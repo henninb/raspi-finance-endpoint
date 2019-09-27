@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Basic file appender for handling logging. -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/finance_db.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Rollover daily -->
+            <fileNamePattern>${LOGS}/finance_db.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- MB max log size -->
+            <maxFileSize>20MB</maxFileSize>
+            <!-- days worth of logs -->
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <!-- Console logging -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <!-- Async appender. This is orders of magnitude faster than sequential logging. -->
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>500</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <!-- We're only async logging the FILE appender and not the ERROR since we shouldn't need
+             the extra speed for logging the actual errors.
+        -->
+        <appender-ref ref="FILE" />
+    </appender>
+
+    <logger name="java" level="INFO">
+        <appender-ref ref="ASYNC" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <logger name="org" level="ERROR">
+        <appender-ref ref="ASYNC" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <logger name="org.apache" level="WARN">
+      <appender-ref ref="ASYNC" />
+      <appender-ref ref="STDOUT" />
+    </logger>
+    
+    <logger name="httpclient" level="WARN">
+      <appender-ref ref="ASYNC" />
+      <appender-ref ref="STDOUT" />
+    </logger>
+
+    <!-- Setup the default to log INFO and above to the console -->
+    <root level = "INFO">
+        <appender-ref ref="ASYNC" />
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>

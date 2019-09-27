@@ -1,0 +1,197 @@
+spring:
+  profiles:
+    active: local
+
+  # ===============================
+  # = ActiveMQ
+  # ===============================
+  #spring.activemq.broker-url=tcp://${AMQ_BROKER}:61616
+  #spring.activemq.broker-url=stomp+ssl://${AMQ_BROKER}:61612
+#  activemq.broker-url: ${AMQ_BROKER_URL}
+#  activemq.user: ${AMQ_USERNAME}
+#  activemq.password: ${AMQ_PASSWORD}
+#  activemq.in-memory: false
+#  activemq.pool.enabled: false
+
+  # ===============================
+  # = DATA SOURCE
+  # ===============================
+  datasource:
+    url: ${DATASOURCE}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: ${DATASOURCE_DRIVER}
+    # testWhileIdle to persist the connection when idle for a long period of time
+    #testWhileIdle: true
+    #validationQuery: SELECT 1
+    platform: ${DATASOURCE_PLATFORM}
+    continueOnError: false
+    schema: classpath:schema-h2.sql
+    data: classpath:data-h2.sql
+    # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql
+    #initialization-mode: always
+    initialization-mode: never
+
+server:
+  port: ${SERVER_PORT}
+
+#management.endpoints.web.exposure.include=*
+#management.endpoints.web.exposure.include=info, health, metrics
+
+#management.endpoints.web.exposure.include=*
+#management.metrics.tag.host=windows10
+#management.metrics.tag.application=raspi_finance
+#management.metrics.export.influx.enabled=true
+#management.metrics.export.influx.auto-create-db=true
+#management.metrics.export.influx.db=metrics
+#management.metrics.export.influx.compressed=false
+#management.metrics.export.influx.step=1m
+#management.metrics.export.influx.uri=192.168.100.135:8086
+#management.health.show-details=always
+
+# ===============================
+# = SSL Setup
+# ===============================
+# Define a custom port instead of the default 8080
+#server.port=8443
+# Tell Spring Security (if used) to require requests over HTTPS
+#security.require-ssl=true
+# The format used for the keystore
+#server.ssl.key-store-type=PKCS12
+# The path to the keystore containing the certificate
+#server.ssl.key-store=classpath:keystore.p12
+# The password used to generate the certificate
+#server.ssl.key-store-password=password
+# The alias mapped to the certificate
+#server.ssl.key-alias=tomcat
+
+# ===============================
+# = JPA / HIBERNATE
+# ===============================
+# Show or not log for each sql query
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL}
+    properties.hibernate.jdbc.time_zone: UTC
+
+logging:
+  level.org.hibernate.SQL: INFO
+
+#spring.jpa.hibernate.ddl-auto: none
+# Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
+# schema will be automatically created afresh for every start of application
+#none is build from schema.sql (no Java classes)
+#update only add new tables in the schema.sql (starting from Java classes)
+
+#route:
+#  sedaOutputUri: seda:finance_drop?size=30&concurrentConsumers=10&blockWhenFull=true
+#  filePollerUri: file:data/inbox?noop=true
+#  directToActivemqUri: direct:sendToActivemq
+#  autoStartRoute: ${CAMEL_ROUTE_ENABLED}
+#  jsonFilesInputPath: ${JSON_FILES_INPUT_PATH}
+#  databaseInsertRoute: databaseInsertRoute
+#  directToActivemqRoute: directToActivemqRoute
+#  jsonFileReaderRoute: jsonFileReaderRoute
+#  sedaQueueToDirectActivemqRoute: sedaQueueToDirectActivemqRoute
+#  transactionToSedaQueueRoute: transactionToSedaQueueRoute
+#  fileWriteRoute: fileWriteRoute
+#  activemqFinanceDropConsumer: activemq:queue:finance_drop?concurrentConsumers=5&maxConcurrentConsumers=10
+#  activemqFinanceDropProducer: activemq:queue:finance_drop
+
+# ===============================
+# = Project Activemq
+# ===============================
+#project:
+#  activemq:
+#    inMemory: false
+#    pooled: true
+#    username: ${AMQ_USERNAME}
+#    password: ${AMQ_PASSWORD}
+#    scheme: ${AMQ_SCHEME}
+#    hostname: ${AMQ_HOSTNAME}
+#    port: ${AMQ_PORTNUMBER}
+#    truststore: ${SSL_TRUSTSTORE}
+#    truststorePassword: ${SSL_TRUSTSTORE_PASSOWRD}
+#    keystorePassword: ${SSL_KEYSTORE_PASSOWRD}
+#    keystore: ${SSL_KEYSTORE}
+#    receiveTimeout: 2000
+#
+#  ssl:
+#    truststore: ${SSL_TRUSTSTORE}
+#    truststore-password: ${SSL_TRUSTSTORE_PASSOWRD}
+#    keystore: ${SSL_KEYSTORE}
+#    keystore-password: ${SSL_KEYSTORE_PASSOWRD}
+#    enabled: ${ACTIVEMQ_SSL_ENABLE}
+#
+#  queue:
+#    receive-timeout: 2000
+#  activemq-ssl.beans.enabled: ${ACTIVEMQ_SSL_BEANS_ENABLED}
+#  activemq-non-ssl.beans.enabled: ${ACTIVEMQ_NONSSL_BEANS_ENABLED}
+
+# ===============================
+# = Camel
+# ===============================
+# the name of Camel
+#camel.springboot.name=SampleCamel
+#camel:
+#  health.check.routes.enabled: false
+
+# ===============================
+# = MongoDB
+# ===============================
+#spring.data.mongodb.database=${MONGO_DATABASE}
+#spring.data.mongodb.host=${MONGO_HOSTNAME}
+#spring.data.mongodb.port=${MONGO_PORT}
+#spring.data.mongodb.uri=${MONGO_URI}
+#spring.main.allow-bean-definition-overriding=true
+
+# ===============================
+# = Thymeleaf
+# ===============================
+#spring.thymeleaf.check-template-location=true
+#spring.thymeleaf.prefix=classpath:/templates/
+#spring.thymeleaf.suffix=.html
+#spring.thymeleaf.mode=HTML5
+#spring.thymeleaf.encoding=UTF-8
+#spring.thymeleaf.content-type=text/html
+#spring.thymeleaf.cache=false
+
+# ===============================
+# = Kafka Properties
+# ===============================
+#project.kafka.serverNamePort=hornsup:9092
+#project.kafka.zookeeperServerPort=hornsup:2181
+#project.kafka.topic=ynot
+#project.kafka.sslKeystore=${SSL_KEYSTORE}
+#project.kafka.sslKeystorePassword=${SSL_KEYSTORE_PASSOWRD}
+#project.kafka.sslTruststore=${SSL_TRUSTSTORE}
+#project.kafka.sslTruststorePassword=${SSL_TRUSTSTORE_PASSOWRD}
+
+#kebab-case '-' separated
+#spring-dbuserservice-driverClassName=org.h2.Driver
+#spring-dbuserservice-url=jdbc:h2:mem:finance_db;DB_CLOSE_DELAY=-1
+#spring-dbuserservice-password=
+#spring-dbuserservice-username=sa
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    web:
+      server:
+        auto-time-requests: true
+    tags.host: HZRVY52
+    tags.environment: prod
+    tags.application: raspi_finance_endpoint
+    export:
+      influx:
+        enabled: false
+        auto-create-db: false
+        db: metrics
+        compressed: false
+        step: 1m
+        uri: http://192.168.100.25::8086

@@ -1,0 +1,47 @@
+
+*.bak
+
+## gradle ##
+.gradle/
+out/
+target/
+build.gradle_master
+application.properties_master
+logback.xml_master
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+*.gz
+LOGS_IS_UNDEFINED/
+env
+env.mac
+logs
+*.jks
+*.pem
+*.p12
+*.ks
+*.der
+*.ts
+json_in
+activemq-hornsup-client-cert
+activemq-hornsup-server-cert
