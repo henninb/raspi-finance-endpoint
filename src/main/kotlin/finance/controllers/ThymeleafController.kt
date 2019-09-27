@@ -39,7 +39,7 @@ class ThymeleafController {
     //http://localhost:8080/transactionView
     @GetMapping(path = [("/transactionView")])
     fun transactionView(model: Model): String {
-        val accounts = accountService.findAllAcitveAccounts()
+        val accounts = accountService.findAllActiveAccounts()
         model.addAttribute("accounts", accounts)
         return "transactionView"
     }
@@ -53,7 +53,7 @@ class ThymeleafController {
     //TODO: ResponseEntity code fix
     @GetMapping(path = [("/transactionView/{accountNameOwner}")])
     fun transactionView(@PathVariable accountNameOwner: String, model: Model): String {
-        val accounts = accountService.findAllAcitveAccounts()
+        val accounts = accountService.findAllActiveAccounts()
         val transactions = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
         model.addAttribute("transactions", transactions)
         model.addAttribute("accounts", accounts)

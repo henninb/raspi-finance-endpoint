@@ -18,8 +18,8 @@ open class AccountService {
         return accountRepository.findAll()
     }
 
-    fun findAllAcitveAccounts(): List<Account> {
-        val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner("Y")
+    fun findAllActiveAccounts(): List<Account> {
+        val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
         if( accounts.isEmpty()) {
             logger.warn("findAllAcitveAccounts() problem.")
         } else {
@@ -34,6 +34,7 @@ open class AccountService {
 
     fun insertAccount(account: Account) : Boolean {
         //TODO: Should saveAndFlush be in a try catch block?
+        logger.info("INFO: transactionRepository.saveAndFlush call.")
         accountRepository.saveAndFlush(account)
         logger.info("INFO: transactionRepository.saveAndFlush success.")
         return true

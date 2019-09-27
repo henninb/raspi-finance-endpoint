@@ -8,20 +8,20 @@ import javax.persistence.Converter
 class AccountTypeConverter : AttributeConverter<AccountType, String> {
 
     override fun convertToDatabaseColumn(attribute: AccountType): String {
-        when (attribute) {
-            AccountType.Credit -> return "credit"
-            AccountType.Debit -> return "debit"
-            AccountType.Undefined -> return "undefined"
-            else -> throw IllegalArgumentException("Unknown: $attribute")
+        return when (attribute) {
+            AccountType.Credit -> "credit"
+            AccountType.Debit -> "debit"
+            AccountType.Undefined -> "undefined"
         }
     }
 
-    override fun convertToEntityAttribute(dbData: String): AccountType {
-        when (dbData) {
-            "credit" -> return AccountType.Credit
-            "debit" -> return AccountType.Debit
-            "unknown" -> return AccountType.Undefined
-            else -> throw IllegalArgumentException("Unknown $dbData")
+    override fun convertToEntityAttribute(attribute: String): AccountType {
+        return  when (attribute.trim()) {
+            "credit" -> AccountType.Credit
+            "debit" -> AccountType.Debit
+            "unknown" -> AccountType.Undefined
+            //else -> throw IllegalArgumentException("Unknown attribute: $attribute")
+            else -> throw RuntimeException("Unknown attribute: $attribute")
         }
     }
 }

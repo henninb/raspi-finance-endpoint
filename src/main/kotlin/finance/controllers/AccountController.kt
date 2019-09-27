@@ -22,7 +22,7 @@ class AccountController {
 
     @GetMapping(path = [("/select_accounts")])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
-        val accounts : List<Account> = accountService.findAllAcitveAccounts()
+        val accounts : List<Account> = accountService.findAllActiveAccounts()
         if( accounts.isEmpty() ) {
             logger.info("no accounts found.")
             return ResponseEntity.notFound().build()
@@ -49,7 +49,8 @@ class AccountController {
         return ResponseEntity.notFound().build()
     }
 
-    //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "Y","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' http://localhost:8080/insert_account
+    //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000"' http://localhost:8080/insert_account
+    //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' http://localhost:8080/insert_account
     //http://localhost:8080/insert_account
     @PostMapping(path = [("/insert_account")], consumes = [("application/json")], produces = [("application/json")])
     fun insert_account(@RequestBody account: Account) : ResponseEntity<String> {
