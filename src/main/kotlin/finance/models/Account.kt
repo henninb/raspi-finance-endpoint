@@ -42,35 +42,35 @@ open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String 
     @Size(min = 3, max = 40)
     @JsonProperty
     @Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
-    var accountNameOwner = _accountNameOwner
+    open var accountNameOwner = _accountNameOwner
 
     @Convert(converter = AccountTypeConverter::class)
     @JsonProperty
-    var accountType = _accountType
+    open var accountType = _accountType
 
     @JsonProperty
-    var activeStatus = _activeStatus
+    open var activeStatus = _activeStatus
 
     @JsonProperty
     @Size(min = 4, max = 4)
-    var moniker = _moniker
+    open var moniker = _moniker
 
     @JsonProperty
     @Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-    var totals = _totals
+    open var totals = _totals
 
     @JsonProperty
     @Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-    var totalsBalanced = _totalsBalanced
+    open var totalsBalanced = _totalsBalanced
 
     @JsonProperty
-    var dateClosed = _dateClosed
+    open var dateClosed = _dateClosed
 
     @JsonProperty
-    var dateUpdated = _dateUpdated
+    open var dateUpdated = _dateUpdated
 
     @JsonProperty
-    var dateAdded = _dateAdded
+    open var dateAdded = _dateAdded
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

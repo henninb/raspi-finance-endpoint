@@ -25,7 +25,7 @@ open class Category constructor(_categoryId: Long = 0L, _category: String = "" )
     @Size(min = 1, max = 50)
     @Column(unique=true)
     @JsonProperty
-    var category = _category
+    open var category = _category
 
 //    @JsonProperty
 //    var dateUpdated = _dateUpdated

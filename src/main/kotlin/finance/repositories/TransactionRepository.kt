@@ -31,4 +31,7 @@ interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
     @Transactional
     @Query(value = "DELETE from t_transaction WHERE guid = ?1", nativeQuery = true)
     fun deleteByGuid(guid: String)
+
+    @Query(value="SELECT EXTRACT(TIMEZONE FROM now())/3600.0" , nativeQuery = true)
+    fun selectTimeZoneOffset(): Int
 }

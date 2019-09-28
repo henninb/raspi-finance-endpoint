@@ -110,6 +110,7 @@ class TransactionController {
         return ResponseEntity.notFound().build()  //404
     }
 
+    //curl --header "Content-Type: application/json-patch+json" --request PATCH --data '{"guid":"9b9aea08-0dc2-4720-b20c-00b0df6af8ce", "description":"new"}' http://localhost:8080/update/9b9aea08-0dc2-4720-b20c-00b0df6af8ce
     //curl --header "Content-Type: application/json-patch+json" --request PATCH --data '{"guid":"a064b942-1e78-4913-adb3-b992fc1b4dd3","sha256":"","accountType":"credit","accountNameOwner":"discover_brian","description":"Last Updated","category":"","notes":"","cleared":0,"reoccurring":false,"amount":"0.00","transactionDate":1512730594,"dateUpdated":1487332021,"dateAdded":1487332021}' http://localhost:8080/update/a064b942-1e78-4913-adb3-b992fc1b4dd3
     //http://localhost:8080/update/340c315d-39ad-4a02-a294-84a74c1c7ddc
     //@PublishedApi
