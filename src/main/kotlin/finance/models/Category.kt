@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import javax.persistence.*
 import javax.validation.constraints.Min
 import javax.validation.constraints.Size
+import org.hibernate.annotations.Proxy
 
 @Entity(name = "CategoryEntity")
+@Proxy(lazy = false)
 @Table(name = "t_category")
 open class Category constructor(_categoryId: Long = 0L, _category: String = "" ) {
 
@@ -25,7 +27,7 @@ open class Category constructor(_categoryId: Long = 0L, _category: String = "" )
     @Size(min = 1, max = 50)
     @Column(unique=true)
     @JsonProperty
-    open var category = _category
+    var category = _category
 
 //    @JsonProperty
 //    var dateUpdated = _dateUpdated

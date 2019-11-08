@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- Basic file appender for handling logging. -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS}/finance_db.log</file>
+        <file>${LOGS}/raspi-finance-endpoint.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- Rollover daily -->
-            <fileNamePattern>${LOGS}/finance_db.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <!-- MB max log size -->
-            <maxFileSize>20MB</maxFileSize>
-            <!-- days worth of logs -->
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>2GB</totalSizeCap>
+            <fileNamePattern>${LOGS}/archive/raspi-finance-endpoint.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- or whenever the file size reaches 10MB -->
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
 
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <!-- json logging -->
+        <!--  <encoder class="net.logstash.logback.encoder.LogstashEncoder"/> -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
     </appender>
 
-    <!-- Console logging -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <!-- json logging -->
+        <!--  <encoder class="net.logstash.logback.encoder.LogstashEncoder"/> -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
     </appender>
 
     <!-- Async appender. This is orders of magnitude faster than sequential logging. -->
@@ -31,33 +35,28 @@
         <!-- We're only async logging the FILE appender and not the ERROR since we shouldn't need
              the extra speed for logging the actual errors.
         -->
+
         <appender-ref ref="FILE" />
     </appender>
 
-    <logger name="java" level="INFO">
+    <!-- Send all our DEBUG and higher log statements to the ASYNC logger. -->
+    <!-- <logger name="" level="INFO"> -->
+    <!--     <appender-ref ref="ASYNC" /> -->
+    <!-- </logger> -->
+
+    <!-- Log all WARN messages, regardless of source -->
+    <logger name="java" level="WARN">
         <appender-ref ref="ASYNC" />
-        <appender-ref ref="STDOUT" />
     </logger>
 
-    <logger name="org" level="ERROR">
+    <!-- Log all WARN messages, regardless of source -->
+    <logger name="org" level="WARN">
         <appender-ref ref="ASYNC" />
-        <appender-ref ref="STDOUT" />
-    </logger>
-
-    <logger name="org.apache" level="WARN">
-      <appender-ref ref="ASYNC" />
-      <appender-ref ref="STDOUT" />
-    </logger>
-    
-    <logger name="httpclient" level="WARN">
-      <appender-ref ref="ASYNC" />
-      <appender-ref ref="STDOUT" />
     </logger>
 
     <!-- Setup the default to log INFO and above to the console -->
-    <root level = "INFO">
-        <appender-ref ref="ASYNC" />
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
-
 </configuration>
+

@@ -13,8 +13,10 @@ import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
+import org.hibernate.annotations.Proxy
 
 @Entity(name = "AccountEntity")
+@Proxy(lazy = false)
 @Table(name = "t_account")
 open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String = "",
                                _accountType: AccountType = AccountType.Credit,
@@ -42,35 +44,35 @@ open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String 
     @Size(min = 3, max = 40)
     @JsonProperty
     @Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
-    open var accountNameOwner = _accountNameOwner
+    var accountNameOwner = _accountNameOwner
 
     @Convert(converter = AccountTypeConverter::class)
     @JsonProperty
-    open var accountType = _accountType
+    var accountType = _accountType
 
     @JsonProperty
-    open var activeStatus = _activeStatus
+    var activeStatus = _activeStatus
 
     @JsonProperty
     @Size(min = 4, max = 4)
-    open var moniker = _moniker
+    var moniker = _moniker
 
     @JsonProperty
     @Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-    open var totals = _totals
+    var totals = _totals
 
     @JsonProperty
     @Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-    open var totalsBalanced = _totalsBalanced
+    var totalsBalanced = _totalsBalanced
 
     @JsonProperty
-    open var dateClosed = _dateClosed
+    var dateClosed = _dateClosed
 
     @JsonProperty
-    open var dateUpdated = _dateUpdated
+    var dateUpdated = _dateUpdated
 
     @JsonProperty
-    open var dateAdded = _dateAdded
+    var dateAdded = _dateAdded
 
     override fun toString(): String = mapper.writeValueAsString(this)
 
