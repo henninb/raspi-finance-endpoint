@@ -8,8 +8,8 @@ RUN mkdir -p /opt/raspi_finance_endpoint/logs
 RUN mkdir -p /opt/raspi_finance_endpoint/json_in
 RUN chown -R henninb /opt/raspi_finance_endpoint/*
 
-COPY ./build/libs/raspi_finance_endpoint.jar /opt/raspi_finance_endpoint/bin/raspi_finance_endpoint.jar
+COPY ./build/libs/raspi-finance-endpoint.jar /opt/raspi_finance_endpoint/bin/raspi-finance-endpoint.jar
 WORKDIR /opt/raspi_finance_endpoint/bin
 USER henninb
 
-CMD java -jar raspi_finance_endpoint.jar
+CMD java -jar raspi-finance-endpoint.jar

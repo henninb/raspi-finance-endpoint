@@ -1,6 +1,6 @@
 package finance.repositories
 
-import finance.models.Category
+import finance.domain.Category
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 

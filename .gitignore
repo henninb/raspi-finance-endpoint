@@ -1,21 +1,8 @@
-
-*.bak
-
 ## gradle ##
 .gradle/
 out/
 target/
-build.gradle_master
-application.properties_master
-logback.xml_master
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
+build/
 
 ### IntelliJ IDEA ###
 .idea
@@ -23,25 +10,22 @@ logback.xml_master
 *.iml
 *.ipr
 
-### NetBeans ###
-nbproject/private/
-build/
-nbbuild/
-dist/
-nbdist/
-.nb-gradle/
-
-*.gz
+### Directories ###
 LOGS_IS_UNDEFINED/
-env
-env.mac
-logs
+logs/
+json_in/
+ssl/
+
+### File types ###
+*.bak
+*.gz
 *.jks
 *.pem
 *.p12
 *.ks
 *.der
 *.ts
-json_in
-activemq-hornsup-client-cert
-activemq-hornsup-server-cert
+*.secrets
+
+### Files ###
+ip

@@ -2,32 +2,25 @@ package finance.services;
 
 //import finance.models.Transaction;
 //import finance.repositories.TransactionRepository;
-import finance.dao.TransactionDAO;
-import finance.models.Account;
-import finance.models.Category;
-import finance.models.Transaction;
+import finance.domain.Account;
+import finance.domain.Category;
+import finance.domain.Transaction;
 import finance.repositories.AccountRepository;
 import finance.repositories.CategoryRepository;
 import finance.repositories.TransactionRepository;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Optional;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.ArgumentMatchers.anyString;
 
 public class TransactionServiceTest {

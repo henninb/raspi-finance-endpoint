@@ -1,6 +1,6 @@
 package finance.repositories
 
-import finance.models.Account
+import finance.domain.Account
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

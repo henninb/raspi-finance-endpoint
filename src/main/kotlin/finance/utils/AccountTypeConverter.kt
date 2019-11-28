@@ -1,6 +1,6 @@
 package finance.utils
 
-import finance.pojos.AccountType
+import finance.domain.AccountType
 import javax.persistence.AttributeConverter
 import javax.persistence.Converter
 

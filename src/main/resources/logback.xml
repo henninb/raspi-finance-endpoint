@@ -40,9 +40,9 @@
     </appender>
 
     <!-- Send all our DEBUG and higher log statements to the ASYNC logger. -->
-    <!-- <logger name="" level="INFO"> -->
-    <!--     <appender-ref ref="ASYNC" /> -->
-    <!-- </logger> -->
+    <logger name="raspi-finance-convert" level="INFO">
+        <appender-ref ref="ASYNC" />
+    </logger>
 
     <!-- Log all WARN messages, regardless of source -->
     <logger name="java" level="WARN">
