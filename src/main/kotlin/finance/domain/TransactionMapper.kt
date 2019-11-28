@@ -1,4 +1,4 @@
-package finance.models
+package finance.domain
 
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet

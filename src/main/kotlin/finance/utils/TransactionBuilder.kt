@@ -1,7 +1,7 @@
 package finance.utils
 
-import finance.models.Transaction
-import finance.pojos.AccountType
+import finance.domain.Transaction
+import finance.domain.AccountType
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp

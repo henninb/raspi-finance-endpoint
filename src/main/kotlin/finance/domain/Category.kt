@@ -1,4 +1,4 @@
-package finance.models
+package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty

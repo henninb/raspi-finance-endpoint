@@ -1,7 +1,7 @@
-package finance.controllers
+package controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.models.Transaction
+import finance.domain.Transaction
 import finance.pojos.Totals
 import finance.services.TransactionService
 import org.slf4j.LoggerFactory
@@ -27,54 +27,55 @@ class TransactionController {
     @Autowired
     lateinit var transactionService: TransactionService
 
-    //http://localhost:8080/findall
-    //http://localhost:8080/findall?pageNumber=0&pageSize=10
-    @SuppressWarnings("unused")
-    @GetMapping(path = [("/findall")])
-    fun findAllTransactions(@RequestParam("pageNumber") pageNumber: Optional<Int>, @RequestParam("pageSize") pageSize: Optional<Int>, pageable: Pageable): ResponseEntity<Page<Transaction>> {
-        var page = 0
-        var size = 10
-        if(pageNumber.isPresent ) {
-            page = pageNumber.get()
-        }
+//    //http://localhost:8080/findall
+//    //http://localhost:8080/findall?pageNumber=0&pageSize=10
+//    @SuppressWarnings("unused")
+//    @GetMapping(path = [("/findall")])
+//    fun findAllTransactions(@RequestParam("pageNumber") pageNumber: Optional<Int>, @RequestParam("pageSize") pageSize: Optional<Int>, pageable: Pageable): ResponseEntity<Page<Transaction>> {
+//        var page = 0
+//        var size = 10
+//        if(pageNumber.isPresent ) {
+//            page = pageNumber.get()
+//        }
+//
+//        if( pageSize.isPresent ) {
+//            size = pageSize.get()
+//        }
+//        var pageable1: Pageable = PageRequest.of(page, size)
+//        var transactions: Page<Transaction> = transactionService.findAllTransactions(pageable1)
+//        if( transactions.totalElements < size ) {
+//            pageable1 = PageRequest.of(0, transactions.totalElements.toInt())
+//            transactions = transactionService.findAllTransactions(pageable1)
+//        }
+//        if(transactions.isEmpty) {
+//            ResponseEntity.notFound().build<List<Transaction>>()
+//            logger.info("isEmpty")
+//        }
+//        return ResponseEntity.ok(transactions)
+//    }
 
-        if( pageSize.isPresent ) {
-            size = pageSize.get()
-        }
-        var pageable1: Pageable = PageRequest.of(page, size)
-        var transactions: Page<Transaction> = transactionService.findAllTransactions(pageable1)
-        if( transactions.totalElements < size ) {
-            pageable1 = PageRequest.of(0, transactions.totalElements.toInt())
-            transactions = transactionService.findAllTransactions(pageable1)
-        }
-        if(transactions.isEmpty) {
-            ResponseEntity.notFound().build<List<Transaction>>()
-            logger.info("isEmpty")
-        }
-        return ResponseEntity.ok(transactions)
-    }
-    //http://localhost:8080/get_page_by_account_name_owner/amex
-    //http://localhost:8080/get_page_by_account_name_owner/amex_brian?pageNumber=0&pageSize=5
-    @SuppressWarnings("unused")
-    @GetMapping(path = [("/get_page_by_account_name_owner/{accountNameOwner}")])
-    fun findByAccountNameOwnerPage(@PathVariable accountNameOwner: String, @RequestParam pageNumber: Optional<Int>, @RequestParam pageSize: Optional<Int>, pageable: Pageable): ResponseEntity<Page<Transaction>> {
-        var page = 0
-        var size = 5
-        if(pageNumber.isPresent ) {
-            page = pageNumber.get()
-        }
-
-        if( pageSize.isPresent ) {
-            size = pageSize.get()
-        }
-        val pageable1: Pageable = PageRequest.of(page, size)
-        val transactions: Page<Transaction> = transactionService.findTransactionsByAccountNameOwnerPageable(pageable1, accountNameOwner)
-        if( transactions.isEmpty) {
-            ResponseEntity.notFound().build<List<Transaction>>()
-        }
-
-        return ResponseEntity.ok(transactions)
-    }
+//    //http://localhost:8080/get_page_by_account_name_owner/amex
+//    //http://localhost:8080/get_page_by_account_name_owner/amex_brian?pageNumber=0&pageSize=5
+//    @SuppressWarnings("unused")
+//    @GetMapping(path = [("/get_page_by_account_name_owner/{accountNameOwner}")])
+//    fun findByAccountNameOwnerPage(@PathVariable accountNameOwner: String, @RequestParam pageNumber: Optional<Int>, @RequestParam pageSize: Optional<Int>, pageable: Pageable): ResponseEntity<Page<Transaction>> {
+//        var page = 0
+//        var size = 5
+//        if(pageNumber.isPresent ) {
+//            page = pageNumber.get()
+//        }
+//
+//        if( pageSize.isPresent ) {
+//            size = pageSize.get()
+//        }
+//        val pageable1: Pageable = PageRequest.of(page, size)
+//        val transactions: Page<Transaction> = transactionService.findTransactionsByAccountNameOwnerPageable(pageable1, accountNameOwner)
+//        if( transactions.isEmpty) {
+//            ResponseEntity.notFound().build<List<Transaction>>()
+//        }
+//
+//        return ResponseEntity.ok(transactions)
+//    }
 
     //http://localhost:8080/get_by_account_name_owner/usbankcash_brian
     //http://localhost:8080/get_by_account_name_owner/amex_kari
@@ -98,15 +99,17 @@ class TransactionController {
         return ResponseEntity.ok(mapper.writeValueAsString(totals))
     }
 
-    //http://localhost:8080/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    //http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @SuppressWarnings("unused")
     @GetMapping(path = [("/select/{guid}")])
     fun findTransaction(@PathVariable guid: String): ResponseEntity<Transaction> {
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
         if( transactionOption.isPresent ) {
             val transaction: Transaction = transactionOption.get()
+            //println( "guid = " + guid)
             return ResponseEntity.ok(transaction)
         }
+        //println( "guid = " + guid)
         return ResponseEntity.notFound().build()  //404
     }
 

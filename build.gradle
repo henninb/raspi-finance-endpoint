@@ -1,27 +1,30 @@
 buildscript {
     ext {
-        springBootVersion = '2.1.3.RELEASE'
-        apacheCamelVersion = '2.24.0'
-        kotlinVersion = '1.3.21'
+        springBootVersion = '2.2.1.RELEASE'
+        apacheCamelVersion = '2.24.2'
+        kotlinVersion = '1.3.50'
         groovyVersion = '2.5.8'
+        //groovyVersion = '3.0.0-rc-1'
         qualityPluginVersion='3.0.0'
         codenarcPluginVersion='0.20.0'
-        activemqVersion='5.15.9'
-        jolokiaVersion='1.6.0'
-        postgresqlVersion='42.2.5'
-        kafkaVersion='2.1.0'
-        hibernateVersion='5.4.1.Final'
-        h2Version='1.4.199'
+        activemqVersion='5.15.10'
+        jolokiaVersion='1.6.2'
+        postgresqlVersion='42.2.8'
+        kafkaVersion='2.3.1'
+        hibernateVersion='5.4.8.Final'
+        h2Version='1.4.200'
         clojureVersion='1.10.0'
+        scalaVersion='2.13.1'
         gradleVersion='5.6.2'
-        mongoVersion='3.10.0'
+        mongoVersion='3.11.2'
         wmqVersion='7.0.1.9'
         swaggerVersion='2.9.2'
-        cucumberVersion='4.2.3'
-        springJmsVersion='5.1.5.RELEASE'
-        lombokVersion='1.18.6'
-        bootstrapVersion='4.3.1'
-        jqueryVersion='3.3.1-2'
+        //swaggerVersion='2.0.10'
+        cucumberVersion='4.8.0'
+        springJmsVersion='5.2.1.RELEASE'
+        lombokVersion='1.18.10'
+        bootstrapVersion= '4.3.1'
+        jqueryVersion='3.4.1'
     }
     repositories {
         mavenLocal()
@@ -44,7 +47,7 @@ apply plugin: 'kotlin'
 apply plugin: 'org.springframework.boot'
 //apply plugin: 'codenarc'
 //apply plugin: 'findbugs'
-apply plugin: 'maven'
+//apply plugin: 'maven'
 //apply plugin: 'org.flywaydb.flyway'
 //apply plugin: 'com.jfrog.artifactory'
 //apply plugin: 'ru.vyarus.quality'
@@ -84,10 +87,36 @@ springBoot {
 }
 
 sourceSets {
-    //main.kotlin.srcDirs = []
-    //main.java.srcDirs = ['src/main/java', 'src/main/kotlin']
-    //main.resources.srcDirs = ['src/main/resources']
-    main.java.srcDirs += 'src/main/kotlin'
+    main.kotlin.srcDirs += 'src/main/kotlin'
+    main.java.srcDirs += 'src/main/clojure'
+    main.java.srcDirs += 'src/main/scala'
+    main.groovy.srcDirs += 'src/main/groovy'
+
+//    integrationTest {
+//        groovy.srcDir file('src/test-integration/groovy')
+//        resources.srcDir file('src/main/resources')
+//        compileClasspath += sourceSets.main.output + configurations.testCompile
+//        runtimeClasspath += output + compileClasspath + configurations.testRuntime
+//    }
+
+
+    integrationTest {
+                groovy {
+            srcDirs = ['src/test-integration/groovy']
+        }
+        resources.srcDir 'src/main/resources'
+        compileClasspath += sourceSets.main.output + configurations.testCompile
+        runtimeClasspath += output + compileClasspath + configurations.testRuntime
+    }
+
+//    integrationTest {
+//        groovy {
+//            srcDirs = ['src/test-integration/groovy']
+//        }
+//        resources.srcDir 'src/main/resources'
+//        compileClasspath += sourceSets.main.output + configurations.testCompile
+//        runtimeClasspath += output + compileClasspath + configurations.testRuntime
+//    }
 }
 
 //compileOptions {
@@ -124,12 +153,12 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
     //  { exclude module: "spring-boot-starter-tomcat" }
     //compile("org.springframework.boot:spring-boot-starter-undertow:${springBootVersion}")
-    //compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
     compile("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
-    compile("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
+    //compile("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
     //compile("org.springframework.boot:spring-boot-starter-jersey:${springBootVersion}")
     compile("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
-    compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+    //compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
     compile("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
     //compile("org.springframework.boot:spring-boot-starter-jdbc:${springBootVersion}")
     //compile("org.springframework.boot:spring-boot-starter-security:${springBootVersion}")
@@ -198,17 +227,9 @@ dependencies {
     compile("com.jcraft:jsch:0.1.55")
 
     //graphql
-    compile("com.graphql-java:graphql-java:2019-03-15T05-33-44-d008832")
+    //compile("com.graphql-java:graphql-java:2019-03-15T05-33-44-d008832")
 
     //IBM MQ
-    //compile("com.ibm.mq:mq:${wmqVersion}")
-    //compile("com.ibm.mq:mqjms:${wmqVersion}")
-    //compile("com.ibm.mq.jms:jms-client:${wmqVersion}")
-    //compile("com.ibm.mq:jmqi:${wmqVersion}")
-    //compile("com.ibm.mq:dhbcore:${wmqVersion}")
-    //compile("com.ibm.mq:headers:${wmqVersion}")
-    //compile("com.ibm.mq:commonservices:${wmqVersion}")
-    //compile("javax:javaee-api:8.0")
 
     //Spring
     compile("org.springframework:spring-jms:${springJmsVersion}")
@@ -266,6 +287,7 @@ dependencies {
     testCompile("io.cucumber:cucumber-spring:${cucumberVersion}")
 
     testCompile("org.spockframework:spock-core:1.2-groovy-2.5")
+    testCompile("org.spockframework:spock-spring:1.2-groovy-2.5")
     //compile("org.jsoup:jsoup:1.10.3")
     //runtime("org.apache.tomcat:tomcat-jdbc:9.0.1")
     //plugin("org.apache.camel:camel-maven-plugin:2.19.3")

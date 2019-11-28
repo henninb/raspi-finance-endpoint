@@ -1,6 +1,6 @@
-package finance.controllers
+package controllers
 
-import finance.models.Category
+import finance.domain.Category
 import finance.services.CategoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

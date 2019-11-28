@@ -1,9 +1,8 @@
-package finance.models
+package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.pojos.AccountType
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants
 import java.math.BigDecimal

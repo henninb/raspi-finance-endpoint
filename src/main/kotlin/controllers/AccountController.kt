@@ -1,8 +1,8 @@
-package finance.controllers
+package controllers
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.models.Account
+import finance.domain.Account
 import finance.services.AccountService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
