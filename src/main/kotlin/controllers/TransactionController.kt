@@ -99,7 +99,7 @@ class TransactionController {
         return ResponseEntity.ok(mapper.writeValueAsString(totals))
     }
 
-    //http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    //http://localhost:8080/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @SuppressWarnings("unused")
     @GetMapping(path = [("/select/{guid}")])
     fun findTransaction(@PathVariable guid: String): ResponseEntity<Transaction> {
@@ -109,7 +109,7 @@ class TransactionController {
             //println( "guid = " + guid)
             return ResponseEntity.ok(transaction)
         }
-        //println( "guid = " + guid)
+        logger.info("guid not found = $guid")
         return ResponseEntity.notFound().build()  //404
     }
 

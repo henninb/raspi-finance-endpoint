@@ -73,6 +73,7 @@ open class TransactionService {
     }
 
     fun findByGuid(guid: String): Optional<Transaction> {
+        logger.info("call findByGuid")
         val transactionOptinoal: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if( transactionOptinoal.isPresent ) {
             return transactionOptinoal

@@ -51,7 +51,7 @@ class TransactionControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc"), HttpMethod.GET,
+                createURLWithPort("/select/340c315d-39ad-4a02-a294-84a74c1c7ddc"), HttpMethod.GET,
                 entity, String.class)
 
         println "response: " + response.body.toString()
