@@ -1,6 +1,8 @@
 #server:
 #  port: 9999
 
+endpoints.metrics.sensitive: false
+
 spring:
   profiles:
     active: local
@@ -66,20 +68,41 @@ logging:
 
 #kebab-case '-' separated
 
+#management.endpoints.web.exposure.include: '*'
+#management.endpoint.metrics.enabled=true
+#management.endpoints.web.exposure.include=metrics
+
+#management.endpoints.web.exposure.include: metrics
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 #management:
 #  endpoints:
-#    #beans:
-#      #enabled: true
 #    web:
 #      exposure:
-#        include: "*"
+#        include: info, health, metrics
 #  metrics:
+#    export:
+#      atlas:
+#        enabled: false
+
+#management:
+#  endpoints:
+#    web:
+#      exposure.include: '*'
+#    metrics:
+#      enabled: true
 #    #web:
 #      #server:
 #        #auto-time-requests: true
-#    tags.host: hornsup
-#    tags.environment: local
-#    tags.application: raspi-finance-convert
+#    tags:
+#      host: hornsup
+#      environment: local
+#      application: raspi-finance-endpoint
 #    export:
 #      influx:
 #        enabled: false
