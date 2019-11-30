@@ -29,3 +29,9 @@ ssl/
 
 ### Files ###
 ip
+
+### others ###
+.classpath
+.project
+.settings/
+bin/

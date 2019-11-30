@@ -27,17 +27,15 @@ buildscript {
         jqueryVersion='3.4.1'
     }
     repositories {
-        mavenLocal()
         mavenCentral()
         jcenter()
-        //gradlePluginPortal()
     }
 
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
-        //classpath "org.jfrog.buildinfo:build-info-extractor-gradle:latest.release"
-        //classpath "ru.vyarus:gradle-quality-plugin:${qualityPluginVersion}"
+        classpath("io.github.gradle-clojure:gradle-clojure-plugin:0.5.0-alpha.1")
+        //classpath("clojuresque:clojuresque:1.7.0")
     }
 }
 
@@ -48,10 +46,9 @@ apply plugin: 'org.springframework.boot'
 //apply plugin: 'codenarc'
 //apply plugin: 'findbugs'
 //apply plugin: 'maven'
-//apply plugin: 'org.flywaydb.flyway'
-//apply plugin: 'com.jfrog.artifactory'
-//apply plugin: 'ru.vyarus.quality'
-//apply plugin: 'java-gradle-plugin'
+//apply plugin: 'codenarc'
+
+//clojure.aotCompile = true
 
 //TODO: Java 11
 //sourceCompatibility = 1.11
@@ -73,7 +70,7 @@ jar {
 }
 
 repositories {
-    mavenLocal()
+
     mavenCentral()
     flatDir {
         dirs 'libs'
@@ -87,7 +84,7 @@ springBoot {
 }
 
 sourceSets {
-    main.kotlin.srcDirs += 'src/main/kotlin'
+    main.java.srcDirs += 'src/main/kotlin'
     main.java.srcDirs += 'src/main/clojure'
     main.java.srcDirs += 'src/main/scala'
     main.groovy.srcDirs += 'src/main/groovy'
@@ -126,9 +123,9 @@ sourceSets {
 
 compileKotlin {
     //kotlinOptions.suppressWarnings = true
+    kotlinOptions.jvmTarget = '1.8'
 }
 
-//gradle wrapper --gradle-version 5.0 --distribution-type all
 wrapper {
     gradleVersion="${gradleVersion}"
 }
