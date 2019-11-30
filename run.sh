@@ -1,8 +1,9 @@
 #!/bin/sh
 
 if [ \( "$OS" = "Linux Mint" \) -o \(  "$OS" = "Ubuntu" \) ]; then
-  #HOST_IP=$(ipconfig getifaddr en0)
   HOST_IP=$(hostname -I | awk '{print $1}')
+elif [ "$OS" = "Darwin" ]; then
+  HOST_IP=$(ipconfig getifaddr en0)
 else
   echo $OS is not yet implemented.
   exit 1
