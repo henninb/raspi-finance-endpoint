@@ -78,26 +78,34 @@ camel:
 #kebab-case '-' separated
 
 management:
-  endpoints:
-#    beans:
-#      enabled: true
-    web:
-      exposure:
-        include: "*"
-  metrics:
-#    web:
-#      server:
-#        auto-time-requests: true
-    tags.host: hornsup
-    tags.environment: prod
-    tags.application: raspi-finance-convert
-    export:
-      influx:
-        enabled: false
-        auto-create-db: false
-        db: metrics
-        compressed: false
-        step: 1m
-        uri: http://hornsup::8086
+  health:
+  security:
+    enabled: false
+  endpoint:
+    health:
+      show-details: always
+
+# management:
+#   endpoints:
+# #    beans:
+# #      enabled: true
+#     web:
+#       exposure:
+#         include: "*"
+#   metrics:
+# #    web:
+# #      server:
+# #        auto-time-requests: true
+#     tags.host: hornsup
+#     tags.environment: prod
+#     tags.application: raspi-finance-convert
+#     export:
+#       influx:
+#         enabled: false
+#         auto-create-db: false
+#         db: metrics
+#         compressed: false
+#         step: 1m
+#         uri: http://hornsup::8086
 #  health:
 #    show-details: always
