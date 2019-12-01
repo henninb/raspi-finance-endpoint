@@ -75,10 +75,12 @@ logging:
 #management.endpoints.web.exposure.include: metrics
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
+  health:
+  security:
+    enabled: false
+  endpoint:
+    health:
+      show-details: always
 
 #management:
 #  endpoints:
