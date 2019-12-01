@@ -1,15 +1,17 @@
 FROM openjdk:8
 
+ARG APP="raspi-finance-enpoint"
+ENV APP raspi-finance-endpoint
 RUN useradd henninb
 
-RUN mkdir -p /opt/raspi_finance_endpoint/bin
-RUN mkdir -p /opt/raspi_finance_endpoint/ssl
-RUN mkdir -p /opt/raspi_finance_endpoint/logs
-RUN mkdir -p /opt/raspi_finance_endpoint/json_in
-RUN chown -R henninb /opt/raspi_finance_endpoint/*
+RUN mkdir -p -m 0775 /opt/${APP}/bin
+RUN mkdir -p -m 0775 /opt/${APP}/logs/archive
+RUN mkdir -p -m 0775 /opt/${APP}/ssl
+RUN mkdir -p -m 0775 /opt/${APP}/json_in
+ADD ./build/libs/${APP}*.jar /opt/${APP}/bin/${APP}.jar
+RUN chown -R henninb /opt/${APP}/*
 
-COPY ./build/libs/raspi-finance-endpoint*.jar /opt/raspi_finance_endpoint/bin/raspi-finance-endpoint.jar
-WORKDIR /opt/raspi_finance_endpoint/bin
+WORKDIR /opt/${APP}/bin
 USER henninb
 
-CMD java -jar raspi-finance-endpoint.jar
+CMD java -jar -Xmx1g /opt/${APP}/bin/${APP}.jar

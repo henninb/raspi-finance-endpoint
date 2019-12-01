@@ -11,7 +11,7 @@ else
   exit 1
 fi
 
-APP=raspi_finance_endpoint
+APP=raspi-finance-endpoint
 mkdir -p logs ssl json_in
 HOST_BASEDIR=$(pwd)
 GUEST_BASEDIR=/opt/${APP}
