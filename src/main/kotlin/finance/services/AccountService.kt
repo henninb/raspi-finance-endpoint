@@ -46,10 +46,10 @@ open class AccountService {
 
     //TODO: Complete the function
     fun patchAccount(account: Account) : Boolean {
-        val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner.toString())
+        val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
         if ( optionalAccount.isPresent ) {
-            var updateFlag = false
-            val fromDb = optionalAccount.get()
+            //var updateFlag = false
+            //val fromDb = optionalAccount.get()
         }
 
         return false

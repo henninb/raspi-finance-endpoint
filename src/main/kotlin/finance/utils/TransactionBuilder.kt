@@ -9,7 +9,7 @@ import java.sql.Timestamp
 class TransactionBuilder {
     fun buildTransaction(): Transaction {
         //val transaction = Transaction.Builder()
-        var transaction = Transaction()
+        val transaction = Transaction()
 
         transaction.transactionId = 1002
         transaction. guid = "4ea3be58-3993-46de-88a2-4ffc7f1d73bd"
