@@ -1,7 +1,9 @@
 package finance.controllers
 
 import finance.Application
+import finance.helpers.TransactionBuilder
 import finance.helpers.TransactionDAO
+import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -21,6 +23,8 @@ class TransactionControllerSpec extends Specification {
 
     @LocalServerPort
     protected int port
+
+    TransactionService transactionService = Mock(TransactionService)
 
     TestRestTemplate restTemplate = new TestRestTemplate()
 
@@ -44,7 +48,7 @@ class TransactionControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "FindAllTransactions test"() {
+    def "findTransaction test"() {
         given:
         //transactionDAO.truncateAccountTable()
         HttpEntity entity = new HttpEntity<>(null, headers)
@@ -56,6 +60,9 @@ class TransactionControllerSpec extends Specification {
 
         println "response: " + response.body.toString()
         then:
+        //2 * transactionService.findByGuid(_) >> Optional.of(TransactionBuilder.builder().build())
+        //0 * _
         assert response.statusCode == HttpStatus.OK
+        //assert response.statusCode == HttpStatus.NOT_FOUND
     }
 }

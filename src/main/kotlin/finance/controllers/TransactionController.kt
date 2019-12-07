@@ -103,12 +103,13 @@ class TransactionController {
     @SuppressWarnings("unused")
     @GetMapping(path = [("/select/{guid}")])
     fun findTransaction(@PathVariable guid: String): ResponseEntity<Transaction> {
+        println("guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
         if( transactionOption.isPresent ) {
             val transaction: Transaction = transactionOption.get()
-            //println( "guid = " + guid)
             return ResponseEntity.ok(transaction)
         }
+
         logger.info("guid not found = $guid")
         return ResponseEntity.notFound().build()  //404
     }
