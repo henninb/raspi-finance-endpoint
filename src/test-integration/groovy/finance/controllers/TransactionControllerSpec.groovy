@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.Application
+import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.helpers.TransactionDAO
 import finance.services.TransactionService
@@ -17,14 +18,12 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 import spock.lang.Specification
 
-@ActiveProfiles("local")
+@ActiveProfiles("stage")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TransactionControllerSpec extends Specification {
 
     @LocalServerPort
     protected int port
-
-    TransactionService transactionService = Mock(TransactionService)
 
     TestRestTemplate restTemplate = new TestRestTemplate()
 
@@ -32,7 +31,13 @@ class TransactionControllerSpec extends Specification {
     HttpHeaders headers
 
     @Autowired
-    TransactionDAO transactionDAO
+    TransactionService transactionService
+    //TransactionDAO transactionDAO
+
+    Transaction transaction = TransactionBuilder.builder().build()
+    String guid = transaction.getGuid()
+
+
 
     def setupSpec() {
         headers = new HttpHeaders()
@@ -50,15 +55,15 @@ class TransactionControllerSpec extends Specification {
 
     def "findTransaction test"() {
         given:
-        //transactionDAO.truncateAccountTable()
+        transactionService.insertTransaction(transaction)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/select/340c315d-39ad-4a02-a294-84a74c1c7ddc"), HttpMethod.GET,
+                createURLWithPort("/select/" + guid), HttpMethod.GET,
                 entity, String.class)
 
-        println "response: " + response.body.toString()
+        //println "response: " + response.body.toString()
         then:
         //2 * transactionService.findByGuid(_) >> Optional.of(TransactionBuilder.builder().build())
         //0 * _
