@@ -1,4 +1,4 @@
-package controllers
+package finance.controllers
 
 import finance.domain.Category
 import finance.services.CategoryService

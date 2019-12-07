@@ -1,4 +1,4 @@
-package controllers
+package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
