@@ -1,4 +1,4 @@
-package finance.services
+package finance.controllers
 
 import finance.Application
 import finance.helpers.TransactionDAO
