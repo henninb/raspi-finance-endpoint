@@ -78,8 +78,9 @@
 -- --ALTER TABLE t_transaction_categories ADD CONSTRAINT transaction_categories_constraint UNIQUE(transaction_id, category_id);
 --
 -- INSERT INTO t_transaction_categories(transaction_id, category_id) SELECT transaction_id, category_id from t_transaction t, t_category c where t.category = c.category;
-select * from t_transaction_categories;
+--select * from t_transaction_categories;
+
+INSERT INTO t_account(account_name_owner, account_type, active_status) VALUES('chase_brian', 'credit', 'Y');
+INSERT INTO t_transaction(guid, account_type, account_name_owner, transaction_date, description, category, amount, cleared, account_id, reoccurring) VALUES('4ea3be58-3993-46de-88a2-4ffc7f1d73bd', 'credit', 'test_brian', DATEADD('DAY',-9, CURRENT_DATE), 'Batteries Plus', 'automotive', '100.29', 1, (select account_id from t_account where account_name_owner = 'chase_brian'), false);
 
 
--- INSERT INTO t_account(account_id, account_name_owner, account_type, active_status) VALUES(1001, 'test_brian', 'credit', 'Y');
--- INSERT INTO t_transaction(guid, account_type, account_name_owner, transaction_date, description, category, amount, cleared, account_id) VALUES('340c315d-39ad-4a02-a294-84a74c1c7ddc', 'credit', 'test_brian', DATEADD('DAY',-9, CURRENT_DATE), 'Batteries Plus', 'automotive', '100.29', 1, 1001);

@@ -38,8 +38,6 @@ class TransactionControllerSpec extends Specification {
     Transaction transaction = TransactionBuilder.builder().build()
     String guid = transaction.getGuid()
 
-
-
     def setupSpec() {
         headers = new HttpHeaders()
 

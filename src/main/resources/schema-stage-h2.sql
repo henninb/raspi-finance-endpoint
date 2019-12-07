@@ -66,7 +66,8 @@ CREATE TABLE t_transaction (
   account_id INTEGER,
   account_type CHAR(6),
   account_name_owner CHAR(40),
-  transaction_id INTEGER,
+  --transaction_id INTEGER,
+  transaction_id bigint auto_increment,
   guid CHAR(36) NOT NULL,
   transaction_date DATE,
   description VARCHAR(75),
@@ -75,12 +76,14 @@ CREATE TABLE t_transaction (
   cleared INTEGER,
   reoccurring BOOLEAN,
   notes VARCHAR(100),
+  sha256 CHAR(70),
   date_updated TIMESTAMP,
   date_added TIMESTAMP
 );
 
 CREATE TABLE t_account(
-  account_id INTEGER NOT NULL,
+  --account_id INTEGER NOT NULL,
+  account_id bigint auto_increment,
   account_name_owner CHAR(40),
   account_name CHAR(20),
   account_owner CHAR(20),
@@ -94,6 +97,11 @@ CREATE TABLE t_account(
   date_added TIMESTAMP
 );
 
+CREATE TABLE t_category(
+  --category_id integer generated primary key,
+  category_id bigint auto_increment,
+  category VARCHAR(50)
+);
 
 CREATE TABLE t_transaction_categories(
                                          category_id BIGINT NOT NULL,
