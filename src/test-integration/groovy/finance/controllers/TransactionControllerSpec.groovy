@@ -3,7 +3,6 @@ package finance.controllers
 import finance.Application
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
-import finance.helpers.TransactionDAO
 import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -32,6 +31,8 @@ class TransactionControllerSpec extends Specification {
 
     @Autowired
     TransactionService transactionService
+
+    //@Autowired
     //TransactionDAO transactionDAO
 
     Transaction transaction = TransactionBuilder.builder().build()
@@ -53,20 +54,18 @@ class TransactionControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "findTransaction test"() {
+    def "test findTransaction endpoint"() {
         given:
         transactionService.insertTransaction(transaction)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
-        when:
+        when: "rest call is initiated"
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/select/" + guid), HttpMethod.GET,
                 entity, String.class)
 
         //println "response: " + response.body.toString()
         then:
-        //2 * transactionService.findByGuid(_) >> Optional.of(TransactionBuilder.builder().build())
-        //0 * _
         assert response.statusCode == HttpStatus.OK
         //assert response.statusCode == HttpStatus.NOT_FOUND
     }

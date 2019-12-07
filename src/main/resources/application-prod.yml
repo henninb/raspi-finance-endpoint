@@ -78,9 +78,6 @@ logging:
 #kebab-case '-' separated
 
 management:
-  health:
-  security:
-    enabled: false
   endpoint:
     health:
       show-details: always
@@ -98,7 +95,7 @@ management:
 # #        auto-time-requests: true
 #     tags.host: hornsup
 #     tags.environment: prod
-#     tags.application: raspi-finance-convert
+#     tags.application: raspi-finance-endpoint
 #     export:
 #       influx:
 #         enabled: false

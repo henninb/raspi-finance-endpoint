@@ -1,7 +1,5 @@
 package finance.services;
 
-//import finance.models.Transaction;
-//import finance.repositories.TransactionRepository;
 import finance.domain.Account;
 import finance.domain.Category;
 import finance.domain.Transaction;
@@ -24,19 +22,19 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 
 public class TransactionServiceTest {
-    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    //private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     @InjectMocks
     TransactionService transactionService;
 
     @Mock
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Mock
-    TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;
 
     @Mock
-    CategoryRepository categoryRepository;
+    private CategoryRepository categoryRepository;
 
     //@Mock
     //TransactionDAO transactionDAO;
@@ -69,7 +67,7 @@ public class TransactionServiceTest {
 
     @Test
     public void deleteByGuidNoRecordTest() {
-        Transaction transaction = new Transaction();
+        //Transaction transaction = new Transaction();
         Optional<Transaction> transactionOptional = Optional.empty();
 
         Mockito.doNothing().when(transactionRepository).deleteByGuid(anyString());
@@ -85,7 +83,7 @@ public class TransactionServiceTest {
         Transaction transaction = new Transaction();
         Account account = new Account();
         Category category = new Category();
-        Optional<Transaction> transactionOptional = Optional.of(transaction);
+        //Optional<Transaction> transactionOptional = Optional.of(transaction);
         Optional<Account> accountOptional = Optional.of(account);
         Optional<Category> categoryOptional = Optional.of(category);
 
@@ -99,9 +97,9 @@ public class TransactionServiceTest {
     @Test
     public void insertTransactionNoAccountTest() {
         Transaction transaction = new Transaction();
-        Account account = new Account();
+        //Account account = new Account();
         Category category = new Category();
-        Optional<Transaction> transactionOptional = Optional.of(transaction);
+        //Optional<Transaction> transactionOptional = Optional.of(transaction);
         Optional<Account> accountOptional = Optional.empty();
         Optional<Category> categoryOptional = Optional.of(category);
 
@@ -117,7 +115,7 @@ public class TransactionServiceTest {
         Transaction transaction = new Transaction();
         Account account = new Account();
         Category category = new Category();
-        Optional<Transaction> transactionOptional = Optional.empty();
+        //Optional<Transaction> transactionOptional = Optional.empty();
         Optional<Account> accountOptional = Optional.of(account);
         Optional<Category> categoryOptional = Optional.of(category);
 

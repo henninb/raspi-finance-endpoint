@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.Transaction
 import finance.domain.AccountType
-
 import java.math.RoundingMode
 import java.sql.Timestamp
 import java.sql.Date

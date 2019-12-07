@@ -1,27 +1,38 @@
 server:
   port: ${SERVER_PORT}
 
+#spring.datasource.data=classpath:accounts.sql
+
 spring:
   profiles:
-    active: prod
+    active: stage
 
   # ===============================
   # = DATA SOURCE
   # ===============================
   datasource:
-    url: ${DATASOURCE}
-    username: ${DATASOURCE_USERNAME}
-    password: ${DATASOURCE_PASSWORD}
-    driver-class-name: ${DATASOURCE_DRIVER}
+    url: jdbc:h2:mem:finance_db;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
     # testWhileIdle to persist the connection when idle for a long period of time
     tomcat:
-      test-While-Idle: true
-      validation-Query: SELECT 1
-    platform: ${DATASOURCE_PLATFORM}
-    continue-On-Error: false
-    # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql
-    #initialization-mode: always
-    initialization-mode: never
+      validation-query: SELECT 1
+      test-while-idle: true
+    platform: h2
+    continue-on-error: false
+    schema: classpath:schema-stage-h2.sql
+    data: classpath:data-stage-h2.sql
+    # enable flag to always if you want to utilize data.sql and schema.sql
+    initialization-mode: always
+  thymeleaf:
+    cache: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
 
 # ===============================
 # = JPA / HIBERNATE
@@ -78,9 +89,6 @@ logging:
 #kebab-case '-' separated
 
 management:
-  health:
-  security:
-    enabled: false
   endpoint:
     health:
       show-details: always

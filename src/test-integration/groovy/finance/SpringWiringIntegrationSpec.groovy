@@ -1,4 +1,4 @@
-package finance.services
+package finance
 
 import finance.Application
 import org.springframework.beans.factory.annotation.Autowired
@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
 @SpringBootTest(classes = Application.class)
-@ActiveProfiles("local")
+@ActiveProfiles("stage")
 class SpringWiringIntegrationSpec extends Specification {
 
     @Autowired
