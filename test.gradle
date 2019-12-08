@@ -24,8 +24,8 @@ sourceSets {
 
 dependencies {
   testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"
-  testCompile "org.spockframework:spock-core:${spockCoreVersion}"
-  testCompile "org.spockframework:spock-spring:${spockCoreVersion}"
+  testCompile "org.spockframework:spock-core:${spockVersion}"
+  testCompile "org.spockframework:spock-spring:${spockVersion}"
 //  testCompile "org.hamcrest:hamcrest-core:${hamcrestVersion}"
   testCompile "com.h2database:h2:${h2databaseVersion}"
   testCompile "org.skyscreamer:jsonassert"
@@ -36,9 +36,6 @@ dependencies {
   testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
   testCompile ("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
-    // exclude(module: 'commons-logging')
-    // exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
-    // exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
   }
 }
 
