@@ -23,8 +23,10 @@ spring:
     continue-on-error: false
     schema: classpath:schema-stage-h2.sql
     data: classpath:data-stage-h2.sql
-    # enable flag to always if you want to utilize data.sql and schema.sql
-    initialization-mode: always
+    # always if you want to utilize data.sql and schema.sql
+    # never Do not initialize the datasource
+    # embedded Only initialize an embedded datasource.
+    initialization-mode: embedded
   thymeleaf:
     cache: false
   h2:

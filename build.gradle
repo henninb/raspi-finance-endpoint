@@ -87,51 +87,19 @@ sourceSets {
 //    main.java.srcDirs += 'src/main/clojure'
 //    main.java.srcDirs += 'src/main/scala'
 
-//    integrationTest {
-//        groovy.srcDir file('src/test-integration/groovy')
-//        resources.srcDir file('src/main/resources')
-//        compileClasspath += sourceSets.main.output + configurations.testCompile
-//        runtimeClasspath += output + compileClasspath + configurations.testRuntime
-//    }
-
     integrationTest {
-        groovy.srcDirs = ['src/test-integration/groovy']
+        groovy.srcDirs = ['src/test/integration/groovy']
         compileClasspath += sourceSets.main.output + configurations.testCompile
         runtimeClasspath += output + compileClasspath + configurations.testRuntime
         resources.srcDir file('src/main/resources')
     }
 
-
-//    integrationTest {
-//        groovy {
-//            srcDir file('src/test-integration/groovy')
-//            //srcDirs = ['src/test-integration/groovy']
-//        }
-//        resources.srcDir 'src/main/resources'
-//        compileClasspath += sourceSets.main.output + configurations.testCompile
-//        runtimeClasspath += output + compileClasspath
-//        runtimeClasspath += configurations.testRuntime
-//    }
-
-//    task integrationTest(type: Test) {
-//        description = 'Runs the integration tests.'
-//        group = 'verification'
-//        testClassesDirs = sourceSets.integrationTest.output.classesDirs
-//        classpath = sourceSets.integrationTest.runtimeClasspath
-//        outputs.upToDateWhen { false }
-//        mustRunAfter test
-//    }
-
-
-//    integrationTest {
-//        groovy {
-//            srcDirs = ['src/test-integration/groovy']
-//        }
-//        resources.srcDir 'src/main/resources'
-//        compileClasspath += sourceSets.main.output + configurations.testCompile
-//        runtimeClasspath += output + compileClasspath + configurations.testRuntime
-//    }
-
+    functionalTest {
+        groovy.srcDirs = ['src/test/functional/groovy']
+        compileClasspath += sourceSets.main.output + configurations.testCompile
+        runtimeClasspath += output + compileClasspath + configurations.testRuntime
+        resources.srcDir file('src/main/resources')
+    }
 }
 
 //compileOptions {
@@ -328,11 +296,17 @@ dependencies {
 //    tasks.matching(javaExecRunConfiguration).all { environment envName, envValue }
 //}
 
- task integrationTest(type: Test) {
-   testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
-   classpath = sourceSets.integrationTest.runtimeClasspath
-   outputs.upToDateWhen { false }
- }
+task integrationTest(type: Test) {
+    testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+task functionalTest(type: Test) {
+    testClassesDirs = project.sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
 
 //gradle writePom, need maven plugin
 task writePom {
