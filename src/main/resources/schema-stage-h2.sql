@@ -1,4 +1,4 @@
-CREATE TABLE t_transaction (
+CREATE TABLE IF NOT EXISTS t_transaction (
   transaction_id bigint auto_increment,
   account_id bigint,
   account_type VARCHAR(6),
@@ -16,7 +16,7 @@ CREATE TABLE t_transaction (
   date_added TIMESTAMP
 );
 
-CREATE TABLE t_account(
+CREATE TABLE IF NOT EXISTS t_account(
   account_id bigint auto_increment,
   account_name_owner VARCHAR(40),
   account_name VARCHAR(20),
@@ -31,12 +31,12 @@ CREATE TABLE t_account(
   date_added TIMESTAMP
 );
 
-CREATE TABLE t_category(
+CREATE TABLE IF NOT EXISTS t_category(
   category_id bigint auto_increment,
   category VARCHAR(50)
 );
 
-CREATE TABLE t_transaction_categories(
+CREATE TABLE IF NOT EXISTS t_transaction_categories(
   category_id BIGINT NOT NULL,
   transaction_id BIGINT NOT NULL,
   date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

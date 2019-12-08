@@ -1,8 +1,11 @@
 package finance.controllers
 
 import finance.Application
+import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
+import finance.helpers.AccountBuilder
+import finance.services.AccountService
 import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -32,10 +35,14 @@ class TransactionControllerSpec extends Specification {
     @Autowired
     TransactionService transactionService
 
+    @Autowired
+    AccountService accountService
+
     //@Autowired
     //TransactionDAO transactionDAO
 
     Transaction transaction = TransactionBuilder.builder().build()
+    Account account = AccountBuilder.builder().build()
     String guid = transaction.getGuid()
 
     def setupSpec() {
@@ -54,7 +61,9 @@ class TransactionControllerSpec extends Specification {
 
     def "test findTransaction endpoint"() {
         given:
+        accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
+
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when: "rest call is initiated"

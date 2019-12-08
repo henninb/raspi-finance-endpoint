@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.Account
 import finance.domain.AccountType
-
 import java.sql.Timestamp
 
 class AccountBuilder {
