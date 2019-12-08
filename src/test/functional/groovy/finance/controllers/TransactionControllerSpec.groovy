@@ -41,16 +41,29 @@ class TransactionControllerSpec extends Specification {
     //@Autowired
     //TransactionDAO transactionDAO
 
-    Transaction transaction = TransactionBuilder.builder().build()
-    Account account = AccountBuilder.builder().build()
-    String guid = transaction.getGuid()
+    @Shared
+    Transaction transaction
+
+    @Shared
+    Account account
+
+    @Shared
+    String guid
+
+    @Shared
+    String accountNameOwner
+
+
+    def setup() {
+
+    }
 
     def setupSpec() {
         headers = new HttpHeaders()
-
-        //def x = transactionDAO.transactionCount()
-        //println "transaction count = ${x}"
-
+        account = AccountBuilder.builder().build()
+        transaction = TransactionBuilder.builder().build()
+        guid = transaction.getGuid()
+        accountNameOwner = transaction.getAccountNameOwner()
     }
 
     private String createURLWithPort(String uri) {
@@ -59,7 +72,44 @@ class TransactionControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "test findTransaction endpoint"() {
+    def "test findTransaction endpoint found"() {
+        given:
+        accountService.insertAccount(account)
+        transactionService.insertTransaction(transaction)
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when: "rest call is initiated"
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/select/" + guid), HttpMethod.GET,
+                entity, String.class)
+        then:
+        assert response.statusCode == HttpStatus.OK
+
+        cleanup:
+        transactionService.deleteByGuid(guid)
+        accountService.deleteByAccountNameOwner(accountNameOwner)
+    }
+
+    def "test findTransaction endpoint not found"() {
+        given:
+        HttpEntity entity = new HttpEntity<>(null, headers)
+        accountService.insertAccount(account)
+        transactionService.insertTransaction(transaction)
+
+        when: "rest call is initiated"
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
+                entity, String.class)
+        then:
+        assert response.statusCode == HttpStatus.NOT_FOUND
+
+        cleanup:
+        transactionService.deleteByGuid(guid)
+        accountService.deleteByAccountNameOwner(accountNameOwner)
+    }
+
+
+    def "test deleteTransaction endpoint guid found"() {
         given:
         accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
@@ -68,12 +118,34 @@ class TransactionControllerSpec extends Specification {
 
         when: "rest call is initiated"
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/select/" + guid), HttpMethod.GET,
+                createURLWithPort("/delete/" + guid), HttpMethod.DELETE,
                 entity, String.class)
-
-        //println "response: " + response.body.toString()
         then:
         assert response.statusCode == HttpStatus.OK
-        //assert response.statusCode == HttpStatus.NOT_FOUND
+
+        cleanup:
+        transactionService.deleteByGuid(guid)
+        accountService.deleteByAccountNameOwner(accountNameOwner)
     }
+
+
+    def "test deleteTransaction endpoint guid not found"() {
+        given:
+        accountService.insertAccount(account)
+        transactionService.insertTransaction(transaction)
+
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when: "rest call is initiated"
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/delete/" + UUID.randomUUID().toString()), HttpMethod.DELETE,
+                entity, String.class)
+        then:
+        assert response.statusCode == HttpStatus.NOT_FOUND
+
+        cleanup:
+        transactionService.deleteByGuid(guid)
+        accountService.deleteByAccountNameOwner(accountNameOwner)
+    }
+
 }
