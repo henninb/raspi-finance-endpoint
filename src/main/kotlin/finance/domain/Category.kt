@@ -15,14 +15,15 @@ open class Category constructor(_categoryId: Long = 0L, _category: String = "" )
 
     constructor() : this(0L, "")
 
-    //TODO: add active_status field
+    //TODO: add activeStatus field
+    //TODO: add dateUpdated field
+    //TODO: add dateAdded field
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Min(value = 0L)
     @JsonProperty
     var categoryId = _categoryId
-
 
     @Size(min = 1, max = 50)
     @Column(unique=true)

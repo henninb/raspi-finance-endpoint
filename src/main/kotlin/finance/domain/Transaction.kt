@@ -32,12 +32,12 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
                                    _sha256: String = ""
 ) {
 
-    //TODO: add active_status field
+    //TODO: the field activeStatus
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Min(value = 0L)
-    @JsonProperty
+    @JsonProperty("transactionId")
     var transactionId = _transactionId
 
     @Column(unique = true)
@@ -45,14 +45,14 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
     var guid = _guid
 
-    @JsonProperty
+    @JsonProperty("accountId")
     @Min(value = 0L)
     var accountId = _accountId
 
     //@Enumerated(EnumType.STRING)
     @Convert(converter = AccountTypeConverter::class)
     @Column(columnDefinition = "VARCHAR")
-    @JsonProperty
+    @JsonProperty("accountType")
     var accountType = _accountType
 
     @Size(min = 3, max = 40)
@@ -60,7 +60,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
     var accountNameOwner = _accountNameOwner
 
-    @JsonProperty
+    @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
 
     @Size(min = 1, max = 75)
@@ -91,22 +91,24 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
     var notes = _notes
 
-    @JsonProperty
+    @JsonProperty("dateUpdated")
     var dateUpdated = _dateUpdated
 
-    @JsonProperty
+    @JsonProperty("dateAdded")
     var dateAdded = _dateAdded
 
-    //TODO: is this a field to remove as it is not required
+    //TODO: remove this field
     @Size(max = 70)
     @JsonProperty
     var sha256 = _sha256
 
+    //TODO: camel case or snake case?
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
 
+    //TODO: camel case or snake case?
     @ManyToMany
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],
