@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS}/raspi-finance-endpoint.log</file>
         <append>true</append>
@@ -23,7 +25,7 @@
         <!-- json logging -->
         <!--  <encoder class="net.logstash.logback.encoder.LogstashEncoder"/> -->
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} - %clr(%-5level) %clr(%-36.36logger{36}){cyan} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -35,12 +37,11 @@
         <!-- We're only async logging the FILE appender and not the ERROR since we shouldn't need
              the extra speed for logging the actual errors.
         -->
-
         <appender-ref ref="FILE" />
     </appender>
 
     <!-- Send all our DEBUG and higher log statements to the ASYNC logger. -->
-    <logger name="raspi-finance-convert" level="INFO">
+    <logger name="finance" level="INFO">
         <appender-ref ref="ASYNC" />
     </logger>
 
