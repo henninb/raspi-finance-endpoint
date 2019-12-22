@@ -48,6 +48,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-docker run -it -h ${APP} --add-host hornsup:$HOST_IP -p 8081:8080 --env-file env.${ENV} -v $HOST_BASEDIR/logs:$GUEST_BASEDIR/logs -v $HOST_BASEDIR/ssl:$GUEST_BASEDIR/ssl --rm --name ${APP} ${APP}
+docker run -it -h ${APP} --add-host hornsup:$HOST_IP -p 8081:8080 --env-file env.${ENV} --env-file env.secrets -v $HOST_BASEDIR/logs:$GUEST_BASEDIR/logs -v $HOST_BASEDIR/ssl:$GUEST_BASEDIR/ssl --rm --name ${APP} ${APP}
 
 exit 0
