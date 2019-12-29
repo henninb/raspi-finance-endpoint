@@ -4,13 +4,13 @@
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS}/raspi-finance-endpoint.log</file>
+        <file>${LOG_PATH}/dist-event-producer.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOGS}/archive/raspi-finance-endpoint.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/archive/dist-event-producer.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <!-- or whenever the file size reaches 10MB -->
             <maxFileSize>10MB</maxFileSize>
-            <maxHistory>7</maxHistory>
+            <maxHistory>14</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
 
@@ -25,7 +25,9 @@
         <!-- json logging -->
         <!--  <encoder class="net.logstash.logback.encoder.LogstashEncoder"/> -->
         <encoder>
-            <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} - %clr(%-5level) %clr(%-36.36logger{36}){cyan} - %msg%n</pattern>
+          <!-- <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%thread]){green} - %clr(%-5level){yellow} %clr(%-36.36logger{36}){cyan} - %msg%n</pattern> -->
+          <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss}){blue} %clr([%thread]){green} - %clr(%-5level){yellow} %clr(%-36.36logger{36}){cyan} - %clr(%msg){magenta}%n</pattern>
+<!--            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
         </encoder>
     </appender>
 
@@ -37,6 +39,7 @@
         <!-- We're only async logging the FILE appender and not the ERROR since we shouldn't need
              the extra speed for logging the actual errors.
         -->
+
         <appender-ref ref="FILE" />
     </appender>
 
@@ -56,7 +59,7 @@
     </logger>
 
     <!-- Setup the default to log INFO and above to the console -->
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

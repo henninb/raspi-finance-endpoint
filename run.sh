@@ -33,7 +33,6 @@ fi
 mkdir -p logs ssl json_in
 HOST_BASEDIR=$(pwd)
 GUEST_BASEDIR=/opt/${APP}
-LOGS=$BASEDIR/logs
 touch env.secrets
 
 ./gradlew clean build

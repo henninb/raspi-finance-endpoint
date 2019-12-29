@@ -1,0 +1,4 @@
+12:01:26.867 [Test worker] INFO  finance.services.TransactionService - accountOptional isPresent.
+12:01:26.872 [Test worker] INFO  finance.services.TransactionService - accountOptional isPresent.
+12:01:26.876 [Test worker] INFO  finance.services.TransactionService - cannot find the accountNameOwner record 
+12:01:26.877 [Test worker] INFO  finance.services.TransactionService - call findByGuid
