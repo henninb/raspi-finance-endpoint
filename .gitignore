@@ -12,6 +12,7 @@ build/
 
 ### Directories ###
 LOGS_IS_UNDEFINED/
+LOG_PATH_IS_UNDEFINED/
 logs/
 json_in/
 ssl/
