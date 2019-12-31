@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
+import finance.utils.DateTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
 import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
@@ -60,6 +61,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
     var accountNameOwner = _accountNameOwner
 
+    //@Convert(convert = DateTypeConverter::class)
     @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
 
