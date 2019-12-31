@@ -62,6 +62,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     var accountNameOwner = _accountNameOwner
 
     @Convert(converter = DateTypeConverter::class)
+    @Column(columnDefinition = "DATE")
     @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
 
