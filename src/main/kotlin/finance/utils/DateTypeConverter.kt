@@ -8,10 +8,10 @@ import java.sql.Date
 class DateTypeConverter : AttributeConverter<Date, Long> {
 
     override fun convertToDatabaseColumn(attribute: Date): Long {
-        return 0L
+        return (attribute.time / 1000)
     }
 
     override fun convertToEntityAttribute(attribute: Long): Date {
-        return Date(0)
+        return Date(attribute * 1000)
     }
 }

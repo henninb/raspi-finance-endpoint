@@ -61,7 +61,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
     var accountNameOwner = _accountNameOwner
 
-    //@Convert(convert = DateTypeConverter::class)
+    @Convert(converter = DateTypeConverter::class)
     @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
 
