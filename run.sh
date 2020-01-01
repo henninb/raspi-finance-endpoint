@@ -23,6 +23,8 @@ if [ \( "$OS" = "Linux Mint" \) -o \(  "$OS" = "Ubuntu" \) ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')
 elif [ "$OS" = "Arch Linux" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
+elif [ "$OS" = "Fedora" ]; then
+  HOST_IP=192.168.100.130
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
 else
