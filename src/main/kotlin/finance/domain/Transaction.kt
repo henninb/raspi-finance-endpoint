@@ -63,13 +63,9 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
     var accountNameOwner = _accountNameOwner
 
-    //@Convert(converter = DateTypeConverter::class)
     @Column(columnDefinition = "DATE")
     @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
-//    get() {
-//        return (field.time / 1000)
-//    }
 
     @JsonGetter("transactionDate")
     fun getTransactionDate(): Long {
@@ -107,9 +103,19 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @JsonProperty("dateUpdated")
     var dateUpdated = _dateUpdated
 
+    @JsonGetter("dateUpdated")
+    fun getDateUpdated(): Long {
+        return (this.dateUpdated.time / 1000)
+    }
+
     @JsonProperty("dateAdded")
     var dateAdded = _dateAdded
 
+    @JsonGetter("dateAdded")
+    fun getDateAdded(): Long {
+        return (this.dateAdded.time / 1000)
+    }
+    
     //TODO: remove this field
     @Size(max = 70)
     @JsonProperty
