@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
-import finance.utils.DateTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
 import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
@@ -17,7 +16,6 @@ import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
-import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.*
 
@@ -115,7 +113,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     fun getDateAdded(): Long {
         return (this.dateAdded.time / 1000)
     }
-    
+
     //TODO: remove this field
     @Size(max = 70)
     @JsonProperty
