@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,6 +17,7 @@ import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.*
 
@@ -61,10 +63,18 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
     var accountNameOwner = _accountNameOwner
 
-    @Convert(converter = DateTypeConverter::class)
+    //@Convert(converter = DateTypeConverter::class)
     @Column(columnDefinition = "DATE")
     @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
+//    get() {
+//        return (field.time / 1000)
+//    }
+
+    @JsonGetter("transactionDate")
+    fun getTransactionDate(): Long {
+        return (this.transactionDate.time / 1000)
+    }
 
     @Size(min = 1, max = 75)
     @Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
