@@ -66,7 +66,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     var transactionDate = _transactionDate
 
     @JsonGetter("transactionDate")
-    fun getTransactionDate(): Long {
+    fun jsonGetterTransactionDate(): Long {
         return (this.transactionDate.time / 1000)
     }
 
@@ -102,17 +102,15 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     var dateUpdated = _dateUpdated
 
     @JsonGetter("dateUpdated")
-    fun getDateUpdated(): Long {
-        println("getDateUpdated")
+    fun jsonGetterDateUpdated(): Long {
         return (this.dateUpdated.time / 1000)
     }
 
-    @JsonProperty("dateAdded")
+    //@JsonProperty("dateAdded")
     var dateAdded = _dateAdded
 
     @JsonGetter("dateAdded")
-    fun getDateAdded(): Long {
-        println("getDateAdded")
+    fun jsonGetterDateAdded(): Long {
         return (this.dateAdded.time / 1000)
     }
 
