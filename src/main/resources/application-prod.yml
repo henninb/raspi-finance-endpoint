@@ -28,7 +28,7 @@ spring:
 # ===============================
 # Show or not log for each sql query
   jpa:
-    show-sql: true
+    show-sql: false
     open-in-view: false
     generate-ddl: true
     hibernate:
