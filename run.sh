@@ -9,6 +9,8 @@ ENV=$1
 APP=raspi-finance-endpoint
 TIMEZONE='America/Chicago'
 USERNAME=henninb
+HOST_BASEDIR=$(pwd)
+GUEST_BASEDIR=/opt/${APP}
 
 if [ $ENV = "prod" ]; then
   echo prod
@@ -34,9 +36,8 @@ else
   exit 1
 fi
 
-mkdir -p logs ssl json_in
-HOST_BASEDIR=$(pwd)
-GUEST_BASEDIR=/opt/${APP}
+mkdir -p logs
+mkdir -p ssl
 touch env.secrets
 
 ./gradlew clean build
