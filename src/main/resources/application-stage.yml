@@ -4,6 +4,8 @@ server:
 #spring.datasource.data=classpath:accounts.sql
 
 spring:
+  application:
+    name: raspi-finance-endpoint
   profiles:
     active: stage
 

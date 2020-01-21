@@ -4,6 +4,8 @@
 # endpoints.metrics.sensitive: false
 
 spring:
+  application:
+    name: raspi-finance-endpoint
   profiles:
     active: local
 

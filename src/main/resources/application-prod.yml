@@ -2,6 +2,8 @@ server:
   port: ${SERVER_PORT}
 
 spring:
+  application:
+    name: raspi-finance-endpoint
   profiles:
     active: prod
 
