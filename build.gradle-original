@@ -1,0 +1,251 @@
+buildscript {
+    ext {
+        springBootVersion = '2.2.3.RELEASE'
+        apacheCamelVersion = '2.24.3'
+        kotlinVersion = '1.3.61'
+        groovyVersion = '2.5.8'
+        //groovyVersion = '3.0.0-rc-1'
+        qualityPluginVersion='3.0.0'
+        codenarcPluginVersion='0.20.0'
+        activemqVersion='5.15.10'
+        jolokiaVersion='1.6.2'
+        postgresqlVersion='42.2.9'
+        kafkaVersion='2.4.0'
+        hibernateVersion='5.4.10.Final'
+        h2Version='1.4.200'
+        clojureVersion='1.10.1'
+        scalaVersion='2.13.1'
+        gradleVersion='5.6.2'
+        mongoVersion='3.12.0'
+        wmqVersion='7.0.1.9'
+        //swaggerVersion='2.9.2'
+        swaggerVersion='2.0.10'
+        cucumberVersion='4.8.0'
+        springJmsVersion='5.2.1.RELEASE'
+        lombokVersion='1.18.10'
+        bootstrapVersion= '4.3.1'
+        jqueryVersion='3.4.1'
+        spockVersion='1.3-groovy-2.5'
+        poiVersion='4.1.0'
+        logbackVersion='1.2.3'
+        powerMockVersion='2.0.4'
+        javaFakerVersion='1.0.1'
+        junitVersion='5.3.1'
+        mockitoVersion='2.23.0'
+        oracleVersion='12.1.0.2'
+        thymeleafVersion='3.0.10.RELEASE'
+        jdbcTemplateVersion='5.2.2.RELEASE'
+        testContainersVersion='1.12.3'
+        httpBuilderVersion='1.0.4'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://clojars.org/repo" }
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+        classpath("io.github.gradle-clojure:gradle-clojure-plugin:0.5.0-alpha.1")
+        classpath('com.netflix.nebula:gradle-lint-plugin:latest.release')
+        //classpath("clojuresque:clojuresque:1.7.0")
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'groovy'
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'org.springframework.boot'
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+//TODO: convert to java 11
+//sourceCompatibility = 11
+
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
+
+    unitTest {
+        groovy.srcDirs = ['src/test/unit/groovy']
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath + configurations.testRuntimeClasspath
+        resources.srcDir file('src/main/resources')
+    }
+
+    integrationTest {
+        groovy.srcDirs = ['src/test/integration/groovy']
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        //TODO: fix this warning
+        runtimeClasspath += main.output + compileClasspath + configurations.testRuntimeClasspath
+        resources.srcDir file('src/main/resources')
+    }
+
+    functionalTest {
+        groovy.srcDirs = ['src/test/functional/groovy']
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        //TODO: fix this warning
+        runtimeClasspath += main.output + compileClasspath + configurations.testRuntimeClasspath
+        resources.srcDir file('src/main/resources')
+    }
+
+    performanceTest {
+        groovy.srcDirs = ['src/test/performance/groovy']
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        //TODO: fix this warning
+        runtimeClasspath += main.output + compileClasspath + configurations.testRuntimeClasspath
+        resources.srcDir file('src/main/resources')
+    }
+}
+
+compileKotlin {
+    //kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = '1.8'
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+    //kotlinOptions.jvmTarget = "11"
+}
+
+wrapper {
+    gradleVersion="${gradleVersion}"
+}
+
+dependencies {
+    //Kotlin
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7")
+
+    //Groovy
+    implementation("org.codehaus.groovy:groovy:${groovyVersion}")
+
+    //Spring Boot
+    implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
+
+    //Camel
+    //implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
+    //implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
+
+    //excel
+    implementation("org.apache.poi:poi:${poiVersion}")
+    implementation("org.apache.poi:poi-ooxml:${poiVersion}")
+
+    //postgres
+    runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
+
+    //h2 database
+    runtimeOnly("com.h2database:h2:${h2Version}")
+
+    //hibernate
+    implementation("org.hibernate:hibernate-core:${hibernateVersion}")
+    implementation("org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final")
+
+    //Logging
+    implementation("ch.qos.logback:logback-classic:1.2.3")
+
+    //testing modules
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testImplementation("org.spockframework:spock-core:${spockVersion}")
+    testImplementation("org.spockframework:spock-spring:${spockVersion}")
+    testImplementation("org.testcontainers:spock:${testContainersVersion}")
+    testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
+    testImplementation("com.github.javafaker:javafaker:0.18") { exclude module: 'org.yaml' }
+    testImplementation("io.github.benas:random-beans:3.7.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+}
+
+task unitTest(type: Test) {
+    testClassesDirs = project.sourceSets.unitTest.output.classesDirs
+    classpath = sourceSets.unitTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+task integrationTest(type: Test) {
+    environment "CAMEL_ROUTE_ENABLED", "true"
+    environment "JSON_FILES_INPUT_PATH", "json_in"
+    environment "JSON_FILES_INPUT_PATH", "excel_in"
+    environment "INPUT_FILEPATH", "config"
+    environment "OUTPUT_FILEPATH", "json_out"
+    testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+task functionalTest(type: Test) {
+    testClassesDirs = project.sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+task performanceTest(type: Test) {
+    testClassesDirs = project.sourceSets.performanceTest.output.classesDirs
+    classpath = sourceSets.performanceTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+test {
+    // runs all individual test tasks
+    finalizedBy(unitTest, integrationTest, functionalTest)
+}
+
+//allprojects {
+//    apply plugin: 'nebula.lint'
+//    gradleLint.rules = ['all-dependency'] // Add as many rules here as you'd like
+//}
+
+configurations.all {
+    //required for Kotlin
+    //exclude group: 'org.slf4j', module: 'slf4j-api'
+    //exclude group: "org.apache.logging.log4j", module: "log4j-slf4j-impl"
+    //exclude group: "org.apache.logging.log4j", module: "log4j-api-kotlin"
+    //exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
+    //exclude group: "commons-logging", module: "commons-logging"
+}
+
+compileJava {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+//bootRun {
+//    String activeProfile =  System.properties['spring.profiles.active']
+//    String confLoc = System.properties['spring.config.location']
+//    systemProperty "spring.profiles.active", activeProfile
+//    systemProperty "spring.config.location", "file:$confLoc"
+//}
+
+// codenarc {
+//     toolVersion = "0.20"
+// }
+
+// codenarcMain {
+//     configFile = rootProject.file("quality/codenarc.groovy")
+// }
+
+// codenarcTest {
+//     ignoreFailures = true
+//     configFile = rootProject.file("quality/codenarc.groovy")
+// }
+
+// codenarcIntegrationTest {
+//     ignoreFailures = true
+//     configFile = rootProject.file("quality/codenarc.groovy")
+// }

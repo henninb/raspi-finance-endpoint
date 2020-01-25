@@ -36,3 +36,5 @@ ip
 .project
 .settings/
 bin/
+
+build.gradle-verbose
