@@ -25,6 +25,7 @@ if [ \( "$OS" = "Linux Mint" \) -o \(  "$OS" = "Ubuntu" \) ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')
 elif [ "$OS" = "Arch Linux" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
+  HOST_IP=192.168.100.208
 elif [ "$OS" = "Fedora" ]; then
   HOST_IP=192.168.100.130
 elif [ "$OS" = "Darwin" ]; then
@@ -36,6 +37,10 @@ else
   exit 1
 fi
 
+mkdir -p src/test/unit/groovy
+mkdir -p src/test/integration/groovy
+mkdir -p src/test/functional/groovy
+mkdir -p src/test/performance/groovy
 mkdir -p logs
 mkdir -p ssl
 touch env.secrets
@@ -48,6 +53,7 @@ fi
 
 docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} .
 if [ $? -ne 0 ]; then
+  echo "docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} ."
   echo "docker build failed."
   exit 1
 fi
