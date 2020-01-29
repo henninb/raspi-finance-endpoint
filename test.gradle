@@ -1,69 +1,77 @@
 sourceSets {
-  test {
-    groovy {
-      srcDirs = ['src/test/groovy']
+    main.java.srcDirs += 'src/main/kotlin'
+
+    test {
+        groovy.srcDir file('src/test/unit/groovy')
+        groovy.srcDir file('src/test/unit/java')
+        resources.srcDir file('src/main/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
     }
-  }
-  integrationTest {
-    groovy {
-      srcDirs = ['src/test-integration/groovy']
+
+    integrationTest {
+        groovy.srcDir file('src/test/integration/groovy')
+        resources.srcDir file('src/main/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
     }
-    resources.srcDir 'src/main/resources'
-    compileClasspath += sourceSets.main.output + configurations.testCompile
-    runtimeClasspath += output + compileClasspath + configurations.testRuntime
-  }
-  functionalTest {
-    groovy {
-      srcDirs = ['src/test/functional/groovy']
+
+    functionalTest {
+        groovy.srcDir file('src/test/functional/groovy')
+        resources.srcDir file('src/main/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
     }
-    resources.srcDir 'src/main/resources'
-    compileClasspath += sourceSets.main.output + configurations.testCompile
-    runtimeClasspath += output + compileClasspath + configurations.testRuntime
-  }
+
+    performanceTest {
+        groovy.srcDir file('src/test/performance/groovy')
+        resources.srcDir file('src/main/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+compileTestKotlin {
+    //kotlinOptions.jvmTarget = '11'
+    kotlinOptions.jvmTarget = '1.8'
 }
 
 dependencies {
-  testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"
-  testCompile "org.spockframework:spock-core:${spockVersion}"
-  testCompile "org.spockframework:spock-spring:${spockVersion}"
-//  testCompile "org.hamcrest:hamcrest-core:${hamcrestVersion}"
-  testCompile "com.h2database:h2:${h2databaseVersion}"
-  testCompile "org.skyscreamer:jsonassert"
-
- // testRuntime "net.bytebuddy:byte-buddy:${bytebuddyVersion}"
-
-  testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-  testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-  testCompile ("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
-  }
-}
-
-//provide dependency scopes
-configurations {
-  testIntegrationCompile.extendsFrom testCompile
-  testIntegrationRuntime.extendsFrom testRuntime
-  testFunctionalCompile.extendsFrom testCompile
-  testFunctionalCompile.extendsFrom testRuntime
-}
-
-//integration test
-task integrationTest(type: Test) {
-  testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
-  classpath = sourceSets.integrationTest.runtimeClasspath
-  outputs.upToDateWhen { false }
-}
-
-//functional test
-task functionalTest(type: Test) {
-  testClassesDirs = project.sourceSets.functionalTest.output.classesDirs
-  classpath = sourceSets.functionalTest.runtimeClasspath
-  outputs.upToDateWhen { false }
+    //testing modules
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testImplementation("org.spockframework:spock-core:${spockVersion}")
+    testImplementation("org.spockframework:spock-spring:${spockVersion}")
+    testImplementation("org.testcontainers:spock:${testContainersVersion}")
+    testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
+    //testImplementation("com.github.javafaker:javafaker:${javaFakerVersion}") { exclude module: 'org.yaml' }
+    //testImplementation("io.github.benas:${randomBeanVersion}")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 }
 
 tasks.withType(Test) {
-  systemProperties = System.properties
+    environment "CAMEL_ROUTE_ENABLED", "true"
+    environment "JSON_FILES_INPUT_PATH", "json_in"
+    environment "JSON_FILES_INPUT_PATH", "excel_in"
+    environment "INPUT_FILEPATH", "config"
+    environment "OUTPUT_FILEPATH", "json_out"
+    //systemProperties = System.properties
+}
+
+task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
+task functionalTest(type: Test) {
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
+task performanceTest(type: Test) {
+    testClassesDirs = sourceSets.performanceTest.output.classesDirs
+    classpath = sourceSets.performanceTest.runtimeClasspath
 }
 
 integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
 functionalTest.reports.html.destination = file("$buildDir/reports/test/functional")
+performanceTest.reports.html.destination = file("$buildDir/reports/test/performance")
