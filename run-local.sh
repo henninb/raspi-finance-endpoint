@@ -1,5 +1,8 @@
 #!/bin/sh
 
+touch env.console
+touch env.secrets
+
 set -a
 source env.secrets
 source env.console
