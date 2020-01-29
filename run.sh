@@ -51,13 +51,21 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} .
-if [ $? -ne 0 ]; then
-  echo "docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} ."
-  echo "docker build failed."
-  exit 1
-fi
+if [ -x "$(command -v docker)" ]; then
+  docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} .
+  if [ $? -ne 0 ]; then
+    echo "docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} ."
+    echo "docker build failed."
+    exit 1
+  fi
 
-docker run -it -h ${APP} --add-host hornsup:$HOST_IP -p 8081:8080 --env-file env.${ENV} --env-file env.secrets -v $HOST_BASEDIR/logs:$GUEST_BASEDIR/logs -v $HOST_BASEDIR/ssl:$GUEST_BASEDIR/ssl --rm --name ${APP} ${APP}
+  docker run -it -h ${APP} --add-host hornsup:$HOST_IP -p 8081:8080 --env-file env.${ENV} --env-file env.secrets -v $HOST_BASEDIR/logs:$GUEST_BASEDIR/logs -v $HOST_BASEDIR/ssl:$GUEST_BASEDIR/ssl --rm --name ${APP} ${APP}
+else
+  set -a
+  . /env.secrets
+  . ./env.console
+  set +a
+  ./gradlew clean build bootRun
+fi
 
 exit 0

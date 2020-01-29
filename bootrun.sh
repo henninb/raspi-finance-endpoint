@@ -4,10 +4,10 @@ touch env.console
 touch env.secrets
 
 set -a
-source env.secrets
-source env.console
+. ./env.secrets
+. ./env.console
 set +a
 
-./gradlew clean bootRun
+./gradlew clean build bootRun
 
 exit 0
