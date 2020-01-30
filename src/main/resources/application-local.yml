@@ -1,7 +1,5 @@
-#server:
-#  port: 9999
-
-# endpoints.metrics.sensitive: false
+server:
+  port: ${SERVER_PORT}
 
 spring:
   application:
@@ -57,60 +55,9 @@ logging:
 #none is build from schema.sql (no Java classes)
 #update only add new tables in the schema.sql (starting from Java classes)
 
-# ===============================
-# = Thymeleaf
-# ===============================
-#spring.thymeleaf.check-template-location=true
-#spring.thymeleaf.prefix=classpath:/templates/
-#spring.thymeleaf.suffix=.html
-#spring.thymeleaf.mode=HTML5
-#spring.thymeleaf.encoding=UTF-8
-#spring.thymeleaf.content-type=text/html
-#spring.thymeleaf.cache=false
-
 #kebab-case '-' separated
-
-#management.endpoints.web.exposure.include: '*'
-#management.endpoint.metrics.enabled=true
-#management.endpoints.web.exposure.include=metrics
-
-#management.endpoints.web.exposure.include: metrics
 
 management:
   endpoint:
     health:
       show-details: always
-
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: info, health, metrics
-#  metrics:
-#    export:
-#      atlas:
-#        enabled: false
-
-#management:
-#  endpoints:
-#    web:
-#      exposure.include: '*'
-#    metrics:
-#      enabled: true
-#    #web:
-#      #server:
-#        #auto-time-requests: true
-#    tags:
-#      host: hornsup
-#      environment: local
-#      application: raspi-finance-endpoint
-#    export:
-#      influx:
-#        enabled: false
-#        auto-create-db: false
-#        db: metrics
-#        compressed: false
-#        step: 1m
-#        uri: http://hornsup::8086
-  #health:
-  #  show-details: always

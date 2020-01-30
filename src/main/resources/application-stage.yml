@@ -1,8 +1,6 @@
 server:
   port: ${SERVER_PORT}
 
-#spring.datasource.data=classpath:accounts.sql
-
 spring:
   application:
     name: raspi-finance-endpoint
@@ -62,62 +60,9 @@ logging:
 #none is build from schema.sql (no Java classes)
 #update only add new tables in the schema.sql (starting from Java classes)
 
-# route:
-#   auto-Start-Route: ${CAMEL_ROUTE_ENABLED}
-#   json-Files-Input-Path: ${JSON_FILES_INPUT_PATH}
-#   json-File-Reader-Route-Id: jsonFileReaderRoute
-#   transaction-To-Database-Route-Id: transactionToDatabaseRoute
-#   json-File-Writer-Route-Id: jsonFileWriterRoute
-#   process-each-transaction: direct:processEachTransaction
-#   json-file-writer-route: direct:jsonFileWriterRoute
-
-# ===============================
-# = Camel
-# ===============================
-# camel:
-#   springboot:
-#     name: RaspiFinance
-#   health.check.routes.enabled: false
-
-# ===============================
-# = Thymeleaf
-# ===============================
-#spring.thymeleaf.check-template-location=true
-#spring.thymeleaf.prefix=classpath:/templates/
-#spring.thymeleaf.suffix=.html
-#spring.thymeleaf.mode=HTML5
-#spring.thymeleaf.encoding=UTF-8
-#spring.thymeleaf.content-type=text/html
-#spring.thymeleaf.cache=false
-
 #kebab-case '-' separated
 
 management:
   endpoint:
     health:
       show-details: always
-
-# management:
-#   endpoints:
-# #    beans:
-# #      enabled: true
-#     web:
-#       exposure:
-#         include: "*"
-#   metrics:
-# #    web:
-# #      server:
-# #        auto-time-requests: true
-#     tags.host: hornsup
-#     tags.environment: prod
-#     tags.application: raspi-finance-convert
-#     export:
-#       influx:
-#         enabled: false
-#         auto-create-db: false
-#         db: metrics
-#         compressed: false
-#         step: 1m
-#         uri: http://hornsup::8086
-#  health:
-#    show-details: always
