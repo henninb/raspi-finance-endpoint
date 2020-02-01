@@ -1,9 +1,7 @@
 sourceSets {
-    main.java.srcDirs += 'src/main/kotlin'
-
     test {
         groovy.srcDir file('src/test/unit/groovy')
-        groovy.srcDir file('src/test/unit/java')
+        java.srcDir file('src/test/unit/java')
         resources.srcDir file('src/main/resources')
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
@@ -11,6 +9,7 @@ sourceSets {
 
     integrationTest {
         groovy.srcDir file('src/test/integration/groovy')
+        java.srcDir file('src/test/integration/java')
         resources.srcDir file('src/main/resources')
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
@@ -18,6 +17,7 @@ sourceSets {
 
     functionalTest {
         groovy.srcDir file('src/test/functional/groovy')
+        java.srcDir file('src/test/functional/java')
         resources.srcDir file('src/main/resources')
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
@@ -25,6 +25,7 @@ sourceSets {
 
     performanceTest {
         groovy.srcDir file('src/test/performance/groovy')
+        java.srcDir file('src/test/performance/java')
         resources.srcDir file('src/main/resources')
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath

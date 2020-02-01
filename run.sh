@@ -37,10 +37,17 @@ else
   exit 1
 fi
 
+mkdir -p src/main/java
+mkdir -p src/main/scala
+mkdir -p src/main/kotlin
 mkdir -p src/test/unit/groovy
+mkdir -p src/test/unit/java
 mkdir -p src/test/integration/groovy
+mkdir -p src/test/integration/java
 mkdir -p src/test/functional/groovy
+mkdir -p src/test/functional/java
 mkdir -p src/test/performance/groovy
+mkdir -p src/test/performance/java
 mkdir -p logs
 mkdir -p ssl
 touch env.secrets

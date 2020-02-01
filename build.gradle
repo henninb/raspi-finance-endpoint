@@ -6,6 +6,7 @@ plugins {
     id 'maven-publish'
     id 'groovy'
     id 'idea'
+    id 'scala'
     id 'java-library'
     id 'jacoco'
     //id "gradle-clojure.clojure" version '0.5.0-alpha.1'
@@ -69,8 +70,14 @@ repositories {
 }
 
 compileKotlin {
-    //kotlinOptions.jvmTarget = '11'
-    kotlinOptions.jvmTarget = '1.8'
+    kotlinOptions.jvmTarget = '11'
+    //kotlinOptions.jvmTarget = '1.8'
+}
+
+sourceSets {
+    main.scala.srcDirs += 'src/main/scala'
+    main.kotlin.srcDirs += 'src/main/kotlin'
+    main.java.srcDirs += 'src/main/java'
 }
 
 compileJava {
@@ -89,6 +96,9 @@ dependencies {
 
     //Groovy
     implementation("org.codehaus.groovy:groovy-all:${groovyVersion}")
+
+    //Scala
+    implementation("org.scala-lang:scala-library:${scalaVersion}")
 
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
