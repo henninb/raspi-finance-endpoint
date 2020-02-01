@@ -1,5 +1,3 @@
-#!/bin/sh
-
 #!/usr/bin/env bash
 
 if [ "$OSTYPE" = "linux-gnu" ]; then
