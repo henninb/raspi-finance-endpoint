@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 if [ "$OSTYPE" = "linux-gnu" ]; then
-  #export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
-  export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)) || readlink $(which javac))))
+  #export JAVA_HOME=$(dirname $(dirname $(readlink -f $(readlink -f $(which javac)))))
+  export JAVA_HOME=$(dirname $(dirname $(readlink -f $(readlink -f $(which javac)) || readlink -f $(which javac))))
 else
   # macos
   export JAVA_HOME=$(/usr/libexec/java_home)
