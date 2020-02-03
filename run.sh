@@ -52,6 +52,8 @@ mkdir -p logs
 mkdir -p ssl
 touch env.secrets
 
+chmod a+x gradle/wrapper/gradle-wrapper.jar
+
 ./gradlew clean build
 if [ $? -ne 0 ]; then
   echo "gradle build failed."
