@@ -1,4 +1,17 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+if [ "$OSTYPE" = "linux-gnu" ]; then
+  #export JAVA_HOME=$(dirname $(dirname $(readlink -f $(readlink -f $(which javac)))))
+  export JAVA_HOME=$(dirname $(dirname $(readlink -f $(readlink -f $(which javac)) || readlink -f $(which javac))))
+else
+  # macos
+  export JAVA_HOME=$(/usr/libexec/java_home)
+  #export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-11.0.2.jdk/Contents/Home
+fi
+
+echo $JAVA_HOME
+
+export PATH=${JAVA_HOME}/bin:${PATH}
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <prod or local>"

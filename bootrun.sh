@@ -1,11 +1,22 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-touch env.console
+if [ "$OSTYPE" = "linux-gnu" ]; then
+#  export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
+  export JAVA_HOME=$(dirname $(dirname $(readlink -f $(readlink -f $(which javac)) || readlink -f $(which javac))))
+else
+  # macos
+  export JAVA_HOME=$(/usr/libexec/java_home)
+  #export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-11.0.2.jdk/Contents/Home
+fi
+
+export PATH=${JAVA_HOME}/bin:${PATH}
+
 touch env.secrets
+touch env.console
 
 set -a
-. ./env.secrets
 . ./env.console
+. ./env.secrets
 set +a
 
 ./gradlew clean build bootRun
