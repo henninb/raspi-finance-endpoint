@@ -62,7 +62,20 @@ logging:
 
 #kebab-case '-' separated
 
+# ===============================
+# = Health and Metrics
+# ===============================
 management:
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      influx:
+        enabled: true
+        auto-create-db: true
+        db: metrics
+        compressed: false
+        uri: http://hornsup:8086
+        user-name: henninb
+        password: monday1

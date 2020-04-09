@@ -50,6 +50,8 @@ else
   exit 1
 fi
 
+echo "$HOST_IP"
+
 mkdir -p src/main/java
 mkdir -p src/main/scala
 mkdir -p src/main/kotlin
