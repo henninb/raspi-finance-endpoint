@@ -58,3 +58,6 @@ Find Performance test results - 500 record (~3:45)
 ```shell
 $ ./gradlew clean performanceTest
 ```
+
+docker compose
+COMPOSE_PROJECT_NAME=project
