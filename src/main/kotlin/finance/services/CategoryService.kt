@@ -6,11 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class CategoryService {
+class CategoryService @Autowired constructor(private var categoryRepository: CategoryRepository<Category>) {
     //private val logger = LoggerFactory.getLogger(this.javaClass)
-
-    @Autowired
-    lateinit private var categoryRepository: CategoryRepository<Category>
 
     fun insertCategory(category: Category): Boolean {
         categoryRepository.save(category)

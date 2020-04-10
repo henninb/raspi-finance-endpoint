@@ -1,28 +1,54 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Transaction
 import finance.domain.Totals
+import finance.domain.Transaction
+import finance.exceptions.EmptyTransactionException
 import finance.services.TransactionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageRequest
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import java.util.*
+import javax.validation.ConstraintViolationException
+import javax.validation.constraints.Max
+import javax.validation.constraints.Min
+
 
 //@CrossOrigin(origins = arrayOf("http://localhost:3000"))
 @CrossOrigin
 //Thymeleaf - @RestController is for JSON; @Controller is for HTML
 @RestController
 @RequestMapping("/transaction")
-class TransactionController {
+//@Validated
+open class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    @Autowired
-    lateinit var transactionService: TransactionService
+    @GetMapping(path = [("/all")])
+    fun findAllTransactions() : ResponseEntity<List<Transaction>> {
+        val transactions: List<Transaction> = transactionService.findAllTransactions()
+        if( transactions.isEmpty() ) {
+            ResponseEntity.notFound().build<List<Transaction>>()
+        }
+        return ResponseEntity.ok(transactions)
+    }
+
+    //curl http://localhost:8080/transaction/page/all?page=0&per_page=1
+    @GetMapping(path = [("/page/all")])
+    fun findAllTransactionsPageable( @RequestParam @Min(value = 1, message = "Page number must be an integer greater than 1.")
+                                          page: Int,
+                                     @RequestParam(value = "per_page") @Max(value = 1000, message = "Page size limit is 1000, change page size value")
+                                          perPage: Int) : ResponseEntity<List<Transaction>> {
+
+        val transactions: List<Transaction> = transactionService.findAllTransactions(PageRequest.of(page -1, perPage))
+        if( transactions.isEmpty() ) {
+            ResponseEntity.notFound().build<List<Transaction>>()
+        }
+        return ResponseEntity.ok(transactions)
+    }
 
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = [("/account/select/{accountNameOwner}")])
@@ -45,7 +71,7 @@ class TransactionController {
     //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @GetMapping(path = [("/select/{guid}")])
     fun findTransaction(@PathVariable guid: String): ResponseEntity<Transaction> {
-        println("guid = $guid")
+        logger.debug("guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
         if( transactionOption.isPresent ) {
             val transaction: Transaction = transactionOption.get()
@@ -53,7 +79,8 @@ class TransactionController {
         }
 
         logger.info("guid not found = $guid")
-        return ResponseEntity.notFound().build()  //404
+        //return ResponseEntity.notFound().build()  //404
+        throw EmptyTransactionException("Cannot find transaction.")
     }
 
     //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"9b9aea08-0dc2-4720-b20c-00b0df6af8ce", "description":"new"}' http://localhost:8080/transaction/update/9b9aea08-0dc2-4720-b20c-00b0df6af8ce
@@ -78,6 +105,7 @@ class TransactionController {
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
+    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
     @DeleteMapping(path = [("/delete/{guid}")])
     fun deleteTransaction(@PathVariable guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
@@ -87,7 +115,33 @@ class TransactionController {
             }
             return ResponseEntity.noContent().build()
         }
-        return ResponseEntity.notFound().build() //404
+        //return ResponseEntity.notFound().build() //404
+        throw EmptyTransactionException("Cannot find transaction during delete.")
+    }
+
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
+    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class])
+    fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
+        val response: MutableMap<String, String> = HashMap()
+        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName
+        return response
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(value = [Exception::class])
+    open fun handleHttpInternalError(throwable: Throwable): Map<String, String>? {
+        val response: MutableMap<String, String> = HashMap()
+        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName
+        return response
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(value = [EmptyTransactionException::class])
+    open fun handleHttpNotFound(throwable: Throwable): Map<String, String>? {
+        val response: MutableMap<String, String> = HashMap()
+        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName
+        return response
     }
 
     companion object {

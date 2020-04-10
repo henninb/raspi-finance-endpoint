@@ -10,7 +10,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
-    override fun findAll(pageable: Pageable): Page<T>
+    //override fun findAll(pageable: Pageable): Page<T>
+    //override fun findAll(pageable: Pageable): List<T>
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(pageable : Pageable, accountNameOwner: String) : Page<Transaction>
