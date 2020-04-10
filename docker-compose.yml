@@ -16,6 +16,8 @@ services:
       - ./ssl:/opt/raspi-finance-endpoint/ssl
     extra_hosts:
       - "hornsup:192.168.100.97"
+    env_file:
+      - env.secrets
     depends_on:
       - influxdb
   influxdb:
@@ -27,3 +29,7 @@ services:
       - "8086"
     env_file:
       - env.influx
+      - env.secrets
+networks:
+  default:
+    name: endpoint-net

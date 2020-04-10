@@ -7,16 +7,15 @@ import finance.services.AccountService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
 @RequestMapping("/account")
-class AccountController {
+//@Validated
+open class AccountController @Autowired constructor(private var accountService: AccountService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
-
-    @Autowired
-    lateinit var accountService: AccountService
 
     @GetMapping(path = [("/account/select/active")])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {

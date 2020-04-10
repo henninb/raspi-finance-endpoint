@@ -19,34 +19,32 @@ if [ $# -ne 1 ]; then
 fi
 ENV=$1
 
-APP=raspi-finance-endpoint
-TIMEZONE='America/Chicago'
-USERNAME=henninb
-HOST_BASEDIR=$(pwd)
-GUEST_BASEDIR=/opt/${APP}
-
-if [ $ENV = "prod" ]; then
+if [ "$ENV" = "prod" ]; then
   echo prod
-elif [ $ENV = "local" ]; then
+elif [ "$ENV" = "local" ]; then
   echo local
 else
   echo "Usage: $0 <prod or local>"
   exit 2
 fi
 
-if [ \( "$OS" = "Linux Mint" \) -o \(  "$OS" = "Ubuntu" \) ]; then
+# "$OSTYPE" == "darwin"*
+if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')
 elif [ "$OS" = "Arch Linux" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
-  HOST_IP=192.168.100.208
+elif [ "$OS" = "openSUSE Tumbleweed" ]; then
+  HOST_IP=192.168.100.193
 elif [ "$OS" = "Fedora" ]; then
   HOST_IP=192.168.100.130
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
+elif [ "$OS" = "void" ]; then
+  HOST_IP=127.0.0.1
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
 else
-  echo $OS is not yet implemented.
+  echo "$OS is not yet implemented."
   exit 1
 fi
 
@@ -60,30 +58,29 @@ mkdir -p src/test/unit/java
 mkdir -p src/test/integration/groovy
 mkdir -p src/test/integration/java
 mkdir -p src/test/functional/groovy
-mkdir -p src/test/functional/java
-mkdir -p src/test/performance/groovy
-mkdir -p src/test/performance/java
+mkdir -p 'src/test/functional/java'
+mkdir -p 'src/test/performance/groovy'
+mkdir -p 'src/test/performance/java'
 mkdir -p logs
 mkdir -p ssl
 touch env.secrets
 
 chmod a+x gradle/wrapper/gradle-wrapper.jar
 
-./gradlew clean build
-if [ $? -ne 0 ]; then
+if ! ./gradlew -x test clean build; then
   echo "gradle build failed."
   exit 1
 fi
 
-if [ -x "$(command -v docker)" ]; then
-  docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} .
-  if [ $? -ne 0 ]; then
-    echo "docker build -t $APP --build-arg TIMEZONE=${TIMEZONE} --build-arg APP=${APP} --build-arg USERNAME=${USERNAME} ."
-    echo "docker build failed."
+if [ -x "$(command -v docker-compose)" ]; then
+  if ! docker-compose -f docker-compose.yml -f "docker-compose-${ENV}.yml" build; then
+    echo "docker-compose build failed."
     exit 1
   fi
-
-  docker run -it -h ${APP} --add-host hornsup:$HOST_IP -p 8081:8080 --env-file env.${ENV} --env-file env.secrets -v $HOST_BASEDIR/logs:$GUEST_BASEDIR/logs -v $HOST_BASEDIR/ssl:$GUEST_BASEDIR/ssl --rm --name ${APP} ${APP}
+  if ! docker-compose -f docker-compose.yml -f "docker-compose-${ENV}.yml" up; then
+    echo "docker-compose up failed."
+    exit 1
+  fi
 else
   set -a
   . /env.secrets

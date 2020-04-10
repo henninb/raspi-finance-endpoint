@@ -8,11 +8,8 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-open class AccountService {
+open class AccountService @Autowired constructor(private var accountRepository: AccountRepository<Account>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
-
-    @Autowired
-    private lateinit var accountRepository: AccountRepository<Account>
 
     fun findAllOrderByAccountNameOwner(): List<Account> {
         return accountRepository.findAll()
