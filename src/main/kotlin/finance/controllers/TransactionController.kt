@@ -23,7 +23,6 @@ import javax.validation.constraints.Min
 //Thymeleaf - @RestController is for JSON; @Controller is for HTML
 @RestController
 @RequestMapping("/transaction")
-//@Validated
 open class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -36,7 +35,7 @@ open class TransactionController @Autowired constructor(private var transactionS
         return ResponseEntity.ok(transactions)
     }
 
-    //curl http://localhost:8080/transaction/page/all?page=0&per_page=1
+    //curl http://localhost:8080/transaction/page/all?page=1&per_page=1
     @GetMapping(path = [("/page/all")])
     fun findAllTransactionsPageable( @RequestParam @Min(value = 1, message = "Page number must be an integer greater than 1.")
                                           page: Int,
@@ -51,8 +50,8 @@ open class TransactionController @Autowired constructor(private var transactionS
     }
 
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
-    @GetMapping(path = [("/account/select/{accountNameOwner}")])
-    fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<List<Transaction>> {
+    @GetMapping(path = ["/account/select/{accountNameOwner}"])
+    fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
         if( transactions.isEmpty() ) {
             ResponseEntity.notFound().build<List<Transaction>>()
@@ -61,16 +60,16 @@ open class TransactionController @Autowired constructor(private var transactionS
     }
 
     //curl http://localhost:8080/transaction/account/totals/chase_brian
-    @GetMapping(path = [("/account/totals/{accountNameOwner}")])
-    fun selectTotalsCleared(@PathVariable accountNameOwner: String): ResponseEntity<String> {
+    @GetMapping(path = ["/account/totals/{accountNameOwner}"])
+    fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val totals: Totals = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
 
         return ResponseEntity.ok(mapper.writeValueAsString(totals))
     }
 
     //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
-    @GetMapping(path = [("/select/{guid}")])
-    fun findTransaction(@PathVariable guid: String): ResponseEntity<Transaction> {
+    @GetMapping(path = ["/select/{guid}"])
+    fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
         if( transactionOption.isPresent ) {
@@ -106,19 +105,17 @@ open class TransactionController @Autowired constructor(private var transactionS
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
-    @DeleteMapping(path = [("/delete/{guid}")])
-    fun deleteTransaction(@PathVariable guid: String): ResponseEntity<String> {
+    @DeleteMapping(path = ["/delete/{guid}"])
+    fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
         if( transactionOption.isPresent ) {
             if( transactionService.deleteByGuid(guid) ) {
                 return ResponseEntity.ok("resource deleted")
             }
-            return ResponseEntity.noContent().build()
+            throw EmptyTransactionException("transaction not deleted.")
         }
-        //return ResponseEntity.notFound().build() //404
         throw EmptyTransactionException("Cannot find transaction during delete.")
     }
-
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
     @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class])
