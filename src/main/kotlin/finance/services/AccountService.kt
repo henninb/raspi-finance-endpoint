@@ -11,16 +11,17 @@ import java.util.*
 open class AccountService @Autowired constructor(private var accountRepository: AccountRepository<Account>) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
+    //TODO: check the signature of accountRepository.findAllByOrderByAccountNameOwner
     fun findAllOrderByAccountNameOwner(): List<Account> {
-        return accountRepository.findAll()
+        return accountRepository.findAllByOrderByAccountNameOwner()
     }
 
     fun findAllActiveAccounts(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
         if( accounts.isEmpty()) {
-            logger.warn("findAllAcitveAccounts() problem.")
+            logger.warn("findAllActiveAccounts() no accounts were found.")
         } else {
-            logger.info("findAllAcitveAccounts()")
+            logger.info("findAllActiveAccounts()")
         }
         return accounts
     }

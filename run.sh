@@ -28,6 +28,13 @@ else
   exit 2
 fi
 
+INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb' --format "{{.ID}}") 2> /dev/null
+
+if [ ! -z "${INFLUX_CONTAINER}" ]; then
+  echo docker rm $INFLUX_CONTAINER
+  docker rm $INFLUX_CONTAINER  2> /dev/null
+fi
+
 # "$OSTYPE" == "darwin"*
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')

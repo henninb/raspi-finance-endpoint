@@ -8,9 +8,10 @@ import java.util.*
 import javax.transaction.Transactional
 
 interface AccountRepository<T : Account> : JpaRepository<T, Long> {
-    fun findByAccountId(transactionId: Long?): Account
+    //fun findByAccountId(transactionId: Long?): Account
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean): List<Account>
+    fun findAllByOrderByAccountNameOwner(): List<Account>
 
     @Modifying
     @Transactional

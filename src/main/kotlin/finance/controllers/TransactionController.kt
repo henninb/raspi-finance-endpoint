@@ -64,6 +64,9 @@ open class TransactionController @Autowired constructor(private var transactionS
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val totals: Totals = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
 
+        //val response : Map<String, String> = totals
+        logger.info("totals:${totals}")
+
         return ResponseEntity.ok(mapper.writeValueAsString(totals))
     }
 
@@ -135,7 +138,7 @@ open class TransactionController @Autowired constructor(private var transactionS
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(value = [EmptyTransactionException::class])
-    open fun handleHttpNotFound(throwable: Throwable): Map<String, String>? {
+    open fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName
         return response
