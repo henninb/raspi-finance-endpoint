@@ -64,6 +64,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             return false
         }
 
+        logger.info("insert - transaction.transactionDate: ${transaction.transactionDate}");
+
         transactionRepository.saveAndFlush(transaction)
         return true
     }

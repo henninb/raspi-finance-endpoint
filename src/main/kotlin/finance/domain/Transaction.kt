@@ -3,6 +3,7 @@ package finance.domain
 import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSetter
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
@@ -67,7 +68,8 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
-        return (this.transactionDate.time / 1000)
+        println("jsonGetterTransactionDate: ${this.transactionDate.time}")
+        return (this.transactionDate.time)
     }
 
     @Size(min = 1, max = 75)

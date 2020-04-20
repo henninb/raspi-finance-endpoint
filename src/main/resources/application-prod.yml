@@ -68,3 +68,4 @@ management:
         uri: http://hornsup:8086
         user-name: henninb
         password: monday1
+debug: false
