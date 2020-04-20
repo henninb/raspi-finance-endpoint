@@ -100,7 +100,9 @@ open class TransactionController @Autowired constructor(private var transactionS
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
     fun insertTransaction(@RequestBody transaction: Transaction) : ResponseEntity<String> {
+        logger.debug("insert - transaction.transactionDate: ${transaction.transactionDate}");
         if (transactionService.insertTransaction(transaction) ) {
+            logger.info(transaction.toString());
             return ResponseEntity.ok("transaction inserted")
         }
         return ResponseEntity.notFound().build()

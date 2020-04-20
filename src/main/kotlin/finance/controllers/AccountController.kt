@@ -2,9 +2,11 @@ package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
+import finance.exceptions.EmptyAccountException
 import finance.services.AccountService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
@@ -66,7 +68,7 @@ open class AccountController @Autowired constructor(private var accountService: 
             accountService.deleteByAccountNameOwner(accountNameOwner)
             return ResponseEntity.ok("account deleted")
         }
-        return ResponseEntity.notFound().build() //404
+        throw EmptyAccountException("account not deleted.")
     }
 
     @PatchMapping(path = ["/update"])
@@ -76,7 +78,16 @@ open class AccountController @Autowired constructor(private var accountService: 
         if( updateStatus ) {
             return ResponseEntity.ok("account updated")
         }
-        return ResponseEntity.notFound().build()
+
+        throw EmptyAccountException("account not updated.")
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(value = [EmptyAccountException::class])
+    open fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName
+        return response
     }
 
     companion object {

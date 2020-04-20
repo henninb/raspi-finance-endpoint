@@ -122,6 +122,9 @@ dependencies {
     //influx
     implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxVersion}")
 
+    //logstash
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:5.2")
+
     //hibernate
     implementation("org.hibernate:hibernate-core:${hibernateVersion}")
     implementation("org.hibernate.javax.persistence:hibernate-jpa-2.1-api:${hibernateJpaVersion}")
