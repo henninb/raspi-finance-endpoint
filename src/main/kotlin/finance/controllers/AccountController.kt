@@ -32,16 +32,17 @@ open class AccountController @Autowired constructor(private var accountService: 
         return ResponseEntity.ok(accounts)
     }
 
-    @GetMapping(path = ["/select/all"])
-    fun selectAllAccounts(): ResponseEntity<List<Account>> {
-        val accounts : List<Account> = accountService.findAllOrderByAccountNameOwner()
-        if( accounts.isEmpty() ) {
-            logger.info("no accounts found.")
-            return ResponseEntity.notFound().build()
-        }
-        logger.info("select all accounts: ${accounts.size}")
-        return ResponseEntity.ok(accounts)
-    }
+//    @GetMapping(path = ["/select/all"])
+//    fun selectAllAccounts(): ResponseEntity<List<Account>> {
+//        val accounts : List<Account> = accountService.findAllOrderByAccountNameOwner()
+//        if( accounts.isEmpty() ) {
+//            logger.info("no accounts found.")
+//            return ResponseEntity.notFound().build()
+//        }
+//        logger.info("count of all accounts: ${accounts.size}")
+//        logger.info("json of all accounts: ${accounts}")
+//        return ResponseEntity.ok(accounts)
+//    }
 
     @GetMapping(path = ["/select/{accountNameOwner}"])
     fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
