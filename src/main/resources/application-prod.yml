@@ -8,6 +8,13 @@ spring:
     active: prod
 
   # ===============================
+  # = JSON
+  # ===============================
+  jackson:
+    property-naming-strategy: UPPER_CAMEL_CASE
+    default-property-inclusion: non_null
+
+  # ===============================
   # = DATA SOURCE
   # ===============================
   datasource:
