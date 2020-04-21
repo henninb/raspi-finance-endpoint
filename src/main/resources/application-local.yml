@@ -7,6 +7,16 @@ spring:
   profiles:
     active: local
 
+  # ===============================
+  # = JSON
+  # ===============================
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: non_null
+
+  # ===============================
+  # = DATA SOURCE
+  # ===============================
   datasource:
     url: jdbc:h2:mem:finance_db;DB_CLOSE_DELAY=-1
     username: sa
@@ -74,3 +84,4 @@ management:
         uri: http://hornsup:8086
         user-name: henninb
         password: monday1
+debug: false

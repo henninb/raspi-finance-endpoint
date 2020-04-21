@@ -1,8 +1,6 @@
 package finance.controllers
 
-import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Totals
 import finance.domain.Transaction
 import finance.exceptions.EmptyTransactionException
 import finance.services.TransactionService
@@ -14,6 +12,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolationException
 import javax.validation.constraints.Max
@@ -64,10 +63,10 @@ open class TransactionController @Autowired constructor(private var transactionS
     //curl http://localhost:8080/transaction/account/totals/chase_brian
     @GetMapping(path = ["/account/totals/{accountNameOwner}"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
-        val totals: Totals = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
+        val totals: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
 
         //val response : Map<String, String> = totals
-        logger.info("totals:${totals}")
+        logger.info("totals=${totals}")
 
         return ResponseEntity.ok(mapper.writeValueAsString(totals))
     }
@@ -102,9 +101,9 @@ open class TransactionController @Autowired constructor(private var transactionS
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
     fun insertTransaction(@RequestBody transaction: Transaction) : ResponseEntity<String> {
-        logger.info("insert - transaction.transactionDate: ${transaction.toString()}");
+        logger.info("insert - transaction.transactionDate: ${transaction.toString()}")
         if (transactionService.insertTransaction(transaction) ) {
-            logger.info(transaction.toString());
+            logger.info(transaction.toString())
             return ResponseEntity.ok("transaction inserted")
         }
         return ResponseEntity.notFound().build()
