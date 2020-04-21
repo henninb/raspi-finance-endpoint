@@ -79,22 +79,26 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return Optional.empty()
     }
 
-    fun getTotalsByAccountNameOwner( accountNameOwner: String) : Totals {
-        try {
+    fun getTotalsByAccountNameOwner( accountNameOwner: String) : Map<String, BigDecimal> {
+
+            val result: MutableMap<String, BigDecimal> = HashMap()
             val totalsCleared: Double = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
             val totals: Double = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
-            val t = Totals()
+//            val t = Totals()
 
-            t.totals = BigDecimal(totals)
-            t.totalsCleared = BigDecimal(totalsCleared)
-
-            return t
-        } catch (ex: EmptyResultDataAccessException) {
-            logger.info(ex.message)
-        } catch (e:Exception) {
-            logger.info(e.message)
-        }
-        return Totals()
+            result["totals"] = BigDecimal(totals)
+            result["totalsCleared"] = BigDecimal(totalsCleared)
+            return result
+//            t.totals = BigDecimal(totals)
+//            t.totalsCleared = BigDecimal(totalsCleared)
+//
+//            return t
+//        } catch (ex: EmptyResultDataAccessException) {
+//            logger.info(ex.message)
+//        } catch (e:Exception) {
+//            logger.info(e.message)
+//        }
+        //return Totals()
     }
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
