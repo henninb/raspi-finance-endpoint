@@ -65,7 +65,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         }
 
         logger.info("insert - transaction.transactionDate: ${transaction.transactionDate}");
-
+        logger.info("transaction payload: ${transaction.toString()}");
         transactionRepository.saveAndFlush(transaction)
         return true
     }
