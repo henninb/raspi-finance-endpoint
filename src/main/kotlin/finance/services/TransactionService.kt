@@ -4,7 +4,6 @@ import finance.domain.Account
 import finance.domain.Category
 import finance.domain.Transaction
 import finance.domain.AccountType
-import finance.domain.Totals
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
