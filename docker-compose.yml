@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile
     container_name: raspi-finance-endpoint
     ports:
-      - "8080:8080"
+      - "8088:8080"
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
       - ./ssl:/opt/raspi-finance-endpoint/ssl
