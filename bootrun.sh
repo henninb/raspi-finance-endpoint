@@ -23,7 +23,6 @@ source env.console
 source env.secrets
 set +a
 
-docker run -it -h influxdb-server -p 8086:8086 --rm --name influxdb-server -d influxdb
 ./gradlew clean build bootRun
 
 exit 0
