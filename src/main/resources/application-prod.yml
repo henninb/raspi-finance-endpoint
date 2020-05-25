@@ -68,7 +68,7 @@ management:
   metrics:
     export:
       influx:
-        enabled: false
+        enabled: true
         auto-create-db: true
         db: metrics
         compressed: false
