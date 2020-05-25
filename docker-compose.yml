@@ -15,7 +15,7 @@ services:
       - ./logs:/opt/raspi-finance-endpoint/logs
       - ./ssl:/opt/raspi-finance-endpoint/ssl
     extra_hosts:
-      - "hornsup:192.168.100.97"
+      - "hornsup:${HOST_IP}"
     env_file:
       - env.secrets
     depends_on:
