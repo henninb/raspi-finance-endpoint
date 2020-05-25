@@ -39,7 +39,8 @@ fi
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')
 elif [ "$OS" = "Arch Linux" ]; then
-  HOST_IP=$(hostname -i | awk '{print $1}')
+  echo 'ip route list | grep default'
+  HOST_IP=192.168.100.207
 elif [ "$OS" = "openSUSE Tumbleweed" ]; then
   HOST_IP=192.168.100.193
 elif [ "$OS" = "Fedora" ]; then

@@ -37,3 +37,4 @@ ip
 bin/
 
 build.gradle-verbose
+docker-compose-run.yml
