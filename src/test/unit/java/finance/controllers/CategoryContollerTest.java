@@ -8,7 +8,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 public class CategoryContollerTest {
-    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+    //private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     @Test
     public void dummy() {
