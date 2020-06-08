@@ -58,3 +58,9 @@ $ ./gradlew clean funtionalTest
 ```shell
 $ ./gradlew clean performanceTest
 ```
+
+## Select all active accounts
+
+```shell
+$ curl localhost:8080/account/select/active
+```
