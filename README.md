@@ -24,40 +24,37 @@
     }
 ```
 
-Check the application health
+## Check the application health
 
 ```shell
 $ curl localhost:8080/actuator/health
 ```
 
-Check the application health - prometheus
+## Check the application health - prometheus
 
 - open a browser - http://localhost:9090/
 
-Find Unit test results
+## Find Unit test results
 
 ```shell
 $ ./gradlew clean test
 ```
 
-Find Integration test results
+## Find Integration test results
 
 ```shell
 $ ./gradlew clean integrationTest
 ```
 
-Find Integration functional test results
+## Find Integration functional test results
 
 ```shell
 $ ./run.sh local
 $ ./gradlew clean funtionalTest
 ```
 
-Find Performance test results - 500 record (~3:45)
+## Find Performance test results - 500 record (~3:45)
 
 ```shell
 $ ./gradlew clean performanceTest
 ```
-
-docker compose
-COMPOSE_PROJECT_NAME=project
