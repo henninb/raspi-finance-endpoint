@@ -64,3 +64,6 @@ $ ./gradlew clean performanceTest
 ```shell
 $ curl localhost:8080/account/select/active
 ```
+
+## gradle wrapper update
+./gradlew wrapper --gradle-version=6.5 --distribution-type=bin
