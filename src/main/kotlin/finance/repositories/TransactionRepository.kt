@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.util.*
 
 interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
@@ -18,6 +19,17 @@ interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
 
     //TODO: add LIMIT 1 result
     fun findByGuid(guid: String): Optional<Transaction>
+
+    @Modifying
+    @Query("UPDATE TransactionEntity set amount = ?1 WHERE guid = ?2")
+    @Transactional
+    fun setAmountByGuid(amount: BigDecimal, guild: String)
+
+    @Modifying
+    @Query("UPDATE TransactionEntity set cleared = ?1 WHERE guid = ?2")
+    @Transactional
+    fun setClearedByGuid(cleared: Int, guild: String)
+
 
     // Using SpEL expression
     @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE cleared = 1 AND accountNameOwner=?1")

@@ -10,14 +10,17 @@ import org.junit.Test
 import org.mockito.Mockito
 import spock.lang.Specification
 
+import javax.validation.Validator
+
 import static org.junit.Assert.assertTrue
 
 class TransactionServiceSpec extends Specification {
     TransactionRepository mockTransactionRepository = Mock(TransactionRepository)
     AccountRepository mockAccountRepository = Mock(AccountRepository)
+    AccountService accountService = new AccountService(mockAccountRepository)
     CategoryRepository mockCategoryRepository = Mock(CategoryRepository)
-
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, mockAccountRepository, mockCategoryRepository)
+    CategoryService categoryService = new CategoryService(mockCategoryRepository)
+    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService)
 
     def "test Delete By GUID"() {
         given:
@@ -61,38 +64,95 @@ class TransactionServiceSpec extends Specification {
         given:
         def categoryName = "my-category"
         def accountName = "my-account-name"
+        def guid = "123"
         Transaction transaction = new Transaction()
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
         when:
+        transaction.guid = guid
+        transaction.accountNameOwner = accountName
+        transaction.category = categoryName
         def isInserted = transactionService.insertTransaction(transaction)
         then:
         isInserted
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
+        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
+        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
+        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
+        0 * _
+    }
+
+    def "test insert duplicate transaction attempt"() {
+        given:
+        def categoryName = "my-category"
+        def accountName = "my-account-name"
+        def guid = "123"
+        Transaction transaction = new Transaction()
+        Optional<Transaction> transactionOptional = Optional.of(transaction)
+        when:
+        transaction.guid = guid
+        transaction.accountNameOwner = accountName
+        transaction.category = categoryName
+        def isInserted = transactionService.insertTransaction(transaction)
+        then:
+        !isInserted
+        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        0 * _
+    }
+
+    def "test insert valid transaction - account name does not exist"() {
+        given:
+        def categoryName = "my-category"
+        def accountName = "my-account-name"
+        def guid = "123"
+        Transaction transaction = new Transaction()
+        Account account = new Account()
+        Category category = new Category()
+        Optional<Account> accountOptional = Optional.of(account)
+        Optional<Category> categoryOptional = Optional.of(category)
+        when:
+        transaction.guid = guid
+        transaction.accountNameOwner = accountName
+        transaction.category = categoryName
+        def isInserted = transactionService.insertTransaction(transaction)
+        then:
+        isInserted
+        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
+        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
+        1 * mockAccountRepository.saveAndFlush(_) >> true
+        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
+        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
+        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         0 * _
     }
 
 
-
-    @Test
-    public void insertTransactionTest() {
-        Transaction transaction = new Transaction();
-        Account account = new Account();
-        Category category = new Category();
-        //Optional<Transaction> transactionOptional = Optional.of(transaction);
-        Optional<Account> accountOptional = Optional.of(account);
-        Optional<Category> categoryOptional = Optional.of(category);
-
-        Mockito.when(categoryRepository.findByCategory(Mockito.anyString())).thenReturn(categoryOptional);
-        Mockito.when(accountRepository.findByAccountNameOwner(Mockito.anyString())).thenReturn(accountOptional);
-        Mockito.when(transactionRepository.saveAndFlush(Mockito.any())).thenReturn(transaction);
-        boolean isInserted = transactionService.insertTransaction(transaction);
-        assertTrue(isInserted);
+    def "test insert valid transaction - category name does not exist"() {
+        given:
+        def categoryName = "my-category"
+        def accountName = "my-account-name"
+        def guid = "123"
+        Transaction transaction = new Transaction()
+        Account account = new Account()
+        Category category = new Category()
+        Optional<Account> accountOptional = Optional.of(account)
+        Optional<Category> categoryOptional = Optional.of(category)
+        when:
+        transaction.guid = guid
+        transaction.accountNameOwner = accountName
+        transaction.category = categoryName
+        def isInserted = transactionService.insertTransaction(transaction)
+        then:
+        isInserted
+        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
+        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
+        1 * mockCategoryRepository.findByCategory(categoryName) >> Optional.empty()
+        1 * mockCategoryRepository.save(_)
+        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
+        0 * _
     }
-
 
 
 
