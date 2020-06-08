@@ -19,9 +19,9 @@ open class AccountService @Autowired constructor(private var accountRepository: 
     fun findAllActiveAccounts(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
         if( accounts.isEmpty()) {
-            logger.warn("findAllActiveAccounts() no accounts were found.")
+            logger.warn("findAllActiveAccounts() - no accounts found.")
         } else {
-            logger.info("findAllActiveAccounts()")
+            logger.info("findAllActiveAccounts() - found accounts.")
         }
         return accounts
     }
