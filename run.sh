@@ -31,6 +31,8 @@ elif [ "$OS" = "Fedora" ]; then
   HOST_IP=192.168.100.130
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
+  echo $HOST_IP
+  echo "lsof -nP | grep LISTEN"
 elif [ "$OS" = "void" ]; then
   HOST_IP=127.0.0.1
 elif [ "$OS" = "Gentoo" ]; then

@@ -68,7 +68,6 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
-        println("jsonGetterTransactionDate: ${this.transactionDate.time}")
         return (this.transactionDate.time)
     }
 
