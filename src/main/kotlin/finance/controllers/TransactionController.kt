@@ -91,9 +91,10 @@ open class TransactionController @Autowired constructor(private var transactionS
     @PatchMapping(path = [("/update/{guid}")], consumes = [("application/json-patch+json")], produces = [("application/json")])
     fun updateTransaction(@RequestBody transaction: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
+        //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
         val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
         if( updateStatus ) {
-            return ResponseEntity.ok("transaction updated")
+            return ResponseEntity.ok("transaction patched")
         }
         return ResponseEntity.notFound().build()
     }
