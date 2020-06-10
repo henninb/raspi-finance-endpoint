@@ -15,11 +15,15 @@ open class CategoryService @Autowired constructor(private var categoryRepository
         return true
     }
 
-    fun findByCategory( category: String ): Optional<Category> {
-        val categoryOptional: Optional<Category> = categoryRepository.findByCategory(category)
+    fun findByCategory(categoryName: String ): Optional<Category> {
+        val categoryOptional: Optional<Category> = categoryRepository.findByCategory(categoryName)
         if( categoryOptional.isPresent ) {
             return categoryOptional
         }
         return Optional.empty()
+    }
+
+    fun deleteByCategory(categoryName: String) {
+        categoryRepository.deleteByCategory(categoryName)
     }
 }

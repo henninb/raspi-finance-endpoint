@@ -12,10 +12,10 @@ class TransactionBuilder {
     String guid = '4ea3be58-3993-46de-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
-    String accountNameOwner = 'chase_brian'
+    String accountNameOwner = 'test_brian'
     Date transactionDate = new Date(1553645394)
-    String description = 'aliexpress.com'
-    String category = 'online'
+    String description = 'test.com'
+    String category = 'test'
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
     Integer cleared = 1
     Boolean reoccurring = false
