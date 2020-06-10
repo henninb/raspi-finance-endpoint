@@ -10,7 +10,7 @@ import spock.lang.Specification
 //@ActiveProfiles("stage")
 //@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 
-@ActiveProfiles("local")
+@ActiveProfiles("stage")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringWiringIntegrationSpec extends Specification {
 
