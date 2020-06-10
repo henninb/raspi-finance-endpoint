@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -85,6 +84,24 @@ class TransactionControllerSpec extends Specification {
 }
      """
 
+
+    String jsonUpdateDescription =
+            """
+{
+"guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
+"accountNameOwner":"foo_brian",
+"description":"Deposit - updated",
+"category":"none",
+"amount":12.10,"cleared":1,"reoccurring":false,
+"notes":"my notes","sha256":"",
+"transactionId":0,"accountId":0,
+"accountType":"debit",
+"transactionDate":1435467600000,
+"dateUpdated":1435502109000,
+"dateAdded":1435502109000
+}
+     """
+
     def setupSpec() {
         headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
@@ -137,7 +154,6 @@ class TransactionControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
 
-
     def "test deleteTransaction endpoint guid found"() {
         given:
         accountService.insertAccount(account)
@@ -156,7 +172,6 @@ class TransactionControllerSpec extends Specification {
         transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
-
 
     def "test deleteTransaction endpoint guid not found"() {
         given:
@@ -181,7 +196,7 @@ class TransactionControllerSpec extends Specification {
         given:
         accountService.insertAccount(account)
         categoryService.insertCategory(category)
-
+        headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>("foo", headers)
 
         when: "rest call is initiated"
@@ -189,7 +204,7 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.UNSUPPORTED_MEDIA_TYPE
+        assert response.statusCode == HttpStatus.BAD_REQUEST
 
         cleanup:
         transactionService.deleteByGuid(guid)
@@ -201,7 +216,7 @@ class TransactionControllerSpec extends Specification {
         given:
         accountService.insertAccount(account)
         categoryService.insertCategory(category)
-
+        headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(json, headers)
 
         when:
@@ -209,7 +224,7 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.UNSUPPORTED_MEDIA_TYPE
+        assert response.statusCode == HttpStatus.OK
 
         cleanup:
         transactionService.deleteByGuid(guid)
@@ -217,30 +232,21 @@ class TransactionControllerSpec extends Specification {
         categoryService.deleteByCategory(categoryName)
     }
 
-    @Ignore
     def "test updateTransaction endpoint"() {
         given:
-        accountService.insertAccount(account)
-        categoryService.insertCategory(category)
-
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(json, headers)
+        transactionService.insertTransaction(transaction)
+        headers.setContentType(new MediaType("application", "json-patch+json"))
+        HttpEntity entity = new HttpEntity<>(jsonUpdateDescription, headers)
 
         when:
-
-       // restTemplate.postForObject("http://localhost:8080/persons/1?_method=patch", requestBody, String.class);
-
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/update/" + guid), HttpMethod.PATCH,
-                entity, String.class)
+        String response = restTemplate.patchForObject(
+                createURLWithPort("/transaction/update/" + guid), entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.UNSUPPORTED_MEDIA_TYPE
+        response == "transaction patched"
 
         cleanup:
         transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
         categoryService.deleteByCategory(categoryName)
     }
-
-
 }
