@@ -128,7 +128,6 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-
     def "test insert valid transaction - category name does not exist"() {
         given:
         def categoryName = "my-category"
@@ -153,7 +152,4 @@ class TransactionServiceSpec extends Specification {
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         0 * _
     }
-
-
-
 }

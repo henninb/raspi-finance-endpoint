@@ -16,7 +16,6 @@ class AccountBuilder {
     Timestamp dateUpdated = new Timestamp(1553645394000)
     Timestamp dateAdded = new Timestamp(1553645394000)
 
-
     static AccountBuilder builder() {
         return new AccountBuilder()
     }

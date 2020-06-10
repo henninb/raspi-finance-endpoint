@@ -7,14 +7,17 @@ import org.springframework.context.ApplicationContext
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
-@SpringBootTest(classes = Application.class)
-@ActiveProfiles("stage")
+//@ActiveProfiles("stage")
+//@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
+@ActiveProfiles("local")
+@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SpringWiringIntegrationSpec extends Specification {
 
     @Autowired
     ApplicationContext context
 
-    def "SpringWiring Test"() {
+    def "test spring wiring"() {
         given:
         def foo = 1
         when:
