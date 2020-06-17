@@ -23,8 +23,8 @@ open class AccountController @Autowired constructor(private var accountService: 
 
     @GetMapping(path = ["/select/active"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
-        val accounts : List<Account> = accountService.findAllActiveAccounts()
-        if( accounts.isEmpty() ) {
+        val accounts: List<Account> = accountService.findAllActiveAccounts()
+        if (accounts.isEmpty()) {
             logger.info("no accounts found.")
             return ResponseEntity.notFound().build()
         }
@@ -32,22 +32,22 @@ open class AccountController @Autowired constructor(private var accountService: 
         return ResponseEntity.ok(accounts)
     }
 
-//    @GetMapping(path = ["/select/all"])
-//    fun selectAllAccounts(): ResponseEntity<List<Account>> {
-//        val accounts : List<Account> = accountService.findAllOrderByAccountNameOwner()
-//        if( accounts.isEmpty() ) {
-//            logger.info("no accounts found.")
-//            return ResponseEntity.notFound().build()
-//        }
-//        logger.info("count of all accounts: ${accounts.size}")
-//        logger.info("json of all accounts: ${accounts}")
-//        return ResponseEntity.ok(accounts)
-//    }
+    @GetMapping(path = ["/select/totals"])
+    fun selectAccountTotals(): ResponseEntity<List<Account>> {
+        accountService.updateAccountTotals()
+        val accounts: List<Account> = accountService.findAllActiveAccounts()
+        if (accounts.isEmpty()) {
+            logger.info("no accounts found.")
+            return ResponseEntity.notFound().build()
+        }
+        logger.info("select active accounts: ${accounts.size}")
+        return ResponseEntity.ok(accounts)
+    }
 
     @GetMapping(path = ["/select/{accountNameOwner}"])
     fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
-        if( accountOptional.isPresent) {
+        if (accountOptional.isPresent) {
             return ResponseEntity.ok(accountOptional.get())
         }
         return ResponseEntity.notFound().build()
@@ -57,7 +57,7 @@ open class AccountController @Autowired constructor(private var accountService: 
     //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' http://localhost:8080/insert_account
     //http://localhost:8080/insert_account
     @PostMapping(path = ["/insert"])
-    fun insertAccount(@RequestBody account: Account) : ResponseEntity<String> {
+    fun insertAccount(@RequestBody account: Account): ResponseEntity<String> {
         accountService.insertAccount(account)
         return ResponseEntity.ok("account inserted")
     }
@@ -68,7 +68,7 @@ open class AccountController @Autowired constructor(private var accountService: 
     fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<String> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
 
-        if(accountOptional.isPresent ) {
+        if (accountOptional.isPresent) {
             accountService.deleteByAccountNameOwner(accountNameOwner)
             return ResponseEntity.ok("account deleted")
         }
@@ -79,7 +79,7 @@ open class AccountController @Autowired constructor(private var accountService: 
     fun updateTransaction(@RequestBody account: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(account, Account::class.java)
         val updateStatus: Boolean = accountService.patchAccount(toBePatchedTransaction)
-        if( updateStatus ) {
+        if (updateStatus) {
             return ResponseEntity.ok("account updated")
         }
 

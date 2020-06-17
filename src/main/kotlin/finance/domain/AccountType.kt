@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 enum class AccountType {
     @JsonProperty("credit")
     Credit,
+
     @JsonProperty("debit")
     Debit,
     Undefined;
@@ -16,6 +17,3 @@ enum class AccountType {
         return name.toLowerCase()
     }
 }
-
-//AccountType.valueOf()
-//println(MyEnum.valueOf("Foo") == MyEnum.Foo)

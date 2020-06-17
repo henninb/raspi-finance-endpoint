@@ -15,7 +15,7 @@ interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
     //override fun findAll(pageable: Pageable): List<T>
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
-    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(pageable : Pageable, accountNameOwner: String) : Page<Transaction>
+    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(pageable: Pageable, accountNameOwner: String): Page<Transaction>
 
     //TODO: add LIMIT 1 result
     fun findByGuid(guid: String): Optional<Transaction>
@@ -45,6 +45,6 @@ interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
     @Query(value = "DELETE from t_transaction WHERE guid = ?1", nativeQuery = true)
     fun deleteByGuid(guid: String)
 
-    @Query(value="SELECT EXTRACT(TIMEZONE FROM now())/3600.0" , nativeQuery = true)
+    @Query(value = "SELECT EXTRACT(TIMEZONE FROM now())/3600.0", nativeQuery = true)
     fun selectTimeZoneOffset(): Int
 }
