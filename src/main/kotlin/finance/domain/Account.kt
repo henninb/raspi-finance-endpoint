@@ -39,7 +39,7 @@ open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String 
     @Min(value = 0L)
     var accountId = _accountId
 
-    @Column(unique=true)
+    @Column(unique = true)
     @Size(min = 3, max = 40)
     @JsonProperty
     @Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE)

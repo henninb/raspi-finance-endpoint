@@ -11,7 +11,7 @@ import org.hibernate.annotations.Proxy
 @Entity(name = "CategoryEntity")
 @Proxy(lazy = false)
 @Table(name = "t_category")
-open class Category constructor(_categoryId: Long = 0L, _category: String = "" ) {
+open class Category constructor(_categoryId: Long = 0L, _category: String = "") {
 
     constructor() : this(0L, "")
 
@@ -26,7 +26,7 @@ open class Category constructor(_categoryId: Long = 0L, _category: String = "" )
     var categoryId = _categoryId
 
     @Size(min = 1, max = 50)
-    @Column(unique=true)
+    @Column(unique = true)
     @JsonProperty
     var category = _category
 

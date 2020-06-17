@@ -20,7 +20,7 @@ open class CategoryController @Autowired constructor(private var categoryService
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
     @PostMapping(path = ["/insert_category"])
-    fun insertCategory(@RequestBody category: Category) : ResponseEntity<String> {
+    fun insertCategory(@RequestBody category: Category): ResponseEntity<String> {
         categoryService.insertCategory(category)
         logger.info("insertCategory")
         return ResponseEntity.ok("category inserted")
