@@ -21,10 +21,12 @@ import javax.validation.ConstraintViolationException
 open class AccountController @Autowired constructor(private var accountService: AccountService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    @GetMapping(path = ["test"])
-    fun selectTotals() {
-        val x = accountService.selectTotals()
-        logger.info("select totals ${x}")
+    @GetMapping(path = ["totals"])
+    fun selectTotals(): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        response["totals"] = accountService.selectTotals().toString()
+        response["totalsCleared"] = accountService.selectTotalsCleared().toString()
+        return response
     }
 
     @GetMapping(path = ["/select/active"])
