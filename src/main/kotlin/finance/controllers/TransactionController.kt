@@ -128,7 +128,7 @@ open class TransactionController @Autowired constructor(private var transactionS
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
     @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
         MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class])
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
+    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
@@ -137,7 +137,7 @@ open class TransactionController @Autowired constructor(private var transactionS
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
-    open fun handleHttpInternalError(throwable: Throwable): Map<String, String>? {
+    open fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
         response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message

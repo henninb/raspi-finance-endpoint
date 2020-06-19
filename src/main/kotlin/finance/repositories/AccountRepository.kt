@@ -32,4 +32,7 @@ interface AccountRepository<T : Account> : JpaRepository<T, Long> {
 
     @Query(value = "SELECT (A.debits - B.credits) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' ) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' ) B", nativeQuery = true)
     fun selectTotals(): Double
+
+    @Query(value = "SELECT (A.debits - B.credits) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' and cleared = 1) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and cleared = 1 ) B", nativeQuery = true)
+    fun selectTotalsCleared(): Double
 }
