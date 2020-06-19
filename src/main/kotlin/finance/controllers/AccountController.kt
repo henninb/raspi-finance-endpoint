@@ -21,6 +21,12 @@ import javax.validation.ConstraintViolationException
 open class AccountController @Autowired constructor(private var accountService: AccountService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
+    @GetMapping(path = ["test"])
+    fun selectTotals() {
+        val x = accountService.selectTotals()
+        logger.info("select totals ${x}")
+    }
+
     @GetMapping(path = ["/select/active"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
         val accounts: List<Account> = accountService.findAllActiveAccounts()
