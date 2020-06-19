@@ -199,11 +199,14 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         //TODO: add logic for patch
         if ( optionalTransaction.isPresent ) {
             val fromDb = optionalTransaction.get()
-            if( fromDb.description != transaction.description) {
-
+            if( fromDb.guid == transaction.guid ) {
+                transactionRepository.saveAndFlush(transaction)
+            } else {
+                logger.warn("GUID did not match any database records.")
+                return false
             }
         } else {
-            logger.warn("cannot patch a transaction without a valid GUID.")
+            logger.warn("WARN: cannot patch a transaction without a valid GUID.")
             return false
         }
         return true

@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import java.math.BigDecimal
@@ -102,7 +103,7 @@ open class TransactionController @Autowired constructor(private var transactionS
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
     fun insertTransaction(@RequestBody transaction: Transaction) : ResponseEntity<String> {
-        logger.info("insert - transaction.transactionDate: ${transaction.toString()}")
+        logger.info("insert - transaction.transactionDate: ${transaction}")
         if (transactionService.insertTransaction(transaction) ) {
             logger.info(transaction.toString())
             return ResponseEntity.ok("transaction inserted")
@@ -125,7 +126,8 @@ open class TransactionController @Autowired constructor(private var transactionS
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class])
+    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
+        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class])
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)

@@ -26,6 +26,11 @@ open class AccountService @Autowired constructor(private var accountRepository: 
         return accounts
     }
 
+    fun selectTotals() : Double {
+        logger.info("select totals - service")
+        return accountRepository.selectTotals()
+    }
+
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
