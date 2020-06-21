@@ -6,7 +6,8 @@ import finance.exceptions.EmptyTransactionException
 import finance.services.TransactionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.domain.PageRequest
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -22,7 +23,7 @@ import javax.validation.constraints.Min
 
 //@CrossOrigin(origins = arrayOf("http://localhost:3000"))
 @CrossOrigin
-//Thymeleaf - @RestController is for JSON; @Controller is for HTML
+//@RestController is for JSON; @Controller is for HTML
 @RestController
 @RequestMapping("/transaction")
 open class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
@@ -37,19 +38,19 @@ open class TransactionController @Autowired constructor(private var transactionS
         return ResponseEntity.ok(transactions)
     }
 
-    //curl http://localhost:8080/transaction/page/all?page=1&per_page=1
-    @GetMapping(path = [("/page/all")])
-    fun findAllTransactionsPageable( @RequestParam @Min(value = 1, message = "Page number must be an integer greater than 1.")
-                                          page: Int,
-                                     @RequestParam(value = "per_page") @Max(value = 1000, message = "Page size limit is 1000, change page size value")
-                                          perPage: Int) : ResponseEntity<List<Transaction>> {
-
-        val transactions: List<Transaction> = transactionService.findAllTransactions(PageRequest.of(page -1, perPage))
-        if( transactions.isEmpty() ) {
-            ResponseEntity.notFound().build<List<Transaction>>()
-        }
-        return ResponseEntity.ok(transactions)
-    }
+//    //curl http://localhost:8080/transaction/page/all?page=1&per_page=1
+//    @GetMapping(path = [("/page/all")])
+//    fun findAllTransactionsPageable( @RequestParam @Min(value = 1, message = "Page number must be an integer greater than 1.")
+//                                          page: Int,
+//                                     @RequestParam(value = "per_page") @Max(value = 1000, message = "Page size limit is 1000, change page size value")
+//                                          perPage: Int) : ResponseEntity<List<Transaction>> {
+//
+//        val transactions: List<Transaction> = transactionService.findAllTransactions(PageRequest.of(page -1, perPage))
+//        if( transactions.isEmpty() ) {
+//            ResponseEntity.notFound().build<List<Transaction>>()
+//        }
+//        return ResponseEntity.ok(transactions)
+//    }
 
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"])
@@ -125,13 +126,17 @@ open class TransactionController @Autowired constructor(private var transactionS
         throw EmptyTransactionException("Cannot find transaction during delete.")
     }
 
+    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
+    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"amount":"abc"}'
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
-        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class])
+    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
+        IllegalArgumentException::class, DataIntegrityViolationException::class])
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
-        logger.error("Bad Request", throwable)
+        logger.info("Bad Request: ", throwable)
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        logger.info(response.toString())
         return response
     }
 
@@ -141,6 +146,7 @@ open class TransactionController @Autowired constructor(private var transactionS
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
         response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        logger.info("response: $response")
         return response
     }
 

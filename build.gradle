@@ -112,7 +112,8 @@ dependencies {
     // implementation("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
-    implementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
+    implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
 
     //Camel
     // implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
@@ -129,6 +130,7 @@ dependencies {
 
     //Validation
     implementation("javax.validation:validation-api:${validationVersion}")
+    //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
 
     //log
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:5.2")
