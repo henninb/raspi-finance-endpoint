@@ -9,6 +9,8 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
+import java.sql.Date
+import java.sql.Timestamp
 
 class AccountSpec extends Specification {
 
@@ -57,21 +59,8 @@ class AccountSpec extends Specification {
     def "test validation invalid #invalidField has error #expectedError"() {
         given:
         Account account = new AccountBuilder()
-        //.transactionId(transactionId)
-                //.guid(guid)
-                //.accountId(accountId)
                 .accountType(accountType)
                 .accountNameOwner(accountNameOwner)
-                //.transactionDate(transactionDate)
-                //.description(description)
-                //.category(category)
-                //.amount(amount)
-                //.cleared(cleared)
-                //.reoccurring(reoccurring)
-                //.notes(notes)
-                //.dateAdded(dateAdded)
-                //.dateUpdated(dateUpdated)
-                //.sha256(sha256)
                 .build()
 
         when:
@@ -87,7 +76,11 @@ class AccountSpec extends Specification {
 
         where:
         invalidField |  accountType | accountNameOwner | moniker |expectedError | errorCount
-        //'accountType'  |  AccountType.Undefined | 'blah.chase_brian' | '0000' |'must be greater than or equal to 0'                   | 1
+        //'accountType'  |  AccountType.Undefined | 'chase_brian' | '0000' |''                   | 0
         'accountNameOwner'  |  AccountType.Credit | 'blah_chase_brian' | '0000' |'must be alpha separated by an underscore'                   | 1
+        //'moniker'  |  AccountType.Credit | 'chase_brian' | '00034333' |                   'size must be between 4 and 4'| 1
+        //'amount'   |  AccountType.Credit | 'blah_chase_brian' | '0000'         | new BigDecimal(3.1415)                                   | 1       | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be dollar precision'                 | 1
+
+
     }
 }

@@ -1,14 +1,18 @@
 package finance.services
 
 import finance.domain.Account
+import finance.domain.Transaction
 import finance.repositories.AccountRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.*
+import javax.validation.ConstraintViolation
+import javax.validation.Validator
 
 @Service
-open class AccountService @Autowired constructor(private var accountRepository: AccountRepository<Account>) {
+open class AccountService @Autowired constructor(private var accountRepository: AccountRepository<Account>,
+                                                 private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //TODO: check the signature of accountRepository.findAllByOrderByAccountNameOwner
@@ -39,6 +43,11 @@ open class AccountService @Autowired constructor(private var accountRepository: 
     }
 
     fun insertAccount(account: Account): Boolean {
+        val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
+        if (constraintViolations.isNotEmpty()) {
+            //TODO: handle the violation
+            logger.info("constraint issue.")
+        }
         //TODO: Should saveAndFlush be in a try catch block?
         logger.info("INFO: transactionRepository.saveAndFlush call.")
         accountRepository.saveAndFlush(account)

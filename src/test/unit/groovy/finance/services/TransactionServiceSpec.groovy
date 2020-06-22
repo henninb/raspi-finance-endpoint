@@ -13,11 +13,11 @@ import javax.validation.Validator
 class TransactionServiceSpec extends Specification {
     TransactionRepository mockTransactionRepository = Mock(TransactionRepository)
     AccountRepository mockAccountRepository = Mock(AccountRepository)
-    AccountService accountService = new AccountService(mockAccountRepository)
+    Validator mockValidator = Mock(Validator)
+    AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     CategoryRepository mockCategoryRepository = Mock(CategoryRepository)
     CategoryService categoryService = new CategoryService(mockCategoryRepository)
-    Validator validator = Mock(Validator)
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, validator)
+    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
 
     def "test Delete By GUID"() {
         given:
@@ -75,7 +75,7 @@ class TransactionServiceSpec extends Specification {
         then:
         isInserted
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * validator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
@@ -96,7 +96,7 @@ class TransactionServiceSpec extends Specification {
         def isInserted = transactionService.insertTransaction(transaction)
         then:
         !isInserted
-        1 * validator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
@@ -121,8 +121,10 @@ class TransactionServiceSpec extends Specification {
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
         1 * mockAccountRepository.saveAndFlush(_) >> true
-        1 * validator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
+        //TODO: fix this validation
+        1 * mockValidator.validate(_) >> new HashSet()
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         0 * _
@@ -137,7 +139,7 @@ class TransactionServiceSpec extends Specification {
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
-        Optional<Category> categoryOptional = Optional.of(category)
+        //Optional<Category> categoryOptional = Optional.of(category)
         when:
         transaction.guid = guid
         transaction.accountNameOwner = accountName
@@ -146,7 +148,7 @@ class TransactionServiceSpec extends Specification {
         then:
         isInserted
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * validator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
         1 * mockCategoryRepository.findByCategory(categoryName) >> Optional.empty()
         1 * mockCategoryRepository.save(_)
