@@ -6,6 +6,7 @@ import finance.repositories.AccountRepository
 import spock.lang.Ignore
 import spock.lang.Specification
 
+import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 class AccountServiceSpec extends Specification {
@@ -60,6 +61,11 @@ class AccountServiceSpec extends Specification {
         given:
         def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"12345\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
         Account account = mapper.readValue(jsonPayload, Account.class)
+//        HashSet hs = new HashSet()
+//        ConstraintViolation cv = {
+//
+//        } as ConstraintViolation;
+//        hs.add(cv)
 
         when:
         def isInserted = accountService.insertAccount(account)

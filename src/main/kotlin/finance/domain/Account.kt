@@ -3,6 +3,7 @@ package finance.domain
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.ValidTimestamp
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants
 import java.math.BigDecimal
@@ -53,7 +54,8 @@ open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String 
     var activeStatus = _activeStatus
 
     @JsonProperty
-    @Size(min = 4, max = 4)
+    //@Size(min = 4, max = 4, message = "Must be 4 digits.")
+    @Pattern(regexp = "^[0-9]{4}$", message = "Must be 4 digits.")
     var moniker = _moniker
 
     @JsonProperty
@@ -65,12 +67,15 @@ open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String 
     var totalsBalanced = _totalsBalanced
 
     @JsonProperty
+    //@ValidTimestamp
     var dateClosed = _dateClosed
 
     @JsonProperty
+    @ValidTimestamp
     var dateUpdated = _dateUpdated
 
     @JsonProperty
+    @ValidTimestamp
     var dateAdded = _dateAdded
 
     override fun toString(): String = mapper.writeValueAsString(this)

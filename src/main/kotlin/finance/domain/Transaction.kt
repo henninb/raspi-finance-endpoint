@@ -12,6 +12,7 @@ import finance.utils.Constants.MUST_BE_ASCII_MESSAGE
 import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
+import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
@@ -61,6 +62,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
     var accountNameOwner = _accountNameOwner
 
+    @ValidDate
     @Column(columnDefinition = "DATE")
     @JsonProperty("transactionDate")
     var transactionDate = _transactionDate
