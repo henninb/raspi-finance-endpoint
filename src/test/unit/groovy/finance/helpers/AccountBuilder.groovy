@@ -10,8 +10,8 @@ class AccountBuilder {
     String accountNameOwner = "chase_brian"
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
-    String moniker = "0000"
-    //BigDecimal totals: Double = 0.0,
+    String moniker = "1234"
+    //BigDecimal totals: Double = new BigDecimal("0.0"),
     //BigDecimal totalsBalanced: BigDecimal = 0.0,
     Timestamp dateClosed = new Timestamp(0)
     Timestamp dateUpdated = new Timestamp(1553645394000)

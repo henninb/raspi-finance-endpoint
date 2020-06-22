@@ -44,8 +44,6 @@ class AccountSpec extends Specification {
     def "test validation valid account"() {
         given:
         Account account = AccountBuilder.builder().build()
-        //def json = mapper.writeValueAsString(account)
-        //println json
 
         when:
         Set<ConstraintViolation<Account>> violations = validator.validate(account)
@@ -54,33 +52,40 @@ class AccountSpec extends Specification {
         violations.isEmpty()
     }
 
-
     @Unroll
     def "test validation invalid #invalidField has error #expectedError"() {
         given:
         Account account = new AccountBuilder()
                 .accountType(accountType)
+                .moniker(moniker)
                 .accountNameOwner(accountNameOwner)
+                .activeStatus(activeStatus)
+//                 .totals(totals)
+//                 .totalsBalanced(totalsBalanced)
+                .dateAdded(dateAdded)
+                .dateUpdated(dateUpdated)
                 .build()
 
         when:
         Set<ConstraintViolation<Account>> violations = validator.validate(account)
 
         then:
-        println("'" + violations.message + "'")
-        println("'" + violations.size() + "'")
+        println("message='${violations.message}'")
+        println("size='${violations.size()}'")
 
         violations.size() == errorCount
         violations.message.contains(expectedError)
         violations.iterator().next().getInvalidValue() == account.getProperties()[invalidField]
 
         where:
-        invalidField |  accountType | accountNameOwner | moniker |expectedError | errorCount
-        //'accountType'  |  AccountType.Undefined | 'chase_brian' | '0000' |''                   | 0
-        'accountNameOwner'  |  AccountType.Credit | 'blah_chase_brian' | '0000' |'must be alpha separated by an underscore'                   | 1
-        //'moniker'  |  AccountType.Credit | 'chase_brian' | '00034333' |                   'size must be between 4 and 4'| 1
-        //'amount'   |  AccountType.Credit | 'blah_chase_brian' | '0000'         | new BigDecimal(3.1415)                                   | 1       | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be dollar precision'                 | 1
-
+        invalidField       | accountId | accountType        | accountNameOwner   | moniker | activeStatus | dateAdded                    | dateUpdated                  | expectedError                              | errorCount
+        'accountNameOwner' | 123L      | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | 123L      | AccountType.Credit | '_b'               | '0000'  | true         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'size must be between 3 and 40'            | 1
+        'moniker'          | 123L      | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'Must be 4 digits.'                        | 1
+        'moniker'          | 123L      | AccountType.Credit | 'chase_brian'      | '00001' | true         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'Must be 4 digits.'                        | 1
+        'dateAdded'        | 123L      | AccountType.Credit | 'chase_brian'      | '0001'  | true         | new Timestamp(1553645394)    | new Timestamp(1553645394000) | 'timestamp must be greater than 1/1/2000.' | 1
+        'dateUpdated'      | 123L      | AccountType.Credit | 'chase_brian'      | '0001'  | true         | new Timestamp(1553645394000) | new Timestamp(1553645394)    | 'timestamp must be greater than 1/1/2000.' | 1
+        //'activeStatus'          | 123L      | AccountType.Credit | 'chase_brian'      | '0000'   | null|null |null |         | 'Must be 4 digits.'                        | 1
 
     }
 }
