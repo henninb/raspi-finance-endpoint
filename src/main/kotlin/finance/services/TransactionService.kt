@@ -42,8 +42,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            //TODO: handle the violation
-            logger.info("constraint issue.")
+            logger.info("insert constraint issue.")
+            return false
         }
         logger.info("*** insert transaction ***")
         val transactionOptional = findByGuid(transaction.guid)
@@ -167,11 +167,17 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     fun patchTransaction( transaction: Transaction ): Boolean {
+        val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
+        if (constraintViolations.isNotEmpty()) {
+            logger.info("patch constraint issue.")
+            return false
+        }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         //TODO: add logic for patch
         if ( optionalTransaction.isPresent ) {
             val fromDb = optionalTransaction.get()
             if( fromDb.guid == transaction.guid ) {
+                logger.info("successful patch $transaction");
                 transactionRepository.saveAndFlush(transaction)
             } else {
                 logger.warn("GUID did not match any database records.")

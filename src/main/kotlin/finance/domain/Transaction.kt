@@ -122,7 +122,7 @@ open class Transaction constructor(_transactionId: Long = 0L, _guid: String = ""
     var sha256 = _sha256
 
     //TODO: camel case or snake case?
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(cascade= [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null

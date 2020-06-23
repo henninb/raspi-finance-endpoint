@@ -1,43 +1,51 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
+import finance.domain.Transaction
+import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
 import spock.lang.Ignore
 import spock.lang.Specification
+import javax.validation.Validation
 
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
+import javax.validation.constraints.Size
 
 class AccountServiceSpec extends Specification {
     AccountRepository mockAccountRepository = Mock(AccountRepository)
     Validator mockValidator = Mock(Validator)
-    AccountService accountService = new AccountService(mockAccountRepository,mockValidator)
+    AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     private ObjectMapper mapper = new ObjectMapper()
 
     def "test findAllActiveAccounts empty"() {
         given:
+        Account account = AccountBuilder.builder().build()
         List<Account> accounts = []
+        accounts.add(account)
 
         when:
-        accountService.findAllActiveAccounts()
+        def results = accountService.findAllActiveAccounts()
 
         then:
+        results.size() == 1
         1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
         0 * _
     }
 
     def "test findAllActiveAccounts"() {
         given:
+        Account account = AccountBuilder.builder().build()
         List<Account> accounts = []
-        Account account = {
-        } as Account
         accounts.add(account)
 
         when:
-        accountService.findAllActiveAccounts()
+        def results = accountService.findAllActiveAccounts()
 
         then:
+        results.size() == 1
         1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
         0 * _
     }
@@ -51,7 +59,7 @@ class AccountServiceSpec extends Specification {
         def isInserted = accountService.insertAccount(account)
 
         then:
-        isInserted
+        isInserted.is(true)
         1 * mockValidator.validate(account) >> new HashSet()
         1 * mockAccountRepository.saveAndFlush(account)
         0 * _
@@ -61,36 +69,27 @@ class AccountServiceSpec extends Specification {
         given:
         def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"12345\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
         Account account = mapper.readValue(jsonPayload, Account.class)
-//        HashSet hs = new HashSet()
-//        ConstraintViolation cv = {
-//
-//        } as ConstraintViolation;
-//        hs.add(cv)
+        def validatorFactory = Validation.buildDefaultValidatorFactory()
+        def validator = validatorFactory.getValidator()
+        Set<ConstraintViolation<Account>>  constraintViolations = validator.validate(account)
 
         when:
-        def isInserted = accountService.insertAccount(account)
+        def result = accountService.insertAccount(account)
 
         then:
-        isInserted
-        1 * mockValidator.validate(account) >> new HashSet()
-        1 * mockAccountRepository.saveAndFlush(account)
+        result.is(false)
+        1 * mockValidator.validate(account) >> constraintViolations
         0 * _
     }
 
-    @Ignore
-    //InvalidFormatException
     def "test insertAccount - bad accountType"() {
         given:
-        def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"badAccountType\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
-        Account account = mapper.readValue(jsonPayload, Account.class)
+        def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
 
         when:
-        def isInserted = accountService.insertAccount(account)
+        mapper.readValue(jsonPayload, Account.class)
 
         then:
-        isInserted
-        1 * mockValidator.validate(account) >> new HashSet()
-        1 * mockAccountRepository.saveAndFlush(account)
-        0 * _
+        thrown InvalidFormatException
     }
 }

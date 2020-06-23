@@ -47,6 +47,7 @@ open class AccountService @Autowired constructor(private var accountRepository: 
         if (constraintViolations.isNotEmpty()) {
             //TODO: handle the violation
             logger.info("constraint issue.")
+            return false
         }
         //TODO: Should saveAndFlush be in a try catch block?
         logger.info("INFO: transactionRepository.saveAndFlush call.")
