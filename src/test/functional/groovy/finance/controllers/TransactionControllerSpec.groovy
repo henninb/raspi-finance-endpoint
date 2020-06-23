@@ -242,7 +242,7 @@ class TransactionControllerSpec extends Specification {
         String response = restTemplate.patchForObject(
                 createURLWithPort("/transaction/update/" + guid), entity, String.class)
         then:
-        response == "transaction patched"
+        assert response == "transaction patched"
 
         cleanup:
         transactionService.deleteByGuid(guid)
