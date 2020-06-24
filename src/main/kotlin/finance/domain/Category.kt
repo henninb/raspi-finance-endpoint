@@ -11,7 +11,7 @@ import org.hibernate.annotations.Proxy
 @Entity(name = "CategoryEntity")
 @Proxy(lazy = false)
 @Table(name = "t_category")
-open class Category constructor(_categoryId: Long = 0L, _category: String = "") {
+class Category constructor(_categoryId: Long = 0L, _category: String = "") {
 
     constructor() : this(0L, "")
 

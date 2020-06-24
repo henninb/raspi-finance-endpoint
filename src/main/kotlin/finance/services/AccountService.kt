@@ -11,7 +11,7 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 @Service
-open class AccountService @Autowired constructor(private var accountRepository: AccountRepository<Account>,
+class AccountService @Autowired constructor(private var accountRepository: AccountRepository,
                                                  private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 

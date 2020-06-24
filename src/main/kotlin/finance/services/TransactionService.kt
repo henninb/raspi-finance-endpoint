@@ -15,15 +15,11 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 @Service
-open class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository<Transaction>,
+class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
                                                      private var accountService: AccountService,
                                                      private var categoryService: CategoryService,
                                                      private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
-
-//    fun findAllTransactions(pageable: Pageable) : List<Transaction> {
-//        return transactionRepository.findAll(pageable).content
-//    }
 
     fun findAllTransactions() : List<Transaction> {
         return transactionRepository.findAll()
@@ -42,8 +38,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            logger.info("insert constraint issue.")
-            return false
+            logger.info("insertTransaction() ConstraintViolation")
         }
         logger.info("*** insert transaction ***")
         val transactionOptional = findByGuid(transaction.guid)
@@ -169,8 +164,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     fun patchTransaction( transaction: Transaction ): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            logger.info("patch constraint issue.")
-            return false
+            logger.info("patchTransaction() ConstraintViolation.")
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         //TODO: add logic for patch

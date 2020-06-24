@@ -18,7 +18,7 @@ import javax.validation.ConstraintViolationException
 @RestController
 @RequestMapping("/account")
 //@Validated
-open class AccountController @Autowired constructor(private var accountService: AccountService) {
+class AccountController @Autowired constructor(private var accountService: AccountService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     @GetMapping(path = ["totals"])
@@ -105,7 +105,7 @@ open class AccountController @Autowired constructor(private var accountService: 
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(value = [EmptyAccountException::class])
-    open fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
+    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)
         response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message

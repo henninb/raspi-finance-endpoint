@@ -10,13 +10,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.util.*
 
-interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
-    //override fun findAll(pageable: Pageable): Page<T>
-    //override fun findAll(pageable: Pageable): List<T>
-
-    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
-    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(pageable: Pageable, accountNameOwner: String): Page<Transaction>
-
+interface TransactionRepository : JpaRepository<Transaction, Long> {
     //TODO: add LIMIT 1 result
     fun findByGuid(guid: String): Optional<Transaction>
 
@@ -47,4 +41,6 @@ interface TransactionRepository<T : Transaction> : JpaRepository<T, Long> {
 
     @Query(value = "SELECT EXTRACT(TIMEZONE FROM now())/3600.0", nativeQuery = true)
     fun selectTimeZoneOffset(): Int
+
+    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
 }
