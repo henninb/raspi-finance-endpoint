@@ -18,7 +18,7 @@ import org.hibernate.annotations.Proxy
 @Entity(name = "AccountEntity")
 @Proxy(lazy = false)
 @Table(name = "t_account")
-open class Account constructor(_accountId: Long = 0L, _accountNameOwner: String = "",
+class Account constructor(_accountId: Long = 0L, _accountNameOwner: String = "",
                                _accountType: AccountType = AccountType.Credit,
                                _activeStatus: Boolean = true, _moniker: String = "0000",
                                _totals: BigDecimal = BigDecimal(0.0),

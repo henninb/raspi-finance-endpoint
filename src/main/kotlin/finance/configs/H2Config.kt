@@ -18,7 +18,7 @@
 //@EnableTransactionManagement
 //@Profile("stage")
 ////@PropertySource("classpath:database-h2.properties")
-//open class H2Config {
+//class H2Config {
 //
 //    private val logger = LoggerFactory.getLogger(this.javaClass)
 //

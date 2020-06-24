@@ -26,7 +26,7 @@ import javax.validation.constraints.Min
 //@RestController is for JSON; @Controller is for HTML
 @RestController
 @RequestMapping("/transaction")
-open class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
+class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     @GetMapping(path = [("/all")])
@@ -142,7 +142,7 @@ open class TransactionController @Autowired constructor(private var transactionS
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
-    open fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
+    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
         response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
@@ -152,7 +152,7 @@ open class TransactionController @Autowired constructor(private var transactionS
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(value = [EmptyTransactionException::class])
-    open fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
+    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)
         response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName  + " , message: " + throwable.message

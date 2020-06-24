@@ -23,7 +23,7 @@ import javax.validation.constraints.*
 @Entity(name = "TransactionEntity")
 @Proxy(lazy = false)
 @Table(name = "t_transaction")
-open class Transaction constructor(_transactionId: Long = 0L, _guid: String = "",
+class Transaction constructor(_transactionId: Long = 0L, _guid: String = "",
                                    _accountId: Long = 0, _accountType: AccountType = AccountType.Credit,
                                    _accountNameOwner: String = "", _transactionDate: Date = Date(0),
                                    _description: String = "", _category: String = "",

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-open class CategoryService @Autowired constructor(private var categoryRepository: CategoryRepository<Category>) {
+class CategoryService @Autowired constructor(private var categoryRepository: CategoryRepository) {
     //private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertCategory(category: Category): Boolean {

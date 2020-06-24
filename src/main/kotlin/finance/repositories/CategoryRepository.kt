@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query
 import java.util.*
 import javax.transaction.Transactional
 
-interface CategoryRepository<T : Category> : JpaRepository<T, Long> {
+interface CategoryRepository : JpaRepository<Category, Long> {
 
     fun findByCategory(category: String): Optional<Category>
 
