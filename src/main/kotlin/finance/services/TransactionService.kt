@@ -51,6 +51,7 @@ class TransactionService @Autowired constructor(private var transactionRepositor
 
         processAccount(transaction)
         processCategory(transaction)
+        println("transaction = ${transaction}")
         transactionRepository.saveAndFlush(transaction)
         logger.info("*** inserted transaction ***")
         return true

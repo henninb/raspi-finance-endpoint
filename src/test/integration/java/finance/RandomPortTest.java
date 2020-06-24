@@ -1,10 +1,12 @@
-import finance.Application;
+package finance;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
 import static org.junit.Assert.assertTrue;
 
 @ActiveProfiles("local")
@@ -23,5 +25,4 @@ public class RandomPortTest {
         System.out.println(localPort);
         assertTrue(localPort > 0 );
     }
-
 }

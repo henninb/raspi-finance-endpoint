@@ -13,6 +13,7 @@ import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import finance.utils.ValidDate
+import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
@@ -100,6 +101,7 @@ class Transaction constructor(_transactionId: Long = 0L, _guid: String = "",
     @Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
     var notes = _notes
 
+    @ValidTimestamp
     @JsonProperty("dateUpdated")
     var dateUpdated = _dateUpdated
 
@@ -108,7 +110,8 @@ class Transaction constructor(_transactionId: Long = 0L, _guid: String = "",
         return (this.dateUpdated.time / 1000)
     }
 
-    //@JsonProperty("dateAdded")
+    @ValidTimestamp
+    @JsonProperty("dateAdded")
     var dateAdded = _dateAdded
 
     @JsonGetter("dateAdded")
@@ -127,7 +130,6 @@ class Transaction constructor(_transactionId: Long = 0L, _guid: String = "",
     @JsonIgnore
     var account: Account? = null
 
-    //TODO: camel case or snake case?
     @ManyToMany
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],

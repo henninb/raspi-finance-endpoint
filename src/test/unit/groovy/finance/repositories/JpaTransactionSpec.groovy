@@ -11,6 +11,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import spock.lang.Specification
 
+import javax.validation.ConstraintViolation
+import javax.validation.ConstraintViolationException
+import java.sql.Timestamp
+
 @DataJpaTest
 class JpaTransactionSpec extends Specification {
 
@@ -23,23 +27,111 @@ class JpaTransactionSpec extends Specification {
     @Autowired
     TestEntityManager entityManager
 
-    def "jpa test fort transaction repository"() {
+    def "jpa test for transaction repository"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
-        transaction.accountId = 1005
         Account account = new AccountBuilder().build()
-        account.accountId = 1005
         println "transaction = $transaction"
         println "account = $account"
-        //entityManager.persist(transaction)
-        entityManager.merge(account)
-        //entityManager.merge(transaction)
-        //entityManager.persist(new Book("Testing Spring with Spock"))
 
-        expect: "the correct count is inside the repository"
-        transactionRepository.count() == 0L
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        println "accountResult = $accountResult"
+        def transactionResult = entityManager.merge(transaction)
+        println "transactionResult = $transactionResult"
+
+        expect:
+        transactionRepository.count() == 1L
         accountRepository.count() == 1L
     }
+
+    def "jpa test for transaction repository - long category"() {
+        given:
+        Transaction transaction = new TransactionBuilder().build()
+        Account account = new AccountBuilder().build()
+
+        when:
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        transaction.category = "123451234512345123451234512345123451234512345123451234512345"
+        entityManager.merge(transaction)
+
+        then:
+        ConstraintViolationException ex = thrown()
+        ex.getMessage().contains('size must be between 0 and 50')
+        0 * _
+    }
+
+    def "jpa test for transaction repository - clearedStatus out of range"() {
+        given:
+        Transaction transaction = new TransactionBuilder().build()
+        Account account = new AccountBuilder().build()
+
+        when:
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        transaction.cleared = 3
+        entityManager.merge(transaction)
+
+        then:
+        ConstraintViolationException ex = thrown()
+        ex.getMessage().contains('must be less than or equal to 1')
+        0 * _
+    }
+
+    def "jpa test for transaction repository - invalid guid"() {
+        given:
+        Transaction transaction = new TransactionBuilder().build()
+        Account account = new AccountBuilder().build()
+
+        when:
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        transaction.guid = "123"
+        entityManager.merge(transaction)
+
+        then:
+        ConstraintViolationException ex = thrown()
+        ex.getMessage().contains('must be uuid formatted')
+        0 * _
+    }
+
+    def "jpa test for transaction repository - invalid dateAdded"() {
+        given:
+        Transaction transaction = new TransactionBuilder().build()
+        Account account = new AccountBuilder().build()
+
+        when:
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        transaction.dateAdded = new Timestamp(123456)
+        println "transaction.dateAdded = $transaction.dateAdded"
+        entityManager.merge(transaction)
+
+        then:
+        ConstraintViolationException ex = thrown()
+        ex.getMessage().contains( 'timestamp must be greater than 1/1/2000.')
+        0 * _
+    }
+
+    def "jpa test for transaction repository - invalid dateUpdated"() {
+        given:
+        Transaction transaction = new TransactionBuilder().build()
+        Account account = new AccountBuilder().build()
+
+        when:
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        transaction.dateUpdated = new Timestamp(123456)
+        println "transaction.dateUpdated = $transaction.dateUpdated"
+        entityManager.merge(transaction)
+
+        then:
+        ConstraintViolationException ex = thrown()
+        ex.getMessage().contains( 'timestamp must be greater than 1/1/2000.')
+        0 * _
+    }
+
 }
 
 

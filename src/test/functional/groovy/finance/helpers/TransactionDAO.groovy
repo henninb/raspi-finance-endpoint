@@ -52,10 +52,10 @@ class TransactionDAO {
     }
 
     Integer transactionCount()  {
-        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM t_transaction", Ineger) as Integer
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM t_transaction", Integer) as Integer
     }
 
     Integer transactionCategoriesCount() {
-        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM t_transaction_categories", Integera) as Integer
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM t_transaction_categories", Integer) as Integer
     }
 }
