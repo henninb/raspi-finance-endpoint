@@ -1,6 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.ValidTimestamp
@@ -21,6 +22,7 @@ import org.hibernate.annotations.Proxy
 @Entity(name = "AccountEntity")
 @Proxy(lazy = false)
 @Table(name = "t_account")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Account(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -25,9 +25,15 @@ class TransactionService @Autowired constructor(private var transactionRepositor
         return transactionRepository.findAll()
     }
 
+    fun deleteByIdFromTransactionCategories(transactionId: Long): Boolean {
+        transactionRepository.deleteByIdFromTransactionCategories(transactionId)
+        return true
+    }
+
     fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if( transactionOptional.isPresent) {
+            transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
             transactionRepository.deleteByGuid(guid)
             return true
         }
@@ -108,10 +114,8 @@ class TransactionService @Autowired constructor(private var transactionRepositor
         }
 
         logger.info("transaction already exists, no transaction data inserted.")
-
         return false
     }
-
 
     private fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
