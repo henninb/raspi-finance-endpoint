@@ -1,8 +1,7 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonGetter
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonCreator.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
@@ -15,6 +14,7 @@ import finance.utils.Constants.UUID_PATTERN
 import finance.utils.ValidDate
 import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
+
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -24,108 +24,104 @@ import javax.validation.constraints.*
 @Entity(name = "TransactionEntity")
 @Proxy(lazy = false)
 @Table(name = "t_transaction")
-class Transaction constructor(_transactionId: Long = 0L, _guid: String = "",
-                                   _accountId: Long = 0, _accountType: AccountType = AccountType.Credit,
-                                   _accountNameOwner: String = "", _transactionDate: Date = Date(0),
-                                   _description: String = "", _category: String = "",
-                                   _amount: BigDecimal = BigDecimal(0.00), _cleared: Int = 0,
-                                   _reoccurring: Boolean = false, _notes: String = "",
-                                   _dateUpdated: Timestamp = Timestamp(0),
-                                   _dateAdded: Timestamp = Timestamp(0),
-                                   _sha256: String = ""
-) {
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Transaction (
+//TODO: the field activeStatus
 
-    //TODO: the field activeStatus
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @field:Min(value = 0L)
+        @JsonProperty
+        var transactionId: Long,
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Min(value = 0L)
-    @JsonProperty("transactionId")
-    var transactionId = _transactionId
+        @Column(unique = true)
+        @JsonProperty
+        @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
+        var guid: String,
 
-    @Column(unique = true)
-    @JsonProperty
-    @Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
-    var guid = _guid
+        @JsonProperty
+        @field:Min(value = 0L)
+        var accountId: Long,
 
-    @JsonProperty("accountId")
-    @Min(value = 0L)
-    var accountId = _accountId
+        @Column(columnDefinition = "VARCHAR")
+        @JsonProperty
+        @field:Convert(converter = AccountTypeConverter::class)
+        var accountType: AccountType,
 
-    //@Enumerated(EnumType.STRING)
-    @Convert(converter = AccountTypeConverter::class)
-    @Column(columnDefinition = "VARCHAR")
-    @JsonProperty("accountType")
-    var accountType = _accountType
+        @JsonProperty
+        @field:Size(min = 3, max = 40)
+        @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
+        var accountNameOwner: String,
 
-    @Size(min = 3, max = 40)
-    @JsonProperty
-    @Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
-    var accountNameOwner = _accountNameOwner
+        @field:ValidDate
+        @Column(columnDefinition = "DATE")
+        @JsonProperty
+        var transactionDate: Date,
 
-    @ValidDate
-    @Column(columnDefinition = "DATE")
-    @JsonProperty("transactionDate")
-    var transactionDate = _transactionDate
+        @JsonProperty
+        @field:Size(min = 1, max = 75)
+        @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
+        var description: String,
+
+        @JsonProperty
+        @field:Size(max = 50)
+        @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
+        var category: String,
+
+        @JsonProperty
+        @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+        var amount: BigDecimal,
+
+        @JsonProperty
+        @field:Min(value = -3)
+        @field:Max(value = 1)
+        @Column(name = "cleared")
+        var cleared: Int,
+
+        @JsonProperty
+        var reoccurring: Boolean,
+
+        @JsonProperty
+        @field:Size(max = 100)
+        @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
+        var notes: String,
+
+        @JsonProperty
+        @field:ValidTimestamp
+        var dateUpdated: Timestamp,
+
+        @JsonProperty
+        @field:ValidTimestamp
+        var dateAdded: Timestamp,
+
+        //TODO: remove this field as it is not required.
+        @JsonProperty
+        @field:Size(max = 70)
+        var sha256: String) {
+
+    constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
+            "", "", BigDecimal(0.00), 0, false, "",
+            Timestamp(0), Timestamp(0), "") {
+    }
+
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
         return (this.transactionDate.time)
     }
 
-    @Size(min = 1, max = 75)
-    @Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-    @JsonProperty
-    var description = _description
-
-    @Size(max = 50)
-    @JsonProperty
-    @Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-    var category = _category
-
-    @JsonProperty
-    @Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-    var amount = _amount
-
-    @Min(value = -3)
-    @Max(value = 1)
-    @Column(name = "cleared")
-    @JsonProperty
-    var cleared = _cleared
-
-    @JsonProperty
-    var reoccurring = _reoccurring
-
-    @Size(max = 100)
-    @JsonProperty
-    @Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-    var notes = _notes
-
-    @ValidTimestamp
-    @JsonProperty("dateUpdated")
-    var dateUpdated = _dateUpdated
-
     @JsonGetter("dateUpdated")
     fun jsonGetterDateUpdated(): Long {
         return (this.dateUpdated.time / 1000)
     }
-
-    @ValidTimestamp
-    @JsonProperty("dateAdded")
-    var dateAdded = _dateAdded
 
     @JsonGetter("dateAdded")
     fun jsonGetterDateAdded(): Long {
         return (this.dateAdded.time / 1000)
     }
 
-    //TODO: remove this field
-    @Size(max = 70)
-    @JsonProperty
-    var sha256 = _sha256
-
     //TODO: camel case or snake case?
-    @ManyToOne(cascade= [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null

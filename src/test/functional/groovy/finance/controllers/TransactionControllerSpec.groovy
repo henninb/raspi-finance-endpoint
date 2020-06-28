@@ -105,6 +105,7 @@ class TransactionControllerSpec extends Specification {
         accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
         HttpEntity entity = new HttpEntity<>(null, headers)
+        def insertedValue = transactionService.findByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -114,6 +115,7 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.OK
 
         cleanup:
+        transactionService.deleteByIdFromTransactionCategories(insertedValue.get().transactionId)
         transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
@@ -123,6 +125,7 @@ class TransactionControllerSpec extends Specification {
         HttpEntity entity = new HttpEntity<>(null, headers)
         accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
+        def insertedValue = transactionService.findByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -132,6 +135,7 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.NOT_FOUND
 
         cleanup:
+        transactionService.deleteByIdFromTransactionCategories(insertedValue.get().transactionId)
         transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
@@ -140,6 +144,7 @@ class TransactionControllerSpec extends Specification {
         given:
         accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
+
 
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -151,7 +156,6 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.OK
 
         cleanup:
-        transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
 
@@ -159,6 +163,7 @@ class TransactionControllerSpec extends Specification {
         given:
         accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
+        def insertedValue = transactionService.findByGuid(guid)
 
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -170,6 +175,7 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.NOT_FOUND
 
         cleanup:
+        transactionService.deleteByIdFromTransactionCategories(insertedValue.get().transactionId)
         transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
@@ -189,7 +195,7 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.BAD_REQUEST
 
         cleanup:
-        transactionService.deleteByGuid(guid)
+        //transactionService.deleteByGuid(guid)
         accountService.deleteByAccountNameOwner(accountNameOwner)
         categoryService.deleteByCategory(categoryName)
     }
