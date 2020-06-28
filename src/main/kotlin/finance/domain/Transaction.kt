@@ -104,7 +104,6 @@ data class Transaction (
             Timestamp(0), Timestamp(0), "") {
     }
 
-
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
         return (this.transactionDate.time)
@@ -120,7 +119,7 @@ data class Transaction (
         return (this.dateAdded.time / 1000)
     }
 
-    //TODO: camel case or snake case?
+    //TODO: camelCase or snake_case?
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "accountId", nullable = true, insertable = false, updatable = false)
     @JsonIgnore
