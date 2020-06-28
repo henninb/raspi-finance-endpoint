@@ -19,7 +19,7 @@ class TransactionServiceSpec extends Specification {
     CategoryService categoryService = new CategoryService(mockCategoryRepository)
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
 
-    def "test Delete By GUID"() {
+    def "test transactionService - deleteByGuid"() {
         given:
         def guid = "123"
         Transaction transaction = new Transaction()
@@ -29,11 +29,12 @@ class TransactionServiceSpec extends Specification {
         then:
         isDeleted
         1 * mockTransactionRepository.deleteByGuid(guid)
+        1 * mockTransactionRepository.deleteByIdFromTransactionCategories(transaction.transactionId)
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    def "test Delete By GUID - no record returned"() {
+    def "test transactionService - deleteByGuid - no record returned because of invalid guid"() {
         given:
         def guid = "123"
         Optional<Transaction> transactionOptional = Optional.empty()
@@ -45,7 +46,7 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    def "test Find By GUID"() {
+    def "test transactionService - findByGuid"() {
         given:
         def guid = "123"
         Transaction transaction = new Transaction()
@@ -57,7 +58,7 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insert valid transaction"() {
+    def "test transactionService - insert valid transaction"() {
         given:
         def categoryName = "my-category"
         def accountName = "my-account-name"
@@ -82,7 +83,7 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insert duplicate transaction attempt"() {
+    def "test transactionService - attempt to insert duplicate transaction"() {
         given:
         def categoryName = "my-category"
         def accountName = "my-account-name"
@@ -101,7 +102,7 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insert valid transaction - account name does not exist"() {
+    def "test transactionService - insert valid transaction where account name does not exist"() {
         given:
         def categoryName = "my-category"
         def accountName = "my-account-name"
@@ -130,7 +131,7 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insert valid transaction - category name does not exist"() {
+    def "test transactionService - insert a valid transaction where category name does not exist"() {
         given:
         def categoryName = "my-category"
         def accountName = "my-account-name"

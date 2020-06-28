@@ -72,12 +72,12 @@ class TransactionControllerSpec extends Specification {
 {
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
 "accountNameOwner":"foo_brian",
-"description":"Deposit",
-"category":"none",
+"description":"example name",
+"category":"foo123",
 "amount":12.10,"cleared":1,"reoccurring":false,
 "notes":"my notes","sha256":"",
 "transactionId":0,"accountId":0,
-"accountType":"debit",
+"accountType":"credit",
 "transactionDate":1435467600000,
 "dateUpdated":1435502109000,
 "dateAdded":1435502109000
@@ -180,10 +180,8 @@ class TransactionControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(accountNameOwner)
     }
 
-    def "test insertTransaction endpoint bad data"() {
+    def "test insertTransaction endpoint bad data - not json"() {
         given:
-        accountService.insertAccount(account)
-        categoryService.insertCategory(category)
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>("foo", headers)
 
@@ -193,11 +191,6 @@ class TransactionControllerSpec extends Specification {
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.BAD_REQUEST
-
-        cleanup:
-        //transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
-        categoryService.deleteByCategory(categoryName)
     }
 
     def "test insertTransaction endpoint"() {
