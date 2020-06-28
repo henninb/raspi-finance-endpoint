@@ -214,7 +214,7 @@ class TransactionControllerSpec extends Specification {
     }
 
     @Ignore
-    //TODO: fix the test for PATCH
+    //TODO: fix Invalid HTTP method: PATCH; nested exception is java.net.ProtocolException: Invalid HTTP method: PATCH
     def "test updateTransaction endpoint"() {
         given:
         println transaction
