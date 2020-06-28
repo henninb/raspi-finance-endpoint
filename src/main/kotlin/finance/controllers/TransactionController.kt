@@ -17,8 +17,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolationException
-import javax.validation.constraints.Max
-import javax.validation.constraints.Min
 
 
 //@CrossOrigin(origins = arrayOf("http://localhost:3000"))
@@ -37,20 +35,6 @@ class TransactionController @Autowired constructor(private var transactionServic
         }
         return ResponseEntity.ok(transactions)
     }
-
-//    //curl http://localhost:8080/transaction/page/all?page=1&per_page=1
-//    @GetMapping(path = [("/page/all")])
-//    fun findAllTransactionsPageable( @RequestParam @Min(value = 1, message = "Page number must be an integer greater than 1.")
-//                                          page: Int,
-//                                     @RequestParam(value = "per_page") @Max(value = 1000, message = "Page size limit is 1000, change page size value")
-//                                          perPage: Int) : ResponseEntity<List<Transaction>> {
-//
-//        val transactions: List<Transaction> = transactionService.findAllTransactions(PageRequest.of(page -1, perPage))
-//        if( transactions.isEmpty() ) {
-//            ResponseEntity.notFound().build<List<Transaction>>()
-//        }
-//        return ResponseEntity.ok(transactions)
-//    }
 
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"])
@@ -76,10 +60,11 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @GetMapping(path = ["/select/{guid}"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
-        logger.debug("guid = $guid")
+        logger.debug("findTransaction() guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
         if( transactionOption.isPresent ) {
             val transaction: Transaction = transactionOption.get()
+            println("transaction.categries = ${transaction.categories}")
             return ResponseEntity.ok(transaction)
         }
 

@@ -131,7 +131,7 @@ data class Transaction (
             joinColumns = [JoinColumn(name = "transactionId")],
             inverseJoinColumns = [JoinColumn(name = "categoryId")])
     @JsonIgnore
-    var categries = mutableListOf<Category>()
+    var categories = mutableListOf<Category>()
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

@@ -85,11 +85,11 @@ class TransactionService @Autowired constructor(private var transactionRepositor
             transaction.category != "" -> {
                 val optionalCategory = categoryService.findByCategory(transaction.category)
                 if (optionalCategory.isPresent) {
-                    transaction.categries.add(optionalCategory.get())
+                    transaction.categories.add(optionalCategory.get())
                 } else {
                     val category = createDefaultCategory(transaction.category)
                     categoryService.insertCategory(category)
-                    transaction.categries.add(category)
+                    transaction.categories.add(category)
                 }
             }
         }

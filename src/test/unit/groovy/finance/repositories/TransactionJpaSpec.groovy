@@ -16,7 +16,7 @@ import javax.validation.ConstraintViolationException
 import java.sql.Timestamp
 
 @DataJpaTest
-class JpaTransactionSpec extends Specification {
+class TransactionJpaSpec extends Specification {
 
     @Autowired
     TransactionRepository transactionRepository
@@ -27,7 +27,7 @@ class JpaTransactionSpec extends Specification {
     @Autowired
     TestEntityManager entityManager
 
-    def "jpa test for transaction repository"() {
+    def "test transaction repository - insert a valid record"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -39,13 +39,15 @@ class JpaTransactionSpec extends Specification {
         println "accountResult = $accountResult"
         def transactionResult = entityManager.merge(transaction)
         println "transactionResult = $transactionResult"
+        def foundTransactionOptional = transactionRepository.findByGuid(transaction.guid)
 
         expect:
         transactionRepository.count() == 1L
         accountRepository.count() == 1L
+        //foundTransactionOptional.get().categries.size() == 1
     }
 
-    def "jpa test for transaction repository - long category"() {
+    def "test transaction repository - attempt to insert a transaction with a category with too many characters"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -62,7 +64,7 @@ class JpaTransactionSpec extends Specification {
         0 * _
     }
 
-    def "jpa test for transaction repository - clearedStatus out of range"() {
+    def "test transaction repository - attempt to insert a transaction with a cleared status out of range"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -79,7 +81,7 @@ class JpaTransactionSpec extends Specification {
         0 * _
     }
 
-    def "jpa test for transaction repository - invalid guid"() {
+    def "test transaction repository - attempt to insert a transaction with an invalid guid"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -96,7 +98,7 @@ class JpaTransactionSpec extends Specification {
         0 * _
     }
 
-    def "jpa test for transaction repository - invalid dateAdded"() {
+    def "test transaction repository - attempt to insert a transaction with an invalid dateAdded"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -114,7 +116,7 @@ class JpaTransactionSpec extends Specification {
         0 * _
     }
 
-    def "jpa test for transaction repository - invalid dateUpdated"() {
+    def "test transaction repository - attempt to insert a transaction with an invalid dateUpdated"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -131,6 +133,22 @@ class JpaTransactionSpec extends Specification {
         ex.getMessage().contains( 'timestamp must be greater than 1/1/2000.')
         0 * _
     }
+
+    def "test transaction repository - delete record"() {
+        given:
+        Transaction transaction = new TransactionBuilder().build()
+        Account account = new AccountBuilder().build()
+
+        def accountResult = entityManager.merge(account)
+        transaction.accountId = accountResult.accountId
+        entityManager.merge(transaction)
+        transactionRepository.deleteByGuid(transaction.guid)
+
+        expect:
+        transactionRepository.count() == 0L
+        accountRepository.count() == 1L
+    }
+
 
 }
 
