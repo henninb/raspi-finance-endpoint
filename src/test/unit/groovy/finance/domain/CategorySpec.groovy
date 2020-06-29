@@ -1,8 +1,11 @@
 package finance.domain
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.helpers.AccountBuilder
+import finance.helpers.CategoryBuilder
 import spock.lang.Specification
 
+import javax.validation.ConstraintViolation
 import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
@@ -32,5 +35,17 @@ class CategorySpec extends Specification {
 
         then:
         category.category == "test"
+    }
+
+    def "test validation valid category"() {
+        given:
+        Category category = CategoryBuilder.builder().build()
+        category.category = "test1234"
+
+        when:
+        Set<ConstraintViolation<Category>> violations = validator.validate(category)
+
+        then:
+        violations.isEmpty()
     }
 }
