@@ -40,6 +40,8 @@ class TransactionJpaSpec extends Specification {
         def transactionResult = entityManager.merge(transaction)
         println "transactionResult = $transactionResult"
         def foundTransactionOptional = transactionRepository.findByGuid(transaction.guid)
+        def categories = transactionRepository.selectFromTransactionCategories(foundTransactionOptional.get().transactionId)
+        //println categories
 
         expect:
         transactionRepository.count() == 1L
