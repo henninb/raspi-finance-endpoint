@@ -1,7 +1,9 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.*
-import com.fasterxml.jackson.annotation.JsonCreator.*
+import com.fasterxml.jackson.annotation.JsonGetter
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
@@ -14,7 +16,6 @@ import finance.utils.Constants.UUID_PATTERN
 import finance.utils.ValidDate
 import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
-
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -25,7 +26,7 @@ import javax.validation.constraints.*
 @Proxy(lazy = false)
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Transaction (
+data class Transaction(
 //TODO: the field activeStatus
 
         @Id

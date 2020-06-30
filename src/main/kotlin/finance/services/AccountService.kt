@@ -1,7 +1,6 @@
 package finance.services
 
 import finance.domain.Account
-import finance.domain.Transaction
 import finance.repositories.AccountRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,7 +11,7 @@ import javax.validation.Validator
 
 @Service
 class AccountService @Autowired constructor(private var accountRepository: AccountRepository,
-                                                 private val validator: Validator) {
+                                            private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //TODO: check the signature of accountRepository.findAllByOrderByAccountNameOwner
@@ -30,11 +29,11 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accounts
     }
 
-    fun selectTotals() : Double {
+    fun selectTotals(): Double {
         return accountRepository.selectTotals()
     }
 
-    fun selectTotalsCleared() : Double {
+    fun selectTotalsCleared(): Double {
         return accountRepository.selectTotalsCleared()
     }
 

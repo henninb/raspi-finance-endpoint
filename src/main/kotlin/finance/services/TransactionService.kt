@@ -1,9 +1,9 @@
 package finance.services
 
 import finance.domain.Account
+import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Transaction
-import finance.domain.AccountType
 import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,12 +16,12 @@ import javax.validation.Validator
 
 @Service
 class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
-                                                     private var accountService: AccountService,
-                                                     private var categoryService: CategoryService,
-                                                     private val validator: Validator) {
+                                                private var accountService: AccountService,
+                                                private var categoryService: CategoryService,
+                                                private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun findAllTransactions() : List<Transaction> {
+    fun findAllTransactions(): List<Transaction> {
         return transactionRepository.findAll()
     }
 
@@ -32,7 +32,7 @@ class TransactionService @Autowired constructor(private var transactionRepositor
 
     fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
-        if( transactionOptional.isPresent) {
+        if (transactionOptional.isPresent) {
             transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
             transactionRepository.deleteByGuid(guid)
             return true
@@ -96,16 +96,16 @@ class TransactionService @Autowired constructor(private var transactionRepositor
     }
 
     private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {
-        if(transactionDb.accountNameOwner.trim() == transaction.accountNameOwner) {
+        if (transactionDb.accountNameOwner.trim() == transaction.accountNameOwner) {
 
-            if( transactionDb.amount != transaction.amount ) {
+            if (transactionDb.amount != transaction.amount) {
                 logger.info("discrepancy in the amount for <${transactionDb.guid}>")
                 //TODO: metric for this
                 transactionRepository.setAmountByGuid(transaction.amount, transaction.guid)
                 return true
             }
 
-            if( transactionDb.cleared != transaction.cleared ) {
+            if (transactionDb.cleared != transaction.cleared) {
                 logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
                 //TODO: metric for this
                 transactionRepository.setClearedByGuid(transaction.cleared, transaction.guid)
@@ -140,42 +140,42 @@ class TransactionService @Autowired constructor(private var transactionRepositor
     fun findByGuid(guid: String): Optional<Transaction> {
         logger.info("call findByGuid")
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
-        if( transactionOptional.isPresent ) {
+        if (transactionOptional.isPresent) {
             return transactionOptional
         }
         return Optional.empty()
     }
 
-    fun getTotalsByAccountNameOwner( accountNameOwner: String) : Map<String, BigDecimal> {
+    fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
-            val result: MutableMap<String, BigDecimal> = HashMap()
-            val totalsCleared: Double = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
-            val totals: Double = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+        val result: MutableMap<String, BigDecimal> = HashMap()
+        val totalsCleared: Double = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
+        val totals: Double = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
 
-            result["totals"] = BigDecimal(totals)
-            result["totalsCleared"] = BigDecimal(totalsCleared)
-            return result
+        result["totals"] = BigDecimal(totals)
+        result["totalsCleared"] = BigDecimal(totalsCleared)
+        return result
     }
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
-        if( transactions.isEmpty() ) {
+        if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //return something
         }
         return transactions
     }
 
-    fun patchTransaction( transaction: Transaction ): Boolean {
+    fun patchTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.info("patchTransaction() ConstraintViolation.")
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         //TODO: add logic for patch
-        if ( optionalTransaction.isPresent ) {
+        if (optionalTransaction.isPresent) {
             val fromDb = optionalTransaction.get()
-            if( fromDb.guid == transaction.guid ) {
+            if (fromDb.guid == transaction.guid) {
                 logger.info("successful patch $transaction");
                 transactionRepository.saveAndFlush(transaction)
             } else {

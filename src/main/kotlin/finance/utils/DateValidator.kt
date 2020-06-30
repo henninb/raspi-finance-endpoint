@@ -5,13 +5,13 @@ import java.sql.Date
 import javax.validation.ConstraintValidator
 import javax.validation.ConstraintValidatorContext
 
-class DateValidator : ConstraintValidator<ValidDate,Date> {
+class DateValidator : ConstraintValidator<ValidDate, Date> {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     override fun initialize(constraintAnnotation: ValidDate) {
     }
 
-    override fun  isValid(value : Date , context: ConstraintValidatorContext ): Boolean {
+    override fun isValid(value: Date, context: ConstraintValidatorContext): Boolean {
         //greater than 1/1/2000
         println("dateToBeEvaluated: $value")
         logger.info("dateToBeEvaluated: $value")

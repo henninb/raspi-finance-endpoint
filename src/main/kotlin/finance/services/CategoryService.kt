@@ -16,9 +16,9 @@ class CategoryService @Autowired constructor(private var categoryRepository: Cat
         return true
     }
 
-    fun findByCategory(categoryName: String ): Optional<Category> {
+    fun findByCategory(categoryName: String): Optional<Category> {
         val categoryOptional: Optional<Category> = categoryRepository.findByCategory(categoryName)
-        if( categoryOptional.isPresent ) {
+        if (categoryOptional.isPresent) {
             return categoryOptional
         }
         return Optional.empty()

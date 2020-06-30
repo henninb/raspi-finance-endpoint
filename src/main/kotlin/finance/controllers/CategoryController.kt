@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
-import java.util.HashMap
+import java.util.*
 import javax.validation.ConstraintViolationException
 
 @RestController
