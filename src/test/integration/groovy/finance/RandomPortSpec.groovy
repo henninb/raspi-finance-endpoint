@@ -27,7 +27,7 @@ class RandomPortSpec extends Specification {
         foo != bar
     }
 
-    def "random port test" () {
+    def "random port test"() {
         when:
         println "localPort = $localPort"
         then:

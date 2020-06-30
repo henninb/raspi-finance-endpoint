@@ -3,16 +3,13 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
-import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
-import spock.lang.Ignore
 import spock.lang.Specification
-import javax.validation.Validation
 
 import javax.validation.ConstraintViolation
+import javax.validation.Validation
 import javax.validation.Validator
-import javax.validation.constraints.Size
 
 class AccountServiceSpec extends Specification {
     AccountRepository mockAccountRepository = Mock(AccountRepository)
@@ -71,7 +68,7 @@ class AccountServiceSpec extends Specification {
         Account account = mapper.readValue(jsonPayload, Account.class)
         def validatorFactory = Validation.buildDefaultValidatorFactory()
         def validator = validatorFactory.getValidator()
-        Set<ConstraintViolation<Account>>  constraintViolations = validator.validate(account)
+        Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         def result = accountService.insertAccount(account)

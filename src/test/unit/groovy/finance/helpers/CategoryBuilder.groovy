@@ -1,7 +1,6 @@
 package finance.helpers
 
-import finance.domain.Account
-import finance.domain.AccountType
+
 import finance.domain.Category
 
 import java.sql.Timestamp
