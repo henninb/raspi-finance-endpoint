@@ -1,6 +1,5 @@
 package finance.utils
 
-import finance.utils.TimestampValidator
 import javax.validation.Constraint
 import javax.validation.Payload
 import kotlin.reflect.KClass

@@ -16,7 +16,7 @@ class AccountTypeConverter : AttributeConverter<AccountType, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): AccountType {
-        return  when (attribute.trim()) {
+        return when (attribute.trim()) {
             "credit" -> AccountType.Credit
             "debit" -> AccountType.Debit
             "unknown" -> AccountType.Undefined

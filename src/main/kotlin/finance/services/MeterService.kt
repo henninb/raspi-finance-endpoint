@@ -1,7 +1,5 @@
 package finance.services
 
-import finance.utils.Constants
-import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

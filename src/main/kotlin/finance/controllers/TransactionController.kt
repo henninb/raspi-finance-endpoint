@@ -28,9 +28,9 @@ class TransactionController @Autowired constructor(private var transactionServic
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     @GetMapping(path = [("/all")])
-    fun findAllTransactions() : ResponseEntity<List<Transaction>> {
+    fun findAllTransactions(): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> = transactionService.findAllTransactions()
-        if( transactions.isEmpty() ) {
+        if (transactions.isEmpty()) {
             ResponseEntity.notFound().build<List<Transaction>>()
         }
         return ResponseEntity.ok(transactions)
@@ -40,7 +40,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     @GetMapping(path = ["/account/select/{accountNameOwner}"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
-        if( transactions.isEmpty() ) {
+        if (transactions.isEmpty()) {
             ResponseEntity.notFound().build<List<Transaction>>()
         }
         return ResponseEntity.ok(transactions)
@@ -62,7 +62,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
-        if( transactionOption.isPresent ) {
+        if (transactionOption.isPresent) {
             val transaction: Transaction = transactionOption.get()
             println("transaction.categries = ${transaction.categories}")
             return ResponseEntity.ok(transaction)
@@ -80,7 +80,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
         val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
-        if( updateStatus ) {
+        if (updateStatus) {
             return ResponseEntity.ok("transaction patched")
         }
         return ResponseEntity.notFound().build()
@@ -88,9 +88,9 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
-    fun insertTransaction(@RequestBody transaction: Transaction) : ResponseEntity<String> {
+    fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
         logger.info("insert - transaction.transactionDate: ${transaction}")
-        if (transactionService.insertTransaction(transaction) ) {
+        if (transactionService.insertTransaction(transaction)) {
             logger.info(transaction.toString())
             return ResponseEntity.ok("transaction inserted")
         }
@@ -102,8 +102,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     @DeleteMapping(path = ["/delete/{guid}"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
-        if( transactionOption.isPresent ) {
-            if( transactionService.deleteByGuid(guid) ) {
+        if (transactionOption.isPresent) {
+            if (transactionService.deleteByGuid(guid)) {
                 return ResponseEntity.ok("resource deleted")
             }
             throw EmptyTransactionException("transaction not deleted.")
@@ -140,7 +140,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)
-        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName  + " , message: " + throwable.message
+        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         return response
     }
 
