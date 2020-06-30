@@ -32,6 +32,13 @@ sourceSets {
     }
 }
 
+test {
+    useJUnitPlatform()
+    testLogging {
+        //events "passed", "skipped", "failed"
+    }
+}
+
 compileTestKotlin {
     //kotlinOptions.jvmTarget = '11'
     kotlinOptions.jvmTarget = '1.8'

@@ -23,7 +23,7 @@ class TransactionBuilder {
     String notes = 'my note to you'
     Timestamp dateUpdated = new Timestamp(1553645394000)
     Timestamp dateAdded = new Timestamp(1553645394000)
-    String sha256 = '963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77'
+    String sha256 = ''
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
