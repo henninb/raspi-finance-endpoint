@@ -23,6 +23,6 @@ public class RandomPortTest {
     @Test
     public void getPort() {
         System.out.println(localPort);
-        assertTrue(localPort > 0 );
+        assertTrue(localPort > 0);
     }
 }

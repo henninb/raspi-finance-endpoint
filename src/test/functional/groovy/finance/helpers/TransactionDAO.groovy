@@ -51,7 +51,7 @@ class TransactionDAO {
         jdbcTemplate.execute(this.SQL_TRUNCATE_CATEGORY_TABLE)
     }
 
-    Integer transactionCount()  {
+    Integer transactionCount() {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM t_transaction", Integer) as Integer
     }
 

@@ -1,7 +1,6 @@
 package finance.domain
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import spock.lang.Specification
 

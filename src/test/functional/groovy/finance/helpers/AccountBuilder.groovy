@@ -2,6 +2,7 @@ package finance.helpers
 
 import finance.domain.Account
 import finance.domain.AccountType
+
 import java.sql.Timestamp
 
 class AccountBuilder {
@@ -41,6 +42,7 @@ class AccountBuilder {
         this.accountType = accountType
         return this
     }
+
     AccountBuilder activeStatus(activeStatus) {
         this.activeStatus = activeStatus
         return this

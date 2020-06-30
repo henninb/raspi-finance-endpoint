@@ -5,9 +5,9 @@ import finance.Application
 import finance.domain.Account
 import finance.domain.Category
 import finance.domain.Transaction
+import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import finance.helpers.TransactionBuilder
-import finance.helpers.AccountBuilder
 import finance.services.AccountService
 import finance.services.CategoryService
 import finance.services.TransactionService
@@ -15,12 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Shared
@@ -68,7 +63,7 @@ class TransactionControllerSpec extends Specification {
     private ObjectMapper mapper = new ObjectMapper()
 
     String json =
-     """
+            """
 {
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
 "accountNameOwner":"foo_brian",
@@ -279,7 +274,6 @@ class TransactionControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(accountNameOwner)
         categoryService.deleteByCategory(categoryName)
     }
-
 
 
     def "test insertTransaction endpoint - old tranaction date"() {

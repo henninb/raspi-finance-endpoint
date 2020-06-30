@@ -4,14 +4,14 @@ import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
+import org.springframework.beans.factory.annotation.Autowired
 
 //import finance.repositories.TransactionRepository
-import org.springframework.beans.factory.annotation.Autowired
+
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import spock.lang.Specification
 
-import javax.validation.ConstraintViolation
 import javax.validation.ConstraintViolationException
 import java.sql.Timestamp
 
@@ -114,7 +114,7 @@ class TransactionJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains( 'timestamp must be greater than 1/1/2000.')
+        ex.getMessage().contains('timestamp must be greater than 1/1/2000.')
         0 * _
     }
 
@@ -132,7 +132,7 @@ class TransactionJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains( 'timestamp must be greater than 1/1/2000.')
+        ex.getMessage().contains('timestamp must be greater than 1/1/2000.')
         0 * _
     }
 

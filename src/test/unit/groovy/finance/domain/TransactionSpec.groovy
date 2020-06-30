@@ -2,7 +2,6 @@ package finance.domain
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.helpers.TransactionBuilder
-import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
