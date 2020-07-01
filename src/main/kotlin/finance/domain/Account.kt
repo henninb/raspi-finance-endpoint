@@ -69,8 +69,7 @@ data class Account(
 
     constructor() : this(0L, "", AccountType.Credit, true,
             "0000", BigDecimal(0.0), BigDecimal(0.0), Timestamp(0),
-            Timestamp(System.currentTimeMillis()), Timestamp(System.currentTimeMillis())) {
-    }
+            Timestamp(System.currentTimeMillis()), Timestamp(System.currentTimeMillis()))
 
     override fun toString(): String = mapper.writeValueAsString(this)
 
