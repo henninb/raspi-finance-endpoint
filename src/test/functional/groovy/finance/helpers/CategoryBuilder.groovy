@@ -4,7 +4,7 @@ import finance.domain.Category
 
 class CategoryBuilder {
 
-    String categoryName = "test123"
+    String categoryName = "foo"
 
     static CategoryBuilder builder() {
         return new CategoryBuilder()

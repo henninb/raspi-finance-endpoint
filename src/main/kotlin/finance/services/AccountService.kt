@@ -14,9 +14,9 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
                                             private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    //TODO: check the signature of accountRepository.findAllByOrderByAccountNameOwner
-    fun findAllOrderByAccountNameOwner(): List<Account> {
-        return accountRepository.findAllByOrderByAccountNameOwner()
+
+    fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
+        return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
     fun findAllActiveAccounts(): List<Account> {
@@ -37,11 +37,8 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accountRepository.selectTotalsCleared()
     }
 
-    fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
-        return accountRepository.findByAccountNameOwner(accountNameOwner)
-    }
-
     fun insertAccount(account: Account): Boolean {
+        val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
             //TODO: handle the violation
@@ -49,9 +46,11 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
             return false
         }
         //TODO: Should saveAndFlush be in a try catch block?
-        logger.info("INFO: transactionRepository.saveAndFlush call.")
-        accountRepository.saveAndFlush(account)
-        logger.info("INFO: transactionRepository.saveAndFlush success.")
+        //logger.info("INFO: transactionRepository.saveAndFlush call.")
+        if( !accountOptional.isPresent ) {
+            accountRepository.saveAndFlush(account)
+        }
+        //logger.info("INFO: transactionRepository.saveAndFlush success.")
         return true
     }
 

@@ -17,12 +17,12 @@ class AccountSpec extends Specification {
     Validator validator
     private ObjectMapper mapper = new ObjectMapper()
 
-    void setup() {
+    def setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
-    void cleanup() {
+    def cleanup() {
         validatorFactory.close()
     }
 

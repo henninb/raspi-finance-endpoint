@@ -9,7 +9,6 @@ import java.sql.Timestamp
 
 class TransactionBuilder {
 
-    Long transactionId = 1002
     String guid = '4ea3be58-3993-46de-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
@@ -31,7 +30,6 @@ class TransactionBuilder {
 
     Transaction build() {
         Transaction transaction = new Transaction()
-        transaction.transactionId = transactionId
         transaction.guid = guid
         transaction.accountId = accountId
         transaction.accountType = accountType
@@ -47,11 +45,6 @@ class TransactionBuilder {
         transaction.dateUpdated = dateUpdated
         transaction.sha256 = sha256
         return transaction
-    }
-
-    TransactionBuilder transactionId(transactionId) {
-        this.transactionId = transactionId
-        return this
     }
 
     TransactionBuilder guid(guid) {

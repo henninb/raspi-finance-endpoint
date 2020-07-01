@@ -32,13 +32,14 @@ class TransactionSpec extends Specification {
 "sha256":"963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77"}
 '''
 
-
-    void setup() {
+    def setup() {
+        println "setup ran."
         validatorFactory = Validation.buildDefaultValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
-    void cleanup() {
+    def cleanup() {
+        println "cleanup ran."
         validatorFactory.close()
     }
 
