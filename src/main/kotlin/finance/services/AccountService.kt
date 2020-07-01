@@ -47,7 +47,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         }
         //TODO: Should saveAndFlush be in a try catch block?
         //logger.info("INFO: transactionRepository.saveAndFlush call.")
-        if( !accountOptional.isPresent ) {
+        if (!accountOptional.isPresent) {
             accountRepository.saveAndFlush(account)
         }
         //logger.info("INFO: transactionRepository.saveAndFlush success.")
