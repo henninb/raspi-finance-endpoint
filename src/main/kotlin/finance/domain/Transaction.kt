@@ -102,8 +102,7 @@ data class Transaction(
 
     constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
             "", "", BigDecimal(0.00), 0, false, "",
-            Timestamp(0), Timestamp(0), "") {
-    }
+            Timestamp(0), Timestamp(0), "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
