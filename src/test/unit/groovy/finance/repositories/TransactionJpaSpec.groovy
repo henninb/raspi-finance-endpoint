@@ -5,9 +5,6 @@ import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
 import org.springframework.beans.factory.annotation.Autowired
-
-//import finance.repositories.TransactionRepository
-
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import spock.lang.Specification
@@ -34,19 +31,23 @@ class TransactionJpaSpec extends Specification {
         println "transaction = $transaction"
         println "account = $account"
 
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         println "accountResult = $accountResult"
-        def transactionResult = entityManager.merge(transaction)
+        def transactionResult = entityManager.persist(transaction)
         println "transactionResult = $transactionResult"
         def foundTransactionOptional = transactionRepository.findByGuid(transaction.guid)
         def categories = transactionRepository.selectFromTransactionCategories(foundTransactionOptional.get().transactionId)
-        //println categories
+        println "categories = $categories"
+        //categories.get(0)
 
         expect:
         transactionRepository.count() == 1L
         accountRepository.count() == 1L
-        //foundTransactionOptional.get().categries.size() == 1
+        foundTransactionOptional.get().guid == transaction.guid
+
+
+        //foundTransactionOptional.get().categories.size() == 1
     }
 
     def "test transaction repository - attempt to insert a transaction with a category with too many characters"() {
@@ -55,10 +56,10 @@ class TransactionJpaSpec extends Specification {
         Account account = new AccountBuilder().build()
 
         when:
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.category = "123451234512345123451234512345123451234512345123451234512345"
-        entityManager.merge(transaction)
+        entityManager.persist(transaction)
 
         then:
         ConstraintViolationException ex = thrown()
@@ -72,10 +73,10 @@ class TransactionJpaSpec extends Specification {
         Account account = new AccountBuilder().build()
 
         when:
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.cleared = 3
-        entityManager.merge(transaction)
+        entityManager.persist(transaction)
 
         then:
         ConstraintViolationException ex = thrown()
@@ -89,10 +90,10 @@ class TransactionJpaSpec extends Specification {
         Account account = new AccountBuilder().build()
 
         when:
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.guid = "123"
-        entityManager.merge(transaction)
+        entityManager.persist(transaction)
 
         then:
         ConstraintViolationException ex = thrown()
@@ -106,11 +107,11 @@ class TransactionJpaSpec extends Specification {
         Account account = new AccountBuilder().build()
 
         when:
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.dateAdded = new Timestamp(123456)
         println "transaction.dateAdded = $transaction.dateAdded"
-        entityManager.merge(transaction)
+        entityManager.persist(transaction)
 
         then:
         ConstraintViolationException ex = thrown()
@@ -124,11 +125,11 @@ class TransactionJpaSpec extends Specification {
         Account account = new AccountBuilder().build()
 
         when:
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.dateUpdated = new Timestamp(123456)
         println "transaction.dateUpdated = $transaction.dateUpdated"
-        entityManager.merge(transaction)
+        entityManager.persist(transaction)
 
         then:
         ConstraintViolationException ex = thrown()
@@ -141,17 +142,15 @@ class TransactionJpaSpec extends Specification {
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
 
-        def accountResult = entityManager.merge(account)
+        def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
-        entityManager.merge(transaction)
+        entityManager.persist(transaction)
         transactionRepository.deleteByGuid(transaction.guid)
 
         expect:
         transactionRepository.count() == 0L
         accountRepository.count() == 1L
     }
-
-
 }
 
 

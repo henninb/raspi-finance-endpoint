@@ -6,7 +6,7 @@ import finance.domain.Category
 import java.sql.Timestamp
 
 class CategoryBuilder {
-    String categoryName = "test123"
+    String categoryName = "foo"
     Timestamp dateUpdated = new Timestamp(1553645394000)
     Timestamp dateAdded = new Timestamp(1553645394000)
 

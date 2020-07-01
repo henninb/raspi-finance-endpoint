@@ -136,7 +136,6 @@ class TransactionService @Autowired constructor(private var transactionRepositor
         return account
     }
 
-
     fun findByGuid(guid: String): Optional<Transaction> {
         logger.info("call findByGuid")
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)

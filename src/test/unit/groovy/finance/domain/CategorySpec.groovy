@@ -27,19 +27,19 @@ class CategorySpec extends Specification {
     def "test JSON serialization to Category object"() {
 
         given:
-        def jsonPayload = "{\"category\":\"test\"}"
+        def jsonPayload = "{\"category\":\"bar\"}"
 
         when:
         Category category = mapper.readValue(jsonPayload, Category.class)
 
         then:
-        category.category == "test"
+        category.category == "bar"
     }
 
     def "test validation valid category"() {
         given:
         Category category = CategoryBuilder.builder().build()
-        category.category = "test1234"
+        category.category = "foobar"
 
         when:
         Set<ConstraintViolation<Category>> violations = validator.validate(category)
