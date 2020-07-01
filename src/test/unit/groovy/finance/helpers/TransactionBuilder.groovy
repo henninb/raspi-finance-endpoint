@@ -99,7 +99,7 @@ class TransactionBuilder {
 
     TransactionBuilder notes(notes) {
         this.notes = notes
-        return this;
+        return this
     }
 
     TransactionBuilder dateUpdated(dateUpdated) {
