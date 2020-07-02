@@ -34,12 +34,7 @@ class TransactionService @Autowired constructor(private var transactionRepositor
     fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
-            try {
-                transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
-            } catch (e: Exception) {
-                println("****** deleteByIdFromTransactionCategories failed")
-                e.printStackTrace()
-            }
+            transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
             transactionRepository.deleteByGuid(guid)
             return true
         }
