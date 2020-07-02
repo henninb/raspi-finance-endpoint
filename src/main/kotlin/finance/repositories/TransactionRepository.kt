@@ -22,7 +22,6 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Transactional
     fun setClearedByGuid(cleared: Int, guild: String)
 
-
     // Using SpEL expression
     @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE cleared = 1 AND accountNameOwner=?1")
     //@Query(value = "SELECT SUM(amount) AS totals t_transaction WHERE cleared = 1 AND account_name_owner=?1", nativeQuery = true)
@@ -46,7 +45,6 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun selectTimeZoneOffset(): Int
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
-
 
     @Query(value = "SELECT * FROM t_transaction_categories WHERE transaction_id =?", nativeQuery = true)
     fun selectFromTransactionCategories(transactionId: Long): List<Long>
