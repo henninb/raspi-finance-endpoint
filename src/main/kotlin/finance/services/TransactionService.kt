@@ -7,6 +7,7 @@ import finance.domain.Transaction
 import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -33,7 +34,12 @@ class TransactionService @Autowired constructor(private var transactionRepositor
     fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
-            transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
+            try {
+                transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
+            } catch (e: Exception) {
+                println("****** deleteByIdFromTransactionCategories failed")
+                e.printStackTrace()
+            }
             transactionRepository.deleteByGuid(guid)
             return true
         }
@@ -148,8 +154,14 @@ class TransactionService @Autowired constructor(private var transactionRepositor
     fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
-        val totalsCleared: Double = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
-        val totals: Double = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+        var totalsCleared: Double = 0.00
+        var totals: Double = 0.00
+        try {
+            totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
+            totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+        } catch( e: EmptyResultDataAccessException) {
+            logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
+        }
 
         result["totals"] = BigDecimal(totals)
         result["totalsCleared"] = BigDecimal(totalsCleared)

@@ -49,12 +49,11 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl http://localhost:8080/transaction/account/totals/chase_brian
     @GetMapping(path = ["/account/totals/{accountNameOwner}"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
-        val totals: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
+        val results: Map<String, BigDecimal> = transactionService.getTotalsByAccountNameOwner(accountNameOwner)
 
-        //val response : Map<String, String> = totals
-        logger.info("totals=${totals}")
+        logger.info("totals=${results}")
 
-        return ResponseEntity.ok(mapper.writeValueAsString(totals))
+        return ResponseEntity.ok(mapper.writeValueAsString(results))
     }
 
     //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
@@ -106,9 +105,9 @@ class TransactionController @Autowired constructor(private var transactionServic
             if (transactionService.deleteByGuid(guid)) {
                 return ResponseEntity.ok("resource deleted")
             }
-            throw EmptyTransactionException("transaction not deleted.")
+            throw EmptyTransactionException("transaction not deleted: $guid")
         }
-        throw EmptyTransactionException("Cannot find transaction during delete.")
+        throw EmptyTransactionException("Cannot find transaction during delete: $guid")
     }
 
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
