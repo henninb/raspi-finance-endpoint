@@ -7,6 +7,7 @@ import finance.helpers.TransactionBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.springframework.dao.EmptyResultDataAccessException
 import spock.lang.Specification
 
 import javax.validation.ConstraintViolationException
@@ -150,6 +151,42 @@ class TransactionJpaSpec extends Specification {
         expect:
         transactionRepository.count() == 0L
         accountRepository.count() == 1L
+    }
+    
+    def "test transaction repository - getTotalsByAccountNameOwner - empty"() {
+        when:
+        transactionRepository.getTotalsByAccountNameOwner("some_account")
+
+        then:
+        EmptyResultDataAccessException ex = thrown()
+        ex.getMessage().contains('Result must not be null!')
+        0 * _
+    }
+
+    def "test transaction repository - getTotalsByAccountNameOwnerCleared - empty"() {
+        when:
+        transactionRepository.getTotalsByAccountNameOwnerCleared("some_account")
+
+        then:
+        EmptyResultDataAccessException ex = thrown()
+        ex.getMessage().contains('Result must not be null!')
+        0 * _
+    }
+
+    def "test transaction repository - deleteByIdFromTransactionCategories - not in the database"() {
+        when:
+        transactionRepository.deleteByIdFromTransactionCategories(100024L)
+
+        then:
+        0 * _
+    }
+
+    def "test transaction repository - setClearedByGuid - not in the database"() {
+        when:
+        transactionRepository.setClearedByGuid(1, "guid-does-not-exist")
+
+        then:
+        0 * _
     }
 }
 
