@@ -152,7 +152,7 @@ class TransactionJpaSpec extends Specification {
         transactionRepository.count() == 0L
         accountRepository.count() == 1L
     }
-    
+
     def "test transaction repository - getTotalsByAccountNameOwner - empty"() {
         when:
         transactionRepository.getTotalsByAccountNameOwner("some_account")
