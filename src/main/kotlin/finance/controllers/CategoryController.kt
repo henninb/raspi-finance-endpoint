@@ -12,6 +12,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.*
 import javax.validation.ConstraintViolationException
 
+@CrossOrigin
 @RestController
 @RequestMapping("/category")
 //@Validated
