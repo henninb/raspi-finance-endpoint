@@ -15,7 +15,7 @@ import javax.validation.ConstraintViolationException
 @RestController
 @RequestMapping("/category")
 //@Validated
-class CategoryController @Autowired constructor(private var categoryService: CategoryService) {
+class CategoryController (private var categoryService: CategoryService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
