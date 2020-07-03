@@ -20,7 +20,7 @@ class CategoryController (private var categoryService: CategoryService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
-    @PostMapping(path = ["/insert_category"])
+    @PostMapping(path = ["/insert"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<String> {
         categoryService.insertCategory(category)
         logger.info("insertCategory")
