@@ -16,6 +16,11 @@ class CategoryService (private var categoryRepository: CategoryRepository) {
         return true
     }
 
+    fun deleteByCategory(categoryName: String) {
+        logger.info("deleteByCategory")
+        categoryRepository.deleteByCategory(categoryName)
+    }
+
     fun findByCategory(categoryName: String): Optional<Category> {
         val categoryOptional: Optional<Category> = categoryRepository.findByCategory(categoryName)
         if (categoryOptional.isPresent) {
@@ -24,8 +29,4 @@ class CategoryService (private var categoryRepository: CategoryRepository) {
         return Optional.empty()
     }
 
-    fun deleteByCategory(categoryName: String) {
-        logger.info("deleteByCategory")
-        categoryRepository.deleteByCategory(categoryName)
-    }
 }
