@@ -69,6 +69,7 @@ class TransactionService @Autowired constructor(private var transactionRepositor
         if (accountOptional.isPresent) {
             logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
             transaction.accountId = accountOptional.get().accountId
+            transaction.accountType = accountOptional.get().accountType
         } else {
             logger.info("METRIC_ACCOUNT_NOT_FOUND_COUNTER")
             val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
@@ -77,6 +78,7 @@ class TransactionService @Autowired constructor(private var transactionRepositor
             logger.debug("called insertAccount")
             accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
             transaction.accountId = accountOptional.get().accountId
+            transaction.accountType = accountOptional.get().accountType
             //meterRegistry.counter(METRIC_ACCOUNT_NOT_FOUND_COUNTER).increment()
         }
     }
@@ -149,8 +151,8 @@ class TransactionService @Autowired constructor(private var transactionRepositor
     fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
-        var totalsCleared: Double = 0.00
-        var totals: Double = 0.00
+        var totalsCleared= 0.00
+        var totals = 0.00
         try {
             totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
             totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
