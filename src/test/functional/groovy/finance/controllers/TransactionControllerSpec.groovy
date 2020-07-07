@@ -104,9 +104,6 @@ class TransactionControllerSpec extends Specification {
     def "test findTransaction endpoint transaction insert guid is not found"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
-        //accountService.insertAccount(account)
-        //transactionService.insertTransaction(transaction)
-        //def insertedValue = transactionService.findByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -130,11 +127,27 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.OK
     }
 
+    //TODO: fix the multiple category delete issue
+    @Ignore
+    def "test deleteTransaction endpoint insert delete guid found - multiple categories associated"() {
+        given:
+        Category categoryNew = new Category()
+        categoryNew.category = "new_cat"
+        categoryService.insertCategory(categoryNew)
+        transaction.categories.add(categoryNew)
+        transactionService.insertTransaction(transaction)
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/transaction/delete/" + transaction.guid), HttpMethod.DELETE,
+                entity, String.class)
+        then:
+        assert response.statusCode == HttpStatus.OK
+    }
+
     def "test deleteTransaction endpoint guid not found"() {
         given:
-//        transactionService.insertTransaction(transaction)
-//        def insertedValue = transactionService.findByGuid(guid)
-
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
@@ -174,8 +187,7 @@ class TransactionControllerSpec extends Specification {
         cleanup:
         transactionService.deleteByGuid(guid)
     }
-
-
+    
     def "test insertTransaction endpoint - bad guid"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)

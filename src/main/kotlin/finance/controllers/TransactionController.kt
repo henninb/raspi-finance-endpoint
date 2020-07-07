@@ -27,15 +27,6 @@ import javax.validation.ConstraintViolationException
 class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    @GetMapping(path = [("/all")])
-    fun findAllTransactions(): ResponseEntity<List<Transaction>> {
-        val transactions: List<Transaction> = transactionService.findAllTransactions()
-        if (transactions.isEmpty()) {
-            ResponseEntity.notFound().build<List<Transaction>>()
-        }
-        return ResponseEntity.ok(transactions)
-    }
-
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {

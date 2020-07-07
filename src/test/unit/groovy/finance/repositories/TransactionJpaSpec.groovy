@@ -4,12 +4,14 @@ import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
+import org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.dao.EmptyResultDataAccessException
 import spock.lang.Specification
 
+import javax.persistence.PersistenceException
 import javax.validation.ConstraintViolationException
 import java.sql.Timestamp
 
@@ -50,6 +52,31 @@ class TransactionJpaSpec extends Specification {
 
         //foundTransactionOptional.get().categories.size() == 1
     }
+
+    def "test transaction repository - insert 2 records with same guid - throws an exception."() {
+        given:
+        Transaction transaction1 = new TransactionBuilder().build()
+        Transaction transaction2 = new TransactionBuilder().build()
+        transaction2.category = ""
+        transaction2.description = "my-description-data"
+        transaction2.notes = "my-notes"
+
+        Account account = new Account()
+        account.accountNameOwner = transaction1.accountNameOwner
+        def accountResult = entityManager.persist(account)
+        transaction1.accountId = accountResult.accountId
+        transaction2.accountId = accountResult.accountId
+        def transactionResult = entityManager.persist(transaction1)
+        when:
+        entityManager.persist(transaction2)
+
+        then:
+        //JdbcSQLIntegrityConstraintViolationException ex = thrown()
+        PersistenceException ex = thrown()
+        println 'ex.getMessage(): ' + ex.getMessage()
+        ex.getMessage().contains('ConstraintViolationException: could not execute statement')
+    }
+
 
     def "test transaction repository - attempt to insert a transaction with a category with too many characters"() {
         given:
