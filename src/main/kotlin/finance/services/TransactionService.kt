@@ -25,16 +25,27 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                                                      private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun findAllTransactions(): List<Transaction> {
-        return transactionRepository.findAll()
-    }
+//    fun findAllTransactions(): List<Transaction> {
+//        return transactionRepository.findAll()
+//    }
 
+    //TODO: fix the delete
     @Transactional
     open fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             println("transaction.categories = ${transaction.categories}")
+//            for( category in transaction.categories) {
+//                println("remove category")
+//                transaction.categories.remove(category)
+//            }
+
+
+//            transaction.categories.forEach {
+//                transaction.categories.remove(it)
+//            }
+
             if (transaction.categories.size > 0) {
                 val categoryOptional = categoryService.findByCategory(transaction.category)
                 transaction.categories.remove(categoryOptional.get())

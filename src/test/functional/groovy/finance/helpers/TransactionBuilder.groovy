@@ -19,7 +19,7 @@ class TransactionBuilder {
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
     Integer cleared = 1
     Boolean reoccurring = false
-    String notes = 'my note to you'
+    String notes = 'my note'
     Timestamp dateUpdated = new Timestamp(1553645394000000)
     Timestamp dateAdded = new Timestamp(1553645394000000)
     String sha256 = ''
