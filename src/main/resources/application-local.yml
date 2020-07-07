@@ -28,8 +28,8 @@ spring:
       test-while-idle: true
     platform: h2
     continue-on-error: false
-    schema: classpath:schema-h2.sql
-    data: classpath:data-h2.sql
+    schema: classpath:schema-local-h2.sql
+    data: classpath:data-local-h2.sql
     # enable flag to always if you want to utilize data.sql and schema.sql
     initialization-mode: always
   thymeleaf:

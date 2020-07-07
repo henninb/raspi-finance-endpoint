@@ -16,22 +16,19 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
+import org.springframework.http.converter.HttpMessageConverter
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
-@ActiveProfiles("stage-transaction")
+@ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TransactionControllerSpec extends Specification {
 
     @LocalServerPort
     protected int port
-
-    TestRestTemplate restTemplate = new TestRestTemplate()
-
-    @Shared
-    HttpHeaders headers
 
     @Autowired
     TransactionService transactionService
@@ -41,6 +38,11 @@ class TransactionControllerSpec extends Specification {
 
     @Autowired
     CategoryService categoryService
+
+    TestRestTemplate restTemplate = new TestRestTemplate()
+
+    @Shared
+    HttpHeaders headers
 
     @Shared
     Transaction transaction
@@ -62,28 +64,13 @@ class TransactionControllerSpec extends Specification {
 
     private ObjectMapper mapper = new ObjectMapper()
 
-    String json =
-            """
-{
-"guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
-"accountNameOwner":"foo_brian",
-"description":"example name",
-"category":"foo123",
-"amount":12.10,"cleared":1,"reoccurring":false,
-"notes":"my notes","sha256":"",
-"transactionId":0,"accountId":0,
-"accountType":"credit",
-"transactionDate":1435467600000,
-"dateUpdated":1435502109000,
-"dateAdded":1435502109000
-}
-     """
-
-    def setupSpec() {
+    def setup() {
+        println("***** setup started")
         headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
         category = CategoryBuilder.builder().build()
         transaction = TransactionBuilder.builder().build()
+        transaction.guid = UUID.randomUUID()
         guid = transaction.getGuid()
         categoryName = transaction.getCategory()
         accountNameOwner = transaction.getAccountNameOwner()
@@ -95,32 +82,31 @@ class TransactionControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "test findTransaction endpoint found"() {
+    def "test findTransaction endpoint insert - find - delete"() {
+
         given:
-        accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
         HttpEntity entity = new HttpEntity<>(null, headers)
         def insertedValue = transactionService.findByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/select/" + guid), HttpMethod.GET,
+                createURLWithPort("/transaction/select/" + transaction.guid), HttpMethod.GET,
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.OK
+        insertedValue.get().guid == transaction.guid
 
         cleanup:
-        transactionService.deleteByIdFromTransactionCategories(insertedValue.get().transactionId)
-        transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
+        transactionService.deleteByGuid(transaction.guid)
     }
 
-    def "test findTransaction endpoint account not found"() {
+    def "test findTransaction endpoint transaction insert guid is not found"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
-        accountService.insertAccount(account)
-        transactionService.insertTransaction(transaction)
-        def insertedValue = transactionService.findByGuid(guid)
+        //accountService.insertAccount(account)
+        //transactionService.insertTransaction(transaction)
+        //def insertedValue = transactionService.findByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -128,37 +114,26 @@ class TransactionControllerSpec extends Specification {
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.NOT_FOUND
-
-        cleanup:
-        transactionService.deleteByIdFromTransactionCategories(insertedValue.get().transactionId)
-        transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
     }
 
-    def "test deleteTransaction endpoint guid found"() {
+    def "test deleteTransaction endpoint insert delete guid found"() {
         given:
-        accountService.insertAccount(account)
         transactionService.insertTransaction(transaction)
-
 
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/delete/" + guid), HttpMethod.DELETE,
+                createURLWithPort("/transaction/delete/" + transaction.guid), HttpMethod.DELETE,
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.OK
-
-        cleanup:
-        accountService.deleteByAccountNameOwner(accountNameOwner)
     }
 
     def "test deleteTransaction endpoint guid not found"() {
         given:
-        accountService.insertAccount(account)
-        transactionService.insertTransaction(transaction)
-        def insertedValue = transactionService.findByGuid(guid)
+//        transactionService.insertTransaction(transaction)
+//        def insertedValue = transactionService.findByGuid(guid)
 
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -168,11 +143,6 @@ class TransactionControllerSpec extends Specification {
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.NOT_FOUND
-
-        cleanup:
-        transactionService.deleteByIdFromTransactionCategories(insertedValue.get().transactionId)
-        transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
     }
 
     def "test insertTransaction endpoint bad data - not json"() {
@@ -190,10 +160,9 @@ class TransactionControllerSpec extends Specification {
 
     def "test insertTransaction endpoint"() {
         given:
-        accountService.insertAccount(account)
-        categoryService.insertCategory(category)
+        def transaction  = TransactionBuilder.builder().build()
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(json, headers)
+        HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -204,41 +173,14 @@ class TransactionControllerSpec extends Specification {
 
         cleanup:
         transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
-        categoryService.deleteByCategory(categoryName)
     }
 
-    @Ignore
-    //TODO: fix Invalid HTTP method: PATCH; nested exception is java.net.ProtocolException: Invalid HTTP method: PATCH
-    def "test updateTransaction endpoint"() {
-        given:
-        println transaction
-        transactionService.insertTransaction(transaction)
-        headers.setContentType(new MediaType("application", "json-patch+json"))
-        transaction.description = "updateToDescription"
-        def updateToDescription = mapper.writeValueAsString(transaction)
-        HttpEntity entity = new HttpEntity<>(updateToDescription, headers)
-
-        when:
-        String response = restTemplate.patchForObject(
-                createURLWithPort("/transaction/update/" + guid), entity, String.class)
-        then:
-        assert response == "transaction patched"
-
-        cleanup:
-        transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
-        categoryService.deleteByCategory(categoryName)
-    }
 
     def "test insertTransaction endpoint - bad guid"() {
         given:
-        accountService.insertAccount(account)
-        categoryService.insertCategory(category)
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.guid = "123"
-        def badGuid = mapper.writeValueAsString(transaction)
-        HttpEntity entity = new HttpEntity<>(badGuid, headers)
+        HttpEntity entity = new HttpEntity<>(transaction, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -246,17 +188,11 @@ class TransactionControllerSpec extends Specification {
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.BAD_REQUEST
-
-        cleanup:
-        transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
-        categoryService.deleteByCategory(categoryName)
     }
 
     def "test insertTransaction endpoint - bad category"() {
+
         given:
-        accountService.insertAccount(account)
-        categoryService.insertCategory(category)
         headers.setContentType(MediaType.APPLICATION_JSON)
 
         when:
@@ -268,35 +204,65 @@ class TransactionControllerSpec extends Specification {
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.BAD_REQUEST
-
-        cleanup:
-        transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
-        categoryService.deleteByCategory(categoryName)
     }
 
 
-    def "test insertTransaction endpoint - old tranaction date"() {
+    def "test insertTransaction endpoint - old transaction date"() {
         given:
-        accountService.insertAccount(account)
-        categoryService.insertCategory(category)
         headers.setContentType(MediaType.APPLICATION_JSON)
 
         when:
         transaction.transactionDate = new java.sql.Date(100000)
-        def oldDate = mapper.writeValueAsString(transaction)
-        HttpEntity entity = new HttpEntity<>(oldDate, headers)
+
+        HttpEntity entity = new HttpEntity<>(transaction, headers)
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
         assert response.statusCode == HttpStatus.BAD_REQUEST
+    }
+
+    @Ignore
+    //TODO: fix Invalid HTTP method: PATCH; nested exception is java.net.ProtocolException: Invalid HTTP method: PATCH
+    def "test updateTransaction endpoint"() {
+
+        given:
+
+        //headers.setContentType(new MediaType("application", "json-patch+json"))
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        //headers.setContentType(HttpMethod.PATCH)
+
+        transaction.guid = UUID.randomUUID()
+        guid = transaction.guid
+        transactionService.insertTransaction(transaction)
+        transaction.description = "updateToDescription"
+        //def updateToDescription = mapper.writeValueAsString(transaction)
+        HttpEntity entity = new HttpEntity<>(transaction, headers)
+        //println entity.headers
+        println transaction
+
+
+
+        //headers.set(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+
+        //RequestSpecification.contentType(String value)
+
+        //ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<EmailPatch>(patch),
+        //                    String.class);
+        //HttpClient httpClient = HttpClients.createDefault();
+        //restTemplate new TestRestTemplate(Collections.<HttpMessageConverter<?>> singletonList(converter));
+        //restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
+
+        when:
+        String response = restTemplate.patchForObject(
+                createURLWithPort("/transaction/update/" + guid), entity, String.class)
+//       def response = restTemplate.exchange(createURLWithPort("/transaction/update/" + guid),
+//                HttpMethod.PATCH, new HttpEntity<Transaction>(transaction),
+//                String.class)
+        then:
+        assert response.getStatusCode() == 200
 
         cleanup:
         transactionService.deleteByGuid(guid)
-        accountService.deleteByAccountNameOwner(accountNameOwner)
-        categoryService.deleteByCategory(categoryName)
     }
-
-
 }

@@ -28,5 +28,4 @@ class CategoryService (private var categoryRepository: CategoryRepository) {
         }
         return Optional.empty()
     }
-
 }

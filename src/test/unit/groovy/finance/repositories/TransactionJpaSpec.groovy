@@ -173,14 +173,6 @@ class TransactionJpaSpec extends Specification {
         0 * _
     }
 
-    def "test transaction repository - deleteByIdFromTransactionCategories - not in the database"() {
-        when:
-        transactionRepository.deleteByIdFromTransactionCategories(100024L)
-
-        then:
-        0 * _
-    }
-
     def "test transaction repository - setClearedByGuid - not in the database"() {
         when:
         transactionRepository.setClearedByGuid(1, "guid-does-not-exist")

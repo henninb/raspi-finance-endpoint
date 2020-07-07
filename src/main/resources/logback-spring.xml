@@ -79,7 +79,7 @@
     </logger>
 
     <!-- Setup the default to log INFO and above to the console -->
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

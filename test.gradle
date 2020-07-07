@@ -32,13 +32,6 @@ sourceSets {
     }
 }
 
-test {
-    useJUnitPlatform()
-    testLogging {
-        //events "passed", "skipped", "failed"
-    }
-}
-
 compileTestKotlin {
     //kotlinOptions.jvmTarget = '11'
     kotlinOptions.jvmTarget = '1.8'
@@ -53,7 +46,6 @@ dependencies {
     testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
     //testImplementation("com.github.javafaker:javafaker:${javaFakerVersion}") { exclude module: 'org.yaml' }
     //testImplementation("io.github.benas:${randomBeanVersion}")
-    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
 }
 
 tasks.withType(Test) {
@@ -63,14 +55,20 @@ tasks.withType(Test) {
     environment "INPUT_FILEPATH", "config"
     environment "OUTPUT_FILEPATH", "json_out"
     //systemProperties = System.properties
+
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+
 }
 
 task integrationTest(type: Test) {
+    description = 'Runs the integration tests.'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
 task functionalTest(type: Test) {
+    description = 'Runs the functional tests.'
     testClassesDirs = sourceSets.functionalTest.output.classesDirs
     classpath = sourceSets.functionalTest.runtimeClasspath
 }

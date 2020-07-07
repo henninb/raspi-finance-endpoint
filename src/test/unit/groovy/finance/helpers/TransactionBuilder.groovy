@@ -20,8 +20,9 @@ class TransactionBuilder {
     Integer cleared = 1
     Boolean reoccurring = false
     String notes = 'my note to you'
-    Timestamp dateUpdated = new Timestamp(1553645394000)
-    Timestamp dateAdded = new Timestamp(1553645394000)
+    Timestamp dateUpdated = new Timestamp(1593981072000)
+    Timestamp dateAdded = new Timestamp(1593981072000)
+    //1593981072
     String sha256 = ''
 
     static TransactionBuilder builder() {

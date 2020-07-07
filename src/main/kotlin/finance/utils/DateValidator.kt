@@ -16,7 +16,5 @@ class DateValidator : ConstraintValidator<ValidDate, Date> {
         println("dateToBeEvaluated: $value")
         logger.info("dateToBeEvaluated: $value")
         return value > Date(946684800)
-        //return value > Date(946684800000)
     }
-
 }
