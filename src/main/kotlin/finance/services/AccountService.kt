@@ -14,7 +14,6 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
                                             private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }

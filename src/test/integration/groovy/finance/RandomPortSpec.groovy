@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
-@ActiveProfiles("stage")
+@ActiveProfiles("int")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RandomPortSpec extends Specification {
 

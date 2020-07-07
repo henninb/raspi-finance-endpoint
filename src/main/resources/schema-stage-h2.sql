@@ -1,3 +1,10 @@
+CREATE TABLE IF NOT EXISTS t_payment(
+    payment_id BIGINT DEFAULT nextval('t_payment_payment_id_seq') NOT NULL,
+    account_name_owner VARCHAR(40) NOT NULL,
+    transaction_date DATE NOT NULL,
+    amount DECIMAL(12,2) NOT NULL DEFAULT 0.0
+);
+
 CREATE TABLE IF NOT EXISTS t_transaction (
   transaction_id bigint auto_increment,
   account_id bigint,

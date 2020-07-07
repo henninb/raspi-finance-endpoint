@@ -5,7 +5,7 @@ spring:
   application:
     name: raspi-finance-endpoint
   profiles:
-    active: stage
+    active: func
 
   # ===============================
   # = JSON
@@ -28,8 +28,6 @@ spring:
       test-while-idle: true
     platform: h2
     continue-on-error: false
-    schema: classpath:schema-stage-h2.sql
-    data: classpath:data-stage-h2.sql
     # always if you want to utilize data.sql and schema.sql
     # never Do not initialize the datasource
     # embedded Only initialize an embedded datasource.
@@ -52,7 +50,7 @@ spring:
     open-in-view: false
     generate-ddl: true
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     properties:
       hibernate:
         jdbc:

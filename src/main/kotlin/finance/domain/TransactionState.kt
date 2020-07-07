@@ -4,12 +4,15 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class AccountType {
-    @JsonProperty("credit")
-    Credit,
+enum class TransactionState {
+    @JsonProperty("future")
+    Future,
 
-    @JsonProperty("debit")
-    Debit,
+    @JsonProperty("cleared")
+    Cleared,
+
+    @JsonProperty("outstanding")
+    Outstanding,
 
     @JsonProperty("undefined")
     Undefined;

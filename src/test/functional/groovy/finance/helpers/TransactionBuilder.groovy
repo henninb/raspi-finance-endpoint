@@ -13,15 +13,15 @@ class TransactionBuilder {
     Long accountId = 0
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
-    Date transactionDate = new Date(1553645394)
+    Date transactionDate = new Date(1593981493)
     String description = 'aliexpress.com'
-    String category = 'online'
+    String category = 'foo'
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
     Integer cleared = 1
     Boolean reoccurring = false
     String notes = 'my note to you'
-    Timestamp dateUpdated = new Timestamp(1553645394000)
-    Timestamp dateAdded = new Timestamp(1553645394000)
+    Timestamp dateUpdated = new Timestamp(1553645394000000)
+    Timestamp dateAdded = new Timestamp(1553645394000000)
     String sha256 = ''
 
     static TransactionBuilder builder() {

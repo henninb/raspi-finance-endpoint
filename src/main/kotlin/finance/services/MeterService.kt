@@ -1,11 +1,10 @@
 package finance.services
 
 import io.micrometer.core.instrument.MeterRegistry
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class MeterService @Autowired constructor(private var meterRegistry: MeterRegistry) {
+class MeterService (private var meterRegistry: MeterRegistry) {
 //    init {
 //        Counter.builder(Constants.TRANSACTION_RECEIVED_EVENT_COUNTER)
 //                .tag(Constants.ACCOUNT_NAME_TAG, "")

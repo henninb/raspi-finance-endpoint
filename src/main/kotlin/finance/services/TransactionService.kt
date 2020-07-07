@@ -4,44 +4,53 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Transaction
+import finance.exceptions.EmptyTransactionException
 import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
+//import javax.transaction.Transactional
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 @Service
-class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
-                                                private var accountService: AccountService,
-                                                private var categoryService: CategoryService,
-                                                private val validator: Validator) {
+open class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
+                                                     private var accountService: AccountService,
+                                                     private var categoryService: CategoryService,
+                                                     private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findAllTransactions(): List<Transaction> {
         return transactionRepository.findAll()
     }
 
-    fun deleteByIdFromTransactionCategories(transactionId: Long): Boolean {
-        transactionRepository.deleteByIdFromTransactionCategories(transactionId)
-        return true
-    }
-
-    fun deleteByGuid(guid: String): Boolean {
+    @Transactional
+    open fun deleteByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
-            transactionRepository.deleteByIdFromTransactionCategories(transactionOptional.get().transactionId)
-            transactionRepository.deleteByGuid(guid)
+            val transaction = transactionOptional.get()
+            println("transaction.categories = ${transaction.categories}")
+            if (transaction.categories.size > 0) {
+                val categoryOptional = categoryService.findByCategory(transaction.category)
+                transaction.categories.remove(categoryOptional.get())
+            }
+            try {
+                transactionRepository.deleteByGuid(guid)
+            } catch (e: EmptyTransactionException) {
+                return false
+            }
             return true
         }
         return false
     }
 
-    fun insertTransaction(transaction: Transaction): Boolean {
+    @Transactional
+    open fun insertTransaction(transaction: Transaction): Boolean {
 
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
@@ -58,7 +67,7 @@ class TransactionService @Autowired constructor(private var transactionRepositor
 
         processAccount(transaction)
         processCategory(transaction)
-        println("transaction = ${transaction}")
+        logger.info("transaction = $transaction")
         transactionRepository.saveAndFlush(transaction)
         logger.info("*** inserted transaction ***")
         return true
@@ -139,7 +148,8 @@ class TransactionService @Autowired constructor(private var transactionRepositor
         return account
     }
 
-    fun findByGuid(guid: String): Optional<Transaction> {
+    @Transactional
+    open fun findByGuid(guid: String): Optional<Transaction> {
         logger.info("call findByGuid")
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {

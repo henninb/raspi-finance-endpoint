@@ -74,7 +74,7 @@ data class Transaction(
         var amount: BigDecimal,
 
         @JsonProperty
-        @field:Min(value = -3)
+        @field:Min(value = -1)
         @field:Max(value = 1)
         @Column(name = "cleared")
         var cleared: Int,
@@ -125,7 +125,7 @@ data class Transaction(
     @JsonIgnore
     var account: Account? = null
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],
             inverseJoinColumns = [JoinColumn(name = "categoryId")])

@@ -74,8 +74,9 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"9b9aea08-0dc2-4720-b20c-00b0df6af8ce", "description":"new"}' http://localhost:8080/transaction/update/9b9aea08-0dc2-4720-b20c-00b0df6af8ce
     //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"a064b942-1e78-4913-adb3-b992fc1b4dd3","sha256":"","accountType":"credit","accountNameOwner":"discover_brian","description":"Last Updated","category":"","notes":"","cleared":0,"reoccurring":false,"amount":"0.00","transactionDate":1512730594,"dateUpdated":1487332021,"dateAdded":1487332021}' http://localhost:8080/transaction/update/a064b942-1e78-4913-adb3-b992fc1b4dd3
+    //TODO: either remove or fix this @PathVariable("guid") guid,
     @PatchMapping(path = [("/update/{guid}")], consumes = [("application/json-patch+json")], produces = [("application/json")])
-    fun updateTransaction(@RequestBody transaction: Map<String, String>): ResponseEntity<String> {
+    fun updateTransaction(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
         val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
@@ -106,6 +107,7 @@ class TransactionController @Autowired constructor(private var transactionServic
                 return ResponseEntity.ok("resource deleted")
             }
             throw EmptyTransactionException("transaction not deleted: $guid")
+            //return ResponseEntity.badRequest("")
         }
         throw EmptyTransactionException("Cannot find transaction during delete: $guid")
     }
