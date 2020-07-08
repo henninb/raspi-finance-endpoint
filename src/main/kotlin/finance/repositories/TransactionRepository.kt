@@ -22,11 +22,13 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Transactional
     fun setClearedByGuid(cleared: Int, guild: String)
 
+    //@Transactional
     // Using SpEL expression
     @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE cleared = 1 AND accountNameOwner=?1")
     //@Query(value = "SELECT SUM(amount) AS totals t_transaction WHERE cleared = 1 AND account_name_owner=?1", nativeQuery = true)
     fun getTotalsByAccountNameOwnerCleared(accountNameOwner: String): Double
 
+    //@Transactional
     // Using SpEL expression
     @Query("SELECT SUM(amount) as totals FROM #{#entityName} WHERE accountNameOwner=?1")
     fun getTotalsByAccountNameOwner(accountNameOwner: String): Double
@@ -41,8 +43,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
 //    @Query(value = "DELETE FROM t_transaction_categories WHERE transaction_id = ?1", nativeQuery = true)
 //    fun deleteByIdFromTransactionCategories(transactionId: Long)
 
-    @Query(value = "SELECT EXTRACT(TIMEZONE FROM now())/3600.0", nativeQuery = true)
-    fun selectTimeZoneOffset(): Int
+//    @Query(value = "SELECT EXTRACT(TIMEZONE FROM now())/3600.0", nativeQuery = true)
+//    fun selectTimeZoneOffset(): Int
 
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
 

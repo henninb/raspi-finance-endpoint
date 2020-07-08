@@ -16,7 +16,7 @@ import javax.validation.constraints.Size
 
 @Entity(name = "PaymentEntity")
 @Proxy(lazy = false)
-@Table(name = "t_payment")
+@Table(name = "t_payment", uniqueConstraints = [UniqueConstraint(columnNames = ["accountNameOwner", "transactionDate", "amount"])])
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Payment(
         @Id
