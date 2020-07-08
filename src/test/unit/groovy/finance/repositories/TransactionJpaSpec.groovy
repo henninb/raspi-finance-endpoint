@@ -1,5 +1,6 @@
 package finance.repositories
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.AccountBuilder
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.dao.EmptyResultDataAccessException
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import javax.persistence.PersistenceException
@@ -26,6 +28,54 @@ class TransactionJpaSpec extends Specification {
 
     @Autowired
     TestEntityManager entityManager
+
+    private ObjectMapper mapper = new ObjectMapper()
+
+    def jsonPayload = '''
+{"accountId":0,
+"accountType":"credit",
+"transactionDate":1553645394,
+"dateUpdated":1593981072000,
+"dateAdded":1593981072000,
+"guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
+"accountNameOwner":"chase_brian",
+"description":"aliexpress.com",
+"category":"online",
+"amount":3.14,
+"cleared":1,
+"reoccurring":false,
+"notes":"my note to you",
+"sha256":"963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77"}
+'''
+
+    def "test Transaction to JSON - valid insert"() {
+
+        given:
+        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
+        Account account = new AccountBuilder().build()
+        def accountResult = entityManager.persist(account)
+        transactionFromString.accountId = accountResult.accountId
+        when:
+        entityManager.persist(transactionFromString)
+        then:
+        transactionRepository.count() == 1L
+    }
+
+    @Ignore
+    def "test Transaction to JSON - attempt to insert same record twice - different uuid"() {
+
+        given:
+        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
+        Account account = new AccountBuilder().build()
+        def accountResult = entityManager.persist(account)
+        transactionFromString.accountId = accountResult.accountId
+        entityManager.persist(transactionFromString)
+        transactionFromString.guid = "4ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd"
+        when:
+        entityManager.persist(transactionFromString)
+        then:
+        transactionRepository.count() == 2L
+    }
 
     def "test transaction repository - insert a valid record"() {
         given:

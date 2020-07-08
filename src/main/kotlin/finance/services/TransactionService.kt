@@ -169,7 +169,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return Optional.empty()
     }
 
-    fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+    @Transactional
+    open fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
         var totalsCleared= 0.00
@@ -186,7 +187,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return result
     }
 
-    fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
+    @Transactional
+    open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
@@ -195,7 +197,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return transactions
     }
 
-    fun patchTransaction(transaction: Transaction): Boolean {
+    @Transactional
+    open fun patchTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.info("patchTransaction() ConstraintViolation.")
