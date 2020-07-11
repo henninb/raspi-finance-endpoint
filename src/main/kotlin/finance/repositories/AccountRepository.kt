@@ -13,9 +13,9 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean): List<Account>
     //fun findByAccountType(accountType: AccountType): List<Account>
 
-    @Modifying
+    //@Modifying
     @Transactional
-    @Query(value = "DELETE from t_account WHERE account_name_owner = ?1", nativeQuery = true)
+    //@Query(value = "DELETE from t_account WHERE account_name_owner = ?1", nativeQuery = true)
     fun deleteByAccountNameOwner(accountNameOwner: String)
 
     @Modifying

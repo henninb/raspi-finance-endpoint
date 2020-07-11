@@ -33,9 +33,9 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Query("SELECT SUM(amount) as totals FROM #{#entityName} WHERE accountNameOwner=?1")
     fun getTotalsByAccountNameOwner(accountNameOwner: String): Double
 
-    @Modifying
+    //@Modifying
     @Transactional
-    @Query(value = "DELETE FROM t_transaction WHERE guid = ?1", nativeQuery = true)
+    //@Query(value = "DELETE FROM t_transaction WHERE guid = ?1", nativeQuery = true)
     fun deleteByGuid(guid: String)
 
 //    @Modifying
