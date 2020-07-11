@@ -4,6 +4,7 @@ import finance.domain.Payment
 import finance.exceptions.EmptyAccountException
 import finance.services.PaymentService
 import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -45,7 +46,7 @@ class PaymentController(private var paymentService: PaymentService) {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class])
+    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, DataIntegrityViolationException::class])
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)
