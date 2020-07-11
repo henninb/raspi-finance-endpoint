@@ -53,11 +53,11 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
             //TODO: handle the violation
-            logger.info("constraint issue.")
-            return false
+            logger.info("insertAccount - ConstraintViolation")
+            //return false
         }
         //TODO: Should saveAndFlush be in a try catch block?
-        //logger.info("INFO: transactionRepository.saveAndFlush call.")
+        logger.info("INFO: transactionRepository.saveAndFlush call.")
         if (!accountOptional.isPresent) {
             accountRepository.saveAndFlush(account)
         }

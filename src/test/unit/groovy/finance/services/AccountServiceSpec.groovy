@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
@@ -78,6 +79,7 @@ class AccountServiceSpec extends Specification {
         0 * _
     }
 
+    @Ignore
     def "test insertAccount - invalid moniker"() {
         given:
         def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"12345\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
@@ -91,8 +93,8 @@ class AccountServiceSpec extends Specification {
 
         then:
         result.is(false)
+        1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * mockValidator.validate(account) >> constraintViolations
-        1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner)
         0 * _
     }
 
