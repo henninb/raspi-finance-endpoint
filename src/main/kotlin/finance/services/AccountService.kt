@@ -29,11 +29,23 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
     }
 
     fun selectTotals(): Double {
-        return accountRepository.selectTotals()
+        var totals: Double
+        try {
+            totals = accountRepository.selectTotals()
+        } catch (e: Exception) {
+          return 0.0
+        }
+        return totals
     }
 
     fun selectTotalsCleared(): Double {
-        return accountRepository.selectTotalsCleared()
+        var totals: Double
+        try {
+            totals = accountRepository.selectTotalsCleared()
+        } catch (e: Exception) {
+            return 0.0
+        }
+        return totals
     }
 
     fun insertAccount(account: Account): Boolean {
