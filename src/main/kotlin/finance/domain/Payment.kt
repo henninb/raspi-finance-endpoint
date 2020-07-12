@@ -1,7 +1,9 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
@@ -40,4 +42,11 @@ data class Payment(
         var amount: BigDecimal
 ) {
     constructor() : this(0L, "", Date(0), BigDecimal(0.00))
+
+    override fun toString(): String = mapper.writeValueAsString(this)
+
+    companion object {
+        @JsonIgnore
+        private val mapper = ObjectMapper()
+    }
 }

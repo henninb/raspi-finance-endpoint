@@ -45,8 +45,6 @@ class PaymentServiceSpec extends Specification {
         isInserted.is(true)
         2 * mockTransactionService.insertTransaction(_)
         1 * mockPaymentRepository.save(payment)
-        //1 * mockValidator.validate(account) >> new HashSet()
-        //1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         0 * _
     }
 
