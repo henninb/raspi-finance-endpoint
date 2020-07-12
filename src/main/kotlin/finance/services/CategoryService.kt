@@ -28,4 +28,8 @@ class CategoryService (private var categoryRepository: CategoryRepository) {
         }
         return Optional.empty()
     }
+
+    fun deleteByCategoryName(categoryName: String) {
+        categoryRepository.deleteByCategory(categoryName)
+    }
 }

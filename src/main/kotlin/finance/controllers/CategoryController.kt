@@ -1,6 +1,8 @@
 package finance.controllers
 
 import finance.domain.Category
+import finance.domain.Payment
+import finance.exceptions.EmptyAccountException
 import finance.services.CategoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +27,18 @@ class CategoryController (private var categoryService: CategoryService) {
         categoryService.insertCategory(category)
         logger.info("insertCategory")
         return ResponseEntity.ok("category inserted")
+    }
+
+    @DeleteMapping(path = ["/delete/{categoryName}"])
+    fun deleteByCategoryName(@PathVariable categoryName: String): ResponseEntity<String> {
+        //val paymentOptional: Optional<Payment> = categoryService.findByPaymentId(paymentId)
+
+        //logger.info("deleteByPaymentId controller - $paymentId")
+        //if (paymentOptional.isPresent) {
+            categoryService.deleteByCategoryName(categoryName)
+            return ResponseEntity.ok("payment deleted")
+        //}
+        //throw EmptyAccountException("payment not deleted.")
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
