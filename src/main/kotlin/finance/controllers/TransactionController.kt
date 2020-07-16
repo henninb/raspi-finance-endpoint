@@ -79,7 +79,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
 
-    @PutMapping(path = [("cleared/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
+    @PutMapping(path = [("/cleared/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
     fun updateTransactionCleared(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val updateStatus: Boolean = transactionService.updateTransactionCleared(guid)
         if (updateStatus) {
