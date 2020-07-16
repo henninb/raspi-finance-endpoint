@@ -70,7 +70,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
             accountService.deleteByAccountNameOwner(accountNameOwner)
             return ResponseEntity.ok("account deleted")
         }
-        throw EmptyAccountException("account not deleted.")
+        return ResponseEntity.notFound().build()
+        //throw EmptyAccountException("account not deleted.")
     }
 
     //http://localhost:8080/account/update
@@ -82,7 +83,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
             return ResponseEntity.ok("account updated")
         }
 
-        throw EmptyAccountException("account not updated.")
+        //throw EmptyAccountException("account not updated.")
+        return ResponseEntity.notFound().build()
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400

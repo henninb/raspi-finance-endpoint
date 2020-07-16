@@ -4,7 +4,6 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Transaction
-import finance.exceptions.EmptyTransactionException
 import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,6 +11,7 @@ import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
 //import javax.transaction.Transactional
@@ -50,11 +50,11 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 val categoryOptional = categoryService.findByCategory(transaction.category)
                 transaction.categories.remove(categoryOptional.get())
             }
-            try {
+//            try {
                 transactionRepository.deleteByGuid(guid)
-            } catch (e: EmptyTransactionException) {
-                return false
-            }
+//            } catch (e: EmptyTransactionException) {
+//                return false
+//            }
             return true
         }
         return false
@@ -81,6 +81,20 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         logger.info("transaction = $transaction")
         transactionRepository.saveAndFlush(transaction)
         logger.info("*** inserted transaction ***")
+        return true
+    }
+
+    open fun updateTransactionCleared(guid: String) : Boolean {
+        val transactionOptional = findByGuid(guid)
+        if (transactionOptional.isPresent) {
+            val transaction = transactionOptional.get()
+            transaction.cleared = 1
+            transactionRepository.saveAndFlush(transaction)
+            logger.info("*** update transaction $guid ***")
+        } else {
+            logger.info("*** updateTransactionCleared transaction not found $guid ***")
+            return false
+        }
         return true
     }
 
@@ -182,8 +196,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
         }
 
-        result["totals"] = BigDecimal(totals)
-        result["totalsCleared"] = BigDecimal(totalsCleared)
+        result["totals"] = BigDecimal(totals).setScale(2, RoundingMode.HALF_UP)
+        result["totalsCleared"] = BigDecimal(totalsCleared).setScale(2, RoundingMode.HALF_UP)
         return result
     }
 
