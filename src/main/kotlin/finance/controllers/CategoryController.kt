@@ -1,11 +1,8 @@
 package finance.controllers
 
 import finance.domain.Category
-import finance.domain.Payment
-import finance.exceptions.EmptyAccountException
 import finance.services.CategoryService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -49,5 +46,4 @@ class CategoryController (private var categoryService: CategoryService) {
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         return response
     }
-
 }

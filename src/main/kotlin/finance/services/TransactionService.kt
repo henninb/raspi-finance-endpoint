@@ -149,7 +149,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 return true
             }
         }
-
+        
         logger.info("transaction already exists, no transaction data inserted.")
         return false
     }

@@ -78,7 +78,6 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
-
     @PutMapping(path = [("/cleared/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
     fun updateTransactionCleared(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val updateStatus: Boolean = transactionService.updateTransactionCleared(guid)
@@ -88,7 +87,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
     }
 
-
+    //TODO: should return a 201 CREATED
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
