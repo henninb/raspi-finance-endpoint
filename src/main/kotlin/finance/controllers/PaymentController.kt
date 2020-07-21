@@ -1,7 +1,6 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.exceptions.EmptyAccountException
 import finance.services.PaymentService
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
@@ -12,6 +11,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.server.ResponseStatusException
 import java.util.*
 import javax.validation.ConstraintViolationException
 
@@ -44,7 +44,7 @@ class PaymentController(private var paymentService: PaymentService) {
             paymentService.deleteByPaymentId(paymentId)
             return ResponseEntity.ok("payment deleted")
         }
-        throw EmptyAccountException("payment not deleted.")
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $paymentId")
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
@@ -56,6 +56,15 @@ class PaymentController(private var paymentService: PaymentService) {
         logger.info("Bad Request: ", throwable)
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info(response.toString())
+        return response
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    //@ExceptionHandler(value = [ResponseStatusException::class])
+    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        logger.error("not found: ", throwable)
+        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         return response
     }
 }

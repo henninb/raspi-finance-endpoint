@@ -2,15 +2,18 @@ package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
-import finance.exceptions.EmptyAccountException
 import finance.services.AccountService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.server.ResponseStatusException
 import java.util.*
 import javax.validation.ConstraintViolationException
 
@@ -36,7 +39,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         val accounts: List<Account> = accountService.findAllActiveAccounts()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")
-            return ResponseEntity.notFound().build()
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accounts.")
         }
         logger.info("select active accounts: ${accounts.size}")
         return ResponseEntity.ok(accounts)
@@ -49,7 +52,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         if (accountOptional.isPresent) {
             return ResponseEntity.ok(accountOptional.get())
         }
-        return ResponseEntity.notFound().build()
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find this account.")
     }
 
     //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' http://localhost:8080/account/insert
@@ -70,8 +73,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
             accountService.deleteByAccountNameOwner(accountNameOwner)
             return ResponseEntity.ok("account deleted")
         }
-        return ResponseEntity.notFound().build()
-        //throw EmptyAccountException("account not deleted.")
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this account: $accountNameOwner.")
     }
 
     //http://localhost:8080/account/update
@@ -83,25 +85,46 @@ class AccountController @Autowired constructor(private var accountService: Accou
             return ResponseEntity.ok("account updated")
         }
 
-        //throw EmptyAccountException("account not updated.")
-        return ResponseEntity.notFound().build()
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not update this account: ${toBePatchedTransaction.accountNameOwner}.")
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class])
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
+    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
+        IllegalArgumentException::class, DataIntegrityViolationException::class])
+    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
-        logger.error("Bad Request", throwable)
+        logger.info("Bad Request: ", throwable)
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        logger.info(response.toString())
         return response
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value = [EmptyAccountException::class])
+    //@ExceptionHandler(value = [EmptyTransactionException::class])
     fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)
         response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        return response
+    }
+
+    @ResponseStatus(HttpStatus.NOT_MODIFIED)
+    //@ExceptionHandler(value = [EmptyTransactionException::class])
+    fun handleHttpNotModified(throwable: Throwable): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        logger.error("not modified: ", throwable)
+        response["response"] = "NOT_MODIFIED: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        return response
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(value = [Exception::class])
+    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        logger.error("internal server error: ", throwable)
+        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        logger.info("response: $response")
         return response
     }
 
