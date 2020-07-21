@@ -9,7 +9,8 @@ import java.math.BigDecimal
 import java.util.*
 
 interface TransactionRepository : JpaRepository<Transaction, Long> {
-    //TODO: add LIMIT 1 result
+
+    fun findTOPByGuid(guid: String): Optional<Transaction>
     fun findByGuid(guid: String): Optional<Transaction>
 
     @Modifying

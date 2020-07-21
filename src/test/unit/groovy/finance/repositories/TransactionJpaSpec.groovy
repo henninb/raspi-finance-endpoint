@@ -63,7 +63,6 @@ class TransactionJpaSpec extends Specification {
 
     @Ignore
     def "test Transaction to JSON - attempt to insert same record twice - different uuid"() {
-
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
         Account account = new AccountBuilder().build()
@@ -71,8 +70,10 @@ class TransactionJpaSpec extends Specification {
         transactionFromString.accountId = accountResult.accountId
         entityManager.persist(transactionFromString)
         transactionFromString.guid = "4ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd"
+
         when:
         entityManager.persist(transactionFromString)
+
         then:
         transactionRepository.count() == 2L
     }
@@ -116,7 +117,8 @@ class TransactionJpaSpec extends Specification {
         def accountResult = entityManager.persist(account)
         transaction1.accountId = accountResult.accountId
         transaction2.accountId = accountResult.accountId
-        def transactionResult = entityManager.persist(transaction1)
+        entityManager.persist(transaction1)
+
         when:
         entityManager.persist(transaction2)
 

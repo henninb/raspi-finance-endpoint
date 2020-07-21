@@ -6,8 +6,10 @@ import finance.domain.Transaction
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
+import org.hibernate.NonUniqueResultException
 import spock.lang.Specification
 
+import javax.persistence.PersistenceException
 import javax.validation.Validator
 
 class TransactionServiceSpec extends Specification {
@@ -51,10 +53,28 @@ class TransactionServiceSpec extends Specification {
         def guid = "123"
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
+
         when:
         transactionService.findByGuid(guid)
+
         then:
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        0 * _
+    }
+
+    def "test transactionService - findByGuid - duplicates returned"() {
+        given:
+        def guid = "123"
+        Transaction transaction = new Transaction()
+        Optional<Transaction> transactionOptional = Optional.of(transaction)
+
+        when:
+        transactionService.findByGuid(guid)
+
+        then:
+        NonUniqueResultException ex = thrown()
+        ex.message.contains( "query did not return a unique result")
+            1 * mockTransactionRepository.findByGuid(guid) >> {throw new NonUniqueResultException(2)}
         0 * _
     }
 
