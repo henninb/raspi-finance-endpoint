@@ -43,7 +43,7 @@ class TransactionBuilder {
         transaction.notes = notes
         transaction.dateAdded = dateAdded
         transaction.dateUpdated = dateUpdated
-        transaction.sha256 = sha256
+        //transaction.sha256 = sha256
         return transaction
     }
 
@@ -112,8 +112,8 @@ class TransactionBuilder {
         return this
     }
 
-    TransactionBuilder sha256(sha256) {
-        this.sha256 = sha256
-        return this
-    }
+//    TransactionBuilder sha256(sha256) {
+//        this.sha256 = sha256
+//        return this
+//    }
 }
