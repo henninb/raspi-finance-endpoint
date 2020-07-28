@@ -23,7 +23,6 @@ class TransactionBuilder {
     Timestamp dateUpdated = new Timestamp(1593981072000)
     Timestamp dateAdded = new Timestamp(1593981072000)
     //1593981072
-    String sha256 = ''
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
@@ -44,7 +43,7 @@ class TransactionBuilder {
         transaction.notes = notes
         transaction.dateAdded = dateAdded
         transaction.dateUpdated = dateUpdated
-        transaction.sha256 = sha256
+        //transaction.sha256 = sha256
         return transaction
     }
 
@@ -110,11 +109,6 @@ class TransactionBuilder {
 
     TransactionBuilder dateAdded(dateAdded) {
         this.dateAdded = dateAdded
-        return this
-    }
-
-    TransactionBuilder sha256(sha256) {
-        this.sha256 = sha256
         return this
     }
 }

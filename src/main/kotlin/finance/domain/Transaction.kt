@@ -87,22 +87,25 @@ data class Transaction(
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         var notes: String,
 
+        //TODO: add a question mark to make this an optional field
         @JsonProperty
         @field:ValidTimestamp
         var dateUpdated: Timestamp,
 
+        //TODO: add a question mark to make this an optional field
         @JsonProperty
         @field:ValidTimestamp
-        var dateAdded: Timestamp,
+        var dateAdded: Timestamp
 
         //TODO: remove this field as it is not required.
-        @JsonProperty
-        @field:Size(max = 70)
-        var sha256: String) {
+        //@JsonProperty
+        //@field:Size(max = 70)
+        //var sha256: String?
+        ) {
 
     constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
             "", "", BigDecimal(0.00), 0, false, "",
-            Timestamp(0), Timestamp(0), "")
+            Timestamp(0), Timestamp(0))
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
@@ -112,11 +115,13 @@ data class Transaction(
     @JsonGetter("dateUpdated")
     fun jsonGetterDateUpdated(): Long {
         return (this.dateUpdated.time / 1000)
+        //return ((this.dateUpdated?.time ?: 0) / 1000)
     }
 
     @JsonGetter("dateAdded")
     fun jsonGetterDateAdded(): Long {
         return (this.dateAdded.time / 1000)
+        //return ((this.dateAdded?.time ?: 0) / 1000)
     }
 
     //TODO: camelCase or snake_case?

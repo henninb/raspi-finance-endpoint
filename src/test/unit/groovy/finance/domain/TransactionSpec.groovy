@@ -21,7 +21,8 @@ class TransactionSpec extends Specification {
 
     //"transactionId":1001,
     def jsonPayload = '''
-{"accountId":0,
+{
+"accountId":0,
 "accountType":"credit",
 "transactionDate":1553645394,
 "dateUpdated":1593981072000,
@@ -34,7 +35,8 @@ class TransactionSpec extends Specification {
 "cleared":1,
 "reoccurring":false,
 "notes":"my note to you",
-"sha256":"963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77"}
+"sha256":"963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77"
+}
 '''
 
     def setup() {
@@ -107,7 +109,6 @@ class TransactionSpec extends Specification {
                 .notes(notes)
                 .dateAdded(dateAdded)
                 .dateUpdated(dateUpdated)
-                .sha256(sha256)
                 .build()
 
         when:
