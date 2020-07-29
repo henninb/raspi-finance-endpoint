@@ -5,11 +5,9 @@ import finance.domain.Transaction
 
 import java.math.RoundingMode
 import java.sql.Date
-import java.sql.Timestamp
 
 class TransactionBuilder {
-
-    String guid = '4ea3be58-3993-46de-88a2-4ffc7f1d73bd'
+    String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
@@ -20,9 +18,6 @@ class TransactionBuilder {
     Integer cleared = 1
     Boolean reoccurring = false
     String notes = 'my note to you'
-//    Timestamp dateUpdated = new Timestamp(1593981072000)
-//    Timestamp dateAdded = new Timestamp(1593981072000)
-    //1593981072
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
