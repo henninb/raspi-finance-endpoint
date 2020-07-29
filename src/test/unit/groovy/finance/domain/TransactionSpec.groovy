@@ -107,8 +107,6 @@ class TransactionSpec extends Specification {
                 .cleared(cleared)
                 .reoccurring(reoccurring)
                 .notes(notes)
-                .dateAdded(dateAdded)
-                .dateUpdated(dateUpdated)
                 .build()
 
         when:
