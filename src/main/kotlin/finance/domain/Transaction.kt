@@ -85,17 +85,17 @@ data class Transaction(
         @JsonProperty
         @field:Size(max = 100)
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-        var notes: String,
+        var notes: String
 
-        //TODO: add a question mark to make this an optional field
-        @JsonProperty
-        @field:ValidTimestamp
-        var dateUpdated: Timestamp,
-
-        //TODO: add a question mark to make this an optional field
-        @JsonProperty
-        @field:ValidTimestamp
-        var dateAdded: Timestamp
+//        //TODO: add a question mark to make this an optional field
+//        @JsonProperty
+//        @field:ValidTimestamp
+//        var dateUpdated: Timestamp,
+//
+//        //TODO: add a question mark to make this an optional field
+//        @JsonProperty
+//        @field:ValidTimestamp
+//        var dateAdded: Timestamp
 
         //TODO: remove this field as it is not required.
         //@JsonProperty
@@ -104,25 +104,24 @@ data class Transaction(
         ) {
 
     constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
-            "", "", BigDecimal(0.00), 0, false, "",
-            Timestamp(0), Timestamp(0))
+            "", "", BigDecimal(0.00), 0, false, "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): Long {
         return (this.transactionDate.time)
     }
 
-    @JsonGetter("dateUpdated")
-    fun jsonGetterDateUpdated(): Long {
-        return (this.dateUpdated.time / 1000)
-        //return ((this.dateUpdated?.time ?: 0) / 1000)
-    }
-
-    @JsonGetter("dateAdded")
-    fun jsonGetterDateAdded(): Long {
-        return (this.dateAdded.time / 1000)
-        //return ((this.dateAdded?.time ?: 0) / 1000)
-    }
+//    @JsonGetter("dateUpdated")
+//    fun jsonGetterDateUpdated(): Long {
+//        return (this.dateUpdated.time / 1000)
+//        //return ((this.dateUpdated?.time ?: 0) / 1000)
+//    }
+//
+//    @JsonGetter("dateAdded")
+//    fun jsonGetterDateAdded(): Long {
+//        return (this.dateAdded.time / 1000)
+//        //return ((this.dateAdded?.time ?: 0) / 1000)
+//    }
 
     //TODO: camelCase or snake_case?
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)

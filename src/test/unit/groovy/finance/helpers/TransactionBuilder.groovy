@@ -20,8 +20,8 @@ class TransactionBuilder {
     Integer cleared = 1
     Boolean reoccurring = false
     String notes = 'my note to you'
-    Timestamp dateUpdated = new Timestamp(1593981072000)
-    Timestamp dateAdded = new Timestamp(1593981072000)
+//    Timestamp dateUpdated = new Timestamp(1593981072000)
+//    Timestamp dateAdded = new Timestamp(1593981072000)
     //1593981072
 
     static TransactionBuilder builder() {
@@ -41,9 +41,6 @@ class TransactionBuilder {
         transaction.cleared = cleared
         transaction.reoccurring = reoccurring
         transaction.notes = notes
-        transaction.dateAdded = dateAdded
-        transaction.dateUpdated = dateUpdated
-        //transaction.sha256 = sha256
         return transaction
     }
 
@@ -99,16 +96,6 @@ class TransactionBuilder {
 
     TransactionBuilder notes(notes) {
         this.notes = notes
-        return this
-    }
-
-    TransactionBuilder dateUpdated(dateUpdated) {
-        this.dateUpdated = dateUpdated
-        return this
-    }
-
-    TransactionBuilder dateAdded(dateAdded) {
-        this.dateAdded = dateAdded
         return this
     }
 }

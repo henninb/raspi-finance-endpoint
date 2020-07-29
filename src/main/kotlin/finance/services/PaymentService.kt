@@ -47,8 +47,6 @@ class PaymentService (private var paymentRepository: PaymentRepository, private 
         transactionDebit.accountType = AccountType.Debit
         transactionDebit.reoccurring = false;
         transactionDebit.accountNameOwner = "bcu-checking_brian"
-        transactionDebit.dateUpdated = Timestamp(System.currentTimeMillis())
-        transactionDebit.dateAdded = Timestamp(System.currentTimeMillis())
     }
 
     private fun populateCreditTransaction(transactionCredit: Transaction, payment: Payment) {
@@ -66,8 +64,6 @@ class PaymentService (private var paymentRepository: PaymentRepository, private 
         transactionCredit.accountType = AccountType.Credit
         transactionCredit.reoccurring = false
         transactionCredit.accountNameOwner = payment.accountNameOwner;
-        transactionCredit.dateUpdated = Timestamp(System.currentTimeMillis())
-        transactionCredit.dateAdded = Timestamp(System.currentTimeMillis())
     }
 
     fun deleteByPaymentId(paymentId: Long) {
