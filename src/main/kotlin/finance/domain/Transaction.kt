@@ -80,27 +80,12 @@ data class Transaction(
         var cleared: Int,
 
         @JsonProperty
-        var reoccurring: Boolean,
+        var reoccurring: Boolean?,
 
         @JsonProperty
         @field:Size(max = 100)
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         var notes: String
-
-//        //TODO: add a question mark to make this an optional field
-//        @JsonProperty
-//        @field:ValidTimestamp
-//        var dateUpdated: Timestamp,
-//
-//        //TODO: add a question mark to make this an optional field
-//        @JsonProperty
-//        @field:ValidTimestamp
-//        var dateAdded: Timestamp
-
-        //TODO: remove this field as it is not required.
-        //@JsonProperty
-        //@field:Size(max = 70)
-        //var sha256: String?
         ) {
 
     constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),

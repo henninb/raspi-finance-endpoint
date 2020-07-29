@@ -5,24 +5,19 @@ import finance.domain.Transaction
 
 import java.math.RoundingMode
 import java.sql.Date
-import java.sql.Timestamp
 
 class TransactionBuilder {
-
-    String guid = '4ea3be58-3993-46de-88a2-4ffc7f1d73bd'
+    String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
-    Date transactionDate = new Date(1593981493)
+    Date transactionDate = new Date(1553645394)
     String description = 'aliexpress.com'
-    String category = 'foo'
+    String category = 'online'
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
     Integer cleared = 1
     Boolean reoccurring = false
-    String notes = 'my note'
-    Timestamp dateUpdated = new Timestamp(1553645394000000)
-    Timestamp dateAdded = new Timestamp(1553645394000000)
-    String sha256 = ''
+    String notes = 'my note to you'
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
@@ -41,9 +36,6 @@ class TransactionBuilder {
         transaction.cleared = cleared
         transaction.reoccurring = reoccurring
         transaction.notes = notes
-        transaction.dateAdded = dateAdded
-        transaction.dateUpdated = dateUpdated
-        //transaction.sha256 = sha256
         return transaction
     }
 
@@ -99,21 +91,6 @@ class TransactionBuilder {
 
     TransactionBuilder notes(notes) {
         this.notes = notes
-        return this;
-    }
-
-    TransactionBuilder dateUpdated(dateUpdated) {
-        this.dateUpdated = dateUpdated
         return this
     }
-
-    TransactionBuilder dateAdded(dateAdded) {
-        this.dateAdded = dateAdded
-        return this
-    }
-
-//    TransactionBuilder sha256(sha256) {
-//        this.sha256 = sha256
-//        return this
-//    }
 }
