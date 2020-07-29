@@ -18,8 +18,6 @@ class PaymentBuilder {
         payment.accountNameOwner = accountNameOwner
         payment.amount = amount
         payment.transactionDate = transactionDate
-
-
         return payment
     }
 
