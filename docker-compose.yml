@@ -19,10 +19,11 @@ services:
     env_file:
       - env.secrets
     depends_on:
-      - influxdb
-  influxdb:
+      - influxdb-server
+      - postgresql-server
+  influxdb-server:
     image: influxdb:latest
-    container_name: influxdb
+    container_name: influxdb-server
     ports:
       - "8086:8086"
     expose:
@@ -30,6 +31,15 @@ services:
     env_file:
       - env.influx
       - env.secrets
+  postgresql-server:
+    image: postgres:12
+    container_name: postgresql-server
+    ports:
+      - "5432:5432"
+    env_file:
+      - env.postgresql
+    volumes:
+      - ./database-data:/var/lib/postgresql/data/
 networks:
   default:
     name: endpoint-net
