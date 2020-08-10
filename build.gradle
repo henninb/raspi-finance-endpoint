@@ -15,7 +15,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.72'
 }
 
-ext['springBootVersion'] = '2.3.1.RELEASE'
+ext['springBootVersion'] = '2.3.2.RELEASE'
 ext['apacheCamelVersion'] = '3.1.0'
 ext['kotlinVersion'] = '1.3.72'
 ext['groovyVersion'] = '3.0.4'
@@ -54,7 +54,7 @@ ext['httpBuilderVersion'] = '1.0.4'
 ext['randomBeanVersion'] = '3.7.0'
 ext['jacksonKotlinVersion'] = '2.9.7'
 ext['hibernateJpaVersion'] = '1.0.0.Final'
-ext['jacksonVersion'] = '2.10.2'
+ext['jacksonVersion'] = '2.11.2'
 ext['micrometerInfluxVersion'] = '1.4.1'
 ext['validationVersion'] = '2.0.1.Final'
 
@@ -72,8 +72,8 @@ repositories {
 }
 
 compileKotlin {
-    //kotlinOptions.jvmTarget = '11'
-    kotlinOptions.jvmTarget = '1.8'
+    kotlinOptions.jvmTarget = '11'
+//    kotlinOptions.jvmTarget = '1.8'
 }
 
 sourceSets {
@@ -112,10 +112,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
 
     //Jackson
-    implementation("com.fasterxml.jackson.core:jackson-core:2.11.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.11.2")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.11.2")
-
+    implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     //Camel
     // implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
     // implementation("org.apache.camel:camel-core:${apacheCamelVersion}")

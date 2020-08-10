@@ -32,10 +32,12 @@ services:
       - env.influx
       - env.secrets
   postgresql-server:
-    image: postgres:12
+    image: postgres:12.3
     container_name: postgresql-server
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    expose:
+      - "5433"
     env_file:
       - env.postgresql
     volumes:

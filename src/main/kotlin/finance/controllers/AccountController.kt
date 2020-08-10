@@ -36,6 +36,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
     //http://localhost:8080/account/select/active
     @GetMapping(path = ["/select/active"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
+        //TODO: create a separate endpoint for the totals
+        accountService.updateAccountTotals()
         val accounts: List<Account> = accountService.findAllActiveAccounts()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")
