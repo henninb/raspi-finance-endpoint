@@ -24,7 +24,7 @@ class TransactionSpec extends Specification {
 {
 "accountId":0,
 "accountType":"credit",
-"transactionDate":1553645394,
+"transactionDate":"2020-10-05",
 "dateUpdated":1593981072000,
 "dateAdded":1593981072000,
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",

@@ -25,7 +25,6 @@ data class Category(
         @Column(unique = true)
         @JsonProperty
         var category: String
-
 ) {
     constructor() : this(0L, "")
 
@@ -38,44 +37,7 @@ data class Category(
 }
 
 //TODO: add active_status field
-//    @JsonProperty
-//    var dateUpdated
-//
-//    @JsonProperty
-//    var dateAdded
+//TODO: add activeStatus field
+//TODO: add dateUpdated field
+//TODO: add dateAdded field
 
-//@Entity(name = "CategoryEntity")
-//@Proxy(lazy = false)
-//@Table(name = "t_category")
-//class Category constructor(_categoryId: Long = 0L, _category: String = "") {
-//
-//    constructor() : this(0L, "")
-//
-//    //TODO: add activeStatus field
-//    //TODO: add dateUpdated field
-//    //TODO: add dateAdded field
-//
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    @Min(value = 0L)
-//    @JsonProperty
-//    var categoryId = _categoryId
-//
-//    @Size(min = 1, max = 50)
-//    @Column(unique = true)
-//    @JsonProperty
-//    var category = _category
-//
-////    @JsonProperty
-////    var dateUpdated = _dateUpdated
-////
-////    @JsonProperty
-////    var dateAdded = _dateAdded
-//
-//    override fun toString(): String = mapper.writeValueAsString(this)
-//
-//    companion object {
-//        @JsonIgnore
-//        private val mapper = ObjectMapper()
-//    }
-//}

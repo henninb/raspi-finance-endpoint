@@ -14,11 +14,10 @@ import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import finance.utils.ValidDate
-import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
-import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import javax.persistence.*
 import javax.validation.constraints.*
 
@@ -91,22 +90,15 @@ data class Transaction(
     constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
             "", "", BigDecimal(0.00), 0, false, "")
 
-    @JsonGetter("transactionDate")
-    fun jsonGetterTransactionDate(): Long {
-        return (this.transactionDate.time)
-    }
+//    @JsonGetter("transactionDate")
+//    fun jsonGetterTransactionDate(): Long {
+//        return (this.transactionDate.time)
+//    }
 
-//    @JsonGetter("dateUpdated")
-//    fun jsonGetterDateUpdated(): Long {
-//        return (this.dateUpdated.time / 1000)
-//        //return ((this.dateUpdated?.time ?: 0) / 1000)
-//    }
-//
-//    @JsonGetter("dateAdded")
-//    fun jsonGetterDateAdded(): Long {
-//        return (this.dateAdded.time / 1000)
-//        //return ((this.dateAdded?.time ?: 0) / 1000)
-//    }
+    @JsonGetter("transactionDate")
+    fun jsonGetterTransactionDate(): String {
+        return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
+    }
 
     //TODO: camelCase or snake_case?
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
