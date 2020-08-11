@@ -48,6 +48,12 @@ dependencies {
     //testImplementation("io.github.benas:${randomBeanVersion}")
 }
 
+test {
+    afterSuite { suite, result ->
+        result.exception?.printStackTrace()
+    }
+}
+
 tasks.withType(Test) {
     environment "CAMEL_ROUTE_ENABLED", "true"
     environment "JSON_FILES_INPUT_PATH", "json_in"
