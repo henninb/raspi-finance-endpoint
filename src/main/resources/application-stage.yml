@@ -57,7 +57,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
-
+  flyway:
+    enabled: false
 logging:
   level.org.hibernate.SQL: WARN
 

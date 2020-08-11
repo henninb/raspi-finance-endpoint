@@ -13,6 +13,18 @@ plugins {
     //id "io.spring.dependency-management" version '1.0.9.RELEASE'
     id 'org.springframework.boot' version '2.3.1.RELEASE'
     id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+    id "org.flywaydb.flyway" version "6.5.3"
+}
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/finance_db'
+    user = 'henninb'
+    password = 'monday1'
+    baselineOnMigrate = true
+    sqlMigrationPrefix = ".sql"
+    locations = [
+            'classpath:db/migration/'
+    ]
 }
 
 ext['springBootVersion'] = '2.3.2.RELEASE'
@@ -125,6 +137,9 @@ dependencies {
     //h2 database
     runtimeOnly("com.h2database:h2:${h2Version}")
 
+    //Flyway
+    implementation "org.flywaydb:flyway-core:6.5.3"
+
     //influx
     implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxVersion}")
 
@@ -145,6 +160,8 @@ dependencies {
     //implementation 'org.inferred:freebuilder:2.4.1'
 
 }
+
+
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
