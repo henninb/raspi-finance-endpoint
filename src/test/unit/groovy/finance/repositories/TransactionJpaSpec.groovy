@@ -5,11 +5,11 @@ import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
-import org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Specification
 
@@ -17,6 +17,7 @@ import javax.persistence.PersistenceException
 import javax.validation.ConstraintViolationException
 import java.sql.Timestamp
 
+@ActiveProfiles("local")
 @DataJpaTest
 class TransactionJpaSpec extends Specification {
 

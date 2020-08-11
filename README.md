@@ -8,6 +8,12 @@
 ./gradlew :dependencies > dependencies.txt
 ./gradlew :dependencies --configuration compile > dependencies_compile.txt
 
+## flyway with gradle
+```
+./gradlew flywayMigrate --info
+gradle -Dflyway.configFiles=path/to/myAlternativeConfig.conf flywayMigrate
+```
+
 ## clojure and lambda
 ```
     // clojure example

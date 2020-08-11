@@ -1,16 +1,14 @@
 package finance.repositories
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Account
 import finance.domain.Payment
-import finance.domain.Transaction
-import finance.helpers.AccountBuilder
-import finance.helpers.TransactionBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
+@ActiveProfiles("local")
 @DataJpaTest
 class PaymentJpaSpec extends Specification {
 
