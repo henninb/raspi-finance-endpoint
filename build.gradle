@@ -72,8 +72,8 @@ repositories {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = '11'
-//    kotlinOptions.jvmTarget = '1.8'
+//    kotlinOptions.jvmTarget = '11'
+    kotlinOptions.jvmTarget = '1.8'
 }
 
 sourceSets {
