@@ -1,0 +1,1 @@
+ALTER TABLE t_transaction DROP COLUMN IF EXISTS sha256;
