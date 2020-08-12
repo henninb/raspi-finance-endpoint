@@ -55,7 +55,8 @@ mkdir -p 'src/test/functional/groovy'
 mkdir -p 'src/test/functional/java'
 mkdir -p 'src/test/performance/groovy'
 mkdir -p 'src/test/performance/java'
-mkdir -p database-data
+mkdir -p 'database-data'
+echo sudo chmod -R g+rwx database-data
 
 mkdir -p logs
 mkdir -p ssl
