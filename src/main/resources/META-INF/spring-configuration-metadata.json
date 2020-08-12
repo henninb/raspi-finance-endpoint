@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "custom.project.time-zone",
+      "type": "java.lang.String",
+      "description": "Description for custom.project.time-zone."
+  },
+    {
+      "name": "custom.project.excel-password",
+      "type": "java.lang.String",
+      "description": "Description for custom.project.excel-password."
+    },
+    {
+      "name": "custom.project.credit-accounts",
+      "type": "java.lang.String",
+      "description": "Description for custom.project.credit-accounts."
+    },
+    {
+      "name": "custom.project.excluded-accounts",
+      "type": "java.lang.String",
+      "description": "Description for custom.project.excluded-accounts."
+    },
+    {
+      "name": "custom.project.excel-input-file-path",
+      "type": "java.lang.String",
+      "description": "Description for custom.project.excel-input-file-path."
+    }
+] }

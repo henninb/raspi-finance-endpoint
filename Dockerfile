@@ -13,6 +13,7 @@ RUN cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 RUN mkdir -p -m 0775 /opt/${APP}/bin
 RUN mkdir -p -m 0775 /opt/${APP}/logs/archive
 RUN mkdir -p -m 0775 /opt/${APP}/ssl
+RUN mkdir -p -m 0775 /opt/${APP}/excel_in
 ADD ./build/libs/${APP}*.jar /opt/${APP}/bin/${APP}.jar
 RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 
