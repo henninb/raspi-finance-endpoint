@@ -8,6 +8,8 @@ ENV APP ${APP}
 ARG USERNAME="set the username as build time"
 ENV USERNAME=${USERNAME}
 RUN useradd ${USERNAME}
+#ENV JAVA_OPTS="-Xmx8192m"
+
 
 RUN cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 RUN mkdir -p -m 0775 /opt/${APP}/bin
@@ -20,4 +22,5 @@ RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 WORKDIR /opt/${APP}/bin
 USER ${USERNAME}
 
+#-Xmx4096m
 CMD java -Duser.timezone=${TIMEZONE} -jar /opt/${APP}/bin/${APP}.jar

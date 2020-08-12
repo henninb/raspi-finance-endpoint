@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -22,8 +23,9 @@ import java.sql.Date
 import java.util.*
 import java.util.stream.IntStream
 
+
 @Service
-class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties) {
+class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties, private val transactionService: TransactionService) {
     @Throws(Exception::class)
     fun processProtectedExcelFile(inputExcelFileName: String) {
         println("${customProperties.excelInputFilePath}/${inputExcelFileName}")
@@ -35,55 +37,72 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
         val workbook: Workbook = XSSFWorkbook(inputStream)
         filterWorkbookThenExportSheetsAsJson(workbook)
         inputStream.close()
+
+        saveExcelFileChanges(inputExcelFileName, workbook)
+    }
+
+    private fun saveExcelFileChanges(inputExcelFileName: String, workbook: Workbook) {
+        val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/new-${inputExcelFileName}"))
+        workbook.write(fileOutStream)
+        fileOutStream.close()
     }
 
     private fun filterWorkbookThenExportSheetsAsJson(workbook: Workbook) {
         IntStream.range(0, workbook.numberOfSheets).filter { idx: Int -> (workbook.getSheetName(idx).contains("_brian") || workbook.getSheetName(idx).contains("_kari")) && !workbook.isSheetHidden(idx) }.forEach { idx: Int ->
             if (!isExcludedAccount(customProperties.excludedAccounts, workbook.getSheetName(idx))) {
                 println(workbook.getSheetName(idx))
-                //exportSheetAsJson(workbook, idx)
+                //transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(idx).replace('.', '-'))
+                exportSheetAsJson(workbook, idx)
             }
         }
     }
 
     private fun exportSheetAsJson(workbook: Workbook, idx: Int) {
-        val transactionList = processExcelSheet(workbook, idx)
-        //mapper.writeValue(File(customProperties.jsonInputFilePath + "/" + workbook.getSheetName(idx).trim { it <= ' ' } + ".json"), transactionList)
+        processExcelSheet(workbook, idx)
     }
 
     @Throws(IOException::class)
-    private fun processExcelSheet(workbook: Workbook, sheetNumber: Int): List<Transaction> {
-        val datatypeSheet = workbook.getSheetAt(sheetNumber)
-        val transactionList: MutableList<Transaction> = ArrayList()
+    private fun processExcelSheet(workbook: Workbook, sheetNumber: Int) {
+        val currentSheet = workbook.getSheetAt(sheetNumber)
 
-        traverseEachRowInTheWorksheet(datatypeSheet, workbook, sheetNumber,  transactionList)
-        return transactionList
+        traverseEachRowInTheWorksheet(currentSheet, workbook, sheetNumber)
     }
 
-    private fun traverseEachRowInTheWorksheet(datatypeSheet: Sheet, workbook: Workbook, sheetNumber: Int, transactionList: MutableList<Transaction>) {
-        for (currentRow in datatypeSheet) {
-            val timezone = TimeZone.getTimeZone(customProperties.timeZone)
-            val transaction = Transaction()
-            transaction.accountNameOwner = workbook.getSheetName(sheetNumber).trim { it <= ' ' }.replace(".", "-")
-            transaction.accountType = getAccountType(customProperties.creditAccounts, workbook.getSheetName(sheetNumber).trim { it <= ' ' })
-            val isRowBlank = traverseEachColumnOfTheRow(currentRow, transaction, timezone)
-            addToTransactionList(isRowBlank, transaction, transactionList)
-        }
+    private fun traverseEachRowInTheWorksheet(currentSheet: Sheet, workbook: Workbook, sheetNumber: Int) {
+
+//        for(Iterator<Row> itr = currentSheet.iterator(); itr.hasNext();)
+//        {
+//            String phone = itr . next ();
+//        }
+
+//        val listIterator = currentSheet.iterator()
+//        while (listIterator.hasNext()) {
+//            val row = listIterator.next()
+//            //currentSheet.removeRow(row)
+//        }
+
+        currentSheet.shiftRows(5,currentSheet.lastRowNum, -1);
+
+            //Read more: https://www.java67.com/2015/10/how-to-solve-concurrentmodificationexception-in-java-arraylist.html#ixzz6Uvrpdg57
+
+//        for (currentRow in currentSheet) {
+//            //transaction.accountNameOwner = workbook.getSheetName(sheetNumber).trim { it <= ' ' }.replace(".", "-")
+//            //transaction.accountType = getAccountType(customProperties.creditAccounts, workbook.getSheetName(sheetNumber).trim { it <= ' ' })
+//            //traverseEachColumnOfTheRow(currentRow, currentSheet)
+//            if (currentRow != null) {
+//                currentSheet.removeRow(currentRow)
+//            }
+//            //currentRow.removeCell()
+//        }
     }
 
-    private fun addToTransactionList(isRowBlank: Boolean, transaction: Transaction, transactionList: MutableList<Transaction>) {
-        if (!isRowBlank && transaction.guid.isNotEmpty()) {
-            transactionList.add(transaction)
-        }
-    }
-
-    private fun traverseEachColumnOfTheRow(currentRow: Row, transaction: Transaction, timezone: TimeZone): Boolean {
+    private fun traverseEachColumnOfTheRow(currentRow: Row, sheet: Sheet): Boolean {
         for (currentCell in currentRow) {
             val currentColumnIndex = currentCell.columnIndex
             if (isGuidValueEmpty(currentColumnIndex, currentCell)) {
                 return true
             }
-            loadColumnValuesIntoTransaction(currentCell, currentColumnIndex, transaction, timezone)
+
         }
         return false
     }
