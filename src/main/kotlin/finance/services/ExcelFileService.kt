@@ -65,35 +65,11 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
     private fun processExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
 
-        traverseEachRowInTheWorksheet(currentSheet, workbook, sheetNumber)
+        removeEachRowInTheWorksheet(currentSheet, workbook, sheetNumber)
     }
 
-    private fun traverseEachRowInTheWorksheet(currentSheet: Sheet, workbook: Workbook, sheetNumber: Int) {
-
-//        for(Iterator<Row> itr = currentSheet.iterator(); itr.hasNext();)
-//        {
-//            String phone = itr . next ();
-//        }
-
-//        val listIterator = currentSheet.iterator()
-//        while (listIterator.hasNext()) {
-//            val row = listIterator.next()
-//            //currentSheet.removeRow(row)
-//        }
-
-        currentSheet.shiftRows(5,currentSheet.lastRowNum, -1);
-
-            //Read more: https://www.java67.com/2015/10/how-to-solve-concurrentmodificationexception-in-java-arraylist.html#ixzz6Uvrpdg57
-
-//        for (currentRow in currentSheet) {
-//            //transaction.accountNameOwner = workbook.getSheetName(sheetNumber).trim { it <= ' ' }.replace(".", "-")
-//            //transaction.accountType = getAccountType(customProperties.creditAccounts, workbook.getSheetName(sheetNumber).trim { it <= ' ' })
-//            //traverseEachColumnOfTheRow(currentRow, currentSheet)
-//            if (currentRow != null) {
-//                currentSheet.removeRow(currentRow)
-//            }
-//            //currentRow.removeCell()
-//        }
+    private fun removeEachRowInTheWorksheet(currentSheet: Sheet, workbook: Workbook, sheetNumber: Int) {
+        currentSheet.shiftRows(2,currentSheet.lastRowNum, -1)
     }
 
     private fun traverseEachColumnOfTheRow(currentRow: Row, sheet: Sheet): Boolean {
