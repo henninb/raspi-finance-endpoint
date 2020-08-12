@@ -69,6 +69,7 @@ ext['hibernateJpaVersion'] = '1.0.0.Final'
 ext['jacksonVersion'] = '2.11.2'
 ext['micrometerInfluxVersion'] = '1.4.1'
 ext['validationVersion'] = '2.0.1.Final'
+ext['flywayVersion'] = '6.5.3'
 
 ext['groovy.version'] = '${gradleVersion}'
 
@@ -138,7 +139,11 @@ dependencies {
     runtimeOnly("com.h2database:h2:${h2Version}")
 
     //Flyway
-    implementation "org.flywaydb:flyway-core:6.5.3"
+    implementation("org.flywaydb:flyway-core:${flywayVersion}")
+
+    //excel
+    implementation("org.apache.poi:poi:${poiVersion}")
+    implementation("org.apache.poi:poi-ooxml:${poiVersion}")
 
     //influx
     implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxVersion}")

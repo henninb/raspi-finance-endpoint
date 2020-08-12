@@ -58,10 +58,9 @@ mkdir -p 'src/test/performance/java'
 mkdir -p 'database-data'
 echo sudo chmod -R g+rwx database-data
 
-mkdir -p logs
-mkdir -p ssl
-mkdir -p json_in
-mkdir -p json_out
+mkdir -p 'logs'
+mkdir -p 'ssl'
+mkdir -p 'excel_in'
 
 #git ls-files | ctags --language=java
 #find . -name "*.java" | xargs ctags --language=java
