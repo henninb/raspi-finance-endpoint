@@ -2,25 +2,19 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.CustomProperties
-import finance.domain.AccountType
 import finance.domain.Transaction
 import org.apache.poi.poifs.crypt.Decryptor
 import org.apache.poi.poifs.crypt.EncryptionInfo
+import org.apache.poi.poifs.crypt.Encryptor
 import org.apache.poi.poifs.filesystem.POIFSFileSystem
-import org.apache.poi.ss.usermodel.*
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.sql.Date
-import java.util.*
+import java.io.*
 import java.util.stream.IntStream
 
 
@@ -28,196 +22,114 @@ import java.util.stream.IntStream
 class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties, private val transactionService: TransactionService) {
     @Throws(Exception::class)
     fun processProtectedExcelFile(inputExcelFileName: String) {
-        println("${customProperties.excelInputFilePath}/${inputExcelFileName}")
+        logger.info("${customProperties.excelInputFilePath}/${inputExcelFileName}")
         val fileStream = POIFSFileSystem(FileInputStream("${customProperties.excelInputFilePath}/${inputExcelFileName}"))
-        val info = EncryptionInfo(fileStream)
-        val decryptor = Decryptor.getInstance(info)
+        val encryptionInfo = EncryptionInfo(fileStream)
+        val decryptor = Decryptor.getInstance(encryptionInfo)
         decryptor.verifyPassword(customProperties.excelPassword)
         val inputStream = decryptor.getDataStream(fileStream)
+
         val workbook: Workbook = XSSFWorkbook(inputStream)
-        filterWorkbookThenExportSheetsAsJson(workbook)
+        filterWorkbookThenImportTransactions(workbook)
         inputStream.close()
 
-        saveExcelFileChanges(inputExcelFileName, workbook)
+        try {
+            saveProtectedExcelFile(inputExcelFileName, workbook, encryptionInfo)
+        } catch (e: OutOfMemoryError) {
+            logger.error("Saving this excel file requires more memory to be provided to the Java JVM.")
+        }
     }
 
-    private fun saveExcelFileChanges(inputExcelFileName: String, workbook: Workbook) {
+    private fun saveProtectedExcelFile(inputExcelFileName: String, workbook: Workbook, encryptionInfo: EncryptionInfo) {
         val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/new-${inputExcelFileName}"))
-        workbook.write(fileOutStream)
+        val poiFileSystem = POIFSFileSystem()
+
+        val encryptor: Encryptor = encryptionInfo.encryptor
+        encryptor.confirmPassword(customProperties.excelPassword)
+        val outputStream: OutputStream = encryptor.getDataStream(poiFileSystem)
+        workbook.write(outputStream)
+        outputStream.close()
+
+        poiFileSystem.writeFilesystem(fileOutStream)
         fileOutStream.close()
+        poiFileSystem.close()
     }
 
-    private fun filterWorkbookThenExportSheetsAsJson(workbook: Workbook) {
+    private fun filterWorkbookThenImportTransactions(workbook: Workbook) {
         IntStream.range(0, workbook.numberOfSheets).filter { idx: Int -> (workbook.getSheetName(idx).contains("_brian") || workbook.getSheetName(idx).contains("_kari")) && !workbook.isSheetHidden(idx) }.forEach { idx: Int ->
             if (!isExcludedAccount(customProperties.excludedAccounts, workbook.getSheetName(idx))) {
-                println(workbook.getSheetName(idx))
-                //transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(idx).replace('.', '-'))
-                exportSheetAsJson(workbook, idx)
+                processEachExcelSheet(workbook, idx)
             }
         }
     }
-
-    private fun exportSheetAsJson(workbook: Workbook, idx: Int) {
-        processExcelSheet(workbook, idx)
-    }
-
+    
     @Throws(IOException::class)
-    private fun processExcelSheet(workbook: Workbook, sheetNumber: Int) {
+    private fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
+        val transactionList = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(sheetNumber).replace('.', '-'))
 
-        removeEachRowInTheWorksheet(currentSheet, workbook, sheetNumber)
-    }
-
-    private fun removeEachRowInTheWorksheet(currentSheet: Sheet, workbook: Workbook, sheetNumber: Int) {
-        currentSheet.shiftRows(2,currentSheet.lastRowNum, -1)
-    }
-
-    private fun traverseEachColumnOfTheRow(currentRow: Row, sheet: Sheet): Boolean {
-        for (currentCell in currentRow) {
-            val currentColumnIndex = currentCell.columnIndex
-            if (isGuidValueEmpty(currentColumnIndex, currentCell)) {
-                return true
-            }
-
+        logger.info(workbook.getSheetName(sheetNumber))
+        removeEachRowInTheWorksheet(currentSheet)
+        var currentRow = 1
+        for( transaction in transactionList ) {
+            insertNewRow(currentSheet, currentRow, transaction)
+            currentRow += 1
         }
-        return false
     }
 
-    private fun isGuidValueEmpty(currentColumnIndex: Int, currentCell: Cell): Boolean {
-        if (currentColumnIndex == COL_GUID && currentCell.stringCellValue.trim { it <= ' ' } == "") {
-            return true
-        }
-        return false
-    }
-
-    private fun loadColumnValuesIntoTransaction(currentCell: Cell, column: Int, transaction: Transaction, timeZone: TimeZone) {
-        if (currentCell.address.row != 0) {
-            when (currentCell.cellType) {
-                CellType.STRING -> {
-                    loadStringValueColumns(column, currentCell, transaction)
+    private fun insertNewRow(currentSheet: Sheet, rowNumber: Int , transaction: Transaction) {
+        val newRow = currentSheet.createRow(rowNumber)
+        for (columnNumber in 1 until 8) {
+            val newCell = newRow.createCell(columnNumber)
+            when (columnNumber) {
+                COL_GUID -> {
+                    newCell.setCellValue(transaction.guid)
                 }
-                CellType.NUMERIC -> {
-                    loadNumericValueColumns(column, currentCell, transaction, timeZone)
+                COL_TRANSACTION_DATE -> {
+                    newCell.setCellValue(transaction.transactionDate)
                 }
-                CellType.BLANK -> {
-    //                if (column != COL_TRANSACTION_ID) {
-    //                    logger.info("blank: $column")
-    //                }
+                COL_DESCRIPTION -> {
+                    newCell.setCellValue(transaction.description)
                 }
-                CellType.FORMULA -> {
-                    logger.info("formula needs to be changed to the actual value: ${transaction.guid}")
-                    throw RuntimeException("formula needs to be changed to the actual value:  ${transaction.guid}")
+                COL_CATEGORY -> {
+                    newCell.setCellValue(transaction.category)
+                }
+                COL_AMOUNT -> {
+                    newCell.setCellValue(transaction.amount.toDouble())
+                }
+                COL_CLEARED -> {
+                    newCell.setCellValue(transaction.cleared.toDouble())
+                }
+                COL_NOTES -> {
+                    newCell.setCellValue(transaction.notes)
                 }
                 else -> {
-                    logger.info("currentCell.getCellType = ${currentCell.cellType}")
-                    throw RuntimeException("currentCell.getCellType = ${currentCell.cellType}")
+                    throw RuntimeException("no column match for transaction guid value:  ${transaction.guid}")
                 }
             }
         }
     }
 
-    private fun loadNumericValueColumns(columnNumber: Int, currentCell: Cell, transaction: Transaction, timezone: TimeZone) {
-        when (columnNumber) {
-            COL_CLEARED -> {
-                populateCleared(currentCell, transaction)
-            }
-            COL_TRANSACTION_DATE -> {
-                populateTransactionDate(currentCell, timezone, transaction)
-            }
-            COL_AMOUNT -> {
-                populateAmount(currentCell, transaction)
-            }
-            else -> {
-                logger.warn("currentCell.getCellType = ${currentCell.cellType}")
-                throw RuntimeException("currentCell.getCellType = ${currentCell.cellType}")
+    private fun removeEachRowInTheWorksheet(currentSheet: Sheet) {
+
+        try {
+            logger.info("currentSheet.lastRowNum = ${currentSheet.lastRowNum}")
+            logger.info("currentSheet.physicalNumberOfRows = ${currentSheet.physicalNumberOfRows}")
+            currentSheet.shiftRows(2, currentSheet.lastRowNum, - 1)
+        } catch (e: IllegalArgumentException) {
+            logger.info("issues with this index")
+        }
+
+        for (rowNumber in currentSheet.lastRowNum downTo 1) {
+            val row = currentSheet.getRow(rowNumber)
+            if (row != null) {
+                currentSheet.removeRow(row)
             }
         }
-    }
-
-    private fun populateAmount(currentCell: Cell, transaction: Transaction) {
-        val `val` = BigDecimal.valueOf(currentCell.numericCellValue)
-        val displayVal = `val`.setScale(2, RoundingMode.HALF_EVEN)
-        transaction.amount = displayVal
-    }
-
-    private fun populateTransactionDate(currentCell: Cell, timezone: TimeZone, transaction: Transaction) {
-        val date = DateUtil.getJavaDate(currentCell.numericCellValue, timezone)
-        transaction.transactionDate = Date(date.time)
-    }
-
-    private fun populateCleared(currentCell: Cell, transaction: Transaction) {
-        val `val` = currentCell.numericCellValue.toInt()
-        transaction.cleared = `val`
-    }
-
-    private fun loadStringValueColumns(columnNumber: Int, currentCell: Cell, transaction: Transaction) {
-        when (columnNumber) {
-            COL_GUID -> {
-                populateGuid(currentCell, transaction)
-            }
-            COL_DESCRIPTION -> {
-                populateDescription(currentCell, transaction)
-            }
-            COL_CATEGORY -> {
-                populateCategory(currentCell, transaction)
-            }
-            COL_NOTES -> {
-                populateNotesAndReoccurring(currentCell, transaction)
-            }
-            else -> {
-                logger.warn("currentCell.getCellType = ${currentCell.cellType}")
-                throw RuntimeException("currentCell.getCellType = ${currentCell.cellType}")
-            }
-        }
-    }
-
-    private fun populateNotesAndReoccurring(currentCell: Cell, transaction: Transaction) {
-        val `val` = capitalizeWords(currentCell.stringCellValue.trim { it <= ' ' })
-        transaction.notes = `val`
-        transaction.reoccurring = `val`.toLowerCase().startsWith("reoccur")
-    }
-
-    private fun populateCategory(currentCell: Cell, transaction: Transaction) {
-        val `val` = currentCell.stringCellValue.trim { it <= ' ' }
-        transaction.category = `val`
-    }
-
-    private fun populateDescription(currentCell: Cell, transaction: Transaction) {
-        val `val` = capitalizeWords(currentCell.stringCellValue.trim { it <= ' ' })
-        transaction.description = `val`
-    }
-
-    private fun populateGuid(currentCell: Cell, transaction: Transaction) {
-        val `val` = currentCell.stringCellValue.trim { it <= ' ' }
-        transaction.guid = `val`
-    }
-
-    private fun capitalizeWords(inputString: String): String {
-        if (inputString.isNotEmpty()) {
-            val words = inputString.toLowerCase().split("\\s").toTypedArray()
-            val capitalizeWord = StringBuilder()
-            for (word in words) {
-                if (word.isNotEmpty()) {
-                    val first = word.substring(0, 1)
-                    val afterFirst = word.substring(1)
-                    capitalizeWord.append(first.toUpperCase()).append(afterFirst).append(" ")
-                } else {
-                    capitalizeWord.append(word)
-                }
-            }
-            return capitalizeWord.toString().trim { it <= ' ' }
-        }
-        return inputString
     }
 
     private fun isExcludedAccount(accountExcludedList: List<String>, accountNameOwner: String): Boolean {
         return accountExcludedList.stream().anyMatch { str: String -> str.trim { it <= ' ' } == accountNameOwner }
-    }
-
-    private fun getAccountType(accountCreditList: List<String>, accountNameOwner: String): AccountType {
-        return if (accountCreditList.stream().anyMatch { str: String -> str.trim { it <= ' ' } == accountNameOwner }) {
-            AccountType.Credit
-        } else AccountType.Debit
     }
 
     companion object {
