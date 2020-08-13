@@ -57,72 +57,10 @@ spring:
 
 custom:
   project:
-    time-zone: ${TIMEZONE}
     excel-password: ${EXCEL_PASSWORD}
     excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
-    credit-accounts:
-      - amazon_brian
-      - amazon.store_brian
-      - amex_brian
-      - amex_kari
-      - amex.newegg_brian
-      - amex.newegg_kari
-      - amex.rewards_brian
-      - barclay.cash_brian
-      - barclay.cash_kari
-      - barclays_brian
-      - barclays_kari
-      - bcu_brian
-      - boa_brian
-      - boa_kari
-      - boa.cash_kari
-      - capitalone_brian
-      - capitalone_kari
-      - chase_brian
-      - chase_kari
-      - chase.unlimited_kari
-      - citi_brian
-      - citi.dividend_brian
-      - discover_brian
-      - discover_kari
-      - discoverit_brian
-      - firstnational_kari
-      - gap_kari
-      - goodyear_kari
-      - herbergers_kari
-      - homedepot_brian
-      - homedepot_kari
-      - hsbc_brian
-      - kohls_kari
-      - lowes_brian
-      - macys_kari
-      - medical_brian
-      - menards_brian
-      - millsfleet_brian
-      - mlb_kari
-      - mlb.one_brian
-      - mlb.two_brian
-      - rakuten_brian
-      - rcard_brian
-      - suzan_brian
-      - target_brian
-      - target_kari
-      - usbankcash_brian
-      - usbankcash_kari
-      - wfargocash_brian
-      - wfargocash_kari
-      - citicash_kari
-      - citicash_brian
     excluded-accounts:
-      - 401k_brian
-      - 401k_kari
-      - amazongift_brian
-      - giftcards_brian
-      - pension_brian
-      - pension_kari
-      - scottrade_ira_brian
-      - vacation_brian
-      - vacation_kari
+      - test_brian
 logging:
   level:
     org:

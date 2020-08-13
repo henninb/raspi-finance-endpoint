@@ -13,6 +13,7 @@ services:
       - "8080:8080"
     expose:
       - "8080"
+#    mem_limit: 1024m
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
       - ./ssl:/opt/raspi-finance-endpoint/ssl

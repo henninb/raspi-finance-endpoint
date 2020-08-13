@@ -22,5 +22,5 @@ RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 WORKDIR /opt/${APP}/bin
 USER ${USERNAME}
 
-#-Xmx4096m
-CMD java -Duser.timezone=${TIMEZONE} -jar /opt/${APP}/bin/${APP}.jar
+#default on the mac was 522m
+CMD java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar
