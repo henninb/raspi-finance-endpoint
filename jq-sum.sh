@@ -15,4 +15,8 @@ curl -s -X GET 'http://localhost:8080/transaction/all' | jq '.[] | select(.accou
 curl -s -X GET 'http://localhost:8080/transaction/page/all?page=1&per_page=1' | jq
 curl -s -X GET 'http://localhost:8080/transaction/page/all?page=1&per_page=2' | jq
 
+curl -s -X GET 'http://localhost:8080/account/select/active' | jq
+
+curl -s -X GET 'http://localhost:8080/account/select/active' | jq '.[] | .accountNameOwner' | tr -d '"'
+
 exit 0
