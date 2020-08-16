@@ -184,7 +184,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     @Transactional
-    open fun getTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+    open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
         var totalsCleared= 0.00
@@ -204,11 +204,12 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
+        val sortedTransactions = transactions.sortedWith(compareBy({ it.cleared }, { it.transactionDate }))
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //return something
         }
-        return transactions
+        return sortedTransactions
     }
 
     @Transactional
