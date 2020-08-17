@@ -10,12 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.lang.RuntimeException
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
-//import javax.transaction.Transactional
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
@@ -237,20 +236,32 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
-    fun cloneTransaction(map: Map<String, String>) {
+    @Transactional
+    open fun cloneTransaction(map: Map<String, String>) : Boolean {
         val guid :String = map["guid"]  ?: error("guid must be set.")
         val transactionDate :String = map["transactionDate"] ?: error("transactionDate must be set.")
         val amount :String = map["amount"] ?: error("transactionDate must be set.")
+        val transactionDateConverted: Date = Date.valueOf(transactionDate) ?: error("transactionDate must be formatted yyyy-MM-dd")
 
         val optionalTransaction = transactionRepository.findByGuid(guid)
 
         if (optionalTransaction.isPresent) {
             val oldTransaction = optionalTransaction.get()
             val transaction = Transaction()
-            //transaction.transactionDate = transactionDate
+            transaction.guid = UUID.randomUUID().toString()
+            transaction.transactionDate = transactionDateConverted
             transaction.description = oldTransaction.description
             transaction.category = oldTransaction.category
-
+            transaction.amount = amount.toBigDecimal()
+            transaction.cleared = oldTransaction.cleared
+            transaction.notes = oldTransaction.notes
+            transaction.reoccurring = oldTransaction.reoccurring
+            transaction.accountType = oldTransaction.accountType
+            transaction.accountId = oldTransaction.accountId
+            transaction.accountNameOwner = oldTransaction.accountNameOwner
+            transactionRepository.saveAndFlush(transaction)
+            return true
         }
+        return false
     }
 }

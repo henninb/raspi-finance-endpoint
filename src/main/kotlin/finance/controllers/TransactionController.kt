@@ -101,13 +101,10 @@ class TransactionController @Autowired constructor(private var transactionServic
 
 
     @PostMapping(path = [("/clone")], consumes = [("application/json")], produces = [("application/json")])
-    fun cloneTransaction(@RequestBody tags: Map<String, String>): ResponseEntity<String> {
-
-          transactionService.cloneTransaction(tags)
-//        if (transactionService.insertTransaction(transaction)) {
-//            logger.info(transaction.toString())
-//            return ResponseEntity.ok("transaction inserted")
-//        }
+    fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
+       if (transactionService.cloneTransaction(payload)) {
+            return ResponseEntity.ok("transaction inserted")
+        }
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
