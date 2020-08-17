@@ -204,10 +204,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
-        val sortedTransactions = transactions.sortedWith(compareBy({ it.cleared }, { it.transactionDate }))
+        val sortedTransactions = transactions.sortedWith(compareBy<Transaction> { it.cleared }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
-            //return something
+            //TODO: return something here
         }
         return sortedTransactions
     }
