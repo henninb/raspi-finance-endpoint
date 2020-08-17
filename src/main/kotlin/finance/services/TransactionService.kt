@@ -236,6 +236,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
+    //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
     @Transactional
     open fun cloneTransaction(map: Map<String, String>) : Boolean {
         val guid :String = map["guid"]  ?: error("guid must be set.")
