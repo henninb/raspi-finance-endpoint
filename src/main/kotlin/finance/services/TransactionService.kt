@@ -242,6 +242,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val transactionDate :String = map["transactionDate"] ?: error("transactionDate must be set.")
         val amount :String = map["amount"] ?: error("transactionDate must be set.")
         val transactionDateConverted: Date = Date.valueOf(transactionDate) ?: error("transactionDate must be formatted yyyy-MM-dd")
+        val firstDayOfTheMonth = map["firstDayOfTheMonth"]
+        val lastDayOfTheMonth = map["lastDayOfTheMonth"]
 
         val optionalTransaction = transactionRepository.findByGuid(guid)
 
