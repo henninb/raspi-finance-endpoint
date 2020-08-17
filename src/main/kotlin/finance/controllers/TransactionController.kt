@@ -99,6 +99,18 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
+
+    @PostMapping(path = [("/clone")], consumes = [("application/json")], produces = [("application/json")])
+    fun cloneTransaction(@RequestBody tags: Map<String, String>): ResponseEntity<String> {
+
+          transactionService.cloneTransaction(tags)
+//        if (transactionService.insertTransaction(transaction)) {
+//            logger.info(transaction.toString())
+//            return ResponseEntity.ok("transaction inserted")
+//        }
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
+    }
+
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
     @DeleteMapping(path = ["/delete/{guid}"])

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.lang.RuntimeException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Timestamp
@@ -234,5 +235,22 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             return false
         }
         return true
+    }
+
+    fun cloneTransaction(map: Map<String, String>) {
+        val guid :String = map["guid"]  ?: error("guid must be set.")
+        val transactionDate :String = map["transactionDate"] ?: error("transactionDate must be set.")
+        val amount :String = map["amount"] ?: error("transactionDate must be set.")
+
+        val optionalTransaction = transactionRepository.findByGuid(guid)
+
+        if (optionalTransaction.isPresent) {
+            val oldTransaction = optionalTransaction.get()
+            val transaction = Transaction()
+            //transaction.transactionDate = transactionDate
+            transaction.description = oldTransaction.description
+            transaction.category = oldTransaction.category
+
+        }
     }
 }
