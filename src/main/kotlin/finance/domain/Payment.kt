@@ -39,9 +39,19 @@ data class Payment(
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-        var amount: BigDecimal
+        var amount: BigDecimal,
+
+        @JsonProperty
+        //TODO: add feature
+        //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
+        var guidSource: String?,
+
+        @JsonProperty
+        //TODO: add feature
+        //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
+        var guidDestination: String?
 ) {
-    constructor() : this(0L, "", Date(0), BigDecimal(0.00))
+    constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")
 
     override fun toString(): String = mapper.writeValueAsString(this)
 
