@@ -66,7 +66,7 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
     @Throws(IOException::class)
     private fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
-        val transactionList = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(sheetNumber).replace('.', '-'))
+        val transactionList  = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(sheetNumber).replace('.', '-'))
 
         logger.info(workbook.getSheetName(sheetNumber))
         removeEachRowInTheWorksheet(currentSheet)

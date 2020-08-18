@@ -18,6 +18,7 @@ import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
+
 @Service
 open class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
                                                      private var accountService: AccountService,
@@ -149,7 +150,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 return true
             }
         }
-        
+
         logger.info("transaction already exists, no transaction data inserted.")
         return false
     }
@@ -238,33 +239,53 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
     @Transactional
-    open fun cloneTransaction(map: Map<String, String>) : Boolean {
+    open fun cloneAsMonthlyTransaction(map: Map<String, String>) : Boolean {
         val guid :String = map["guid"]  ?: error("guid must be set.")
-        val transactionDate :String = map["transactionDate"] ?: error("transactionDate must be set.")
         val amount :String = map["amount"] ?: error("transactionDate must be set.")
-        val transactionDateConverted: Date = Date.valueOf(transactionDate) ?: error("transactionDate must be formatted yyyy-MM-dd")
-        val firstDayOfTheMonth = map["firstDayOfTheMonth"]
-        val lastDayOfTheMonth = map["lastDayOfTheMonth"]
+        val isMonthEnd = map["monthEnd"] ?: error("monthEnd must be set.")
+        val specificDay = map["specificDay"] ?: error("specificDay must be set.")
 
         val optionalTransaction = transactionRepository.findByGuid(guid)
 
-        if (optionalTransaction.isPresent) {
-            val oldTransaction = optionalTransaction.get()
-            val transaction = Transaction()
-            transaction.guid = UUID.randomUUID().toString()
-            transaction.transactionDate = transactionDateConverted
-            transaction.description = oldTransaction.description
-            transaction.category = oldTransaction.category
-            transaction.amount = amount.toBigDecimal()
-            transaction.cleared = oldTransaction.cleared
-            transaction.notes = oldTransaction.notes
-            transaction.reoccurring = oldTransaction.reoccurring
-            transaction.accountType = oldTransaction.accountType
-            transaction.accountId = oldTransaction.accountId
-            transaction.accountNameOwner = oldTransaction.accountNameOwner
-            transactionRepository.saveAndFlush(transaction)
-            return true
+        val calendar = Calendar.getInstance()
+        val month = calendar[Calendar.MONTH]
+        val year = calendar[Calendar.YEAR]
+        calendar.clear()
+        calendar[Calendar.YEAR] = year
+
+        for (currentMonth in month..11) {
+            var lastDay :Date
+            var lastDayUtil :java.util.Date
+            calendar[Calendar.MONTH] = currentMonth
+
+            if( isMonthEnd.toBoolean() ) {
+                calendar[Calendar.DAY_OF_MONTH] = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+                lastDayUtil = calendar.time
+            } else {
+                calendar[Calendar.DAY_OF_MONTH] = specificDay.toInt()
+                lastDayUtil = calendar.time
+            }
+            lastDay = Date(lastDayUtil.time)
+
+            if (optionalTransaction.isPresent) {
+                val oldTransaction = optionalTransaction.get()
+                val transaction = Transaction()
+                transaction.guid = UUID.randomUUID().toString()
+                transaction.transactionDate = lastDay
+                transaction.description = oldTransaction.description
+                transaction.category = oldTransaction.category
+                transaction.amount = amount.toBigDecimal()
+                transaction.cleared = -1
+                transaction.notes = oldTransaction.notes
+                transaction.reoccurring = oldTransaction.reoccurring
+                transaction.accountType = oldTransaction.accountType
+                transaction.accountId = oldTransaction.accountId
+                transaction.accountNameOwner = oldTransaction.accountNameOwner
+                transactionRepository.saveAndFlush(transaction)
+            } else {
+                logger.info("no record found ${guid}.")
+            }
         }
-        return false
+        return true
     }
 }
