@@ -1,7 +1,5 @@
 package finance.controllers
 
-import finance.domain.Payment
-import finance.services.CategoryService
 import finance.services.ExcelFileService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
