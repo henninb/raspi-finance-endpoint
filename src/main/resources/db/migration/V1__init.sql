@@ -1,4 +1,0 @@
--- create table person(
---   name TEXT,
---   id INT
--- );

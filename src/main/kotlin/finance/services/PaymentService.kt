@@ -28,6 +28,8 @@ class PaymentService (private var paymentRepository: PaymentRepository, private 
 
         transactionService.insertTransaction(transactionCredit)
         transactionService.insertTransaction(transactionDebit)
+        payment.guidDestination = transactionCredit.guid
+        payment.guidSource = transactionDebit.guid
         paymentRepository.save(payment)
         return true
     }

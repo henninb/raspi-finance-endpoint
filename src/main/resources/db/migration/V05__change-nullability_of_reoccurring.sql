@@ -1,0 +1,1 @@
+ALTER TABLE t_transaction ALTER COLUMN reoccurring SET not null;
