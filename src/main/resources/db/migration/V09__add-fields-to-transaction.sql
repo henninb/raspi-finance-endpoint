@@ -1,0 +1,1 @@
+ALTER TABLE t_transaction ADD COLUMN IF NOT EXISTS active_status BOOLEAN DEFAULT true;
