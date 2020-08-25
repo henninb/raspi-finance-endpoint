@@ -1,4 +1,4 @@
-FROM postgres:12.3
+FROM postgres:12.4
 # RUN mkdir -p /var/lib/postgresql/data
 # RUN chmod -R g+rwx /var/lib/postgresql/data
 ENTRYPOINT docker-entrypoint.sh
