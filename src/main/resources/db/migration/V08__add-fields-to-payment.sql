@@ -1,2 +1,0 @@
-ALTER TABLE t_payment ADD COLUMN IF NOT EXISTS guid_source TEXT;
-ALTER TABLE t_payment ADD COLUMN IF NOT EXISTS guid_destination TEXT;
