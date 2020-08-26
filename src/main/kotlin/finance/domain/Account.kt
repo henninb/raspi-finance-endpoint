@@ -20,7 +20,9 @@ import javax.validation.constraints.Size
 
 @Entity(name = "AccountEntity")
 @Proxy(lazy = false)
-@Table(name = "t_account", uniqueConstraints = [UniqueConstraint(columnNames = ["account_id", "account_name_owner", "account_type"])])
+@Table(name = "t_account",
+        uniqueConstraints = [UniqueConstraint(columnNames = ["account_id", "account_name_owner", "account_type"], name="uk_id_account_type")]
+      )
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Account(
         @Id
