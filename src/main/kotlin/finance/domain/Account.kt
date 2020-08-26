@@ -20,51 +20,60 @@ import javax.validation.constraints.Size
 
 @Entity(name = "AccountEntity")
 @Proxy(lazy = false)
-@Table(name = "t_account")
+@Table(name = "t_account", uniqueConstraints = [UniqueConstraint(columnNames = ["account_id", "account_name_owner", "account_type"])])
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Account(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @JsonProperty
         @field:Min(value = 0L)
+        @Column(name="account_id", nullable = false)
         var accountId: Long,
 
         @JsonProperty
-        @Column(unique = true)
+        @Column(name="account_name_owner", unique = true, nullable = false)
         @field:Size(min = 3, max = 40)
         @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
         var accountNameOwner: String,
 
         @JsonProperty
+        @Column(name="account_type", nullable = false)
         @Convert(converter = AccountTypeConverter::class)
         var accountType: AccountType,
 
         @JsonProperty
+        @Column(name="active_status", nullable = false)
         var activeStatus: Boolean,
 
         @JsonProperty
         //@Size(min = 4, max = 4, message = "Must be 4 digits.")
         @field:Pattern(regexp = "^[0-9]{4}$", message = "Must be 4 digits.")
+        @Column(name="moniker")
         var moniker: String,
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+        @Column(name="totals")
         var totals: BigDecimal,
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+        @Column(name="totals_balanced")
         var totalsBalanced: BigDecimal,
 
         @JsonProperty
         //@ValidTimestamp
+        @Column(name="date_closed")
         var dateClosed: Timestamp,
 
         @JsonProperty
         @ValidTimestamp
+        @Column(name="date_updated")
         var dateUpdated: Timestamp,
 
         @JsonProperty
         @ValidTimestamp
+        @Column(name="date_added")
         var dateAdded: Timestamp) {
 
     constructor() : this(0L, "", AccountType.Credit, true,
