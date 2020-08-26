@@ -62,18 +62,17 @@ data class Account(
         var totalsBalanced: BigDecimal,
 
         @JsonProperty
-        //@ValidTimestamp
         @Column(name="date_closed")
         var dateClosed: Timestamp,
 
         @JsonProperty
         @ValidTimestamp
-        @Column(name="date_updated")
+        @Column(name="date_updated", nullable = false)
         var dateUpdated: Timestamp,
 
         @JsonProperty
         @ValidTimestamp
-        @Column(name="date_added")
+        @Column(name="date_added", nullable = false)
         var dateAdded: Timestamp) {
 
     constructor() : this(0L, "", AccountType.Credit, true,

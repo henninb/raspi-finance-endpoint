@@ -25,7 +25,7 @@ data class Payment(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @field:Min(value = 0L)
         @JsonProperty
-        @Column(name="payment_id")
+        @Column(name="payment_id", nullable = false)
         var paymentId: Long,
 
         @JsonProperty
@@ -47,13 +47,13 @@ data class Payment(
         @JsonProperty
         //TODO: add feature
         //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
-        @Column(name="guid_source")
+        @Column(name="guid_source", nullable = false)
         var guidSource: String?,
 
         @JsonProperty
         //TODO: add feature
         //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
-        @Column(name="guid_destination")
+        @Column(name="guid_destination", nullable = false)
         var guidDestination: String?
 ) {
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")
