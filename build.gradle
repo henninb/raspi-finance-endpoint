@@ -37,11 +37,11 @@ ext['activemqVersion'] = '5.16.0'
 ext['jolokiaVersion'] = '1.6.2'
 ext['postgresqlVersion'] = '42.2.16'
 ext['kafkaVersion'] = '2.5.0'
-ext['hibernateVersion'] = '5.4.18.Final'
+ext['hibernateVersion'] = '5.4.20.Final'
 ext['h2Version'] = '1.4.200'
 ext['clojureVersion'] = '1.10.1'
 ext['scalaVersion'] = '2.13.3'
-ext['gradleVersion'] = '6.5.1'
+ext['gradleVersion'] = '6.6.1'
 ext['mongoVersion'] = '3.12.2'
 ext['wmqVersion'] = '7.0.1.9'
 ext['swaggerVersion'] = '2.9.2'
@@ -64,7 +64,6 @@ ext['jdbcTemplateVersion'] = '5.2.2.RELEASE'
 ext['testContainersVersion'] = '1.12.3'
 ext['httpBuilderVersion'] = '1.0.4'
 ext['randomBeanVersion'] = '3.7.0'
-ext['jacksonKotlinVersion'] = '2.9.7'
 ext['hibernateJpaVersion'] = '1.0.0.Final'
 ext['jacksonVersion'] = '2.11.2'
 ext['micrometerInfluxVersion'] = '1.4.1'
@@ -107,7 +106,7 @@ dependencies {
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonKotlinVersion}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
 
     //Groovy
     implementation("org.codehaus.groovy:groovy-all:${groovyVersion}")
@@ -128,6 +127,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
+
     //Camel
     // implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
     // implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
@@ -163,10 +163,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:${logbackVersion}")
 
     //implementation 'org.inferred:freebuilder:2.4.1'
-
 }
-
-
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

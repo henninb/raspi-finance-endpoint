@@ -19,11 +19,11 @@ data class Category(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @field:Min(value = 0L)
         @JsonProperty
-        @Column(name="category_id")
+        @Column(name="category_id", nullable = false)
         var categoryId: Long,
 
         @field:Size(min = 1, max = 50)
-        @Column(name="category", unique = true)
+        @Column(name="category", unique = true, nullable = false)
         @JsonProperty
         var category: String
 ) {
