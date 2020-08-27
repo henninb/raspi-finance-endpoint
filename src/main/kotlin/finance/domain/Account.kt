@@ -50,17 +50,17 @@ data class Account(
         @JsonProperty
         //@Size(min = 4, max = 4, message = "Must be 4 digits.")
         @field:Pattern(regexp = "^[0-9]{4}$", message = "Must be 4 digits.")
-        @Column(name="moniker")
+        @Column(name="moniker", columnDefinition = "TEXT DEFAULT '0000'")
         var moniker: String,
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-        @Column(name="totals")
+        @Column(name="totals", columnDefinition = "DECIMAL(12,2) DEFAULT 0.0")
         var totals: BigDecimal,
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-        @Column(name="totals_balanced")
+        @Column(name="totals_balanced", columnDefinition = "DECIMAL(12,2) DEFAULT 0.0")
         var totalsBalanced: BigDecimal,
 
         @JsonProperty
