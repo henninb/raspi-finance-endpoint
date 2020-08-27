@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS t_account(
     account_name_owner TEXT UNIQUE NOT NULL,
     account_name TEXT, -- NULL for now
     account_owner TEXT, -- NULL for now
-    account_type TEXT NOT NULL,
-    active_status BOOLEAN NOT NULL,
-    moniker TEXT NOT NULL DEFAULT '',
+    account_type TEXT NOT NULL DEFAULT 'unknown',
+    active_status BOOLEAN NOT NULL DEFAULT TRUE,
+    moniker TEXT NOT NULL DEFAULT '0000',
     totals DECIMAL(12,2) DEFAULT 0.0,
     totals_balanced DECIMAL(12,2) DEFAULT 0.0,
     date_closed TIMESTAMP DEFAULT TO_TIMESTAMP(0),
