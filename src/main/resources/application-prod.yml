@@ -42,10 +42,11 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: ${HIBERNATE_DDL}
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
+#    properties:
+#      hibernate:
+#        jdbc:
+#          time_zone: UTC
+
 # ===============================
 # = Flyway
 # ===============================

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
+import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
@@ -30,6 +31,7 @@ data class Payment(
 
         @JsonProperty
         @Column(name="account_name_owner", nullable = false)
+        @field:Convert(converter = LowerCaseConverter::class)
         @field:Size(min = 3, max = 40)
         @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
         var accountNameOwner: String,

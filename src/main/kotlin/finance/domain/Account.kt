@@ -8,6 +8,7 @@ import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
 import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
+import finance.utils.LowerCaseConverter
 import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
@@ -21,7 +22,7 @@ import javax.validation.constraints.Size
 @Entity(name = "AccountEntity")
 @Proxy(lazy = false)
 @Table(name = "t_account",
-        uniqueConstraints = [UniqueConstraint(columnNames = ["account_id", "account_name_owner", "account_type"], name="uk_id_account_type")]
+        uniqueConstraints = [UniqueConstraint(columnNames = ["account_name_owner", "account_type"], name="uk_id_account_type")]
       )
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Account(
@@ -35,6 +36,7 @@ data class Account(
         @JsonProperty
         @Column(name="account_name_owner", unique = true, nullable = false)
         @field:Size(min = 3, max = 40)
+        @field:Convert(converter = LowerCaseConverter::class)
         @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
         var accountNameOwner: String,
 
@@ -44,7 +46,7 @@ data class Account(
         var accountType: AccountType,
 
         @JsonProperty
-        @Column(name="active_status", nullable = false)
+        @Column(name="active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
         var activeStatus: Boolean,
 
         @JsonProperty
