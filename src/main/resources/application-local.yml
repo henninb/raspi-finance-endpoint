@@ -51,10 +51,10 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: create-drop
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
+#    properties:
+#      hibernate:
+#        jdbc:
+#          time_zone: UTC
   flyway:
     enabled: false
 logging:

@@ -2,8 +2,10 @@ package finance.services
 
 import finance.domain.Account
 import finance.repositories.AccountRepository
+import org.hibernate.exception.SQLGrammarException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.validation.ConstraintViolation
@@ -70,11 +72,15 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
     }
 
     fun updateAccountTotals() {
-        logger.info("updateAccountGrandTotals")
-        accountRepository.updateAccountGrandTotals()
-        logger.info("updateAccountClearedTotals")
-        accountRepository.updateAccountClearedTotals()
-        logger.info("updateAccountTotals")
+        try {
+            logger.info("updateAccountGrandTotals")
+            accountRepository.updateAccountGrandTotals()
+            logger.info("updateAccountClearedTotals")
+            accountRepository.updateAccountClearedTotals()
+            logger.info("updateAccountTotals")
+        } catch(sqlgrammerException: InvalidDataAccessResourceUsageException) {
+            logger.info("empty database.")
+        }
     }
 
     //TODO: Complete the function

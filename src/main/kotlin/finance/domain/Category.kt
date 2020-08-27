@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
 import javax.persistence.*
 import javax.validation.constraints.Min
@@ -23,6 +24,7 @@ data class Category(
         var categoryId: Long,
 
         @field:Size(min = 1, max = 50)
+        @field:Convert(converter = LowerCaseConverter::class)
         @Column(name="category", unique = true, nullable = false)
         @JsonProperty
         var category: String
