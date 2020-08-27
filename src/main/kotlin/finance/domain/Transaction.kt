@@ -1,9 +1,6 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonGetter
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
@@ -45,7 +42,7 @@ data class Transaction(
         @Column(name="account_id", nullable = false)
         var accountId: Long,
 
-        @Column(name="account_type", columnDefinition = "VARCHAR", nullable = false)
+        @Column(name="account_type", columnDefinition = "TEXT", nullable = false)
         @JsonProperty
         @field:Convert(converter = AccountTypeConverter::class)
         var accountType: AccountType,
@@ -85,13 +82,13 @@ data class Transaction(
         var cleared: Int,
 
         @JsonProperty
-        @Column(name = "reoccurring")
+        @Column(name = "reoccurring", columnDefinition = "BOOLEAN DEFAULT TRUE", nullable = false)
         var reoccurring: Boolean?,
 
         @JsonProperty
         @field:Size(max = 100)
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-        @Column(name = "notes")
+        @Column(name = "notes", nullable = false)
         var notes: String
         ) {
 
@@ -106,6 +103,11 @@ data class Transaction(
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
+    }
+
+    @JsonSetter("description")
+    fun jsonSetterDescription( description: String) {
+        this.description = description.toLowerCase()
     }
 
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
@@ -125,5 +127,10 @@ data class Transaction(
     companion object {
         @JsonIgnore
         private val mapper = ObjectMapper()
+
+        //TODO: uncertain what this will do
+//        operator fun invoke(description: String): Transaction {
+//            return Transaction(description.toLowerCase())
+//        }
     }
 }
