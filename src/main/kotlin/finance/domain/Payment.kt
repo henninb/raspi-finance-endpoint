@@ -8,6 +8,8 @@ import finance.utils.Constants
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Date
 import javax.persistence.*
@@ -65,5 +67,7 @@ data class Payment(
     companion object {
         @JsonIgnore
         private val mapper = ObjectMapper()
+        val logger: Logger
+            get() = LoggerFactory.getLogger(Payment::class.java)
     }
 }
