@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS t_transaction (
     description TEXT NOT NULL,
     category TEXT NOT NULL DEFAULT '',
     amount DECIMAL(12,2) NOT NULL DEFAULT 0.0,
-    cleared INTEGER NOT NULL DEFAULT 0,
+    transaction_state TEXT NOT NULL DEFAULT 'undefined',
     reoccurring BOOLEAN NOT NULL DEFAULT FALSE,
     active_status BOOLEAN NOT NULL DEFAULT TRUE,
     notes TEXT NOT NULL DEFAULT '',
