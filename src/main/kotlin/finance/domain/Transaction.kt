@@ -12,6 +12,7 @@ import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import finance.utils.LowerCaseConverter
+import finance.utils.TransactionStateConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import org.slf4j.Logger
@@ -27,8 +28,6 @@ import javax.validation.constraints.*
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Transaction(
-//TODO: the field activeStatus
-
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @field:Min(value = 0L)
@@ -82,11 +81,19 @@ data class Transaction(
         @Column(name="amount", nullable = false)
         var amount: BigDecimal,
 
+        //TODO: replace with TransactionState
         @JsonProperty
         @field:Min(value = -1)
         @field:Max(value = 1)
         @Column(name = "cleared", nullable = false)
         var cleared: Int,
+
+        @JsonProperty
+        @field:Convert(converter = TransactionStateConverter::class)
+        var transactionState: TransactionState?,
+
+        @JsonProperty
+        var activeStatus: Boolean?,
 
         @JsonProperty
         @Column(name = "reoccurring", columnDefinition = "BOOLEAN DEFAULT TRUE", nullable = false)
@@ -100,33 +107,17 @@ data class Transaction(
         var notes: String
         ) {
 
-    constructor() : this(0L, "", 0, AccountType.Credit, "", Date(0),
-            "", "", BigDecimal(0.00), 0, false, "")
-
-//    @JsonGetter("transactionDate")
-//    fun jsonGetterTransactionDate(): Long {
-//        return (this.transactionDate.time)
-//    }
+    constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
+            "", "", BigDecimal(0.00), 0, TransactionState.Undefined, true,false, "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
 
-//    @JsonGetter("description")
-//    fun jsonGetterDescription(): String {
-//        logger.info("** jsonGetterDescription called **")
-//        return description.toLowerCase()
-//    }
-
-    @JsonSetter("description")
-    fun jsonSetterDescription( description: String) {
-//        logger.info("** jsonSetterDescription called **")
-        this.description = description.toLowerCase()
-    }
-
+    //Foreign key constraint
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "account_id", nullable = true, insertable = false, updatable = false)
+    @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
 
@@ -144,9 +135,5 @@ data class Transaction(
         private val mapper = ObjectMapper()
         val logger: Logger
             get() = LoggerFactory.getLogger(Transaction::class.java)
-        //TODO: uncertain what this will do
-//        operator fun invoke(description: String): Transaction {
-//            return Transaction(description.toLowerCase())
-//        }
     }
 }
