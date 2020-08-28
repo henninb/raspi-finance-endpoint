@@ -9,7 +9,7 @@
 -- CONSTRAINT t_account_account_type_lowercase_ck CHECK (account_type = lower(account_type))
 
 -- ALTER TABLE t_account ADD CONSTRAINT TEST_UNIQUE UNIQUE ( account_id, account_name_owner, account_type);
--- insert into t_account(account_name_owner, account_type, active_status,date_added, date_updated) VALUES('test_brian', 'credit', true, now(), now());
+-- insert into t_account(account_name_owner, account_type, active_status,date_added, date_updated) VALUES('cash_brian', 'debit', true, now(), now());
 
 -- ALTER TABLE t_account ADD CONSTRAINT unique_account_name_owner_account_id UNIQUE(account_id, account_name_owner, account_type);
 -- ALTER TABLE t_account ADD CONSTRAINT t_account_account_type_lowercase_ck CHECK (account_type = lower(account_type));

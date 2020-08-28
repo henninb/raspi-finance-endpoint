@@ -99,7 +99,7 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
                     newCell.setCellValue(transaction.amount.toDouble())
                 }
                 COL_CLEARED -> {
-                    newCell.setCellValue(transaction.cleared.toDouble())
+                    newCell.setCellValue(transaction.transactionState.toString())
                 }
                 COL_NOTES -> {
                     newCell.setCellValue(transaction.notes)

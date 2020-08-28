@@ -81,16 +81,18 @@ data class Transaction(
         @Column(name="amount", nullable = false)
         var amount: BigDecimal,
 
-        //TODO: replace with TransactionState
-        @JsonProperty
-        @field:Min(value = -1)
-        @field:Max(value = 1)
-        @Column(name = "cleared", nullable = false)
-        var cleared: Int,
+//        //TODO: replace cleared with TransactionState
+//        @JsonProperty
+//        @field:Min(value = -1)
+//        @field:Max(value = 1)
+//        @Column(name = "cleared", nullable = false)
+//        var cleared: Int,
 
+        //TODO: replace cleared with TransactionState
         @JsonProperty
         @field:Convert(converter = TransactionStateConverter::class)
-        var transactionState: TransactionState?,
+        @Column(name = "transaction_state", nullable = false)
+        var transactionState: TransactionState,
 
         @JsonProperty
         var activeStatus: Boolean?,
@@ -108,7 +110,7 @@ data class Transaction(
         ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), 0, TransactionState.Undefined, true,false, "")
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true,false, "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {

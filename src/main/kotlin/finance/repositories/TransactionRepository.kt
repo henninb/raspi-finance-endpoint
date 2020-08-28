@@ -1,6 +1,7 @@
 package finance.repositories
 
 import finance.domain.Transaction
+import finance.domain.TransactionState
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -19,15 +20,15 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun setAmountByGuid(amount: BigDecimal, guild: String)
 
     @Modifying
-    @Query("UPDATE TransactionEntity set cleared = ?1 WHERE guid = ?2")
+    @Query("UPDATE TransactionEntity set transaction_state = ?1 WHERE guid = ?2")
     @Transactional
-    fun setClearedByGuid(cleared: Int, guild: String)
+    fun setTransactionStateByGuid(transactionState: TransactionState, guild: String)
 
     //@Transactional
     // Using SpEL expression
-    @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE cleared = 1 AND accountNameOwner=?1")
+    @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE transactionState = 'cleared' AND accountNameOwner=?1")
     //@Query(value = "SELECT SUM(amount) AS totals t_transaction WHERE cleared = 1 AND account_name_owner=?1", nativeQuery = true)
-    fun getTotalsByAccountNameOwnerCleared(accountNameOwner: String): Double
+    fun getTotalsByAccountNameOwnerTransactionState(accountNameOwner: String): Double
 
     //@Transactional
     // Using SpEL expression
