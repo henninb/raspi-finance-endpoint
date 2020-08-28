@@ -2,6 +2,7 @@ package finance.helpers
 
 import finance.domain.AccountType
 import finance.domain.Transaction
+import finance.domain.TransactionState
 
 import java.math.RoundingMode
 import java.sql.Date
@@ -15,7 +16,7 @@ class TransactionBuilder {
     String description = 'aliexpress.com'
     String category = 'online'
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
-    Integer cleared = 1
+    TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
     String notes = 'my note to you'
 
@@ -33,7 +34,7 @@ class TransactionBuilder {
         transaction.description = description
         transaction.category = category
         transaction.amount = amount
-        transaction.cleared = cleared
+        transaction.transactionState = transactionState
         transaction.reoccurring = reoccurring
         transaction.notes = notes
         return transaction
@@ -79,8 +80,8 @@ class TransactionBuilder {
         return this
     }
 
-    TransactionBuilder cleared(cleared) {
-        this.cleared = cleared
+    TransactionBuilder transactionState(transactionState) {
+        this.transactionState = transactionState
         return this
     }
 

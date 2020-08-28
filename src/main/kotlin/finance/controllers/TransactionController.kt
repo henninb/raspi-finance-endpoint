@@ -78,9 +78,9 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
-    @PutMapping(path = [("/cleared/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
+    @PutMapping(path = [("/state/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
     fun updateTransactionCleared(@PathVariable("guid") guid: String): ResponseEntity<String> {
-        val updateStatus: Boolean = transactionService.updateTransactionCleared(guid)
+        val updateStatus: Boolean = transactionService.updateTransactionState(guid)
         if (updateStatus) {
             return ResponseEntity.ok("transaction updated")
         }

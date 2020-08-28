@@ -21,7 +21,7 @@ class TransactionStateConverter : AttributeConverter<TransactionState, String> {
             "outstanding" -> TransactionState.Outstanding
             "future" -> TransactionState.Future
             "cleared" -> TransactionState.Cleared
-            "unknown" -> TransactionState.Undefined
+            "undefined" -> TransactionState.Undefined
             else -> throw RuntimeException("Unknown attribute: $attribute")
         }
     }

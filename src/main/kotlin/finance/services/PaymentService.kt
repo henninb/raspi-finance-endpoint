@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.AccountType
 import finance.domain.Payment
 import finance.domain.Transaction
+import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -45,7 +46,7 @@ class PaymentService (private var paymentRepository: PaymentRepository, private 
         } else {
             transactionDebit.amount = payment.amount
         }
-        transactionDebit.cleared = 0;
+        transactionDebit.transactionState = TransactionState.Outstanding
         transactionDebit.accountType = AccountType.Debit
         transactionDebit.reoccurring = false;
         transactionDebit.accountNameOwner = "bcu-checking_brian"
@@ -62,7 +63,8 @@ class PaymentService (private var paymentRepository: PaymentRepository, private 
         } else {
             transactionCredit.amount = payment.amount
         }
-        transactionCredit.cleared = 0
+
+        transactionCredit.transactionState = TransactionState.Outstanding
         transactionCredit.accountType = AccountType.Credit
         transactionCredit.reoccurring = false
         transactionCredit.accountNameOwner = payment.accountNameOwner;

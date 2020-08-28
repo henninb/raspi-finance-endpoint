@@ -1,9 +1,6 @@
 package finance.services
 
-import finance.domain.Account
-import finance.domain.AccountType
-import finance.domain.Category
-import finance.domain.Transaction
+import finance.domain.*
 import finance.repositories.TransactionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,15 +82,15 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
-    open fun updateTransactionCleared(guid: String) : Boolean {
+    open fun updateTransactionState(guid: String) : Boolean {
         val transactionOptional = findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
-            transaction.cleared = 1
+            //transaction.cleared = 1
+            transaction.transactionState = TransactionState.Cleared
             transactionRepository.saveAndFlush(transaction)
-            logger.info("*** update transaction $guid ***")
         } else {
-            logger.info("*** updateTransactionCleared transaction not found $guid ***")
+            logger.info("*** updateTransactionState transaction not found $guid ***")
             return false
         }
         return true
@@ -143,10 +140,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 return true
             }
 
-            if (transactionDb.cleared != transaction.cleared) {
+            if (transactionDb.transactionState != transaction.transactionState) {
                 logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
                 //TODO: metric for this
-                transactionRepository.setClearedByGuid(transaction.cleared, transaction.guid)
+                transactionRepository.setTransactionStateByGuid(transaction.transactionState, transaction.guid)
                 return true
             }
         }
@@ -191,7 +188,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         var totalsCleared= 0.00
         var totals = 0.00
         try {
-            totalsCleared = transactionRepository.getTotalsByAccountNameOwnerCleared(accountNameOwner)
+            totalsCleared = transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
             totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
         } catch( e: EmptyResultDataAccessException) {
             logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
@@ -205,7 +202,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
-        val sortedTransactions = transactions.sortedWith(compareBy<Transaction> { it.cleared }.thenByDescending { it.transactionDate })
+        val sortedTransactions = transactions.sortedWith(compareBy<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //TODO: return something here
@@ -275,7 +272,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 transaction.description = oldTransaction.description
                 transaction.category = oldTransaction.category
                 transaction.amount = amount.toBigDecimal()
-                transaction.cleared = -1
+                transaction.transactionState = TransactionState.Future
                 transaction.notes = oldTransaction.notes
                 transaction.reoccurring = oldTransaction.reoccurring
                 transaction.accountType = oldTransaction.accountType
