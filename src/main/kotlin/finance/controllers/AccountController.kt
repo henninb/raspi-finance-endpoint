@@ -26,10 +26,10 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //http://localhost:8080/account/totals
     @GetMapping(path = ["totals"])
-    fun selectTotals(): Map<String, String> {
+    fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
-        response["totals"] = accountService.selectTotals().toString()
-        response["totalsCleared"] = accountService.selectTotalsCleared().toString()
+        response["totals"] = accountService.computeTheGrandTotalForAllTransactions().toString()
+        response["totalsCleared"] = accountService.computeTheGrandTotalForAllClearedTransactions().toString()
         return response
     }
 
@@ -37,8 +37,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @GetMapping(path = ["/select/active"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
-        accountService.updateAccountTotals()
-        val accounts: List<Account> = accountService.findAllActiveAccounts()
+        accountService.updateTheGrandTotalForAllClearedTransactions()
+        val accounts: List<Account> = accountService.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accounts.")

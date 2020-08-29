@@ -2,7 +2,6 @@ package finance.services
 
 import finance.domain.Account
 import finance.repositories.AccountRepository
-import org.hibernate.exception.SQLGrammarException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.InvalidDataAccessResourceUsageException
@@ -20,7 +19,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
-    fun findAllActiveAccounts(): List<Account> {
+    fun findByActiveStatusOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts() - no accounts found.")
@@ -30,20 +29,20 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accounts
     }
 
-    fun selectTotals(): Double {
-        var totals: Double
+    fun computeTheGrandTotalForAllTransactions(): Double {
+        val totals: Double
         try {
-            totals = accountRepository.selectTotals()
+            totals = accountRepository.computeTheGrandTotalForAllTransactions()
         } catch (e: Exception) {
           return 0.0
         }
         return totals
     }
 
-    fun selectTotalsCleared(): Double {
-        var totals: Double
+    fun computeTheGrandTotalForAllClearedTransactions(): Double {
+        val totals: Double
         try {
-            totals = accountRepository.selectTotalsCleared()
+            totals = accountRepository.computeTheGrandTotalForAllClearedTransactions()
         } catch (e: Exception) {
             return 0.0
         }
@@ -71,14 +70,14 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         accountRepository.deleteByAccountNameOwner(accountNameOwner)
     }
 
-    fun updateAccountTotals() {
+    fun updateTheGrandTotalForAllClearedTransactions() {
         try {
             logger.info("updateAccountGrandTotals")
-            accountRepository.updateAccountGrandTotals()
+            accountRepository.updateTheGrandTotalForAllClearedTransactions()
             logger.info("updateAccountClearedTotals")
-            accountRepository.updateAccountClearedTotals()
+            accountRepository.updateTheGrandTotalForAllTransactions()
             logger.info("updateAccountTotals")
-        } catch(sqlgrammerException: InvalidDataAccessResourceUsageException) {
+        } catch(sqlGramerException: InvalidDataAccessResourceUsageException) {
             logger.info("empty database.")
         }
     }

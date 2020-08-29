@@ -11,7 +11,6 @@ import javax.transaction.Transactional
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean): List<Account>
-    //fun findByAccountType(accountType: AccountType): List<Account>
 
     //@Modifying
     @Transactional
@@ -20,17 +19,17 @@ interface AccountRepository : JpaRepository<Account, Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE t_account SET totals = x.totals FROM (SELECT account_name_owner, SUM(amount) AS totals FROM t_transaction GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true)
-    fun updateAccountClearedTotals()
+    @Query(value = "UPDATE t_account SET totals = x.totals FROM (SELECT account_name_owner, SUM(amount) AS totals FROM t_transaction WHERE active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true)
+    fun updateTheGrandTotalForAllTransactions()
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE t_account SET totals_balanced = x.totals_balanced FROM (SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction WHERE cleared = 1 GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true)
-    fun updateAccountGrandTotals()
+    @Query(value = "UPDATE t_account SET totals_balanced = x.totals_balanced FROM (SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction WHERE transaction_state = 'cleared' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true)
+    fun updateTheGrandTotalForAllClearedTransactions()
 
-    @Query(value = "SELECT (A.debits - B.credits) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' ) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' ) B", nativeQuery = true)
-    fun selectTotals(): Double
+    @Query(value = "SELECT (A.debits - B.credits) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' AND active_status = true) B", nativeQuery = true)
+    fun computeTheGrandTotalForAllTransactions(): Double
 
-    @Query(value = "SELECT (A.debits - B.credits) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' and cleared = 1) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and cleared = 1 ) B", nativeQuery = true)
-    fun selectTotalsCleared(): Double
+    @Query(value = "SELECT (A.debits - B.credits) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND transaction_state = 'cleared' AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and transaction_state = 'cleared' AND active_status = true) B", nativeQuery = true)
+    fun computeTheGrandTotalForAllClearedTransactions(): Double
 }

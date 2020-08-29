@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
-import spock.lang.Ignore
 import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
@@ -25,7 +24,7 @@ class AccountServiceSpec extends Specification {
         accounts.add(account)
 
         when:
-        def results = accountService.findAllActiveAccounts()
+        def results = accountService.findByActiveStatusOrderByAccountNameOwner()
 
         then:
         results.size() == 1
@@ -40,7 +39,7 @@ class AccountServiceSpec extends Specification {
         accounts.add(account)
 
         when:
-        def results = accountService.findAllActiveAccounts()
+        def results = accountService.findByActiveStatusOrderByAccountNameOwner()
 
         then:
         results.size() == 1
