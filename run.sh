@@ -21,22 +21,28 @@ fi
 # "$OSTYPE" == "darwin"*
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')
+  sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Arch Linux" ]; then
   HOST_IP=192.168.100.207
+  sudo chmod -R g+rwx database-data
 elif [ "$OS" = "openSUSE Tumbleweed" ]; then
   HOST_IP=192.168.100.193
+  sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Solus" ]; then
   HOST_IP=192.168.100.190
+  sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Fedora" ]; then
   HOST_IP=192.168.100.130
+  sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
-  echo $HOST_IP
-  echo "lsof -nP | grep LISTEN"
+  # echo "lsof -nP | grep LISTEN"
 elif [ "$OS" = "void" ]; then
   HOST_IP=127.0.0.1
+  sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
+  sudo chmod -R g+rwx database-data
 else
   echo "$OS is not yet implemented."
   exit 1
@@ -56,8 +62,6 @@ mkdir -p 'src/test/functional/java'
 mkdir -p 'src/test/performance/groovy'
 mkdir -p 'src/test/performance/java'
 mkdir -p 'database-data'
-echo sudo chmod -R g+rwx database-data
-
 mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
@@ -77,7 +81,7 @@ fi
 
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb' --format "{{.ID}}") 2> /dev/null
 
-if [ ! -z "${INFLUX_CONTAINER}" ]; then
+if [ -n "${INFLUX_CONTAINER}" ]; then
   echo docker rm -f "${INFLUX_CONTAINER}"
   docker rm -f "${INFLUX_CONTAINER}"  2> /dev/null
 fi
