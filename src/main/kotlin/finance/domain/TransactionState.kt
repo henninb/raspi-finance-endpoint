@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class TransactionState {
-    @JsonProperty("future")
-    Future,
-
     @JsonProperty("cleared")
     Cleared,
 
     @JsonProperty("outstanding")
     Outstanding,
 
+    @JsonProperty("future")
+    Future,
+        
     @JsonProperty("undefined")
     Undefined;
 
