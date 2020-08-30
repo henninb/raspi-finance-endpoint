@@ -285,4 +285,25 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         }
         return true
     }
+
+    @Transactional
+    open fun changeAccountNameOwner(map: Map<String, String>) {
+        val accountNameOwner = map["accountNameOwner"]
+        val guid = map["guid"]
+
+        if( guid != null && accountNameOwner != null) {
+            val accountOptional = accountService.findByAccountNameOwner(accountNameOwner)
+            val transactionOptional = findByGuid(guid)
+
+            if (transactionOptional.isPresent && accountOptional.isPresent) {
+                val account = accountOptional.get()
+                val transaction = transactionOptional.get()
+                transaction.accountNameOwner = account.accountNameOwner
+                transaction.accountId = account.accountId
+                transactionRepository.saveAndFlush(transaction)
+            }
+        } else {
+            logger.info("a null in one of the two variables")
+        }
+    }
 }

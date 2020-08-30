@@ -99,6 +99,18 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
+    @PutMapping(path = [("/update/account")], consumes = [("application/json")], produces = [("application/json")])
+    fun updateAccountByGuid(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
+        //TODO: need to complete action
+        logger.info(payload["accountNameOwner"])
+        logger.info(payload["guid"])
+        transactionService.changeAccountNameOwner(payload)
+        logger.info("transaction account updated")
+
+
+        return ResponseEntity.ok("transaction account updated")
+    }
+
 
     @PostMapping(path = [("/clone")], consumes = [("application/json")], produces = [("application/json")])
     fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
