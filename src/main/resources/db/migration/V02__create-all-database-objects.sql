@@ -71,14 +71,15 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories(
     category_id BIGINT NOT NULL,
     transaction_id BIGINT NOT NULL,
     date_updated TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0)
+    date_added TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    PRIMARY KEY (category_id, transaction_id)
 );
-
-CREATE SEQUENCE IF NOT EXISTS t_transaction_transaction_id_seq start with 1001;
 
 -----------------
 -- Transaction --
 -----------------
+CREATE SEQUENCE IF NOT EXISTS t_transaction_transaction_id_seq start with 1001;
+
 CREATE TABLE IF NOT EXISTS t_transaction (
     transaction_id BIGINT DEFAULT nextval('t_transaction_transaction_id_seq') NOT NULL,
     account_id BIGINT NOT NULL DEFAULT -1,
@@ -101,7 +102,8 @@ CREATE TABLE IF NOT EXISTS t_transaction (
     CONSTRAINT t_transaction_category_lowercase_ck CHECK (category = lower(category)),
     CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
     CONSTRAINT t_transaction_account_type_lowercase_ck CHECK (account_type = lower(account_type)),
-    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY(account_id, account_name_owner, account_type) REFERENCES t_account(account_id, account_name_owner, account_type)
+    --CONSTRAINT fk_category_id_transaction_id FOREIGN KEY(transaction_id) REFERENCES t_transaction_categories(category_id, transaction_id) ON DELETE CASCADE,
+    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY(account_id, account_name_owner, account_type) REFERENCES t_account(account_id, account_name_owner, account_type) ON DELETE CASCADE
 );
 
 CREATE OR REPLACE FUNCTION fn_ins_ts_transaction() RETURNS TRIGGER AS

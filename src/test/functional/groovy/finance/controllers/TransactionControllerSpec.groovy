@@ -218,7 +218,6 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.BAD_REQUEST
     }
 
-
     def "test insertTransaction endpoint - old transaction date"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -234,7 +233,7 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.BAD_REQUEST
     }
 
-    @Ignore
+    //@Ignore
     //TODO: fix Invalid HTTP method: PATCH; nested exception is java.net.ProtocolException: Invalid HTTP method: PATCH
     def "test updateTransaction endpoint"() {
 
@@ -266,13 +265,10 @@ class TransactionControllerSpec extends Specification {
         //restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
 
         when:
-        String response = restTemplate.patchForObject(
-                createURLWithPort("/transaction/update/" + guid), entity, String.class)
-//       def response = restTemplate.exchange(createURLWithPort("/transaction/update/" + guid),
-//                HttpMethod.PATCH, new HttpEntity<Transaction>(transaction),
-//                String.class)
+          def response = restTemplate.exchange(createURLWithPort("/transaction/update/" + guid),
+                HttpMethod.PUT, new HttpEntity<Transaction>(transaction), String.class)
         then:
-        assert response.getStatusCode() == 200
+        assert response.getStatusCode() == HttpStatus.OK
 
         cleanup:
         transactionService.deleteByGuid(guid)

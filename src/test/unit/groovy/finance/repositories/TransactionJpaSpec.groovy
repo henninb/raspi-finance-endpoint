@@ -158,7 +158,7 @@ class TransactionJpaSpec extends Specification {
         when:
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
-        transaction.transactionState = "Stuff"
+        transaction.transactionState = TransactionState.Undefined
         entityManager.persist(transaction)
 
         then:

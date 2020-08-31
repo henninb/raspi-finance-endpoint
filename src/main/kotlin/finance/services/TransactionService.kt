@@ -82,12 +82,11 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
-    open fun updateTransactionState(guid: String) : Boolean {
+    open fun updateTransactionState(guid: String, transactionState: TransactionState) : Boolean {
         val transactionOptional = findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
-            //transaction.cleared = 1
-            transaction.transactionState = TransactionState.Cleared
+            transaction.transactionState = transactionState
             transactionRepository.saveAndFlush(transaction)
         } else {
             logger.info("*** updateTransactionState transaction not found $guid ***")
