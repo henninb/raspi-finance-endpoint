@@ -98,7 +98,7 @@ class CategoryControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/catgory/insert/"), HttpMethod.POST,
+                createURLWithPort("/category/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
         //thrown HttpMessageNotReadableException

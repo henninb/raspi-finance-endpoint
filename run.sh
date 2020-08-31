@@ -74,7 +74,7 @@ touch env.console
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
-if ! ./gradlew clean build ; then
+if ! ./gradlew clean build functionalTest; then
   echo "gradle build failed."
   exit 1
 fi

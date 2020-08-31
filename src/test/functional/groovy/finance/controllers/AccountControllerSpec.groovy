@@ -39,7 +39,6 @@ class AccountControllerSpec extends Specification {
     @Shared
     Account account
 
-
     def setupSpec() {
         headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
@@ -54,6 +53,7 @@ class AccountControllerSpec extends Specification {
 
     def "test findAccount endpoint accountNameOwner found"() {
         given:
+        account.accountNameOwner = "found_test"
         accountService.insertAccount(account)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -84,6 +84,7 @@ class AccountControllerSpec extends Specification {
 
     def "test deleteAccount endpoint"() {
         given:
+        account.accountNameOwner = "random_test"
         accountService.insertAccount(account)
 
         HttpEntity entity = new HttpEntity<>(null, headers)
@@ -113,6 +114,5 @@ class AccountControllerSpec extends Specification {
         //thrown HttpMessageNotReadableException
         assert response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
-
     }
 }

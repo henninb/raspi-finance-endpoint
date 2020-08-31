@@ -103,7 +103,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    //@ExceptionHandler(value = [EmptyTransactionException::class])
+    @ExceptionHandler(value = [ResponseStatusException::class])
     fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)

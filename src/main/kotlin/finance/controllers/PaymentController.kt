@@ -60,7 +60,7 @@ class PaymentController(private var paymentService: PaymentService) {
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    //@ExceptionHandler(value = [ResponseStatusException::class])
+    @ExceptionHandler(value = [ResponseStatusException::class])
     fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)

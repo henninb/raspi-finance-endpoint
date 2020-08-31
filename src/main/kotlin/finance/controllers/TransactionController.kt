@@ -2,6 +2,7 @@ package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
+import finance.domain.TransactionState
 import finance.services.TransactionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -78,9 +79,21 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
-    @PutMapping(path = [("/state/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
-    fun updateTransactionCleared(@PathVariable("guid") guid: String): ResponseEntity<String> {
-        val updateStatus: Boolean = transactionService.updateTransactionState(guid)
+    @PutMapping(path = [("/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
+    fun updateTransactionPut(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
+        val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
+        //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
+        val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
+        if (updateStatus) {
+            return ResponseEntity.ok("transaction patched")
+        }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
+    }
+
+    @PutMapping(path = [("/state/update/{guid}/{state}")], consumes = [("application/json")], produces = [("application/json")])
+    fun updateTransactionState(@PathVariable("guid") guid: String, @PathVariable("state") state: TransactionState): ResponseEntity<String> {
+        //val transactionState = TransactionState
+        val updateStatus: Boolean = transactionService.updateTransactionState(guid, state)
         if (updateStatus) {
             return ResponseEntity.ok("transaction updated")
         }
@@ -150,7 +163,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    //@ExceptionHandler(value = [EmptyTransactionException::class])
+    @ExceptionHandler(value = [ResponseStatusException::class])
     fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)
