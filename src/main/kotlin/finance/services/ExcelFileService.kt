@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.*
 import java.util.stream.IntStream
-import kotlin.jvm.Throws
 
 @Service
 class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties, private val transactionService: TransactionService) {
@@ -62,22 +61,22 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
             }
         }
     }
-    
+
     @Throws(IOException::class)
     private fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
-        val transactionList  = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(sheetNumber).replace('.', '-'))
+        val transactionList = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(workbook.getSheetName(sheetNumber).replace('.', '-'))
 
         logger.info(workbook.getSheetName(sheetNumber))
         removeEachRowInTheWorksheet(currentSheet)
         var currentRow = 1
-        for( transaction in transactionList ) {
+        for (transaction in transactionList) {
             insertNewRow(currentSheet, currentRow, transaction)
             currentRow += 1
         }
     }
 
-    private fun insertNewRow(currentSheet: Sheet, rowNumber: Int , transaction: Transaction) {
+    private fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction) {
         val newRow = currentSheet.createRow(rowNumber)
         for (columnNumber in 1 until 8) {
             val newCell = newRow.createCell(columnNumber)
@@ -115,7 +114,7 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
         try {
             logger.info("currentSheet.lastRowNum = ${currentSheet.lastRowNum}")
             logger.info("currentSheet.physicalNumberOfRows = ${currentSheet.physicalNumberOfRows}")
-            currentSheet.shiftRows(2, currentSheet.lastRowNum, - 1)
+            currentSheet.shiftRows(2, currentSheet.lastRowNum, -1)
         } catch (e: IllegalArgumentException) {
             logger.info("issues with this index")
         }

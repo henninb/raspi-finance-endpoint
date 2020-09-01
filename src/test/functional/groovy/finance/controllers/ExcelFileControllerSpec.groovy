@@ -1,11 +1,6 @@
 package finance.controllers
 
 import finance.Application
-import finance.domain.Category
-import finance.helpers.CategoryBuilder
-import finance.services.CategoryService
-import finance.services.ExcelFileService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort

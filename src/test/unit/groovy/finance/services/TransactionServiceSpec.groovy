@@ -72,8 +72,8 @@ class TransactionServiceSpec extends Specification {
 
         then:
         NonUniqueResultException ex = thrown()
-        ex.message.contains( "query did not return a unique result")
-            1 * mockTransactionRepository.findByGuid(guid) >> {throw new NonUniqueResultException(2)}
+        ex.message.contains("query did not return a unique result")
+        1 * mockTransactionRepository.findByGuid(guid) >> { throw new NonUniqueResultException(2) }
         0 * _
     }
 

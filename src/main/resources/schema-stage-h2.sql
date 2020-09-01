@@ -17,9 +17,10 @@
 --select * from t_transaction;
 --insert into t_transaction(account_id, account_name_owner, account_type, amount, category, cleared, description, guid, notes, reoccurring, transaction_date) VALUES (1, 'TEST_brian', 'credit', 0.0, '', 1, 'testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-01-12');
 
-CREATE TABLE IF NOT EXISTS t_transaction_categories(
-  category_id BIGINT NOT NULL,
-  transaction_id BIGINT NOT NULL,
-  date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS t_transaction_categories
+(
+    category_id    BIGINT NOT NULL,
+    transaction_id BIGINT NOT NULL,
+    date_updated   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_added     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

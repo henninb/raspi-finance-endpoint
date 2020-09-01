@@ -78,7 +78,8 @@
 -- --ALTER TABLE t_transaction_categories ADD CONSTRAINT transaction_categories_constraint UNIQUE(transaction_id, category_id);
 --
 -- INSERT INTO t_transaction_categories(transaction_id, category_id) SELECT transaction_id, category_id from t_transaction t, t_category c where t.category = c.category;
-select * from t_transaction_categories;
+select *
+from t_transaction_categories;
 
 
 -- INSERT INTO t_account(account_id, account_name_owner, account_type, active_status) VALUES(1001, 'test_brian', 'credit', 'Y');

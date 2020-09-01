@@ -1,8 +1,10 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonGetter
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.services.ExcelFileService
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
@@ -21,7 +23,10 @@ import java.math.BigDecimal
 import java.sql.Date
 import java.text.SimpleDateFormat
 import javax.persistence.*
-import javax.validation.constraints.*
+import javax.validation.constraints.Digits
+import javax.validation.constraints.Min
+import javax.validation.constraints.Pattern
+import javax.validation.constraints.Size
 
 @Entity(name = "TransactionEntity")
 @Proxy(lazy = false)
@@ -32,20 +37,20 @@ data class Transaction(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @field:Min(value = 0L)
         @JsonProperty
-        @Column(name="transaction_id")
+        @Column(name = "transaction_id")
         var transactionId: Long,
 
-        @Column(name="guid", unique = true, nullable = false)
+        @Column(name = "guid", unique = true, nullable = false)
         @JsonProperty
         @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         var guid: String,
 
         @JsonProperty
         @field:Min(value = 0L)
-        @Column(name="account_id", nullable = false)
+        @Column(name = "account_id", nullable = false)
         var accountId: Long,
 
-        @Column(name="account_type", columnDefinition = "TEXT", nullable = false)
+        @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
         @JsonProperty
         @field:Convert(converter = AccountTypeConverter::class)
         var accountType: AccountType,
@@ -53,32 +58,32 @@ data class Transaction(
         @JsonProperty
         @field:Size(min = 3, max = 40)
         @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
-        @Column(name="account_name_owner", nullable = false)
+        @Column(name = "account_name_owner", nullable = false)
         @field:Convert(converter = LowerCaseConverter::class)
         var accountNameOwner: String,
 
         @field:ValidDate
-        @Column(name="transaction_date", columnDefinition = "DATE", nullable = false)
+        @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
         @JsonProperty
         var transactionDate: Date,
 
         @JsonProperty
         @field:Size(min = 1, max = 75)
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-        @Column(name="description", nullable = false)
+        @Column(name = "description", nullable = false)
         @field:Convert(converter = LowerCaseConverter::class)
         var description: String,
 
         @JsonProperty
         @field:Size(max = 50)
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
-        @Column(name="category", nullable = false)
+        @Column(name = "category", nullable = false)
         @field:Convert(converter = LowerCaseConverter::class)
         var category: String,
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-        @Column(name="amount", nullable = false)
+        @Column(name = "amount", nullable = false)
         var amount: BigDecimal,
 
 //        //TODO: replace cleared with TransactionState
@@ -107,10 +112,10 @@ data class Transaction(
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "notes", nullable = false)
         var notes: String
-        ) {
+) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true,false, "")
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {

@@ -42,10 +42,10 @@ spring:
       settings:
         web-allow-others: true
 
-# ===============================
-# = JPA / HIBERNATE
-# ===============================
-# Show or not log for each sql query
+  # ===============================
+  # = JPA / HIBERNATE
+  # ===============================
+  # Show or not log for each sql query
   jpa:
     show-sql: true
     open-in-view: false

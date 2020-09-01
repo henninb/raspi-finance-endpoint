@@ -39,7 +39,7 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Transactional
     //@Query(value = "DELETE FROM t_transaction WHERE guid = ?1", nativeQuery = true)
     fun deleteByGuid(guid: String)
-    
+
     fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner: String): List<Transaction>
 
     @Query(value = "SELECT * FROM t_transaction_categories WHERE transaction_id =?", nativeQuery = true)

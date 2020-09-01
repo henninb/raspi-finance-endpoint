@@ -171,7 +171,7 @@ class TransactionControllerSpec extends Specification {
 
     def "test insertTransaction endpoint"() {
         given:
-        def transaction  = TransactionBuilder.builder().build()
+        def transaction = TransactionBuilder.builder().build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 
@@ -185,7 +185,7 @@ class TransactionControllerSpec extends Specification {
         cleanup:
         transactionService.deleteTransactionByGuid(guid)
     }
-    
+
     def "test insertTransaction endpoint - bad guid"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -251,7 +251,6 @@ class TransactionControllerSpec extends Specification {
         println transaction
 
 
-
         //headers.set(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
 
         //RequestSpecification.contentType(String value)
@@ -263,7 +262,7 @@ class TransactionControllerSpec extends Specification {
         //restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
 
         when:
-          def response = restTemplate.exchange(createURLWithPort("/transaction/update/" + guid),
+        def response = restTemplate.exchange(createURLWithPort("/transaction/update/" + guid),
                 HttpMethod.PUT, new HttpEntity<Transaction>(transaction), String.class)
         then:
         assert response.getStatusCode() == HttpStatus.OK
