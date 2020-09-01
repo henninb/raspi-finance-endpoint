@@ -21,21 +21,21 @@ import javax.validation.ConstraintViolationException
 class PaymentController(private var paymentService: PaymentService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    @GetMapping(path = ["/select"])
+    @GetMapping(path = ["/select"], produces = ["application/json"])
     fun selectAllPayments(): ResponseEntity<List<Payment>> {
         val payments = paymentService.findAllPayments()
 
         return ResponseEntity.ok(payments)
     }
 
-    @PostMapping(path = ["/insert"])
+    @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<String> {
         paymentService.insertPayment(payment)
         return ResponseEntity.ok("payment inserted")
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/payment/delete/1001
-    @DeleteMapping(path = ["/delete/{paymentId}"])
+    @DeleteMapping(path = ["/delete/{paymentId}"], produces = ["application/json"])
     fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<String> {
         val paymentOptional: Optional<Payment> = paymentService.findByPaymentId(paymentId)
 

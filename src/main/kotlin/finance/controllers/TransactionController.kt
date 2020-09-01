@@ -29,7 +29,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //curl http://localhost:8080/transaction/account/select/usbankcash_brian
-    @GetMapping(path = ["/account/select/{accountNameOwner}"])
+    @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
         if (transactions.isEmpty()) {
@@ -40,7 +40,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     //curl http://localhost:8080/transaction/account/totals/chase_brian
-    @GetMapping(path = ["/account/totals/{accountNameOwner}"])
+    @GetMapping(path = ["/account/totals/{accountNameOwner}"], produces = ["application/json"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val results: Map<String, BigDecimal> = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
 
@@ -50,7 +50,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
-    @GetMapping(path = ["/select/{guid}"])
+    @GetMapping(path = ["/select/{guid}"], produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() guid = $guid")
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
@@ -127,7 +127,7 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
-    @DeleteMapping(path = ["/delete/{guid}"])
+    @DeleteMapping(path = ["/delete/{guid}"], produces = ["application/json"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {

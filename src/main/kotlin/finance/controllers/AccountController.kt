@@ -25,7 +25,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //http://localhost:8080/account/totals
-    @GetMapping(path = ["totals"])
+    @GetMapping(path = ["totals"], produces = ["application/json"])
     fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         response["totals"] = accountService.computeTheGrandTotalForAllTransactions().toString()
@@ -34,7 +34,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //http://localhost:8080/account/select/active
-    @GetMapping(path = ["/select/active"])
+    @GetMapping(path = ["/select/active"], produces = ["application/json"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
         accountService.updateTheGrandTotalForAllClearedTransactions()
@@ -48,7 +48,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //http://localhost:8080/account/select/test_brian
-    @GetMapping(path = ["/select/{accountNameOwner}"])
+    @GetMapping(path = ["/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
         if (accountOptional.isPresent) {
@@ -59,7 +59,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' http://localhost:8080/account/insert
     //http://localhost:8080/account/insert
-    @PostMapping(path = ["/insert"])
+    @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<String> {
         accountService.insertAccount(account)
         return ResponseEntity.ok("account inserted")
@@ -67,7 +67,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //http://localhost:8080/account/delete/amex_brian
     //curl --header "Content-Type: application/json" --request DELETE http://localhost:8080/account/delete/test_brian
-    @DeleteMapping(path = ["/delete/{accountNameOwner}"])
+    @DeleteMapping(path = ["/delete/{accountNameOwner}"], produces = ["application/json"])
     fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<String> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
 
@@ -79,7 +79,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //http://localhost:8080/account/update
-    @PatchMapping(path = ["/update"])
+    @PatchMapping(path = ["/update"], produces = ["application/json"])
     fun updateTransaction(@RequestBody account: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(account, Account::class.java)
         val updateStatus: Boolean = accountService.patchAccount(toBePatchedTransaction)
