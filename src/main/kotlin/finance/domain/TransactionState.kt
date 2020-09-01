@@ -18,7 +18,7 @@ enum class TransactionState {
     @JsonProperty("undefined")
     Undefined;
 
-
+//TODO: fix this
 //    override fun fromString(param: String): TransactionState {
 //        val toUpper = param.capitalize()
 //        return try {

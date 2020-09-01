@@ -82,19 +82,6 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
-    open fun updateTransactionState(guid: String, transactionState: TransactionState) : Boolean {
-        val transactionOptional = findByGuid(guid)
-        if (transactionOptional.isPresent) {
-            val transaction = transactionOptional.get()
-            transaction.transactionState = transactionState
-            transactionRepository.saveAndFlush(transaction)
-        } else {
-            logger.info("*** updateTransactionState transaction not found $guid ***")
-            return false
-        }
-        return true
-    }
-
     private fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
@@ -304,5 +291,33 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         } else {
             logger.info("a null in one of the two variables")
         }
+    }
+
+    @Transactional
+    open fun updateTransactionState(guid: String, transactionState: TransactionState) : Boolean {
+        val transactionOptional = findByGuid(guid)
+        if (transactionOptional.isPresent) {
+            val transaction = transactionOptional.get()
+            transaction.transactionState = transactionState
+            transactionRepository.saveAndFlush(transaction)
+        } else {
+            logger.info("*** updateTransactionState transaction not found $guid ***")
+            return false
+        }
+        return true
+    }
+
+    @Transactional
+    open fun updateTransactionReoccurringState(guid: String, reoccurring: Boolean) :Boolean {
+        val transactionOptional = findByGuid(guid)
+        if (transactionOptional.isPresent) {
+            val transaction = transactionOptional.get()
+            transaction.reoccurring = reoccurring
+            transactionRepository.saveAndFlush(transaction)
+        } else {
+            logger.info("*** updateTransactionReoccurringState transaction not found $guid ***")
+            return false
+        }
+        return true
     }
 }
