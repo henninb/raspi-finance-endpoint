@@ -16,8 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
-import org.springframework.http.converter.HttpMessageConverter
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Shared
@@ -87,7 +85,7 @@ class TransactionControllerSpec extends Specification {
         given:
         transactionService.insertTransaction(transaction)
         HttpEntity entity = new HttpEntity<>(null, headers)
-        def insertedValue = transactionService.findByGuid(guid)
+        def insertedValue = transactionService.findTransactionByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -98,7 +96,7 @@ class TransactionControllerSpec extends Specification {
         insertedValue.get().guid == transaction.guid
 
         cleanup:
-        transactionService.deleteByGuid(transaction.guid)
+        transactionService.deleteTransactionByGuid(transaction.guid)
     }
 
     def "test findTransaction endpoint transaction insert guid is not found"() {
@@ -185,7 +183,7 @@ class TransactionControllerSpec extends Specification {
         assert response.statusCode == HttpStatus.OK
 
         cleanup:
-        transactionService.deleteByGuid(guid)
+        transactionService.deleteTransactionByGuid(guid)
     }
     
     def "test insertTransaction endpoint - bad guid"() {
@@ -271,6 +269,6 @@ class TransactionControllerSpec extends Specification {
         assert response.getStatusCode() == HttpStatus.OK
 
         cleanup:
-        transactionService.deleteByGuid(guid)
+        transactionService.deleteTransactionByGuid(guid)
     }
 }

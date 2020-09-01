@@ -48,7 +48,7 @@ class PaymentService (private var paymentRepository: PaymentRepository, private 
         }
         transactionDebit.transactionState = TransactionState.Outstanding
         transactionDebit.accountType = AccountType.Debit
-        transactionDebit.reoccurring = false;
+        transactionDebit.reoccurring = false
         transactionDebit.accountNameOwner = "bcu-checking_brian"
     }
 

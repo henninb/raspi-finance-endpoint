@@ -53,10 +53,10 @@ class TransactionController @Autowired constructor(private var transactionServic
     @GetMapping(path = ["/select/{guid}"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() guid = $guid")
-        val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
+        val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {
             val transaction: Transaction = transactionOption.get()
-            println("transaction.categries = ${transaction.categories}")
+            println("transaction.categories = ${transaction.categories}")
             return ResponseEntity.ok(transaction)
         }
 
@@ -64,26 +64,10 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }
 
-    //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"9b9aea08-0dc2-4720-b20c-00b0df6af8ce", "description":"new"}' http://localhost:8080/transaction/update/9b9aea08-0dc2-4720-b20c-00b0df6af8ce
-    //curl --header "Content-Type: application/json-patch+json" -X PATCH -d '{"guid":"a064b942-1e78-4913-adb3-b992fc1b4dd3","sha256":"","accountType":"credit","accountNameOwner":"discover_brian","description":"Last Updated","category":"","notes":"","cleared":0,"reoccurring":false,"amount":"0.00","transactionDate":1512730594,"dateUpdated":1487332021,"dateAdded":1487332021}' http://localhost:8080/transaction/update/a064b942-1e78-4913-adb3-b992fc1b4dd3
-    //TODO: either remove or fix this @PathVariable("guid") guid,
-    //TODO: change to a PUT
-    @PatchMapping(path = [("/update/{guid}")], consumes = [("application/json-patch+json")], produces = [("application/json")])
-    fun updateTransaction(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
-        val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
-        //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
-        val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
-        if (updateStatus) {
-            return ResponseEntity.ok("transaction patched")
-        }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
-    }
-
     @PutMapping(path = [("/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
-    fun updateTransactionPut(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
+    fun updateTransaction(@PathVariable("guid")  guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
-        //val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
-        val updateStatus: Boolean = transactionService.patchTransaction(toBePatchedTransaction)
+        val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
         if (updateStatus) {
             return ResponseEntity.ok("transaction patched")
         }
@@ -112,7 +96,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
     @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
-        logger.info("insert - transaction.transactionDate: ${transaction}")
+        logger.info("insert - transaction.transactionDate: $transaction")
         if (transactionService.insertTransaction(transaction)) {
             logger.info(transaction.toString())
             return ResponseEntity.ok("transaction inserted")
@@ -132,7 +116,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok("transaction account updated")
     }
 
-
+    //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
     @PostMapping(path = [("/clone")], consumes = [("application/json")], produces = [("application/json")])
     fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
        if (transactionService.cloneAsMonthlyTransaction(payload)) {
@@ -145,9 +129,9 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
     @DeleteMapping(path = ["/delete/{guid}"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
-        val transactionOption: Optional<Transaction> = transactionService.findByGuid(guid)
+        val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {
-            if (transactionService.deleteByGuid(guid)) {
+            if (transactionService.deleteTransactionByGuid(guid)) {
                 return ResponseEntity.ok("resource deleted")
             }
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
