@@ -9,7 +9,6 @@ import finance.repositories.TransactionRepository
 import org.hibernate.NonUniqueResultException
 import spock.lang.Specification
 
-import javax.persistence.PersistenceException
 import javax.validation.Validator
 
 class TransactionServiceSpec extends Specification {
@@ -27,7 +26,7 @@ class TransactionServiceSpec extends Specification {
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
         when:
-        def isDeleted = transactionService.deleteByGuid(guid)
+        def isDeleted = transactionService.deleteTransactionByGuid(guid)
         then:
         isDeleted
         1 * mockTransactionRepository.deleteByGuid(guid)
@@ -41,7 +40,7 @@ class TransactionServiceSpec extends Specification {
         def guid = "123"
         Optional<Transaction> transactionOptional = Optional.empty()
         when:
-        def isDeleted = transactionService.deleteByGuid(guid)
+        def isDeleted = transactionService.deleteTransactionByGuid(guid)
         then:
         !isDeleted
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
@@ -55,7 +54,7 @@ class TransactionServiceSpec extends Specification {
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
         when:
-        transactionService.findByGuid(guid)
+        transactionService.findTransactionByGuid(guid)
 
         then:
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
@@ -69,7 +68,7 @@ class TransactionServiceSpec extends Specification {
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
         when:
-        transactionService.findByGuid(guid)
+        transactionService.findTransactionByGuid(guid)
 
         then:
         NonUniqueResultException ex = thrown()

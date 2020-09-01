@@ -2,7 +2,6 @@ package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.lang.Enum
 
 @JsonFormat
 enum class TransactionState {
@@ -35,4 +34,11 @@ enum class TransactionState {
     override fun toString(): String {
         return name.toLowerCase()
     }
+
+    companion object {
+        fun toLowerCase(obj: TransactionState): String {
+            return obj.name.toLowerCase()
+        }
+    }
+
 }

@@ -29,7 +29,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     //TODO: fix the delete
     @Transactional
-    open fun deleteByGuid(guid: String): Boolean {
+    open fun deleteTransactionByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
@@ -66,7 +66,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             logger.info("insertTransaction() ConstraintViolation")
         }
         logger.info("*** insert transaction ***")
-        val transactionOptional = findByGuid(transaction.guid)
+        val transactionOptional = findTransactionByGuid(transaction.guid)
 
         if (transactionOptional.isPresent) {
             val transactionDb = transactionOptional.get()
@@ -158,7 +158,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     @Transactional
-    open fun findByGuid(guid: String): Optional<Transaction> {
+    open fun findTransactionByGuid(guid: String): Optional<Transaction> {
         logger.info("call findByGuid")
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
@@ -188,6 +188,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
+                //TODO: look into this type of error handling
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found on :: "+ userId));
+
         val sortedTransactions = transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
@@ -197,7 +201,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     @Transactional
-    open fun patchTransaction(transaction: Transaction): Boolean {
+    open fun updateTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.info("patchTransaction() ConstraintViolation.")
@@ -220,7 +224,6 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
-    //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
     @Transactional
     open fun cloneAsMonthlyTransaction(map: Map<String, String>) : Boolean {
         val guid :String = map["guid"]  ?: error("guid must be set.")
@@ -237,39 +240,45 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         calendar[Calendar.YEAR] = year
 
         for (currentMonth in month..11) {
-            var lastDay :Date
-            var lastDayUtil :java.util.Date
             calendar[Calendar.MONTH] = currentMonth
 
-            if( isMonthEnd.toBoolean() ) {
-                calendar[Calendar.DAY_OF_MONTH] = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-                lastDayUtil = calendar.time
-            } else {
-                calendar[Calendar.DAY_OF_MONTH] = specificDay.toInt()
-                lastDayUtil = calendar.time
-            }
-            lastDay = Date(lastDayUtil.time)
+            val fixedMonthDay :Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
 
             if (optionalTransaction.isPresent) {
-                val oldTransaction = optionalTransaction.get()
-                val transaction = Transaction()
-                transaction.guid = UUID.randomUUID().toString()
-                transaction.transactionDate = lastDay
-                transaction.description = oldTransaction.description
-                transaction.category = oldTransaction.category
-                transaction.amount = amount.toBigDecimal()
-                transaction.transactionState = TransactionState.Future
-                transaction.notes = oldTransaction.notes
-                transaction.reoccurring = oldTransaction.reoccurring
-                transaction.accountType = oldTransaction.accountType
-                transaction.accountId = oldTransaction.accountId
-                transaction.accountNameOwner = oldTransaction.accountNameOwner
-                transactionRepository.saveAndFlush(transaction)
+                setValuesForReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
             } else {
                 logger.info("no record found ${guid}.")
             }
         }
         return true
+    }
+
+    private fun setValuesForReoccurringTransactions(optionalTransaction: Optional<Transaction>, fixedMonthDay: Date, amount: String) {
+        val oldTransaction = optionalTransaction.get()
+        val transaction = Transaction()
+        transaction.guid = UUID.randomUUID().toString()
+        transaction.transactionDate = fixedMonthDay
+        transaction.description = oldTransaction.description
+        transaction.category = oldTransaction.category
+        transaction.amount = amount.toBigDecimal()
+        transaction.transactionState = TransactionState.Future
+        transaction.notes = oldTransaction.notes
+        transaction.reoccurring = oldTransaction.reoccurring
+        transaction.accountType = oldTransaction.accountType
+        transaction.accountId = oldTransaction.accountId
+        transaction.accountNameOwner = oldTransaction.accountNameOwner
+        transactionRepository.saveAndFlush(transaction)
+    }
+
+    private fun calculateDayOfTheMonth(isMonthEnd: String, calendar: Calendar, specificDay: String): Date {
+        if (isMonthEnd.toBoolean()) {
+            calendar[Calendar.DAY_OF_MONTH] = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+        } else {
+            calendar[Calendar.DAY_OF_MONTH] = specificDay.toInt()
+        }
+        val calendarDate = calendar.time
+        return Date(calendarDate.time)
     }
 
     @Transactional
@@ -279,7 +288,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
         if( guid != null && accountNameOwner != null) {
             val accountOptional = accountService.findByAccountNameOwner(accountNameOwner)
-            val transactionOptional = findByGuid(guid)
+            val transactionOptional = findTransactionByGuid(guid)
 
             if (transactionOptional.isPresent && accountOptional.isPresent) {
                 val account = accountOptional.get()
@@ -295,7 +304,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     @Transactional
     open fun updateTransactionState(guid: String, transactionState: TransactionState) : Boolean {
-        val transactionOptional = findByGuid(guid)
+        val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             transaction.transactionState = transactionState
@@ -309,7 +318,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     @Transactional
     open fun updateTransactionReoccurringState(guid: String, reoccurring: Boolean) :Boolean {
-        val transactionOptional = findByGuid(guid)
+        val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
