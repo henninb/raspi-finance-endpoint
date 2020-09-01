@@ -64,7 +64,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }
 
-    @PutMapping(path = [("/update/{guid}")], consumes = [("application/json")], produces = [("application/json")])
+    @PutMapping(path = ["/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransaction(@PathVariable("guid")  guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
@@ -74,7 +74,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
-    @PutMapping(path = [("/state/update/{guid}/{state}")], consumes = [("application/json")], produces = [("application/json")])
+    @PutMapping(path = ["/state/update/{guid}/{state}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransactionState(@PathVariable("guid") guid: String, @PathVariable("state") state: TransactionState): ResponseEntity<String> {
         val updateStatus: Boolean = transactionService.updateTransactionState(guid, state)
         if (updateStatus) {
@@ -83,7 +83,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
     }
 
-    @PutMapping(path = [("/reoccurring/update/{guid}/{reoccurring}")], consumes = [("application/json")], produces = [("application/json")])
+    @PutMapping(path = ["/reoccurring/update/{guid}/{reoccurring}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransactionReoccurringState(@PathVariable("guid") guid: String, @PathVariable("reoccurring") reoccurring: Boolean): ResponseEntity<String> {
         val updateStatus: Boolean = transactionService.updateTransactionReoccurringState(guid, reoccurring)
         if (updateStatus) {
@@ -94,7 +94,7 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //TODO: should return a 201 CREATED
     //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
-    @PostMapping(path = [("/insert")], consumes = [("application/json")], produces = [("application/json")])
+    @PostMapping(path = [("/insert")], consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
         logger.info("insert - transaction.transactionDate: $transaction")
         if (transactionService.insertTransaction(transaction)) {
@@ -104,7 +104,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
-    @PutMapping(path = [("/update/account")], consumes = [("application/json")], produces = [("application/json")])
+    @PutMapping(path = [("/update/account")], consumes = ["application/json"], produces = ["application/json"])
     fun updateAccountByGuid(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
         //TODO: need to complete action
         logger.info(payload["accountNameOwner"])
@@ -117,7 +117,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
-    @PostMapping(path = [("/clone")], consumes = [("application/json")], produces = [("application/json")])
+    @PostMapping(path = ["/clone"], consumes = ["application/json"], produces = ["application/json"])
     fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
        if (transactionService.cloneAsMonthlyTransaction(payload)) {
             return ResponseEntity.ok("transaction inserted")
