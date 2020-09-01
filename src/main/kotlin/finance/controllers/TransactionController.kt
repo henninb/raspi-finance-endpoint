@@ -65,7 +65,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     @PutMapping(path = ["/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
-    fun updateTransaction(@PathVariable("guid")  guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
+    fun updateTransaction(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
         if (updateStatus) {
@@ -119,7 +119,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
     @PostMapping(path = ["/clone"], consumes = ["application/json"], produces = ["application/json"])
     fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
-       if (transactionService.cloneAsMonthlyTransaction(payload)) {
+        if (transactionService.cloneAsMonthlyTransaction(payload)) {
             return ResponseEntity.ok("transaction inserted")
         }
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")

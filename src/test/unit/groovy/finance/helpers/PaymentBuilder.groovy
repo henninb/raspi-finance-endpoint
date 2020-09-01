@@ -1,6 +1,7 @@
 package finance.helpers
 
 import finance.domain.Payment
+
 import java.sql.Date
 
 class PaymentBuilder {

@@ -28,36 +28,36 @@ data class Payment(
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @field:Min(value = 0L)
         @JsonProperty
-        @Column(name="payment_id", nullable = false)
+        @Column(name = "payment_id", nullable = false)
         var paymentId: Long,
 
         @JsonProperty
-        @Column(name="account_name_owner", nullable = false)
+        @Column(name = "account_name_owner", nullable = false)
         @field:Convert(converter = LowerCaseConverter::class)
         @field:Size(min = 3, max = 40)
         @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
         var accountNameOwner: String,
 
         @field:ValidDate
-        @Column(name="transaction_date", columnDefinition = "DATE", nullable = false)
+        @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
         @JsonProperty
         var transactionDate: Date,
 
         @JsonProperty
         @field:Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-        @Column(name="amount", nullable = false)
+        @Column(name = "amount", nullable = false)
         var amount: BigDecimal,
 
         @JsonProperty
         //TODO: add feature
         //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
-        @Column(name="guid_source", nullable = false)
+        @Column(name = "guid_source", nullable = false)
         var guidSource: String?,
 
         @JsonProperty
         //TODO: add feature
         //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
-        @Column(name="guid_destination", nullable = false)
+        @Column(name = "guid_destination", nullable = false)
         var guidDestination: String?
 ) {
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")

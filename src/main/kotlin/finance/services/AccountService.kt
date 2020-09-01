@@ -34,7 +34,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         try {
             totals = accountRepository.computeTheGrandTotalForAllTransactions()
         } catch (e: Exception) {
-          return 0.0
+            return 0.0
         }
         return totals
     }
@@ -77,7 +77,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
             logger.info("updateAccountClearedTotals")
             accountRepository.updateTheGrandTotalForAllTransactions()
             logger.info("updateAccountTotals")
-        } catch(sqlGramerException: InvalidDataAccessResourceUsageException) {
+        } catch (sqlGrammarException: InvalidDataAccessResourceUsageException) {
             logger.info("empty database.")
         }
     }

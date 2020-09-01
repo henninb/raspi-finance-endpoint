@@ -8,11 +8,10 @@ import finance.repositories.PaymentRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.sql.Timestamp
 import java.util.*
 
 @Service
-class PaymentService (private var paymentRepository: PaymentRepository, private var transactionService: TransactionService) {
+class PaymentService(private var paymentRepository: PaymentRepository, private var transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findAllPayments(): List<Payment> {

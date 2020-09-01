@@ -13,7 +13,7 @@ enum class TransactionState {
 
     @JsonProperty("future")
     Future,
-        
+
     @JsonProperty("undefined")
     Undefined;
 

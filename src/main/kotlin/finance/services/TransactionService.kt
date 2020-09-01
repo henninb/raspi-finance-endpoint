@@ -49,7 +49,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 transaction.categories.remove(categoryOptional.get())
             }
 //            try {
-                transactionRepository.deleteByGuid(guid)
+            transactionRepository.deleteByGuid(guid)
 //            } catch (e: EmptyTransactionException) {
 //                return false
 //            }
@@ -171,12 +171,12 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
-        var totalsCleared= 0.00
+        var totalsCleared = 0.00
         var totals = 0.00
         try {
             totalsCleared = transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
             totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
-        } catch( e: EmptyResultDataAccessException) {
+        } catch (e: EmptyResultDataAccessException) {
             logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
         }
 
@@ -188,7 +188,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
-                //TODO: look into this type of error handling
+        //TODO: look into this type of error handling
 //        User user = userRepository.findById(userId)
 //                .orElseThrow(() -> new ResourceNotFoundException("User not found on :: "+ userId));
 
@@ -225,9 +225,9 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     @Transactional
-    open fun cloneAsMonthlyTransaction(map: Map<String, String>) : Boolean {
-        val guid :String = map["guid"]  ?: error("guid must be set.")
-        val amount :String = map["amount"] ?: error("transactionDate must be set.")
+    open fun cloneAsMonthlyTransaction(map: Map<String, String>): Boolean {
+        val guid: String = map["guid"] ?: error("guid must be set.")
+        val amount: String = map["amount"] ?: error("transactionDate must be set.")
         val isMonthEnd = map["monthEnd"] ?: error("monthEnd must be set.")
         val specificDay = map["specificDay"] ?: error("specificDay must be set.")
 
@@ -242,7 +242,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         for (currentMonth in month..11) {
             calendar[Calendar.MONTH] = currentMonth
 
-            val fixedMonthDay :Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
+            val fixedMonthDay: Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
 
             if (optionalTransaction.isPresent) {
                 setValuesForReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
@@ -286,7 +286,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val accountNameOwner = map["accountNameOwner"]
         val guid = map["guid"]
 
-        if( guid != null && accountNameOwner != null) {
+        if (guid != null && accountNameOwner != null) {
             val accountOptional = accountService.findByAccountNameOwner(accountNameOwner)
             val transactionOptional = findTransactionByGuid(guid)
 
@@ -303,7 +303,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     @Transactional
-    open fun updateTransactionState(guid: String, transactionState: TransactionState) : Boolean {
+    open fun updateTransactionState(guid: String, transactionState: TransactionState): Boolean {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
@@ -317,7 +317,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     }
 
     @Transactional
-    open fun updateTransactionReoccurringState(guid: String, reoccurring: Boolean) :Boolean {
+    open fun updateTransactionReoccurringState(guid: String, reoccurring: Boolean): Boolean {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()

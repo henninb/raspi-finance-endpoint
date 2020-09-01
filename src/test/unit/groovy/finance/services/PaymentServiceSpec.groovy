@@ -1,15 +1,10 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Account
 import finance.domain.Payment
-import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
-import finance.repositories.AccountRepository
 import finance.repositories.PaymentRepository
 import spock.lang.Specification
-
-import javax.validation.Validator
 
 class PaymentServiceSpec extends Specification {
     PaymentRepository mockPaymentRepository = Mock(PaymentRepository)

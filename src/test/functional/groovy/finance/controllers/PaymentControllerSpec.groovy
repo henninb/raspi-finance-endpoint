@@ -1,14 +1,9 @@
 package finance.controllers
 
 import finance.Application
-import finance.domain.Account
 import finance.domain.Payment
-import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
-import finance.services.AccountService
-import finance.services.CategoryService
 import finance.services.PaymentService
-import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -53,7 +48,7 @@ class PaymentControllerSpec extends Specification {
         def paymentId = 1
         paymentService.insertPayment(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
-        
+
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/payment/delete/" + paymentId), HttpMethod.DELETE,

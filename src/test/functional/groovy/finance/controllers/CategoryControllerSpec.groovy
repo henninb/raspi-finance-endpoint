@@ -3,9 +3,7 @@ package finance.controllers
 import finance.Application
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
-import finance.helpers.PaymentBuilder
 import finance.services.CategoryService
-import finance.services.PaymentService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
