@@ -92,10 +92,18 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     @PutMapping(path = [("/state/update/{guid}/{state}")], consumes = [("application/json")], produces = [("application/json")])
     fun updateTransactionState(@PathVariable("guid") guid: String, @PathVariable("state") state: TransactionState): ResponseEntity<String> {
-        //val transactionState = TransactionState
         val updateStatus: Boolean = transactionService.updateTransactionState(guid, state)
         if (updateStatus) {
-            return ResponseEntity.ok("transaction updated")
+            return ResponseEntity.ok("transaction state updated")
+        }
+        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
+    }
+
+    @PutMapping(path = [("/reoccurring/update/{guid}/{reoccurring}")], consumes = [("application/json")], produces = [("application/json")])
+    fun updateTransactionReoccurringState(@PathVariable("guid") guid: String, @PathVariable("reoccurring") reoccurring: Boolean): ResponseEntity<String> {
+        val updateStatus: Boolean = transactionService.updateTransactionReoccurringState(guid, reoccurring)
+        if (updateStatus) {
+            return ResponseEntity.ok("transaction reoccurring updated")
         }
         throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
     }
