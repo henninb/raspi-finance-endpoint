@@ -19,14 +19,14 @@ class CategoryController (private var categoryService: CategoryService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
-    @PostMapping(path = ["/insert"])
+    @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<String> {
         categoryService.insertCategory(category)
         logger.info("insertCategory")
         return ResponseEntity.ok("category inserted")
     }
 
-    @DeleteMapping(path = ["/delete/{categoryName}"])
+    @DeleteMapping(path = ["/delete/{categoryName}"], produces = ["application/json"])
     fun deleteByCategoryName(@PathVariable categoryName: String): ResponseEntity<String> {
         //val paymentOptional: Optional<Payment> = categoryService.findByPaymentId(paymentId)
 
