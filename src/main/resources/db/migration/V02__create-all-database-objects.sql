@@ -4,11 +4,9 @@ SET client_min_messages TO WARNING;
 -------------
 -- Account --
 -------------
-CREATE SEQUENCE IF NOT EXISTS seq_account_id START WITH 1001;
-
 CREATE TABLE IF NOT EXISTS t_account
 (
-    account_id         BIGINT      NOT NULL DEFAULT nextval(seq_account_id),
+    account_id         BIGSERIAL      PRIMARY KEY,
     account_name_owner TEXT UNIQUE NOT NULL,
     account_name       TEXT, -- NULL for now
     account_owner      TEXT, -- NULL for now
@@ -20,7 +18,6 @@ CREATE TABLE IF NOT EXISTS t_account
     date_closed        TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
     date_updated       TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT pk_account_id PRIMARY KEY (account_id),
     CONSTRAINT unique_account_name_owner_account_id UNIQUE (account_id, account_name_owner, account_type),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
@@ -62,15 +59,12 @@ EXECUTE PROCEDURE fn_ins_ts_account();
 --------------
 -- Category --
 --------------
-CREATE SEQUENCE IF NOT EXISTS seq_category_id start with 1001;
-
 CREATE TABLE IF NOT EXISTS t_category
 (
-    category_id  BIGINT      NOT NULL DEFAULT nextval(seq_category_id),
+    category_id  BIGSERIAL      PRIMARY KEY,
     category     TEXT UNIQUE NOT NULL,
     date_updated TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT pk_category_id PRIMARY KEY (category_id)
+    date_added   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
 ---------------------------
@@ -91,13 +85,10 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 -----------------
 --CREATE TYPE transaction_state_enum AS ENUM ('outstanding','future','cleared', 'undefined');
 --CREATE TYPE account_type_enum AS ENUM ('credit','debit', 'undefined');
-
-CREATE SEQUENCE IF NOT EXISTS seq_transaction_id start with 1001;
-
 CREATE TABLE IF NOT EXISTS t_transaction
 (
-    transaction_id     BIGINT         NOT NULL DEFAULT nextval(seq_transaction_id),
-    account_id         BIGINT         NOT NULL DEFAULT -1,
+    transaction_id     BIGSERIAL      PRIMARY KEY,
+    account_id         BIGINT         NOT NULL,
     account_type       TEXT           NOT NULL DEFAULT 'undefined',
     account_name_owner TEXT           NOT NULL,
     guid               TEXT           NOT NULL UNIQUE,
@@ -111,21 +102,16 @@ CREATE TABLE IF NOT EXISTS t_transaction
     notes              TEXT           NOT NULL DEFAULT '',
     date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT pk_transaction_id PRIMARY KEY (transaction_id),
     CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
                                               notes),
     CONSTRAINT t_transaction_description_lowercase_ck CHECK (description = lower(description)),
     CONSTRAINT t_transaction_category_lowercase_ck CHECK (category = lower(category)),
     CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
-    --CONSTRAINT t_transaction_account_type_lowercase_ck CHECK (account_type = lower(account_type)),
     --CONSTRAINT fk_category_id_transaction_id FOREIGN KEY(transaction_id) REFERENCES t_transaction_categories(category_id, transaction_id) ON DELETE CASCADE,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE
 );
-
---ALTER TABLE t_transaction ADD CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined'));
---ALTER TABLE t_transaction ADD CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined'));
 
 CREATE OR REPLACE FUNCTION fn_ins_ts_transaction() RETURNS TRIGGER AS
 $$
@@ -149,7 +135,6 @@ CREATE OR REPLACE FUNCTION fn_upd_ts_transaction() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    RAISE NOTICE 'fn_upd_ts_transaction';
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -165,11 +150,9 @@ EXECUTE PROCEDURE fn_upd_ts_transaction();
 -------------
 -- Payment --
 -------------
-CREATE SEQUENCE IF NOT EXISTS seq_payment_id START WITH 1001;
-
 CREATE TABLE IF NOT EXISTS t_payment
 (
-    payment_id         BIGINT         NOT NULL DEFAULT nextval(seq_payment_id),
+    payment_id         BIGSERIAL      PRIMARY KEY,
     account_name_owner TEXT           NOT NULL,
     transaction_date   DATE           NOT NULL,
     amount             DECIMAL(12, 2) NOT NULL DEFAULT 0.0,
@@ -177,7 +160,6 @@ CREATE TABLE IF NOT EXISTS t_payment
     guid_destination   TEXT           NOT NULL,
     date_updated       TIMESTAMP               DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP               DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT pk_payment_id PRIMARY KEY (payment_id),
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
     CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid),
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
