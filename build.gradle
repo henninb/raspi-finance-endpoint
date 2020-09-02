@@ -11,21 +11,21 @@ plugins {
     id 'jacoco'
     //id "gradle-clojure.clojure" version '0.5.0-alpha.1'
     //id "io.spring.dependency-management" version '1.0.9.RELEASE'
-    id 'org.springframework.boot' version '2.3.1.RELEASE'
-    id 'org.jetbrains.kotlin.jvm' version '1.4.0'
+    id "org.springframework.boot" version "2.3.3.RELEASE"
+    id "org.jetbrains.kotlin.jvm" version "1.4.0"
     id "org.flywaydb.flyway" version "6.5.3"
 }
 
-flyway {
-    url = 'jdbc:postgresql://localhost:5432/finance_db'
-    user = 'henninb'
-    password = 'monday1'
-    baselineOnMigrate = true
-    sqlMigrationPrefix = ".sql"
-    locations = [
-            'classpath:db/migration/'
-    ]
-}
+//flyway {
+//    url = 'jdbc:postgresql://localhost:5432/finance_db'
+//    user = 'henninb'
+//    password = 'password'
+//    baselineOnMigrate = true
+//    sqlMigrationPrefix = ".sql"
+//    locations = [
+//            'classpath:db/migration/'
+//    ]
+//}
 
 ext['springBootVersion'] = '2.3.3.RELEASE'
 ext['apacheCamelVersion'] = '3.1.0'
@@ -72,26 +72,26 @@ ext['flywayVersion'] = '6.5.3'
 
 ext['groovy.version'] = '${gradleVersion}'
 
-apply from: 'test.gradle'
+apply from: "test.gradle"
 
 repositories {
     mavenCentral()
     jcenter()
     google()
     flatDir {
-        dirs 'libs'
+        dirs "libs"
     }
 }
 
 compileKotlin {
-//    kotlinOptions.jvmTarget = '11'
-    kotlinOptions.jvmTarget = '1.8'
+//    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "1.8"
 }
 
 sourceSets {
-    main.scala.srcDirs += 'src/main/scala'
-    main.kotlin.srcDirs += 'src/main/kotlin'
-    main.java.srcDirs += 'src/main/java'
+    main.scala.srcDirs += "src/main/scala"
+    main.kotlin.srcDirs += "src/main/kotlin"
+    main.java.srcDirs += "src/main/java"
 }
 
 compileJava {

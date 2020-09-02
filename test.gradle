@@ -1,41 +1,49 @@
 sourceSets {
     test {
-        groovy.srcDir file('src/test/unit/groovy')
-        java.srcDir file('src/test/unit/java')
-        resources.srcDir file('src/main/resources')
+        groovy.srcDir "src/test/unit/groovy"
+        java.srcDir "src/test/unit/java"
+        resources.srcDir "src/main/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 
     integrationTest {
-        groovy.srcDir file('src/test/integration/groovy')
-        java.srcDir file('src/test/integration/java')
-        resources.srcDir file('src/main/resources')
+        groovy.srcDir "src/test/integration/groovy"
+        java.srcDir "src/test/integration/java"
+        resources.srcDir "src/main/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 
     functionalTest {
-        groovy.srcDir file('src/test/functional/groovy')
-        java.srcDir file('src/test/functional/java')
-        resources.srcDir file('src/main/resources')
+        groovy.srcDir "src/test/functional/groovy"
+        java.srcDir "src/test/functional/java"
+        resources.srcDir "src/main/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 
     performanceTest {
-        groovy.srcDir file('src/test/performance/groovy')
-        java.srcDir file('src/test/performance/java')
-        resources.srcDir file('src/main/resources')
+        groovy.srcDir "src/test/performance/groovy"
+        java.srcDir "src/test/performance/java"
+        resources.srcDir "src/main/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 }
 
 compileTestKotlin {
-    //kotlinOptions.jvmTarget = '11'
-    kotlinOptions.jvmTarget = '1.8'
+    //kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "1.8"
 }
+
+//provide dependency scopes
+//configurations {
+//    testIntegrationCompile.extendsFrom testCompile
+//    testIntegrationRuntime.extendsFrom testRuntime
+//    testFunctionalCompile.extendsFrom testCompile
+//    testFunctionalCompile.extendsFrom testRuntime
+//}
 
 dependencies {
     //testing modules
@@ -44,7 +52,7 @@ dependencies {
     testImplementation("org.spockframework:spock-spring:${spockVersion}")
     testImplementation("org.testcontainers:spock:${testContainersVersion}")
     testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
-    //testImplementation("com.github.javafaker:javafaker:${javaFakerVersion}") { exclude module: 'org.yaml' }
+    //testImplementation("com.github.javafaker:javafaker:${javaFakerVersion}") { exclude module: "org.yaml" }
     //testImplementation("io.github.benas:${randomBeanVersion}")
 }
 
@@ -55,11 +63,7 @@ test {
 }
 
 tasks.withType(Test) {
-    environment "CAMEL_ROUTE_ENABLED", "true"
-    environment "JSON_FILES_INPUT_PATH", "json_in"
     environment "JSON_FILES_INPUT_PATH", "excel_in"
-    environment "INPUT_FILEPATH", "config"
-    environment "OUTPUT_FILEPATH", "json_out"
     //systemProperties = System.properties
 
     useJUnitPlatform()
@@ -68,18 +72,19 @@ tasks.withType(Test) {
 }
 
 task integrationTest(type: Test) {
-    description = 'Runs the integration tests.'
+    description = "Runs the integration tests."
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
 task functionalTest(type: Test) {
-    description = 'Runs the functional tests.'
+    description = "Runs the functional tests."
     testClassesDirs = sourceSets.functionalTest.output.classesDirs
     classpath = sourceSets.functionalTest.runtimeClasspath
 }
 
 task performanceTest(type: Test) {
+    description = "Runs the performance tests."
     testClassesDirs = sourceSets.performanceTest.output.classesDirs
     classpath = sourceSets.performanceTest.runtimeClasspath
 }
@@ -87,3 +92,4 @@ task performanceTest(type: Test) {
 integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
 functionalTest.reports.html.destination = file("$buildDir/reports/test/functional")
 performanceTest.reports.html.destination = file("$buildDir/reports/test/performance")
+test.dependsOn functionalTest
