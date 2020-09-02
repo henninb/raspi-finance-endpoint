@@ -15,7 +15,11 @@
 -- ALTER TABLE t_account ADD CONSTRAINT t_account_account_type_lowercase_ck CHECK (account_type = lower(account_type));
 
 --select * from t_transaction;
---insert into t_transaction(account_id, account_name_owner, account_type, amount, category, cleared, description, guid, notes, reoccurring, transaction_date) VALUES (1, 'TEST_brian', 'credit', 0.0, '', 1, 'testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-01-12');
+--insert into t_transaction(account_id, account_name_owner, account_type, amount, category, transaction_state, description, guid, notes, reoccurring, transaction_date) VALUES (1013, 'chase_kari', 'credit', 0.0, '', 'cleared', 'testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-09-12');
+--insert into t_transaction(account_id, account_name_owner, account_type, amount, category, transaction_state, description, guid, notes, reoccurring, transaction_date) VALUES (1013, 'chase_kari', 'Credit', 0.0, '', 'cleared', 'testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-09-12');
+--insert into t_transaction(account_id, account_name_owner, account_type, amount, category, transaction_state, description, guid, notes, reoccurring, transaction_date) VALUES (1013, 'chase_Kari', 'credit', 0.0, '', 'cleared', 'testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-09-12');
+--insert into t_transaction(account_id, account_name_owner, account_type, amount, category, transaction_state, description, guid, notes, reoccurring, transaction_date) VALUES (1013, 'chase_Kari', 'credit', 0.0, '', 'cleared', 'Testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-09-12');
+--insert into t_transaction(account_id, account_name_owner, account_type, amount, category, transaction_state, description, guid, notes, reoccurring, transaction_date) VALUES (1013, 'chase_Kari', 'credit', 0.0, '', 'Cleared', 'testing', '031a8d6a-27c2-4302-bb6d-60dc64400081', '', true, '2020-09-12');
 
 CREATE TABLE IF NOT EXISTS t_transaction_categories
 (
