@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS t_account
     date_added         TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT pk_account_id PRIMARY KEY (account_id),
     CONSTRAINT unique_account_name_owner_account_id UNIQUE (account_id, account_name_owner, account_type),
-    CONSTRAINT ck_account_name_owner_lowercase CHECK (account_name_owner = lower(account_name_owner)),
+    CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
