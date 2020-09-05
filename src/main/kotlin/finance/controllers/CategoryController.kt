@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.server.ResponseStatusException
 import java.util.*
 import javax.validation.ConstraintViolationException
 
@@ -17,6 +18,18 @@ import javax.validation.ConstraintViolationException
 //@Validated
 class CategoryController(private var categoryService: CategoryService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
+
+    //http://localhost:8080/category/select/active
+    @GetMapping(path = ["/select/active"], produces = ["application/json"])
+    fun selectAllActiveCategories(): ResponseEntity<List<Category>> {
+        val categories: List<Category> = categoryService.fetchAllCategories()
+        if (categories.isEmpty()) {
+            logger.info("no accounts found.")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accounts.")
+        }
+        logger.info("select active categories: ${categories.size}")
+        return ResponseEntity.ok(categories)
+    }
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
     @PostMapping(path = ["/insert"], produces = ["application/json"])
