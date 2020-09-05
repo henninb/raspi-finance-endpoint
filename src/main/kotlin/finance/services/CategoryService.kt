@@ -31,4 +31,8 @@ class CategoryService(private var categoryRepository: CategoryRepository) {
     fun deleteByCategoryName(categoryName: String) {
         categoryRepository.deleteByCategory(categoryName)
     }
+
+    fun fetchAllCategories(): List<Category> {
+        return categoryRepository.findAll()
+    }
 }
