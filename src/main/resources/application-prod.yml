@@ -7,16 +7,16 @@ spring:
   profiles:
     active: prod
 
-  # ===============================
-  # = JSON
-  # ===============================
+# ===============================
+# = Jackson Settings
+# ===============================
   jackson:
     property-naming-strategy: LOWER_CAMEL_CASE
     default-property-inclusion: non_null
     mapper.accept-case-insensitive-enums: true
-  # ===============================
-  # = DATA SOURCE
-  # ===============================
+# ===============================
+# = DATA SOURCE
+# ===============================
   datasource:
     url: ${DATASOURCE}
     username: ${DATASOURCE_USERNAME}
@@ -32,9 +32,9 @@ spring:
     #initialization-mode: always
     initialization-mode: never
 
-  # ===============================
-  # = JPA / HIBERNATE
-  # ===============================
+# ===============================
+# = JPA / HIBERNATE
+# ===============================
   # Show or not log for each sql query
   jpa:
     show-sql: false
@@ -47,9 +47,9 @@ spring:
   #        jdbc:
   #          time_zone: UTC
 
-  # ===============================
-  # = Flyway
-  # ===============================
+# ===============================
+# = Flyway
+# ===============================
   flyway:
     enabled: true
     user: ${DATASOURCE_USERNAME}
@@ -57,9 +57,10 @@ spring:
     url: ${DATASOURCE}
     baseline-on-migrate: true
     locations: classpath:db/migration
-    postgres:
-        wait-Indefinitely-For-Adivsory-Lock: true
 
+# ===============================
+# = Flyway
+# ===============================
 custom:
   project:
     excel-password: ${EXCEL_PASSWORD}

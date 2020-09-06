@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 
+ENV=$1
+APP=raspi-finance-convert
+
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 <prod or local>"
+  echo "Usage: $0 <prod|local|stage|perf>"
   exit 1
 fi
 
-ENV=$1
-
-APP=raspi-finance-convert
-
-if [ "$ENV" = "prod" ]; then
-  echo prod
-elif [ "$ENV" = "local" ]; then
-  echo local
+if [ "$ENV" = "prod" ] || [ "$ENV" = "local" ] || [ "$ENV" = "stage" ] || [ "$ENV" = "perf" ]; then
+  echo "${ENV}"
 else
-  echo "Usage: $0 <prod or local>"
+  echo "Usage: $0 <prod|local|stage|perf>"
   exit 2
 fi
 
@@ -74,9 +71,16 @@ touch env.console
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
-if ! ./gradlew clean build functionalTest; then
-  echo "gradle build failed."
-  exit 1
+if [ "$ENV" = "prod" ]; then
+  if ! ./gradlew clean build functionalTest; then
+    echo "gradle build failed."
+    exit 1
+  fi
+else
+  if ! ./gradlew clean build -x test; then
+    echo "gradle build failed."
+    exit 1
+  fi
 fi
 
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb' --format "{{.ID}}") 2> /dev/null

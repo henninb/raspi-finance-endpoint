@@ -4,7 +4,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
-@ActiveProfiles("local")
+@ActiveProfiles("unit")
 @DataJpaTest
 class CategoryJpaSpec extends Specification {
 }

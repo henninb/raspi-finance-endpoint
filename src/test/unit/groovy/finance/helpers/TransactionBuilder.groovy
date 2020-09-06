@@ -16,7 +16,6 @@ class TransactionBuilder {
     String description = 'aliexpress.com'
     String category = 'online'
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
-    //Integer cleared = 1
     TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
     String notes = 'my note to you'
