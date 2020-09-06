@@ -5,7 +5,7 @@ spring:
   application:
     name: raspi-finance-endpoint
   profiles:
-    active: local
+    active: perf
 
   # ===============================
   # = JSON
@@ -51,11 +51,11 @@ spring:
     open-in-view: false
     generate-ddl: true
     hibernate:
-      ddl-auto: create-drop
-  #    properties:
-  #      hibernate:
-  #        jdbc:
-  #          time_zone: UTC
+      ddl-auto: ${HIBERNATE_DDL}
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
   flyway:
     enabled: false
 logging:
@@ -79,7 +79,7 @@ management:
   metrics:
     export:
       influx:
-        enabled: true
+        enabled: false
         auto-create-db: true
         db: metrics
         compressed: false

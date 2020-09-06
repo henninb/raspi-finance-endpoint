@@ -18,7 +18,7 @@ import javax.persistence.PersistenceException
 import javax.validation.ConstraintViolationException
 import java.sql.Timestamp
 
-@ActiveProfiles("local")
+@ActiveProfiles("unit")
 @DataJpaTest
 class TransactionJpaSpec extends Specification {
 

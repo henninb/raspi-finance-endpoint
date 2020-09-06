@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
-@ActiveProfiles("local")
+@ActiveProfiles("unit")
 @DataJpaTest
 class PaymentJpaSpec extends Specification {
 
