@@ -6,7 +6,7 @@ SET client_min_messages TO WARNING;
 -------------
 CREATE TABLE IF NOT EXISTS t_account
 (
-    account_id         BIGSERIAL      PRIMARY KEY,
+    account_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT UNIQUE NOT NULL,
     account_name       TEXT, -- NULL for now
     account_owner      TEXT, -- NULL for now
@@ -61,10 +61,12 @@ EXECUTE PROCEDURE fn_ins_ts_account();
 --------------
 CREATE TABLE IF NOT EXISTS t_category
 (
-    category_id  BIGSERIAL      PRIMARY KEY,
-    category     TEXT UNIQUE NOT NULL,
-    date_updated TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
+    category_id   BIGSERIAL PRIMARY KEY,
+    category      TEXT UNIQUE NOT NULL,
+    active_status BOOLEAN     NOT NULL DEFAULT TRUE,
+    date_updated  TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added    TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
 ---------------------------
@@ -87,7 +89,7 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 --CREATE TYPE account_type_enum AS ENUM ('credit','debit', 'undefined');
 CREATE TABLE IF NOT EXISTS t_transaction
 (
-    transaction_id     BIGSERIAL      PRIMARY KEY,
+    transaction_id     BIGSERIAL PRIMARY KEY,
     account_id         BIGINT         NOT NULL,
     account_type       TEXT           NOT NULL DEFAULT 'undefined',
     account_name_owner TEXT           NOT NULL,
@@ -152,7 +154,7 @@ EXECUTE PROCEDURE fn_upd_ts_transaction();
 -------------
 CREATE TABLE IF NOT EXISTS t_payment
 (
-    payment_id         BIGSERIAL      PRIMARY KEY,
+    payment_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT           NOT NULL,
     transaction_date   DATE           NOT NULL,
     amount             DECIMAL(12, 2) NOT NULL DEFAULT 0.0,
