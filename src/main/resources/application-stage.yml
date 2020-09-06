@@ -93,7 +93,7 @@ management:
       influx:
         enabled: true
         auto-create-db: true
-        db: metrics
+        db: metrics-test
         compressed: false
         uri: http://hornsup:8086
         user-name: henninb
