@@ -8,7 +8,7 @@ spring:
     active: int
 
   # ===============================
-  # = JSON
+  # = Jackson Settings
   # ===============================
   jackson:
     property-naming-strategy: LOWER_CAMEL_CASE
@@ -58,6 +58,10 @@ spring:
   #          time_zone: UTC
   flyway:
     enabled: false
+
+# ===============================
+# = Logging
+# ===============================
 logging:
   level.org.hibernate.SQL: WARN
 

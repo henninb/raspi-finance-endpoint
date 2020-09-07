@@ -8,58 +8,74 @@ spring:
     active: perf
 
   # ===============================
-  # = JSON
+  # = Jackson Settings
   # ===============================
   jackson:
     property-naming-strategy: LOWER_CAMEL_CASE
     default-property-inclusion: non_null
     mapper.accept-case-insensitive-enums: true
-
   # ===============================
   # = DATA SOURCE
   # ===============================
   datasource:
-    url: jdbc:h2:mem:finance_db;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://hornsup:5432/finance_test_db
+    username: henninb
+    password: monday1
+    driver-class-name: org.postgresql.Driver
     # testWhileIdle to persist the connection when idle for a long period of time
     tomcat:
-      validation-query: SELECT 1
-      test-while-idle: true
-    platform: h2
-    continue-on-error: false
-    schema: classpath:schema-basic-h2.sql
-    data: classpath:data-basic-h2.sql
-    # enable flag to always if you want to utilize data.sql and schema.sql
-    initialization-mode: always
-  thymeleaf:
-    cache: false
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
+      test-While-Idle: true
+      validation-Query: SELECT 1
+    platform: postgresql
+    continue-On-Error: false
+    # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql
+    #initialization-mode: always
+    initialization-mode: never
 
   # ===============================
   # = JPA / HIBERNATE
   # ===============================
   # Show or not log for each sql query
   jpa:
-    show-sql: true
+    show-sql: false
     open-in-view: false
     generate-ddl: true
     hibernate:
-      ddl-auto: ${HIBERNATE_DDL}
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
+      ddl-auto: create
+  #    properties:
+  #      hibernate:
+  #        jdbc:
+  #          time_zone: UTC
+
+  # ===============================
+  # = Flyway
+  # ===============================
   flyway:
-    enabled: false
+    enabled: true
+    user: henninb
+    password: monday1
+    url: jdbc:postgresql://hornsup:5432/finance_test_db
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+# ===============================
+# = Custom
+# ===============================
+custom:
+  project:
+    excel-password: n/a
+    excel-input-file-path: excel_in
+    excluded-accounts:
+      - test_brian
+
+# ===============================
+# = Logging
+# ===============================
 logging:
-  level.org.hibernate.SQL: WARN
+  level:
+    org:
+      flywaydb: DEBUG
+      hibernate.SQL: WARN
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
@@ -79,9 +95,9 @@ management:
   metrics:
     export:
       influx:
-        enabled: false
+        enabled: true
         auto-create-db: true
-        db: metrics
+        db: metrics-test
         compressed: false
         uri: http://hornsup:8086
         user-name: henninb

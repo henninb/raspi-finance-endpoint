@@ -59,7 +59,7 @@ spring:
     locations: classpath:db/migration
 
 # ===============================
-# = Flyway
+# = Custom
 # ===============================
 custom:
   project:
@@ -67,6 +67,10 @@ custom:
     excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
     excluded-accounts:
       - test_brian
+
+# ===============================
+# = Logging
+# ===============================
 logging:
   level:
     org:
