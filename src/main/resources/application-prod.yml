@@ -7,16 +7,16 @@ spring:
   profiles:
     active: prod
 
-# ===============================
-# = Jackson Settings
-# ===============================
+  # ===============================
+  # = Jackson Settings
+  # ===============================
   jackson:
     property-naming-strategy: LOWER_CAMEL_CASE
     default-property-inclusion: non_null
     mapper.accept-case-insensitive-enums: true
-# ===============================
-# = DATA SOURCE
-# ===============================
+  # ===============================
+  # = DATA SOURCE
+  # ===============================
   datasource:
     url: ${DATASOURCE}
     username: ${DATASOURCE_USERNAME}
@@ -32,9 +32,9 @@ spring:
     #initialization-mode: always
     initialization-mode: never
 
-# ===============================
-# = JPA / HIBERNATE
-# ===============================
+  # ===============================
+  # = JPA / HIBERNATE
+  # ===============================
   # Show or not log for each sql query
   jpa:
     show-sql: false
@@ -47,9 +47,9 @@ spring:
   #        jdbc:
   #          time_zone: UTC
 
-# ===============================
-# = Flyway
-# ===============================
+  # ===============================
+  # = Flyway
+  # ===============================
   flyway:
     enabled: true
     user: ${DATASOURCE_USERNAME}
@@ -59,7 +59,7 @@ spring:
     locations: classpath:db/migration
 
 # ===============================
-# = Flyway
+# = Custom
 # ===============================
 custom:
   project:
