@@ -1,6 +1,11 @@
 server:
   port: ${SERVER_PORT}
-
+  ssl:
+    key-store: classpath:hornsup-raspi-finance-keystore.p12
+    key-store-password: monday1
+    key-store-type: pkcs12
+    key-alias: hornsup-raspi-finance
+    key-password: monday1
 spring:
   application:
     name: raspi-finance-endpoint

@@ -67,7 +67,6 @@ mkdir -p 'excel_in'
 #find . -name "*.java" | xargs ctags --language=java
 
 touch env.secrets
-touch env.console
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
