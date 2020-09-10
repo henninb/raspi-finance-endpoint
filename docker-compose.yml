@@ -37,9 +37,6 @@ services:
       - env.secrets
   postgresql-server:
     image: postgres:12.4
-    # build:
-    #   context: ./
-    #   dockerfile: Dockerfile-postgresql
     container_name: postgresql-server
     ports:
       - "5433:5432"

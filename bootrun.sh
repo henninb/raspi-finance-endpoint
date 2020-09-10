@@ -14,15 +14,15 @@
 #export PATH=${JAVA_HOME}/bin:${PATH}
 
 touch env.secrets
-touch env.console
+touch env.bootrun
 
 set -a
 # shellcheck disable=SC1091
-source env.console
+source env.bootrun
 # shellcheck disable=SC1091
 source env.secrets
 set +a
 
-./gradlew clean build bootRun
+./gradlew clean build bootRun -x test
 
 exit 0
