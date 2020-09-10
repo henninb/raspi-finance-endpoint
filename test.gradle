@@ -37,13 +37,7 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-//provide dependency scopes
-//configurations {
-//    testIntegrationCompile.extendsFrom testCompile
-//    testIntegrationRuntime.extendsFrom testRuntime
-//    testFunctionalCompile.extendsFrom testCompile
-//    testFunctionalCompile.extendsFrom testRuntime
-//}
+
 
 dependencies {
     //testing modules
@@ -52,8 +46,14 @@ dependencies {
     testImplementation("org.spockframework:spock-spring:${spockVersion}")
     testImplementation("org.testcontainers:spock:${testContainersVersion}")
     testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
-    //testImplementation("com.github.javafaker:javafaker:${javaFakerVersion}") { exclude module: "org.yaml" }
-    //testImplementation("io.github.benas:${randomBeanVersion}")
+}
+
+//provide dependency scopes
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntime.extendsFrom testRuntime
+    functionalTestCompile.extendsFrom testImplementation
+    testFunctionalCompile.extendsFrom testRuntime
 }
 
 test {
@@ -63,7 +63,8 @@ test {
 }
 
 tasks.withType(Test) {
-    environment "JSON_FILES_INPUT_PATH", "excel_in"
+    //TODO: not used
+    environment "INPUT_PATH", "excel_in"
     //systemProperties = System.properties
 
     useJUnitPlatform()

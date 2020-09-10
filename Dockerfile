@@ -1,5 +1,4 @@
 FROM openjdk:11
-#FROM openjdk:8
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
@@ -9,7 +8,6 @@ ARG USERNAME="set the username as build time"
 ENV USERNAME=${USERNAME}
 RUN useradd ${USERNAME}
 #ENV JAVA_OPTS="-Xmx8192m"
-
 
 RUN cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 RUN mkdir -p -m 0775 /opt/${APP}/bin
