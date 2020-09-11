@@ -34,33 +34,29 @@ openssl x509 -req -days 365 -in "$HOME/ssl/ca.csr" -signkey "$HOME/ssl/ca.key.pe
 
 openssl x509 -req -days 365 -in "$HOME/ssl/${SERVERNAME}-${APP}.csr.pem" -signkey "$HOME/ssl/ca.key.pem" -out "$HOME/ssl/${SERVERNAME}-${APP}.crt.pem"
 
-cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-convert/ssl"
-
-cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-endpoint/ssl"
 
 # mkdir -p "$HOME/projects/raspi-finance-react/node_modules/webpack-dev-server/ssl"
 
 echo keytool -list -v -keystore "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" -keypass "${KEYSTORE_PASSWORD}"
 #keytool -list -v -keystore "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" -keypass "${KEYSTORE_PASSWORD}"
 
-echo next
-keytool -noprompt -importkeystore -srckeystore "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" -destkeystore "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -deststoretype pkcs12
+echo TODO: remove password prompt
+keytool -noprompt -importkeystore -srckeystore "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" -destkeystore "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -deststoretype pkcs12 -keypass "${KEYSTORE_PASSWORD}" -storepass "${TRUSTSTORE_PASSWORD}"
 
-openssl pkcs12 -in "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -nokeys -out "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" -password pass:${KEYSTORE_PASSWORD}
+openssl pkcs12 -in "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -nokeys -out "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" -password "pass:${KEYSTORE_PASSWORD}"
 
-openssl pkcs12 -in "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -nocerts -nodes -out "$HOME/ssl/${SERVERNAME}-${APP}-key.pem" -password pass:${KEYSTORE_PASSWORD}
+openssl pkcs12 -in "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -nocerts -nodes -out "$HOME/ssl/${SERVERNAME}-${APP}-key.pem" -password "pass:${KEYSTORE_PASSWORD}"
 
-#openssl x509 -outform der -in your-cert.pem -out your-cert.crt
+mkdir -p "$HOME/projects/raspi-finance-react/ssl/"
+mkdir -p "$HOME/projects/raspi-finance-ncurses/ssl/"
 
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" "$HOME/projects/raspi-finance-react/ssl/"
-
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" "$HOME/projects/raspi-finance-ncurses/ssl/"
-
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-key.pem" "$HOME/projects/raspi-finance-react/ssl/"
-
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" "$HOME/projects/raspi-finance-endpoint/src/main/resources/"
+cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-convert/ssl"
+cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-endpoint/ssl"
 
-echo curl --cacert archlinux-raspi-finance.pem https://archlinux:8080
 echo curl --cacert hornsup-raspi-finance.pem https://hornsup:8080
 
 exit 0
