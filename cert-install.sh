@@ -49,7 +49,9 @@ openssl pkcs12 -in "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" -nocerts -nodes
 
 mkdir -p "$HOME/projects/raspi-finance-react/ssl/"
 mkdir -p "$HOME/projects/raspi-finance-ncurses/ssl/"
+sudo mkdir -p /etc/pki/tls/certs
 
+sudo cp -v "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" "/etc/pki/tls/certs/"
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" "$HOME/projects/raspi-finance-react/ssl/"
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-cert.pem" "$HOME/projects/raspi-finance-ncurses/ssl/"
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-key.pem" "$HOME/projects/raspi-finance-react/ssl/"
@@ -57,7 +59,13 @@ cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.p12" "$HOME/projects/raspi-financ
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-convert/ssl"
 cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-endpoint/ssl"
 
-echo curl --cacert hornsup-raspi-finance.pem https://hornsup:8080
+echo sudo trust anchor --remove --verbose "pkcs11:id=%9F%AE%4A%84%68%2A%6E%A0%6A%79%CC%DA%F4%89%51%20%9B%C4%29%2B;type=cert"
+
+
+echo curl-config --ca
+echo export CURL_CA_BUNDLE=/path/to/cacert/ca-certificates.crt
+sudo trust anchor "/etc/pki/tls/certs/${SERVERNAME}-${APP}-cert.pem"
+echo curl --cacert "${SERVERNAME}-${APP}-cert.pem" https://hornsup:8080
 
 exit 0
 
