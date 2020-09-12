@@ -27,6 +27,7 @@ services:
       - postgresql-server
   influxdb-server:
     image: influxdb:latest
+    user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: influxdb-server
     ports:
       - "8086:8086"
@@ -37,13 +38,7 @@ services:
       - env.secrets
   postgresql-server:
     image: postgres:12.4
-    configs:
-      - uid: '1001'
-      - gid: '1001'
-      - mode: 0440
-    #user: "${UID}:${GID}"
-    user: "1001:1001"
-    # user: "henninb"
+    user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: postgresql-server
     ports:
       - "5433:5432"

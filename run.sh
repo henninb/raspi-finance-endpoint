@@ -21,16 +21,16 @@ if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/L
   sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Arch Linux" ]; then
   HOST_IP=192.168.100.207
-  sudo chmod -R g+rwx database-data
+  # sudo chmod -R g+rwx database-data
 elif [ "$OS" = "openSUSE Tumbleweed" ]; then
   HOST_IP=192.168.100.193
-  sudo chmod -R g+rwx database-data
+  # sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Solus" ]; then
   HOST_IP=192.168.100.190
-  sudo chmod -R g+rwx database-data
+  # sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Fedora" ]; then
   HOST_IP=192.168.100.130
-  sudo chmod -R g+rwx database-data
+  # sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
   # echo "lsof -nP | grep LISTEN"
@@ -39,15 +39,15 @@ elif [ "$OS" = "void" ]; then
   #sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
-  sudo chmod -R a+rwx database-data
+  # sudo chmod -R a+rwx database-data
 else
   echo "$OS is not yet implemented."
   exit 1
 fi
 
 export HOST_IP
-# export UID="$(id -u)"
-# export GID="$(id -g)"
+export CURRENT_UID="$(id -u)"
+export CURRENT_GID="$(id -g)"
 
 mkdir -p 'src/main/scala'
 mkdir -p 'src/main/java'
