@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.8"
 services:
   raspi-finance-endpoint:
     build:
@@ -37,6 +37,13 @@ services:
       - env.secrets
   postgresql-server:
     image: postgres:12.4
+    configs:
+      - uid: '1001'
+      - gid: '1001'
+      - mode: 0440
+    #user: "${UID}:${GID}"
+    user: "1001:1001"
+    # user: "henninb"
     container_name: postgresql-server
     ports:
       - "5433:5432"

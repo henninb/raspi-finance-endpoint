@@ -36,7 +36,7 @@ elif [ "$OS" = "Darwin" ]; then
   # echo "lsof -nP | grep LISTEN"
 elif [ "$OS" = "void" ]; then
   HOST_IP=127.0.0.1
-  sudo chmod -R g+rwx database-data
+  #sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
   sudo chmod -R a+rwx database-data
@@ -46,6 +46,8 @@ else
 fi
 
 export HOST_IP
+# export UID="$(id -u)"
+# export GID="$(id -g)"
 
 mkdir -p 'src/main/scala'
 mkdir -p 'src/main/java'
