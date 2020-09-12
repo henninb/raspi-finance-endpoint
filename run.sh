@@ -39,7 +39,7 @@ elif [ "$OS" = "void" ]; then
   sudo chmod -R g+rwx database-data
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
-  sudo chmod -R g+rwx database-data
+  sudo chmod -R a+rwx database-data
 else
   echo "$OS is not yet implemented."
   exit 1
