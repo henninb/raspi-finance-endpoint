@@ -63,7 +63,6 @@ class TransactionControllerSpec extends Specification {
     private ObjectMapper mapper = new ObjectMapper()
 
     def setup() {
-        println("***** setup started")
         headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
         category = CategoryBuilder.builder().build()
@@ -92,8 +91,9 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/select/" + transaction.guid), HttpMethod.GET,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
         insertedValue.get().guid == transaction.guid
+        0 * _
 
         cleanup:
         transactionService.deleteTransactionByGuid(transaction.guid)
@@ -108,7 +108,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
     }
 
     def "test deleteTransaction endpoint insert delete guid found"() {
@@ -122,7 +123,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/delete/" + transaction.guid), HttpMethod.DELETE,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
+        0 * _
     }
 
     //TODO: fix the multiple category delete issue
@@ -141,7 +143,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/delete/" + transaction.guid), HttpMethod.DELETE,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
+        0 * _
     }
 
     def "test deleteTransaction endpoint guid not found"() {
@@ -153,7 +156,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/delete/" + UUID.randomUUID().toString()), HttpMethod.DELETE,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
     }
 
     def "test insertTransaction endpoint bad data - not json"() {
@@ -166,7 +170,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
     def "test insertTransaction endpoint"() {
@@ -180,7 +185,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
+        0 * _
 
         cleanup:
         transactionService.deleteTransactionByGuid(guid)
@@ -197,11 +203,11 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
     def "test insertTransaction endpoint - bad category"() {
-
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
 
@@ -213,7 +219,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
     def "test insertTransaction endpoint - old transaction date"() {
@@ -228,44 +235,27 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort("/transaction/insert/"), HttpMethod.POST,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
-    //@Ignore
-    //TODO: fix Invalid HTTP method: PATCH; nested exception is java.net.ProtocolException: Invalid HTTP method: PATCH
-    def "test updateTransaction endpoint"() {
-
+    def "test updateTransaction transaction endpoint"() {
         given:
-
         //headers.setContentType(new MediaType("application", "json-patch+json"))
         headers.setContentType(MediaType.APPLICATION_JSON)
-        //headers.setContentType(HttpMethod.PATCH)
 
         transaction.guid = UUID.randomUUID()
         guid = transaction.guid
         transactionService.insertTransaction(transaction)
         transaction.description = "updateToDescription"
-        //def updateToDescription = mapper.writeValueAsString(transaction)
         HttpEntity entity = new HttpEntity<>(transaction, headers)
-        //println entity.headers
-        println transaction
-
-
-        //headers.set(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-
-        //RequestSpecification.contentType(String value)
-
-        //ResponseEntity<String> exchange = restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<EmailPatch>(patch),
-        //                    String.class);
-        //HttpClient httpClient = HttpClients.createDefault();
-        //restTemplate new TestRestTemplate(Collections.<HttpMessageConverter<?>> singletonList(converter));
-        //restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory(httpClient));
 
         when:
         def response = restTemplate.exchange(createURLWithPort("/transaction/update/" + guid),
-                HttpMethod.PUT, new HttpEntity<Transaction>(transaction), String.class)
+                HttpMethod.PUT, entity, String.class)
         then:
-        assert response.getStatusCode() == HttpStatus.OK
+        response.getStatusCode() == HttpStatus.OK
+        0 * _
 
         cleanup:
         transactionService.deleteTransactionByGuid(guid)

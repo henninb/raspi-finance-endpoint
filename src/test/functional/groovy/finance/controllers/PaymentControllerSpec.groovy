@@ -54,7 +54,7 @@ class PaymentControllerSpec extends Specification {
                 createURLWithPort("/payment/delete/" + paymentId), HttpMethod.DELETE,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
         0 * _
 
     }
@@ -68,7 +68,7 @@ class PaymentControllerSpec extends Specification {
 //                createURLWithPort("/account/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
 //                entity, String.class)
 //        then:
-//        assert response.statusCode == HttpStatus.NOT_FOUND
+//        response.statusCode == HttpStatus.NOT_FOUND
 //        0 * _
 //    }
 //
@@ -83,7 +83,7 @@ class PaymentControllerSpec extends Specification {
 //                createURLWithPort("/account/delete/" + account.accountNameOwner), HttpMethod.DELETE,
 //                entity, String.class)
 //        then:
-//        assert response.statusCode == HttpStatus.OK
+//        response.statusCode == HttpStatus.OK
 //        0 * _
 //
 //        cleanup:
@@ -102,7 +102,7 @@ class PaymentControllerSpec extends Specification {
                 entity, String.class)
         then:
         //thrown HttpMessageNotReadableException
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 }

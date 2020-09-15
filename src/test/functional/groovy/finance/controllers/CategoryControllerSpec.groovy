@@ -36,8 +36,7 @@ class CategoryControllerSpec extends Specification {
         category = CategoryBuilder.builder().build()
     }
 
-
-    private String createURLWithPort(String uri) {
+    def createURLWithPort(String uri) {
         println "port = ${port}"
 
         return "http://localhost:" + port + uri
@@ -54,7 +53,7 @@ class CategoryControllerSpec extends Specification {
                 createURLWithPort("/category/delete/${category.category}"), HttpMethod.DELETE,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
@@ -67,7 +66,7 @@ class CategoryControllerSpec extends Specification {
 //                createURLWithPort("/account/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
 //                entity, String.class)
 //        then:
-//        assert response.statusCode == HttpStatus.NOT_FOUND
+//        response.statusCode == HttpStatus.NOT_FOUND
 //        0 * _
 //    }
 //
@@ -82,7 +81,7 @@ class CategoryControllerSpec extends Specification {
 //                createURLWithPort("/account/delete/" + account.accountNameOwner), HttpMethod.DELETE,
 //                entity, String.class)
 //        then:
-//        assert response.statusCode == HttpStatus.OK
+//        response.statusCode == HttpStatus.OK
 //        0 * _
 //
 //        cleanup:
@@ -100,7 +99,7 @@ class CategoryControllerSpec extends Specification {
                 entity, String.class)
         then:
         //thrown HttpMessageNotReadableException
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 }
