@@ -42,7 +42,7 @@ class ExcelFileControllerSpec extends Specification {
                 createURLWithPort("/excel/file/export"), HttpMethod.GET,
                 entity, String.class)
         then:
-        assert response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 }
