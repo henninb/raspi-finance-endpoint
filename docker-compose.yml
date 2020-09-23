@@ -27,7 +27,7 @@ services:
       - postgresql-server
   influxdb-server:
     image: influxdb:latest
-    user: "${CURRENT_UID}:${CURRENT_GID}"
+#    user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: influxdb-server
     ports:
       - "8086:8086"
