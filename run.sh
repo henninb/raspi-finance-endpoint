@@ -94,7 +94,6 @@ echo curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=metr
 echo curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=metrics" -u "henninb:monday1" --data-urlencode "q=SHOW measurements on metrics"
 
 if [ -x "$(command -v docker-compose)" ]; then
-
   if ! docker-compose -f docker-compose.yml -f "docker-compose-${ENV}.yml" config > docker-compose-run.yml; then
     echo "docker-compose config failed."
     exit 1
