@@ -2,6 +2,7 @@ package finance.services
 
 import finance.domain.*
 import finance.repositories.TransactionRepository
+import io.micrometer.core.annotation.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
@@ -28,6 +29,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 //    }
 
     //TODO: fix the delete
+    @Timed
     @Transactional
     open fun deleteTransactionByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
@@ -58,6 +60,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return false
     }
 
+    //https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
+    @Timed
     @Transactional
     open fun insertTransaction(transaction: Transaction): Boolean {
 
@@ -157,6 +161,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return account
     }
 
+    @Timed
     @Transactional
     open fun findTransactionByGuid(guid: String): Optional<Transaction> {
         logger.info("call findByGuid")
@@ -167,6 +172,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return Optional.empty()
     }
 
+    @Timed
     @Transactional
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
@@ -185,6 +191,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return result
     }
 
+    @Timed
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
@@ -200,6 +207,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return sortedTransactions
     }
 
+    @Timed
     @Transactional
     open fun updateTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
@@ -224,6 +232,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
+    @Timed
     @Transactional
     open fun cloneAsMonthlyTransaction(map: Map<String, String>): Boolean {
         val guid: String = map["guid"] ?: error("guid must be set.")
@@ -281,6 +290,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return Date(calendarDate.time)
     }
 
+    @Timed
     @Transactional
     open fun changeAccountNameOwner(map: Map<String, String>) {
         val accountNameOwner = map["accountNameOwner"]
@@ -302,6 +312,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         }
     }
 
+    @Timed
     @Transactional
     open fun updateTransactionState(guid: String, transactionState: TransactionState): Boolean {
         val transactionOptional = findTransactionByGuid(guid)
@@ -316,6 +327,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
+    @Timed
     @Transactional
     open fun updateTransactionReoccurringState(guid: String, reoccurring: Boolean): Boolean {
         val transactionOptional = findTransactionByGuid(guid)

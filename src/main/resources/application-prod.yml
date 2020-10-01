@@ -103,4 +103,10 @@ management:
         uri: http://hornsup:8086
         user-name: henninb
         password: monday1
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 debug: false
+
+
