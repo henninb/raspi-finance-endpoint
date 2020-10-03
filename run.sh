@@ -112,7 +112,7 @@ if [ -x "$(command -v docker-compose)" ]; then
 else
   set -a
   # shellcheck disable=SC1091
-  source env.console
+  source env.prod
   # shellcheck disable=SC1091
   source env.secrets
   set +a
