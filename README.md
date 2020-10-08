@@ -77,3 +77,6 @@ $ curl localhost:8080/account/select/active
 ## docker compose
 3.8	19.03.0+
 3.7	18.06.0+
+
+## dependency checker
+./gradlew dependencyUpdates
