@@ -11,19 +11,19 @@ plugins {
     id 'jacoco'
     id "org.springframework.boot" version "2.3.4.RELEASE"
     id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id "org.flywaydb.flyway" version "7.0.1"
+    id "org.flywaydb.flyway" version "7.0.2"
     id "com.github.ben-manes.versions" version "0.33.0"
 }
 
 ext['springBootVersion'] = '2.3.4.RELEASE'
-ext['apacheCamelVersion'] = '3.1.0'
+ext['apacheCamelVersion'] = '3.5.0'
 ext['kotlinVersion'] = '1.4.10'
 ext['groovyVersion'] = '3.0.6'
 ext['qualityPluginVersion'] = '3.0.0'
 ext['codenarcPluginVersion'] = '0.20.0'
 ext['activemqVersion'] = '5.16.0'
 ext['jolokiaVersion'] = '1.6.2'
-ext['postgresqlVersion'] = '42.2.16'
+ext['postgresqlVersion'] = '42.2.17'
 ext['kafkaVersion'] = '2.5.0'
 ext['hibernateVersion'] = '5.4.22.Final'
 ext['h2Version'] = '1.4.200'
@@ -57,6 +57,7 @@ ext['jacksonVersion'] = '2.11.3'
 ext['micrometerInfluxVersion'] = '1.5.5'
 ext['validationVersion'] = '2.0.1.Final'
 ext['flywayVersion'] = '6.5.7'
+ext['logstashLogbackVersion'] = '6.4'
 
 ext['groovy.version'] = '${gradleVersion}'
 
@@ -118,7 +119,7 @@ dependencies {
 
     //Camel
     // implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
-    // implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
+    implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
     //postgres
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
@@ -141,7 +142,7 @@ dependencies {
     //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
 
     //log
-    runtimeOnly("net.logstash.logback:logstash-logback-encoder:6.4")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
 
     //hibernate
     implementation("org.hibernate:hibernate-core:${hibernateVersion}")
