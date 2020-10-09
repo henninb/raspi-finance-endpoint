@@ -79,4 +79,4 @@ $ curl localhost:8080/account/select/active
 3.7	18.06.0+
 
 ## dependency checker
-./gradlew dependencyUpdates
+./gradlew dependencyUpdates -Drevision=release
