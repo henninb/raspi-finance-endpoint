@@ -11,7 +11,7 @@ plugins {
     id 'jacoco'
     id "org.springframework.boot" version "2.3.4.RELEASE"
     id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id "org.flywaydb.flyway" version "6.5.7"
+    id "org.flywaydb.flyway" version "7.0.1"
     id "com.github.ben-manes.versions" version "0.33.0"
 }
 
@@ -25,7 +25,7 @@ ext['activemqVersion'] = '5.16.0'
 ext['jolokiaVersion'] = '1.6.2'
 ext['postgresqlVersion'] = '42.2.16'
 ext['kafkaVersion'] = '2.5.0'
-ext['hibernateVersion'] = '5.4.21.Final'
+ext['hibernateVersion'] = '5.4.22.Final'
 ext['h2Version'] = '1.4.200'
 ext['clojureVersion'] = '1.10.1'
 ext['scalaVersion'] = '2.13.3'
@@ -52,7 +52,7 @@ ext['jdbcTemplateVersion'] = '5.2.2.RELEASE'
 ext['testContainersVersion'] = '1.14.3'
 ext['httpBuilderVersion'] = '1.0.4'
 ext['randomBeanVersion'] = '3.7.0'
-ext['hibernateJpaVersion'] = '1.0.0.Final'
+ext['hibernateJpaVersion'] = '1.0.2'
 ext['jacksonVersion'] = '2.11.3'
 ext['micrometerInfluxVersion'] = '1.5.5'
 ext['validationVersion'] = '2.0.1.Final'
