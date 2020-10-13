@@ -16,45 +16,43 @@ CREATE TABLE IF NOT EXISTS t_account
     totals             DECIMAL(12, 2)       DEFAULT 0.0,
     totals_balanced    DECIMAL(12, 2)       DEFAULT 0.0,
     date_closed        TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
-    date_updated       TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
-    date_added         TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
+    date_updated       TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added         TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT unique_account_name_owner_account_id UNIQUE (account_id, account_name_owner, account_type),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
-CREATE OR REPLACE FUNCTION fn_upd_ts_account() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION fn_update_timestamp_account() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    RAISE NOTICE 'fn_upd_ts_account';
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE PLPGSQL;
 
-DROP TRIGGER IF EXISTS tr_upd_ts_account ON t_account;
-CREATE TRIGGER tr_upd_ts_account
+DROP TRIGGER IF EXISTS tr_update_timestamp_account ON t_account;
+CREATE TRIGGER tr_update_timestamp_account
     BEFORE UPDATE
     ON t_account
     FOR EACH ROW
-EXECUTE PROCEDURE fn_upd_ts_account();
+EXECUTE PROCEDURE fn_update_timestamp_account();
 
-CREATE OR REPLACE FUNCTION fn_ins_ts_account() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION fn_insert_timestamp_account() RETURNS TRIGGER AS
 $$
 BEGIN
-    RAISE NOTICE 'fn_ins_ts_account';
     NEW.date_added := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE PLPGSQL;
 
-DROP TRIGGER IF EXISTS tr_ins_ts_account ON t_account;
-CREATE TRIGGER tr_ins_ts_account
+DROP TRIGGER IF EXISTS tr_insert_timestamp_account ON t_account;
+CREATE TRIGGER tr_insert_timestamp_account
     BEFORE INSERT
     ON t_account
     FOR EACH ROW
-EXECUTE PROCEDURE fn_ins_ts_account();
+EXECUTE PROCEDURE fn_insert_timestamp_account();
 
 --------------
 -- Category --
@@ -69,10 +67,42 @@ CREATE TABLE IF NOT EXISTS t_category
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
+CREATE OR REPLACE FUNCTION fn_insert_timestamp_category() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_added := CURRENT_TIMESTAMP;
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_timestamp_category ON t_category;
+CREATE TRIGGER tr_insert_timestamp_category
+    BEFORE INSERT
+    ON t_category
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_insert_timestamp_category();
+
+CREATE OR REPLACE FUNCTION fn_update_timestamp_category() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_update_timestamp_category ON t_category;
+CREATE TRIGGER tr_update_timestamp_category
+    BEFORE UPDATE
+    ON t_category
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_update_timestamp_category();
+
 ---------------------------
 -- TransactionCategories --
 ---------------------------
-
 CREATE TABLE IF NOT EXISTS t_transaction_categories
 (
     category_id    BIGINT    NOT NULL,
@@ -115,25 +145,24 @@ CREATE TABLE IF NOT EXISTS t_transaction
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE
 );
 
-CREATE OR REPLACE FUNCTION fn_ins_ts_transaction() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    --TODO: add logic to insert account
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE PLPGSQL;
 
-DROP TRIGGER IF EXISTS tr_ins_ts_transactions ON t_transaction;
-CREATE TRIGGER tr_ins_ts_transactions
+DROP TRIGGER IF EXISTS tr_insert_timestamp_transaction ON t_transaction;
+CREATE TRIGGER tr_insert_timestamp_transaction
     BEFORE INSERT
     ON t_transaction
     FOR EACH ROW
-EXECUTE PROCEDURE fn_ins_ts_transaction();
+EXECUTE PROCEDURE fn_insert_timestamp_transaction();
 
-CREATE OR REPLACE FUNCTION fn_upd_ts_transaction() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION fn_update_timestamp_transaction() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
@@ -142,12 +171,12 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
-DROP TRIGGER IF EXISTS tr_upd_ts_transactions ON t_transaction;
-CREATE TRIGGER tr_upd_ts_transactions
+DROP TRIGGER IF EXISTS tr_update_timestamp_transaction ON t_transaction;
+CREATE TRIGGER tr_update_timestamp_transaction
     BEFORE UPDATE
     ON t_transaction
     FOR EACH ROW
-EXECUTE PROCEDURE fn_upd_ts_transaction();
+EXECUTE PROCEDURE fn_update_timestamp_transaction();
 
 -------------
 -- Payment --
@@ -160,12 +189,45 @@ CREATE TABLE IF NOT EXISTS t_payment
     amount             DECIMAL(12, 2) NOT NULL DEFAULT 0.0,
     guid_source        TEXT           NOT NULL,
     guid_destination   TEXT           NOT NULL,
-    date_updated       TIMESTAMP               DEFAULT TO_TIMESTAMP(0),
-    date_added         TIMESTAMP               DEFAULT TO_TIMESTAMP(0),
+    date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
     CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid),
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
 );
+
+CREATE OR REPLACE FUNCTION fn_insert_timestamp_payment() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_added := CURRENT_TIMESTAMP;
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_timestamp_payment ON t_payment;
+CREATE TRIGGER tr_insert_timestamp_payment
+    BEFORE INSERT
+    ON t_payment
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_insert_timestamp_payment();
+
+CREATE OR REPLACE FUNCTION fn_update_timestamp_payment() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_update_timestamp_payment ON t_payment;
+CREATE TRIGGER tr_update_timestamp_payment
+    BEFORE UPDATE
+    ON t_payment
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_update_timestamp_payment();
 
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;
