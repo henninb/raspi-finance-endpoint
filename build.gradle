@@ -56,7 +56,9 @@ ext['hibernateJpaVersion'] = '1.0.2'
 ext['jacksonVersion'] = '2.11.3'
 ext['micrometerInfluxVersion'] = '1.5.5'
 ext['validationVersion'] = '2.0.1.Final'
-ext['flywayVersion'] = '6.5.7'
+// https://stackoverflow.com/questions/64173564/failed-to-ugrade-a-spring-boot-app-to-flyway-7-0-0
+//ext['flywayVersion'] = '6.5.7'
+ext['flywayVersion'] = '7.0.1'
 ext['logstashLogbackVersion'] = '6.4'
 
 ext['groovy.version'] = '${gradleVersion}'
