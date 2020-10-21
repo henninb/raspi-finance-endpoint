@@ -11,19 +11,19 @@ plugins {
     id 'jacoco'
     id "org.springframework.boot" version "2.3.4.RELEASE"
     id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id "org.flywaydb.flyway" version "7.0.3"
+    id "org.flywaydb.flyway" version "7.0.4"
     id "com.github.ben-manes.versions" version "0.33.0"
 }
 
 ext['springBootVersion'] = '2.3.4.RELEASE'
-ext['apacheCamelVersion'] = '3.5.0'
+ext['apacheCamelVersion'] = '3.6.0'
 ext['kotlinVersion'] = '1.4.10'
 ext['groovyVersion'] = '3.0.6'
 ext['qualityPluginVersion'] = '3.0.0'
 ext['codenarcPluginVersion'] = '0.20.0'
 ext['activemqVersion'] = '5.16.0'
 ext['jolokiaVersion'] = '1.6.2'
-ext['postgresqlVersion'] = '42.2.17'
+ext['postgresqlVersion'] = '42.2.18'
 ext['kafkaVersion'] = '2.5.0'
 ext['hibernateVersion'] = '5.4.22.Final'
 ext['h2Version'] = '1.4.200'
@@ -58,7 +58,7 @@ ext['micrometerInfluxVersion'] = '1.5.5'
 ext['validationVersion'] = '2.0.1.Final'
 // https://stackoverflow.com/questions/64173564/failed-to-ugrade-a-spring-boot-app-to-flyway-7-0-0
 //ext['flywayVersion'] = '6.5.7'
-ext['flywayVersion'] = '7.0.3'
+ext['flywayVersion'] = '7.0.4'
 ext['logstashLogbackVersion'] = '6.4'
 
 ext['groovy.version'] = '${gradleVersion}'
