@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS t_account
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
+-- ALTER TABLE t_account ALTER COLUMN date_updated SET NOT NULL;
+-- ALTER TABLE t_account ALTER COLUMN date_added SET NOT NULL;
+
 CREATE OR REPLACE FUNCTION fn_update_timestamp_account() RETURNS TRIGGER AS
 $$
 DECLARE
@@ -66,6 +69,9 @@ CREATE TABLE IF NOT EXISTS t_category
     date_added    TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
+
+-- ALTER TABLE t_category ADD COLUMN date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
+-- ALTER TABLE t_category ADD COLUMN date_added       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_category() RETURNS TRIGGER AS
 $$
@@ -195,6 +201,9 @@ CREATE TABLE IF NOT EXISTS t_payment
     CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid),
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
 );
+
+-- ALTER TABLE t_payment ADD COLUMN date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
+-- ALTER TABLE t_payment ADD COLUMN date_added       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_payment() RETURNS TRIGGER AS
 $$

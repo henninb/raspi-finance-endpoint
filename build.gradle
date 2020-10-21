@@ -57,9 +57,10 @@ ext['jacksonVersion'] = '2.11.3'
 ext['micrometerInfluxVersion'] = '1.5.5'
 ext['validationVersion'] = '2.0.1.Final'
 // https://stackoverflow.com/questions/64173564/failed-to-ugrade-a-spring-boot-app-to-flyway-7-0-0
-//ext['flywayVersion'] = '6.5.7'
 ext['flywayVersion'] = '7.0.4'
 ext['logstashLogbackVersion'] = '6.4'
+ext['retrofitVersion'] = '2.9.0'
+
 
 ext['groovy.version'] = '${gradleVersion}'
 
@@ -142,6 +143,9 @@ dependencies {
     //Validation
     implementation("javax.validation:validation-api:${validationVersion}")
     //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
+
+    //rest client
+    implementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
 
     //log
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
