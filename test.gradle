@@ -46,6 +46,7 @@ dependencies {
     testImplementation("org.spockframework:spock-spring:${spockVersion}")
     testImplementation("org.testcontainers:spock:${testContainersVersion}")
     testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
+    testImplementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
 }
 
 //provide dependency scopes
