@@ -197,9 +197,6 @@ CREATE TABLE IF NOT EXISTS t_payment
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
 );
 
--- ALTER TABLE t_payment ADD COLUMN date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
--- ALTER TABLE t_payment ADD COLUMN date_added       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
-
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_payment() RETURNS TRIGGER AS
 $$
 DECLARE
@@ -232,6 +229,54 @@ CREATE TRIGGER tr_update_timestamp_payment
     ON t_payment
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_timestamp_payment();
+
+
+-------------
+-- Parm --
+-------------
+CREATE TABLE IF NOT EXISTS t_parm
+(
+    parm_id      BIGSERIAL PRIMARY KEY,
+    parm_name    TEXT      NOT NULL,
+    parm_value   TEXT      NOT NULL,
+    date_updated TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0)
+);
+
+CREATE OR REPLACE FUNCTION fn_insert_timestamp_parm() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_added := CURRENT_TIMESTAMP;
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_timestamp_parm ON t_parm;
+CREATE TRIGGER tr_insert_timestamp_parm
+    BEFORE INSERT
+    ON t_parm
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_insert_timestamp_parm();
+
+CREATE OR REPLACE FUNCTION fn_update_timestamp_parm() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_update_timestamp_parm ON t_parm;
+CREATE TRIGGER tr_update_timestamp_parm
+    BEFORE UPDATE
+    ON t_parm
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_update_timestamp_parm();
+
+--insert into t_parm(parm_name, parm_value) VALUES('payment_account', '');
 
 COMMIT;
 -- check for locks
