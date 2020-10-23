@@ -23,9 +23,6 @@ CREATE TABLE IF NOT EXISTS t_account
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
--- ALTER TABLE t_account ALTER COLUMN date_updated SET NOT NULL;
--- ALTER TABLE t_account ALTER COLUMN date_added SET NOT NULL;
-
 CREATE OR REPLACE FUNCTION fn_update_timestamp_account() RETURNS TRIGGER AS
 $$
 DECLARE
@@ -69,9 +66,6 @@ CREATE TABLE IF NOT EXISTS t_category
     date_added    TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
-
--- ALTER TABLE t_category ADD COLUMN date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
--- ALTER TABLE t_category ADD COLUMN date_added       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0);
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_category() RETURNS TRIGGER AS
 $$
@@ -148,7 +142,8 @@ CREATE TABLE IF NOT EXISTS t_transaction
     --CONSTRAINT fk_category_id_transaction_id FOREIGN KEY(transaction_id) REFERENCES t_transaction_categories(category_id, transaction_id) ON DELETE CASCADE,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
-    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE
+    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
 );
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
@@ -238,5 +233,6 @@ CREATE TRIGGER tr_update_timestamp_payment
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_timestamp_payment();
 
+COMMIT;
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;

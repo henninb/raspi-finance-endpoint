@@ -69,7 +69,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
         if (updateStatus) {
-            return ResponseEntity.ok("transaction patched")
+            return ResponseEntity.ok("transaction put")
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
