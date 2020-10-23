@@ -220,6 +220,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             val fromDb = optionalTransaction.get()
             if (fromDb.guid == transaction.guid) {
                 logger.info("successful patch $transaction")
+                processCategory(transaction)
                 transactionRepository.saveAndFlush(transaction)
             } else {
                 logger.warn("GUID did not match any database records.")
