@@ -24,8 +24,8 @@ class CategoryController(private var categoryService: CategoryService) {
     fun selectAllActiveCategories(): ResponseEntity<List<Category>> {
         val categories: List<Category> = categoryService.fetchAllCategories()
         if (categories.isEmpty()) {
-            logger.info("no accounts found.")
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accounts.")
+            logger.info("no category found.")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any categories.")
         }
         logger.info("select active categories: ${categories.size}")
         return ResponseEntity.ok(categories)
