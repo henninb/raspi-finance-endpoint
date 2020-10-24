@@ -6,6 +6,7 @@ import java.sql.Date
 
 class PaymentBuilder {
 
+    Long paymentId = 1
     String accountNameOwner = "foo_brian"
     BigDecimal amount = new BigDecimal(0.0)
     Date transactionDate = new Date(1553645394)
@@ -16,10 +17,10 @@ class PaymentBuilder {
 
     Payment build() {
         Payment payment = new Payment()
+        payment.paymentId = paymentId
         payment.accountNameOwner = accountNameOwner
         payment.amount = amount
         payment.transactionDate = transactionDate
-
 
         return payment
     }
@@ -36,6 +37,11 @@ class PaymentBuilder {
 
     PaymentBuilder transactionDate(transactionDate) {
         this.transactionDate = transactionDate
+        return this
+    }
+
+    PaymentBuilder paymentId(paymentId) {
+        this.paymentId = paymentId
         return this
     }
 }

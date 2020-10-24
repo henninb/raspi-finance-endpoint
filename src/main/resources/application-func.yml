@@ -19,15 +19,15 @@ spring:
   # = DATA SOURCE
   # ===============================
   datasource:
-    url: jdbc:h2:mem:finance_db;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://192.168.100.124:5432/finance_test_db
+    username: henninb
+    password: monday1
+    driver-class-name: org.postgresql.Driver
     # testWhileIdle to persist the connection when idle for a long period of time
     tomcat:
       validation-query: SELECT 1
       test-while-idle: true
-    platform: h2
+    platform: postgresql
     continue-on-error: false
     # always if you want to utilize data.sql and schema.sql
     # never Do not initialize the datasource
@@ -56,8 +56,17 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+
+  # ===============================
+  # = Flyway
+  # ===============================
   flyway:
-    enabled: false
+    enabled: true
+    user: henninb
+    password: monday1
+    url: jdbc:postgresql://192.168.100.124:5432/finance_test_db
+    baseline-on-migrate: true
+    locations: classpath:db/migration
 
 # ===============================
 # = Logging
