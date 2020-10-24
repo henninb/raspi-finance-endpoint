@@ -7,8 +7,10 @@ import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.lang.RuntimeException
 import java.math.BigDecimal
 import java.util.*
+import kotlin.jvm.Throws
 
 @Service
 class PaymentService(private var paymentRepository: PaymentRepository, private var transactionService: TransactionService, private var parmService: ParmService) {
@@ -34,6 +36,9 @@ class PaymentService(private var paymentRepository: PaymentRepository, private v
         return true
     }
 
+    //TODO: 10/24/2020 - not sure if Throws annotation helps here?
+    //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
+    @Throws
     private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) {
         val optionalParm = parmService.findByParm("payment_account")
         if ( optionalParm.isPresent) {
@@ -53,8 +58,7 @@ class PaymentService(private var paymentRepository: PaymentRepository, private v
             transactionDebit.accountNameOwner = optionalParm.get().parmValue
             //return true
         } else {
-            logger.error("failed to read the parm 'payment_account'.")
-            //return false
+            throw RuntimeException("failed to read the parm 'payment_account'.")
         }
     }
 

@@ -37,8 +37,6 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-
-
 dependencies {
     //testing modules
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
@@ -47,6 +45,8 @@ dependencies {
     testImplementation("org.testcontainers:spock:${testContainersVersion}")
     testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
     testImplementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
+    //testImplementation("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.0")
 }
 
 //provide dependency scopes
