@@ -17,7 +17,7 @@ import javax.validation.ConstraintViolationException
 @RequestMapping("/parm")
 class ParmController(private var parmService: ParmService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
-    
+
     //https://hornsup:8080/parm/select/payment_account
     @GetMapping(path = ["/select/{parmName}"], produces = ["application/json"])
     fun selectParm(@PathVariable parmName: String): ResponseEntity<Parm> {
