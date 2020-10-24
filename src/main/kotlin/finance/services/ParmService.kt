@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class ParmService(private var parmRepository: ParmRepository) {
+open class ParmService(private var parmRepository: ParmRepository) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertParm(parm: Parm): Boolean {

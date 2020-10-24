@@ -11,7 +11,7 @@ import java.math.BigDecimal
 import java.util.*
 
 @Service
-class PaymentService(private var paymentRepository: PaymentRepository, private var transactionService: TransactionService) {
+class PaymentService(private var paymentRepository: PaymentRepository, private var transactionService: TransactionService, private var parmService: ParmService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findAllPayments(): List<Payment> {
@@ -35,20 +35,27 @@ class PaymentService(private var paymentRepository: PaymentRepository, private v
     }
 
     private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) {
-        transactionDebit.guid = UUID.randomUUID().toString()
-        transactionDebit.transactionDate = payment.transactionDate
-        transactionDebit.description = "payment"
-        transactionDebit.category = "bill_pay"
-        transactionDebit.notes = "to ${payment.accountNameOwner}"
-        if (payment.amount > BigDecimal(0.0)) {
-            transactionDebit.amount = payment.amount * BigDecimal(-1.0)
+        val optionalParm = parmService.findByParm("payment_account")
+        if ( optionalParm.isPresent) {
+            transactionDebit.guid = UUID.randomUUID().toString()
+            transactionDebit.transactionDate = payment.transactionDate
+            transactionDebit.description = "payment"
+            transactionDebit.category = "bill_pay"
+            transactionDebit.notes = "to ${payment.accountNameOwner}"
+            if (payment.amount > BigDecimal(0.0)) {
+                transactionDebit.amount = payment.amount * BigDecimal(-1.0)
+            } else {
+                transactionDebit.amount = payment.amount
+            }
+            transactionDebit.transactionState = TransactionState.Outstanding
+            transactionDebit.accountType = AccountType.Debit
+            transactionDebit.reoccurring = false
+            transactionDebit.accountNameOwner = optionalParm.get().parmValue
+            //return true
         } else {
-            transactionDebit.amount = payment.amount
+            logger.error("failed to read the parm 'payment_account'.")
+            //return false
         }
-        transactionDebit.transactionState = TransactionState.Outstanding
-        transactionDebit.accountType = AccountType.Debit
-        transactionDebit.reoccurring = false
-        transactionDebit.accountNameOwner = "bcu-checking_brian"
     }
 
     private fun populateCreditTransaction(transactionCredit: Transaction, payment: Payment) {
