@@ -135,7 +135,8 @@ CREATE TABLE IF NOT EXISTS t_transaction
     notes              TEXT           NOT NULL DEFAULT '',
     date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount, notes),
+    CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
+                                              notes),
     CONSTRAINT t_transaction_description_lowercase_ck CHECK (description = lower(description)),
     CONSTRAINT t_transaction_category_lowercase_ck CHECK (category = lower(category)),
     CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
@@ -237,10 +238,10 @@ EXECUTE PROCEDURE fn_update_timestamp_payment();
 CREATE TABLE IF NOT EXISTS t_parm
 (
     parm_id      BIGSERIAL PRIMARY KEY,
-    parm_name    TEXT   UNIQUE   NOT NULL,
-    parm_value   TEXT      NOT NULL,
-    date_updated TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0)
+    parm_name    TEXT UNIQUE NOT NULL,
+    parm_value   TEXT        NOT NULL,
+    date_updated TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_parm() RETURNS TRIGGER AS
@@ -277,6 +278,50 @@ CREATE TRIGGER tr_update_timestamp_parm
 EXECUTE PROCEDURE fn_update_timestamp_parm();
 
 --insert into t_parm(parm_name, parm_value) VALUES('payment_account', '');
+
+-----------------
+-- description --
+-----------------
+CREATE TABLE IF NOT EXISTS t_description
+(
+    description_id BIGSERIAL PRIMARY KEY,
+    description    TEXT UNIQUE NOT NULL,
+    date_updated        TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added          TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
+);
+
+CREATE OR REPLACE FUNCTION fn_insert_timestamp_description() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_added := CURRENT_TIMESTAMP;
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_timestamp_description ON t_description;
+CREATE TRIGGER tr_insert_timestamp_description
+    BEFORE INSERT
+    ON t_description
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_insert_timestamp_description();
+
+CREATE OR REPLACE FUNCTION fn_update_timestamp_description() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_update_timestamp_description ON t_description;
+CREATE TRIGGER tr_update_timestamp_description
+    BEFORE UPDATE
+    ON t_description
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_update_timestamp_description();
 
 COMMIT;
 -- check for locks
