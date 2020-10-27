@@ -11,7 +11,7 @@ open class ParmService(private var parmRepository: ParmRepository) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertParm(parm: Parm): Boolean {
-        parmRepository.save(parm)
+        parmRepository.saveAndFlush(parm)
         return true
     }
 
