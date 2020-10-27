@@ -11,7 +11,7 @@ plugins {
     id 'jacoco'
     id "org.springframework.boot" version "2.3.4.RELEASE"
     id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id "org.flywaydb.flyway" version "7.0.4"
+    id "org.flywaydb.flyway" version "7.1.0"
     id "com.github.ben-manes.versions" version "0.33.0"
 }
 
@@ -57,7 +57,7 @@ ext['jacksonVersion'] = '2.11.3'
 ext['micrometerInfluxVersion'] = '1.5.5'
 ext['validationVersion'] = '2.0.1.Final'
 // https://stackoverflow.com/questions/64173564/failed-to-ugrade-a-spring-boot-app-to-flyway-7-0-0
-ext['flywayVersion'] = '7.0.4'
+ext['flywayVersion'] = '7.1.0'
 ext['logstashLogbackVersion'] = '6.4'
 ext['retrofitVersion'] = '2.9.0'
 
@@ -72,6 +72,12 @@ repositories {
     google()
     flatDir {
         dirs "libs"
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
     }
 }
 
@@ -114,6 +120,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
 
     //Jackson
     implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
