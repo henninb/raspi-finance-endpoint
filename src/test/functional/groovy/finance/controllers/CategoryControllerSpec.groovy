@@ -3,7 +3,6 @@ package finance.controllers
 import finance.Application
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
-import finance.services.CategoryApiService
 import finance.services.CategoryService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,7 +37,7 @@ class CategoryControllerSpec extends Specification {
     }
 
 //    def "my test "() {
-//        CategoryApiService apiEndpoints = RetrofitHelper.getTesterInstance().create(CategoryApiService.class);
+//        ParmApiService apiEndpoints = RetrofitHelper.getTesterInstance().create(ParmApiService.class);
 //    }
 
     def createURLWithPort(String uri) {
