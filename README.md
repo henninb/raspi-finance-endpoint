@@ -81,3 +81,6 @@ $ curl localhost:8080/account/select/active
 
 ## dependency checker
 ./gradlew dependencyUpdates -Drevision=release
+
+## retrofit example
+https://github.com/jeyrschabu/retrofit-samples
