@@ -1,7 +1,7 @@
 package finance.controllers
 
-import finance.domain.Parm
-import finance.services.ParmService
+import finance.domain.Description
+import finance.services.DescriptionService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,32 +14,29 @@ import javax.validation.ConstraintViolationException
 
 @CrossOrigin
 @RestController
-@RequestMapping("/parm")
-class ParmController(private var parmService: ParmService) {
+@RequestMapping("/description")
+class DescriptionController(private var descriptionService: DescriptionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    //https://hornsup:8080/parm/select/payment_account
-    @GetMapping(path = ["/select/{parmName}"], produces = ["application/json"])
-    fun selectParm(@PathVariable parmName: String): ResponseEntity<Parm> {
-        val parmOptional: Optional<Parm> = parmService.findByParm(parmName)
-        if (!parmOptional.isPresent) {
-            logger.info("no parm found.")
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find the parm.")
-        }
-        return ResponseEntity.ok(parmOptional.get())
+    //https://hornsup:8080/description/select/all
+    @GetMapping(path = ["/select/all"], produces = ["application/json"])
+    fun selectDescription(): ResponseEntity<List<Description>> {
+        val descriptions  = descriptionService.fetchAllDescriptions()
+
+        return ResponseEntity.ok(descriptions)
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8080/parm/insert
+    //curl --header "Content-Type: application/json" -X POST -d '{"description":"test"}' http://localhost:8080/description/insert
     @PostMapping(path = ["/insert"], produces = ["application/json"])
-    fun insertParm(@RequestBody parm: Parm): ResponseEntity<String> {
-        parmService.insertParm(parm)
-        logger.info("insertParm")
-        return ResponseEntity.ok("parm inserted")
+    fun insertDescription(@RequestBody description: Description): ResponseEntity<String> {
+        descriptionService.insertDescription(description)
+        logger.info("insertDescription")
+        return ResponseEntity.ok("description inserted")
     }
 
-    @DeleteMapping(path = ["/delete/{parmName}"], produces = ["application/json"])
-    fun deleteByParmName(@PathVariable parmName: String): ResponseEntity<String> {
-        parmService.deleteByParmName(parmName)
+    @DeleteMapping(path = ["/delete/{description}"], produces = ["application/json"])
+    fun deleteByDescription(@PathVariable description: String): ResponseEntity<String> {
+        descriptionService.deleteByDescription(description)
         return ResponseEntity.ok("payment deleted")
     }
 
