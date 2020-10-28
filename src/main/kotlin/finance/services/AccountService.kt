@@ -29,6 +29,10 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accounts
     }
 
+    fun findAccountsThatRequirePayment() : List<String> {
+        return accountRepository.findAccountsThatRequirePayment()
+    }
+
     fun computeTheGrandTotalForAllTransactions(): Double {
         val totals: Double
         try {
