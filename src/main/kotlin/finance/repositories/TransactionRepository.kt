@@ -11,7 +11,7 @@ import java.util.*
 
 interface TransactionRepository : JpaRepository<Transaction, Long> {
 
-    fun findTOPByGuid(guid: String): Optional<Transaction>
+    //fun findTOPByGuid(guid: String): Optional<Transaction>
     fun findByGuid(guid: String): Optional<Transaction>
 
     @Modifying

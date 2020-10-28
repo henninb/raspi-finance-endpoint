@@ -33,6 +33,19 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return response
     }
 
+    //curl --header "Content-Type: application/json" https://hornsup:8080/account/payment/required
+    @GetMapping(path = ["/payment/required"], produces = ["application/json"])
+    fun selectPaymentRequired(): ResponseEntity<List<String>> {
+
+        val accountNameOwners = accountService.findAccountsThatRequirePayment()
+        if (accountNameOwners.isEmpty()) {
+            logger.info("no accountNameOwners found.")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accountNameOwners.")
+        }
+        return ResponseEntity.ok(accountNameOwners)
+    }
+
+
     //http://localhost:8080/account/select/active
     @GetMapping(path = ["/select/active"], produces = ["application/json"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
