@@ -25,7 +25,7 @@ class ParmControllerSpec extends Specification {
 
         BehaviorDelegate<ParmApiService> delegate
         MockParmService(BehaviorDelegate<ParmApiService> delegate) {
-            this.delegate = delegate;
+            this.delegate = delegate
         }
 
         @Override
@@ -34,18 +34,16 @@ class ParmControllerSpec extends Specification {
         }
     }
 
+    def setup() {
+
+    }
     def setupSpec() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL).build()
-
-        def mockRetrofit = new MockRetrofit.Builder(retrofit)
-                .networkBehavior(behavior).build()
-
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL).build()
+        MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build()
         BehaviorDelegate<ParmApiService> delegate = mockRetrofit.create(ParmApiService)
 
-        mockParmService = new MockParmService(delegate);
+        mockParmService = new MockParmService(delegate)
     }
-
 
     def "should succeed" () {
         given:
@@ -57,7 +55,7 @@ class ParmControllerSpec extends Specification {
 
     def "should fail on 500" () {
         given:
-        behavior.setFailurePercent(100);
+        behavior.setFailurePercent(100)
 
         when:
         mockParmService.selectParm('test').execute()

@@ -30,7 +30,6 @@ class TransactionServiceSpec extends Specification {
         then:
         isDeleted
         1 * mockTransactionRepository.deleteByGuid(guid)
-        //1 * mockTransactionRepository.deleteByIdFromTransactionCategories(transaction.transactionId)
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
@@ -64,8 +63,6 @@ class TransactionServiceSpec extends Specification {
     def "test transactionService - findByGuid - duplicates returned"() {
         given:
         def guid = "123"
-        Transaction transaction = new Transaction()
-        Optional<Transaction> transactionOptional = Optional.of(transaction)
 
         when:
         transactionService.findTransactionByGuid(guid)
@@ -183,9 +180,7 @@ class TransactionServiceSpec extends Specification {
         def guid = "123"
         Transaction transaction = new Transaction()
         Account account = new Account()
-        Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
-        //Optional<Category> categoryOptional = Optional.of(category)
         when:
         transaction.guid = guid
         transaction.accountNameOwner = accountName

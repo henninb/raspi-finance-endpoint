@@ -17,6 +17,10 @@ class AccountServiceSpec extends Specification {
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     private ObjectMapper mapper = new ObjectMapper()
 
+    def setupSpec() {
+
+    }
+
     def "test findAllActiveAccounts empty"() {
         given:
         Account account = AccountBuilder.builder().build()

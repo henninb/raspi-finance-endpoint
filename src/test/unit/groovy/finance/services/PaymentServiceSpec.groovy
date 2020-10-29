@@ -1,6 +1,5 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parm
 import finance.domain.Payment
 import finance.helpers.PaymentBuilder
@@ -15,7 +14,7 @@ class PaymentServiceSpec extends Specification {
     TransactionService mockTransactionService = Mock(TransactionService)
     ParmService mockParmService = new ParmService(mockParmRepository)
     PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParmService)
-    private ObjectMapper mapper = new ObjectMapper()
+    //private ObjectMapper mapper = new ObjectMapper()
 
     def "test findAll payments empty"() {
         given:
