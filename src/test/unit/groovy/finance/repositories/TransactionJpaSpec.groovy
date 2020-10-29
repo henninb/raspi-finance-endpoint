@@ -163,7 +163,7 @@ class TransactionJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('must be less than or equal to 1')
+        ex.getMessage().contains('will not have this message')
         0 * _
     }
 

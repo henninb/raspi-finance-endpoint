@@ -3,6 +3,8 @@ sourceSets {
         groovy.srcDir "src/test/unit/groovy"
         java.srcDir "src/test/unit/java"
         resources.srcDir "src/main/resources"
+
+
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
@@ -11,6 +13,7 @@ sourceSets {
         groovy.srcDir "src/test/integration/groovy"
         java.srcDir "src/test/integration/java"
         resources.srcDir "src/main/resources"
+
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
@@ -32,13 +35,24 @@ sourceSets {
     }
 }
 
+//provide dependency scopes
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntime.extendsFrom testRuntime
+    functionalTestImplementation.extendsFrom testImplementation
+    functionalTestRuntime.extendsFrom testRuntime
+    performanceTestImplementation.extendsFrom testImplementation
+    performanceRuntime.extendsFrom testRuntime
+}
+
 compileTestKotlin {
     //kotlinOptions.jvmTarget = "11"
     kotlinOptions.jvmTarget = "1.8"
 }
 
 dependencies {
-    //testing modules
+
+    testImplementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
     testImplementation("org.spockframework:spock-core:${spockVersion}")
     testImplementation("org.spockframework:spock-spring:${spockVersion}")
@@ -47,7 +61,7 @@ dependencies {
     testImplementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
     testImplementation("com.squareup.retrofit2:retrofit-mock:${retrofitVersion}")
     //testImplementation("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+    //testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.0")
 }
 
 //provide dependency scopes
@@ -76,20 +90,20 @@ tasks.withType(Test) {
 
 task integrationTest(type: Test) {
     description = "Runs the integration tests."
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
+    testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
+    classpath = project.sourceSets.integrationTest.runtimeClasspath
 }
 
 task functionalTest(type: Test) {
     description = "Runs the functional tests."
-    testClassesDirs = sourceSets.functionalTest.output.classesDirs
-    classpath = sourceSets.functionalTest.runtimeClasspath
+    testClassesDirs = project.sourceSets.functionalTest.output.classesDirs
+    classpath = project.sourceSets.functionalTest.runtimeClasspath
 }
 
 task performanceTest(type: Test) {
     description = "Runs the performance tests."
-    testClassesDirs = sourceSets.performanceTest.output.classesDirs
-    classpath = sourceSets.performanceTest.runtimeClasspath
+    testClassesDirs = project.sourceSets.performanceTest.output.classesDirs
+    classpath = project.sourceSets.performanceTest.runtimeClasspath
 }
 
 integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
