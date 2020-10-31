@@ -106,8 +106,8 @@ management:
         db: metrics-test
         compressed: false
         uri: http://hornsup:8086
-        user-name: henninb
-        password: monday1
+        user-name: admin
+        password:
   endpoints:
     web:
       exposure:
