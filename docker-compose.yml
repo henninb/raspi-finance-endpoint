@@ -47,7 +47,7 @@ services:
     env_file:
       - env.postgresql
     volumes:
-      # - ./database-data:/var/lib/postgresql/data:z
+      # - ./docker-postgres-init.sql:/docker-entrypoint initdb.d/docker_postgres_init.sql
       - ./database-data:/var/lib/postgresql/data
 networks:
   default:
