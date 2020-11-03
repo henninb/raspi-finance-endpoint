@@ -57,7 +57,7 @@ spring:
   # = Flyway
   # ===============================
   flyway:
-    enabled: true
+    enabled: false
     user: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
     url: ${DATASOURCE}
