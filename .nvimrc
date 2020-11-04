@@ -2,5 +2,5 @@
 " colorscheme desert
 " colorscheme morning
 " colorscheme torte
-colorscheme evening
+"colorscheme evening
 
