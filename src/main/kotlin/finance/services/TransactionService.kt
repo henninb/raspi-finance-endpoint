@@ -188,22 +188,17 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     private fun retrieveTotals(accountNameOwner: String): Double {
         try {
             return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
-        } catch (e: EmptyResultDataAccessException) {
-            logger.warn("empty getTotalsByAccountNameOwner.")
+        } catch (e: Exception) {
+            logger.error("empty getTotalsByAccountNameOwner failed.")
         }
         return 0.00
     }
 
     private fun retrieveTotalsCleared(accountNameOwner: String): Double {
         try {
-            val optionalAmount = transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
-            return if (optionalAmount.isPresent ) {
-                optionalAmount.asDouble
-            } else {
-                0.0
-            }
-        } catch (e: EmptyResultDataAccessException) {
-            logger.warn("empty getTotalsByAccountNameOwnerCleared.")
+            return transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
+        } catch (e: Exception) {
+            logger.error("empty getTotalsByAccountNameOwnerCleared failed.")
         }
         return 0.00
     }

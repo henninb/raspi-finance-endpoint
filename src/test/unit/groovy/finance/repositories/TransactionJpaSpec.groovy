@@ -239,21 +239,23 @@ class TransactionJpaSpec extends Specification {
 
     def "test transaction repository - getTotalsByAccountNameOwner - empty"() {
         when:
-        transactionRepository.getTotalsByAccountNameOwner("some_account")
+        def result = transactionRepository.getTotalsByAccountNameOwner("some_account")
 
         then:
-        EmptyResultDataAccessException ex = thrown()
-        ex.getMessage().contains('Result must not be null!')
+        0.0 == result
+        //EmptyResultDataAccessException ex = thrown()
+        //ex.getMessage().contains('Result must not be null!')
         0 * _
     }
 
     def "test transaction repository - getTotalsByAccountNameOwnerCleared - empty"() {
         when:
-        transactionRepository.getTotalsByAccountNameOwnerTransactionState("some_account")
+        def result = transactionRepository.getTotalsByAccountNameOwnerTransactionState("some_account")
 
         then:
-        EmptyResultDataAccessException ex = thrown()
-        ex.getMessage().contains('Result must not be null!')
+        0.0 == result
+//        EmptyResultDataAccessException ex = thrown()
+//        ex.getMessage().contains('Result must not be null!')
         0 * _
     }
 
