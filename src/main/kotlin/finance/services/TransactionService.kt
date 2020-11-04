@@ -177,18 +177,35 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
-        var totalsCleared = 0.00
-        var totals = 0.00
-        try {
-            totalsCleared = transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
-            totals = transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
-        } catch (e: EmptyResultDataAccessException) {
-            logger.warn("empty getTotalsByAccountNameOwnerCleared and getTotalsByAccountNameOwner.")
-        }
+        val totalsCleared = retrieveTotalsCleared(accountNameOwner)
+        val totals = retrieveTotals(accountNameOwner)
 
         result["totals"] = BigDecimal(totals).setScale(2, RoundingMode.HALF_UP)
         result["totalsCleared"] = BigDecimal(totalsCleared).setScale(2, RoundingMode.HALF_UP)
         return result
+    }
+
+    private fun retrieveTotals(accountNameOwner: String): Double {
+        try {
+            return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
+        } catch (e: EmptyResultDataAccessException) {
+            logger.warn("empty getTotalsByAccountNameOwner.")
+        }
+        return 0.00
+    }
+
+    private fun retrieveTotalsCleared(accountNameOwner: String): Double {
+        try {
+            val optionalAmount = transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
+            return if (optionalAmount.isPresent ) {
+                optionalAmount.asDouble
+            } else {
+                0.0
+            }
+        } catch (e: EmptyResultDataAccessException) {
+            logger.warn("empty getTotalsByAccountNameOwnerCleared.")
+        }
+        return 0.00
     }
 
     @Timed

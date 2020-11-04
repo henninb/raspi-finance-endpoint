@@ -154,11 +154,11 @@ class TransactionJpaSpec extends Specification {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
-
-        when:
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.transactionState = TransactionState.Undefined
+
+        when:
         entityManager.persist(transaction)
 
         then:
@@ -171,11 +171,11 @@ class TransactionJpaSpec extends Specification {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
-
-        when:
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         transaction.guid = "123"
+
+        when:
         entityManager.persist(transaction)
 
         then:

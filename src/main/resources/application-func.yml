@@ -43,7 +43,7 @@ spring:
     cache: false
   h2:
     console:
-      enabled: true
+      enabled: false
       path: /h2-console
       settings:
         web-allow-others: true
