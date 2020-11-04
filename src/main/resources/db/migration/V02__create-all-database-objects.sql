@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     reoccurring        BOOLEAN        NOT NULL DEFAULT FALSE,
     active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     notes              TEXT           NOT NULL DEFAULT '',
+    receipt_image      BYTEA          NULL,
     date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
@@ -146,6 +147,8 @@ CREATE TABLE IF NOT EXISTS t_transaction
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
 );
+
+--ALTER TABLE t_transaction ADD COLUMN receipt_image BYTEA          NULL;
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
 $$

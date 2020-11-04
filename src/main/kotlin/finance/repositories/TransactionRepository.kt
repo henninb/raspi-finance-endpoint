@@ -28,7 +28,7 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     // Using SpEL expression
     @Query("SELECT SUM(amount) as totalsCleared FROM #{#entityName} WHERE transactionState = 'cleared' AND accountNameOwner=?1")
     //@Query(value = "SELECT SUM(amount) AS totals t_transaction WHERE cleared = 1 AND account_name_owner=?1", nativeQuery = true)
-    fun getTotalsByAccountNameOwnerTransactionState(accountNameOwner: String): Double
+    fun getTotalsByAccountNameOwnerTransactionState(accountNameOwner: String): OptionalDouble
 
     //@Transactional
     // Using SpEL expression
