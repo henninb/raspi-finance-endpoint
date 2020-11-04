@@ -9,7 +9,6 @@ import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
 import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.LowerCaseConverter
-import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -67,21 +66,11 @@ data class Account(
 
         @JsonProperty
         @Column(name = "date_closed")
-        var dateClosed: Timestamp,
-
-        @JsonProperty
-        @ValidTimestamp
-        @Column(name = "date_updated", nullable = false)
-        var dateUpdated: Timestamp,
-
-        @JsonProperty
-        @ValidTimestamp
-        @Column(name = "date_added", nullable = false)
-        var dateAdded: Timestamp) {
+        var dateClosed: Timestamp
+) {
 
     constructor() : this(0L, "", AccountType.Credit, true,
-            "0000", BigDecimal(0.0), BigDecimal(0.0), Timestamp(0),
-            Timestamp(System.currentTimeMillis()), Timestamp(System.currentTimeMillis()))
+            "0000", BigDecimal(0.0), BigDecimal(0.0), Timestamp(0))
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

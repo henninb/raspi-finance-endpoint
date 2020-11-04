@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.helpers.TransactionBuilder
 import spock.lang.Specification
@@ -57,7 +58,6 @@ class TransactionSpec extends Specification {
 
         when:
         def json = mapper.writeValueAsString(transactionFromString)
-        println json
 
         then:
         json.contains("4ea3be58-3993-46de-88a2-4ffc7f1d73bd")
@@ -65,13 +65,8 @@ class TransactionSpec extends Specification {
     }
 
     def "test JSON deserialize to Transaction domain object"() {
-
-        given:
-        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
         when:
-        println("transactionId='${transaction.transactionId}'")
-        println("guid='${transaction.guid}'")
-        println("accountType='${transaction.accountType}'")
+        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
 
         then:
         transaction.accountType == AccountType.Credit
@@ -79,6 +74,17 @@ class TransactionSpec extends Specification {
         transaction.transactionId == 0
         0 * _
     }
+
+    def "test JSON deserialize to Transaction domain object - bad"() {
+        when:
+        mapper.readValue('trash-payload', Transaction.class)
+
+        then:
+        JsonParseException ex = thrown()
+        ex.getMessage().contains('Unrecognized token')
+        0 * _
+    }
+
 
     def "test validation valid transaction"() {
         given:
@@ -113,9 +119,6 @@ class TransactionSpec extends Specification {
         Set<ConstraintViolation<Transaction>> violations = validator.validate(transaction)
 
         then:
-        println("message='${violations.message}'")
-        println("size='${violations.size()}'")
-
         violations.size() == errorCount
         violations.message.contains(expectedError)
         violations.iterator().next().getInvalidValue() == transaction.getProperties()[invalidField]

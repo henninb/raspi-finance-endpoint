@@ -9,14 +9,11 @@ import finance.helpers.TransactionBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Specification
 
 import javax.persistence.PersistenceException
 import javax.validation.ConstraintViolationException
-import java.sql.Timestamp
 
 @ActiveProfiles("unit")
 @DataJpaTest
@@ -51,32 +48,62 @@ class TransactionJpaSpec extends Specification {
 '''
 
     def "test Transaction to JSON - valid insert"() {
-
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
         Account account = new AccountBuilder().build()
         def accountResult = entityManager.persist(account)
         transactionFromString.accountId = accountResult.accountId
+
         when:
-        entityManager.persist(transactionFromString)
+        def result = entityManager.persist(transactionFromString)
+
         then:
         transactionRepository.count() == 1L
+        accountRepository.count() == 1L
+        result.guid == transactionFromString.guid
     }
 
-    @Ignore
     def "test Transaction to JSON - attempt to insert same record twice - different uuid"() {
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
-        Account account = new AccountBuilder().build()
-        def accountResult = entityManager.persist(account)
-        transactionFromString.accountId = accountResult.accountId
+        Account account = new AccountBuilder().builder().build()
+
+        def res = entityManager.persist(account)
+        transactionFromString.accountId = res.accountId
+        transactionFromString.accountNameOwner = res.accountNameOwner
         entityManager.persist(transactionFromString)
-        transactionFromString.guid = "4ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd"
+        def transactionFromString2 = mapper.readValue(jsonPayload, Transaction.class)
+        transactionFromString2.accountId = account.accountId
+        transactionFromString2.accountNameOwner = account.accountNameOwner
+        transactionFromString2.guid = '3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73b1'
 
         when:
-        entityManager.persist(transactionFromString)
+        entityManager.persist(transactionFromString2)
 
         then:
+        transactionRepository.count() == 2L
+    }
+
+    def "test Transaction to JSON - attempt to insert same record twice - different guid"() {
+        given:
+        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
+        transactionFromString.category = ''
+        Transaction transaction1 = TransactionBuilder.builder().build()
+        Account account = new AccountBuilder().accountNameOwner('trash_id').build()
+        def res = entityManager.persist(account)
+        transaction1.accountId = res.accountId
+        transaction1.accountNameOwner = res.accountNameOwner
+        transactionFromString.accountId = res.accountId
+        transactionFromString.accountNameOwner = res.accountNameOwner
+        def first = entityManager.persist(transactionFromString)
+        transaction1.guid = '3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd'
+
+        when:
+        def sec = entityManager.persist(transaction1)
+
+        then:
+        first.guid == transactionFromString.guid
+        sec.guid == transaction1.guid
         transactionRepository.count() == 2L
     }
 
@@ -84,35 +111,26 @@ class TransactionJpaSpec extends Specification {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
-        println "transaction = $transaction"
-        println "account = $account"
-
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
-        println "accountResult = $accountResult"
-        def transactionResult = entityManager.persist(transaction)
-        println "transactionResult = $transactionResult"
-        def foundTransactionOptional = transactionRepository.findByGuid(transaction.guid)
-        def categories = transactionRepository.selectFromTransactionCategories(foundTransactionOptional.get().transactionId)
-        println "categories = $categories"
-        //categories.get(0)
 
-        expect:
+        when:
+        def transactionResult = entityManager.persist(transaction)
+
+        then:
         transactionRepository.count() == 1L
         accountRepository.count() == 1L
-        foundTransactionOptional.get().guid == transaction.guid
-
-
-        //foundTransactionOptional.get().categories.size() == 1
+        transactionRepository.findByGuid(transaction.guid).get().guid == transaction.guid
+        transactionResult.guid == transaction.guid
     }
 
-    def "test transaction repository - insert 2 records with same guid - throws an exception."() {
+    def "test transaction repository - insert 2 records with duplicate guid - throws an exception."() {
         given:
         Transaction transaction1 = new TransactionBuilder().build()
         Transaction transaction2 = new TransactionBuilder().build()
-        transaction2.category = ""
-        transaction2.description = "my-description-data"
-        transaction2.notes = "my-notes"
+        transaction2.category = ''
+        transaction2.description = 'my-description-data'
+        transaction2.notes = 'my-notes'
 
         Account account = new Account()
         account.accountNameOwner = transaction1.accountNameOwner
@@ -125,45 +143,24 @@ class TransactionJpaSpec extends Specification {
         entityManager.persist(transaction2)
 
         then:
-        //JdbcSQLIntegrityConstraintViolationException ex = thrown()
         PersistenceException ex = thrown()
-        println 'ex.getMessage(): ' + ex.getMessage()
         ex.getMessage().contains('ConstraintViolationException: could not execute statement')
     }
-
 
     def "test transaction repository - attempt to insert a transaction with a category with too many characters"() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
-
-        when:
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
-        transaction.category = "123451234512345123451234512345123451234512345123451234512345"
+        transaction.category = '123451234512345123451234512345123451234512345123451234512345'
+
+        when:
         entityManager.persist(transaction)
 
         then:
         ConstraintViolationException ex = thrown()
         ex.getMessage().contains('size must be between 0 and 50')
-        0 * _
-    }
-
-    @Ignore
-    def "test transaction repository - attempt to insert a transaction with a cleared status out of range"() {
-        given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().build()
-        def accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.transactionState = TransactionState.Undefined
-
-        when:
-        entityManager.persist(transaction)
-
-        then:
-        ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('will not have this message')
         0 * _
     }
 
@@ -173,7 +170,7 @@ class TransactionJpaSpec extends Specification {
         Account account = new AccountBuilder().build()
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
-        transaction.guid = "123"
+        transaction.guid = '123'
 
         when:
         entityManager.persist(transaction)
@@ -181,44 +178,6 @@ class TransactionJpaSpec extends Specification {
         then:
         ConstraintViolationException ex = thrown()
         ex.getMessage().contains('must be uuid formatted')
-        0 * _
-    }
-
-    @Ignore
-    def "test transaction repository - attempt to insert a transaction with an invalid dateAdded"() {
-        given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().build()
-
-        when:
-        def accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.dateAdded = new Timestamp(123456)
-        println "transaction.dateAdded = $transaction.dateAdded"
-        entityManager.persist(transaction)
-
-        then:
-        ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('timestamp must be greater than 1/1/2000.')
-        0 * _
-    }
-
-    @Ignore
-    def "test transaction repository - attempt to insert a transaction with an invalid dateUpdated"() {
-        given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().build()
-
-        when:
-        def accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.dateUpdated = new Timestamp(123456)
-        println "transaction.dateUpdated = $transaction.dateUpdated"
-        entityManager.persist(transaction)
-
-        then:
-        ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('timestamp must be greater than 1/1/2000.')
         0 * _
     }
 
@@ -230,38 +189,36 @@ class TransactionJpaSpec extends Specification {
         def accountResult = entityManager.persist(account)
         transaction.accountId = accountResult.accountId
         entityManager.persist(transaction)
+
+        when:
         transactionRepository.deleteByGuid(transaction.guid)
 
-        expect:
+        then:
         transactionRepository.count() == 0L
         accountRepository.count() == 1L
     }
 
     def "test transaction repository - getTotalsByAccountNameOwner - empty"() {
         when:
-        def result = transactionRepository.getTotalsByAccountNameOwner("some_account")
+        Double result = transactionRepository.getTotalsByAccountNameOwner('refa')
 
         then:
         0.0 == result
-        //EmptyResultDataAccessException ex = thrown()
-        //ex.getMessage().contains('Result must not be null!')
         0 * _
     }
 
     def "test transaction repository - getTotalsByAccountNameOwnerCleared - empty"() {
         when:
-        def result = transactionRepository.getTotalsByAccountNameOwnerTransactionState("some_account")
+        Double result = transactionRepository.getTotalsByAccountNameOwnerTransactionState('some_account')
 
         then:
         0.0 == result
-//        EmptyResultDataAccessException ex = thrown()
-//        ex.getMessage().contains('Result must not be null!')
         0 * _
     }
 
     def "test transaction repository - setClearedByGuid - not in the database"() {
         when:
-        transactionRepository.setTransactionStateByGuid(TransactionState.Cleared, "guid-does-not-exist")
+        transactionRepository.setTransactionStateByGuid(TransactionState.Cleared, 'guid-does-not-exist')
 
         then:
         0 * _

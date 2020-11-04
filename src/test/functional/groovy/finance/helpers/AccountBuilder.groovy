@@ -14,8 +14,6 @@ class AccountBuilder {
     BigDecimal totals = new BigDecimal("0.0")
     BigDecimal totalsBalanced = new BigDecimal("0.0")
     Timestamp dateClosed = new Timestamp(0)
-    Timestamp dateUpdated = new Timestamp(1553645394000)
-    Timestamp dateAdded = new Timestamp(1553645394000)
 
     static AccountBuilder builder() {
         return new AccountBuilder()
@@ -30,8 +28,6 @@ class AccountBuilder {
         account.totals = totals
         account.totalsBalanced = totalsBalanced
         account.dateClosed = dateClosed
-        account.dateAdded = dateAdded
-        account.dateUpdated = dateUpdated
         return account
     }
 
@@ -57,16 +53,6 @@ class AccountBuilder {
 
     AccountBuilder dateClosed(dateClosed) {
         this.dateClosed = dateClosed
-        return this
-    }
-
-    AccountBuilder dateUpdated(dateUpdated) {
-        this.dateUpdated = dateUpdated
-        return this
-    }
-
-    AccountBuilder dateAdded(dateAdded) {
-        this.dateAdded = dateAdded
         return this
     }
 
