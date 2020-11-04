@@ -1,5 +1,6 @@
 package finance.services
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
@@ -125,6 +126,8 @@ class AccountServiceSpec extends Specification {
         mapper.readValue(jsonPayload, Account.class)
 
         then:
-        thrown InvalidFormatException
+        InvalidFormatException ex = thrown()
+        ex.getMessage().contains('not one of the values accepted for Enum class')
+        0 * _
     }
 }

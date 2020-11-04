@@ -10,11 +10,9 @@ import spock.lang.Specification
 class PaymentServiceSpec extends Specification {
     PaymentRepository mockPaymentRepository = Mock(PaymentRepository)
     ParmRepository mockParmRepository = Mock(ParmRepository)
-    //Validator mockValidator = Mock(Validator)
     TransactionService mockTransactionService = Mock(TransactionService)
     ParmService mockParmService = new ParmService(mockParmRepository)
     PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParmService)
-    //private ObjectMapper mapper = new ObjectMapper()
 
     def "test findAll payments empty"() {
         given:
@@ -48,4 +46,22 @@ class PaymentServiceSpec extends Specification {
         1 * mockPaymentRepository.save(payment)
         0 * _
     }
+
+    def "test insertPayment - findByParmName throws an exception"() {
+        given:
+        Payment payment = PaymentBuilder.builder().build()
+        def parm = new Parm()
+        parm.parmValue = 'val'
+        parm.parmName = 'payment_account'
+
+        when:
+        paymentService.insertPayment(payment)
+
+        then:
+        1 * mockParmRepository.findByParmName('payment_account') >> Optional.empty()
+        RuntimeException ex = thrown()
+        ex.getMessage().contains('failed to read the parm ')
+        0 * _
+    }
+
 }

@@ -156,8 +156,6 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         account.moniker = "0000"
         account.accountType = accountType
         account.activeStatus = true
-        account.dateAdded = Timestamp(System.currentTimeMillis())
-        account.dateUpdated = Timestamp(System.currentTimeMillis())
         return account
     }
 

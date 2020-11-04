@@ -11,7 +11,7 @@ class CategoryService(private var categoryRepository: CategoryRepository) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertCategory(category: Category): Boolean {
-        categoryRepository.save(category)
+        categoryRepository.saveAndFlush(category)
         return true
     }
 
