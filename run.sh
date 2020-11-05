@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ENV=$1
-APP=raspi-finance-convert
+APP=raspi-finance-endpoint
 
 if [ $# -ne 1 ]; then
   echo "Usage: $0 <prod|local|stage|perf>"
