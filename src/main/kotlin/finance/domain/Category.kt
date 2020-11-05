@@ -4,10 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.Constants
+import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
+import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
 import javax.persistence.*
 import javax.validation.constraints.Min
+import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
 
@@ -24,6 +28,7 @@ data class Category(
         var categoryId: Long,
 
         @field:Size(min = 1, max = 50)
+        @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "category", unique = true, nullable = false)
         @JsonProperty
