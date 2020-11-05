@@ -32,7 +32,7 @@ class ParmJpaSpec extends Specification {
         then:
         result.empty
     }
-    
+
     def "test parm - valid insert"() {
         given:
         Parm parm = ParmBuilder.builder().build()

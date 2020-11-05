@@ -2,7 +2,7 @@ package finance.utils
 
 object Constants {
 
-    const val ALPHA_NUMERIC_NO_SPACE = "^[a-z0-9]*$"
+    const val ALPHA_NUMERIC_NO_SPACE = "^[a-z0-9_-]*$"
     const val ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$"
     const val ASCII_PATTERN = "^[\\u0000-\\u007F]*$"
 
