@@ -12,7 +12,7 @@ import spock.lang.Specification
 class RandomPortSpec extends Specification {
 
     @Autowired
-    ApplicationContext context
+    ApplicationContext applicationContext
 
     @LocalServerPort
     protected int localPort;
@@ -20,6 +20,7 @@ class RandomPortSpec extends Specification {
     def "test spring wiring"() {
         given:
         def foo = 1
+
         when:
         def bar = 2
 
@@ -30,6 +31,7 @@ class RandomPortSpec extends Specification {
     def "random port test"() {
         when:
         println "localPort = $localPort"
+
         then:
         localPort > 0
     }
