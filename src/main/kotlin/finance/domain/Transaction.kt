@@ -5,17 +5,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.AccountTypeConverter
+import finance.utils.*
+import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
 import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
 import finance.utils.Constants.MUST_BE_ASCII_MESSAGE
 import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
+import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
-import finance.utils.LowerCaseConverter
-import finance.utils.TransactionStateConverter
-import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -76,7 +75,7 @@ data class Transaction(
 
         @JsonProperty
         @field:Size(max = 50)
-        @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
+        @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
         @Column(name = "category", nullable = false)
         @field:Convert(converter = LowerCaseConverter::class)
         var category: String,
@@ -86,14 +85,6 @@ data class Transaction(
         @Column(name = "amount", nullable = false)
         var amount: BigDecimal,
 
-//        //TODO: replace cleared with TransactionState
-//        @JsonProperty
-//        @field:Min(value = -1)
-//        @field:Max(value = 1)
-//        @Column(name = "cleared", nullable = false)
-//        var cleared: Int,
-
-        //TODO: replace cleared with TransactionState
         @JsonProperty
         @field:Convert(converter = TransactionStateConverter::class)
         @Column(name = "transaction_state", nullable = false)
