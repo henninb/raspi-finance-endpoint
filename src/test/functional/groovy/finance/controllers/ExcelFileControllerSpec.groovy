@@ -27,9 +27,7 @@ class ExcelFileControllerSpec extends Specification {
     }
 
     private String createURLWithPort(String uri) {
-        println "port = ${port}"
-
-        return "http://localhost:" + port + uri
+        return 'http://localhost:' + port + uri
     }
 
     @Ignore
@@ -39,8 +37,9 @@ class ExcelFileControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/excel/file/export"), HttpMethod.GET,
+                createURLWithPort('/excel/file/export'), HttpMethod.GET,
                 entity, String.class)
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _

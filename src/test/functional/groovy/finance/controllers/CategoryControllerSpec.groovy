@@ -36,13 +36,7 @@ class CategoryControllerSpec extends Specification {
         category = CategoryBuilder.builder().build()
     }
 
-//    def "my test "() {
-//        ParmApiService apiEndpoints = RetrofitHelper.getTesterInstance().create(ParmApiService.class);
-//    }
-
     def createURLWithPort(String uri) {
-        println "port = ${port}"
-
         return "http://localhost:" + port + uri
     }
 
@@ -50,12 +44,12 @@ class CategoryControllerSpec extends Specification {
         given:
         categoryService.insertCategory(category)
         HttpEntity entity = new HttpEntity<>(null, headers)
-        println category
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/category/delete/${category.category}"), HttpMethod.DELETE,
                 entity, String.class)
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _

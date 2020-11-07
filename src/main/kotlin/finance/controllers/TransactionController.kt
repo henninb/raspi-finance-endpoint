@@ -56,7 +56,6 @@ class TransactionController @Autowired constructor(private var transactionServic
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {
             val transaction: Transaction = transactionOption.get()
-            println("transaction.categories = ${transaction.categories}")
             return ResponseEntity.ok(transaction)
         }
 

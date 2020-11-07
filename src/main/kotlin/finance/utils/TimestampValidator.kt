@@ -12,8 +12,6 @@ class TimestampValidator : ConstraintValidator<ValidTimestamp, Timestamp> {
     }
 
     override fun isValid(value: Timestamp, context: ConstraintValidatorContext): Boolean {
-        //greater than 1/1/2000
-        println("timestampToBeEvaluated: $value")
         logger.info("timestampToBeEvaluated: $value")
         return value > Timestamp(946684800000)
     }

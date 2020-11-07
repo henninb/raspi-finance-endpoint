@@ -41,18 +41,15 @@ class TransactionSpec extends Specification {
 '''
 
     def setup() {
-        println "setup ran."
         validatorFactory = Validation.buildDefaultValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
     def cleanup() {
-        println "cleanup ran."
         validatorFactory.close()
     }
 
     def "test Transaction to JSON"() {
-
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
 
