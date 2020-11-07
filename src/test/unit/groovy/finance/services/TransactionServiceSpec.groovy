@@ -174,7 +174,6 @@ class TransactionServiceSpec extends Specification {
 
         when:
         def isInserted = transactionService.insertTransaction(transaction)
-        println account
 
         then:
         isInserted

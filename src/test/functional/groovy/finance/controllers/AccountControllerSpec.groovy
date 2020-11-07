@@ -44,15 +44,9 @@ class AccountControllerSpec extends Specification {
         account = AccountBuilder.builder().build()
     }
 
-
-
     private String createURLWithPort(String uri) {
-        println "port = ${port}"
-
         return "http://localhost:" + port + uri
     }
-
-
 
     def "test findAccount endpoint accountNameOwner found"() {
         given:
@@ -64,6 +58,7 @@ class AccountControllerSpec extends Specification {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/select/" + account.accountNameOwner), HttpMethod.GET,
                 entity, String.class)
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _
@@ -89,13 +84,13 @@ class AccountControllerSpec extends Specification {
         given:
         account.accountNameOwner = "random_test"
         accountService.insertAccount(account)
-
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/delete/" + account.accountNameOwner), HttpMethod.DELETE,
                 entity, String.class)
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _

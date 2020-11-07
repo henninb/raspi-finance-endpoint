@@ -74,9 +74,7 @@ class TransactionControllerSpec extends Specification {
     }
 
     private String createURLWithPort(String uri) {
-        println "port = ${port}"
-
-        return "http://localhost:" + port + uri
+        return 'http://localhost:' + port + uri
     }
 
     def "test findTransaction endpoint insert - find - delete"() {
@@ -88,8 +86,9 @@ class TransactionControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/select/" + transaction.guid), HttpMethod.GET,
+                createURLWithPort('/transaction/select/' + transaction.guid), HttpMethod.GET,
                 entity, String.class)
+
         then:
         response.statusCode == HttpStatus.OK
         insertedValue.get().guid == transaction.guid

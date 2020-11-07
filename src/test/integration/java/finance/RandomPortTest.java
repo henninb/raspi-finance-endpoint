@@ -13,16 +13,11 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class RandomPortTest {
-
-//    @Value("${local.server.port}")
-//    protected int localPort;
-
     @LocalServerPort
     protected int localPort;
 
     @Test
     public void getPort() {
-        System.out.println(localPort);
         assertTrue(localPort > 0);
     }
 }

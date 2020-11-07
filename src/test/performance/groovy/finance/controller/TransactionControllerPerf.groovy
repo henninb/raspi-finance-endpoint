@@ -36,11 +36,8 @@ class TransactionControllerPerf extends Specification {
     }
 
     private String createURLWithPort(String uri) {
-        println "port = ${port}"
-
         return "http://localhost:" + port + uri
     }
-
 
     @Unroll
     def "test insertTransaction endpoint"() {

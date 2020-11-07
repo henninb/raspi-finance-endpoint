@@ -30,9 +30,10 @@ class RandomPortSpec extends Specification {
 
     def "random port test"() {
         when:
-        println "localPort = $localPort"
+        def x = true
 
         then:
+        x
         localPort > 0
     }
 }

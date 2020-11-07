@@ -35,26 +35,12 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
-            println("transaction.categories = ${transaction.categories}")
-//            for( category in transaction.categories) {
-//                println("remove category")
-//                transaction.categories.remove(category)
-//            }
-
-
-//            transaction.categories.forEach {
-//                transaction.categories.remove(it)
-//            }
-
             if (transaction.categories.size > 0) {
                 val categoryOptional = categoryService.findByCategory(transaction.category)
                 transaction.categories.remove(categoryOptional.get())
             }
-//            try {
+
             transactionRepository.deleteByGuid(guid)
-//            } catch (e: EmptyTransactionException) {
-//                return false
-//            }
             return true
         }
         return false
