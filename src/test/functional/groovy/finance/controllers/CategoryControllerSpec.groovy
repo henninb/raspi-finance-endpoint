@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -34,6 +35,7 @@ class CategoryControllerSpec extends Specification {
     def setup() {
         headers = new HttpHeaders()
         category = CategoryBuilder.builder().build()
+        category.category = UUID.randomUUID()
     }
 
     def createURLWithPort(String uri) {
@@ -86,6 +88,7 @@ class CategoryControllerSpec extends Specification {
 //        accountService.deleteByAccountNameOwner(account.accountNameOwner)
 //    }
 //
+
     def "test insertPayment endpoint"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
