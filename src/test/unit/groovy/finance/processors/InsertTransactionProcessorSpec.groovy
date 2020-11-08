@@ -20,18 +20,13 @@ import javax.validation.Validator
 class InsertTransactionProcessorSpec extends Specification {
     Message mockMessage = Mock(Message)
     Exchange mockExchange = Mock(Exchange)
-    //MeterRegistry mockMeterRegistry = GroovyMock(MeterRegistry)
-    //MeterService meterService = new MeterService(mockMeterRegistry)
     TransactionRepository mockTransactionRepository = Mock(TransactionRepository)
     AccountRepository mockAccountRepository = Mock(AccountRepository)
     Validator mockValidator = Mock(Validator)
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     CategoryService categoryService = new CategoryService(mockCategoryRepository)
-
     ObjectMapper mapper = new ObjectMapper()
-    //Counter mockCounter = GroovyMock(Counter)
-
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
     InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService)
     def jsonPayload = '''
@@ -42,22 +37,6 @@ class InsertTransactionProcessorSpec extends Specification {
         "dateAdded":1593981072000,
         "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
         "accountNameOwner":"chase_brian",
-        "description":"aliexpress.com",
-        "category":"online",
-        "amount":3.14,
-        "transactionState":"cleared",
-        "reoccurring":false,
-        "notes":"my note to you"}
-        '''
-
-    def jsonPayloadBadAccountName = '''
-        {"accountId":0,
-        "accountType":"credit",
-        "transactionDate":1553645394,
-        "dateUpdated":1593981072000,
-        "dateAdded":1593981072000,
-        "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
-        "accountNameOwner":"",
         "description":"aliexpress.com",
         "category":"online",
         "amount":3.14,

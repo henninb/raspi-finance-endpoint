@@ -3,7 +3,6 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'maven-publish'
     id 'groovy'
     id 'idea'
     id 'scala'
