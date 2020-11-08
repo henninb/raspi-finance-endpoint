@@ -45,7 +45,7 @@ class ParmControllerSpec extends Specification {
         mockParmService = new MockParmService(delegate)
     }
 
-    def "should succeed" () {
+    def "test - should succeed"() {
         given:
         def response = mockParmService.selectParm('test').execute()
 
@@ -53,7 +53,7 @@ class ParmControllerSpec extends Specification {
         response.isSuccessful()
     }
 
-    def "should fail on 500" () {
+    def "test -- selectParm - should fail on 500"() {
         given:
         behavior.setFailurePercent(100)
 
@@ -61,7 +61,8 @@ class ParmControllerSpec extends Specification {
         mockParmService.selectParm('test').execute()
 
         then:
-        thrown(IOException)
+        def ex = thrown(IOException)
+        //ex.message.contains('test')
     }
 }
 

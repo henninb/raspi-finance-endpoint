@@ -102,20 +102,57 @@ class AccountControllerSpec extends Specification {
     }
 
     @Ignore
-    //started to fail on 11/8/2020
+    //TODO: build failed started to fail noticed on 11/8/2020
     def "test insertAccount endpoint bad data"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>('badData', headers)
+        HttpEntity entity = new HttpEntity<>('accountBadData', headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/account/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        def ex = thrown(JsonParseException)
-        ex.getMessage().contains('Unrecognized token')
-        //response.statusCode == HttpStatus.BAD_REQUEST
+        //def ex = thrown(JsonParseException)
+        //ex.getMessage().contains('Unrecognized token')
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
+    }
+
+    @Ignore
+    //TODO: build failed started to fail noticed on 11/8/2020
+    def "test insertAccount endpoint - irrelevant payload"() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>('{"test":1}', headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                entity, String.class)
+        then:
+        //def ex = thrown(JsonParseException)
+        //ex.getMessage().contains('Unrecognized token')
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
+
+    def "test findAccount endpoint empty accountNameOwner"() {
+        given:
+        account.accountNameOwner = ''
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(account.toString(), headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                entity, String.class)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+
+        //cleanup:
+        //accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 }

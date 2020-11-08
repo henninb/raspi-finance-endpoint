@@ -1,8 +1,11 @@
 package finance.controllers
 
 import finance.Application
+import finance.domain.Account
 import finance.domain.Category
+import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
+import finance.services.AccountService
 import finance.services.CategoryService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,6 +31,9 @@ class CategoryControllerSpec extends Specification {
 
     @Autowired
     CategoryService categoryService
+
+    @Autowired
+    AccountService accountService
 
     @Shared
     Category category
@@ -57,47 +63,48 @@ class CategoryControllerSpec extends Specification {
         0 * _
     }
 
-//    def "test findAccount endpoint accountNameOwner not found"() {
-//        given:
-//        HttpEntity entity = new HttpEntity<>(null, headers)
-//
-//        when:
-//        ResponseEntity<String> response = restTemplate.exchange(
-//                createURLWithPort("/account/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
-//                entity, String.class)
-//        then:
-//        response.statusCode == HttpStatus.NOT_FOUND
-//        0 * _
-//    }
-//
-//    def "test deleteAccount endpoint"() {
-//        given:
-//        accountService.insertAccount(account)
-//
-//        HttpEntity entity = new HttpEntity<>(null, headers)
-//
-//        when:
-//        ResponseEntity<String> response = restTemplate.exchange(
-//                createURLWithPort("/account/delete/" + account.accountNameOwner), HttpMethod.DELETE,
-//                entity, String.class)
-//        then:
-//        response.statusCode == HttpStatus.OK
-//        0 * _
-//
-//        cleanup:
-//        accountService.deleteByAccountNameOwner(account.accountNameOwner)
-//    }
-//
+    def "test -- find category endpoint category not found"() {
+        given:
+        HttpEntity entity = new HttpEntity<>(null, headers)
 
-    def "test insertPayment endpoint"() {
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/category/select/' + UUID.randomUUID().toString()), HttpMethod.GET,
+                entity, String.class)
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
+    def "test -- delete category endpoint"() {
+        given:
+        categoryService.insertCategory(category)
+
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/category/delete/' + category.category), HttpMethod.DELETE,
+                entity, String.class)
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+
+        cleanup:
+        categoryService.deleteByCategoryName(category.category)
+    }
+
+
+    def "test -- insertPayment endpoint"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(category, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/category/insert/"), HttpMethod.POST,
+                createURLWithPort('/category/insert/'), HttpMethod.POST,
                 entity, String.class)
+
         then:
         //thrown HttpMessageNotReadableException
         response.statusCode == HttpStatus.OK
