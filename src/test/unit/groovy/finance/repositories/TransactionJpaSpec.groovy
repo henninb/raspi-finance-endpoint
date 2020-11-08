@@ -36,15 +36,14 @@ class TransactionJpaSpec extends Specification {
 "transactionDate":1553645394,
 "dateUpdated":1593981072000,
 "dateAdded":1593981072000,
-"guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
+"guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
 "accountNameOwner":"chase_brian",
 "description":"aliexpress.com",
 "category":"online",
 "amount":3.14,
 "transactionState":"cleared",
 "reoccurring":false,
-"notes":"my note to you",
-"sha256":"963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77"}
+"notes":"my note to you"}
 '''
 
     def "test Transaction to JSON - valid insert"() {

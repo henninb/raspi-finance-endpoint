@@ -1,14 +1,17 @@
 package finance.processors
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.domain.Account
 import finance.domain.Transaction
+import finance.domain.Category
+import finance.helpers.AccountBuilder
+import finance.helpers.CategoryBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
 import finance.services.AccountService
 import finance.services.CategoryService
 import finance.services.TransactionService
-import io.micrometer.core.instrument.Counter
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
@@ -31,25 +34,78 @@ class InsertTransactionProcessorSpec extends Specification {
 
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
     InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService)
+    def jsonPayload = '''
+        {"accountId":0,
+        "accountType":"credit",
+        "transactionDate":1553645394,
+        "dateUpdated":1593981072000,
+        "dateAdded":1593981072000,
+        "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
+        "accountNameOwner":"chase_brian",
+        "description":"aliexpress.com",
+        "category":"online",
+        "amount":3.14,
+        "transactionState":"cleared",
+        "reoccurring":false,
+        "notes":"my note to you"}
+        '''
 
-    def "test InsertTransactionProcessor"() {
+    def jsonPayloadBadAccountName = '''
+        {"accountId":0,
+        "accountType":"credit",
+        "transactionDate":1553645394,
+        "dateUpdated":1593981072000,
+        "dateAdded":1593981072000,
+        "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
+        "accountNameOwner":"",
+        "description":"aliexpress.com",
+        "category":"online",
+        "amount":3.14,
+        "transactionState":"cleared",
+        "reoccurring":false,
+        "notes":"my note to you"}
+        '''
+
+    def "test -- InsertTransactionProcessor - empty transaction"() {
         given:
-        String payload = "{\"guid\":\"0a23fec3-18c8-4b89-a5af-68fab8db8620\",\"accountType\":\"credit\",\"accountNameOwner\":\"amex_brian\",\"transactionDate\":1475647200000,\"description\":\"Cafe Roale\",\"category\":\"online\",\"amount\":33.08,\"cleared\":1,\"reoccurring\":false,\"notes\":\"\",\"dateUpdated\":1475588992000,\"dateAdded\":1475588992000,\"sha256\":\"\"}"
-        Transaction transaction = mapper.readValue(payload, Transaction.class)
-        def guid = transaction.guid
+        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
 
         when:
         processor.process(mockExchange)
 
         then:
         1 * mockExchange.getIn() >> mockMessage
-        1 * mockMessage.getBody(String.class) >> payload
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.of(transaction)
+        1 * mockMessage.getBody(String.class) >> jsonPayload
+        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * mockValidator.validate(transaction as Object) >> new HashSet()
+        1 * mockMessage.setBody(transaction.toString())
+        0 * _
+    }
+
+    def "test -- InsertTransactionProcessor - happy path"() {
+        given:
+        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
+        Account account = AccountBuilder.builder().build()
+        Category category = CategoryBuilder.builder().build()
+
+        account.accountNameOwner = transaction.accountNameOwner
+        category.category = transaction.category
+
+        when:
+        processor.process(mockExchange)
+
+        then:
+        1 * mockExchange.getIn() >> mockMessage
+        1 * mockMessage.getBody(String.class) >> jsonPayload
+        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.empty()
+        1 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
+        2 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
+        1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.empty()
+        1 * mockCategoryRepository.saveAndFlush(category)
+        1 * mockValidator.validate(transaction as Object) >> new HashSet()
         1 * mockValidator.validate(_ as Object) >> new HashSet()
-        1 * mockMessage.setBody(_ as Object)
-        //1 * mockMeterRegistry.counter('transaction.received.event.counter', ['account.name', 'amex_brian']) >> mockCounter
-        //1 * mockMeterRegistry.counter('transaction.already.exists.counter', ['account.name', 'amex_brian']) >> mockCounter
-        //2 * mockCounter.increment()
+        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockMessage.setBody(transaction.toString())
         0 * _
     }
 }
