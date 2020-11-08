@@ -128,7 +128,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         0 * _
     }
 
-    @Ignore
+    @Ignore //TODO: should be integration tests
     def 'test -- invalid field in payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
@@ -146,7 +146,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         0 * _
     }
 
-    @Ignore
+    @Ignore //TODO: should be integration tests
     def 'test -- invalid json payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
@@ -163,7 +163,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         0 * _
     }
 
-    @Ignore
+    @Ignore //TODO: should be integration tests
     def 'test -- wrong json payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
