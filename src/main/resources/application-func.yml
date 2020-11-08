@@ -86,14 +86,14 @@ custom:
     camel-route:
       auto-start-route: true
       json-file-reader-route-id: jsonFileReaderRoute
-      json-file-reader-route: "file:json_test_in?delete=true&moveFailed=.failedWithErrors"
+      json-file-reader-route: "file:json_in?delete=true&moveFailed=.failedWithErrors"
       transaction-to-database-route-id: transactionToDatabaseRoute
       transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route-id: jsonFileWriterRoute
       json-file-writer-route: direct:jsonFileWriterRoute
-      saved-file-endpoint: "file:json_test_in/.processed"
-      failed-Json-file-endpoint: "file:json_test_in/.notJsonFileNotProcessed"
-      failed-json-parser-endpoint: "file:json_test_in/.notJsonFileNotProcessed"
+      saved-file-endpoint: "file:json_in/.processed"
+      failed-Json-file-endpoint: "file:json_in/.notJsonFileNotProcessed"
+      failed-json-parser-endpoint: "file:json_in/.notJsonFileNotProcessed"
 
 # ===============================
 # = Logging
