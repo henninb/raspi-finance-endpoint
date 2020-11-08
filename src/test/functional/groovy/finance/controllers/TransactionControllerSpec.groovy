@@ -160,9 +160,8 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    @Ignore
     //TODO: bh 11/8/2020 - com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'badTransactionJsonPayload'
-    def "test insertTransaction endpoint bad data - not json"() {
+    def "test insertTransaction endpoint bad data - not json in the payload"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('badTransactionJsonPayload', headers)
