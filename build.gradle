@@ -16,7 +16,8 @@ plugins {
 }
 
 ext['springBootVersion'] = '2.3.5.RELEASE'
-ext['apacheCamelVersion'] = '3.6.0'
+//ext['apacheCamelVersion'] = '3.6.0'
+ext['apacheCamelVersion'] = '3.3.0'
 ext['kotlinVersion'] = '1.4.10'
 ext['groovyVersion'] = '3.0.6'
 ext['qualityPluginVersion'] = '3.0.0'
@@ -83,8 +84,8 @@ configurations {
 }
 
 compileKotlin {
-//    kotlinOptions.jvmTarget = "11"
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
+//    kotlinOptions.jvmTarget = "1.8"
 }
 
 sourceSets {
@@ -122,6 +123,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
+    //implementation("org.apache.camel.springboot:camel-spring-boot-dependencies:${springBootVersion}")
+
+
+    //implementation group: 'org.apache.camel', name: 'camel-spring-boot-dependencies', version: '3.0.0-M4', ext: 'pom'
+    //implementation "org.apache.camel:camel-spring-boot-starter:3.0.0-M4"
+    implementation 'org.apache.camel.springboot:camel-spring-boot-starter:3.3.0'
+    //implementation "org.apache.camel:camel-spring-boot-starter:2.24.0"
+
 
     //Jackson
     implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
@@ -129,7 +138,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
 
     //Camel
-    // implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
+    //implementation("org.apache.camel:camel-spring-boot-starter:${apacheCamelVersion}")
     implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
     //postgres

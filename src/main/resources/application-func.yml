@@ -75,6 +75,27 @@ spring:
     locations: classpath:db/migration
 
 # ===============================
+# = Custom
+# ===============================
+custom:
+  project:
+    excel-password: n/a
+    excel-input-file-path: n/a
+    excluded-accounts:
+      - test_brian
+    camel-route:
+      auto-start-route: true
+      json-file-reader-route-id: jsonFileReaderRoute
+      json-file-reader-route: "file:json_in?delete=true&moveFailed=.failedWithErrors"
+      transaction-to-database-route-id: transactionToDatabaseRoute
+      transaction-to-database-Route: direct:transactionToDatabaseRoute
+      json-file-writer-route-id: jsonFileWriterRoute
+      json-file-writer-route: direct:jsonFileWriterRoute
+      saved-file-endpoint: "file:json_in/.processed"
+      failed-Json-file-endpoint: "file:json_in/.notJsonFileNotProcessed"
+      failed-json-parser-endpoint: "file:json_in/.notJsonFileNotProcessed"
+
+# ===============================
 # = Logging
 # ===============================
 logging:
