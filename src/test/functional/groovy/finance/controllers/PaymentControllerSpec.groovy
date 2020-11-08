@@ -145,7 +145,7 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/insert/"), HttpMethod.POST,  entity, String.class)
+                createURLWithPort('/payment/insert/'), HttpMethod.POST,  entity, String.class)
 
         then:
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
