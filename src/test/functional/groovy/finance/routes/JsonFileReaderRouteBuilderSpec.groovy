@@ -9,24 +9,24 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Specification
 
-@ActiveProfiles("func")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class JsonFileReaderRouteBuilderSpec extends Specification {
-
-    @Autowired
-    JsonFileReaderRouteBuilder jsonFileReaderRouteBuilder
-
-    @Ignore
-    def "test -- jsonFileReaderRouteBuilder"() {
-        given:
-        def camelContext = jsonFileReaderRouteBuilder.getContext()
-        def producer = camelContext.createProducerTemplate()
-        def transactions = [TransactionBuilder.builder().build()]
-
-        when:
-        producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, 'foo_brian.json')
-
-        then:
-        1 == 1
-    }
-}
+//@ActiveProfiles("func")
+//@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+//class JsonFileReaderRouteBuilderSpec extends Specification {
+//
+//    @Autowired
+//    JsonFileReaderRouteBuilder jsonFileReaderRouteBuilder
+//
+//    @Ignore
+//    def "test -- jsonFileReaderRouteBuilder"() {
+//        given:
+//        def camelContext = jsonFileReaderRouteBuilder.getContext()
+//        def producer = camelContext.createProducerTemplate()
+//        def transactions = [TransactionBuilder.builder().build()]
+//
+//        when:
+//        producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, 'foo_brian.json')
+//
+//        then:
+//        1 == 1
+//    }
+//}
