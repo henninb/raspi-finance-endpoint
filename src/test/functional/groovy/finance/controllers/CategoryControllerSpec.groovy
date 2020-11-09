@@ -48,7 +48,7 @@ class CategoryControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "test Payment endpoint paymentId found and deleted"() {
+    def "test -- Payment endpoint paymentId found and deleted"() {
         given:
         categoryService.insertCategory(category)
         HttpEntity entity = new HttpEntity<>(null, headers)
@@ -94,7 +94,6 @@ class CategoryControllerSpec extends Specification {
         categoryService.deleteByCategoryName(category.category)
     }
 
-
     def "test -- insertPayment endpoint"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -106,7 +105,6 @@ class CategoryControllerSpec extends Specification {
                 entity, String.class)
 
         then:
-        //thrown HttpMessageNotReadableException
         response.statusCode == HttpStatus.OK
         0 * _
     }
