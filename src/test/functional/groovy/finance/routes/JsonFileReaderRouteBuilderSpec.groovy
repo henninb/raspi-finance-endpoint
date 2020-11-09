@@ -4,6 +4,7 @@ import finance.Application
 import finance.configurations.CamelProperties
 import finance.helpers.TransactionBuilder
 import finance.repositories.TransactionRepository
+import org.apache.camel.CamelContext
 import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,11 +26,13 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     TransactionRepository transactionRepository
 
     ProducerTemplate producer
+    CamelContext camelContext
 
     def setup() {
-        def camelContext = jsonFileReaderRouteBuilder.getContext()
+        camelContext = jsonFileReaderRouteBuilder.getContext()
         producer = camelContext.createProducerTemplate()
         camelContext.start()
+
         camelContext.routes.forEach(route -> route.setAutoStartup(true))
         producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
     }
@@ -44,6 +47,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         then:
         //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
+        camelContext.isStarted()
         sleep(5000)
         def result = transactionRepository.findByGuid(transaction.guid).get()
         result.guid == transaction.guid
