@@ -77,14 +77,15 @@ custom:
     camel-route:
       auto-start-route: true
       json-file-reader-route-id: jsonFileReaderRoute
-      json-file-reader-route: "file:/opt/raspi-finance-endpoint/json_in?delete=true&moveFailed=.failedWithErrors"
+      json-file-reader-route: "file:json_in?delete=true&moveFailed=.not-processed-failed-with-errors"
       transaction-to-database-route-id: transactionToDatabaseRoute
       transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route-id: jsonFileWriterRoute
       json-file-writer-route: direct:jsonFileWriterRoute
-      saved-file-endpoint: "file:/opt/raspi-finance-endpoint/json_in/.processed"
-      failed-Json-file-endpoint: "file:/opt/raspi-finance-endpoint/json_in/.notJsonFileNotProcessed"
-      failed-json-parser-endpoint: "file:/opt/raspi-finance-endpoint/json_in/.notJsonFileNotProcessed"
+      saved-file-endpoint: "file:json_in/.processed-successfully"
+      failed-Json-file-endpoint: "file:json_in/.not-processed-non-json-file"
+      failed-json-parser-endpoint: "file:json_in/.not-processed-json-parsing-errors"
+
 logging:
   level:
     org:
