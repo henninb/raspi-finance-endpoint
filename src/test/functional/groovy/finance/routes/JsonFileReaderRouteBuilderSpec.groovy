@@ -19,7 +19,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     @Autowired
     CamelProperties camelProperties
 
-    def "test -- jsonFileReaderRouteBuilder"() {
+    def "test -- jsonFileReaderRouteBuilder -- happy path"() {
         given:
         def camelContext = jsonFileReaderRouteBuilder.getContext()
         def producer = camelContext.createProducerTemplate()
@@ -50,6 +50,22 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         when:
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, 'foo_brian.txt')
+
+        then:
+        1 == 1
+    }
+
+
+    def "test -- jsonFileReaderRouteBuilder -- bad file"() {
+        given:
+        def camelContext = jsonFileReaderRouteBuilder.getContext()
+        def producer = camelContext.createProducerTemplate()
+        camelContext.start()
+        camelContext.routes.forEach(route -> println route)
+        producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
+
+        when:
+        producer.sendBodyAndHeader('trash content', Exchange.FILE_NAME, 'foo_trash.json')
 
         then:
         1 == 1
