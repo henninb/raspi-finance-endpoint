@@ -133,7 +133,7 @@ class PaymentControllerSpec extends Specification {
     }
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
-    @Ignore
+    //TODO: build fails in intellij
     def "test insertPayment failed due to setup issues - to a non-debit account"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)

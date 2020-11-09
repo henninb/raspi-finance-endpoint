@@ -101,7 +101,6 @@ class AccountControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 
-    @Ignore
     //TODO: build failed started to fail noticed on 11/8/2020
     def "test insertAccount endpoint bad data"() {
         given:
@@ -113,13 +112,10 @@ class AccountControllerSpec extends Specification {
                 createURLWithPort('/account/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        //def ex = thrown(JsonParseException)
-        //ex.getMessage().contains('Unrecognized token')
         response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
-    @Ignore
     //TODO: build failed started to fail noticed on 11/8/2020
     def "test insertAccount endpoint - irrelevant payload"() {
         given:
@@ -151,8 +147,5 @@ class AccountControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
-
-        //cleanup:
-        //accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 }
