@@ -2,6 +2,7 @@ package finance.routes
 
 import finance.Application
 import finance.configurations.CamelProperties
+import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.repositories.TransactionRepository
 import org.apache.camel.CamelContext
@@ -44,13 +45,21 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         when:
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.json")
+//        Optional<Transaction> result = transactionRepository.findByGuid(transaction.guid)
+//        def databaseTransaction = result.get()
+//        def result = ''
+//        if ( res?.isPresent() ) {
+//            result = res.get()
+//            println result
+//        }
+
 
         then:
         //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
-        camelContext.isStarted()
+        //camelContext.isStarted()
         sleep(5000)
-        def result = transactionRepository.findByGuid(transaction.guid).get()
-        result.guid == transaction.guid
+        def databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
+        databaseTransaction.guid == transaction.guid
     }
 
     def "test -- jsonFileReaderRouteBuilder -- happy path - with empty description"() {
