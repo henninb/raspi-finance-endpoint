@@ -29,7 +29,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accounts
     }
 
-    fun findAccountsThatRequirePayment() : List<String> {
+    fun findAccountsThatRequirePayment(): List<String> {
         return accountRepository.findAccountsThatRequirePayment()
     }
 
@@ -58,11 +58,10 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
             //TODO: handle the violation
-            logger.info("insertAccount - ConstraintViolation")
-            //return false
+            //throw ValidationException("")
+            logger.error("insertAccount - ConstraintViolation")
         }
-        //TODO: Should saveAndFlush be in a try catch block?
-        logger.info("INFO: transactionRepository.saveAndFlush call.")
+        
         if (!accountOptional.isPresent) {
             accountRepository.saveAndFlush(account)
         }

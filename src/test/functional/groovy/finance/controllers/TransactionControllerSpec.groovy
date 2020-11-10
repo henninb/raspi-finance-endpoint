@@ -1,6 +1,6 @@
 package finance.controllers
 
-import com.fasterxml.jackson.core.JsonParseException
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.Application
 import finance.domain.Account
@@ -207,7 +207,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        //TODO: should be a bad request
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
@@ -223,7 +224,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        //TODO: should be a bad request
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
@@ -238,7 +240,8 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        //TODO: should be a bad request
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 

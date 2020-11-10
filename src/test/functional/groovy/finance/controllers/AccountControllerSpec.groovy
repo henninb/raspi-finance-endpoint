@@ -1,6 +1,6 @@
 package finance.controllers
 
-import com.fasterxml.jackson.core.JsonParseException
+
 import finance.Application
 import finance.domain.Account
 import finance.helpers.AccountBuilder
@@ -13,7 +13,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 

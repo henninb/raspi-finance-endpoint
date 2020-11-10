@@ -289,8 +289,8 @@ CREATE TABLE IF NOT EXISTS t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
     description    TEXT UNIQUE NOT NULL,
-    date_updated        TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added          TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
+    date_updated   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added     TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_description() RETURNS TRIGGER AS

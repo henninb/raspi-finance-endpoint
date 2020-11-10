@@ -28,7 +28,7 @@ import javax.validation.ConstraintViolationException
 class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
-    //curl http://localhost:8080/transaction/account/select/usbankcash_brian
+    //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
@@ -39,7 +39,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(transactions)
     }
 
-    //curl http://localhost:8080/transaction/account/totals/chase_brian
+    //curl https://hornsup:8080/transaction/account/totals/chase_brian
     @GetMapping(path = ["/account/totals/{accountNameOwner}"], produces = ["application/json"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val results: Map<String, BigDecimal> = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
@@ -49,7 +49,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(mapper.writeValueAsString(results))
     }
 
-    //curl http://localhost:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    //curl https://hornsup:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @GetMapping(path = ["/select/{guid}"], produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() guid = $guid")
@@ -92,7 +92,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     //TODO: should return a 201 CREATED
-    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d ''
+    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d ''
     @PostMapping(path = ["/insert"], consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
         logger.info("insert - transaction.transactionDate: $transaction")
@@ -114,13 +114,14 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok("transaction account updated")
     }
 
+    // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
     @PutMapping(path = ["/update/receipt/image/{guid}"], consumes = ["application/json"], produces = ["application/json"])
     fun setTransactionReceiptImageByGuid(@PathVariable("guid") guid: String, @RequestBody payload: String): ResponseEntity<String> {
         transactionService.setTransactionReceiptImageByGuid(guid, payload.toByteArray())
         return ResponseEntity.ok("transaction receipt image updated")
     }
 
-    //curl -s -X POST http://localhost:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
+    //curl -s -X POST https://hornsup:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
     @PostMapping(path = ["/clone"], consumes = ["application/json"], produces = ["application/json"])
     fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
         if (transactionService.cloneAsMonthlyTransaction(payload)) {
@@ -129,8 +130,8 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
-    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
-    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
+    //curl --header "Content-Type: application/json" -X DELETE https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
+    //curl --header "Content-Type: application/json" -X DELETE https://hornsup:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
     @DeleteMapping(path = ["/delete/{guid}"], produces = ["application/json"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
@@ -144,8 +145,8 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }
 
-    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
-    //curl --header "Content-Type: application/json" http://localhost:8080/transaction/insert -X POST -d '{"amount":"abc"}'
+    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
+    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"amount":"abc"}'
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
     @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
         MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,

@@ -8,7 +8,6 @@ import org.apache.camel.builder.RouteBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-import java.lang.RuntimeException
 
 @ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component

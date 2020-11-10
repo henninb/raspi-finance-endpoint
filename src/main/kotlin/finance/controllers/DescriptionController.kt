@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
-import org.springframework.web.server.ResponseStatusException
 import java.util.*
 import javax.validation.ConstraintViolationException
 
@@ -21,7 +20,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     //https://hornsup:8080/description/select/all
     @GetMapping(path = ["/select/all"], produces = ["application/json"])
     fun selectDescription(): ResponseEntity<List<Description>> {
-        val descriptions  = descriptionService.fetchAllDescriptions()
+        val descriptions = descriptionService.fetchAllDescriptions()
 
         return ResponseEntity.ok(descriptions)
     }

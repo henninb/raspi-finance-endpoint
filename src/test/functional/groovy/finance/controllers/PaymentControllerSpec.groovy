@@ -16,7 +16,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -78,7 +77,7 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/delete/" + payment.paymentId), HttpMethod.DELETE,  entity, String.class)
+                createURLWithPort("/payment/delete/" + payment.paymentId), HttpMethod.DELETE, entity, String.class)
         then:
         response.statusCode == HttpStatus.OK
         0 * _
@@ -92,7 +91,7 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/delete/" + 123451), HttpMethod.DELETE,  entity, String.class)
+                createURLWithPort("/payment/delete/" + 123451), HttpMethod.DELETE, entity, String.class)
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
@@ -121,7 +120,7 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST,  entity, String.class)
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String.class)
 
         then:
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
@@ -145,7 +144,7 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST,  entity, String.class)
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String.class)
 
         then:
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
