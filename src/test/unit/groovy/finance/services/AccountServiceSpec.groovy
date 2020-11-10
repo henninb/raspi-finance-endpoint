@@ -9,6 +9,7 @@ import finance.repositories.AccountRepository
 import spock.lang.Specification
 import javax.validation.ConstraintViolation
 import javax.validation.Validation
+import javax.validation.ValidationException
 import javax.validation.Validator
 
 class AccountServiceSpec extends Specification {
@@ -93,6 +94,8 @@ class AccountServiceSpec extends Specification {
         accountService.insertAccount(account)
 
         then:
+        def ex = thrown(ValidationException)
+        ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * mockValidator.validate(account) >> constraintViolations
         0 * _
@@ -110,6 +113,8 @@ class AccountServiceSpec extends Specification {
         accountService.insertAccount(account)
 
         then:
+        def ex = thrown(ValidationException)
+        ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * mockValidator.validate(account) >> constraintViolations
         0 * _

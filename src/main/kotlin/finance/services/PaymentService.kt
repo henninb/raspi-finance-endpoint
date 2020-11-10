@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
@@ -29,7 +30,7 @@ class PaymentService(private var paymentRepository: PaymentRepository, private v
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         if (constraintViolations.isNotEmpty()) {
             logger.error("Cannot insert payment as there is a constraint violation on the data.")
-            throw RuntimeException("Cannot insert payment as there is a constraint violation on the data.")
+            throw ValidationException("Cannot insert payment as there is a constraint violation on the data.")
         }
 
         populateCreditTransaction(transactionCredit, payment)

@@ -8,6 +8,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
@@ -57,11 +58,10 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
-            //TODO: handle the violation
-            //throw ValidationException("")
-            logger.error("insertAccount - ConstraintViolation")
+            logger.error("Cannot insert account as there is a constraint violation on the data.")
+            throw ValidationException("Cannot insert account as there is a constraint violation on the data.")
         }
-        
+
         if (!accountOptional.isPresent) {
             accountRepository.saveAndFlush(account)
         }

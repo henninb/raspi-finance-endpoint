@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
@@ -16,8 +17,7 @@ class CategoryService(private var categoryRepository: CategoryRepository, privat
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
         if (constraintViolations.isNotEmpty()) {
             logger.error("Cannot insert category as there is a constraint violation on the data.")
-            //ValidationException
-            throw RuntimeException("Cannot insert category as there is a constraint violation on the data.")
+            throw ValidationException("Cannot insert category as there is a constraint violation on the data.")
         }
 
         categoryRepository.saveAndFlush(category)

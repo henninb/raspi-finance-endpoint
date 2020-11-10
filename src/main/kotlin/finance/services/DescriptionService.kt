@@ -5,6 +5,7 @@ import finance.repositories.DescriptionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
@@ -15,7 +16,7 @@ open class DescriptionService(private var descriptionRepository: DescriptionRepo
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
         if (constraintViolations.isNotEmpty()) {
             logger.error("Cannot insert description as there is a constraint violation on the data.")
-            throw RuntimeException("Cannot insert description as there is a constraint violation on the data.")
+            throw ValidationException("Cannot insert description as there is a constraint violation on the data.")
         }
         descriptionRepository.saveAndFlush(description)
         return true
