@@ -207,8 +207,7 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        //TODO: should be a bad request
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -223,9 +222,9 @@ class TransactionControllerSpec extends Specification {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String.class)
+
         then:
-        //TODO: should be a bad request
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -240,8 +239,7 @@ class TransactionControllerSpec extends Specification {
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String.class)
         then:
-        //TODO: should be a bad request
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 

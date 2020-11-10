@@ -12,6 +12,7 @@ import java.math.RoundingMode
 import java.sql.Date
 import java.util.*
 import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
 import javax.validation.Validator
 
 
@@ -51,7 +52,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.error("Cannot insert transaction as there is a constraint violation on the data.")
-            throw RuntimeException("Cannot insert transaction as there is a constraint violation on the data.")
+            throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
         }
         val transactionOptional = findTransactionByGuid(transaction.guid)
 

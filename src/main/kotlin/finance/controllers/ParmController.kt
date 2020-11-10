@@ -11,6 +11,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
 import javax.validation.ConstraintViolationException
+import javax.validation.ValidationException
 
 @CrossOrigin
 @RestController
@@ -44,7 +45,8 @@ class ParmController(private var parmService: ParmService) {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class])
+    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
+        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class])
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)
