@@ -1,13 +1,12 @@
 package finance.services
 
-import com.fasterxml.jackson.core.JsonParseException
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
 import spock.lang.Specification
-
 import javax.validation.ConstraintViolation
 import javax.validation.Validation
 import javax.validation.Validator
@@ -19,7 +18,6 @@ class AccountServiceSpec extends Specification {
     private ObjectMapper mapper = new ObjectMapper()
 
     def setupSpec() {
-
     }
 
     def "test findAllActiveAccounts empty"() {

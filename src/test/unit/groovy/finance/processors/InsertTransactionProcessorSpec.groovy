@@ -2,8 +2,8 @@ package finance.processors
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
-import finance.domain.Transaction
 import finance.domain.Category
+import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import finance.repositories.AccountRepository
@@ -15,6 +15,7 @@ import finance.services.TransactionService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
+
 import javax.validation.Validator
 
 class InsertTransactionProcessorSpec extends Specification {
@@ -25,7 +26,7 @@ class InsertTransactionProcessorSpec extends Specification {
     Validator mockValidator = Mock(Validator)
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    CategoryService categoryService = new CategoryService(mockCategoryRepository)
+    CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator)
     ObjectMapper mapper = new ObjectMapper()
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
     InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService)
@@ -56,7 +57,7 @@ class InsertTransactionProcessorSpec extends Specification {
         1 * mockExchange.getIn() >> mockMessage
         1 * mockMessage.getBody(String.class) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockValidator.validate(transaction as Object) >> new HashSet()
+        1 * mockValidator.validate(_) >> new HashSet()
         1 * mockMessage.setBody(transaction.toString())
         0 * _
     }
@@ -81,9 +82,9 @@ class InsertTransactionProcessorSpec extends Specification {
         2 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.empty()
         1 * mockCategoryRepository.saveAndFlush(category)
-        1 * mockValidator.validate(transaction as Object) >> new HashSet()
-        1 * mockValidator.validate(_ as Object) >> new HashSet()
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        3 * mockValidator.validate(_) >> new HashSet()
+        //1 * mockValidator.validate(account as Object) >> new HashSet()
+        1 * mockTransactionRepository.saveAndFlush(_)
         1 * mockMessage.setBody(transaction.toString())
         0 * _
     }

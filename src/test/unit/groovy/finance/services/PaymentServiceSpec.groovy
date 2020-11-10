@@ -7,12 +7,15 @@ import finance.repositories.ParmRepository
 import finance.repositories.PaymentRepository
 import spock.lang.Specification
 
+import javax.validation.Validator
+
 class PaymentServiceSpec extends Specification {
-    PaymentRepository mockPaymentRepository = Mock(PaymentRepository)
-    ParmRepository mockParmRepository = Mock(ParmRepository)
-    TransactionService mockTransactionService = Mock(TransactionService)
+    PaymentRepository mockPaymentRepository = GroovyMock(PaymentRepository)
+    ParmRepository mockParmRepository = GroovyMock(ParmRepository)
+    TransactionService mockTransactionService = GroovyMock(TransactionService)
     ParmService mockParmService = new ParmService(mockParmRepository)
-    PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParmService)
+    Validator mockValidator = Mock(Validator)
+    PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParmService, mockValidator)
 
     def "test findAll payments empty"() {
         given:
@@ -43,6 +46,7 @@ class PaymentServiceSpec extends Specification {
         isInserted.is(true)
         2 * mockTransactionService.insertTransaction(_)
         1 * mockParmRepository.findByParmName('payment_account') >> Optional.of(parm)
+        1 * mockValidator.validate(_) >> new HashSet()
         1 * mockPaymentRepository.save(payment)
         0 * _
     }
@@ -59,6 +63,7 @@ class PaymentServiceSpec extends Specification {
 
         then:
         1 * mockParmRepository.findByParmName('payment_account') >> Optional.empty()
+        1 * mockValidator.validate(_) >> new HashSet()
         RuntimeException ex = thrown()
         ex.getMessage().contains('failed to read the parm ')
         0 * _

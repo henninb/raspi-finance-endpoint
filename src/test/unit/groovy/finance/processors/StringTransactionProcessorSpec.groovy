@@ -3,12 +3,9 @@ package finance.processors
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
-import spock.lang.Specification
-
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
-import javax.validation.Validator
 
 class StringTransactionProcessorSpec extends Specification {
     Exchange mockExchange = Mock(Exchange)

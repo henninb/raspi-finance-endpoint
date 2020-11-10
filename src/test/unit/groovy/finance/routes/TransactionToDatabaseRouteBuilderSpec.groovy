@@ -4,17 +4,13 @@ import finance.configurations.CamelProperties
 import finance.helpers.TransactionBuilder
 import finance.processors.ExceptionProcessor
 import finance.processors.InsertTransactionProcessor
-import finance.processors.JsonTransactionProcessor
 import finance.processors.StringTransactionProcessor
-import org.apache.camel.EndpointInject
-import org.apache.camel.Exchange
 import org.apache.camel.builder.AdviceWithRouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.model.ModelCamelContext
 import org.apache.camel.model.RouteDefinition
 import org.apache.camel.reifier.RouteReifier
-import spock.lang.Ignore
 import spock.lang.Specification
 
 class TransactionToDatabaseRouteBuilderSpec extends Specification {

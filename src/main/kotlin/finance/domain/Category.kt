@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.Constants
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.LowerCaseConverter

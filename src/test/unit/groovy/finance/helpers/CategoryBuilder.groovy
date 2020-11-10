@@ -1,9 +1,6 @@
 package finance.helpers
 
-
 import finance.domain.Category
-
-import java.sql.Timestamp
 
 class CategoryBuilder {
     String categoryName = 'foo'

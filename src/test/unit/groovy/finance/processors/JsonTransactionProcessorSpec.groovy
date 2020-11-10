@@ -6,6 +6,7 @@ import finance.helpers.TransactionBuilder
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
+
 import javax.validation.Validator
 
 class JsonTransactionProcessorSpec extends Specification {

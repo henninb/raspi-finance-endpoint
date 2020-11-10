@@ -15,7 +15,7 @@ class RandomPortSpec extends Specification {
     ApplicationContext applicationContext
 
     @LocalServerPort
-    protected int localPort;
+    protected int localPort
 
     def "test spring wiring"() {
         given:

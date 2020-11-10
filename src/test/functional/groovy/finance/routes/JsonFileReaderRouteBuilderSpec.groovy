@@ -2,7 +2,6 @@ package finance.routes
 
 import finance.Application
 import finance.configurations.CamelProperties
-import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.repositories.TransactionRepository
 import org.apache.camel.CamelContext
@@ -86,7 +85,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         def transactions = [transaction]
 
         when:
-        producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME,  "${transaction.guid}.txt")
+        producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.txt")
 
         then:
         //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?

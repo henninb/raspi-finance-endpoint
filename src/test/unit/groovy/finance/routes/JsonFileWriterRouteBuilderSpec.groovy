@@ -58,7 +58,7 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
-        producer.sendBodyAndHeader('theData', 'guid','123')
+        producer.sendBodyAndHeader('theData', 'guid', '123')
 
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 1

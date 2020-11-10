@@ -1,17 +1,22 @@
 package finance.services
 
-import finance.domain.Category
 import finance.domain.Description
 import finance.repositories.DescriptionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.*
+import javax.validation.ConstraintViolation
+import javax.validation.Validator
 
 @Service
-open class DescriptionService(private var descriptionRepository: DescriptionRepository) {
+open class DescriptionService(private var descriptionRepository: DescriptionRepository, private val validator: Validator) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertDescription(description: Description): Boolean {
+        val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
+        if (constraintViolations.isNotEmpty()) {
+            logger.error("Cannot insert description as there is a constraint violation on the data.")
+            throw RuntimeException("Cannot insert description as there is a constraint violation on the data.")
+        }
         descriptionRepository.saveAndFlush(description)
         return true
     }

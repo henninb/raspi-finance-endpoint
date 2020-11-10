@@ -5,13 +5,11 @@ import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Date
-import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.Validator
@@ -50,17 +48,16 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Timed
     @Transactional
     open fun insertTransaction(transaction: Transaction): Boolean {
-
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            logger.info("insertTransaction() ConstraintViolation")
+            logger.error("Cannot insert transaction as there is a constraint violation on the data.")
+            throw RuntimeException("Cannot insert transaction as there is a constraint violation on the data.")
         }
-        logger.info("*** insert transaction ***")
         val transactionOptional = findTransactionByGuid(transaction.guid)
 
         if (transactionOptional.isPresent) {
             val transactionDb = transactionOptional.get()
-            logger.info("*** update transaction ***")
+            logger.info("*** Will update transaction in the database ***")
             return updateTransaction(transactionDb, transaction)
         }
 
@@ -68,7 +65,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         processCategory(transaction)
         logger.info("transaction = $transaction")
         transactionRepository.saveAndFlush(transaction)
-        logger.info("*** inserted transaction ***")
+        logger.info("*** Inserted transaction into the database successfully ***")
         return true
     }
 
@@ -253,17 +250,26 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             if (optionalTransaction.isPresent) {
                 setValuesForReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
             } else {
-                logger.info("no record found ${guid}.")
+                logger.error("Cannot clone monthly transaction for a record found '${guid}'.")
+                throw RuntimeException("Cannot clone monthly transaction for a record found '${guid}'.")
             }
         }
         return true
     }
 
-    fun setTransactionReceiptImageByGuid(guid: String, receiptImage: ByteArray) {
-        transactionRepository.setTransactionReceiptImageByGuid(guid, receiptImage)
+    @Timed
+    @Transactional
+    open fun setTransactionReceiptImageByGuid(guid: String, receiptImage: ByteArray): Boolean {
+        val optionalTransaction = transactionRepository.findByGuid(guid)
+        if (optionalTransaction.isPresent) {
+            transactionRepository.setTransactionReceiptImageByGuid(guid, receiptImage)
+            return true
+        }
+        logger.error("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
+        throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
-    private fun setValuesForReoccurringTransactions(optionalTransaction: Optional<Transaction>, fixedMonthDay: Date, amount: String) {
+    private fun setValuesForReoccurringTransactions(optionalTransaction: Optional<Transaction>, fixedMonthDay: Date, amount: String): Boolean {
         val oldTransaction = optionalTransaction.get()
         val transaction = Transaction()
         transaction.guid = UUID.randomUUID().toString()
@@ -278,6 +284,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         transaction.accountId = oldTransaction.accountId
         transaction.accountNameOwner = oldTransaction.accountNameOwner
         transactionRepository.saveAndFlush(transaction)
+        return true
     }
 
     private fun calculateDayOfTheMonth(isMonthEnd: String, calendar: Calendar, specificDay: String): Date {
@@ -293,7 +300,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     @Timed
     @Transactional
-    open fun changeAccountNameOwner(map: Map<String, String>) {
+    open fun changeAccountNameOwner(map: Map<String, String>): Boolean {
         val accountNameOwner = map["accountNameOwner"]
         val guid = map["guid"]
 
@@ -307,10 +314,14 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 transaction.accountNameOwner = account.accountNameOwner
                 transaction.accountId = account.accountId
                 transactionRepository.saveAndFlush(transaction)
+                return true
+            } else {
+                logger.error("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
+                throw RuntimeException("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
             }
-        } else {
-            logger.info("a null in one of the two variables")
         }
+        logger.error("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
+        throw RuntimeException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
     }
 
     @Timed
@@ -321,11 +332,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             val transaction = transactionOptional.get()
             transaction.transactionState = transactionState
             transactionRepository.saveAndFlush(transaction)
-        } else {
-            logger.info("*** updateTransactionState transaction not found $guid ***")
-            return false
+            return true
         }
-        return true
+        logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
+        throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
     }
 
     @Timed
@@ -336,10 +346,9 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
             transactionRepository.saveAndFlush(transaction)
-        } else {
-            logger.info("*** updateTransactionReoccurringState transaction not found $guid ***")
-            return false
+            return true
         }
-        return true
+        logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
+        throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
     }
 }

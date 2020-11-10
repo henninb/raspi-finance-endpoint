@@ -1,9 +1,7 @@
 package finance.controllers
 
 import finance.Application
-import finance.domain.Account
 import finance.domain.Category
-import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import finance.services.AccountService
 import finance.services.CategoryService
@@ -13,7 +11,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 

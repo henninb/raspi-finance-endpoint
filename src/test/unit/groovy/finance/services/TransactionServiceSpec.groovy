@@ -4,7 +4,6 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Transaction
-import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
@@ -20,7 +19,7 @@ class TransactionServiceSpec extends Specification {
     Validator mockValidator = Mock(Validator)
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     CategoryRepository mockCategoryRepository = Mock(CategoryRepository)
-    CategoryService categoryService = new CategoryService(mockCategoryRepository)
+    CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator)
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
     Category category = CategoryBuilder.builder().build()
 
@@ -212,6 +211,7 @@ class TransactionServiceSpec extends Specification {
         1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
         1 * mockCategoryRepository.findByCategory(categoryName) >> Optional.empty()
+        1 * mockValidator.validate(category) >> new HashSet()
         1 * mockCategoryRepository.saveAndFlush(category)
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         0 * _

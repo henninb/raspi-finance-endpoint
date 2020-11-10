@@ -24,6 +24,7 @@ class ParmControllerSpec extends Specification {
     static class MockParmService implements ParmApiService {
 
         BehaviorDelegate<ParmApiService> delegate
+
         MockParmService(BehaviorDelegate<ParmApiService> delegate) {
             this.delegate = delegate
         }
@@ -37,6 +38,7 @@ class ParmControllerSpec extends Specification {
     def setup() {
 
     }
+
     def setupSpec() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL).build()
         MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build()
