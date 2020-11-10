@@ -27,6 +27,7 @@ ssl/
 *.ks
 *.der
 *.ts
+test.json
 
 ### Files ###
 ip

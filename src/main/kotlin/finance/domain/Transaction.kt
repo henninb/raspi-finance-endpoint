@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.*
+import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
@@ -15,7 +15,11 @@ import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
+import finance.utils.LowerCaseConverter
+import finance.utils.TransactionStateConverter
+import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
+import org.hibernate.annotations.Type
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
@@ -102,16 +106,23 @@ data class Transaction(
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "notes", nullable = false)
-        var notes: String
+        var notes: String,
+
+        @Lob
+        @JsonProperty
+        @Type(type = "org.hibernate.type.BinaryType")
+        @Column(name = "receipt_image", nullable = true)
+        var receiptImage: ByteArray?
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, "")
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, "", ByteArray(0))
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
+
 
     //Foreign key constraint
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)

@@ -15,13 +15,18 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun findByGuid(guid: String): Optional<Transaction>
 
     @Modifying
-    @Query("UPDATE TransactionEntity set amount = ?1 WHERE guid = ?2")
     @Transactional
+    @Query("UPDATE TransactionEntity set amount = ?1 WHERE guid = ?2")
     fun setAmountByGuid(amount: BigDecimal, guild: String)
 
     @Modifying
-    @Query("UPDATE TransactionEntity set transaction_state = ?1 WHERE guid = ?2")
     @Transactional
+    @Query("UPDATE TransactionEntity set receipt_image = ?2 WHERE guid = ?1")
+    fun setTransactionReceiptImageByGuid(guild: String, receiptImage: ByteArray)
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE TransactionEntity set transaction_state = ?1 WHERE guid = ?2")
     fun setTransactionStateByGuid(transactionState: TransactionState, guild: String)
 
     //@Transactional

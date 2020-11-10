@@ -259,6 +259,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         return true
     }
 
+    fun setTransactionReceiptImageByGuid(guid: String, receiptImage: ByteArray) {
+        transactionRepository.setTransactionReceiptImageByGuid(guid, receiptImage)
+    }
+
     private fun setValuesForReoccurringTransactions(optionalTransaction: Optional<Transaction>, fixedMonthDay: Date, amount: String) {
         val oldTransaction = optionalTransaction.get()
         val transaction = Transaction()
