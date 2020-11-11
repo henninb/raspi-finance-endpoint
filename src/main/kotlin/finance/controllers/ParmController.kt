@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parm
 import finance.services.ParmService
 import org.apache.logging.log4j.LogManager
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException

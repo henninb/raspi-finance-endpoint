@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parm
 import finance.repositories.ParmRepository
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 

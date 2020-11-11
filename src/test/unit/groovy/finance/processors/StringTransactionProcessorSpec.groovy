@@ -1,6 +1,6 @@
 package finance.processors
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import org.apache.camel.Exchange

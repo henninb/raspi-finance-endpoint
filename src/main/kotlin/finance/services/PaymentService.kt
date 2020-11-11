@@ -6,9 +6,7 @@ import finance.domain.Payment
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
-import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*

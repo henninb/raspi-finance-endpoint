@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.repositories.AccountRepository
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
@@ -65,8 +64,11 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
 
         if (!accountOptional.isPresent) {
             accountRepository.saveAndFlush(account)
+            logger.info("inserted account successfully.")
+        } else {
+            logger.info("account not inserted as the account already exists ${account.accountNameOwner}.")
         }
-        //logger.info("INFO: transactionRepository.saveAndFlush success.")
+
         return true
     }
 

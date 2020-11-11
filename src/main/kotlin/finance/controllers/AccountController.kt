@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
-import java.util.logging.Logger
 import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
@@ -44,7 +43,6 @@ class AccountController @Autowired constructor(private var accountService: Accou
         }
         return ResponseEntity.ok(accountNameOwners)
     }
-
 
     //http://localhost:8080/account/select/active
     @GetMapping(path = ["/select/active"], produces = ["application/json"])
@@ -103,7 +101,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not update this account: ${toBePatchedTransaction.accountNameOwner}.")
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
         MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
         IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class])

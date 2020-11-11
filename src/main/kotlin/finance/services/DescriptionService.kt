@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Description
 import finance.repositories.DescriptionRepository
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -34,7 +33,7 @@ open class DescriptionService(private var descriptionRepository: DescriptionRepo
         return descriptionRepository.findByActiveStatusOrderByDescription(true)
     }
 
-//    fun findByDescription(description: String): Optional<Description> {
+    //    fun findByDescription(description: String): Optional<Description> {
 //        val descriptionOptional: Optional<Description> = descriptionRepository.findByDescription(description)
 //        if (descriptionOptional.isPresent) {
 //            return descriptionOptional

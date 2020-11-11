@@ -5,8 +5,6 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.TransactionService
 import org.apache.logging.log4j.LogManager
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
@@ -17,7 +15,6 @@ import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
-import java.lang.System.getLogger
 import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolationException
@@ -119,7 +116,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
     @PutMapping(path = ["/update/receipt/image/{guid}"], produces = ["application/json"])
     fun setTransactionReceiptImageByGuid(@PathVariable("guid") guid: String, @RequestBody payload: String): ResponseEntity<String> {
-        logger.info("guid = ${guid}")
+        logger.info("guid = $guid")
         transactionService.setTransactionReceiptImageByGuid(guid, payload.toByteArray())
         return ResponseEntity.ok("transaction receipt image updated")
     }

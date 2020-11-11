@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 CREATE TABLE IF NOT EXISTS t_receipt_image
 (
     transaction_id BIGINT    NOT NULL,
-    receipt_image      BYTEA     NOT NULL,
+    receipt_image  BYTEA     NOT NULL,
     date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     PRIMARY KEY (transaction_id)
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
     description    TEXT UNIQUE NOT NULL,
-    active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
+    active_status  BOOLEAN     NOT NULL DEFAULT TRUE,
     date_updated   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added     TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
