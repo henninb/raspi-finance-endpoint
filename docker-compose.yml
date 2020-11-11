@@ -1,6 +1,7 @@
 version: "3.7"
 services:
   raspi-finance-endpoint:
+    image: raspi-finance-endpoint
     build:
       context: ./
       args:

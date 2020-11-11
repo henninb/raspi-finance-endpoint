@@ -61,4 +61,14 @@ class CategoryController(private var categoryService: CategoryService) {
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         return response
     }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(value = [Exception::class])
+    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        logger.error("internal server error: ", throwable)
+        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        logger.info("response: $response")
+        return response
+    }
 }

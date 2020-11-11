@@ -95,10 +95,11 @@ data class Transaction(
         var transactionState: TransactionState,
 
         @JsonProperty
+        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
         var activeStatus: Boolean?,
 
         @JsonProperty
-        @Column(name = "reoccurring", columnDefinition = "BOOLEAN DEFAULT TRUE", nullable = false)
+        @Column(name = "reoccurring", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
         var reoccurring: Boolean?,
 
         @JsonProperty

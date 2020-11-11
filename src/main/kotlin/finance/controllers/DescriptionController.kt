@@ -26,17 +26,18 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         return ResponseEntity.ok(descriptions)
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"description":"test"}' http://localhost:8080/description/insert
+    //curl --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' https://hornsup:8080/description/insert
     @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertDescription(@RequestBody description: Description): ResponseEntity<String> {
         descriptionService.insertDescription(description)
-        logger.info("insertDescription")
+        logger.info("description inserted")
         return ResponseEntity.ok("description inserted")
     }
 
     @DeleteMapping(path = ["/delete/{description}"], produces = ["application/json"])
     fun deleteByDescription(@PathVariable description: String): ResponseEntity<String> {
         descriptionService.deleteByDescription(description)
+        logger.info("description deleted")
         return ResponseEntity.ok("payment deleted")
     }
 
