@@ -19,11 +19,11 @@ import spock.lang.Specification
 import javax.validation.Validator
 
 class InsertTransactionProcessorSpec extends Specification {
-    Message mockMessage = Mock(Message)
-    Exchange mockExchange = Mock(Exchange)
-    TransactionRepository mockTransactionRepository = Mock(TransactionRepository)
-    AccountRepository mockAccountRepository = Mock(AccountRepository)
-    Validator mockValidator = Mock(Validator)
+    Message mockMessage = GroovyMock(Message)
+    Exchange mockExchange = GroovyMock(Exchange)
+    TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
+    AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    Validator mockValidator = GroovyMock(Validator)
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator)

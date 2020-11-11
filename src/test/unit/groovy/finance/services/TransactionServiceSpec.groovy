@@ -14,11 +14,11 @@ import spock.lang.Specification
 import javax.validation.Validator
 
 class TransactionServiceSpec extends Specification {
-    TransactionRepository mockTransactionRepository = Mock(TransactionRepository)
-    AccountRepository mockAccountRepository = Mock(AccountRepository)
-    Validator mockValidator = Mock(Validator)
+    TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
+    AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    Validator mockValidator = GroovyMock(Validator)
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
-    CategoryRepository mockCategoryRepository = Mock(CategoryRepository)
+    CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator)
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
     Category category = CategoryBuilder.builder().build()

@@ -12,6 +12,8 @@ import javax.validation.Validator
 class JsonTransactionProcessorSpec extends Specification {
     Validator mockValidator = GroovyMock(Validator)
     JsonTransactionProcessor processor = new JsonTransactionProcessor(mockValidator)
+    Exchange mockExchange = GroovyMock(Exchange)
+    Message mockMessage = GroovyMock(Message)
 
     String payload = "[{\"guid\":\"0a23fec3-18c8-4b89-a5af-68fab8db8620\",\"accountId\":0,\"accountType\":\"credit\",\"accountNameOwner\":\"amex_brian\",\"transactionDate\":1475647200000,\"description\":\"target.com\",\"category\":\"online\",\"amount\":33.08,\"cleared\":1,\"reoccurring\":false,\"notes\":\"\",\"dateUpdated\":1475588992000,\"dateAdded\":1475588992000,\"sha256\":\"\"}," +
             "{\"transactionId\":0,\"guid\":\"0a23fec3-18c8-4b89-a5af-68fab8db8620\",\"accountId\":0,\"accountType\":\"credit\",\"accountNameOwner\":\"amex_brian\",\"transactionDate\":1475647200000,\"description\":\"Cafe Roale\",\"category\":\"restaurant\",\"amount\":3.08,\"cleared\":1,\"reoccurring\":false,\"notes\":\"\",\"dateUpdated\":1475588992000,\"dateAdded\":1475588992000,\"sha256\":\"\"}]"
@@ -23,9 +25,6 @@ class JsonTransactionProcessorSpec extends Specification {
     def "test JsonTransactionProcessor - process - valid records"() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
-        Exchange mockExchange = Mock(Exchange)
-        Message mockMessage = Mock(Message)
-        ObjectMapper mapper = new ObjectMapper()
         List<Transaction> transactions = [transaction] //mapper.readValue(payload, Transaction[].class)
 
         when:
@@ -45,13 +44,6 @@ class JsonTransactionProcessorSpec extends Specification {
 
 
     def "test JsonTransactionProcessor - process - invalid records"() {
-        Exchange mockExchange = Mock(Exchange)
-        Message mockMessage = Mock(Message)
-        ObjectMapper mapper = new ObjectMapper()
-
-        given:
-        List<Transaction> transactions = mapper.readValue(payload, Transaction[].class)
-
         when:
         processor.process(mockExchange)
 
