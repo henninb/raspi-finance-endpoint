@@ -1,7 +1,10 @@
 package finance.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Description
 import finance.services.DescriptionService
+import org.apache.logging.log4j.LogManager
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -16,7 +19,6 @@ import javax.validation.ValidationException
 @RestController
 @RequestMapping("/description")
 class DescriptionController(private var descriptionService: DescriptionService) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //https://hornsup:8080/description/select/all
     @GetMapping(path = ["/select/all"], produces = ["application/json"])
@@ -49,5 +51,10 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         logger.error("Bad Request", throwable)
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         return response
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

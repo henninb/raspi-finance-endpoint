@@ -1,10 +1,13 @@
 package finance.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.AccountType
 import finance.domain.Payment
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
+import io.micrometer.core.annotation.Timed
+import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -16,13 +19,13 @@ import javax.validation.Validator
 @Service
 class PaymentService(private var paymentRepository: PaymentRepository, private var transactionService: TransactionService,
                      private var parmService: ParmService, private val validator: Validator) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findAllPayments(): List<Payment> {
         return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
     }
 
     //TODO: make this method transactional - what happens if one inserts fails?
+    //@Timed
     fun insertPayment(payment: Payment): Boolean {
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
@@ -100,5 +103,10 @@ class PaymentService(private var paymentRepository: PaymentRepository, private v
             return paymentOptional
         }
         return Optional.empty()
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

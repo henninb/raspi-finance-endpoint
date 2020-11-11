@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.CustomProperties
 import finance.domain.Transaction
+import org.apache.logging.log4j.LogManager
 import org.apache.poi.poifs.crypt.Decryptor
 import org.apache.poi.poifs.crypt.EncryptionInfo
 import org.apache.poi.poifs.crypt.Encryptor
@@ -19,6 +20,7 @@ import java.util.stream.IntStream
 
 @Service
 class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties, private val transactionService: TransactionService) {
+
     @Throws(Exception::class)
     fun processProtectedExcelFile(inputExcelFileName: String) {
         logger.info("${customProperties.excelInputFilePath}/${inputExcelFileName}")
@@ -139,8 +141,7 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
         const val COL_AMOUNT = 5
         const val COL_CLEARED = 6
         const val COL_NOTES = 7
-        val mapper = ObjectMapper()
-        val logger: Logger
-            get() = LoggerFactory.getLogger(ExcelFileService::class.java)
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

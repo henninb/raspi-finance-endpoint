@@ -1,8 +1,10 @@
 package finance.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.*
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
+import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -21,7 +23,6 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                                                      private var accountService: AccountService,
                                                      private var categoryService: CategoryService,
                                                      private val validator: Validator) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
 //    fun findAllTransactions(): List<Transaction> {
 //        return transactionRepository.findAll()
@@ -351,5 +352,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         }
         logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

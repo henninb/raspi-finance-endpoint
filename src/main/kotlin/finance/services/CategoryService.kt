@@ -1,7 +1,9 @@
 package finance.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Category
 import finance.repositories.CategoryRepository
+import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
@@ -11,7 +13,6 @@ import javax.validation.Validator
 
 @Service
 class CategoryService(private var categoryRepository: CategoryRepository, private val validator: Validator) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertCategory(category: Category): Boolean {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
@@ -38,5 +39,10 @@ class CategoryService(private var categoryRepository: CategoryRepository, privat
 
     fun fetchAllCategories(): List<Category> {
         return categoryRepository.findAll()
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

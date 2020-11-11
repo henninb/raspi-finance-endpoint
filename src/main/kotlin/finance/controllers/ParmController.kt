@@ -1,7 +1,10 @@
 package finance.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parm
 import finance.services.ParmService
+import org.apache.logging.log4j.LogManager
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,7 +20,6 @@ import javax.validation.ValidationException
 @RestController
 @RequestMapping("/parm")
 class ParmController(private var parmService: ParmService) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //https://hornsup:8080/parm/select/payment_account
     @GetMapping(path = ["/select/{parmName}"], produces = ["application/json"])
@@ -62,5 +64,10 @@ class ParmController(private var parmService: ParmService) {
         response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }
