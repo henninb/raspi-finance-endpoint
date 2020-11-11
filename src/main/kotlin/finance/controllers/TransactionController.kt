@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.TransactionService
+import org.apache.logging.log4j.LogManager
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
@@ -15,6 +17,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
+import java.lang.System.getLogger
 import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolationException
@@ -27,8 +30,6 @@ import javax.validation.ValidationException
 @RestController
 @RequestMapping("/transaction")
 class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
-
     //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
@@ -191,5 +192,6 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     companion object {
         private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

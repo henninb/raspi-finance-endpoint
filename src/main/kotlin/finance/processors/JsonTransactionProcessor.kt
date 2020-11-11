@@ -5,6 +5,7 @@ import finance.domain.Transaction
 import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
+import org.apache.logging.log4j.LogManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,8 +41,7 @@ open class JsonTransactionProcessor @Autowired constructor(private val validator
     }
 
     companion object {
-        val mapper = ObjectMapper()
-        val logger: Logger
-            get() = LoggerFactory.getLogger(JsonTransactionProcessor::class.java)
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

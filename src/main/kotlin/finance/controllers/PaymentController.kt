@@ -1,7 +1,10 @@
 package finance.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Payment
 import finance.services.PaymentService
+import org.apache.logging.log4j.LogManager
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
@@ -20,7 +23,6 @@ import javax.validation.ValidationException
 @RestController
 @RequestMapping("/payment")
 class PaymentController(private var paymentService: PaymentService) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     @GetMapping(path = ["/select"], produces = ["application/json"])
     fun selectAllPayments(): ResponseEntity<List<Payment>> {
@@ -77,5 +79,10 @@ class PaymentController(private var paymentService: PaymentService) {
         response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

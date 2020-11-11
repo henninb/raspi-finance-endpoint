@@ -1,7 +1,9 @@
 package finance.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.repositories.AccountRepository
+import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.InvalidDataAccessResourceUsageException
@@ -14,7 +16,6 @@ import javax.validation.Validator
 @Service
 class AccountService @Autowired constructor(private var accountRepository: AccountRepository,
                                             private val validator: Validator) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
@@ -95,5 +96,10 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         }
 
         return false
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

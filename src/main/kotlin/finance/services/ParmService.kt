@@ -1,14 +1,15 @@
 package finance.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parm
 import finance.repositories.ParmRepository
+import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 open class ParmService(private var parmRepository: ParmRepository) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertParm(parm: Parm): Boolean {
         parmRepository.saveAndFlush(parm)
@@ -27,5 +28,10 @@ open class ParmService(private var parmRepository: ParmRepository) {
             return parmOptional
         }
         return Optional.empty()
+    }
+
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

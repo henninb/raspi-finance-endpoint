@@ -6,6 +6,7 @@ import finance.services.TransactionService
 import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
+import org.apache.logging.log4j.LogManager
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,8 +39,7 @@ open class InsertTransactionProcessor @Autowired constructor(
     }
 
     companion object {
-        val mapper = ObjectMapper()
-        val logger: Logger
-            get() = LoggerFactory.getLogger(InsertTransactionProcessor::class.java)
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }

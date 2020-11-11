@@ -1,7 +1,9 @@
 package finance.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Description
 import finance.repositories.DescriptionRepository
+import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.validation.ConstraintViolation
@@ -10,7 +12,6 @@ import javax.validation.Validator
 
 @Service
 open class DescriptionService(private var descriptionRepository: DescriptionRepository, private val validator: Validator) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun insertDescription(description: Description): Boolean {
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
@@ -40,4 +41,8 @@ open class DescriptionService(private var descriptionRepository: DescriptionRepo
 //        }
 //        return Optional.empty()
 //    }
+    companion object {
+        private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
+    }
 }

@@ -3,7 +3,7 @@ package finance.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.services.AccountService
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
@@ -15,15 +15,14 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
+import java.util.logging.Logger
 import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
 @CrossOrigin
 @RestController
 @RequestMapping("/account")
-//@Validated
 class AccountController @Autowired constructor(private var accountService: AccountService) {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     //http://localhost:8080/account/totals
     @GetMapping(path = ["totals"], produces = ["application/json"])
@@ -146,5 +145,6 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     companion object {
         private val mapper = ObjectMapper()
+        private val logger = LogManager.getLogger()
     }
 }
