@@ -49,7 +49,6 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 //        def result = ''
 //        if ( res?.isPresent() ) {
 //            result = res.get()
-//            println result
 //        }
 
 

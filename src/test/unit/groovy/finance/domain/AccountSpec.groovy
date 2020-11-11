@@ -72,10 +72,11 @@ class AccountSpec extends Specification {
         violations.iterator().next().getInvalidValue() == account.getProperties()[invalidField]
 
         where:
-        invalidField       | accountId | accountType        | accountNameOwner   | moniker | activeStatus | totals                 | totalsBalanced         | expectedError                              | errorCount
-        'accountNameOwner' | 123L      | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | 123L      | AccountType.Credit | '_b'               | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'size must be between 3 and 40'            | 1
-        'moniker'          | 123L      | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
-        'moniker'          | 123L      | AccountType.Credit | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        invalidField       | accountId | accountType                    | accountNameOwner   | moniker | activeStatus | totals                 | totalsBalanced         | expectedError                              | errorCount
+        'accountNameOwner' | 123L      | AccountType.Debit              | 'blah_chase_brian' | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | 123L      | AccountType.Credit             | '_b'               | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'size must be between 3 and 40'            | 1
+        'moniker'          | 123L      | AccountType.Credit             | 'chase_brian'      | 'abc'   | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        'moniker'          | 123L      | AccountType.Credit             | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        //'accountType'      | 123L      | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
     }
 }

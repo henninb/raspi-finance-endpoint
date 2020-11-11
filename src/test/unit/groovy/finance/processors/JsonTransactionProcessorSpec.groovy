@@ -1,12 +1,10 @@
 package finance.processors
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
-
 import javax.validation.Validator
 
 class JsonTransactionProcessorSpec extends Specification {
@@ -25,7 +23,7 @@ class JsonTransactionProcessorSpec extends Specification {
     def "test JsonTransactionProcessor - process - valid records"() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
-        List<Transaction> transactions = [transaction] //mapper.readValue(payload, Transaction[].class)
+        List<Transaction> transactions = [transaction]
 
         when:
         processor.process(mockExchange)
@@ -54,13 +52,8 @@ class JsonTransactionProcessorSpec extends Specification {
         2 * mockValidator.validate(_) >> new HashSet()
         1 * mockMessage.setBody({
             it ->
-                //println(it.size())
-                //println(it.size() == 1)
-                //println(it.size() == 2)
-                //println "transactions.getClass()=${transactions.getClass()}"
                 return it.size() == 1
-        }
-        )
+            })
         0 * _
     }
 

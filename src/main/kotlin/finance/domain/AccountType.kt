@@ -17,4 +17,11 @@ enum class AccountType {
     override fun toString(): String {
         return name.toLowerCase()
     }
+
+//    fun parseEAccountType(str: String): AccountType {
+//        return when(str) {
+//            "EXAMPLE5" -> AccountType.Undefined
+//            else -> AccountType.valueOf(str)
+//        }
+//    }
 }

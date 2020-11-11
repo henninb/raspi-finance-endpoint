@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Payment
 import finance.services.PaymentService
 import org.apache.logging.log4j.LogManager
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
