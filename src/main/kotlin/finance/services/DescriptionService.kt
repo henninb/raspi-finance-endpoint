@@ -22,14 +22,15 @@ open class DescriptionService(private var descriptionRepository: DescriptionRepo
         return true
     }
 
-    fun deleteByDescription(description: String) {
+    fun deleteByDescription(description: String): Boolean {
         logger.info("deleteByCategory")
 
         descriptionRepository.deleteByDescription(description)
+        return true
     }
 
     fun fetchAllDescriptions(): List<Description> {
-        return descriptionRepository.findAll()
+        return descriptionRepository.findByActiveStatusOrderByDescription(true)
     }
 
 //    fun findByDescription(description: String): Optional<Description> {

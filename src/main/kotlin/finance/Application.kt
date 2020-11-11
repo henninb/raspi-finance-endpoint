@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @SpringBootApplication
 @EnableConfigurationProperties
 @EnableTransactionManagement
-// This class must not be final or Spring Boot is not happy.
+// TODO: This class must not be final or Spring Boot is not happy.
 open class Application {
     companion object {
         @JvmStatic

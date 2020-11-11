@@ -46,10 +46,9 @@ data class Account(
 
         @JsonProperty
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean,
+        var activeStatus: Boolean?,
 
         @JsonProperty
-        //@Size(min = 4, max = 4, message = "Must be 4 digits.")
         @field:Pattern(regexp = "^[0-9]{4}$", message = "Must be 4 digits.")
         @Column(name = "moniker", columnDefinition = "TEXT DEFAULT '0000'")
         var moniker: String,

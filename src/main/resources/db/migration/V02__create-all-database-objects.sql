@@ -43,6 +43,8 @@ EXECUTE PROCEDURE fn_update_timestamp_account();
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_account() RETURNS TRIGGER AS
 $$
 BEGIN
+    NEW.active_status := true;
+    NEW.date_updated := CURRENT_TIMESTAMP;
     NEW.date_added := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
@@ -72,6 +74,7 @@ CREATE OR REPLACE FUNCTION fn_insert_timestamp_category() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
+    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -111,6 +114,18 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
     date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     PRIMARY KEY (category_id, transaction_id)
+);
+
+-------------------
+-- ReceiptImage  --
+-------------------
+CREATE TABLE IF NOT EXISTS t_receipt_image
+(
+    transaction_id BIGINT    NOT NULL,
+    receipt_image      BYTEA     NOT NULL,
+    date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    PRIMARY KEY (transaction_id)
 );
 
 -----------------
@@ -154,6 +169,7 @@ CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
+    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -194,6 +210,8 @@ CREATE TABLE IF NOT EXISTS t_payment
     amount             DECIMAL(12, 2) NOT NULL DEFAULT 0.0,
     guid_source        TEXT           NOT NULL,
     guid_destination   TEXT           NOT NULL,
+    --TODO: bh 11/11/2020 - need to add this field
+    --active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
@@ -205,6 +223,8 @@ CREATE OR REPLACE FUNCTION fn_insert_timestamp_payment() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
+    --TODO: bh 11/11/2020 - need to add
+    --NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -234,7 +254,6 @@ CREATE TRIGGER tr_update_timestamp_payment
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_timestamp_payment();
 
-
 -------------
 -- Parm --
 -------------
@@ -243,6 +262,8 @@ CREATE TABLE IF NOT EXISTS t_parm
     parm_id      BIGSERIAL PRIMARY KEY,
     parm_name    TEXT UNIQUE NOT NULL,
     parm_value   TEXT        NOT NULL,
+    --TODO: bh 11/11/2020 - need to add this field
+    --active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     date_updated TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
@@ -251,6 +272,8 @@ CREATE OR REPLACE FUNCTION fn_insert_timestamp_parm() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
+    --TODO: bh 11/11/2020 - need to add
+    --NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -289,14 +312,19 @@ CREATE TABLE IF NOT EXISTS t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
     description    TEXT UNIQUE NOT NULL,
+    active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     date_updated   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added     TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
+    date_added     TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
+
+--ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_description() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
+    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
