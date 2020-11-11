@@ -8,11 +8,10 @@ import org.apache.camel.Message
 import spock.lang.Specification
 
 class StringTransactionProcessorSpec extends Specification {
-    Exchange mockExchange = Mock(Exchange)
-    Message mockMessage = Mock(Message)
-    ObjectMapper mapper = new ObjectMapper()
+    Exchange mockExchange = GroovyMock(Exchange)
+    Message mockMessage = GroovyMock(Message)
 
-    void "test StringTransactionProcessor"() {
+    def "test -- StringTransactionProcessor"() {
         given:
         StringTransactionProcessor processor = new StringTransactionProcessor()
         Transaction transaction = TransactionBuilder.builder().build()
@@ -23,9 +22,7 @@ class StringTransactionProcessorSpec extends Specification {
         then:
         1 * mockExchange.getIn() >> mockMessage
         1 * mockMessage.getBody(Transaction.class) >> transaction
-        1 * mockExchange.setProperty('guid', transaction.guid)
-        //TODO: this should be 1
-        //0 * mockMessage.setBody(transaction.toString())
+        1 * mockMessage.setBody(transaction.toString())
         1 * _
     }
 }

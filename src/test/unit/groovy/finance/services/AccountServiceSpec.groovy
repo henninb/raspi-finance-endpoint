@@ -13,8 +13,8 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 class AccountServiceSpec extends Specification {
-    AccountRepository mockAccountRepository = Mock(AccountRepository)
-    Validator mockValidator = Mock(Validator)
+    AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    Validator mockValidator = GroovyMock(Validator)
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
     private ObjectMapper mapper = new ObjectMapper()
 

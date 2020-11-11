@@ -15,8 +15,8 @@ import spock.lang.Specification
 
 class JsonFileReaderRouteBuilderSpec extends Specification {
     ModelCamelContext camelContext
-    JsonTransactionProcessor mockJsonTransactionProcessor = Mock(JsonTransactionProcessor)
-    ExceptionProcessor mockExceptionProcessor = Mock(ExceptionProcessor)
+    JsonTransactionProcessor mockJsonTransactionProcessor = GroovyMock(JsonTransactionProcessor)
+    ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
 
     CamelProperties camelProperties = new CamelProperties(
             "true",

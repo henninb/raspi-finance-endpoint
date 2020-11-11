@@ -13,7 +13,7 @@ import spock.lang.Specification
 class JsonFileWriterRouteBuilderSpec extends Specification {
 
     ModelCamelContext camelContext
-    ExceptionProcessor mockExceptionProcessor = Mock(ExceptionProcessor)
+    ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
 
     CamelProperties camelProperties = new CamelProperties(
             "true",

@@ -15,9 +15,9 @@ import spock.lang.Specification
 
 class TransactionToDatabaseRouteBuilderSpec extends Specification {
     ModelCamelContext camelContext
-    StringTransactionProcessor stringTransactionProcessorMock = Mock(StringTransactionProcessor)
-    InsertTransactionProcessor insertTransactionProcessorMock = Mock(InsertTransactionProcessor)
-    ExceptionProcessor mockExceptionProcessor = Mock(ExceptionProcessor)
+    StringTransactionProcessor stringTransactionProcessorMock = GroovyMock(StringTransactionProcessor)
+    InsertTransactionProcessor insertTransactionProcessorMock = GroovyMock(InsertTransactionProcessor)
+    ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
 
     CamelProperties camelProperties = new CamelProperties(
             "true",

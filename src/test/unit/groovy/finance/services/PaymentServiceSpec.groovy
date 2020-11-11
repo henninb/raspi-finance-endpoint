@@ -14,7 +14,7 @@ class PaymentServiceSpec extends Specification {
     ParmRepository mockParmRepository = GroovyMock(ParmRepository)
     TransactionService mockTransactionService = GroovyMock(TransactionService)
     ParmService mockParmService = new ParmService(mockParmRepository)
-    Validator mockValidator = Mock(Validator)
+    Validator mockValidator = GroovyMock(Validator)
     PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParmService, mockValidator)
 
     def "test findAll payments empty"() {
