@@ -19,8 +19,7 @@ class AccountTypeConverter : AttributeConverter<AccountType, String> {
         return when (attribute.trim().toLowerCase()) {
             "credit" -> AccountType.Credit
             "debit" -> AccountType.Debit
-            "unknown" -> AccountType.Undefined
-            //else -> throw IllegalArgumentException("Unknown attribute: $attribute")
+            "undefined" -> AccountType.Undefined
             else -> throw RuntimeException("Unknown attribute: $attribute")
         }
     }

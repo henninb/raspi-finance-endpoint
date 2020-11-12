@@ -51,6 +51,19 @@ class AccountSpec extends Specification {
         0 * _
     }
 
+
+    def "test validation valid account - invalid enum"() {
+        when:
+        AccountBuilder.builder().accountType(AccountType.valueOf("invalid")).build()
+
+        then:
+        def ex = thrown(IllegalArgumentException)
+        ex.message.contains('No enum constant finance.domain.AccountType')
+        //violations.isEmpty()
+        0 * _
+    }
+
+
     @Unroll
     def "test validation invalid #invalidField has error #expectedError"() {
         given:

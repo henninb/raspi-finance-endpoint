@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.AccountTypeConverter
+import finance.utils.*
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
@@ -15,9 +15,6 @@ import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
-import finance.utils.LowerCaseConverter
-import finance.utils.TransactionStateConverter
-import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import org.hibernate.annotations.Type
 import org.slf4j.Logger
@@ -102,6 +99,11 @@ data class Transaction(
         @Column(name = "reoccurring", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
         var reoccurring: Boolean?,
 
+        @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
+        @JsonProperty
+        @field:Convert(converter = ReoccurringTypeConverter::class)
+        var reoccurringType: ReoccurringType?,
+
         @JsonProperty
         @field:Size(max = 100)
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
@@ -117,14 +119,13 @@ data class Transaction(
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, "", ByteArray(0))
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", ByteArray(0))
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
-
-
+    
     //Foreign key constraint
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)
