@@ -2,15 +2,17 @@ package finance.processors
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
+import finance.services.MeterService
 import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.apache.logging.log4j.LogManager
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-open class StringTransactionProcessor : Processor {
+open class StringTransactionProcessor @Autowired constructor(private var meterService: MeterService) : Processor {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     @Throws(Exception::class)

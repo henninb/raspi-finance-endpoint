@@ -2,6 +2,7 @@ package finance.processors
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
+import finance.services.MeterService
 import finance.services.TransactionService
 import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
@@ -12,7 +13,8 @@ import org.springframework.stereotype.Component
 
 @Component
 open class InsertTransactionProcessor @Autowired constructor(
-        private var transactionService: TransactionService
+        private var transactionService: TransactionService,
+        private var meterService: MeterService
 ) : Processor {
     //private val logger = LoggerFactory.getLogger(this.javaClass)
     //private val logger = LoggerFactory.getLogger(javaClass)

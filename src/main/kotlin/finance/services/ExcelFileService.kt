@@ -17,7 +17,9 @@ import java.io.*
 import java.util.stream.IntStream
 
 @Service
-class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties, private val transactionService: TransactionService) {
+class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties,
+                                              private val transactionService: TransactionService,
+                                              private var meterService: MeterService) {
 
     @Throws(Exception::class)
     fun processProtectedExcelFile(inputExcelFileName: String) {

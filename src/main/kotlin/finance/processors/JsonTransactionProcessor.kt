@@ -2,6 +2,7 @@ package finance.processors
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
+import finance.services.MeterService
 import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
@@ -12,7 +13,8 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 @Component
-open class JsonTransactionProcessor @Autowired constructor(private val validator: Validator) : Processor {
+open class JsonTransactionProcessor @Autowired constructor(private val validator: Validator,
+                                                           private var meterService: MeterService) : Processor {
 
     @Throws(Exception::class)
     @Timed("json.transaction.processor.timer")

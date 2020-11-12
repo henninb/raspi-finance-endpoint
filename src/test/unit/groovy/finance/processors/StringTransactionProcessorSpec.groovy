@@ -3,6 +3,7 @@ package finance.processors
 
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
+import finance.services.MeterService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
@@ -10,10 +11,11 @@ import spock.lang.Specification
 class StringTransactionProcessorSpec extends Specification {
     Exchange mockExchange = GroovyMock(Exchange)
     Message mockMessage = GroovyMock(Message)
+    MeterService mockMeterService = GroovyMock(MeterService)
+    StringTransactionProcessor processor = new StringTransactionProcessor(mockMeterService)
 
     def "test -- StringTransactionProcessor"() {
         given:
-        StringTransactionProcessor processor = new StringTransactionProcessor()
         Transaction transaction = TransactionBuilder.builder().build()
 
         when:

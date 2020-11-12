@@ -14,7 +14,8 @@ import javax.validation.Validator
 
 @Service
 class AccountService @Autowired constructor(private var accountRepository: AccountRepository,
-                                            private val validator: Validator) {
+                                            private val validator: Validator,
+                                            private var meterService: MeterService) {
 
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
@@ -23,9 +24,9 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
     fun findByActiveStatusOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
         if (accounts.isEmpty()) {
-            logger.warn("findAllActiveAccounts() - no accounts found.")
+            logger.warn("findAllActiveAccounts - no accounts found.")
         } else {
-            logger.info("findAllActiveAccounts() - found accounts.")
+            logger.info("findAllActiveAccounts - found accounts.")
         }
         return accounts
     }

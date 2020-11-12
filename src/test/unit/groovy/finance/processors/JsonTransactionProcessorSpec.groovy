@@ -2,6 +2,7 @@ package finance.processors
 
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
+import finance.services.MeterService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
@@ -9,7 +10,8 @@ import javax.validation.Validator
 
 class JsonTransactionProcessorSpec extends Specification {
     Validator mockValidator = GroovyMock(Validator)
-    JsonTransactionProcessor processor = new JsonTransactionProcessor(mockValidator)
+    MeterService mockMeterService = GroovyMock(MeterService)
+    JsonTransactionProcessor processor = new JsonTransactionProcessor(mockValidator, mockMeterService)
     Exchange mockExchange = GroovyMock(Exchange)
     Message mockMessage = GroovyMock(Message)
 
