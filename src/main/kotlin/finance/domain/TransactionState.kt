@@ -4,41 +4,24 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class TransactionState {
+enum class TransactionState(val state: String) {
     @JsonProperty("cleared")
-    Cleared,
+    Cleared("cleared"),
 
     @JsonProperty("outstanding")
-    Outstanding,
+    Outstanding("outstanding"),
 
     @JsonProperty("future")
-    Future,
+    Future("future"),
 
     @JsonProperty("undefined")
-    Undefined;
+    Undefined("undefined");
 
-//TODO: fix this
-//    override fun fromString(param: String): TransactionState {
-//        val toUpper = param.capitalize()
-//        return try {
-//            valueOf(toUpper)
-//        } catch (e: Exception) {
-//            Undefined
-//        }
-//    }
-
-//    override fun valueOf(parm: String) :TransactionState {
-//
-//    }
-
-    override fun toString(): String {
-        return name.toLowerCase()
-    }
+    fun value() : String = state
+    override fun toString(): String = name.toLowerCase()
 
     companion object {
-        fun toLowerCase(obj: TransactionState): String {
-            return obj.name.toLowerCase()
-        }
+        private val VALUES = values();
+        fun getByValue(state: String) = VALUES.firstOrNull { it.state == state }
     }
-
 }
