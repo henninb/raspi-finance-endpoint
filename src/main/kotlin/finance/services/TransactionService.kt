@@ -21,7 +21,8 @@ import javax.validation.Validator
 open class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
                                                      private var accountService: AccountService,
                                                      private var categoryService: CategoryService,
-                                                     private val validator: Validator) {
+                                                     private val validator: Validator,
+                                                     private var meterService: MeterService) {
 
 //    fun findAllTransactions(): List<Transaction> {
 //        return transactionRepository.findAll()

@@ -11,7 +11,9 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class CategoryService(private var categoryRepository: CategoryRepository, private val validator: Validator) {
+class CategoryService(private var categoryRepository: CategoryRepository,
+                      private val validator: Validator,
+                      private var meterService: MeterService) {
 
     fun insertCategory(category: Category): Boolean {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)

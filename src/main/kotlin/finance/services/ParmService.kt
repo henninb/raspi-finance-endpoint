@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-open class ParmService(private var parmRepository: ParmRepository) {
+open class ParmService(private var parmRepository: ParmRepository,
+                       private var meterService: MeterService) {
 
     fun insertParm(parm: Parm): Boolean {
         parmRepository.saveAndFlush(parm)

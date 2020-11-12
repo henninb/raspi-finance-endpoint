@@ -15,7 +15,8 @@ import javax.validation.Validator
 class AccountServiceSpec extends Specification {
     AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
     Validator mockValidator = GroovyMock(Validator)
-    AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
+    MeterService mockMeterService = GroovyMock()
+    AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
     private ObjectMapper mapper = new ObjectMapper()
 
     def setupSpec() {

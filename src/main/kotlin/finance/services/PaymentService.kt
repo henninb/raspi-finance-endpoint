@@ -15,8 +15,11 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class PaymentService(private var paymentRepository: PaymentRepository, private var transactionService: TransactionService,
-                     private var parmService: ParmService, private val validator: Validator) {
+class PaymentService(private var paymentRepository: PaymentRepository,
+                     private var transactionService: TransactionService,
+                     private var parmService: ParmService,
+                     private val validator: Validator,
+                     private var meterService: MeterService) {
 
     fun findAllPayments(): List<Payment> {
         return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }

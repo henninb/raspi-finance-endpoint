@@ -10,7 +10,9 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-open class DescriptionService(private var descriptionRepository: DescriptionRepository, private val validator: Validator) {
+open class DescriptionService(private var descriptionRepository: DescriptionRepository,
+                              private val validator: Validator,
+                              private var meterService: MeterService) {
 
     fun insertDescription(description: Description): Boolean {
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)

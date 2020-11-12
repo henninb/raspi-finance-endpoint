@@ -17,10 +17,11 @@ class TransactionServiceSpec extends Specification {
     TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
     AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
     Validator mockValidator = GroovyMock(Validator)
-    AccountService accountService = new AccountService(mockAccountRepository, mockValidator)
+    MeterService mockMeterService = GroovyMock()
+    AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
     CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator)
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator)
+    CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
+    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator, mockMeterService)
     Category category = CategoryBuilder.builder().build()
 
     def "test transactionService - deleteByGuid"() {
