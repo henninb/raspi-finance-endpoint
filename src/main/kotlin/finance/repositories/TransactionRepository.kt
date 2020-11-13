@@ -21,7 +21,7 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE TransactionEntity set receipt_image = ?2 WHERE guid = ?1")
+    @Query("UPDATE t_transaction set receipt_image = ?2 WHERE guid = ?1", nativeQuery = true)
     fun setTransactionReceiptImageByGuid(guid: String, receiptImage: ByteArray)
 
     @Modifying
