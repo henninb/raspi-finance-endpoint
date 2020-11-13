@@ -121,11 +121,11 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 -------------------
 CREATE TABLE IF NOT EXISTS t_receipt_image
 (
-    transaction_id BIGINT    NOT NULL,
-    receipt_image  BYTEA     NOT NULL,
-    date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    PRIMARY KEY (transaction_id)
+    receipt_image_id   BIGSERIAL PRIMARY KEY,
+    transaction_id BIGINT  UNIQUE  NOT NULL,
+    receipt_image  BYTEA     NOT NULL
+    --date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0), -- TODO: will need a trigger for this
+    --date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0), -- TODO: will need a trigger for this
 );
 
 -----------------
@@ -172,6 +172,7 @@ CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
+    NEW.reoccurring_type = 'undefined';
     NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;

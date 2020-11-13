@@ -8,16 +8,9 @@ import java.util.*
 interface PaymentRepository : JpaRepository<Payment, Long> {
     fun findByPaymentId(paymentId: Long): Optional<Payment>
 
-
     //fun findAllOrderByTransactionDateDesc(): List<Payment>
 
-    //    @Modifying
     @Transactional
     fun deleteByPaymentId(paymentId: Long)
     //fun deleteByPaymentId
-
-//    @Modifying
-//    @Transactional
-//    @Query(value = "DELETE FROM t_payment WHERE payment_id = ?1", nativeQuery = true)
-//    fun deleteByPaymentId(paymentId: Long)
 }

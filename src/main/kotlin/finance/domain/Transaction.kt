@@ -16,7 +16,6 @@ import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import org.hibernate.annotations.Proxy
-import org.hibernate.annotations.Type
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
@@ -110,17 +109,17 @@ data class Transaction(
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "notes", nullable = false)
-        var notes: String,
+        var notes: String
 
-        @Lob
-        @JsonProperty
-        @Type(type = "org.hibernate.type.BinaryType")
-        @Column(name = "receipt_image", nullable = true)
-        var receiptImage: ByteArray?
+//        @Lob
+//        @JsonProperty
+//        @Type(type = "org.hibernate.type.BinaryType")
+//        @Column(name = "receipt_image", nullable = true)
+//        var receiptImage: ByteArray?
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", ByteArray(0))
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
