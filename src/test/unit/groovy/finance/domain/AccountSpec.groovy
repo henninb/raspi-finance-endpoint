@@ -25,10 +25,13 @@ class AccountSpec extends Specification {
         validatorFactory.close()
     }
 
-    def "test JSON serialization to Account object"() {
-        given:
-        def jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+    def jsonPayload = '''
+{"accountNameOwner":"discover_brian","accountType":"credit","activeStatus":true,
+"moniker":"1234","totals":0.01,"totalsBalanced":0.02,
+"dateClosed":0,"dateUpdated":1553645394000,"dateAdded":1553645394000}
+'''
 
+    def "test JSON serialization to Account object"() {
         when:
         Account account = mapper.readValue(jsonPayload, Account.class)
 

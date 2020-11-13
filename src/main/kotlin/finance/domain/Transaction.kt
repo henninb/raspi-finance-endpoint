@@ -35,6 +35,7 @@ import javax.validation.constraints.Size
 data class Transaction(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_transaction_transaction_id_seq")
         @field:Min(value = 0L)
         @JsonProperty
         @Column(name = "transaction_id")
@@ -125,7 +126,15 @@ data class Transaction(
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
-    
+
+//    @Lob
+//    @OneToOne(fetch = FetchType.EAGER)
+//    @JoinTable(name = "t_receipt_image",
+//            joinColumns = [JoinColumn(name = "transactionId")])
+//    //@JoinColumn(name = "transaction_id", nullable = false, insertable = false, updatable = false)
+//    @JsonIgnore
+//    var receiptImage: ByteArray? = null
+
     //Foreign key constraint
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)

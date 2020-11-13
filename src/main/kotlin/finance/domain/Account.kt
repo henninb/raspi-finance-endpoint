@@ -27,6 +27,7 @@ import javax.validation.constraints.Size
 data class Account(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_account_account_id_seq")
         @JsonProperty
         @field:Min(value = 0L)
         @Column(name = "account_id", nullable = false)

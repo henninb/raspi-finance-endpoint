@@ -12,7 +12,6 @@ import javax.validation.Validator
 import javax.validation.ValidatorFactory
 import java.math.RoundingMode
 import java.sql.Date
-import java.sql.Timestamp
 
 class TransactionSpec extends Specification {
 
@@ -20,7 +19,6 @@ class TransactionSpec extends Specification {
     Validator validator
     private ObjectMapper mapper = new ObjectMapper()
 
-    //"transactionId":1001,
     def jsonPayload = '''
 {
 "accountId":0,
@@ -33,10 +31,10 @@ class TransactionSpec extends Specification {
 "description":"aliexpress.com",
 "category":"online",
 "amount":3.14,
-"cleared":1,
+"transactionState":"cleared",
 "reoccurring":false,
-"notes":"my note to you",
-"sha256":"963e35c37ea59f3f6fa35d72fb0ba47e1e1523fae867eeeb7ead64b55ff22b77"
+"reoccurringType":"undefined",
+"notes":"my note to you"
 }
 '''
 
@@ -109,6 +107,7 @@ class TransactionSpec extends Specification {
                 .amount(amount)
                 .transactionState(transactionState)
                 .reoccurring(reoccurring)
+                .reoccurringType(reoccurringType)
                 .notes(notes)
                 .build()
 
@@ -121,17 +120,17 @@ class TransactionSpec extends Specification {
         violations.iterator().next().getInvalidValue() == transaction.getProperties()[invalidField]
 
         where:
-        invalidField       | transactionId | guid                                   | accountId | accountType        | accountNameOwner   | transactionDate      | description      | category | amount                                                   | transactionState         | reoccurring | notes      | dateAdded                    | dateUpdated                  | sha256   | expectedError                              | errorCount
-        'guid'             | 1001L         | '11ea3be58-3993-46de-88a2-4ffc7f1d73b' | 1004      | AccountType.Credit | 'chase_brian'      | new Date(1553645394) | 'aliexpress.com' | 'online' | new BigDecimal(-94.74).setScale(2, RoundingMode.HALF_UP) | TransactionState.Future  | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be uuid formatted'                   | 1
-        'accountId'        | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | -1L       | AccountType.Credit | 'chase_brian'      | new Date(1553645394) | 'aliexpress.com' | 'online' | new BigDecimal(43.16).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Future  | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | ''       | 'must be greater than or equal to 0'       | 1
-        'description'      | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Café Roale'     | 'online' | new BigDecimal(-3.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be ascii character set'              | 1
-        'description'      | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | ''               | 'online' | new BigDecimal(-3.11).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'size must be between 1 and 75'            | 1
-        'accountNameOwner' | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one.chase_brian'  | new Date(1553645394) | 'target.com'     | 'online' | new BigDecimal(13.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ''         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | ''       | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one -chase_brian' | new Date(1553645394) | 'target.com'     | 'online' | new BigDecimal(13.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ''         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | ''       | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'brian'            | new Date(1553645394) | 'target.com'     | 'online' | new BigDecimal(13.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ''         | new Timestamp(1553645394000) | new Timestamp(1553645394000) | ''       | 'must be alpha separated by an underscore' | 1
-        'category'         | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Cafe Roale'     | 'onliné' | new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)   | TransactionState.Cleared | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be alphanumeric no space'            | 1
-        'category'         | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Cafe Roale'     | 'Online' | new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)   | TransactionState.Cleared | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be alphanumeric no space'            | 1
-        'amount'           | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Cafe Roale'     | 'online' | new BigDecimal(3.1412)                                   | TransactionState.Cleared | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'must be dollar precision'                 | 1
-        'transactionDate'  | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(946684700)  | 'Cafe Roale'     | 'online' | new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)   | TransactionState.Cleared | false       | 'no notes' | new Timestamp(1553645394000) | new Timestamp(1553645394000) | 'sha256' | 'date must be greater than 1/1/2000.'      | 1
+        invalidField       | transactionId | guid                                   | accountId | accountType        | accountNameOwner   | transactionDate      | description      | category | amount                                                   | transactionState         | reoccurring | reoccurringType           | notes      | expectedError                              | errorCount
+        'guid'             | 1001L         | '11ea3be58-3993-46de-88a2-4ffc7f1d73b' | 1004      | AccountType.Credit | 'chase_brian'      | new Date(1553645394) | 'aliexpress.com' | 'online' | new BigDecimal(-94.74).setScale(2, RoundingMode.HALF_UP) | TransactionState.Future  | false       | ReoccurringType.Undefined | 'no notes' | 'must be uuid formatted'                   | 1
+        'accountId'        | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | -1L       | AccountType.Credit | 'chase_brian'      | new Date(1553645394) | 'aliexpress.com' | 'online' | new BigDecimal(43.16).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Future  | false       | ReoccurringType.Undefined | 'no notes' | 'must be greater than or equal to 0'       | 1
+        'description'      | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Café Roale'     | 'online' | new BigDecimal(-3.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be ascii character set'              | 1
+        'description'      | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | ''               | 'online' | new BigDecimal(-3.11).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'size must be between 1 and 75'            | 1
+        'accountNameOwner' | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one.chase_brian'  | new Date(1553645394) | 'target.com'     | 'online' | new BigDecimal(13.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one -chase_brian' | new Date(1553645394) | 'target.com'     | 'online' | new BigDecimal(13.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'brian'            | new Date(1553645394) | 'target.com'     | 'online' | new BigDecimal(13.14).setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
+        'category'         | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Cafe Roale'     | 'onliné' | new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be alphanumeric no space'            | 1
+        'category'         | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Cafe Roale'     | 'Online' | new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be alphanumeric no space'            | 1
+        'amount'           | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Cafe Roale'     | 'online' | new BigDecimal(3.1412)                                   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be dollar precision'                 | 1
+        'transactionDate'  | 1001L         | '4ea3be58-3993-46de-88a2-4ffc7f1d73bd' | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(946684700)  | 'Cafe Roale'     | 'online' | new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'date must be greater than 1/1/2000.'      | 1
     }
 }

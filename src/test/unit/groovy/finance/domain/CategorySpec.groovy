@@ -25,7 +25,7 @@ class CategorySpec extends Specification {
         validatorFactory.close()
     }
 
-    def "test JSON serialization to Category object"() {
+    def "test -- JSON serialization to Category"() {
 
         given:
         def jsonPayload = '{"category":"bar"}'

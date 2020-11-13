@@ -25,6 +25,7 @@ import javax.validation.constraints.Size
 data class Payment(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_payment_payment_id_seq")
         @field:Min(value = 0L)
         @JsonProperty
         @Column(name = "payment_id", nullable = false)

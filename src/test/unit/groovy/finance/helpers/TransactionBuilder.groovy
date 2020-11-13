@@ -1,6 +1,7 @@
 package finance.helpers
 
 import finance.domain.AccountType
+import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
 
@@ -18,6 +19,7 @@ class TransactionBuilder {
     BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
     TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
+    ReoccurringType reoccurringType = ReoccurringType.Undefined
     String notes = 'my note to you'
 
     static TransactionBuilder builder() {
@@ -36,6 +38,7 @@ class TransactionBuilder {
         transaction.amount = amount
         transaction.transactionState = transactionState
         transaction.reoccurring = reoccurring
+        transaction.reoccurringType = reoccurringType
         transaction.notes = notes
         return transaction
     }
@@ -87,6 +90,11 @@ class TransactionBuilder {
 
     TransactionBuilder reoccurring(reoccurring) {
         this.reoccurring = reoccurring
+        return this
+    }
+
+    TransactionBuilder reoccurringType(reoccurringType) {
+        this.reoccurringType = reoccurringType
         return this
     }
 

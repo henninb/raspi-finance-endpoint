@@ -17,6 +17,7 @@ import javax.validation.constraints.Size
 data class Parm(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_parm_parm_id_seq")
         @field:Min(value = 0L)
         @JsonProperty
         @Column(name = "parm_id", nullable = false)
