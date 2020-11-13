@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
+import finance.utils.Constants.MUST_BE_UUID_MESSAGE
+import finance.utils.Constants.UUID_PATTERN
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
@@ -49,14 +51,12 @@ data class Payment(
         var amount: BigDecimal,
 
         @JsonProperty
-        //TODO: add feature
-        //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
+        @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         @Column(name = "guid_source", nullable = false)
         var guidSource: String?,
 
         @JsonProperty
-        //TODO: add feature
-        //@field:Pattern(regexp = Constants.UUID_PATTERN, message = Constants.MUST_BE_UUID_MESSAGE)
+        @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         @Column(name = "guid_destination", nullable = false)
         var guidDestination: String?
 ) {

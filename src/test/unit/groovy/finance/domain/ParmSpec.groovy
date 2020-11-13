@@ -2,7 +2,11 @@ package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.helpers.ParmBuilder
+import finance.helpers.PaymentBuilder
 import spock.lang.Specification
+
+import javax.validation.ConstraintViolation
 import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
@@ -62,5 +66,16 @@ class ParmSpec extends Specification {
         JsonParseException ex = thrown()
         ex.getMessage().contains('Unexpected character')
         0 * _
+    }
+
+    def "test validation valid parm"() {
+        given:
+        Parm parm = new ParmBuilder().builder().build()
+
+        when:
+        Set<ConstraintViolation<Parm>> violations = validator.validate(parm)
+
+        then:
+        violations.isEmpty()
     }
 }
