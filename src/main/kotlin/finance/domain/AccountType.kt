@@ -18,14 +18,31 @@ enum class AccountType(val type: String) {
     @JsonProperty("undefined")
     Undefined("undefined");
 
-    fun value() : String = type
+    constructor() {
+    }
+
+    //fun value() : String = type
     override fun toString(): String = name.toLowerCase()
+
+//    fun parseAccountType(str: String): AccountType {
+//        return when(str) {
+//            "undefined" -> Undefined
+//            else -> valueOf(str)
+//        }
+//    }
+
+//    override fun valueof(): AccountType {
+//
+//        return Undefined
+//    }
 
     companion object {
         //private val VALUES = values();
         //fun getByValue(type: String) = VALUES.firstOrNull { it.type == type }
-        fun from(type: String?): AccountType = values().find { it.name == type } ?: Undefined
+        //fun from(type: String?): AccountType = values().find { it.name == type } ?: Undefined
+        //operator fun invoke(type: String?): AccountType = values().find { it.name == type } ?: Undefined
         //fun valueOf(type: String): AccountType? = values().find { it.type == type }
         //private val map = AccountType.values().associateBy(AccountType::type)
+        //fun valueOf(type: String): AccountType = values().find { it.name == type } ?: Undefined
     }
 }

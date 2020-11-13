@@ -1,6 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.helpers.AccountBuilder
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -28,17 +29,22 @@ class AccountSpec extends Specification {
     def jsonPayload = '''
 {"accountNameOwner":"discover_brian","accountType":"credit","activeStatus":true,
 "moniker":"1234","totals":0.01,"totalsBalanced":0.02,
-"dateClosed":0,"dateUpdated":1553645394000,"dateAdded":1553645394000}
+"dateClosed":0}
 '''
 
-    def "test JSON serialization to Account object"() {
+    def jsonPayloadNonValidEnum = """
+{"accountNameOwner":"discover_brian","accountType":"non-valid","activeStatus":true,
+"moniker":"1234","totals":0.01,"totalsBalanced":0.02,
+"dateClosed":0,"dateUpdated":1553645394000,"dateAdded":1553645394000}
+"""
+
+    def "test JSON deserialization to Account"() {
         when:
         Account account = mapper.readValue(jsonPayload, Account.class)
 
         then:
         account.accountType == AccountType.Credit
         account.accountNameOwner == "discover_brian"
-        account.accountId == 0
         0 * _
     }
 
@@ -54,6 +60,16 @@ class AccountSpec extends Specification {
         0 * _
     }
 
+    def "test JSON deserialization to Account - non-valid enum"() {
+        when:
+        Account account = mapper.readValue(jsonPayloadNonValidEnum, Account.class)
+
+        then:
+        def ex = thrown(InvalidFormatException)
+        ex.message.contains('not one of the values accepted for Enum class')
+        0 * _
+    }
+
 
     def "test validation valid account - invalid enum"() {
         when:
@@ -62,7 +78,6 @@ class AccountSpec extends Specification {
         then:
         def ex = thrown(IllegalArgumentException)
         ex.message.contains('No enum constant finance.domain.AccountType')
-        //violations.isEmpty()
         0 * _
     }
 
@@ -88,11 +103,11 @@ class AccountSpec extends Specification {
         violations.iterator().next().getInvalidValue() == account.getProperties()[invalidField]
 
         where:
-        invalidField       | accountId | accountType                    | accountNameOwner   | moniker | activeStatus | totals                 | totalsBalanced         | expectedError                              | errorCount
-        'accountNameOwner' | 123L      | AccountType.Debit              | 'blah_chase_brian' | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | 123L      | AccountType.Credit             | '_b'               | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'size must be between 3 and 40'            | 1
-        'moniker'          | 123L      | AccountType.Credit             | 'chase_brian'      | 'abc'   | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
-        'moniker'          | 123L      | AccountType.Credit             | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
-        //'accountType'      | 123L      | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        invalidField       | accountType                    | accountNameOwner   | moniker | activeStatus | totals                 | totalsBalanced         | expectedError                              | errorCount
+        'accountNameOwner' | AccountType.Debit              | 'blah_chase_brian' | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | AccountType.Credit             | '_b'               | '0000'  | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'size must be between 3 and 40'            | 1
+        'moniker'          | AccountType.Credit             | 'chase_brian'      | 'abc'   | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        'moniker'          | AccountType.Credit             | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        //'accountType'     | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
     }
 }

@@ -16,8 +16,11 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
+
+import java.sql.Date
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -72,6 +75,9 @@ class PaymentControllerSpec extends Specification {
     def "test Payment endpoint existing payment inserted and then deleted"() {
         given:
         parmService.insertParm(parm)
+        payment.guidDestination = UUID.randomUUID()
+        payment.guidSource = UUID.randomUUID()
+        payment.transactionDate = Date.valueOf("2020-10-12")
         paymentService.insertPayment(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -86,6 +92,9 @@ class PaymentControllerSpec extends Specification {
     def "test Payment endpoint existing payment inserted and then attempt to delete a non existent payment"() {
         given:
         parmService.insertParm(parm)
+        payment.guidDestination = UUID.randomUUID()
+        payment.guidSource = UUID.randomUUID()
+        payment.transactionDate = Date.valueOf("2020-10-11")
         paymentService.insertPayment(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -100,6 +109,10 @@ class PaymentControllerSpec extends Specification {
     def "test insertPayment endpoint - happy path"() {
         given:
         payment.accountNameOwner = 'happy-path_brian'
+        payment.guidDestination = UUID.randomUUID()
+        payment.guidSource = UUID.randomUUID()
+        payment.transactionDate = Date.valueOf("2020-10-10") //new Date(1605300155000)
+
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
         parmService.insertParm(parm)
@@ -111,7 +124,7 @@ class PaymentControllerSpec extends Specification {
         response.statusCode == HttpStatus.OK
         0 * _
     }
-
+    
     def "test insertPayment failed due to setup issues"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
