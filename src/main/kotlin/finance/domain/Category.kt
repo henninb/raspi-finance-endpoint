@@ -21,6 +21,7 @@ import javax.validation.constraints.Size
 data class Category(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_category_category_id_seq")
         @field:Min(value = 0L)
         @JsonProperty
         @Column(name = "category_id", nullable = false)

@@ -17,6 +17,7 @@ import javax.validation.constraints.Size
 data class Description(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_description_description_id_seq")
         @field:Min(value = 0L)
         @JsonProperty
         @Column(name = "description_id", nullable = false)

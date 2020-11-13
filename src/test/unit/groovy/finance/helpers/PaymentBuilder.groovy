@@ -9,6 +9,8 @@ class PaymentBuilder {
     String accountNameOwner = "foo_brian"
     BigDecimal amount = new BigDecimal(0.0)
     Date transactionDate = new Date(1553645394)
+    String guidSource = 'abc'
+    String guidDestination = 'def'
 
     static PaymentBuilder builder() {
         return new PaymentBuilder()
@@ -19,6 +21,8 @@ class PaymentBuilder {
         payment.accountNameOwner = accountNameOwner
         payment.amount = amount
         payment.transactionDate = transactionDate
+        payment.guidSource = guidSource
+        payment.guidDestination = guidDestination
         return payment
     }
 
@@ -34,6 +38,16 @@ class PaymentBuilder {
 
     PaymentBuilder transactionDate(transactionDate) {
         this.transactionDate = transactionDate
+        return this
+    }
+
+    PaymentBuilder guidSource(guidSource) {
+        this.guidSource = guidSource
+        return this
+    }
+
+    PaymentBuilder guidDestination(guidDestination) {
+        this.guidDestination = guidDestination
         return this
     }
 }
