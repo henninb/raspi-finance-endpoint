@@ -106,6 +106,7 @@ class TransactionServiceSpec extends Specification {
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
+        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -154,6 +155,7 @@ class TransactionServiceSpec extends Specification {
         1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
+        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -186,6 +188,7 @@ class TransactionServiceSpec extends Specification {
         1 * mockValidator.validate(account) >> new HashSet()
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
+        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -215,6 +218,7 @@ class TransactionServiceSpec extends Specification {
         1 * mockValidator.validate(category) >> new HashSet()
         1 * mockCategoryRepository.saveAndFlush(category)
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
+        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 }

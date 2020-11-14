@@ -41,8 +41,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             }
 
             transactionRepository.deleteByGuid(guid)
+            //TODO: add metric here
             return true
         }
+        //TODO: add metric here
         return false
     }
 
@@ -52,6 +54,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     open fun insertTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
+            //TODO: add metric here
             logger.error("Cannot insert transaction as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
         }
@@ -59,34 +62,31 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
         if (transactionOptional.isPresent) {
             val transactionDb = transactionOptional.get()
-            logger.info("*** Will update transaction in the database ***")
             return updateTransaction(transactionDb, transaction)
         }
 
         processAccount(transaction)
         processCategory(transaction)
-        logger.info("transaction = $transaction")
         transactionRepository.saveAndFlush(transaction)
-        logger.info("*** Inserted transaction into the database successfully ***")
+        meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
         return true
     }
 
     private fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
-            logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
             transaction.accountId = accountOptional.get().accountId
             transaction.accountType = accountOptional.get().accountType
+            logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
         } else {
-            logger.info("METRIC_ACCOUNT_NOT_FOUND_COUNTER")
             val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
-            logger.debug("will insertAccount")
             accountService.insertAccount(account)
-            logger.debug("called insertAccount")
+            //TODO: add metric here
+            logger.info("inserted account from transactionService ${transaction.accountNameOwner}")
             accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
             transaction.accountId = accountOptional.get().accountId
             transaction.accountType = accountOptional.get().accountType
-            //meterRegistry.counter(METRIC_ACCOUNT_NOT_FOUND_COUNTER).increment()
         }
     }
 
@@ -99,6 +99,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 } else {
                     val category = createDefaultCategory(transaction.category)
                     categoryService.insertCategory(category)
+                    logger.info("inserted category from transactionService ${transaction.category}")
                     transaction.categories.add(category)
                 }
             }
@@ -110,20 +111,21 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
             if (transactionDb.amount != transaction.amount) {
                 logger.info("discrepancy in the amount for <${transactionDb.guid}>")
-                //TODO: metric for this
+                //TODO: add metric here
                 transactionRepository.setAmountByGuid(transaction.amount, transaction.guid)
                 return true
             }
 
             if (transactionDb.transactionState != transaction.transactionState) {
                 logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
-                //TODO: metric for this
+                //TODO: add metric here
                 transactionRepository.setTransactionStateByGuid(transaction.transactionState, transaction.guid)
                 return true
             }
         }
 
-        logger.info("transaction already exists, no transaction data inserted.")
+        //TODO: add metric here
+        logger.info("transaction already exists, no transaction data inserted for ${transaction.guid}")
         return false
     }
 
@@ -147,7 +149,6 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Timed
     @Transactional
     open fun findTransactionByGuid(guid: String): Optional<Transaction> {
-        logger.info("call findByGuid")
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             return transactionOptional
@@ -172,6 +173,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         try {
             return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
         } catch (e: Exception) {
+            //TODO: add metric here
             logger.error("empty getTotalsByAccountNameOwner failed.")
         }
         return 0.00
