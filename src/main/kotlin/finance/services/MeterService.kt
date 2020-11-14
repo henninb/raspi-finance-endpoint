@@ -8,9 +8,10 @@ import finance.utils.Constants.TRANSACTION_UPDATE_CLEARED_COUNTER
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-class MeterService(private var meterRegistry: MeterRegistry) {
+open class MeterService(private var meterRegistry: MeterRegistry) {
     init {
         Counter.builder(TRANSACTION_RECEIVED_EVENT_COUNTER)
                 .tag(ACCOUNT_NAME_TAG, "")
@@ -50,7 +51,8 @@ class MeterService(private var meterRegistry: MeterRegistry) {
         meterRegistry.counter(TRANSACTION_UPDATE_CLEARED_COUNTER, ACCOUNT_NAME_TAG, accountName).increment()
     }
 
-    fun incrementTransactionSuccessfullyInsertedCounter(accountName: String) {
+    @Transactional
+    open fun incrementTransactionSuccessfullyInsertedCounter(accountName: String) {
         meterRegistry.counter(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, ACCOUNT_NAME_TAG, accountName).increment()
     }
 

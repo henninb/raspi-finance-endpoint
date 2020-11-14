@@ -88,6 +88,7 @@ class InsertTransactionProcessorSpec extends Specification {
         3 * mockValidator.validate(_) >> new HashSet()
         //1 * mockValidator.validate(account as Object) >> new HashSet()
         1 * mockTransactionRepository.saveAndFlush(_)
+        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         1 * mockMessage.setBody(transaction.toString())
         0 * _
     }
