@@ -1,7 +1,11 @@
 package finance.services
 
 import finance.utils.Constants.ACCOUNT_NAME_TAG
+import finance.utils.Constants.EXCEPTION_COUNTER
+import finance.utils.Constants.EXCEPTION_NAME_TYPE_TAG
 import finance.utils.Constants.TRANSACTION_ALREADY_EXISTS_COUNTER
+import finance.utils.Constants.TRANSACTION_LIST_IS_EMPTY
+import finance.utils.Constants.TRANSACTION_RECEIPT_IMAGE
 import finance.utils.Constants.TRANSACTION_RECEIVED_EVENT_COUNTER
 import finance.utils.Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER
 import finance.utils.Constants.TRANSACTION_UPDATE_CLEARED_COUNTER
@@ -29,38 +33,49 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
                 .tag(ACCOUNT_NAME_TAG, "")
                 .register(meterRegistry)
 
-//        Counter.builder(Constants.ERROR_COUNTER)
-//                .tag(Constants.ACCOUNT_NAME_TAG, "")
-//                .tag(Constants.ERROR_TYPE_TAG, "")
-//                .register(meterRegistry)
+        Counter.builder(EXCEPTION_COUNTER)
+                .tag(EXCEPTION_NAME_TYPE_TAG, "")
+                .register(meterRegistry)
+
+        Counter.builder(TRANSACTION_RECEIPT_IMAGE)
+                .tag(ACCOUNT_NAME_TAG, "")
+                .register(meterRegistry)
+
+        Counter.builder(TRANSACTION_LIST_IS_EMPTY)
+                .tag(ACCOUNT_NAME_TAG, "")
+                .register(meterRegistry)
+        
     }
-//
-//    enum class ErrorType(val errorMessage: String) {
-//        VALIDATION_ERROR("validation.error"),
-//        DELAY("delay.error");
-//    }
-//
 
-//
-//    fun incrementErrorCounter(accountName: String, errorType: ErrorType) {
-//        meterRegistry.counter(Constants.ERROR_COUNTER, Constants.ERROR_TYPE_TAG,
-//                errorType.errorMessage, Constants.ACCOUNT_NAME_TAG, accountName).increment()
-//    }
+    fun incrementExceptionCounter(exceptionName: String) {
+        meterRegistry.counter(EXCEPTION_COUNTER, EXCEPTION_NAME_TYPE_TAG, exceptionName).increment()
+    }
 
-    fun incrementTransactionUpdateClearedCounter(accountName: String) {
+    @Transactional
+    open fun incrementTransactionUpdateClearedCounter(accountName: String) {
         meterRegistry.counter(TRANSACTION_UPDATE_CLEARED_COUNTER, ACCOUNT_NAME_TAG, accountName).increment()
     }
 
     @Transactional
-    open fun incrementTransactionSuccessfullyInsertedCounter(accountName: String) {
-        meterRegistry.counter(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, ACCOUNT_NAME_TAG, accountName).increment()
+    open fun incrementTransactionSuccessfullyInsertedCounter(accountNameOwner: String) {
+        meterRegistry.counter(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 
-    fun incrementTransactionAlreadyExistsCounter(accountName: String) {
-        meterRegistry.counter(TRANSACTION_ALREADY_EXISTS_COUNTER, ACCOUNT_NAME_TAG, accountName).increment()
+    @Transactional
+    open fun incrementTransactionAlreadyExistsCounter(accountNameOwner: String) {
+        meterRegistry.counter(TRANSACTION_ALREADY_EXISTS_COUNTER, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 
-    fun incrementTransactionReceivedCounter(accountName: String) {
-        meterRegistry.counter(TRANSACTION_RECEIVED_EVENT_COUNTER, ACCOUNT_NAME_TAG, accountName).increment()
+    @Transactional
+    open fun incrementTransactionReceivedCounter(accountNameOwner: String) {
+        meterRegistry.counter(TRANSACTION_RECEIVED_EVENT_COUNTER, ACCOUNT_NAME_TAG, accountNameOwner).increment()
+    }
+
+    fun incrementAccountListIsEmpty(accountNameOwner: String) {
+        meterRegistry.counter(TRANSACTION_LIST_IS_EMPTY, ACCOUNT_NAME_TAG, accountNameOwner).increment()
+    }
+
+    fun incrementTransactionReceiptImage(accountNameOwner: String) {
+        meterRegistry.counter(TRANSACTION_RECEIPT_IMAGE, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 }
