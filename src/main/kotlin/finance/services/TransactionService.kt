@@ -173,7 +173,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         try {
             return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
         } catch (e: Exception) {
-            //TODO: add metric here
+            meterService.incrementExceptionCounter(e.toString())
             logger.error("empty getTotalsByAccountNameOwner failed.")
         }
         return 0.00
@@ -183,6 +183,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         try {
             return transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
         } catch (e: Exception) {
+            meterService.incrementExceptionCounter(e.toString())
             logger.error("empty getTotalsByAccountNameOwnerCleared failed.")
         }
         return 0.00
@@ -193,13 +194,12 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
         //TODO: look into this type of error handling
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new ResourceNotFoundException("User not found on :: "+ userId));
 
         val sortedTransactions = transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //TODO: return something here
+            meterService.incrementAccountListIsEmpty(accountNameOwner)
         }
         return sortedTransactions
     }
@@ -209,7 +209,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     open fun updateTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            logger.info("patchTransaction() ConstraintViolation.")
+            logger.error("Cannot update transaction as there is a constraint violation on the data.")
+            throw ValidationException("Cannot update transaction as there is a constraint violation on the data.")
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         //TODO: add logic for patch
@@ -267,8 +268,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             transactionRepository.setTransactionReceiptImageByGuid(guid, receiptImage)
+            meterService.incrementTransactionReceiptImage(optionalTransaction.get().accountNameOwner)
             return true
         }
+        //TODO: add metric here
         logger.error("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
@@ -320,10 +323,12 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 transactionRepository.saveAndFlush(transaction)
                 return true
             } else {
+                //TODO: add metric here
                 logger.error("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
                 throw RuntimeException("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
             }
         }
+        //TODO: add metric here
         logger.error("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
         throw RuntimeException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
     }
@@ -336,8 +341,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             val transaction = transactionOptional.get()
             transaction.transactionState = transactionState
             transactionRepository.saveAndFlush(transaction)
+            //TODO: add metric here
             return true
         }
+        //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
         throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
     }
@@ -350,8 +357,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
             transactionRepository.saveAndFlush(transaction)
+            //TODO: add metric here
             return true
         }
+        //TODO: add metric here
         logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
     }
