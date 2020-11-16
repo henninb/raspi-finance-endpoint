@@ -44,7 +44,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         Counter.builder(TRANSACTION_LIST_IS_EMPTY)
                 .tag(ACCOUNT_NAME_TAG, "")
                 .register(meterRegistry)
-        
+
     }
 
     fun incrementExceptionCounter(exceptionName: String) {

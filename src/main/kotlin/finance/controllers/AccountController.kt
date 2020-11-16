@@ -39,7 +39,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         val accountNameOwners = accountService.findAccountsThatRequirePayment()
         if (accountNameOwners.isEmpty()) {
             logger.info("no accountNameOwners found.")
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accountNameOwners.")
+            //throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accountNameOwners.")
         }
         return ResponseEntity.ok(accountNameOwners)
     }
