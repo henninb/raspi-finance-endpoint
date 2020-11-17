@@ -116,8 +116,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
     @PutMapping(path = ["/update/receipt/image/{guid}"], produces = ["application/json"])
     fun setTransactionReceiptImageByGuid(@PathVariable("guid") guid: String, @RequestBody payload: String): ResponseEntity<String> {
-        logger.info("guid = $guid")
         transactionService.setTransactionReceiptImageByGuid(guid, payload.toByteArray())
+        logger.info("set transaction receipt image for guid = $guid")
         return ResponseEntity.ok("transaction receipt image updated")
     }
 
