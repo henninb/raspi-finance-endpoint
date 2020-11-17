@@ -105,8 +105,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     @PutMapping(path = ["/update/account"], consumes = ["application/json"], produces = ["application/json"])
     fun updateAccountByGuid(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
         //TODO: need to complete action
-        logger.info(payload["accountNameOwner"])
-        logger.info(payload["guid"])
+        logger.info("value of accountNameOwner: " + payload["accountNameOwner"])
+        logger.info("value of guid: " + payload["guid"])
         transactionService.changeAccountNameOwner(payload)
         logger.info("transaction account updated")
 
