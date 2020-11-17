@@ -75,7 +75,8 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         meterRegistry.counter(TRANSACTION_LIST_IS_EMPTY, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 
-    fun incrementTransactionReceiptImage(accountNameOwner: String) {
+    @Transactional
+    open fun incrementTransactionReceiptImage(accountNameOwner: String) {
         meterRegistry.counter(TRANSACTION_RECEIPT_IMAGE, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 }
