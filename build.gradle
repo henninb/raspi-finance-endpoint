@@ -14,7 +14,7 @@ plugins {
     id "com.github.ben-manes.versions" version "0.36.0"
 }
 
-ext['springBootVersion'] = '2.3.5.RELEASE'
+ext['springBootVersion'] = '2.4.0'
 ext['apacheCamelVersion'] = '3.6.0'
 ext['kotlinVersion'] = '1.4.10'
 ext['groovyVersion'] = '3.0.6'
@@ -53,8 +53,8 @@ ext['testContainersVersion'] = '1.15.0'
 ext['httpBuilderVersion'] = '1.0.4'
 ext['randomBeanVersion'] = '3.7.0'
 ext['hibernateJpaVersion'] = '1.0.2'
-ext['jacksonVersion'] = '2.12.0-rc1'
-ext['micrometerInfluxVersion'] = '1.6.0'
+ext['jacksonVersion'] = '2.12.0-rc2'
+ext['micrometerInfluxVersion'] = '1.6.1'
 ext['validationVersion'] = '2.0.1.Final'
 // https://stackoverflow.com/questions/64173564/failed-to-ugrade-a-spring-boot-app-to-flyway-7-0-0
 ext['flywayVersion'] = '7.2.0'
