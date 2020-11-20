@@ -109,30 +109,26 @@ data class Transaction(
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "notes", nullable = false)
-        var notes: String
+        var notes: String,
 
-//        @Lob
-//        @JsonProperty
-//        @Type(type = "org.hibernate.type.BinaryType")
-//        @Column(name = "receipt_image", nullable = true)
-//        var receiptImage: ByteArray?
+        @JsonProperty
+        @Column(name = "receipt_image_id", nullable = true)
+        var receiptImageId: Long?
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "")
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", 0)
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
 
-//    @Lob
-//    @OneToOne(fetch = FetchType.EAGER)
-//    @JoinTable(name = "t_receipt_image",
-//            joinColumns = [JoinColumn(name = "transactionId")])
-//    //@JoinColumn(name = "transaction_id", nullable = false, insertable = false, updatable = false)
+    //TODO: 11/19/2020 - need to fix this mess.
+//    @OneToOne(fetch = FetchType.EAGER, optional = true)
+//    @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
 //    @JsonIgnore
-//    var receiptImage: ByteArray? = null
+//    var receiptImage: ReceiptImage? = null
 
     //Foreign key constraint
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
