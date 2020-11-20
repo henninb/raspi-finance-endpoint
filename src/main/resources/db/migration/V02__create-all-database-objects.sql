@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     reoccurring_type   TEXT           NULL DEFAULT 'undefined',
     active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     notes              TEXT           NOT NULL DEFAULT '',
+    receipt_image_id   BIGINT         NULL,
     receipt_image      BYTEA          NULL,
     date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
