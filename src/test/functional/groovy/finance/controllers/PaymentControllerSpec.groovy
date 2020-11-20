@@ -16,7 +16,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -124,7 +123,7 @@ class PaymentControllerSpec extends Specification {
         response.statusCode == HttpStatus.OK
         0 * _
     }
-    
+
     def "test insertPayment failed due to setup issues"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)

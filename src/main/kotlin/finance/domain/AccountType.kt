@@ -18,8 +18,7 @@ enum class AccountType(val type: String) {
     @JsonProperty("undefined")
     Undefined("undefined");
 
-    constructor() {
-    }
+    constructor()
 
     //fun value() : String = type
     override fun toString(): String = name.toLowerCase()

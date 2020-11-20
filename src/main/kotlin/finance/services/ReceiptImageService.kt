@@ -1,10 +1,8 @@
 package finance.services
 
-import finance.domain.Account
 import finance.repositories.ReceiptImageRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class ReceiptImageService @Autowired constructor(private var receiptImageRepository: ReceiptImageRepository) {

@@ -264,11 +264,27 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     @Timed
     @Transactional
-    open fun setTransactionReceiptImageByGuid(guid: String, receiptImage: ByteArray): Boolean {
+    open fun updateTransactionReceiptImageByGuid(guid: String, receiptImageData: ByteArray): Boolean {
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
-            transactionRepository.setTransactionReceiptImageByGuid(guid, receiptImage)
-            meterService.incrementTransactionReceiptImage(optionalTransaction.get().accountNameOwner)
+            val transaction = optionalTransaction.get()
+            var receiptImage = ReceiptImage()
+            if (transaction.receiptImage != null) {
+                //TODO: see how this works
+                println("update existing receipt image.")
+                //receiptImage = transaction.receiptImage!!
+                transaction.receiptImage!!.receiptImage = receiptImageData
+                transactionRepository.saveAndFlush(transaction)
+                meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
+                return true
+
+            }
+
+            receiptImage.transactionId = transaction.transactionId
+            receiptImage.receiptImage = receiptImageData
+            transaction.receiptImage = receiptImage
+            transactionRepository.saveAndFlush(transaction)
+            meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
             return true
         }
         //TODO: add metric here

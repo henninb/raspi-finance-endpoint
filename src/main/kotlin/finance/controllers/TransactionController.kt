@@ -23,7 +23,6 @@ import javax.validation.ValidationException
 
 //@CrossOrigin(origins = arrayOf("http://localhost:3000"))
 @CrossOrigin
-//@RestController is for JSON; @Controller is for HTML
 @RestController
 @RequestMapping("/transaction")
 class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
@@ -115,8 +114,8 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
     @PutMapping(path = ["/update/receipt/image/{guid}"], produces = ["application/json"])
-    fun setTransactionReceiptImageByGuid(@PathVariable("guid") guid: String, @RequestBody payload: String): ResponseEntity<String> {
-        transactionService.setTransactionReceiptImageByGuid(guid, payload.toByteArray())
+    fun updateTransactionReceiptImageByGuid(@PathVariable("guid") guid: String, @RequestBody payload: String): ResponseEntity<String> {
+        transactionService.updateTransactionReceiptImageByGuid(guid, payload.toByteArray())
         logger.info("set transaction receipt image for guid = $guid")
         return ResponseEntity.ok("transaction receipt image updated")
     }

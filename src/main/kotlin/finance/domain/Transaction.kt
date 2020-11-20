@@ -117,25 +117,28 @@ data class Transaction(
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", 0)
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", null)
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
 
-    //TODO: 11/19/2020 - need to fix this mess.
-//    @OneToOne(fetch = FetchType.EAGER, optional = true)
-//    @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
-//    @JsonIgnore
-//    var receiptImage: ReceiptImage? = null
-
+    //TODO: 11/19/2020 - cannot reference a transaction that does not exist
     //Foreign key constraint
+    //TODO: Probably need to change to a OneToMany relationship (one transaction can have many receiptImages)
+    @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
+    @JsonIgnore
+    var receiptImage: ReceiptImage? = null
+
+    //Foreign key constraint (many transactions can have one account)
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
 
+    //Foreign key constraint (many transactions can have many categories)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "t_transaction_categories",
             joinColumns = [JoinColumn(name = "transactionId")],

@@ -17,11 +17,11 @@ enum class TransactionState(val state: String) {
     @JsonProperty("undefined")
     Undefined("undefined");
 
-    fun value() : String = state
+    fun value(): String = state
     override fun toString(): String = name.toLowerCase()
 
     companion object {
-        private val VALUES = values();
+        private val VALUES = values()
         fun getByValue(state: String) = VALUES.firstOrNull { it.state == state }
     }
 }

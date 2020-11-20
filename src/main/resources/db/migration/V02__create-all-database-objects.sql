@@ -121,12 +121,50 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 -------------------
 CREATE TABLE IF NOT EXISTS t_receipt_image
 (
-    receipt_image_id   BIGSERIAL PRIMARY KEY,
-    transaction_id BIGINT  UNIQUE  NOT NULL,
-    receipt_image  BYTEA     NOT NULL
-    --date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0), -- TODO: will need a trigger for this
-    --date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0), -- TODO: will need a trigger for this
+    receipt_image_id BIGSERIAL PRIMARY KEY,
+    transaction_id   BIGINT    NOT NULL,
+    receipt_image    BYTEA     NOT NULL,
+    active_status    BOOLEAN   NOT NULL DEFAULT TRUE,
+    date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added       TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE
 );
+-- example
+-- ALTER TABLE t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
+
+CREATE OR REPLACE FUNCTION fn_insert_receipt_image() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.active_status := true;
+    NEW.date_added := CURRENT_TIMESTAMP;
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_receipt_image ON t_receipt_image;
+CREATE TRIGGER tr_insert_receipt_image
+    BEFORE INSERT
+    ON t_receipt_image
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_insert_receipt_image();
+
+CREATE OR REPLACE FUNCTION fn_update_receipt_image() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_update_receipt_image ON t_receipt_image;
+CREATE TRIGGER tr_update_receipt_image
+    BEFORE UPDATE
+    ON t_receipt_image
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_update_receipt_image();
 
 -----------------
 -- Transaction --
@@ -146,11 +184,10 @@ CREATE TABLE IF NOT EXISTS t_transaction
     amount             DECIMAL(12, 2) NOT NULL DEFAULT 0.0,
     transaction_state  TEXT           NOT NULL DEFAULT 'undefined',
     reoccurring        BOOLEAN        NOT NULL DEFAULT FALSE,
-    reoccurring_type   TEXT           NULL DEFAULT 'undefined',
+    reoccurring_type   TEXT           NULL     DEFAULT 'undefined',
     active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     notes              TEXT           NOT NULL DEFAULT '',
     receipt_image_id   BIGINT         NULL,
-    receipt_image      BYTEA          NULL,
     date_updated       TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP      NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
@@ -161,13 +198,16 @@ CREATE TABLE IF NOT EXISTS t_transaction
     --CONSTRAINT fk_category_id_transaction_id FOREIGN KEY(transaction_id) REFERENCES t_transaction_categories(category_id, transaction_id) ON DELETE CASCADE,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
-    CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined')),
+    CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
+                                          ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE,
+    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE
 );
 
---ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined')),
---ALTER TABLE t_transaction ADD COLUMN reoccurring_type   TEXT           NULL DEFAULT 'undefined';
+-- example
+-- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined'));
+-- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
 $$
@@ -273,11 +313,15 @@ CREATE TABLE IF NOT EXISTS t_parm
     date_added   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
+-- example
+-- ALTER TABLE t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
+-- insert into t_parm(parm_name, parm_value) VALUES('payment_account', '');
+
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_parm() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    --TODO: bh 11/11/2020 - need to add
+    --TODO: bh 11/11/2020 - need to modify the function after the column is added
     --NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
@@ -307,8 +351,6 @@ CREATE TRIGGER tr_update_timestamp_parm
     ON t_parm
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_timestamp_parm();
-
---insert into t_parm(parm_name, parm_value) VALUES('payment_account', '');
 
 -----------------
 -- description --
@@ -360,5 +402,6 @@ CREATE TRIGGER tr_update_timestamp_description
 EXECUTE PROCEDURE fn_update_timestamp_description();
 
 COMMIT;
+
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;
