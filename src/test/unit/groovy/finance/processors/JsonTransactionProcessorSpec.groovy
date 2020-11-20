@@ -6,6 +6,7 @@ import finance.services.MeterService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
+
 import javax.validation.Validator
 
 class JsonTransactionProcessorSpec extends Specification {
@@ -55,7 +56,7 @@ class JsonTransactionProcessorSpec extends Specification {
         1 * mockMessage.setBody({
             it ->
                 return it.size() == 1
-            })
+        })
         0 * _
     }
 

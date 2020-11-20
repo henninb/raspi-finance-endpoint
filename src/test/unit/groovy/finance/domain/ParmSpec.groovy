@@ -3,7 +3,6 @@ package finance.domain
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.helpers.ParmBuilder
-import finance.helpers.PaymentBuilder
 import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
@@ -15,14 +14,14 @@ class ParmSpec extends Specification {
 
     ValidatorFactory validatorFactory
     Validator validator
-    private ObjectMapper mapper = new ObjectMapper ()
+    private ObjectMapper mapper = new ObjectMapper()
 
-    void setup () {
+    void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
-    void cleanup () {
+    void cleanup() {
         validatorFactory.close()
     }
 

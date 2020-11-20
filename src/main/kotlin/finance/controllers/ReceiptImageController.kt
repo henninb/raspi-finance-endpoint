@@ -1,6 +1,5 @@
 package finance.controllers
 
-import finance.domain.Payment
 import finance.services.ReceiptImageService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

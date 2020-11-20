@@ -24,33 +24,19 @@ data class ReceiptImage(
         @JsonProperty
         @field:Min(value = 0L)
         @Column(name = "transaction_id", nullable = false)
-        var transactionId: Long,
+        var transactionId: Long
+) {
 
-        @Lob
-        @JsonIgnore
-        @Type(type = "org.hibernate.type.BinaryType")
-        @Column(name = "receipt_image", nullable = false)
-        var receiptImage: ByteArray?
+    constructor() : this(0L, 0L)
 
-        ) {
-
-    constructor() : this(0L, 0L, ByteArray(0))
+    @Lob
+    @JsonIgnore
+    @Type(type = "org.hibernate.type.BinaryType")
+    @Column(name = "receipt_image", nullable = false)
+    var receiptImage: ByteArray? = null
+    //TODO: look into this -> lateinit var receiptImage: ByteArray
 
     override fun toString(): String = mapper.writeValueAsString(this)
-
-//    override fun equals(other: Any?): Boolean {
-//        if (this === other) return true
-//        if (javaClass != other?.javaClass) return false
-//
-//        other as ReceiptImage
-//
-//        if (receipt_image_id != other.receipt_image_id) return false
-//        if (transactionId != other.transactionId) return false
-//
-//        return true
-//    }
-
-    override fun hashCode(): Int = receipt_image_id.toInt()
 
     companion object {
         @JsonIgnore

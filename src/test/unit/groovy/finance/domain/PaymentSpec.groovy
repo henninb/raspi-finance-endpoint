@@ -3,8 +3,6 @@ package finance.domain
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.helpers.PaymentBuilder
 import finance.utils.Constants
-
-import java.sql.Date
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -12,6 +10,7 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
+import java.sql.Date
 
 class PaymentSpec extends Specification {
     ValidatorFactory validatorFactory
