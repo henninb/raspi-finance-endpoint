@@ -33,8 +33,7 @@ data class ReceiptImage(
     @JsonIgnore
     @Type(type = "org.hibernate.type.BinaryType")
     @Column(name = "receipt_image", nullable = false)
-    var receiptImage: ByteArray? = null
-    //TODO: look into this -> lateinit var receiptImage: ByteArray
+    lateinit var receiptImage: ByteArray
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

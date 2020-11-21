@@ -21,4 +21,11 @@ class ReceiptImageController(private var receiptImageService: ReceiptImageServic
         receiptImageService.insertReceiptImageByTransactionId(transactionId, payload.toByteArray())
         return ResponseEntity.ok("insert transaction receipt image")
     }
+
+    //http://localhost:8080/account/select
+    @GetMapping(path = ["/select/{receipt_image_id}"])
+    fun selectAllActiveAccounts(@PathVariable("receipt_image_id") receiptImageId: Long): ResponseEntity<String> {
+        val receiptImage = receiptImageService.findByReceiptImageId(receiptImageId)
+        return ResponseEntity.ok(receiptImage.receiptImage.toString(Charsets.UTF_8))
+    }
 }

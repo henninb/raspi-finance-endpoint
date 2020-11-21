@@ -4,14 +4,14 @@ ENV=$1
 APP=raspi-finance-endpoint
 
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 <prod|local|func|perf>"
+  echo "Usage: $0 <prod|func|perf>"
   exit 1
 fi
 
-if [ "$ENV" = "prod" ] || [ "$ENV" = "local" ] || [ "$ENV" = "func" ] || [ "$ENV" = "perf" ]; then
+if [ "$ENV" = "prod" ] || [ "$ENV" = "func" ] || [ "$ENV" = "perf" ]; then
   echo "${ENV}"
 else
-  echo "Usage: $0 <prod|local|func|perf>"
+  echo "Usage: $0 <prod|func|perf>"
   exit 2
 fi
 
