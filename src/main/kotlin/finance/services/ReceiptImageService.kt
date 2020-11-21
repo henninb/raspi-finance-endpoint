@@ -1,5 +1,6 @@
 package finance.services
 
+import finance.domain.ReceiptImage
 import finance.repositories.ReceiptImageRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -20,5 +21,13 @@ class ReceiptImageService @Autowired constructor(private var receiptImageReposit
     fun findByTransactionId(transactionId: Long): Long {
         val receiptImage = receiptImageRepository.findByTransactionId(transactionId)
         return receiptImage.receipt_image_id
+    }
+
+    fun findByReceiptImageId(receiptImageId: Long): ReceiptImage {
+        val optionalReceiptImage = receiptImageRepository.findById(receiptImageId)
+        if( optionalReceiptImage.isPresent ) {
+            return receiptImageRepository.findById(receiptImageId).get()
+        }
+        throw RuntimeException("cannot find the receipt image.")
     }
 }
