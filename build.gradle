@@ -8,15 +8,15 @@ plugins {
     id 'scala'
     id 'java-library'
     id 'jacoco'
-    id "org.springframework.boot" version "2.3.5.RELEASE"
-    id "org.jetbrains.kotlin.jvm" version "1.4.10"
-    id "org.flywaydb.flyway" version "7.2.0"
+    id "org.springframework.boot" version "2.4.0"
+    id "org.jetbrains.kotlin.jvm" version "1.4.20"
+    id "org.flywaydb.flyway" version "7.2.1"
     id "com.github.ben-manes.versions" version "0.36.0"
 }
 
 ext['springBootVersion'] = '2.4.0'
 ext['apacheCamelVersion'] = '3.6.0'
-ext['kotlinVersion'] = '1.4.10'
+ext['kotlinVersion'] = '1.4.20'
 ext['groovyVersion'] = '3.0.6'
 ext['qualityPluginVersion'] = '3.0.0'
 ext['codenarcPluginVersion'] = '0.20.0'
@@ -27,8 +27,8 @@ ext['kafkaVersion'] = '2.5.0'
 ext['hibernateVersion'] = '5.4.23.Final'
 ext['h2Version'] = '1.4.200'
 ext['clojureVersion'] = '1.10.1'
-ext['scalaVersion'] = '2.13.3'
-ext['gradleVersion'] = '6.7'
+ext['scalaVersion'] = '2.13.4'
+ext['gradleVersion'] = '6.7.1'
 ext['mongoVersion'] = '3.12.2'
 ext['wmqVersion'] = '7.0.1.9'
 ext['swaggerVersion'] = '2.9.2'
@@ -57,7 +57,7 @@ ext['jacksonVersion'] = '2.12.0-rc2'
 ext['micrometerInfluxVersion'] = '1.6.1'
 ext['validationVersion'] = '2.0.1.Final'
 // https://stackoverflow.com/questions/64173564/failed-to-ugrade-a-spring-boot-app-to-flyway-7-0-0
-ext['flywayVersion'] = '7.2.0'
+ext['flywayVersion'] = '7.2.1'
 ext['logstashLogbackVersion'] = '6.4'
 ext['retrofitVersion'] = '2.9.0'
 
