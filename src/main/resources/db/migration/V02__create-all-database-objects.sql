@@ -127,10 +127,15 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
     active_status    BOOLEAN   NOT NULL DEFAULT TRUE,
     date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added       TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    CONSTRAINT ck_image_size CHECK(length(receipt_image) <= 1048576), -- 1024 kb file size limit
+    --646174613a696d6167652f706e673b626173653634 = data:image/png;base64
+    CONSTRAINT ck_image_type_png CHECK(left(encode(receipt_image,'hex'),42) = '646174613a696d6167652f706e673b626173653634'),
     CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE
 );
 -- example
 -- ALTER TABLE t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
+-- ALTER TABLE t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(receipt_image) <= 1024);
+-- select receipt_image_id, transaction_id, length(receipt_image)/1048576.0, left(encode(receipt_image,'hex'),100) from t_receipt_image;
 
 CREATE OR REPLACE FUNCTION fn_insert_receipt_image() RETURNS TRIGGER AS
 $$
