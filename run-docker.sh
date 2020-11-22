@@ -67,6 +67,8 @@ chmod +x gradle/wrapper/gradle-wrapper.jar
 
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb' --format "{{.ID}}") 2> /dev/null
 
+./gradlew clean build -x test
+
 if [ -n "${INFLUX_CONTAINER}" ]; then
   echo docker rm -f "${INFLUX_CONTAINER}"
   docker rm -f "${INFLUX_CONTAINER}"  2> /dev/null

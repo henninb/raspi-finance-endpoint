@@ -47,7 +47,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(mapper.writeValueAsString(results))
     }
 
-    //curl https://hornsup:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    //curl -k https://hornsup:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @GetMapping(path = ["/select/{guid}"], produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() guid = $guid")
