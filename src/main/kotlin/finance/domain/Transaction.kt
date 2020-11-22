@@ -119,6 +119,7 @@ data class Transaction(
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
             "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", null)
 
+
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
@@ -129,7 +130,7 @@ data class Transaction(
     //TODO: Probably need to change to a OneToMany relationship (one transaction can have many receiptImages)
     @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
-    @JsonIgnore
+    @JsonProperty
     var receiptImage: ReceiptImage? = null
 
     //Foreign key constraint (many transactions can have one account)
