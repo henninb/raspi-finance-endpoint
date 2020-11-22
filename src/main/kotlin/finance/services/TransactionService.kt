@@ -274,11 +274,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 logger.info("update existing receipt image.")
                 transaction.receiptImage!!.receiptImage = receiptImageData
                 val result = transactionRepository.saveAndFlush(transaction)
-                //logger.info("receipt_image_id ${result.receiptImage.receipt_image_id}")
+                logger.info("receipt_image_id=${result.receiptImage?.receipt_image_id}")
                 //result.receiptImageId = result.receiptImage.receipt_image_id
                 meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
                 return true
-
             }
 
             receiptImage.transactionId = transaction.transactionId
