@@ -109,15 +109,11 @@ data class Transaction(
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "notes", nullable = false)
-        var notes: String,
-
-        @JsonProperty
-        @Column(name = "receipt_image_id", nullable = true)
-        var receiptImageId: Long?
+        var notes: String
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
-            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "", null)
+            "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "")
 
 
     @JsonGetter("transactionDate")
