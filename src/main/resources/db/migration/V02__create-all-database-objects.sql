@@ -124,12 +124,15 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
     receipt_image_id BIGSERIAL PRIMARY KEY,
     transaction_id   BIGINT    NOT NULL,
     receipt_image    BYTEA     NOT NULL,
+    --jpg_image    BYTEA     NOT NULL,
     active_status    BOOLEAN   NOT NULL DEFAULT TRUE,
     date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added       TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT ck_image_size CHECK(length(receipt_image) <= 1048576), -- 1024 kb file size limit
     --646174613a696d6167652f706e673b626173653634 = data:image/png;base64
-    CONSTRAINT ck_image_type_png CHECK(left(encode(receipt_image,'hex'),42) = '646174613a696d6167652f706e673b626173653634'),
+    --646174613a696d6167652f6a7065673b626173653634 = data:image/jpeg;base64
+    --CONSTRAINT ck_image_type_png CHECK(left(encode(receipt_image,'hex'),42) = '646174613a696d6167652f706e673b626173653634'),
+    CONSTRAINT ck_image_type_jpg CHECK(left(encode(receipt_image,'hex'),44) = '646174613a696d6167652f6a7065673b626173653634'),
     CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE
 );
 -- example
@@ -171,6 +174,7 @@ CREATE TRIGGER tr_update_receipt_image
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_receipt_image();
 
+-- write some JPA logic such that this trigger is not required
 CREATE OR REPLACE FUNCTION fn_insert_receipt_image_after() RETURNS TRIGGER AS
 $$
 DECLARE
@@ -180,6 +184,7 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
+-- write some JPA logic such that this trigger is not required
 DROP TRIGGER IF EXISTS tr_insert_receipt_image_after ON t_receipt_image;
 CREATE TRIGGER tr_insert_receipt_image_after
     AFTER INSERT
