@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Proxy
 import org.hibernate.annotations.Type
-import java.text.SimpleDateFormat
 import javax.persistence.*
 import javax.validation.constraints.Min
 

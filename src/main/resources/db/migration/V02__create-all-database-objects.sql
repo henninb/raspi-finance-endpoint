@@ -155,22 +155,6 @@ CREATE TRIGGER tr_insert_receipt_image
     FOR EACH ROW
 EXECUTE PROCEDURE fn_insert_receipt_image();
 
-CREATE OR REPLACE FUNCTION fn_insert_receipt_image_after() RETURNS TRIGGER AS
-$$
-DECLARE
-BEGIN
-    UPDATE t_transaction SET receipt_image_id = NEW.receipt_image_id WHERE transaction_id = NEW.transaction_id;
-    RETURN NULL;
-END;
-$$ LANGUAGE PLPGSQL;
-
-DROP TRIGGER IF EXISTS tr_insert_receipt_image_after ON t_receipt_image;
-CREATE TRIGGER tr_insert_receipt_image_after
-    AFTER INSERT
-    ON t_receipt_image
-    FOR EACH ROW
-EXECUTE PROCEDURE fn_insert_receipt_image_after();
-
 CREATE OR REPLACE FUNCTION fn_update_receipt_image() RETURNS TRIGGER AS
 $$
 DECLARE
@@ -186,6 +170,22 @@ CREATE TRIGGER tr_update_receipt_image
     ON t_receipt_image
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_receipt_image();
+
+CREATE OR REPLACE FUNCTION fn_insert_receipt_image_after() RETURNS TRIGGER AS
+$$
+DECLARE
+BEGIN
+    UPDATE t_transaction SET receipt_image_id = NEW.receipt_image_id WHERE transaction_id = NEW.transaction_id;
+    RETURN NULL;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_receipt_image_after ON t_receipt_image;
+CREATE TRIGGER tr_insert_receipt_image_after
+    AFTER INSERT
+    ON t_receipt_image
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_insert_receipt_image_after();
 
 -----------------
 -- Transaction --
@@ -222,13 +222,14 @@ CREATE TABLE IF NOT EXISTS t_transaction
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE,
-    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
 );
 
 -- example
+-- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
 -- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined'));
 -- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
+-- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
 
 CREATE OR REPLACE FUNCTION fn_insert_timestamp_transaction() RETURNS TRIGGER AS
 $$

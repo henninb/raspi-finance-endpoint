@@ -115,15 +115,20 @@ data class Transaction(
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
             "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, "")
 
-
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
 
+//    //TODO: look to remove this field as it may not be required
+//    @JsonIgnore
+//    @Column(name = "receipt_image_id", nullable = true)
+//    var receiptImageId: Long? = null
+
     //TODO: 11/19/2020 - cannot reference a transaction that does not exist
     //Foreign key constraint
     //TODO: Probably need to change to a OneToMany relationship (one transaction can have many receiptImages)
+    //@OneToOne(mappedBy = "receiptImageId", cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
     @JsonProperty

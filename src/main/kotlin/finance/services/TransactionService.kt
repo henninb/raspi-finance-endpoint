@@ -271,10 +271,11 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             var receiptImage = ReceiptImage()
             if (transaction.receiptImage != null) {
                 //TODO: see how this works
-                println("update existing receipt image.")
-                //receiptImage = transaction.receiptImage!!
+                logger.info("update existing receipt image.")
                 transaction.receiptImage!!.receiptImage = receiptImageData
-                transactionRepository.saveAndFlush(transaction)
+                val result = transactionRepository.saveAndFlush(transaction)
+                //logger.info("receipt_image_id ${result.receiptImage.receipt_image_id}")
+                //result.receiptImageId = result.receiptImage.receipt_image_id
                 meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
                 return true
 
