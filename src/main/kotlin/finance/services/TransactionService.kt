@@ -24,11 +24,9 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                                                      private val validator: Validator,
                                                      private var meterService: MeterService) {
 
-//    fun findAllTransactions(): List<Transaction> {
-//        return transactionRepository.findAll()
-//    }
 
-    //TODO: fix the delete
+
+    //TODO: fix the delete to handle foreign key during the delete process
     @Timed
     @Transactional
     open fun deleteTransactionByGuid(guid: String): Boolean {
@@ -36,8 +34,15 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             if (transaction.categories.size > 0) {
+                //TODO: add metric here
                 val categoryOptional = categoryService.findByCategory(transaction.category)
                 transaction.categories.remove(categoryOptional.get())
+            }
+
+            //TODO: Not sure if this works to delete a transaction that has an image associated
+            if( transaction.receiptImage != null) {
+                //TODO: add metric here
+                transaction.receiptImage = null
             }
 
             transactionRepository.deleteByGuid(guid)
@@ -268,7 +273,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
-            var receiptImage = ReceiptImage()
+            val receiptImage = ReceiptImage()
             if (transaction.receiptImage != null) {
                 //TODO: see how this works
                 logger.info("update existing receipt image.")

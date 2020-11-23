@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
     receipt_image_id BIGSERIAL PRIMARY KEY,
     transaction_id   BIGINT    NOT NULL,
     receipt_image    BYTEA     NOT NULL,
-    --jpg_image    BYTEA     NOT NULL, -- TODO: add this column
+    jpg_image    BYTEA     NULL, -- ADD the not NULL constraint
     active_status    BOOLEAN   NOT NULL DEFAULT TRUE,
     date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added       TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
-    -- CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE,
+    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE,
     CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
 );
 
