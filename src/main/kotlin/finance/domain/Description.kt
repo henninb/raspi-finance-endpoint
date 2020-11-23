@@ -10,7 +10,7 @@ import javax.persistence.*
 import javax.validation.constraints.Min
 import javax.validation.constraints.Size
 
-@Entity(name = "DescriptionEntity")
+@Entity
 @Proxy(lazy = false)
 @Table(name = "t_description")
 @JsonIgnoreProperties(ignoreUnknown = true)

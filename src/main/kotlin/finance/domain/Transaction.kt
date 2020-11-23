@@ -27,7 +27,7 @@ import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-@Entity(name = "TransactionEntity")
+@Entity
 @Proxy(lazy = false)
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -120,16 +120,12 @@ data class Transaction(
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
 
-//    //TODO: look to remove this field as it may not be required
-//    @JsonIgnore
-//    @Column(name = "receipt_image_id", nullable = true)
-//    var receiptImageId: Long? = null
-
     //TODO: 11/19/2020 - cannot reference a transaction that does not exist
     //Foreign key constraint
-    //TODO: Probably need to change to a OneToMany relationship (one transaction can have many receiptImages)
+    //TODO: Probably need to change to a OneToMany relationship
+    //Foreign key constraint (one transaction can have many receiptImages)
     //@OneToOne(mappedBy = "receiptImageId", cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
-    @OneToOne(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, optional = true)
+    @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
     @JsonProperty
     var receiptImage: ReceiptImage? = null
@@ -143,7 +139,7 @@ data class Transaction(
     //Foreign key constraint (many transactions can have many categories)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "t_transaction_categories",
-            joinColumns = [JoinColumn(name = "transactionId")],
+            joinColumns = [JoinColumn(name = "transaction_id")],
             inverseJoinColumns = [JoinColumn(name = "category_id")])
     @JsonIgnore
     var categories = mutableListOf<Category>()

@@ -1,7 +1,7 @@
 package finance.services
 
 
-import finance.domain.Parm
+import finance.domain.Parameter
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -11,5 +11,5 @@ interface ParmApiService {
     //fun selectParm(@Path("parmName") String parmName): Call<List<Parm>>
 
     @GET("/select/{parmName}")
-    fun selectParm(@Path("parmName") parmName: String): Call<List<Parm>>
+    fun selectParm(@Path("parmName") parmName: String): Call<List<Parameter>>
 }

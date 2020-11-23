@@ -3,12 +3,12 @@ package finance.controllers
 import finance.Application
 import finance.domain.Account
 import finance.domain.AccountType
-import finance.domain.Parm
+import finance.domain.Parameter
 import finance.domain.Payment
 import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
 import finance.services.AccountService
-import finance.services.ParmService
+import finance.services.ParameterService
 import finance.services.PaymentService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -41,7 +41,7 @@ class PaymentControllerSpec extends Specification {
     AccountService accountService
 
     @Autowired
-    ParmService parmService
+    ParameterService parmService
 
     @Shared
     Payment payment
@@ -50,17 +50,18 @@ class PaymentControllerSpec extends Specification {
     Account account
 
     @Shared
-    Parm parm
+    Parameter parameter
 
     def setupSpec() {
         restTemplate = new TestRestTemplate()
         headers = new HttpHeaders()
         payment = PaymentBuilder.builder().build()
 
-        parm = new Parm()
-        parm.parm_id = 1
-        parm.parmName = 'payment_account'
-        parm.parmValue = 'bcu-checking_brian'
+        parameter = new Parameter()
+        //TODO: do I need to set the Id?
+        parameter.parameterId = 1
+        parameter.parameterName = 'payment_account'
+        parameter.parameterValue = 'bcu-checking_brian'
 
         account = AccountBuilder.builder().build()
         account.accountType = AccountType.Credit
@@ -73,7 +74,7 @@ class PaymentControllerSpec extends Specification {
 
     def "test Payment endpoint existing payment inserted and then deleted"() {
         given:
-        parmService.insertParm(parm)
+        parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
         payment.transactionDate = Date.valueOf("2020-10-12")
@@ -90,7 +91,7 @@ class PaymentControllerSpec extends Specification {
 
     def "test Payment endpoint existing payment inserted and then attempt to delete a non existent payment"() {
         given:
-        parmService.insertParm(parm)
+        parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
         payment.transactionDate = Date.valueOf("2020-10-11")
@@ -114,7 +115,7 @@ class PaymentControllerSpec extends Specification {
 
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.insertParm(parm)
+        parmService.insertParm(parameter)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -128,7 +129,7 @@ class PaymentControllerSpec extends Specification {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.deleteByParmName(parm.parmName)
+        parmService.deleteByParmName(parameter.parameterName)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -140,7 +141,7 @@ class PaymentControllerSpec extends Specification {
         0 * _
 
         cleanup:
-        parmService.insertParm(parm)
+        parmService.insertParm(parameter)
     }
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
@@ -149,9 +150,9 @@ class PaymentControllerSpec extends Specification {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         accountService.insertAccount(account)
-        parmService.deleteByParmName(parm.parmName)
-        parm.parmValue = account.accountNameOwner
-        parmService.insertParm(parm)
+        parmService.deleteByParmName(parameter.parameterName)
+        parameter.parameterValue = account.accountNameOwner
+        parmService.insertParm(parameter)
         HttpEntity entity = new HttpEntity<>(payment, headers)
 
         when:

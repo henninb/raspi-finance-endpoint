@@ -14,7 +14,7 @@ import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
 
-@Entity(name = "CategoryEntity")
+@Entity
 @Proxy(lazy = false)
 @Table(name = "t_category")
 @JsonIgnoreProperties(ignoreUnknown = true)

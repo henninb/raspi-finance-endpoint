@@ -16,17 +16,17 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE TransactionEntity set amount = ?1 WHERE guid = ?2")
+    @Query("UPDATE #{#entityName} set amount = ?1 WHERE guid = ?2")
     fun setAmountByGuid(amount: BigDecimal, guid: String)
 
     @Modifying
     @Transactional
-    @Query("UPDATE t_transaction set receipt_image = ?2 WHERE guid = ?1", nativeQuery = true)
-    fun setTransactionReceiptImageByGuid(guid: String, receiptImage: ByteArray)
+    @Query("UPDATE t_transaction set receipt_image_id = ?2 WHERE guid = ?1", nativeQuery = true)
+    fun setTransactionReceiptImageIdByGuid(guid: String, receiptImageId: Long)
 
     @Modifying
     @Transactional
-    @Query("UPDATE TransactionEntity set transaction_state = ?1 WHERE guid = ?2")
+    @Query("UPDATE #{#entityName} set transaction_state = ?1 WHERE guid = ?2")
     fun setTransactionStateByGuid(transactionState: TransactionState, guid: String)
 
     // Using SpEL expression

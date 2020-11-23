@@ -1,6 +1,6 @@
 package finance.controllers
 
-import finance.domain.Parm
+import finance.domain.Parameter
 import finance.services.ParmApiService
 import org.jetbrains.annotations.NotNull
 import retrofit2.Call
@@ -12,7 +12,7 @@ import retrofit2.mock.NetworkBehavior
 import spock.lang.Shared
 import spock.lang.Specification
 
-class ParmControllerSpec extends Specification {
+class ParameterControllerSpec extends Specification {
     static final String BASE_URL = "http://url.com"
 
     @Shared
@@ -30,7 +30,7 @@ class ParmControllerSpec extends Specification {
         }
 
         @Override
-        Call<List<Parm>> selectParm(@NotNull @Path("parmName") String parmName) {
+        Call<List<Parameter>> selectParm(@NotNull @Path("parmName") String parmName) {
             delegate.returningResponse().selectParm(parmName)
         }
     }

@@ -17,7 +17,7 @@ import javax.validation.Validator
 @Service
 class PaymentService(private var paymentRepository: PaymentRepository,
                      private var transactionService: TransactionService,
-                     private var parmService: ParmService,
+                     private var parameterService: ParameterService,
                      private val validator: Validator,
                      private var meterService: MeterService) {
 
@@ -52,7 +52,7 @@ class PaymentService(private var paymentRepository: PaymentRepository,
     //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
     @Throws
     private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) {
-        val optionalParm = parmService.findByParm("payment_account")
+        val optionalParm = parameterService.findByParm("payment_account")
         if (optionalParm.isPresent) {
             transactionDebit.guid = UUID.randomUUID().toString()
             transactionDebit.transactionDate = payment.transactionDate
@@ -67,7 +67,7 @@ class PaymentService(private var paymentRepository: PaymentRepository,
             transactionDebit.transactionState = TransactionState.Outstanding
             transactionDebit.accountType = AccountType.Debit
             transactionDebit.reoccurring = false
-            transactionDebit.accountNameOwner = optionalParm.get().parmValue
+            transactionDebit.accountNameOwner = optionalParm.get().parameterValue
             //return true
         } else {
             throw RuntimeException("failed to read the parm 'payment_account'.")

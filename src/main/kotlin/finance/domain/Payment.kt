@@ -20,7 +20,7 @@ import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-@Entity(name = "PaymentEntity")
+@Entity
 @Proxy(lazy = false)
 @Table(name = "t_payment", uniqueConstraints = [UniqueConstraint(columnNames = ["account_name_owner", "transaction_date", "amount"])])
 @JsonIgnoreProperties(ignoreUnknown = true)

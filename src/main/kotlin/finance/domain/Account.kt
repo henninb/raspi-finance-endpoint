@@ -18,7 +18,7 @@ import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-@Entity(name = "AccountEntity")
+@Entity
 @Proxy(lazy = false)
 @Table(name = "t_account",
         uniqueConstraints = [UniqueConstraint(columnNames = ["account_name_owner", "account_type"], name = "uk_id_account_type")]
