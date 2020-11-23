@@ -1,8 +1,8 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Parm
-import finance.services.ParmService
+import finance.domain.Parameter
+import finance.services.ParameterService
 import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,30 +17,30 @@ import javax.validation.ValidationException
 @CrossOrigin
 @RestController
 @RequestMapping("/parm")
-class ParmController(private var parmService: ParmService) {
+class ParameterController(private var parameterService: ParameterService) {
 
     //https://hornsup:8080/parm/select/payment_account
     @GetMapping(path = ["/select/{parmName}"], produces = ["application/json"])
-    fun selectParm(@PathVariable parmName: String): ResponseEntity<Parm> {
-        val parmOptional: Optional<Parm> = parmService.findByParm(parmName)
-        if (!parmOptional.isPresent) {
+    fun selectParm(@PathVariable parmName: String): ResponseEntity<Parameter> {
+        val parameterOptional: Optional<Parameter> = parameterService.findByParm(parmName)
+        if (!parameterOptional.isPresent) {
             logger.info("no parm found.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find the parm.")
         }
-        return ResponseEntity.ok(parmOptional.get())
+        return ResponseEntity.ok(parameterOptional.get())
     }
 
     //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8080/parm/insert
     @PostMapping(path = ["/insert"], produces = ["application/json"])
-    fun insertParm(@RequestBody parm: Parm): ResponseEntity<String> {
-        parmService.insertParm(parm)
+    fun insertParm(@RequestBody parameter: Parameter): ResponseEntity<String> {
+        parameterService.insertParm(parameter)
         logger.info("insertParm")
         return ResponseEntity.ok("parm inserted")
     }
 
     @DeleteMapping(path = ["/delete/{parmName}"], produces = ["application/json"])
     fun deleteByParmName(@PathVariable parmName: String): ResponseEntity<String> {
-        parmService.deleteByParmName(parmName)
+        parameterService.deleteByParmName(parmName)
         return ResponseEntity.ok("payment deleted")
     }
 

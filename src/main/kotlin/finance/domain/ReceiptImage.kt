@@ -10,7 +10,7 @@ import org.hibernate.annotations.Type
 import javax.persistence.*
 import javax.validation.constraints.Min
 
-@Entity(name = "ReceiptImageEntity")
+@Entity
 @Proxy(lazy = false)
 @Table(name = "t_receipt_image")
 @JsonIgnoreProperties(ignoreUnknown = true)

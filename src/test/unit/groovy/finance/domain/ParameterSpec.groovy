@@ -2,7 +2,7 @@ package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.helpers.ParmBuilder
+import finance.helpers.ParameterBuilder
 import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
@@ -10,7 +10,7 @@ import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
 
-class ParmSpec extends Specification {
+class ParameterSpec extends Specification {
 
     ValidatorFactory validatorFactory
     Validator validator
@@ -25,27 +25,27 @@ class ParmSpec extends Specification {
         validatorFactory.close()
     }
 
-    def "test -- JSON serialization to Parm"() {
+    def "test -- JSON serialization to Parameter"() {
         given:
         def jsonPayload = """
-{"parmName":"foo","parmValue":"bar"}
+{"parameterName":"foo","parameterValue":"bar"}
 """
         when:
-        Parm parm = mapper.readValue(jsonPayload, Parm.class)
+        Parameter parm = mapper.readValue(jsonPayload, Parameter.class)
 
         then:
-        parm.parmName == 'foo'
-        parm.parmValue == 'bar'
+        parm.parameterName == 'foo'
+        parm.parameterValue == 'bar'
         0 * _
     }
 
-    def "test JSON deserialization to Parm object - bad non-json"() {
+    def "test JSON deserialization to Parameter object - bad non-json"() {
 
         given:
         def jsonPayloadBad = 'badPayload'
 
         when:
-        mapper.readValue(jsonPayloadBad, Parm.class)
+        mapper.readValue(jsonPayloadBad, Parameter.class)
 
         then:
         JsonParseException ex = thrown()
@@ -53,13 +53,13 @@ class ParmSpec extends Specification {
         0 * _
     }
 
-    def "test JSON deserialization to Parm object - bad json"() {
+    def "test JSON deserialization to Parameter object - bad json"() {
 
         given:
-        def jsonPayloadBad = '{"parmName":"foo","parmValue":"bar",}'
+        def jsonPayloadBad = '{"parameterName":"foo","parameterValue":"bar",}'
 
         when:
-        mapper.readValue(jsonPayloadBad, Parm.class)
+        mapper.readValue(jsonPayloadBad, Parameter.class)
 
         then:
         JsonParseException ex = thrown()
@@ -67,12 +67,12 @@ class ParmSpec extends Specification {
         0 * _
     }
 
-    def "test validation valid parm"() {
+    def "test validation valid parameter"() {
         given:
-        Parm parm = new ParmBuilder().builder().build()
+        Parameter parameter = new ParameterBuilder().builder().build()
 
         when:
-        Set<ConstraintViolation<Parm>> violations = validator.validate(parm)
+        Set<ConstraintViolation<Parameter>> violations = validator.validate(parameter)
 
         then:
         violations.isEmpty()
