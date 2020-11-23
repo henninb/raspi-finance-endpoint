@@ -38,8 +38,17 @@ data class ReceiptImage(
     @Lob
     @JsonProperty
     @Type(type = "org.hibernate.type.BinaryType")
+    //TODO: change nullable to false after cut over
+    @Column(name = "jpg_image", nullable = true)
+    var jpgImage: ByteArray? = null
+    //lateinit var jpgImage: ByteArray
+
+    @Lob
+    @JsonProperty
+    @Type(type = "org.hibernate.type.BinaryType")
     @Column(name = "receipt_image", nullable = false)
     lateinit var receiptImage: ByteArray
+
 
     override fun toString(): String = mapper.writeValueAsString(this)
 
