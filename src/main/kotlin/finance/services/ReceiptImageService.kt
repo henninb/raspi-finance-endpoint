@@ -4,24 +4,11 @@ import finance.domain.ReceiptImage
 import finance.repositories.ReceiptImageRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 @Service
-class ReceiptImageService @Autowired constructor(private var receiptImageRepository: ReceiptImageRepository) {
-
-    fun insertReceiptImageByTransactionId(transactionId: Long, receiptImage: ByteArray): Boolean {
-        receiptImageRepository.insertReceiptImageByTransactionId(transactionId, receiptImage)
-        return true
-    }
-
-    fun updateReceiptImageByTransactionId(transactionId: Long, receiptImage: ByteArray): Boolean {
-        receiptImageRepository.updateReceiptImageByTransactionId(transactionId, receiptImage)
-        return true
-    }
-
-    fun findByTransactionId(transactionId: Long): Long {
-        val receiptImage = receiptImageRepository.findByTransactionId(transactionId)
-        return receiptImage.receipt_image_id
-    }
+open class ReceiptImageService @Autowired constructor(private var receiptImageRepository: ReceiptImageRepository) {
 
     fun findByReceiptImageId(receiptImageId: Long): ReceiptImage {
         val optionalReceiptImage = receiptImageRepository.findById(receiptImageId)
@@ -29,5 +16,16 @@ class ReceiptImageService @Autowired constructor(private var receiptImageReposit
             return receiptImageRepository.findById(receiptImageId).get()
         }
         throw RuntimeException("cannot find the receipt image.")
+    }
+
+    @Transactional
+    open fun insertReceiptImage(receiptImage: ReceiptImage): Long {
+        val response = receiptImageRepository.saveAndFlush(receiptImage)
+        return response.receiptImageId
+    }
+
+    @Transactional
+    open fun findByReceiptId(receiptImageId: Long) : Optional<ReceiptImage> {
+        return receiptImageRepository.findById(receiptImageId)
     }
 }

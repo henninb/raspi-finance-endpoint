@@ -16,11 +16,13 @@ import javax.validation.constraints.Min
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReceiptImage(
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name="receipt_image_id_gen", sequenceName = "t_receipt_image_receipt_image_id_seq", allocationSize = 1)
+        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "receipt_image_id_gen")
+
         @field:Min(value = 0L)
         @JsonIgnore
         @Column(name = "receipt_image_id", nullable = false)
-        var receipt_image_id: Long,
+        var receiptImageId: Long,
 
         @JsonIgnore
         @field:Min(value = 0L)

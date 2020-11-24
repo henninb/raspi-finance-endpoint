@@ -120,6 +120,10 @@ data class Transaction(
         return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
     }
 
+    @JsonIgnore
+    @Column(name = "receipt_image_id", nullable = true)
+    var receiptImageId: Long? = null
+
     //TODO: 11/19/2020 - cannot reference a transaction that does not exist
     //Foreign key constraint
     //TODO: Probably need to change to a OneToMany relationship

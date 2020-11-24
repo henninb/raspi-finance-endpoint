@@ -7,6 +7,7 @@ import finance.domain.Transaction
 import finance.helpers.CategoryBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
+import finance.repositories.ReceiptImageRepository
 import finance.repositories.TransactionRepository
 import org.hibernate.NonUniqueResultException
 import spock.lang.Specification
@@ -21,12 +22,14 @@ class TransactionServiceSpec extends Specification {
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
     CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator, mockMeterService)
+    ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
+    ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
+    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
     Category category = CategoryBuilder.builder().build()
 
     def "test transactionService - deleteByGuid"() {
         given:
-        def guid = '123'
+        def guid = '123'  // should use GUID generator
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
