@@ -16,8 +16,8 @@ import javax.validation.constraints.Min
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReceiptImage(
         @Id
-        @SequenceGenerator(name="receipt_image_id_gen", sequenceName = "t_receipt_image_receipt_image_id_seq", allocationSize = 1)
-        @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "receipt_image_id_gen")
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @SequenceGenerator(name = "t_receipt_image_receipt_image_id_seq")
 
         @field:Min(value = 0L)
         @JsonIgnore
@@ -27,30 +27,25 @@ data class ReceiptImage(
         @JsonIgnore
         @field:Min(value = 0L)
         @Column(name = "transaction_id", nullable = false)
-        var transactionId: Long
+        var transactionId: Long,
+
+        @JsonProperty
+        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+        var activeStatus: Boolean?
 ) {
 
-    constructor() : this(0L, 0L)
+    constructor() : this(0L, 0L, true)
 
-    @JsonGetter("receiptImage")
-    fun jsonGetterReceiptImage(): String {
-        return this.receiptImage.toString(Charsets.UTF_8)
+    @JsonGetter("jpgImage")
+    fun jsonGetterJpgImage(): String {
+        return this.jpgImage.toString(Charsets.UTF_8)
     }
 
     @Lob
     @JsonProperty
     @Type(type = "org.hibernate.type.BinaryType")
-    //TODO: change nullable to false after cut over
-    @Column(name = "jpg_image", nullable = true)
-    var jpgImage: ByteArray? = null
-    //lateinit var jpgImage: ByteArray
-
-    @Lob
-    @JsonProperty
-    @Type(type = "org.hibernate.type.BinaryType")
-    @Column(name = "receipt_image", nullable = false)
-    lateinit var receiptImage: ByteArray
-
+    @Column(name = "jpg_image", nullable = false)
+    lateinit var jpgImage: ByteArray
 
     override fun toString(): String = mapper.writeValueAsString(this)
 
