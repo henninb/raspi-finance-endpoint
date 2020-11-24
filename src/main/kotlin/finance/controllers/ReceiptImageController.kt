@@ -13,6 +13,6 @@ class ReceiptImageController(private var receiptImageService: ReceiptImageServic
     @GetMapping(path = ["/select/{receipt_image_id}"])
     fun selectReceiptImage(@PathVariable("receipt_image_id") receiptImageId: Long): ResponseEntity<String> {
         val receiptImage = receiptImageService.findByReceiptImageId(receiptImageId)
-        return ResponseEntity.ok(receiptImage.receiptImage.toString(Charsets.UTF_8))
+        return ResponseEntity.ok(receiptImage.jpgImage.toString(Charsets.UTF_8))
     }
 }

@@ -270,7 +270,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
     @Timed
     @Transactional
-    open fun updateTransactionReceiptImageByGuid(guid: String, receiptImageData: ByteArray): Boolean {
+    open fun updateTransactionReceiptImageByGuid(guid: String, jpgBase64Data: ByteArray): Boolean {
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
@@ -280,10 +280,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 logger.info("update existing receipt image: ${transaction.transactionId}")
                 val receiptImageOptional = receiptImageService.findByReceiptId(transaction.receiptImageId!!)
                 if (receiptImageOptional.isPresent ) {
-                    receiptImageOptional.get().receiptImage = receiptImageData
+                    receiptImageOptional.get().jpgImage = jpgBase64Data
                     receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 } else {
-                    throw RuntimeException("failed to update receipt image.")
+                    throw RuntimeException("failed to update receipt image for transaction ${transaction.guid}")
                 }
 
                 meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
@@ -292,7 +292,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
             receiptImage.transactionId = transaction.transactionId
-            receiptImage.receiptImage = receiptImageData
+            receiptImage.jpgImage = jpgBase64Data
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = receiptImageId
 
