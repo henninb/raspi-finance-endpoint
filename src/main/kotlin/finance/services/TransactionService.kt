@@ -27,7 +27,6 @@ open class TransactionService @Autowired constructor(private var transactionRepo
 
 
 
-    //TODO: fix the delete to handle foreign key during the delete process
     @Timed
     @Transactional
     open fun deleteTransactionByGuid(guid: String): Boolean {
