@@ -10,14 +10,6 @@ import java.util.*
 @Service
 open class ReceiptImageService @Autowired constructor(private var receiptImageRepository: ReceiptImageRepository) {
 
-    fun findByReceiptImageId(receiptImageId: Long): ReceiptImage {
-        val optionalReceiptImage = receiptImageRepository.findById(receiptImageId)
-        if( optionalReceiptImage.isPresent ) {
-            return receiptImageRepository.findById(receiptImageId).get()
-        }
-        throw RuntimeException("cannot find the receipt image.")
-    }
-
     @Transactional
     open fun insertReceiptImage(receiptImage: ReceiptImage): Long {
         val response = receiptImageRepository.saveAndFlush(receiptImage)
@@ -25,7 +17,13 @@ open class ReceiptImageService @Autowired constructor(private var receiptImageRe
     }
 
     @Transactional
-    open fun findByReceiptId(receiptImageId: Long) : Optional<ReceiptImage> {
+    open fun findByReceiptImageId(receiptImageId: Long) : Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
+    }
+
+    @Transactional
+    open fun deleteReceiptImage(receiptImage: ReceiptImage) :  Boolean {
+        receiptImageRepository.deleteById(receiptImage.receiptImageId)
+        return true
     }
 }

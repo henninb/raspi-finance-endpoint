@@ -40,10 +40,13 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 transaction.categories.remove(categoryOptional.get())
             }
 
-            //TODO: Not sure if this works to delete a transaction that has an image associated
-            if( transaction.receiptImage != null) {
-                //TODO: add metric here
-                transaction.receiptImage = null
+            if( transaction.receiptImageId != null) {
+                val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
+                if( receiptImageOptional.isPresent) {
+                    receiptImageService.deleteReceiptImage(receiptImageOptional.get())
+                    transaction.receiptImageId = null
+                    //TODO: add metric here
+                }
             }
 
             transactionRepository.deleteByGuid(guid)
@@ -278,7 +281,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             logger.info("receiptImageId: ${transaction.receiptImageId}")
             if ( transaction.receiptImageId  != null ) {
                 logger.info("update existing receipt image: ${transaction.transactionId}")
-                val receiptImageOptional = receiptImageService.findByReceiptId(transaction.receiptImageId!!)
+                val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
                 if (receiptImageOptional.isPresent ) {
                     receiptImageOptional.get().jpgImage = jpgBase64Data
                     receiptImageService.insertReceiptImage(receiptImageOptional.get())
