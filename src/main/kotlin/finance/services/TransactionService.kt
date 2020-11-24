@@ -40,12 +40,8 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             }
 
             if( transaction.receiptImageId != null) {
-                val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
-                if( receiptImageOptional.isPresent) {
-                    receiptImageService.deleteReceiptImage(receiptImageOptional.get())
-                    transaction.receiptImageId = null
-                    //TODO: add metric here
-                }
+                deleteReceiptImage(transaction)
+                transaction.receiptImageId = null
             }
 
             transactionRepository.deleteByGuid(guid)
@@ -54,6 +50,14 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         }
         //TODO: add metric here
         return false
+    }
+
+    private fun deleteReceiptImage(transaction: Transaction) {
+        val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
+        if (receiptImageOptional.isPresent) {
+            receiptImageService.deleteReceiptImage(receiptImageOptional.get())
+            //TODO: add metric here
+        }
     }
 
     //https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
