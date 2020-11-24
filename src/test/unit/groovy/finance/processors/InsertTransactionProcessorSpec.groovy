@@ -8,10 +8,12 @@ import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
+import finance.repositories.ReceiptImageRepository
 import finance.repositories.TransactionRepository
 import finance.services.AccountService
 import finance.services.CategoryService
 import finance.services.MeterService
+import finance.services.ReceiptImageService
 import finance.services.TransactionService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
@@ -29,8 +31,10 @@ class InsertTransactionProcessorSpec extends Specification {
     AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
     CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
+    ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
+    ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
     ObjectMapper mapper = new ObjectMapper()
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, mockValidator, mockMeterService)
+    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
     InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, mockMeterService)
 
     def jsonPayload = '''

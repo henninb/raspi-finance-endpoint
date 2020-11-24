@@ -174,24 +174,6 @@ CREATE TRIGGER tr_update_receipt_image
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_receipt_image();
 
--- write some JPA logic such that this trigger is not required
-CREATE OR REPLACE FUNCTION fn_insert_receipt_image_after() RETURNS TRIGGER AS
-$$
-DECLARE
-BEGIN
-    UPDATE t_transaction SET receipt_image_id = NEW.receipt_image_id WHERE transaction_id = NEW.transaction_id;
-    RETURN NULL;
-END;
-$$ LANGUAGE PLPGSQL;
-
--- write some JPA logic such that this trigger is not required
-DROP TRIGGER IF EXISTS tr_insert_receipt_image_after ON t_receipt_image;
-CREATE TRIGGER tr_insert_receipt_image_after
-    AFTER INSERT
-    ON t_receipt_image
-    FOR EACH ROW
-EXECUTE PROCEDURE fn_insert_receipt_image_after();
-
 -----------------
 -- Transaction --
 -----------------

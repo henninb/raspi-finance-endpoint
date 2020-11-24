@@ -21,7 +21,7 @@ data class Description(
         @field:Min(value = 0L)
         @JsonProperty
         @Column(name = "description_id", nullable = false)
-        var description_id: Long,
+        var descriptionId: Long,
 
         @field:Size(min = 1, max = 50)
         @field:Convert(converter = LowerCaseConverter::class)

@@ -21,6 +21,7 @@ import javax.validation.Validator
 open class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
                                                      private var accountService: AccountService,
                                                      private var categoryService: CategoryService,
+                                                     private var receiptImageService: ReceiptImageService,
                                                      private val validator: Validator,
                                                      private var meterService: MeterService) {
 
@@ -273,21 +274,28 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
-            val receiptImage = ReceiptImage()
-            if (transaction.receiptImage != null) {
-                //TODO: see how this works
-                logger.info("update existing receipt image.")
-                transaction.receiptImage!!.receiptImage = receiptImageData
-                val result = transactionRepository.saveAndFlush(transaction)
-                logger.info("receipt_image_id=${result.receiptImage?.receipt_image_id}")
-                //result.receiptImageId = result.receiptImage.receipt_image_id
+
+            logger.info("receiptImageId: ${transaction.receiptImageId}")
+            if ( transaction.receiptImageId  != null ) {
+                logger.info("update existing receipt image: ${transaction.transactionId}")
+                val receiptImageOptional = receiptImageService.findByReceiptId(transaction.receiptImageId!!)
+                if (receiptImageOptional.isPresent ) {
+                    receiptImageOptional.get().receiptImage = receiptImageData
+                    receiptImageService.insertReceiptImage(receiptImageOptional.get())
+                } else {
+                    throw RuntimeException("failed to update receipt image.")
+                }
+
                 meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
                 return true
             }
-
+            logger.info("added new receipt image: ${transaction.transactionId}")
+            val receiptImage = ReceiptImage()
             receiptImage.transactionId = transaction.transactionId
             receiptImage.receiptImage = receiptImageData
-            transaction.receiptImage = receiptImage
+            val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
+            transaction.receiptImageId = receiptImageId
+
             transactionRepository.saveAndFlush(transaction)
             meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
             return true
