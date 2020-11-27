@@ -28,7 +28,7 @@ services:
       - influxdb-server
       - postgresql-server
   influxdb-server:
-    image: influxdb:latest
+    image: influxdb:1.8.3
 #    user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: influxdb-server
     ports:
