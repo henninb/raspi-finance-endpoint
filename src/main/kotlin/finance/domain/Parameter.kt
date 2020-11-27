@@ -29,13 +29,18 @@ data class Parameter(
         @JsonProperty
         var parameterName: String,
 
+
         @field:Size(min = 1, max = 50)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "parm_value", unique = true, nullable = false)
         @JsonProperty
-        var parameterValue: String
+        var parameterValue: String,
+
+        @JsonProperty
+        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+        var activeStatus: Boolean
 ) {
-    constructor() : this(0L, "", "")
+    constructor() : this(0L, "", "", true)
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

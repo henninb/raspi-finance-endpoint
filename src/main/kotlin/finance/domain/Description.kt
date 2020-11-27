@@ -23,17 +23,17 @@ data class Description(
         @Column(name = "description_id", nullable = false)
         var descriptionId: Long,
 
+        @JsonProperty
+        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+        var activeStatus: Boolean,
+
         @field:Size(min = 1, max = 50)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "description", unique = true, nullable = false)
         @JsonProperty
-        var description: String,
-
-        @JsonProperty
-        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean
+        var description: String
 ) {
-    constructor() : this(0L, "", true)
+    constructor() : this(0L, true, "")
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

@@ -23,7 +23,7 @@ class CategoryController(private var categoryService: CategoryService) {
     //http://localhost:8080/category/select/active
     @GetMapping(path = ["/select/active"], produces = ["application/json"])
     fun selectAllActiveCategories(): ResponseEntity<List<Category>> {
-        val categories: List<Category> = categoryService.fetchAllCategories()
+        val categories: List<Category> = categoryService.fetchAllActiveCategories()
         if (categories.isEmpty()) {
             logger.info("no category found.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any categories.")
