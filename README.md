@@ -92,3 +92,8 @@ $ curl localhost:8080/account/select/active
 ```
 https://github.com/jeyrschabu/retrofit-samples
 ```
+
+## latest openjdk11 version
+```
+https://wiki.openjdk.java.net/display/JDKUpdates/JDK11u
+```

@@ -27,6 +27,10 @@ data class Category(
         @Column(name = "category_id", nullable = false)
         var categoryId: Long,
 
+        @JsonProperty
+        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+        var activeStatus: Boolean,
+
         @field:Size(min = 1, max = 50)
         @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
         @field:Convert(converter = LowerCaseConverter::class)
@@ -34,7 +38,7 @@ data class Category(
         @JsonProperty
         var category: String
 ) {
-    constructor() : this(0L, "")
+    constructor() : this(0L, true,"")
 
     override fun toString(): String = mapper.writeValueAsString(this)
 
@@ -43,9 +47,3 @@ data class Category(
         private val mapper = ObjectMapper()
     }
 }
-
-//TODO: add active_status field
-//TODO: add activeStatus field
-//TODO: add dateUpdated field
-//TODO: add dateAdded field
-

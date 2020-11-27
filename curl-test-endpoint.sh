@@ -1,7 +1,5 @@
 #!/bin/sh
 
-uuid=$(uuidgen)
-
 cat > /tmp/transaction-insert <<EOF
 {
   "accountId": 0,
@@ -33,6 +31,8 @@ EOF
 
 cat /tmp/transaction-insert
 cat /tmp/account-insert
+
+curl -k 'https://hornsup:8080/account/payment/required'
 
 exit 0
 

@@ -38,8 +38,8 @@ class CategoryService(private var categoryRepository: CategoryRepository,
         categoryRepository.deleteByCategory(categoryName)
     }
 
-    fun fetchAllCategories(): List<Category> {
-        return categoryRepository.findAll()
+    fun fetchAllActiveCategories(): List<Category> {
+        return categoryRepository.findByActiveStatusOrderByCategory(true)
     }
 
     companion object {
