@@ -38,6 +38,13 @@ else
   exit 1
 fi
 
+if [ ! -x "$(command -v ./os-env)" ]; then
+  echo "./os-env is need to set the environment variable OS."
+  exit 3
+fi
+
+./os-env
+
 export HOST_IP
 export CURRENT_UID="$(id -u)"
 export CURRENT_GID="$(id -g)"

@@ -15,6 +15,13 @@ else
   exit 2
 fi
 
+if [ ! -x "$(command -v ./os-env)" ]; then
+  echo "./os-env is need to set the environment variable OS."
+  exit 3
+fi
+
+./os-env
+
 # "$OSTYPE" == "darwin"*
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(hostname -I | awk '{print $1}')
