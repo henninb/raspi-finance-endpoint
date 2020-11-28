@@ -15,6 +15,7 @@ services:
     expose:
       - "8080"
 #    mem_limit: 1024m
+    hostname: raspi-finance-endpoint
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
       - ./ssl:/opt/raspi-finance-endpoint/ssl
@@ -48,6 +49,7 @@ services:
       - "5433"
     env_file:
       - env.postgresql
+    hostname: postgresql-server
     volumes:
       # - ./docker-postgres-init.sql:/docker-entrypoint initdb.d/docker_postgres_init.sql
       - ./database-data:/var/lib/postgresql/data
