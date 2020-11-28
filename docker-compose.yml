@@ -15,7 +15,7 @@ services:
     expose:
       - "8080"
 #    mem_limit: 1024m
-    hostname: raspi-finance-endpoint
+    hostname: hornsup-endpoint
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
       - ./ssl:/opt/raspi-finance-endpoint/ssl
@@ -55,4 +55,4 @@ services:
       - ./database-data:/var/lib/postgresql/data
 networks:
   default:
-    name: endpoint-net
+    name: finance-net
