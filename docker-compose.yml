@@ -32,6 +32,8 @@ services:
     image: influxdb:1.8.3
 #    user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: influxdb-server
+    volumes:
+      - ./influxdb-data:/var/lib/influxdb
     ports:
       - "8086:8086"
     expose:
@@ -51,8 +53,7 @@ services:
       - env.postgresql
     hostname: postgresql-server
     volumes:
-      # - ./docker-postgres-init.sql:/docker-entrypoint initdb.d/docker_postgres_init.sql
-      - ./database-data:/var/lib/postgresql/data
+      - ./postgresql-data:/var/lib/postgresql/data
 networks:
   default:
     name: finance-net
