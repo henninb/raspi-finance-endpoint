@@ -15,22 +15,20 @@ else
   exit 2
 fi
 
-# "$OSTYPE" == "darwin"*
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
-  HOST_IP=$(hostname -I | awk '{print $1}')
+  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "Arch Linux" ]; then
-  HOST_IP=192.168.100.207
+  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "openSUSE Tumbleweed" ]; then
-  HOST_IP=192.168.100.193
+  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "Solus" ]; then
-  HOST_IP=192.168.100.118
+  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "Fedora" ]; then
-  HOST_IP=192.168.100.130
+  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
-  # echo "lsof -nP | grep LISTEN"
 elif [ "$OS" = "void" ]; then
-  HOST_IP=127.0.0.1
+  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
 else
