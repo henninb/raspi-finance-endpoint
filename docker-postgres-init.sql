@@ -1,3 +1,16 @@
+CREATE USER henninb WITH PASSWORD
+SELECT 1 FROM pg_roles WHERE rolname='USR_NAME'
+
+
+--echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql
+
+-- pass the md5 hash as the password
+
+CREATE ROLE henninb LOGIN INHERIT ENCRYPTED PASSWORD 'md53c18737e8b8d9f72677d5e66040df7bd';
+
+"md5" + md5(password + username)
+# echo -n "md5"; echo -n "password123admin" | md5sum | awk '{print $1}'
+
 --CREATE USER henninb WITH PASSWORD 'monday1' CREATEDB;
 CREATE USER henninb WITH PASSWORD 'monday1' SUPERUSER;
 CREATE DATABASE finance_db;
