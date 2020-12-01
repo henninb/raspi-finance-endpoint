@@ -81,6 +81,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
+    //Added on 2020-12-01
+    implementation("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
+
+    //Tomcat
+    implementation("org.apache.tomcat.embed:tomcat-embed-core:9.0.40")
 
     //Jackson
     implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
