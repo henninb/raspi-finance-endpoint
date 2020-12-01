@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.TransactionService
+import org.apache.catalina.connector.ClientAbortException
 import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
@@ -15,6 +16,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
+import java.io.IOException
 import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolationException
@@ -174,6 +176,19 @@ class TransactionController @Autowired constructor(private var transactionServic
         logger.error("not modified: ", throwable)
         response["response"] = "NOT_MODIFIED: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         return response
+    }
+
+    //TODO: look to move this to the other controllers
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(value = [ClientAbortException::class])
+    fun handleServiceUnavailable(throwable: Throwable) {
+        logger.error("client connection aborted")
+        logger.error(throwable.message)
+//        if (e.message!!.contains("Broken pipe")) {
+//            return        //socket is closed, cannot return any response
+//        } else {
+//            return new HttpEntity<>(e.getMessage());
+//        }
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
