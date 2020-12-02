@@ -8,10 +8,10 @@ plugins {
     id 'scala'
     id 'java-library'
     id 'jacoco'
-    id "org.springframework.boot" version "2.4.0"
-    id "org.jetbrains.kotlin.jvm" version "1.4.20"
-    id "org.flywaydb.flyway" version "7.3.0"
-    id "com.github.ben-manes.versions" version "0.36.0"
+    id "org.springframework.boot" version "${springBootVersion}"
+    id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
+    id "org.flywaydb.flyway" version "${flywayVersion}"
+    id "com.github.ben-manes.versions" version "${gradleVersionsPlugin}"
 }
 
 ext['groovy.version'] = '${gradleVersion}'
