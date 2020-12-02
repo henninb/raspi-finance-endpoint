@@ -4,8 +4,11 @@ package finance.configurations
 import io.micrometer.core.aop.TimedAspect
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy
+import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+
+
 //import org.springframework.context.embedded
 
 @Configuration
@@ -22,6 +25,16 @@ open class BeanConfig {
     open fun timedAspect(registry: MeterRegistry): TimedAspect {
         return TimedAspect(registry)
     }
+
+//    @Bean
+//    open fun servletContainerFactory(): EmbeddedServletContainerFactory {
+//        val factory = TomcatEmbeddedServletContainerFactory()
+//        factory.addConnectorCustomizers(TomcatConnectorCustomizer { connector ->
+//            connector.setAttribute("sslProtocols", "TLSv1.1,TLSv1.2")
+//            connector.setAttribute("sslEnabledProtocols", "TLSv1.1,TLSv1.2")
+//        })
+//        return factory
+//    }
 
 
 //    @Bean
