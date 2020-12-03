@@ -54,11 +54,16 @@ mkdir -p 'src/test/functional/groovy'
 mkdir -p 'src/test/performance/groovy'
 mkdir -p 'postgresql-data'
 mkdir -p 'influxdb-data'
+mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
+
+if [ -x "$(command -v ctags)" ]; then
+  git ls-files | ctags --links=no --languages=groovy,kotlin -L-
+fi
 
 if [ "$ENV" = "prod" ]; then
   if ! ./gradlew clean build functionalTest; then

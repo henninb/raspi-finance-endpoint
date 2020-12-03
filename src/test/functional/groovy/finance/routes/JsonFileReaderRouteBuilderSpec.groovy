@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
+import spock.util.concurrent.PollingConditions
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,6 +29,8 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     ProducerTemplate producer
     CamelContext camelContext
 
+    def conditions = new PollingConditions(timeout: 10, initialDelay: 1.5, factor: 1.25)
+
     def setup() {
         camelContext = jsonFileReaderRouteBuilder.getContext()
         producer = camelContext.createProducerTemplate()
@@ -44,20 +47,12 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         when:
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.json")
-//        Optional<Transaction> result = transactionRepository.findByGuid(transaction.guid)
-//        def databaseTransaction = result.get()
-//        def result = ''
-//        if ( res?.isPresent() ) {
-//            result = res.get()
-//        }
-
 
         then:
-        //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
-        //camelContext.isStarted()
-        sleep(5000)
-        def databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
-        databaseTransaction.guid == transaction.guid
+        conditions.eventually {
+            def databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
+            databaseTransaction.guid == transaction.guid
+        }
     }
 
     def "test -- jsonFileReaderRouteBuilder -- happy path - with empty description"() {
@@ -70,12 +65,14 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         then:
         //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
-        sleep(5000)
+        //sleep(5000)
         //def result = transactionRepository.findByGuid(transaction.guid).get()
         //result.guid == transaction.guid
         //def ex = thrown(RuntimeException)
         //ex.message.contains('transaction object has validation errors.')
-        1 == 1
+        conditions.eventually {
+            1 == 1
+        }
     }
 
     def "test -- jsonFileReaderRouteBuilder - bad filename"() {
@@ -87,9 +84,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.txt")
 
         then:
-        //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
-        sleep(5000)
-        1 == 1
+        conditions.eventually {
+            1 == 1
+        }
     }
 
     def "test -- jsonFileReaderRouteBuilder -- bad file"() {
@@ -98,7 +95,8 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         then:
         //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
-        sleep(5000)
-        1 == 1
+        conditions.eventually {
+            1 == 1
+        }
     }
 }
