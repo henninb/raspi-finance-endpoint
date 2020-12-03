@@ -35,10 +35,6 @@ class ParameterControllerSpec extends Specification {
         }
     }
 
-    def setup() {
-
-    }
-
     def setupSpec() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL).build()
         MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build()

@@ -18,9 +18,6 @@ class ParameterJpaSpec extends Specification {
     @Autowired
     TestEntityManager entityManager
 
-    def setupSpec() {
-    }
-
     def "find a parm that does not exist."() {
         when:
         Optional<Parameter> result = parmRepository.findByParameterName('does-not-exist')
