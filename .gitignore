@@ -43,5 +43,6 @@ docker-compose-run.yml
 database-data/
 postgresql-data/
 influxdb-data/
+grafana-data/
 excel_in/
 finance_db_master.xlsm

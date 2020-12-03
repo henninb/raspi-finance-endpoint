@@ -28,6 +28,7 @@ services:
     depends_on:
       - influxdb-server
       - postgresql-server
+      - grafana-server
   influxdb-server:
     image: influxdb:1.8.3
     user: "${CURRENT_UID}:${CURRENT_GID}"
@@ -41,6 +42,13 @@ services:
     env_file:
       - env.influx
       - env.secrets
+  grafana-server:
+    image: grafana/grafana:7.3.4
+    container_name: grafana-server
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./grafana-data:/var/lib/grafana
   postgresql-server:
     image: postgres:12.5
     user: "${CURRENT_UID}:${CURRENT_GID}"
