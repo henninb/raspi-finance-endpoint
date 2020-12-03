@@ -77,6 +77,8 @@ INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb' --format "{{.ID}}") 2> /dev/n
 
 ./gradlew clean build -x test
 
+docker rmi -f $(docker images -q -f dangling=true)
+
 if [ -n "${INFLUX_CONTAINER}" ]; then
   echo docker rm -f "${INFLUX_CONTAINER}"
   docker rm -f "${INFLUX_CONTAINER}"  2> /dev/null
