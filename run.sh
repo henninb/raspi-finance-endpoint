@@ -77,6 +77,8 @@ else
   fi
 fi
 
+docker rmi -f $(docker images -q -f dangling=true)
+
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
 if [ -n "${INFLUX_CONTAINER}" ]; then
   echo docker rm -f "${INFLUX_CONTAINER}"
