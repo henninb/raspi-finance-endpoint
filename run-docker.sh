@@ -65,8 +65,9 @@ mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
 
-#git ls-files | ctags --language=java
-#find . -name "*.java" | xargs ctags --language=java
+if [ -x "$(command -v ctags)" ]; then
+  git ls-files | ctags --links=no --languages=groovy,kotlin -L-
+fi
 
 touch env.secrets
 
