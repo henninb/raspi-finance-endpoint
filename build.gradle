@@ -8,6 +8,7 @@ plugins {
     id 'scala'
     id 'java-library'
     id 'jacoco'
+    id 'codenarc'
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
     id "org.flywaydb.flyway" version "${flywayVersion}"
@@ -38,6 +39,28 @@ configurations {
 //        jvmTarget = "1.8"
 //    }
 //}
+
+
+codenarc {
+    toolVersion = "$codenarcPluginVersion"
+
+    codenarcMain {
+        configFile = rootProject.file('config/codenarc/codenarc.groovy')
+        exclude "**/package-info.*"
+        ignoreFailures true
+        maxPriority1Violations 0
+        maxPriority2Violations 10
+        maxPriority3Violations 20
+    }
+    // codenarcTest {
+    //     configFile = rootProject.file('config/codenarc/codenarc.groovy')
+    //     exclude "**/package-info.*"
+    //     ignoreFailures true
+    //     maxPriority1Violations 0
+    //     maxPriority2Violations 10
+    //     maxPriority3Violations 20
+    // }
+}
 
 compileKotlin {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -71,6 +94,10 @@ dependencies {
 
     //Scala
     implementation("org.scala-lang:scala-library:${scalaVersion}")
+
+    // Codenarc
+    implementation("org.codenarc:CodeNarc:${codenarcPluginVersion}")
+
 
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")

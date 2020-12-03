@@ -16,7 +16,7 @@ class TransactionBuilder {
     Date transactionDate = new Date(1553645394)
     String description = 'aliexpress.com'
     String category = 'online'
-    BigDecimal amount = new BigDecimal(3.14).setScale(2, RoundingMode.HALF_UP)
+    BigDecimal amount = new BigDecimal('3.14').setScale(2, RoundingMode.HALF_UP)
     TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined

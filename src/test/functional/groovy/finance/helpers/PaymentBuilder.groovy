@@ -6,8 +6,8 @@ import java.sql.Date
 
 class PaymentBuilder {
 
-    String accountNameOwner = "foo_brian"
-    BigDecimal amount = new BigDecimal(0.0)
+    String accountNameOwner = 'foo_brian'
+    BigDecimal amount = new BigDecimal('0.0')
     Date transactionDate = new Date(1605300155000)
     String guidSource = UUID.randomUUID()
     String guidDestination = UUID.randomUUID()
