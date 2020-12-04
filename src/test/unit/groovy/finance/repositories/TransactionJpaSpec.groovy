@@ -30,7 +30,7 @@ class TransactionJpaSpec extends Specification {
 
     protected ObjectMapper mapper = new ObjectMapper()
 
-    String jsonPayload = '''
+    protected String jsonPayload = '''
 {"accountId":0,
 "accountType":"credit",
 "transactionDate":1553645394,

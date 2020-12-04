@@ -1,10 +1,12 @@
 package finance.routes
 
 import finance.configurations.CamelProperties
+import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.processors.ExceptionProcessor
 import finance.processors.InsertTransactionProcessor
 import finance.processors.StringTransactionProcessor
+import org.apache.camel.ProducerTemplate
 import org.apache.camel.builder.AdviceWithRouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
@@ -14,12 +16,12 @@ import org.apache.camel.reifier.RouteReifier
 import spock.lang.Specification
 
 class TransactionToDatabaseRouteBuilderSpec extends Specification {
-    ModelCamelContext camelContext
-    StringTransactionProcessor stringTransactionProcessorMock = GroovyMock(StringTransactionProcessor)
-    InsertTransactionProcessor insertTransactionProcessorMock = GroovyMock(InsertTransactionProcessor)
-    ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
+    protected ModelCamelContext camelContext
+    protected StringTransactionProcessor stringTransactionProcessorMock = GroovyMock(StringTransactionProcessor)
+    protected InsertTransactionProcessor insertTransactionProcessorMock = GroovyMock(InsertTransactionProcessor)
+    protected ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
 
-    CamelProperties camelProperties = new CamelProperties(
+    protected CamelProperties camelProperties = new CamelProperties(
             "true",
             "n/a",
             "n/a",
@@ -31,14 +33,14 @@ class TransactionToDatabaseRouteBuilderSpec extends Specification {
             "mock:toFailedJsonFileEndpoint",
             "mock:toFailedJsonParserEndpoint")
 
-    def setup() {
+    void setup() {
         camelContext = new DefaultCamelContext()
-        def router = new TransactionToDatabaseRouteBuilder(camelProperties, stringTransactionProcessorMock, insertTransactionProcessorMock, mockExceptionProcessor)
+        TransactionToDatabaseRouteBuilder router = new TransactionToDatabaseRouteBuilder(camelProperties, stringTransactionProcessorMock, insertTransactionProcessorMock, mockExceptionProcessor)
         camelContext.addRoutes(router)
 
         camelContext.start()
 
-        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext.class)
+        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
 
         camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
             RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.transactionToDatabaseRouteId), mcc, new AdviceWithRouteBuilder() {
@@ -49,17 +51,17 @@ class TransactionToDatabaseRouteBuilderSpec extends Specification {
         }
     }
 
-    def cleanup() {
+    void cleanup() {
         camelContext.stop()
     }
 
-    def 'test -- valid payload - 2 messages'() {
+    void  'test -- valid payload - 2 messages'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.jsonFileWriterRoute)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.jsonFileWriterRoute)
         mockTestOutputEndpoint.expectedCount = 2
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
-        def transactions = [TransactionBuilder.builder().build(), TransactionBuilder.builder().build()]
+        List<Transaction> transactions = [TransactionBuilder.builder().build(), TransactionBuilder.builder().build()]
 
         when:
         producer.sendBody(transactions)
@@ -72,13 +74,13 @@ class TransactionToDatabaseRouteBuilderSpec extends Specification {
         0 * _
     }
 
-    def 'test -- invalid payload - 2 messages'() {
+    void 'test -- invalid payload - 2 messages'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.jsonFileWriterRoute)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.jsonFileWriterRoute)
         mockTestOutputEndpoint.expectedCount = 0
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
-        def transactions = ['junk1', 'junk2']
+        List<String> transactions = ['junk1', 'junk2']
 
         when:
         producer.sendBody(transactions)

@@ -20,7 +20,7 @@ class PaymentJpaSpec extends Specification {
 
     protected ObjectMapper mapper = new ObjectMapper()
 
-    String json = """
+    protected String json = """
 {"accountNameOwner": "test_brian", "amount":1.54, "transactionDate":1593981072000, "guidSource":"c8e5cd3c-3f70-473b-92bf-1c2e4fb338ab", "guidDestination":"e074436e-ed64-455d-be56-7421e04d467b" }
 """
 

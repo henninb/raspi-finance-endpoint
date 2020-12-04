@@ -102,10 +102,10 @@ class AccountSpec extends Specification {
 
         where:
         invalidField       | accountType        | accountNameOwner   | moniker | activeStatus | totals                 | totalsBalanced         | expectedError                              | errorCount
-        'accountNameOwner' | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | new BigDecimal('0.00') | new BigDecimal('0.00') | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | AccountType.Credit | '_b'               | '0000'  | true         | new BigDecimal('0.00') | new BigDecimal('0.00') | 'size must be between 3 and 40'            | 1
-        'moniker'          | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | new BigDecimal('0.00') | new BigDecimal('0.00') | 'Must be 4 digits.'                        | 1
-        'moniker'          | AccountType.Credit | 'chase_brian'      | '00001' | true         | new BigDecimal('0.00') | new BigDecimal('0.00') | 'Must be 4 digits.'                        | 1
-        //'accountType'     | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | new BigDecimal("0.00") | new BigDecimal("0.00") | 'Must be 4 digits.'                        | 1
+        'accountNameOwner' | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | 0.00G | 0.00G | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | AccountType.Credit | '_b'               | '0000'  | true         | 0.00G | 0.00G | 'size must be between 3 and 40'            | 1
+        'moniker'          | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | 0.00G | 0.00G | 'Must be 4 digits.'                        | 1
+        'moniker'          | AccountType.Credit | 'chase_brian'      | '00001' | true         | 0.00G | 0.00G | 'Must be 4 digits.'                        | 1
+        //'accountType'     | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | 0.00G | 0.00G | 'Must be 4 digits.'                        | 1
     }
 }
