@@ -42,7 +42,7 @@ class TransactionControllerPerf extends Specification {
     @Unroll
     def "test insertTransaction endpoint"() {
         given:
-        def transaction = TransactionBuilder.builder().build()
+        Transaction transaction = TransactionBuilder.builder().build()
         transaction.notes = notes
         transaction.guid = guid
         transaction.description = description
@@ -78,9 +78,10 @@ class TransactionControllerPerf extends Specification {
         Random random = new Random()
 
         String generatedString = random.ints(leftLimit, rightLimit + 1)
-                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .filter{ i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97)}
                 .limit(targetStringLength)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                //not sure what the collect is doing
+                //.collect (StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString()
 
         return generatedString
