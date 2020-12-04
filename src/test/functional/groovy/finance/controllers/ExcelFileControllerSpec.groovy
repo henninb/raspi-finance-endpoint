@@ -31,7 +31,7 @@ class ExcelFileControllerSpec extends Specification {
     }
 
     @Ignore
-    def "test Excel File controller"() {
+    void "test Excel File controller"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 

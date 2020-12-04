@@ -3,8 +3,7 @@ package finance.helpers
 import finance.domain.Category
 
 class CategoryBuilder {
-
-    String categoryName = 'online'
+    String categoryName = 'foo'
 
     static CategoryBuilder builder() {
         return new CategoryBuilder()
@@ -16,8 +15,8 @@ class CategoryBuilder {
         return category
     }
 
-    CategoryBuilder category(categoryName) {
-        this.categoryName = categoryName
+    CategoryBuilder category(String category) {
+        this.categoryName = category
         return this
     }
 }

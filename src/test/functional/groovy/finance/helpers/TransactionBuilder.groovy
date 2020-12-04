@@ -5,7 +5,6 @@ import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
 
-import java.math.RoundingMode
 import java.sql.Date
 
 class TransactionBuilder {
@@ -16,7 +15,7 @@ class TransactionBuilder {
     Date transactionDate = new Date(1553645394)
     String description = 'aliexpress.com'
     String category = 'online'
-    BigDecimal amount = new BigDecimal('3.14').setScale(2, RoundingMode.HALF_UP)
+    BigDecimal amount = 3.14G
     TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined
@@ -43,62 +42,62 @@ class TransactionBuilder {
         return transaction
     }
 
-    TransactionBuilder guid(guid) {
+    TransactionBuilder guid(String guid) {
         this.guid = guid
         return this
     }
 
-    TransactionBuilder accountId(accountId) {
+    TransactionBuilder accountId(Long accountId) {
         this.accountId = accountId
         return this
     }
 
-    TransactionBuilder accountType(accountType) {
+    TransactionBuilder accountType(AccountType accountType) {
         this.accountType = accountType
         return this
     }
 
-    TransactionBuilder accountNameOwner(accountNameOwner) {
+    TransactionBuilder accountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    TransactionBuilder transactionDate(transactionDate) {
+    TransactionBuilder transactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
 
-    TransactionBuilder description(description) {
+    TransactionBuilder description(String description) {
         this.description = description
         return this
     }
 
-    TransactionBuilder category(category) {
+    TransactionBuilder category(String category) {
         this.category = category
         return this
     }
 
-    TransactionBuilder amount(amount) {
+    TransactionBuilder amount(BigDecimal amount) {
         this.amount = amount
         return this
     }
 
-    TransactionBuilder transactionState(transactionState) {
+    TransactionBuilder transactionState(TransactionState transactionState) {
         this.transactionState = transactionState
         return this
     }
 
-    TransactionBuilder reoccurring(reoccurring) {
+    TransactionBuilder reoccurring(Boolean reoccurring) {
         this.reoccurring = reoccurring
         return this
     }
 
-    TransactionBuilder reoccurringType(reoccurringType) {
+    TransactionBuilder reoccurringType(ReoccurringType reoccurringType) {
         this.reoccurringType = reoccurringType
         return this
     }
 
-    TransactionBuilder notes(notes) {
+    TransactionBuilder notes(String notes) {
         this.notes = notes
         return this
     }

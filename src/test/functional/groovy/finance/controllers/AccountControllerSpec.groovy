@@ -49,7 +49,7 @@ class AccountControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "test findAccount endpoint accountNameOwner found"() {
+    void "test findAccount endpoint accountNameOwner found"() {
         given:
         account.accountNameOwner = 'found_test'
         accountService.insertAccount(account)
@@ -68,7 +68,7 @@ class AccountControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 
-    def "test findAccount endpoint accountNameOwner not found"() {
+    void "test findAccount endpoint accountNameOwner not found"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -81,7 +81,7 @@ class AccountControllerSpec extends Specification {
         0 * _
     }
 
-    def "test deleteAccount endpoint"() {
+    void "test deleteAccount endpoint"() {
         given:
         account.accountNameOwner = 'random_test'
         accountService.insertAccount(account)
@@ -101,7 +101,7 @@ class AccountControllerSpec extends Specification {
     }
 
     //TODO: build failed started to fail noticed on 11/8/2020
-    def "test insertAccount endpoint bad data"() {
+    void "test insertAccount endpoint bad data"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('accountBadData', headers)
@@ -116,7 +116,7 @@ class AccountControllerSpec extends Specification {
     }
 
     //TODO: build failed started to fail noticed on 11/8/2020
-    def "test insertAccount endpoint - irrelevant payload"() {
+    void "test insertAccount endpoint - irrelevant payload"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('{"test":1}', headers)
@@ -132,7 +132,7 @@ class AccountControllerSpec extends Specification {
         0 * _
     }
 
-    def "test findAccount endpoint empty accountNameOwner"() {
+    void "test findAccount endpoint empty accountNameOwner"() {
         given:
         account.accountNameOwner = ''
         headers.setContentType(MediaType.APPLICATION_JSON)

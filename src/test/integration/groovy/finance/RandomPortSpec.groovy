@@ -17,7 +17,7 @@ class RandomPortSpec extends Specification {
     @LocalServerPort
     protected int localPort
 
-    def "test spring wiring"() {
+    void "test spring wiring"() {
         given:
         def foo = 1
 
@@ -28,7 +28,7 @@ class RandomPortSpec extends Specification {
         foo != bar
     }
 
-    def "random port test"() {
+    void "random port test"() {
         when:
         def x = true
 

@@ -2,6 +2,7 @@ package finance.routes
 
 import finance.Application
 import finance.configurations.CamelProperties
+import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.repositories.TransactionRepository
 import org.apache.camel.CamelContext
@@ -18,20 +19,19 @@ import spock.util.concurrent.PollingConditions
 class JsonFileReaderRouteBuilderSpec extends Specification {
 
     @Autowired
-    JsonFileReaderRouteBuilder jsonFileReaderRouteBuilder
+    protected JsonFileReaderRouteBuilder jsonFileReaderRouteBuilder
 
     @Autowired
-    CamelProperties camelProperties
+    protected CamelProperties camelProperties
 
     @Autowired
-    TransactionRepository transactionRepository
+    protected TransactionRepository transactionRepository
 
-    ProducerTemplate producer
-    CamelContext camelContext
+    protected ProducerTemplate producer
+    protected CamelContext camelContext
+    protected PollingConditions conditions = new PollingConditions(timeout: 10, initialDelay: 1.5, factor: 1.25)
 
-    def conditions = new PollingConditions(timeout: 10, initialDelay: 1.5, factor: 1.25)
-
-    def setup() {
+    void setup() {
         camelContext = jsonFileReaderRouteBuilder.getContext()
         producer = camelContext.createProducerTemplate()
         camelContext.start()
@@ -40,9 +40,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
     }
 
-    def "test -- jsonFileReaderRouteBuilder -- happy path"() {
+    void "test -- jsonFileReaderRouteBuilder -- happy path"() {
         given:
-        def transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID()).build()
+        def transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).build()
         def transactions = [transaction]
 
         when:
@@ -55,9 +55,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         }
     }
 
-    def "test -- jsonFileReaderRouteBuilder -- happy path - with empty description"() {
+    void "test -- jsonFileReaderRouteBuilder -- happy path - with empty description"() {
         given:
-        def transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID()).description('').build()
+        def transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).description('').build()
         def transactions = [transaction]
 
         when:
@@ -75,10 +75,10 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         }
     }
 
-    def "test -- jsonFileReaderRouteBuilder - bad filename"() {
+    void 'test -- jsonFileReaderRouteBuilder - bad filename'() {
         given:
-        def transaction = TransactionBuilder.builder().guid(UUID.randomUUID()).build()
-        def transactions = [transaction]
+        Transaction transaction = TransactionBuilder.builder().guid(UUID.randomUUID().toString()).build()
+        List<Transaction> transactions = [transaction]
 
         when:
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.txt")
@@ -89,7 +89,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         }
     }
 
-    def "test -- jsonFileReaderRouteBuilder -- bad file"() {
+    void "test -- jsonFileReaderRouteBuilder -- bad file"() {
         when:
         producer.sendBodyAndHeader('trash content', Exchange.FILE_NAME, 'foo_trash.json')
 
