@@ -2,6 +2,7 @@ package finance.routes
 
 import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
+import org.apache.camel.ProducerTemplate
 import org.apache.camel.builder.AdviceWithRouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
@@ -12,10 +13,10 @@ import spock.lang.Specification
 
 class JsonFileWriterRouteBuilderSpec extends Specification {
 
-    ModelCamelContext camelContext
-    ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
+    protected ModelCamelContext camelContext
+    protected ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
 
-    CamelProperties camelProperties = new CamelProperties(
+    protected CamelProperties camelProperties = new CamelProperties(
             "true",
             "n/a",
             "n/a",
@@ -27,15 +28,12 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
             "mock:toFailedJsonFileEndpoint",
             "mock:toFailedJsonParserEndpoint")
 
-    def setup() {
+    void setup() {
         camelContext = new DefaultCamelContext()
-        def router = new JsonFileWriterRouteBuilder(camelProperties, mockExceptionProcessor)
+        JsonFileWriterRouteBuilder router = new JsonFileWriterRouteBuilder(camelProperties, mockExceptionProcessor)
         camelContext.addRoutes(router)
-
         camelContext.start()
-
-        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext.class)
-
+        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
         camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
             RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.jsonFileWriterRouteId), mcc, new AdviceWithRouteBuilder() {
                 @Override
@@ -45,16 +43,15 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
         }
     }
 
-    def cleanup() {
+    void cleanup() {
         camelContext.stop()
     }
 
-
-    def 'test -- valid payload - 1 messages'() {
+    void 'test -- valid payload - 1 messages'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.savedFileEndpoint)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.savedFileEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
@@ -66,11 +63,11 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
         0 * _
     }
 
-    def 'test -- invalid payload - 1 messages'() {
+    void 'test -- invalid payload - 1 messages'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.savedFileEndpoint)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.savedFileEndpoint)
         mockTestOutputEndpoint.expectedCount = 0
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
@@ -82,5 +79,4 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
         mockTestOutputEndpoint.assertIsSatisfied()
         0 * _
     }
-
 }

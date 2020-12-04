@@ -37,7 +37,7 @@ class InsertTransactionProcessorSpec extends Specification {
     protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
     protected InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, mockMeterService)
 
-    String jsonPayload = '''
+    protected String jsonPayload = '''
         {"accountId":0,
         "accountType":"credit",
         "transactionDate":1553645394,
@@ -62,14 +62,14 @@ class InsertTransactionProcessorSpec extends Specification {
 
         then:
         1 * mockExchange.in >> mockMessage
-        1 * mockMessage.body(String) >> jsonPayload
+        1 * mockMessage.getBody(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * mockValidator.validate(_) >> new HashSet()
         1 * mockMessage.setBody(transaction.toString())
         0 * _
     }
 
-    def "test -- InsertTransactionProcessor - happy path"() {
+    void 'test -- InsertTransactionProcessor - happy path'() {
         given:
         Transaction transaction = mapper.readValue(jsonPayload, Transaction)
         Account account = AccountBuilder.builder().build()
@@ -83,13 +83,13 @@ class InsertTransactionProcessorSpec extends Specification {
 
         then:
         1 * mockExchange.in >> mockMessage
-        1 * mockMessage.body(String) >> jsonPayload
+        1 * mockMessage.getBody(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
         2 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.empty()
         1 * mockCategoryRepository.saveAndFlush(category)
-        3 * mockValidator.validate(_) >> new HashSet()
+        3 * mockValidator.validate(_) >> ([] as Set)
         //1 * mockValidator.validate(account as Object) >> new HashSet()
         1 * mockTransactionRepository.saveAndFlush(_)
         1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)

@@ -4,8 +4,6 @@ import finance.domain.AccountType
 import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
-
-import java.math.RoundingMode
 import java.sql.Date
 
 class TransactionBuilder {
@@ -16,7 +14,7 @@ class TransactionBuilder {
     Date transactionDate = new Date(1553645394)
     String description = 'aliexpress.com'
     String category = 'online'
-    BigDecimal amount = new BigDecimal('3.14').setScale(2, RoundingMode.HALF_UP)
+    BigDecimal amount = 3.14G
     TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined

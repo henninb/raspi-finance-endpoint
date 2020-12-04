@@ -7,10 +7,10 @@ import java.sql.Date
 class PaymentBuilder {
 
     String accountNameOwner = 'foo_brian'
-    BigDecimal amount = new BigDecimal('0.0')
+    BigDecimal amount = 0.00G
     Date transactionDate = new Date(1605300155000)
-    String guidSource = UUID.randomUUID()
-    String guidDestination = UUID.randomUUID()
+    String guidSource = UUID.randomUUID().toString()
+    String guidDestination = UUID.randomUUID().toString()
 
     static PaymentBuilder builder() {
         return new PaymentBuilder()
@@ -31,7 +31,7 @@ class PaymentBuilder {
         return this
     }
 
-    PaymentBuilder amount(BigDecimal gamount) {
+    PaymentBuilder amount(BigDecimal amount) {
         this.amount = amount
         return this
     }

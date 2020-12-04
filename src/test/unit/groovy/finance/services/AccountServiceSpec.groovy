@@ -11,23 +11,24 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validation
 import javax.validation.ValidationException
 import javax.validation.Validator
+import javax.validation.ValidatorFactory
 
 class AccountServiceSpec extends Specification {
-    AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
-    Validator mockValidator = GroovyMock(Validator)
-    MeterService mockMeterService = GroovyMock()
-    AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
-    private ObjectMapper mapper = new ObjectMapper()
 
+    protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    protected Validator mockValidator = GroovyMock(Validator)
+    protected MeterService mockMeterService = GroovyMock()
+    protected AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
+    protected ObjectMapper mapper = new ObjectMapper()
 
-    def "test findAllActiveAccounts empty"() {
+    void 'test findAllActiveAccounts empty'() {
         given:
         Account account = AccountBuilder.builder().build()
         List<Account> accounts = []
         accounts.add(account)
 
         when:
-        def results = accountService.findByActiveStatusOrderByAccountNameOwner()
+        List<Account> results = accountService.findByActiveStatusOrderByAccountNameOwner()
 
         then:
         results.size() == 1
@@ -35,14 +36,14 @@ class AccountServiceSpec extends Specification {
         0 * _
     }
 
-    def "test findAllActiveAccounts"() {
+    void 'test findAllActiveAccounts'() {
         given:
         Account account = AccountBuilder.builder().build()
         List<Account> accounts = []
         accounts.add(account)
 
         when:
-        def results = accountService.findByActiveStatusOrderByAccountNameOwner()
+        List<Account> results = accountService.findByActiveStatusOrderByAccountNameOwner()
 
         then:
         results.size() == 1
@@ -50,13 +51,13 @@ class AccountServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insertAccount - existing"() {
+    void 'test insertAccount - existing'() {
         given:
-        def jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
-        Account account = mapper.readValue(jsonPayload, Account.class)
+        String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+        Account account = mapper.readValue(jsonPayload, Account)
 
         when:
-        def isInserted = accountService.insertAccount(account)
+        Boolean isInserted = accountService.insertAccount(account)
 
         then:
         isInserted.is(true)
@@ -65,13 +66,13 @@ class AccountServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insertAccount - json inserted success"() {
+    void 'test insertAccount - json inserted success'() {
         given:
-        def jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
-        Account account = mapper.readValue(jsonPayload, Account.class)
+        String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+        Account account = mapper.readValue(jsonPayload, Account)
 
         when:
-        def isInserted = accountService.insertAccount(account)
+        Boolean isInserted = accountService.insertAccount(account)
 
         then:
         isInserted.is(true)
@@ -81,55 +82,54 @@ class AccountServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insertAccount - invalid moniker"() {
+    void 'test insertAccount - invalid moniker'() {
         given:
-        def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"12345\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
-        Account account = mapper.readValue(jsonPayload, Account.class)
-        def validatorFactory = Validation.buildDefaultValidatorFactory()
-        def validator = validatorFactory.getValidator()
+        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"12345\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+        Account account = mapper.readValue(jsonPayload, Account)
+        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()
+        Validator validator = validatorFactory.validator
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         accountService.insertAccount(account)
 
         then:
-        def ex = thrown(ValidationException)
+        ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * mockValidator.validate(account) >> constraintViolations
         0 * _
     }
 
-    def "test insertAccount - invalid dateAdded"() {
+    void 'test insertAccount - invalid dateAdded'() {
         given:
-        def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394}"
-        Account account = mapper.readValue(jsonPayload, Account.class)
-        def validatorFactory = Validation.buildDefaultValidatorFactory()
-        def validator = validatorFactory.getValidator()
+        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394}"
+        Account account = mapper.readValue(jsonPayload, Account)
+        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()
+        Validator validator = validatorFactory.validator
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         accountService.insertAccount(account)
 
         then:
-        def ex = thrown(ValidationException)
+        ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * mockValidator.validate(account) >> constraintViolations
         0 * _
     }
 
-
-    def "test insertAccount - bad json - accountType"() {
+    void "test insertAccount - bad json - accountType"() {
         given:
-        def jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
 
         when:
-        mapper.readValue(jsonPayload, Account.class)
+        mapper.readValue(jsonPayload, Account)
 
         then:
         InvalidFormatException ex = thrown()
-        ex.getMessage().contains('not one of the values accepted for Enum class')
+        ex.message.contains('not one of the values accepted for Enum class')
         0 * _
     }
 }

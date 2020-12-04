@@ -11,8 +11,8 @@ class AccountBuilder {
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
     String moniker = '1234'
-    BigDecimal totals = new BigDecimal(0.0G)
-    BigDecimal totalsBalanced = new BigDecimal(0.0G)
+    BigDecimal totals = 0.00G
+    BigDecimal totalsBalanced = 0.00G
     Timestamp dateClosed = new Timestamp(0)
 
     static AccountBuilder builder() {

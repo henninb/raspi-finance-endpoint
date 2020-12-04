@@ -4,6 +4,7 @@ import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
 import finance.processors.JsonTransactionProcessor
 import org.apache.camel.Exchange
+import org.apache.camel.ProducerTemplate
 import org.apache.camel.builder.AdviceWithRouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
@@ -17,6 +18,21 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     protected ModelCamelContext camelContext
     protected JsonTransactionProcessor mockJsonTransactionProcessor = GroovyMock(JsonTransactionProcessor)
     protected ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
+
+    protected String payload = '''
+    [
+    {"guid":"aa08f2bb-29a6-4f71-b866-ff8f625e1b04","accountNameOwner":"foo_brian",
+    "description":"Bullseye cafe","category":"restaurant","amount":4.42,"cleared":1,
+    "reoccurring":false,"notes":"","sha256":"","transactionId":0,"accountId":0,
+    "accountType":"credit",
+    "transactionDate":1337058000000,"dateUpdated":1487301459000,"dateAdded":1487301459000},
+    {"guid":"bb08f2bb-29a6-4f71-b866-ff8f625e1b04","accountNameOwner":"foo_brian",
+    "description":"Bullseye cafe","category":"restaurant","amount":4.42,"cleared":1,
+    "reoccurring":false,"notes":"","sha256":"","transactionId":0,"accountId":0,
+    "accountType":"credit",
+    "transactionDate":1337058000000,"dateUpdated":1487301459000,"dateAdded":1487301459000}
+    ]
+    '''
 
     protected CamelProperties camelProperties = new CamelProperties(
             "true",
@@ -32,7 +48,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void setup() {
         camelContext = new DefaultCamelContext()
-        def router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
+        JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
         camelContext.addRoutes(router)
 
         camelContext.start()
@@ -52,21 +68,6 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     void cleanup() {
         camelContext.stop()
     }
-
-    String payload = '''
-    [
-    {"guid":"aa08f2bb-29a6-4f71-b866-ff8f625e1b04","accountNameOwner":"foo_brian",
-    "description":"Bullseye cafe","category":"restaurant","amount":4.42,"cleared":1,
-    "reoccurring":false,"notes":"","sha256":"","transactionId":0,"accountId":0,
-    "accountType":"credit",
-    "transactionDate":1337058000000,"dateUpdated":1487301459000,"dateAdded":1487301459000},
-    {"guid":"bb08f2bb-29a6-4f71-b866-ff8f625e1b04","accountNameOwner":"foo_brian",
-    "description":"Bullseye cafe","category":"restaurant","amount":4.42,"cleared":1,
-    "reoccurring":false,"notes":"","sha256":"","transactionId":0,"accountId":0,
-    "accountType":"credit",
-    "transactionDate":1337058000000,"dateUpdated":1487301459000,"dateAdded":1487301459000}
-    ]
-    '''
 
     String invalidJsonPayload = '''
     [
@@ -97,9 +98,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void 'test -- with invalid file name'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonFileEndpoint)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonFileEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
@@ -113,9 +114,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void 'test -- valid payload and valid fileName'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
         mockTestOutputEndpoint.expectedCount = 1
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
@@ -132,9 +133,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     //TODO: should be integration tests
     void 'test -- invalid field in payload and valid fileName'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
@@ -151,9 +152,9 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     //TODO: should be integration tests
     void 'test -- invalid json payload and valid fileName'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
 
         when:
@@ -169,11 +170,11 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     //TODO: should be integration tests
     void 'test -- wrong json payload and valid fileName'() {
         given:
-        def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
+        MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
         mockTestOutputEndpoint.expectedCount = 1
-        def producer = camelContext.createProducerTemplate()
+        ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri('direct:routeFromLocal')
-        def myPayload = '[{"test":1}]'
+        String myPayload = '[{"test":1}]'
 
         when:
         producer.sendBodyAndHeader(myPayload, Exchange.FILE_NAME, 'foo_brian.json')

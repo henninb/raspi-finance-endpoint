@@ -13,45 +13,45 @@ import spock.lang.Specification
 class ParameterJpaSpec extends Specification {
 
     @Autowired
-    protected ParameterRepository parmRepository
+    protected ParameterRepository parameterRepository
 
     @Autowired
     protected TestEntityManager entityManager
 
-    void 'find a parm that does not exist.'() {
+    void 'find a parameter that does not exist.'() {
         when:
-        Optional<Parameter> result = parmRepository.findByParameterName('does-not-exist')
+        Optional<Parameter> result = parameterRepository.findByParameterName('does-not-exist')
 
         then:
         result == Optional.empty()
     }
 
-    void 'test parm - valid insert'() {
+    void 'test parameter - valid insert'() {
         given:
         Parameter parameter = ParameterBuilder.builder().build()
 
         when:
-        Parameter parmResult = entityManager.persist(parameter)
+        Parameter parameterResult = entityManager.persist(parameter)
 
         then:
-        parmRepository.count() == 1L
-        parmResult.parameterName == parameter.parameterName
-        parmResult.parameterValue == parameter.parameterValue
+        parameterRepository.count() == 1L
+        parameterResult.parameterName == parameter.parameterName
+        parameterResult.parameterValue == parameter.parameterValue
         0 * _
     }
 
-    def "test parm - valid insert and find it"() {
+    void 'test parameter - valid insert and find it'() {
         given:
-        Parameter parm = ParameterBuilder.builder().build()
-        entityManager.persist(parm)
+        Parameter parameter = ParameterBuilder.builder().build()
+        entityManager.persist(parameter)
 
         when:
-        Optional<Parameter> result = parmRepository.findByParameterName(parm.parameterName)
+        Optional<Parameter> result = parameterRepository.findByParameterName(parameter.parameterName)
 
         then:
-        parmRepository.count() == 1L
-        result.get().parameterName == parm.parameterName
-        result.get().parameterValue == parm.parameterValue
+        parameterRepository.count() == 1L
+        result.get().parameterName == parameter.parameterName
+        result.get().parameterValue == parameter.parameterValue
         0 * _
     }
 }

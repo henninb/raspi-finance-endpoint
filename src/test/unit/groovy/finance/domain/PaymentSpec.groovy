@@ -73,9 +73,9 @@ class PaymentSpec extends Specification {
         violations.iterator().next().invalidValue == payment.properties[invalidField]
 
         where:
-        invalidField       | accountNameOwner | transactionDate      | amount | guidDestination   | guidSource        | expectedError                   | errorCount
-        'accountNameOwner' | 'a_'             | new Date(1553645394) | 0.0    | UUID.randomUUID() | UUID.randomUUID() | 'size must be between 3 and 40' | 1
-        'guidDestination'  | 'a_b'            | new Date(1553645394) | 0.0    | 'invalid'         | UUID.randomUUID() | Constants.MUST_BE_UUID_MESSAGE  | 1
-        'guidSource'       | 'a_b'            | new Date(1553645394) | 0.0    | UUID.randomUUID() | 'invalid'         | Constants.MUST_BE_UUID_MESSAGE  | 1
+        invalidField       | accountNameOwner | transactionDate      | amount | guidDestination              | guidSource                   | expectedError                   | errorCount
+        'accountNameOwner' | 'a_'             | new Date(1553645394) | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 'size must be between 3 and 40' | 1
+        'guidDestination'  | 'a_b'            | new Date(1553645394) | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | Constants.MUST_BE_UUID_MESSAGE  | 1
+        'guidSource'       | 'a_b'            | new Date(1553645394) | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | Constants.MUST_BE_UUID_MESSAGE  | 1
     }
 }
