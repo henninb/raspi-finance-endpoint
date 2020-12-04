@@ -12,9 +12,9 @@ import javax.validation.ValidatorFactory
 
 class ParameterSpec extends Specification {
 
-    ValidatorFactory validatorFactory
-    Validator validator
-    private ObjectMapper mapper = new ObjectMapper()
+    protected ValidatorFactory validatorFactory
+    protected Validator validator
+    protected ObjectMapper mapper = new ObjectMapper()
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
@@ -25,13 +25,13 @@ class ParameterSpec extends Specification {
         validatorFactory.close()
     }
 
-    def "test -- JSON serialization to Parameter"() {
+    void 'test -- JSON serialization to Parameter'() {
         given:
-        def jsonPayload = """
+        String jsonPayload = """
 {"parameterName":"foo","parameterValue":"bar"}
 """
         when:
-        Parameter parm = mapper.readValue(jsonPayload, Parameter.class)
+        Parameter parm = mapper.readValue(jsonPayload, Parameter)
 
         then:
         parm.parameterName == 'foo'
@@ -39,35 +39,35 @@ class ParameterSpec extends Specification {
         0 * _
     }
 
-    def "test JSON deserialization to Parameter object - bad non-json"() {
+    void 'test JSON deserialization to Parameter object - bad non-json'() {
 
         given:
-        def jsonPayloadBad = 'badPayload'
+        String jsonPayloadBad = 'badPayload'
 
         when:
-        mapper.readValue(jsonPayloadBad, Parameter.class)
+        mapper.readValue(jsonPayloadBad, Parameter)
 
         then:
         JsonParseException ex = thrown()
-        ex.getMessage().contains('Unrecognized token')
+        ex.message.contains('Unrecognized token')
         0 * _
     }
 
-    def "test JSON deserialization to Parameter object - bad json"() {
+    void 'test JSON deserialization to Parameter object - bad json'() {
 
         given:
-        def jsonPayloadBad = '{"parameterName":"foo","parameterValue":"bar",}'
+        String jsonPayloadBad = '{"parameterName":"foo","parameterValue":"bar",}'
 
         when:
-        mapper.readValue(jsonPayloadBad, Parameter.class)
+        mapper.readValue(jsonPayloadBad, Parameter)
 
         then:
         JsonParseException ex = thrown()
-        ex.getMessage().contains('Unexpected character')
+        ex.message.contains('Unexpected character')
         0 * _
     }
 
-    def "test validation valid parameter"() {
+    void 'test validation valid parameter'() {
         given:
         Parameter parameter = new ParameterBuilder().builder().build()
 
@@ -75,6 +75,6 @@ class ParameterSpec extends Specification {
         Set<ConstraintViolation<Parameter>> violations = validator.validate(parameter)
 
         then:
-        violations.isEmpty()
+        violations.empty
     }
 }

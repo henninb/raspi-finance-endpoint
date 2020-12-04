@@ -43,23 +43,6 @@ configurations {
 
 codenarc {
     toolVersion = "$codenarcPluginVersion"
-
-    codenarcMain {
-        configFile = rootProject.file('config/codenarc/codenarc.groovy')
-        exclude "**/package-info.*"
-        ignoreFailures true
-        maxPriority1Violations 0
-        maxPriority2Violations 10
-        maxPriority3Violations 20
-    }
-    // codenarcTest {
-    //     configFile = rootProject.file('config/codenarc/codenarc.groovy')
-    //     exclude "**/package-info.*"
-    //     ignoreFailures true
-    //     maxPriority1Violations 0
-    //     maxPriority2Violations 10
-    //     maxPriority3Violations 20
-    // }
 }
 
 compileKotlin {
@@ -80,7 +63,7 @@ compileJava {
 }
 
 wrapper {
-    gradleVersion="${gradleVersion}"
+    gradleVersion = "${gradleVersion}"
 }
 
 dependencies {
@@ -160,3 +143,8 @@ dependencies {
 //tasks.withType(bootRun) {
 //    options.encoding = 'UTF-8'
 //}
+
+tasks.withType(CodeNarc) {
+    configFile = rootProject.file('config/codenarc/codenarcMain.groovy')
+    ignoreFailures = true
+}

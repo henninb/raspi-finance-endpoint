@@ -15,7 +15,7 @@ class CategoryBuilder {
         return category
     }
 
-    CategoryBuilder category(category) {
+    CategoryBuilder category(String category) {
         this.categoryName = category
         return this
     }

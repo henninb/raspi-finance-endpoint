@@ -13,12 +13,12 @@ import spock.lang.Specification
 class ParameterJpaSpec extends Specification {
 
     @Autowired
-    ParameterRepository parmRepository
+    protected ParameterRepository parmRepository
 
     @Autowired
-    TestEntityManager entityManager
+    protected TestEntityManager entityManager
 
-    def "find a parm that does not exist."() {
+    void 'find a parm that does not exist.'() {
         when:
         Optional<Parameter> result = parmRepository.findByParameterName('does-not-exist')
 
@@ -26,17 +26,17 @@ class ParameterJpaSpec extends Specification {
         result == Optional.empty()
     }
 
-    def "test parm - valid insert"() {
+    void 'test parm - valid insert'() {
         given:
-        Parameter parm = ParameterBuilder.builder().build()
+        Parameter parameter = ParameterBuilder.builder().build()
 
         when:
-        def parmResult = entityManager.persist(parm)
+        Parameter parmResult = entityManager.persist(parameter)
 
         then:
         parmRepository.count() == 1L
-        parmResult.parameterName == parm.parameterName
-        parmResult.parameterValue == parm.parameterValue
+        parmResult.parameterName == parameter.parameterName
+        parmResult.parameterValue == parameter.parameterValue
         0 * _
     }
 

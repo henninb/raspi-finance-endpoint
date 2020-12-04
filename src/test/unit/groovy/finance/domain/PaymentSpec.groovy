@@ -13,11 +13,11 @@ import javax.validation.ValidatorFactory
 import java.sql.Date
 
 class PaymentSpec extends Specification {
-    ValidatorFactory validatorFactory
-    Validator validator
-    private ObjectMapper mapper = new ObjectMapper()
+    protected ValidatorFactory validatorFactory
+    protected Validator validator
+    protected ObjectMapper mapper = new ObjectMapper()
 
-    def jsonPayload = """
+    String jsonPayload = """
 {"accountNameOwner":"foo","amount":5.12, "guidSource":"abc", "guidDestination":"def", "transactionDate":"2020-11-12"}
 """
 
@@ -30,9 +30,9 @@ class PaymentSpec extends Specification {
         validatorFactory.close()
     }
 
-    def "test -- JSON serialization to Payment"() {
+    void 'test -- JSON serialization to Payment'() {
         when:
-        Payment payment = mapper.readValue(jsonPayload, Payment.class)
+        Payment payment = mapper.readValue(jsonPayload, Payment)
 
         then:
         payment.accountNameOwner == 'foo'
@@ -42,19 +42,19 @@ class PaymentSpec extends Specification {
         0 * _
     }
 
-    def "test validation valid payment"() {
+    void 'test validation valid payment'() {
         given:
-        Payment payment = new PaymentBuilder().builder().accountNameOwner("new_brian").build()
+        Payment payment = new PaymentBuilder().builder().accountNameOwner('new_brian').build()
 
         when:
         Set<ConstraintViolation<Payment>> violations = validator.validate(payment)
 
         then:
-        violations.isEmpty()
+        violations.empty
     }
 
     @Unroll
-    def "test validation invalid #invalidField has error expectedError"() {
+    void 'test validation invalid #invalidField has error expectedError'() {
         given:
         Payment payment = new PaymentBuilder().builder()
                 .accountNameOwner(accountNameOwner)
@@ -70,7 +70,7 @@ class PaymentSpec extends Specification {
         then:
         violations.size() == errorCount
         violations.message.contains(expectedError)
-        violations.iterator().next().getInvalidValue() == payment.getProperties()[invalidField]
+        violations.iterator().next().invalidValue == payment.properties[invalidField]
 
         where:
         invalidField       | accountNameOwner | transactionDate      | amount | guidDestination   | guidSource        | expectedError                   | errorCount

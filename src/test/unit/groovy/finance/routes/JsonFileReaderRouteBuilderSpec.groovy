@@ -14,11 +14,11 @@ import spock.lang.Ignore
 import spock.lang.Specification
 
 class JsonFileReaderRouteBuilderSpec extends Specification {
-    ModelCamelContext camelContext
-    JsonTransactionProcessor mockJsonTransactionProcessor = GroovyMock(JsonTransactionProcessor)
-    ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
+    protected ModelCamelContext camelContext
+    protected JsonTransactionProcessor mockJsonTransactionProcessor = GroovyMock(JsonTransactionProcessor)
+    protected ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
 
-    CamelProperties camelProperties = new CamelProperties(
+    protected CamelProperties camelProperties = new CamelProperties(
             "true",
             "jsonFileReaderRoute",
             "direct:routeFromLocal",
@@ -30,14 +30,14 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
             "mock:toFailedJsonFileEndpoint",
             "mock:toFailedJsonParserEndpoint")
 
-    def setup() {
+    void setup() {
         camelContext = new DefaultCamelContext()
         def router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
         camelContext.addRoutes(router)
 
         camelContext.start()
 
-        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext.class)
+        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
 
         camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
             RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.jsonFileReaderRouteId), mcc, new AdviceWithRouteBuilder() {
@@ -49,7 +49,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         }
     }
 
-    def cleanup() {
+    void cleanup() {
         camelContext.stop()
     }
 
@@ -95,7 +95,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     ]
     '''
 
-    def 'test -- with invalid file name'() {
+    void 'test -- with invalid file name'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonFileEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
@@ -111,7 +111,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         0 * _
     }
 
-    def 'test -- valid payload and valid fileName'() {
+    void 'test -- valid payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
         mockTestOutputEndpoint.expectedCount = 1
@@ -130,7 +130,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     @Ignore
     //TODO: should be integration tests
-    def 'test -- invalid field in payload and valid fileName'() {
+    void 'test -- invalid field in payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
@@ -149,7 +149,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     @Ignore
     //TODO: should be integration tests
-    def 'test -- invalid json payload and valid fileName'() {
+    void 'test -- invalid json payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
@@ -167,7 +167,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     @Ignore
     //TODO: should be integration tests
-    def 'test -- wrong json payload and valid fileName'() {
+    void 'test -- wrong json payload and valid fileName'() {
         given:
         def mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
         mockTestOutputEndpoint.expectedCount = 1

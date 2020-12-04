@@ -7,12 +7,12 @@ import java.sql.Timestamp
 
 class AccountBuilder {
 
-    String accountNameOwner = "foo_brian"
+    String accountNameOwner = 'foo_brian'
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
-    String moniker = "1234"
-    BigDecimal totals = new BigDecimal("0.0")
-    BigDecimal totalsBalanced = new BigDecimal("0.0")
+    String moniker = '1234'
+    BigDecimal totals = new BigDecimal(0.0G)
+    BigDecimal totalsBalanced = new BigDecimal(0.0G)
     Timestamp dateClosed = new Timestamp(0)
 
     static AccountBuilder builder() {
@@ -31,37 +31,37 @@ class AccountBuilder {
         return account
     }
 
-    AccountBuilder accountNameOwner(accountNameOwner) {
+    AccountBuilder accountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    AccountBuilder accountType(accountType) {
+    AccountBuilder accountType(AccountType accountType) {
         this.accountType = accountType
         return this
     }
 
-    AccountBuilder activeStatus(activeStatus) {
+    AccountBuilder activeStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
         return this
     }
 
-    AccountBuilder moniker(moniker) {
+    AccountBuilder moniker(String moniker) {
         this.moniker = moniker
         return this
     }
 
-    AccountBuilder dateClosed(dateClosed) {
+    AccountBuilder dateClosed(Timestamp dateClosed) {
         this.dateClosed = dateClosed
         return this
     }
 
-    AccountBuilder totals(totals) {
+    AccountBuilder totals(BigDecimal totals) {
         this.totals = totals
         return this
     }
 
-    AccountBuilder totalsBalanced(totalsBalanced) {
+    AccountBuilder totalsBalanced(BigDecimal totalsBalanced) {
         this.totalsBalanced = totalsBalanced
         return this
     }

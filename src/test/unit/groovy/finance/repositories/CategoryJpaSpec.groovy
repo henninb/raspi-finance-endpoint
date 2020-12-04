@@ -1,6 +1,5 @@
 package finance.repositories
 
-
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,17 +14,17 @@ import javax.validation.ConstraintViolationException
 @DataJpaTest
 class CategoryJpaSpec extends Specification {
     @Autowired
-    CategoryRepository categoryRepository
+    protected CategoryRepository categoryRepository
 
     @Autowired
-    TestEntityManager entityManager
+    protected TestEntityManager entityManager
 
-    def "test category - valid insert"() {
+    void 'test category - valid insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
 
         when:
-        def categoryResult = entityManager.persist(category)
+        Category categoryResult = entityManager.persist(category)
 
         then:
         categoryRepository.count() == 1L
@@ -33,15 +32,15 @@ class CategoryJpaSpec extends Specification {
         0 * _
     }
 
-    def "test category - valid insert, insert a second category with the same name"() {
+    void 'test category - valid insert, insert a second category with the same name'() {
         given:
         Category category1 = CategoryBuilder.builder().build()
         Category category2 = CategoryBuilder.builder().build()
-        def categoryResult1 = entityManager.persist(category1)
+        Category categoryResult1 = entityManager.persist(category1)
         category2.category = 'second'
 
         when:
-        def categoryResult2 = entityManager.persist(category2)
+        Category categoryResult2 = entityManager.persist(category2)
 
         then:
         categoryRepository.count() == 2L
@@ -50,7 +49,7 @@ class CategoryJpaSpec extends Specification {
         0 * _
     }
 
-    def "test category - empty category insert"() {
+    void 'test category - empty category insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
         category.category = ''
@@ -60,11 +59,11 @@ class CategoryJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('Validation failed for classes [finance.domain.Category]')
+        ex.message.contains('Validation failed for classes [finance.domain.Category]')
         0 * _
     }
 
-    def "test category - invalid category insert"() {
+    void 'test category - invalid category insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
         category.category = 'add a space'
@@ -74,11 +73,11 @@ class CategoryJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('Validation failed for classes [finance.domain.Category]')
+        ex.message.contains('Validation failed for classes [finance.domain.Category]')
         0 * _
     }
 
-    def "test category - capital letter category insert"() {
+    void 'test category - capital letter category insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
         category.category = 'Space'
@@ -88,7 +87,7 @@ class CategoryJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('Validation failed for classes [finance.domain.Category]')
+        ex.message.contains('Validation failed for classes [finance.domain.Category]')
         0 * _
     }
 }

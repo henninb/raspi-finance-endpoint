@@ -14,12 +14,12 @@ import javax.validation.ConstraintViolationException
 @DataJpaTest
 class AccountJpaSpec extends Specification {
     @Autowired
-    AccountRepository accountRepository
+    protected AccountRepository accountRepository
 
     @Autowired
-    TestEntityManager entityManager
+    protected TestEntityManager entityManager
 
-    def "test account repository - computeTheGrandTotalForAllTransactions - empty"() {
+    void 'test account repository - computeTheGrandTotalForAllTransactions - empty'() {
         when:
         Double result = accountRepository.computeTheGrandTotalForAllTransactions()
 
@@ -28,7 +28,7 @@ class AccountJpaSpec extends Specification {
         0 * _
     }
 
-    def "test account repository - computeTheGrandTotalForAllClearedTransactions - empty"() {
+    void 'test account repository - computeTheGrandTotalForAllClearedTransactions - empty'() {
         when:
         Double result = accountRepository.computeTheGrandTotalForAllClearedTransactions()
 
@@ -37,26 +37,26 @@ class AccountJpaSpec extends Specification {
         0 * _
     }
 
-    def "test account - valid insert"() {
+    void 'test account - valid insert'() {
         given:
         Account account = new AccountBuilder().build()
 
         when:
-        def accountResult = entityManager.persist(account)
+        Account accountResult = entityManager.persist(account)
 
         then:
         accountRepository.count() == 1L
         accountResult.accountNameOwner == account.accountNameOwner
     }
 
-    def "test account - valid insert - 2 of the same does the update on the first record"() {
+    void 'test account - valid insert - 2 of the same does the update on the first record'() {
         given:
         Account account = new AccountBuilder().build()
         entityManager.persist(account)
         account.moniker = '9999'
 
         when:
-        def accountResult = entityManager.persist(account)
+        Account accountResult = entityManager.persist(account)
 
         then:
         accountRepository.count() == 1L
@@ -64,7 +64,7 @@ class AccountJpaSpec extends Specification {
         accountResult.accountNameOwner == account.accountNameOwner
     }
 
-    def "test account - invalid moniker"() {
+    void 'test account - invalid moniker'() {
         given:
         Account account = new AccountBuilder().build()
         account.moniker = 'invalid'
@@ -74,10 +74,10 @@ class AccountJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('Validation failed for classes [finance.domain.Account]')
+        ex.message.contains('Validation failed for classes [finance.domain.Account]')
     }
 
-    def "test account - invalid accountNameOwner"() {
+    void 'test account - invalid accountNameOwner'() {
         given:
         Account account = new AccountBuilder().build()
         account.accountNameOwner = 'invalid'
@@ -87,6 +87,6 @@ class AccountJpaSpec extends Specification {
 
         then:
         ConstraintViolationException ex = thrown()
-        ex.getMessage().contains('Validation failed for classes [finance.domain.Account]')
+        ex.message.contains('Validation failed for classes [finance.domain.Account]')
     }
 }
