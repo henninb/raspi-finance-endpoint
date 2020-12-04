@@ -15,11 +15,11 @@ import java.sql.Date
 
 class TransactionSpec extends Specification {
 
-    ValidatorFactory validatorFactory
-    Validator validator
-    private ObjectMapper mapper = new ObjectMapper()
+    protected ValidatorFactory validatorFactory
+    protected Validator validator
+    protected ObjectMapper mapper = new ObjectMapper()
 
-    def jsonPayload = '''
+    String jsonPayload = '''
 {
 "accountId":0,
 "accountType":"credit",
@@ -38,50 +38,49 @@ class TransactionSpec extends Specification {
 }
 '''
 
-    def setup() {
+    void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
         validator = validatorFactory.getValidator()
     }
 
-    def cleanup() {
+    void cleanup() {
         validatorFactory.close()
     }
 
-    def "test Transaction to JSON"() {
+    void 'test Transaction to JSON'() {
         given:
-        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction.class)
+        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
 
         when:
-        def json = mapper.writeValueAsString(transactionFromString)
+        String json = mapper.writeValueAsString(transactionFromString)
 
         then:
-        json.contains("4ea3be58-3993-46de-88a2-4ffc7f1d73bd")
+        json.contains('4ea3be58-3993-46de-88a2-4ffc7f1d73bd')
         0 * _
     }
 
-    def "test JSON deserialize to Transaction domain object"() {
+    void 'test JSON deserialize to Transaction domain object'() {
         when:
-        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
+        Transaction transaction = mapper.readValue(jsonPayload, Transaction)
 
         then:
         transaction.accountType == AccountType.Credit
-        transaction.guid == "4ea3be58-3993-46de-88a2-4ffc7f1d73bd"
+        transaction.guid == '4ea3be58-3993-46de-88a2-4ffc7f1d73bd'
         transaction.transactionId == 0
         0 * _
     }
 
-    def "test JSON deserialize to Transaction domain object - bad"() {
+    void 'test JSON deserialize to Transaction domain object - bad'() {
         when:
-        mapper.readValue('trash-payload', Transaction.class)
+        mapper.readValue('trash-payload', Transaction)
 
         then:
         JsonParseException ex = thrown()
-        ex.getMessage().contains('Unrecognized token')
+        ex.message.contains('Unrecognized token')
         0 * _
     }
 
-
-    def "test validation valid transaction"() {
+    void 'test validation valid transaction'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
 
@@ -89,12 +88,12 @@ class TransactionSpec extends Specification {
         Set<ConstraintViolation<Transaction>> violations = validator.validate(transaction)
 
         then:
-        violations.isEmpty()
+        violations.empty
         0 * _
     }
 
     @Unroll
-    def "test validation invalid #invalidField has error expectedError"() {
+    void 'test validation invalid #invalidField has error expectedError'() {
         given:
         Transaction transaction = new TransactionBuilder().builder()
                 .guid(guid)
@@ -117,10 +116,10 @@ class TransactionSpec extends Specification {
         then:
         violations.size() == errorCount
         violations.message.contains(expectedError)
-        violations.iterator().next().getInvalidValue() == transaction.getProperties()[invalidField]
+        violations.iterator().next().invalidValue == transaction.properties[invalidField]
 
         where:
-        invalidField       | guid                                   | accountId | accountType        | accountNameOwner   | transactionDate      | description      | category | amount                                                   | transactionState         | reoccurring | reoccurringType           | notes      | expectedError                              | errorCount
+        invalidField       | guid                                   | accountId | accountType        | accountNameOwner   | transactionDate      | description      | category | amount                                                     | transactionState         | reoccurring | reoccurringType           | notes      | expectedError                              | errorCount
         'guid'             | '11ea3be58-3993-46de-88a2-4ffc7f1d73b' | 1004      | AccountType.Credit | 'chase_brian'      | new Date(1553645394) | 'aliexpress.com' | 'online' | new BigDecimal('-94.74').setScale(2, RoundingMode.HALF_UP) | TransactionState.Future  | false       | ReoccurringType.Undefined | 'no notes' | 'must be uuid formatted'                   | 1
         'accountId'        | UUID.randomUUID()                      | -1L       | AccountType.Credit | 'chase_brian'      | new Date(1553645394) | 'aliexpress.com' | 'online' | new BigDecimal('43.16').setScale(2, RoundingMode.HALF_UP)  | TransactionState.Future  | false       | ReoccurringType.Undefined | 'no notes' | 'must be greater than or equal to 0'       | 1
         'description'      | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(1553645394) | 'Café Roale'     | 'online' | new BigDecimal('-3.14').setScale(2, RoundingMode.HALF_UP)  | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be ascii character set'              | 1

@@ -22,22 +22,22 @@ import spock.lang.Specification
 import javax.validation.Validator
 
 class InsertTransactionProcessorSpec extends Specification {
-    Message mockMessage = GroovyMock(Message)
-    Exchange mockExchange = GroovyMock(Exchange)
-    TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
-    AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
-    Validator mockValidator = GroovyMock(Validator)
-    MeterService mockMeterService = GroovyMock()
-    AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
-    CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
-    ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
-    ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
-    ObjectMapper mapper = new ObjectMapper()
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
-    InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, mockMeterService)
+    protected Message mockMessage = GroovyMock(Message)
+    protected Exchange mockExchange = GroovyMock(Exchange)
+    protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
+    protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    protected Validator mockValidator = GroovyMock(Validator)
+    protected MeterService mockMeterService = GroovyMock()
+    protected AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
+    protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
+    protected CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
+    protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
+    protected ObjectMapper mapper = new ObjectMapper()
+    protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
+    protected InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, mockMeterService)
 
-    def jsonPayload = '''
+    String jsonPayload = '''
         {"accountId":0,
         "accountType":"credit",
         "transactionDate":1553645394,
@@ -53,16 +53,16 @@ class InsertTransactionProcessorSpec extends Specification {
         "notes":"my note to you"}
         '''
 
-    def "test -- InsertTransactionProcessor - empty transaction"() {
+    void 'test -- InsertTransactionProcessor - empty transaction'() {
         given:
-        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
+        Transaction transaction = mapper.readValue(jsonPayload, Transaction)
 
         when:
         processor.process(mockExchange)
 
         then:
-        1 * mockExchange.getIn() >> mockMessage
-        1 * mockMessage.getBody(String.class) >> jsonPayload
+        1 * mockExchange.in >> mockMessage
+        1 * mockMessage.body(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * mockValidator.validate(_) >> new HashSet()
         1 * mockMessage.setBody(transaction.toString())
@@ -71,7 +71,7 @@ class InsertTransactionProcessorSpec extends Specification {
 
     def "test -- InsertTransactionProcessor - happy path"() {
         given:
-        Transaction transaction = mapper.readValue(jsonPayload, Transaction.class)
+        Transaction transaction = mapper.readValue(jsonPayload, Transaction)
         Account account = AccountBuilder.builder().build()
         Category category = CategoryBuilder.builder().build()
 
@@ -82,8 +82,8 @@ class InsertTransactionProcessorSpec extends Specification {
         processor.process(mockExchange)
 
         then:
-        1 * mockExchange.getIn() >> mockMessage
-        1 * mockMessage.getBody(String.class) >> jsonPayload
+        1 * mockExchange.in >> mockMessage
+        1 * mockMessage.body(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
         2 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)

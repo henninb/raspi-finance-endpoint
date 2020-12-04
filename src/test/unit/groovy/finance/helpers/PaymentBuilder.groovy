@@ -26,27 +26,27 @@ class PaymentBuilder {
         return payment
     }
 
-    PaymentBuilder accountNameOwner(accountNameOwner) {
+    PaymentBuilder accountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    PaymentBuilder amount(amount) {
+    PaymentBuilder amount(BigDecimal gamount) {
         this.amount = amount
         return this
     }
 
-    PaymentBuilder transactionDate(transactionDate) {
+    PaymentBuilder transactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
 
-    PaymentBuilder guidSource(guidSource) {
+    PaymentBuilder guidSource(String guidSource) {
         this.guidSource = guidSource
         return this
     }
 
-    PaymentBuilder guidDestination(guidDestination) {
+    PaymentBuilder guidDestination(String guidDestination) {
         this.guidDestination = guidDestination
         return this
     }

@@ -13,35 +13,35 @@ import spock.lang.Specification
 class PaymentJpaSpec extends Specification {
 
     @Autowired
-    PaymentRepository paymentRepository
+    protected PaymentRepository paymentRepository
 
     @Autowired
-    TestEntityManager entityManager
+    protected TestEntityManager entityManager
 
-    private ObjectMapper mapper = new ObjectMapper()
+    protected ObjectMapper mapper = new ObjectMapper()
 
-    def json = """
+    String json = """
 {"accountNameOwner": "test_brian", "amount":1.54, "transactionDate":1593981072000, "guidSource":"c8e5cd3c-3f70-473b-92bf-1c2e4fb338ab", "guidDestination":"e074436e-ed64-455d-be56-7421e04d467b" }
 """
 
-    def "test payment to JSON - valid insert"() {
+    void 'test payment to JSON - valid insert'() {
 
         given:
-        Payment payment = mapper.readValue(json, Payment.class)
+        Payment payment = mapper.readValue(json, Payment)
 
         when:
-        def result = entityManager.persist(payment)
+        Payment result = entityManager.persist(payment)
 
         then:
         paymentRepository.count() == 1L
         result == payment
     }
 
-    def "test payment to JSON - valid insert and delete"() {
+    void 'test payment to JSON - valid insert and delete'() {
 
         given:
-        Payment payment = mapper.readValue(json, Payment.class)
-        def result = entityManager.persist(payment)
+        Payment payment = mapper.readValue(json, Payment)
+        Payment result = entityManager.persist(payment)
 
         when:
         paymentRepository.deleteByPaymentId(result.paymentId)

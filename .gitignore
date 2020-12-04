@@ -47,3 +47,4 @@ grafana-data/
 excel_in/
 finance_db_master.xlsm
 metrics-*.json
+tags

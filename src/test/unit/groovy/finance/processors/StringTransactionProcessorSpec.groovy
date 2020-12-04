@@ -1,6 +1,5 @@
 package finance.processors
 
-
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.services.MeterService
@@ -22,9 +21,9 @@ class StringTransactionProcessorSpec extends Specification {
         processor.process(mockExchange)
 
         then:
-        1 * mockExchange.getIn() >> mockMessage
-        1 * mockMessage.getBody(Transaction.class) >> transaction
-        1 * mockMessage.setBody(transaction.toString())
+        1 * mockExchange.in >> mockMessage
+        1 * mockMessage.body(Transaction) >> transaction
+        1 * mockMessage.body(transaction.toString())
         1 * _
     }
 }

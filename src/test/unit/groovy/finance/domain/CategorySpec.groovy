@@ -12,9 +12,9 @@ import javax.validation.ValidatorFactory
 
 class CategorySpec extends Specification {
 
-    ValidatorFactory validatorFactory
-    Validator validator
-    private ObjectMapper mapper = new ObjectMapper()
+    protected ValidatorFactory validatorFactory
+    protected Validator validator
+    protected ObjectMapper mapper = new ObjectMapper()
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
@@ -25,41 +25,40 @@ class CategorySpec extends Specification {
         validatorFactory.close()
     }
 
-    def "test -- JSON serialization to Category"() {
+    void 'test -- JSON serialization to Category'() {
 
         given:
-        def jsonPayload = '{"category":"bar"}'
+        String jsonPayload = '{"category":"bar"}'
 
         when:
-        Category category = mapper.readValue(jsonPayload, Category.class)
+        Category category = mapper.readValue(jsonPayload, Category)
 
         then:
         category.category == "bar"
         0 * _
     }
 
-    def "test JSON serialization to Category object - bad payload"() {
+    void 'test JSON serialization to Category object - bad payload'() {
 
         given:
-        def jsonPayloadBad = 'badPayload'
+        String jsonPayloadBad = 'badPayload'
 
         when:
-        mapper.readValue(jsonPayloadBad, Category.class)
+        mapper.readValue(jsonPayloadBad, Category)
 
         then:
         JsonParseException ex = thrown()
-        ex.getMessage().contains('Unrecognized token')
+        ex.message.contains('Unrecognized token')
         0 * _
     }
 
-
-    def "test JSON serialization to Category object - missing valid fields"() {
+    void 'test JSON serialization to Category object - missing valid fields'() {
 
         given:
-        def jsonPayloadBad = '{"categoryMissing":"bar"}'
+        String jsonPayloadBad = '{"categoryMissing":"bar"}'
 
         when:
-        Category category = mapper.readValue(jsonPayloadBad, Category.class)
+        Category category = mapper.readValue(jsonPayloadBad, Category)
 
         then:
         category.category == ''
@@ -67,7 +66,7 @@ class CategorySpec extends Specification {
 
     }
 
-    def "test validation valid category"() {
+    void 'test validation valid category'() {
         given:
         Category category = CategoryBuilder.builder().build()
         category.category = "foobar"
@@ -76,6 +75,6 @@ class CategorySpec extends Specification {
         Set<ConstraintViolation<Category>> violations = validator.validate(category)
 
         then:
-        violations.isEmpty()
+        violations.empty
     }
 }
