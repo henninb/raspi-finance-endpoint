@@ -45,7 +45,7 @@ class CategoryControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "test -- Payment endpoint paymentId found and deleted"() {
+    void "test -- Payment endpoint paymentId found and deleted"() {
         given:
         categoryService.insertCategory(category)
         HttpEntity entity = new HttpEntity<>(null, headers)
@@ -60,7 +60,7 @@ class CategoryControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- find category endpoint category not found"() {
+    void "test -- find category endpoint category not found"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -73,7 +73,7 @@ class CategoryControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- delete category endpoint"() {
+    void "test -- delete category endpoint"() {
         given:
         categoryService.insertCategory(category)
 
@@ -91,7 +91,7 @@ class CategoryControllerSpec extends Specification {
         categoryService.deleteByCategoryName(category.category)
     }
 
-    def "test -- insertPayment endpoint"() {
+    void "test -- insertPayment endpoint"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(category, headers)

@@ -18,12 +18,12 @@ class ParameterBuilder {
         return parameter
     }
 
-    ParameterBuilder parameterName(parameterName) {
+    ParameterBuilder parameterName(String parameterName) {
         this.parameterName = parameterName
         return this
     }
 
-    ParameterBuilder parameterValue(parameterValue) {
+    ParameterBuilder parameterValue(String parameterValue) {
         this.parameterValue = parameterValue
         return this
     }

@@ -79,7 +79,7 @@ class TransactionControllerSpec extends Specification {
         return 'http://localhost:' + port + uri
     }
 
-    def "test -- findTransaction endpoint insert - find - delete"() {
+    void "test -- findTransaction endpoint insert - find - delete"() {
 
         given:
         transactionService.insertTransaction(transaction)
@@ -100,7 +100,7 @@ class TransactionControllerSpec extends Specification {
         transactionService.deleteTransactionByGuid(transaction.guid)
     }
 
-    def "test -- findTransaction endpoint transaction insert guid is not found"() {
+    void "test -- findTransaction endpoint transaction insert guid is not found"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -113,7 +113,7 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- deleteTransaction endpoint insert delete guid found"() {
+    void "test -- deleteTransaction endpoint insert delete guid found"() {
         given:
         transactionService.insertTransaction(transaction)
 
@@ -130,7 +130,7 @@ class TransactionControllerSpec extends Specification {
 
     //TODO: bh fix the multiple category delete issue
     @Ignore
-    def "test -- deleteTransaction endpoint insert delete guid found - multiple categories associated"() {
+    void "test -- deleteTransaction endpoint insert delete guid found - multiple categories associated"() {
         given:
         Category categoryNew = new Category()
         categoryNew.category = "new_cat"
@@ -148,7 +148,7 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- deleteTransaction endpoint guid not found"() {
+    void "test -- deleteTransaction endpoint guid not found"() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -163,7 +163,7 @@ class TransactionControllerSpec extends Specification {
 
     //TODO: bh 11/8/2020 - com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'badTransactionJsonPayload'
     //TODO: build fails in intellij
-    def "test -- insertTransaction endpoint bad data - not json in the payload"() {
+    void "test -- insertTransaction endpoint bad data - not json in the payload"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('badTransactionJsonPayload', headers)
@@ -178,7 +178,7 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- insertTransaction endpoint"() {
+    void "test -- insertTransaction endpoint"() {
         given:
         def transaction = TransactionBuilder.builder().build()
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -196,7 +196,7 @@ class TransactionControllerSpec extends Specification {
         transactionService.deleteTransactionByGuid(guid)
     }
 
-    def "test -- insertTransaction endpoint - bad guid"() {
+    void "test -- insertTransaction endpoint - bad guid"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.guid = '123'
@@ -211,7 +211,7 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- insertTransaction endpoint - bad category"() {
+    void "test -- insertTransaction endpoint - bad category"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
 
@@ -228,7 +228,7 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    def "test -- insertTransaction endpoint - old transaction date"() {
+    void "test -- insertTransaction endpoint - old transaction date"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.transactionDate = new java.sql.Date(100000)
@@ -246,7 +246,7 @@ class TransactionControllerSpec extends Specification {
     //TODO: should this fail as a bad request?
     //TODO: build fails and duplicate constraint violation
     @Ignore
-    def "test -- updateTransaction transaction endpoint"() {
+    void "test -- updateTransaction transaction endpoint"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.guid = UUID.randomUUID()

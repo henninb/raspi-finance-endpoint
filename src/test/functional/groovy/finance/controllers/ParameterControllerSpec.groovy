@@ -43,7 +43,7 @@ class ParameterControllerSpec extends Specification {
         mockParmService = new MockParmService(delegate)
     }
 
-    def "test - should succeed"() {
+    void "test - should succeed"() {
         given:
         def response = mockParmService.selectParm('test').execute()
 
@@ -51,7 +51,7 @@ class ParameterControllerSpec extends Specification {
         response.isSuccessful()
     }
 
-    def "test -- selectParm - should fail on 500"() {
+    void "test -- selectParm - should fail on 500"() {
         given:
         behavior.setFailurePercent(100)
 

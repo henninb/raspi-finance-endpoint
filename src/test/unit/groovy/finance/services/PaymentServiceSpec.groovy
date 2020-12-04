@@ -19,7 +19,7 @@ class PaymentServiceSpec extends Specification {
     protected MeterService mockkMeterService = GroovyMock(MeterService)
     protected PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParameterService, mockValidator, mockMeterService)
 
-    def "test findAll payments empty"() {
+    void "test findAll payments empty"() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         List<Payment> payments = []
@@ -34,7 +34,7 @@ class PaymentServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insertPayment - existing"() {
+    void "test insertPayment - existing"() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         def parameter = new Parameter()
@@ -53,7 +53,7 @@ class PaymentServiceSpec extends Specification {
         0 * _
     }
 
-    def "test insertPayment - findByParameterName throws an exception"() {
+    void "test insertPayment - findByParameterName throws an exception"() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         def parameter = new Parameter()

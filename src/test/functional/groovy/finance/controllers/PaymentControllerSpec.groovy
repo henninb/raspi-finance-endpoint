@@ -72,7 +72,7 @@ class PaymentControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    def "test Payment endpoint existing payment inserted and then deleted"() {
+    void "test Payment endpoint existing payment inserted and then deleted"() {
         given:
         parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
@@ -89,7 +89,7 @@ class PaymentControllerSpec extends Specification {
         0 * _
     }
 
-    def "test Payment endpoint existing payment inserted and then attempt to delete a non existent payment"() {
+    void "test Payment endpoint existing payment inserted and then attempt to delete a non existent payment"() {
         given:
         parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
@@ -106,7 +106,7 @@ class PaymentControllerSpec extends Specification {
         0 * _
     }
 
-    def "test insertPayment endpoint - happy path"() {
+    void "test insertPayment endpoint - happy path"() {
         given:
         payment.accountNameOwner = 'happy-path_brian'
         payment.guidDestination = UUID.randomUUID()
@@ -125,7 +125,7 @@ class PaymentControllerSpec extends Specification {
         0 * _
     }
 
-    def "test insertPayment failed due to setup issues"() {
+    void "test insertPayment failed due to setup issues"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
@@ -146,7 +146,7 @@ class PaymentControllerSpec extends Specification {
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
     //TODO: build fails in intellij
-    def "test insertPayment failed due to setup issues - to a non-debit account"() {
+    void "test insertPayment failed due to setup issues - to a non-debit account"() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         accountService.insertAccount(account)
