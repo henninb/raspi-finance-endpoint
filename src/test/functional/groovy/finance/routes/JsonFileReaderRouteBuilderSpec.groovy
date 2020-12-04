@@ -36,7 +36,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         producer = camelContext.createProducerTemplate()
         camelContext.start()
 
-        camelContext.routes.forEach(route -> route.setAutoStartup(true))
+        camelContext.routes.each {route -> route.setAutoStartup(true) }
         producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
     }
 
