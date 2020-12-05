@@ -295,7 +295,7 @@ ruleset {
     FieldName
     InterfaceName
     InterfaceNameSameAsSuperInterface
-    MethodName
+    //MethodName
     ObjectOverrideMisspelledMethodName
     PackageName
     PackageNameMatchesFilePath

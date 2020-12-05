@@ -14,9 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
-import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
+import org.springframework.http.HttpStatus
 import spock.lang.Specification
 
 import java.sql.Date
@@ -65,7 +70,7 @@ class PaymentControllerSpec extends Specification {
 
         account = AccountBuilder.builder().build()
         account.accountType = AccountType.Credit
-        account.accountNameOwner = "blah_brian"
+        account.accountNameOwner = 'blah_brian'
     }
 
     private String createURLWithPort(String uri) {
@@ -83,7 +88,7 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/delete/" + payment.paymentId), HttpMethod.DELETE, entity, String)
+                createURLWithPort('/payment/delete/' + payment.paymentId), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.OK
         0 * _

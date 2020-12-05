@@ -10,7 +10,11 @@ import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.ReceiptImageRepository
 import finance.repositories.TransactionRepository
-import finance.services.*
+import finance.services.AccountService
+import finance.services.CategoryService
+import finance.services.MeterService
+import finance.services.ReceiptImageService
+import finance.services.TransactionService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
@@ -60,7 +64,7 @@ class InsertTransactionProcessorSpec extends Specification {
         1 * mockExchange.in >> mockMessage
         1 * mockMessage.getBody(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockValidator.validate(_) >> new HashSet()
+        1 * mockValidator.validate(_) >> ([] as Set)
         1 * mockMessage.setBody(transaction.toString())
         0 * _
     }

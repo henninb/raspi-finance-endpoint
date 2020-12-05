@@ -15,17 +15,17 @@ import spock.lang.Specification
 import javax.validation.Validator
 
 class TransactionServiceSpec extends Specification {
-    TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
-    AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
-    Validator mockValidator = GroovyMock(Validator)
-    MeterService mockMeterService = GroovyMock()
-    AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
-    CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
-    ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
-    ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
-    TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
-    Category category = CategoryBuilder.builder().build()
+    protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
+    protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    protected Validator mockValidator = GroovyMock(Validator)
+    protected MeterService mockMeterService = GroovyMock()
+    protected AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
+    protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
+    protected CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
+    protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
+    protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
+    protected Category category = CategoryBuilder.builder().build()
 
     void 'test transactionService - deleteByGuid'() {
         given:
@@ -105,7 +105,7 @@ class TransactionServiceSpec extends Specification {
         then:
         isInserted.is(true)
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockValidator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> ([] as Set)
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
@@ -129,7 +129,7 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isInserted.is(false)
-        1 * mockValidator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> ([] as Set)
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
@@ -155,7 +155,7 @@ class TransactionServiceSpec extends Specification {
         isInserted.is(true)
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockValidator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> ([] as Set)
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
@@ -185,10 +185,10 @@ class TransactionServiceSpec extends Specification {
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
         1 * mockAccountRepository.saveAndFlush(account) >> true
-        1 * mockValidator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> ([] as Set)
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockValidator.validate(account) >> new HashSet()
+        1 * mockValidator.validate(account) >> ([] as Set)
         1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
@@ -215,10 +215,10 @@ class TransactionServiceSpec extends Specification {
         then:
         isInserted.is(true)
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockValidator.validate(transaction) >> new HashSet()
+        1 * mockValidator.validate(transaction) >> ([] as Set)
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
         1 * mockCategoryRepository.findByCategory(categoryName) >> Optional.empty()
-        1 * mockValidator.validate(category) >> new HashSet()
+        1 * mockValidator.validate(category) >> ([] as Set)
         1 * mockCategoryRepository.saveAndFlush(category)
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)

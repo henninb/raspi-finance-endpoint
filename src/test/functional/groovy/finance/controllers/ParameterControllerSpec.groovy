@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Parameter
-import finance.services.ParmApiService
+import finance.services.ParameterApiService
 import org.jetbrains.annotations.NotNull
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -16,47 +16,47 @@ class ParameterControllerSpec extends Specification {
     static final String BASE_URL = "http://url.com"
 
     @Shared
-    NetworkBehavior behavior = NetworkBehavior.create()
+    protected NetworkBehavior behavior = NetworkBehavior.create()
 
     @Shared
-    ParmApiService mockParmService
+    protected ParameterApiService mockParameterService
 
-    static class MockParmService implements ParmApiService {
+    static class MockParameterService implements ParameterApiService {
 
-        BehaviorDelegate<ParmApiService> delegate
+        BehaviorDelegate<ParameterApiService> delegate
 
-        MockParmService(BehaviorDelegate<ParmApiService> delegate) {
+        MockParameterService(BehaviorDelegate<ParameterApiService> delegate) {
             this.delegate = delegate
         }
 
         @Override
-        Call<List<Parameter>> selectParm(@NotNull @Path("parmName") String parmName) {
-            delegate.returningResponse().selectParm(parmName)
+        Call<List<Parameter>> selectParameter(@NotNull @Path("parameterName") String parameterName) {
+            delegate.returningResponse().selectParameter(parameterName)
         }
     }
 
     void setupSpec() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL).build()
         MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build()
-        BehaviorDelegate<ParmApiService> delegate = mockRetrofit.create(ParmApiService)
+        BehaviorDelegate<ParameterApiService> delegate = mockRetrofit.create(ParameterApiService)
 
-        mockParmService = new MockParmService(delegate)
+        mockParameterService = new MockParameterService(delegate)
     }
 
     void "test - should succeed"() {
         given:
-        def response = mockParmService.selectParm('test').execute()
+        def response = mockParameterService.selectParameter('test').execute()
 
         expect:
         response.successful
     }
 
-    void 'test -- selectParm - should fail on 500'() {
+    void 'test -- selectParameter - should fail on 500'() {
         given:
         behavior.setFailurePercent(100)
 
         when:
-        mockParmService.selectParm('test').execute()
+        mockParameterService.selectParameter('test').execute()
 
         then:
         IOException ex = thrown(IOException)
