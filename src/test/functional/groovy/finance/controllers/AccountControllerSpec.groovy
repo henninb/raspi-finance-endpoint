@@ -10,15 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -43,6 +39,27 @@ class AccountControllerSpec extends Specification {
 
     @Shared
     protected Account account
+
+    @Shared
+    protected String jsonPayloadInvalidActiveStatus = '''
+{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":"invalid","moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+'''
+    @Shared
+    protected String jsonPayloadInvalidTotals = '''
+{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":true,"moniker":"1234","totals":0.0155,"totalsBalanced":0.02,"dateClosed":0}
+'''
+    @Shared
+    protected String jsonPayloadMissingAccountType = '''
+{"accountNameOwner":"test_brian","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+'''
+    @Shared
+    protected String jsonPayloadEmptyAccountNameOwner = '''
+{"accountNameOwner":"","accountType":"credit","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+'''
+    @Shared
+    protected String jsonPayloadInvalidAccountType = '''
+{"accountNameOwner":"test_brian","accountType":"invalid","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+'''
 
     void setup() {
         headers = new HttpHeaders()
@@ -81,7 +98,7 @@ class AccountControllerSpec extends Specification {
                 createURLWithPort("/account/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
                 entity, String)
         then:
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode.is(HttpStatus.NOT_FOUND)
         0 * _
     }
 
@@ -104,51 +121,53 @@ class AccountControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 
-    //TODO: build failed started to fail noticed on 11/8/2020
-    void 'test insertAccount endpoint bad data'() {
+    @Unroll
+    void 'test deleteAccount endpoint - failure for irregular payload'() {
         given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>('accountBadData', headers)
+        HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                createURLWithPort("/account/delete/${accountNameOwner}"), HttpMethod.DELETE,
                 entity, String)
+
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode.is(httpStatus)
+        response.body.contains(responseBody)
         0 * _
+
+        where:
+        accountNameOwner | httpStatus           | responseBody
+        '1'              | HttpStatus.NOT_FOUND | 'could not delete this account'
+        null             | HttpStatus.NOT_FOUND | 'could not delete this account'
+        'adding/junk'       | HttpStatus.NOT_FOUND | 'Not Found'
     }
 
-    //TODO: build failed started to fail noticed on 11/8/2020
-    void 'test insertAccount endpoint - irrelevant payload'() {
+    @Unroll
+    void 'test insertAccount endpoint - failure for irregular payload'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>('{"test":1}', headers)
+        HttpEntity entity = new HttpEntity<>(payload, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/account/insert/'), HttpMethod.POST,
                 entity, String)
         then:
-        //def ex = thrown(JsonParseException)
-        //ex.getMessage().contains('Unrecognized token')
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode.is(httpStatus)
+        response.body.contains(responseBody)
         0 * _
-    }
 
-    void 'test findAccount endpoint empty accountNameOwner'() {
-        given:
-        account.accountNameOwner = ''
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(account, headers)
+        where:
+        payload                          | httpStatus             | responseBody
+        'badJson'                        | HttpStatus.BAD_REQUEST | 'Unrecognized token'
+        '{"test":1}'                     | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountNameOwner due to missing'
+        '{badJson:"test"}'               | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
+        jsonPayloadInvalidActiveStatus   | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type'
+        jsonPayloadMissingAccountType    | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountType due to missing'
+        jsonPayloadEmptyAccountNameOwner | HttpStatus.BAD_REQUEST | 'Cannot insert account as there is a constraint violation on the data'
+        jsonPayloadInvalidAccountType    | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type `finance.domain.AccountType'
+        jsonPayloadInvalidTotals         | HttpStatus.BAD_REQUEST | 'Cannot insert account as there is a constraint violation on the data.'
 
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String)
-
-        then:
-        response.statusCode == HttpStatus.BAD_REQUEST
-        0 * _
     }
 }
