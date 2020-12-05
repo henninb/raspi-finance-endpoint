@@ -140,7 +140,7 @@ class AccountControllerSpec extends Specification {
         accountNameOwner | httpStatus           | responseBody
         '1'              | HttpStatus.NOT_FOUND | 'could not delete this account'
         null             | HttpStatus.NOT_FOUND | 'could not delete this account'
-        'adding/junk'       | HttpStatus.NOT_FOUND | 'Not Found'
+        'adding/junk'    | HttpStatus.NOT_FOUND | 'Not Found'
     }
 
     @Unroll

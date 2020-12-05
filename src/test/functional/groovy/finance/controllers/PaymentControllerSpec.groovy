@@ -14,15 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-import org.springframework.http.HttpStatus
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.sql.Date
 
@@ -57,6 +53,16 @@ class PaymentControllerSpec extends Specification {
     @Shared
     protected Parameter parameter
 
+    @Shared
+    protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+
+
+    @Shared
+    protected String jsonPayloadMissingAmount = '{"accountNameOwner":"foo_test", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+
+    @Shared
+    protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.1288888, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+
     void setupSpec() {
         restTemplate = new TestRestTemplate()
         headers = new HttpHeaders()
@@ -82,7 +88,7 @@ class PaymentControllerSpec extends Specification {
         parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf("2020-10-12")
+        payment.transactionDate = Date.valueOf('2020-10-12')
         paymentService.insertPayment(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -150,7 +156,6 @@ class PaymentControllerSpec extends Specification {
     }
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
-    //TODO: build fails in intellij
     void 'test insertPayment failed due to setup issues - to a non-debit account'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -166,7 +171,32 @@ class PaymentControllerSpec extends Specification {
 
         then:
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
+    }
+
+    @Unroll
+    void 'test insertPayment endpoint - failure for irregular payload'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(payload, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/payment/insert/'), HttpMethod.POST,
+                entity, String)
+        then:
+        response.statusCode.is(httpStatus)
+        response.body.contains(responseBody)
+        0 * _
+
+        where:
+        payload                      | httpStatus             | responseBody
+        'badJson'                    | HttpStatus.BAD_REQUEST | 'Unrecognized token'
+        '{"test":1}'                 | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountNameOwner due to missing'
+        '{badJson:"test"}'           | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
+        jsonPayloadInvalidAmount     | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data.'
+        jsonPayloadMissingAmount     | HttpStatus.BAD_REQUEST | 'value failed for JSON property amount due to missing'
+        jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data'
     }
 }

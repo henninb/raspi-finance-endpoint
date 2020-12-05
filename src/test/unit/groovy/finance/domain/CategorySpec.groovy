@@ -18,6 +18,7 @@ class CategorySpec extends Specification {
     protected ValidatorFactory validatorFactory
     protected Validator validator
     protected ObjectMapper mapper = new ObjectMapper()
+    protected String jsonPayload = '{"category":"bar", "activeStatus":true}'
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
@@ -29,9 +30,6 @@ class CategorySpec extends Specification {
     }
 
     void 'test -- JSON serialization to Category'() {
-
-        given:
-        String jsonPayload = '{"category":"bar"}'
 
         when:
         Category category = mapper.readValue(jsonPayload, Category)
