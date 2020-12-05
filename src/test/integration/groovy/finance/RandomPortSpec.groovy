@@ -12,7 +12,7 @@ import spock.lang.Specification
 class RandomPortSpec extends Specification {
 
     @Autowired
-    ApplicationContext applicationContext
+    protected ApplicationContext applicationContext
 
     @LocalServerPort
     protected int localPort
