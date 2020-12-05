@@ -29,30 +29,30 @@ class PaymentControllerSpec extends Specification {
     protected int port
 
     @Shared
-    TestRestTemplate restTemplate
+    protected TestRestTemplate restTemplate
 
     @Shared
-    HttpHeaders headers
+    protected HttpHeaders headers
 
     @Autowired
-    PaymentService paymentService
+    protected PaymentService paymentService
 
     @Autowired
-    AccountService accountService
+    protected AccountService accountService
 
     @Autowired
-    ParameterService parmService
+    protected ParameterService parmService
 
     @Shared
-    Payment payment
+    protected Payment payment
 
     @Shared
-    Account account
+    protected Account account
 
     @Shared
-    Parameter parameter
+    protected Parameter parameter
 
-    def setupSpec() {
+    void setupSpec() {
         restTemplate = new TestRestTemplate()
         headers = new HttpHeaders()
         payment = PaymentBuilder.builder().build()
@@ -69,10 +69,10 @@ class PaymentControllerSpec extends Specification {
     }
 
     private String createURLWithPort(String uri) {
-        return "http://localhost:" + port + uri
+        return 'http://localhost:' + port + uri
     }
 
-    void "test Payment endpoint existing payment inserted and then deleted"() {
+    void 'test Payment endpoint existing payment inserted and then deleted'() {
         given:
         parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
@@ -83,35 +83,35 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/delete/" + payment.paymentId), HttpMethod.DELETE, entity, String.class)
+                createURLWithPort("/payment/delete/" + payment.paymentId), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.OK
         0 * _
     }
 
-    void "test Payment endpoint existing payment inserted and then attempt to delete a non existent payment"() {
+    void 'test Payment endpoint existing payment inserted and then attempt to delete a non existent payment'() {
         given:
         parmService.insertParm(parameter)
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf("2020-10-11")
+        payment.transactionDate = Date.valueOf('2020-10-11')
         paymentService.insertPayment(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/delete/" + 123451), HttpMethod.DELETE, entity, String.class)
+                createURLWithPort('/payment/delete/123451'), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
-    void "test insertPayment endpoint - happy path"() {
+    void 'test insertPayment endpoint - happy path'() {
         given:
         payment.accountNameOwner = 'happy-path_brian'
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf("2020-10-10") //new Date(1605300155000)
+        payment.transactionDate = Date.valueOf('2020-10-10') //new Date(1605300155000)
 
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
@@ -119,13 +119,13 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String.class)
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
-    void "test insertPayment failed due to setup issues"() {
+    void 'test insertPayment failed due to setup issues'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
@@ -133,11 +133,11 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String.class)
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
 
         then:
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode.is(HttpStatus.INTERNAL_SERVER_ERROR)
         0 * _
 
         cleanup:
@@ -146,7 +146,7 @@ class PaymentControllerSpec extends Specification {
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
     //TODO: build fails in intellij
-    void "test insertPayment failed due to setup issues - to a non-debit account"() {
+    void 'test insertPayment failed due to setup issues - to a non-debit account'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         accountService.insertAccount(account)
@@ -157,12 +157,11 @@ class PaymentControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String.class)
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
 
         then:
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
         response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
-
 }

@@ -1,6 +1,5 @@
 package finance.controllers
 
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.Application
 import finance.domain.Account
@@ -30,40 +29,40 @@ class TransactionControllerSpec extends Specification {
     protected int port
 
     @Autowired
-    TransactionService transactionService
+    protected TransactionService transactionService
 
     @Autowired
-    AccountService accountService
+    protected AccountService accountService
 
     @Autowired
-    CategoryService categoryService
+    protected CategoryService categoryService
 
-    TestRestTemplate restTemplate = new TestRestTemplate()
-
-    @Shared
-    HttpHeaders headers
+    protected TestRestTemplate restTemplate = new TestRestTemplate()
 
     @Shared
-    Transaction transaction
+    protected HttpHeaders headers
 
     @Shared
-    Account account
+    protected Transaction transaction
 
     @Shared
-    Category category
+    protected Account account
 
     @Shared
-    String guid
+    protected Category category
 
     @Shared
-    String categoryName
+    protected String guid
 
     @Shared
-    String accountNameOwner
+    protected String categoryName
+
+    @Shared
+    protected String accountNameOwner
 
     private ObjectMapper mapper = new ObjectMapper()
 
-    def setupSpec() {
+    void setupSpec() {
         headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
         category = CategoryBuilder.builder().build()
@@ -79,20 +78,20 @@ class TransactionControllerSpec extends Specification {
         return 'http://localhost:' + port + uri
     }
 
-    void "test -- findTransaction endpoint insert - find - delete"() {
+    void 'test -- findTransaction endpoint insert - find - delete'() {
 
         given:
         transactionService.insertTransaction(transaction)
         HttpEntity entity = new HttpEntity<>(null, headers)
-        def insertedValue = transactionService.findTransactionByGuid(guid)
+        Optional<Transaction> insertedValue = transactionService.findTransactionByGuid(guid)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/select/' + transaction.guid), HttpMethod.GET,
-                entity, String.class)
+                entity, String)
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode.is(HttpStatus.OK)
         insertedValue.get().guid == transaction.guid
         0 * _
 
@@ -100,20 +99,20 @@ class TransactionControllerSpec extends Specification {
         transactionService.deleteTransactionByGuid(transaction.guid)
     }
 
-    void "test -- findTransaction endpoint transaction insert guid is not found"() {
+    void 'test -- findTransaction endpoint transaction insert guid is not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/transaction/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
-                entity, String.class)
+                entity, String)
         then:
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode.is(HttpStatus.NOT_FOUND)
         0 * _
     }
 
-    void "test -- deleteTransaction endpoint insert delete guid found"() {
+    void 'test -- deleteTransaction endpoint insert delete guid found'() {
         given:
         transactionService.insertTransaction(transaction)
 
@@ -122,15 +121,15 @@ class TransactionControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/delete/' + transaction.guid), HttpMethod.DELETE,
-                entity, String.class)
+                entity, String)
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
     //TODO: bh fix the multiple category delete issue
     @Ignore
-    void "test -- deleteTransaction endpoint insert delete guid found - multiple categories associated"() {
+    void 'test -- deleteTransaction endpoint insert delete guid found - multiple categories associated'() {
         given:
         Category categoryNew = new Category()
         categoryNew.category = "new_cat"
@@ -142,61 +141,61 @@ class TransactionControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/delete/' + transaction.guid), HttpMethod.DELETE,
-                entity, String.class)
+                entity, String)
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
-    void "test -- deleteTransaction endpoint guid not found"() {
+    void 'test -- deleteTransaction endpoint guid not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/transaction/delete/" + UUID.randomUUID().toString()), HttpMethod.DELETE,
-                entity, String.class)
+                entity, String)
         then:
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode.is(HttpStatus.NOT_FOUND)
         0 * _
     }
 
     //TODO: bh 11/8/2020 - com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'badTransactionJsonPayload'
     //TODO: build fails in intellij
-    void "test -- insertTransaction endpoint bad data - not json in the payload"() {
+    void 'test -- insertTransaction endpoint bad data - not json in the payload'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('badTransactionJsonPayload', headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST, entity, String.class)
+                createURLWithPort('/transaction/insert/'), HttpMethod.POST, entity, String)
 
         then:
         //thrown(JsonParseException)
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
     }
 
-    void "test -- insertTransaction endpoint"() {
+    void 'test -- insertTransaction endpoint'() {
         given:
-        def transaction = TransactionBuilder.builder().build()
+        Transaction transaction = TransactionBuilder.builder().build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode.is(HttpStatus.OK)
         0 * _
 
         cleanup:
         transactionService.deleteTransactionByGuid(guid)
     }
 
-    void "test -- insertTransaction endpoint - bad guid"() {
+    void 'test -- insertTransaction endpoint - bad guid'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.guid = '123'
@@ -205,30 +204,30 @@ class TransactionControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
     }
 
-    void "test -- insertTransaction endpoint - bad category"() {
+    void 'test -- insertTransaction endpoint - bad category'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
 
         when:
         transaction.category = "123451234512345123451234512345123451234512345123451234512345"
-        def badCategory = mapper.writeValueAsString(transaction)
+        String badCategory = mapper.writeValueAsString(transaction)
         HttpEntity entity = new HttpEntity<>(badCategory, headers)
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
-    void "test -- insertTransaction endpoint - old transaction date"() {
+    void 'test -- insertTransaction endpoint - old transaction date'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.transactionDate = new java.sql.Date(100000)
@@ -237,7 +236,7 @@ class TransactionControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
@@ -246,7 +245,7 @@ class TransactionControllerSpec extends Specification {
     //TODO: should this fail as a bad request?
     //TODO: build fails and duplicate constraint violation
     @Ignore
-    void "test -- updateTransaction transaction endpoint"() {
+    void 'test -- updateTransaction transaction endpoint'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         transaction.guid = UUID.randomUUID()
@@ -258,7 +257,7 @@ class TransactionControllerSpec extends Specification {
 
         when:
         def response = restTemplate.exchange(createURLWithPort('/transaction/update/' + guid),
-                HttpMethod.PUT, entity, String.class)
+                HttpMethod.PUT, entity, String)
 
         then:
         response.getStatusCode() == HttpStatus.BAD_REQUEST

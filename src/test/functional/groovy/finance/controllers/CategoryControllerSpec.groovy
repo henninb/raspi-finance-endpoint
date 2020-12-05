@@ -21,27 +21,27 @@ class CategoryControllerSpec extends Specification {
     @LocalServerPort
     protected int port
 
-    TestRestTemplate restTemplate = new TestRestTemplate()
+    protected TestRestTemplate restTemplate = new TestRestTemplate()
 
     @Shared
-    HttpHeaders headers
+    protected HttpHeaders headers
 
     @Autowired
-    CategoryService categoryService
+    protected CategoryService categoryService
 
     @Autowired
-    AccountService accountService
+    protected AccountService accountService
 
     @Shared
-    Category category
+    protected Category category
 
-    def setup() {
+    void setup() {
         headers = new HttpHeaders()
         category = CategoryBuilder.builder().build()
         category.category = UUID.randomUUID()
     }
 
-    def createURLWithPort(String uri) {
+    private String createURLWithPort(String uri) {
         return "http://localhost:" + port + uri
     }
 
@@ -53,7 +53,7 @@ class CategoryControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/category/delete/${category.category}"), HttpMethod.DELETE,
-                entity, String.class)
+                entity, String)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -66,14 +66,14 @@ class CategoryControllerSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/category/select/' + UUID.randomUUID().toString()), HttpMethod.GET,
-                entity, String.class)
+                createURLWithPort('/category/select/' + UUID.randomUUID()), HttpMethod.GET,
+                entity, String)
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
-    void "test -- delete category endpoint"() {
+    void 'test -- delete category endpoint'() {
         given:
         categoryService.insertCategory(category)
 
@@ -82,7 +82,7 @@ class CategoryControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/category/delete/' + category.category), HttpMethod.DELETE,
-                entity, String.class)
+                entity, String)
         then:
         response.statusCode == HttpStatus.OK
         0 * _
@@ -91,7 +91,7 @@ class CategoryControllerSpec extends Specification {
         categoryService.deleteByCategoryName(category.category)
     }
 
-    void "test -- insertPayment endpoint"() {
+    void 'test -- insertPayment endpoint'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(category, headers)
@@ -99,7 +99,7 @@ class CategoryControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/category/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
 
         then:
         response.statusCode == HttpStatus.OK

@@ -5,7 +5,6 @@ import finance.helpers.TransactionBuilder
 import finance.services.MeterService
 import org.apache.camel.Exchange
 import org.apache.camel.Message
-import spock.lang.IgnoreRest
 import spock.lang.Specification
 
 class StringTransactionProcessorSpec extends Specification {
@@ -14,7 +13,6 @@ class StringTransactionProcessorSpec extends Specification {
     protected MeterService mockMeterService = GroovyMock(MeterService)
     protected StringTransactionProcessor processor = new StringTransactionProcessor(mockMeterService)
 
-    @IgnoreRest
     void 'test -- StringTransactionProcessor'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()

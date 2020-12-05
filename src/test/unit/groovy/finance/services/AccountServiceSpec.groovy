@@ -7,11 +7,7 @@ import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
 import spock.lang.Specification
 
-import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.ValidationException
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import javax.validation.*
 
 class AccountServiceSpec extends Specification {
 
@@ -120,7 +116,7 @@ class AccountServiceSpec extends Specification {
         0 * _
     }
 
-    void "test insertAccount - bad json - accountType"() {
+    void 'test insertAccount - bad json - accountType'() {
         given:
         String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
 
