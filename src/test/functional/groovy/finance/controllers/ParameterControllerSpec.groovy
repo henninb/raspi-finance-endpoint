@@ -43,7 +43,7 @@ class ParameterControllerSpec extends Specification {
         mockParameterService = new MockParameterService(delegate)
     }
 
-    void "test - should succeed"() {
+    void 'test - find parameter - succeed'() {
         given:
         def response = mockParameterService.selectParameter('test').execute()
 

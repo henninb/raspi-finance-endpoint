@@ -9,15 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -40,6 +36,16 @@ class CategoryControllerSpec extends Specification {
     @Shared
     protected Category category
 
+    @Shared
+    protected jsonPayloadInvalidActiveStatus = '''
+{"category":"none", "activeStatus":"invalid"}
+'''
+
+    @Shared
+    protected jsonPayloadMissingCategory = '''
+{"activeStatus":true}
+'''
+
     void setup() {
         headers = new HttpHeaders()
         category = CategoryBuilder.builder().build()
@@ -50,7 +56,7 @@ class CategoryControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    void "test -- Payment endpoint paymentId found and deleted"() {
+    void 'test -- Payment endpoint paymentId found and deleted'() {
         given:
         categoryService.insertCategory(category)
         HttpEntity entity = new HttpEntity<>(null, headers)
@@ -65,7 +71,7 @@ class CategoryControllerSpec extends Specification {
         0 * _
     }
 
-    void "test -- find category endpoint category not found"() {
+    void 'test -- find category endpoint category not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -78,7 +84,7 @@ class CategoryControllerSpec extends Specification {
         0 * _
     }
 
-    void 'test -- delete category endpoint'() {
+    void 'test -- deleteCategory endpoint'() {
         given:
         categoryService.insertCategory(category)
 
@@ -96,7 +102,7 @@ class CategoryControllerSpec extends Specification {
         categoryService.deleteByCategoryName(category.category)
     }
 
-    void 'test -- insertPayment endpoint'() {
+    void 'test -- insertCategory endpoint'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(category, headers)
@@ -109,5 +115,29 @@ class CategoryControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.OK
         0 * _
+    }
+
+    @Unroll
+    void 'test insertCategory endpoint - failure for irregular payload'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(payload, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/category/insert/'), HttpMethod.POST,
+                entity, String)
+        then:
+        response.statusCode.is(httpStatus)
+        response.body.contains(responseBody)
+        0 * _
+
+        where:
+        payload                        | httpStatus             | responseBody
+        'badJson'                      | HttpStatus.BAD_REQUEST | 'Unrecognized token'
+        '{"test":1}'                   | HttpStatus.BAD_REQUEST | 'value failed for JSON property category due to missing'
+        '{badJson:"test"}'             | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
+        jsonPayloadInvalidActiveStatus | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type'
+        jsonPayloadMissingCategory     | HttpStatus.BAD_REQUEST | 'value failed for JSON property category due to missing'
     }
 }

@@ -53,12 +53,12 @@ data class Payment(
         @JsonProperty
         @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         @Column(name = "guid_source", nullable = false)
-        var guidSource: String?,
+        var guidSource: String,
 
         @JsonProperty
         @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         @Column(name = "guid_destination", nullable = false)
-        var guidDestination: String?
+        var guidDestination: String
 ) {
 
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")

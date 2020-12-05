@@ -16,7 +16,7 @@ object Constants {
     const val ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$"
     const val ASCII_PATTERN = "^[\\u0000-\\u007F]*$"
 
-    //GUID - max length 36
+    //GUID length = 36
     const val UUID_PATTERN = "^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$"
     const val MUST_BE_ASCII_MESSAGE = "must be ascii character set"
     const val MUST_BE_UUID_MESSAGE = "must be uuid formatted"

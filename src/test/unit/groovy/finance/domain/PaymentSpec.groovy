@@ -18,8 +18,7 @@ class PaymentSpec extends Specification {
     protected ValidatorFactory validatorFactory
     protected Validator validator
     protected ObjectMapper mapper = new ObjectMapper()
-
-    protected String jsonPayload = '{"accountNameOwner":"foo","amount":5.12, "guidSource":"abc", "guidDestination":"def", "transactionDate":"2020-11-12"}'
+    protected String jsonPayload = '{"accountNameOwner":"foo_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
@@ -35,10 +34,10 @@ class PaymentSpec extends Specification {
         Payment payment = mapper.readValue(jsonPayload, Payment)
 
         then:
-        payment.accountNameOwner == 'foo'
+        payment.accountNameOwner == 'foo_test'
         payment.amount == 5.12
-        payment.guidSource == 'abc'
-        payment.guidDestination == 'def'
+        payment.guidSource == '78f65481-f351-4142-aff6-73e99d2a286d'
+        payment.guidDestination == '0db56665-0d47-414e-93c5-e5ae4c5e4299'
         0 * _
     }
 
@@ -62,7 +61,7 @@ class PaymentSpec extends Specification {
 
     void 'test validation valid payment'() {
         given:
-        Payment payment = new PaymentBuilder().builder().accountNameOwner('new_brian').build()
+        Payment payment = mapper.readValue(jsonPayload, Payment)
 
         when:
         Set<ConstraintViolation<Payment>> violations = validator.validate(payment)

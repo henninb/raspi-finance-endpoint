@@ -1,6 +1,6 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import finance.Application
 import finance.domain.Account
 import finance.domain.Category
@@ -15,16 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Shared
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-import org.springframework.http.HttpStatus
 import spock.lang.Specification
+import spock.lang.Unroll
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -65,7 +61,67 @@ class TransactionControllerSpec extends Specification {
     @Shared
     protected String accountNameOwner
 
-    private ObjectMapper mapper = new ObjectMapper()
+    @Shared
+    protected String jsonPayloadInvalidGuid = '''
+{
+"accountId":0,
+"accountType":"credit",
+"transactionDate":"2020-10-05",
+"dateUpdated":1593981072000,
+"dateAdded":1593981072000,
+"guid":"badGuid",
+"accountNameOwner":"chase_brian",
+"description":"aliexpress.com",
+"category":"online",
+"amount":3.14,
+"transactionState":"cleared",
+"reoccurring":false,
+"reoccurringType":"undefined",
+"notes":"my note to you"
+}
+'''
+
+    @Shared
+    protected String jsonPayloadMissingGuid = '''
+{
+"accountId":0,
+"accountType":"credit",
+"transactionDate":"2020-10-05",
+"dateUpdated":1593981072000,
+"dateAdded":1593981072000,
+"accountNameOwner":"chase_brian",
+"description":"aliexpress.com",
+"category":"online",
+"amount":3.14,
+"transactionState":"cleared",
+"reoccurring":false,
+"reoccurringType":"undefined",
+"notes":"my note to you"
+}
+'''
+
+    @Shared
+    protected String jsonPayloadInvalidCategory = '''
+{
+"accountId":0,
+"accountType":"credit",
+"transactionDate":"2020-10-05",
+"dateUpdated":1593981072000,
+"dateAdded":1593981072000,
+"accountNameOwner":"chase_brian",
+"description":"aliexpress.com",
+"guid":"2eba99af-6625-4fc7-a65d-e24783ab60c0",
+"category":"123451234512345123451234512345123451234512345123451234512345",
+"amount":3.14,
+"transactionState":"cleared",
+"reoccurring":false,
+"reoccurringType":"undefined",
+"notes":"my note to you"
+}
+'''
+
+    @Shared
+    protected Transaction transactionOldTransactionDate = TransactionBuilder.builder().build()
 
     void setupSpec() {
         headers = new HttpHeaders()
@@ -77,6 +133,7 @@ class TransactionControllerSpec extends Specification {
         transaction.category = UUID.randomUUID()
         categoryName = transaction.category
         accountNameOwner = transaction.accountNameOwner
+        transactionOldTransactionDate.transactionDate = new java.sql.Date(100000)
     }
 
     private String createURLWithPort(String uri) {
@@ -165,23 +222,6 @@ class TransactionControllerSpec extends Specification {
         0 * _
     }
 
-    //TODO: bh 11/8/2020 - com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'badTransactionJsonPayload'
-    //TODO: build fails in intellij
-    void 'test -- insertTransaction endpoint bad data - not json in the payload'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>('badTransactionJsonPayload', headers)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST, entity, String)
-
-        then:
-        //thrown(JsonParseException)
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
-        0 * _
-    }
-
     void 'test -- insertTransaction endpoint'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
@@ -200,51 +240,30 @@ class TransactionControllerSpec extends Specification {
         transactionService.deleteTransactionByGuid(guid)
     }
 
-    void 'test -- insertTransaction endpoint - bad guid'() {
+    @Unroll
+    void 'test insertTransaction endpoint - failure for irregular payload'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
-        transaction.guid = '123'
-        HttpEntity entity = new HttpEntity<>(transaction, headers)
+        HttpEntity entity = new HttpEntity<>(payload, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/transaction/insert/'), HttpMethod.POST,
                 entity, String)
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode.is(httpStatus)
+        response.body.contains(responseBody)
         0 * _
-    }
 
-    void 'test -- insertTransaction endpoint - bad category'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-
-        when:
-        transaction.category = "123451234512345123451234512345123451234512345123451234512345"
-        String badCategory = mapper.writeValueAsString(transaction)
-        HttpEntity entity = new HttpEntity<>(badCategory, headers)
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String)
-
-        then:
-        response.statusCode == HttpStatus.BAD_REQUEST
-        0 * _
-    }
-
-    void 'test -- insertTransaction endpoint - old transaction date'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        transaction.transactionDate = new java.sql.Date(100000)
-        HttpEntity entity = new HttpEntity<>(transaction, headers)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String)
-        then:
-        response.statusCode == HttpStatus.BAD_REQUEST
-        0 * _
+        where:
+        payload                                  | httpStatus             | responseBody
+        'badJson'                                | HttpStatus.BAD_REQUEST | 'Unrecognized token'
+        '{"test":1}'                             | HttpStatus.BAD_REQUEST | 'value failed for JSON property guid due to missing'
+        '{badJson:"test"}'                       | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
+        jsonPayloadInvalidGuid                   | HttpStatus.BAD_REQUEST | 'Cannot insert transaction as there is a constraint violation on the data.'
+        jsonPayloadMissingGuid                   | HttpStatus.BAD_REQUEST | 'value for creator parameter guid which is a non-nullable type'
+        jsonPayloadInvalidCategory               | HttpStatus.BAD_REQUEST | 'Cannot insert transaction as there is a constraint violation on the data'
+        transactionOldTransactionDate.toString() | HttpStatus.BAD_REQUEST | 'Cannot insert transaction as there is a constraint violation on the data.'
     }
 
     //TODO: should this fail as a bad request?
