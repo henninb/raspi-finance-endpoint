@@ -1,8 +1,11 @@
 package finance.domain
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.AccountBuilder
+import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -26,17 +29,19 @@ class AccountSpec extends Specification {
         validatorFactory.close()
     }
 
-    private String jsonPayload = '''
+    @Shared
+    protected String jsonPayload = '''
 {"accountNameOwner":"discover_brian","accountType":"credit","activeStatus":true,
 "moniker":"1234","totals":0.01,"totalsBalanced":0.02,
 "dateClosed":0}
 '''
 
-    private String jsonPayloadNonValidEnum = """
+    @Shared
+    protected String jsonPayloadInvalidAccountType = '''
 {"accountNameOwner":"discover_brian","accountType":"non-valid","activeStatus":true,
 "moniker":"1234","totals":0.01,"totalsBalanced":0.02,
 "dateClosed":0,"dateUpdated":1553645394000,"dateAdded":1553645394000}
-"""
+'''
 
     void 'test JSON deserialization to Account'() {
         when:
@@ -60,24 +65,23 @@ class AccountSpec extends Specification {
         0 * _
     }
 
-    void 'test JSON deserialization to Account - non-valid enum'() {
+    @Unroll
+    void 'test -- JSON deserialize to Account with invalid payload'() {
         when:
-        mapper.readValue(jsonPayloadNonValidEnum, Account)
+        mapper.readValue(payload, Account)
 
         then:
-        InvalidFormatException ex = thrown(InvalidFormatException)
-        ex.message.contains('not one of the values accepted for Enum class')
+        Exception ex = thrown(exceptionThrown)
+        ex.message.contains(message)
         0 * _
-    }
 
-    void 'test validation valid account - invalid enum'() {
-        when:
-        AccountBuilder.builder().accountType(AccountType.valueOf("invalid")).build()
-
-        then:
-        IllegalArgumentException ex = thrown(IllegalArgumentException)
-        ex.message.contains('No enum constant finance.domain.AccountType')
-        0 * _
+        where:
+        payload                       | exceptionThrown          | message
+        'non-jsonPayload'             | JsonParseException       | 'Unrecognized token'
+        '[]'                          | MismatchedInputException | 'Cannot deserialize value of type'
+        '{accountNameOwner: "test"}'  | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"activeStatus": "abc"}'     | InvalidFormatException   | 'Cannot deserialize value of type'
+        jsonPayloadInvalidAccountType | InvalidFormatException   | 'Cannot deserialize value of type'
     }
 
     @Unroll

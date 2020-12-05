@@ -2,6 +2,8 @@ package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.TransactionBuilder
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -17,7 +19,6 @@ class TransactionSpec extends Specification {
     protected ValidatorFactory validatorFactory
     protected Validator validator
     protected ObjectMapper mapper = new ObjectMapper()
-
     protected String jsonPayload = '''
 {
 "accountId":0,
@@ -54,11 +55,14 @@ class TransactionSpec extends Specification {
         String json = mapper.writeValueAsString(transactionFromString)
 
         then:
-        json.contains('4ea3be58-3993-46de-88a2-4ffc7f1d73bd')
+        json.contains(transactionFromString.guid)
+        json.contains(transactionFromString.description)
+        json.contains(transactionFromString.notes)
+        json.contains(transactionFromString.transactionState.toString())
         0 * _
     }
 
-    void 'test JSON deserialize to Transaction domain object'() {
+    void 'test -- JSON deserialize to Transaction with valid payload'() {
         when:
         Transaction transaction = mapper.readValue(jsonPayload, Transaction)
 
@@ -69,14 +73,25 @@ class TransactionSpec extends Specification {
         0 * _
     }
 
-    void 'test JSON deserialize to Transaction domain object - bad'() {
+    @Unroll
+    void 'test -- JSON deserialize to Transaction with invalid payload'() {
         when:
-        mapper.readValue('trash-payload', Transaction)
+        mapper.readValue(payload, Transaction)
 
         then:
-        JsonParseException ex = thrown()
-        ex.message.contains('Unrecognized token')
+        Exception ex = thrown(exceptionThrown)
+        ex.message.contains(message)
         0 * _
+
+        where:
+        payload                 | exceptionThrown          | message
+        'non-jsonPayload'       | JsonParseException       | 'Unrecognized token'
+        '[]'                    | MismatchedInputException | 'Cannot deserialize value of type'
+        '{description: "test"}' | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"amount": "abc"}'     | InvalidFormatException   | 'Cannot deserialize value of type'
+        //'{"amount": 1.5555}'
+        //'{}'
+        //'{"description": "test"}'
     }
 
     void 'test validation valid transaction'() {
