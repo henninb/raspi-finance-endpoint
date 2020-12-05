@@ -19,17 +19,17 @@ class TransactionControllerPerf extends Specification {
     @LocalServerPort
     protected int port
 
-    TestRestTemplate restTemplate = new TestRestTemplate()
+    protected TestRestTemplate restTemplate = new TestRestTemplate()
 
     @Shared
-    HttpHeaders headers
+    protected HttpHeaders headers
 
     @Shared
-    Transaction transaction
+    protected Transaction transaction
 
-    private ObjectMapper mapper = new ObjectMapper()
+    protected ObjectMapper mapper = new ObjectMapper()
 
-    def setup() {
+    void setup() {
         headers = new HttpHeaders()
         transaction = TransactionBuilder.builder().build()
         transaction.guid = UUID.randomUUID()
@@ -40,7 +40,7 @@ class TransactionControllerPerf extends Specification {
     }
 
     @Unroll
-    def "test insertTransaction endpoint"() {
+    void "test insertTransaction endpoint"() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         transaction.notes = notes
