@@ -2,8 +2,11 @@ package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.CategoryBuilder
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import javax.validation.ConstraintViolation
 import javax.validation.Validation
@@ -38,21 +41,25 @@ class CategorySpec extends Specification {
         0 * _
     }
 
-    void 'test JSON serialization to Category object - bad payload'() {
-
-        given:
-        String jsonPayloadBad = 'badPayload'
-
+    @Unroll
+    void 'test -- JSON deserialize to Category with invalid payload'() {
         when:
-        mapper.readValue(jsonPayloadBad, Category)
+        mapper.readValue(payload, Category)
 
         then:
-        JsonParseException ex = thrown()
-        ex.message.contains('Unrecognized token')
+        Exception ex = thrown(exceptionThrown)
+        ex.message.contains(message)
         0 * _
+
+        where:
+        payload                   | exceptionThrown          | message
+        'non-jsonPayload'         | JsonParseException       | 'Unrecognized token'
+        '[]'                      | MismatchedInputException | 'Cannot deserialize value of type'
+        '{category: "test"}'      | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"activeStatus": "abc"}' | InvalidFormatException   | 'Cannot deserialize value of type'
     }
 
-    void 'test JSON serialization to Category object - missing valid fields'() {
+    void 'test JSON deserialization to Category object - category is empty'() {
 
         given:
         String jsonPayloadBad = '{"categoryMissing":"bar"}'
@@ -61,9 +68,8 @@ class CategorySpec extends Specification {
         Category category = mapper.readValue(jsonPayloadBad, Category)
 
         then:
-        category.category == ''
+        category.category.empty
         0 * _
-
     }
 
     void 'test validation valid category'() {

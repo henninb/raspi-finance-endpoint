@@ -1,6 +1,8 @@
 package finance.domain
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.PaymentBuilder
 import finance.utils.Constants
 import spock.lang.Specification
@@ -17,9 +19,7 @@ class PaymentSpec extends Specification {
     protected Validator validator
     protected ObjectMapper mapper = new ObjectMapper()
 
-    protected String jsonPayload = """
-{"accountNameOwner":"foo","amount":5.12, "guidSource":"abc", "guidDestination":"def", "transactionDate":"2020-11-12"}
-"""
+    protected String jsonPayload = '{"accountNameOwner":"foo","amount":5.12, "guidSource":"abc", "guidDestination":"def", "transactionDate":"2020-11-12"}'
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
@@ -30,7 +30,7 @@ class PaymentSpec extends Specification {
         validatorFactory.close()
     }
 
-    void 'test -- JSON serialization to Payment'() {
+    void 'test -- JSON deserialization to Payment'() {
         when:
         Payment payment = mapper.readValue(jsonPayload, Payment)
 
@@ -40,6 +40,24 @@ class PaymentSpec extends Specification {
         payment.guidSource == 'abc'
         payment.guidDestination == 'def'
         0 * _
+    }
+
+    @Unroll
+    void 'test -- JSON deserialize to Payment with invalid payload'() {
+        when:
+        mapper.readValue(payload, Payment)
+
+        then:
+        Exception ex = thrown(exceptionThrown)
+        ex.message.contains(message)
+        0 * _
+
+        where:
+        payload                | exceptionThrown          | message
+        'non-jsonPayload'      | JsonParseException       | 'Unrecognized token'
+        '[]'                   | MismatchedInputException | 'Cannot deserialize value of type'
+        '{guidSource: "test"}' | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"amount": "123",}'   | JsonParseException       | 'was expecting double-quote to start field name'
     }
 
     void 'test validation valid payment'() {
