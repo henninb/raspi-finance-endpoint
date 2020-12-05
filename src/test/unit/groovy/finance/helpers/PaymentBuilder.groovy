@@ -9,8 +9,8 @@ class PaymentBuilder {
     String accountNameOwner = 'foo_brian'
     BigDecimal amount = 0.00G
     Date transactionDate = new Date(1605300155000)
-    String guidSource = UUID.randomUUID().toString()
-    String guidDestination = UUID.randomUUID().toString()
+    String guidSource = UUID.randomUUID()
+    String guidDestination = UUID.randomUUID()
 
     static PaymentBuilder builder() {
         return new PaymentBuilder()

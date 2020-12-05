@@ -17,7 +17,7 @@ class PaymentSpec extends Specification {
     protected Validator validator
     protected ObjectMapper mapper = new ObjectMapper()
 
-    String jsonPayload = """
+    protected String jsonPayload = """
 {"accountNameOwner":"foo","amount":5.12, "guidSource":"abc", "guidDestination":"def", "transactionDate":"2020-11-12"}
 """
 

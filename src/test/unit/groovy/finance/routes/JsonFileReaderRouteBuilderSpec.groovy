@@ -46,30 +46,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
             "mock:toFailedJsonFileEndpoint",
             "mock:toFailedJsonParserEndpoint")
 
-    void setup() {
-        camelContext = new DefaultCamelContext()
-        JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
-        camelContext.addRoutes(router)
-
-        camelContext.start()
-
-        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
-
-        camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
-            RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.jsonFileReaderRouteId), mcc, new AdviceWithRouteBuilder() {
-                @Override
-                void configure() throws Exception {
-                    mockEndpointsAndSkip('direct://toTransactionToDatabaseRoute')
-                }
-            })
-        }
-    }
-
-    void cleanup() {
-        camelContext.stop()
-    }
-
-    String invalidJsonPayload = '''
+    protected String invalidJsonPayload = '''
     [
     {"guid":"aa08f2bb-29a6-4f71-b866-ff8f625e1b04","accountNameOwner":"foo_brian",
     "description":"Bullseye cafe","category":"restaurant",
@@ -95,6 +72,29 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     "transactionDate":1337058000000,"dateUpdated":1487301459000,"dateAdded":1487301459000}
     ]
     '''
+
+    void setup() {
+        camelContext = new DefaultCamelContext()
+        JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
+        camelContext.addRoutes(router)
+
+        camelContext.start()
+
+        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
+
+        camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
+            RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.jsonFileReaderRouteId), mcc, new AdviceWithRouteBuilder() {
+                @Override
+                void configure() throws Exception {
+                    mockEndpointsAndSkip('direct://toTransactionToDatabaseRoute')
+                }
+            })
+        }
+    }
+
+    void cleanup() {
+        camelContext.stop()
+    }
 
     void 'test -- with invalid file name'() {
         given:

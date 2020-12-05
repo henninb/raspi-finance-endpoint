@@ -18,7 +18,7 @@ class ParameterJpaSpec extends Specification {
     @Autowired
     protected TestEntityManager entityManager
 
-    void 'find a parameter that does not exist.'() {
+    void 'find a parameter that does not exist'() {
         when:
         Optional<Parameter> result = parameterRepository.findByParameterName('does-not-exist')
 

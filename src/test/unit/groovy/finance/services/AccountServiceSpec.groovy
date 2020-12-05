@@ -7,7 +7,10 @@ import finance.helpers.AccountBuilder
 import finance.repositories.AccountRepository
 import spock.lang.Specification
 
-import javax.validation.*
+import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
+import javax.validation.Validator
+import javax.validation.ValidatorFactory
 
 class AccountServiceSpec extends Specification {
 
@@ -57,7 +60,7 @@ class AccountServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockValidator.validate(account) >> new HashSet()
+        1 * mockValidator.validate(account) >> ([] as Set)
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         0 * _
     }
@@ -72,7 +75,7 @@ class AccountServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockValidator.validate(account) >> new HashSet()
+        1 * mockValidator.validate(account) >> ([] as Set)
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
         1 * mockAccountRepository.saveAndFlush(account)
         0 * _

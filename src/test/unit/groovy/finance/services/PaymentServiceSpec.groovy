@@ -48,7 +48,7 @@ class PaymentServiceSpec extends Specification {
         isInserted.is(true)
         2 * mockTransactionService.insertTransaction(_)
         1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.of(parameter)
-        1 * mockValidator.validate(_) >> new HashSet()
+        1 * mockValidator.validate(_) >> ([] as Set)
         1 * mockPaymentRepository.save(payment)
         0 * _
     }
@@ -65,7 +65,7 @@ class PaymentServiceSpec extends Specification {
 
         then:
         1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.empty()
-        1 * mockValidator.validate(_) >> new HashSet()
+        1 * mockValidator.validate(_) >> ([] as Set)
         RuntimeException ex = thrown()
         ex.message.contains('failed to read the parm ')
         0 * _

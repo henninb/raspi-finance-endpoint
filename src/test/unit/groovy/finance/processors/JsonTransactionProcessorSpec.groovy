@@ -33,7 +33,7 @@ class JsonTransactionProcessorSpec extends Specification {
         then:
         1 * mockExchange.in >> mockMessage
         1 * mockMessage.getBody(String) >> transactions.toString()
-        1 * mockValidator.validate(_) >> new HashSet()
+        1 * mockValidator.validate(_) >> ([] as Set)
         1 * mockMessage.setBody({
             it -> return it.size() == 1
         }
