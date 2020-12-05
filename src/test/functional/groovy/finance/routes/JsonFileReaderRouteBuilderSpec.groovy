@@ -32,33 +32,33 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     protected PollingConditions conditions = new PollingConditions(timeout: 10, initialDelay: 1.5, factor: 1.25)
 
     void setup() {
-        camelContext = jsonFileReaderRouteBuilder.getContext()
+        camelContext = jsonFileReaderRouteBuilder.context
         producer = camelContext.createProducerTemplate()
         camelContext.start()
 
-        camelContext.routes.each {route -> route.setAutoStartup(true) }
+        camelContext.routes.each { route -> route.setAutoStartup(true) }
         producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
     }
 
-    void "test -- jsonFileReaderRouteBuilder -- happy path"() {
+    void 'test -- jsonFileReaderRouteBuilder -- happy path'() {
         given:
-        def transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).build()
-        def transactions = [transaction]
+        Transaction transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).build()
+        List<Transaction> transactions = [transaction]
 
         when:
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.json")
 
         then:
         conditions.eventually {
-            def databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
+            Transaction databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
             databaseTransaction.guid == transaction.guid
         }
     }
 
-    void "test -- jsonFileReaderRouteBuilder -- happy path - with empty description"() {
+    void 'test -- jsonFileReaderRouteBuilder -- happy path - with empty description'() {
         given:
-        def transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).description('').build()
-        def transactions = [transaction]
+        Transaction transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).description('').build()
+        List<Transaction> transactions = [transaction]
 
         when:
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.json")
@@ -72,6 +72,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         //ex.message.contains('transaction object has validation errors.')
         conditions.eventually {
             1 == 1
+            //transactionRepository.findByGuid(transaction.guid).get().guid == transaction.guid
         }
     }
 
@@ -89,7 +90,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         }
     }
 
-    void "test -- jsonFileReaderRouteBuilder -- bad file"() {
+    void 'test -- jsonFileReaderRouteBuilder -- bad file'() {
         when:
         producer.sendBodyAndHeader('trash content', Exchange.FILE_NAME, 'foo_trash.json')
 

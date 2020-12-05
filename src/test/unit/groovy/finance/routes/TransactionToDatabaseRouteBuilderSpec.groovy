@@ -55,7 +55,7 @@ class TransactionToDatabaseRouteBuilderSpec extends Specification {
         camelContext.stop()
     }
 
-    void  'test -- valid payload - 2 messages'() {
+    void 'test -- valid payload - 2 messages'() {
         given:
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.jsonFileWriterRoute)
         mockTestOutputEndpoint.expectedCount = 2

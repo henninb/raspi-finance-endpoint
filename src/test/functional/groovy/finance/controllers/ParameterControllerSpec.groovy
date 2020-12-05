@@ -35,7 +35,7 @@ class ParameterControllerSpec extends Specification {
         }
     }
 
-    def setupSpec() {
+    void setupSpec() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL).build()
         MockRetrofit mockRetrofit = new MockRetrofit.Builder(retrofit).networkBehavior(behavior).build()
         BehaviorDelegate<ParmApiService> delegate = mockRetrofit.create(ParmApiService)
@@ -48,10 +48,10 @@ class ParameterControllerSpec extends Specification {
         def response = mockParmService.selectParm('test').execute()
 
         expect:
-        response.isSuccessful()
+        response.successful
     }
 
-    void "test -- selectParm - should fail on 500"() {
+    void 'test -- selectParm - should fail on 500'() {
         given:
         behavior.setFailurePercent(100)
 
@@ -59,9 +59,6 @@ class ParameterControllerSpec extends Specification {
         mockParmService.selectParm('test').execute()
 
         then:
-        def ex = thrown(IOException)
-        //ex.message.contains('test')
+        IOException ex = thrown(IOException)
     }
 }
-
-

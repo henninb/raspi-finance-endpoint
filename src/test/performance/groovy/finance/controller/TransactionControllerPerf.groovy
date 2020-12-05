@@ -78,10 +78,10 @@ class TransactionControllerPerf extends Specification {
         Random random = new Random()
 
         String generatedString = random.ints(leftLimit, rightLimit + 1)
-                .filter{ i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97)}
+                .filter { i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97) }
                 .limit(targetStringLength)
-                //not sure what the collect is doing
-                //.collect (StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        //not sure what the collect is doing
+        //.collect (StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString()
 
         return generatedString

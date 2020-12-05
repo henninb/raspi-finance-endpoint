@@ -19,14 +19,14 @@ class PaymentServiceSpec extends Specification {
     protected MeterService mockkMeterService = GroovyMock(MeterService)
     protected PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParameterService, mockValidator, mockMeterService)
 
-    void "test findAll payments empty"() {
+    void 'test findAll payments empty'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         List<Payment> payments = []
         payments.add(payment)
 
         when:
-        def results = paymentService.findAllPayments()
+        List<Payment> results = paymentService.findAllPayments()
 
         then:
         results.size() == 1
@@ -34,15 +34,15 @@ class PaymentServiceSpec extends Specification {
         0 * _
     }
 
-    void "test insertPayment - existing"() {
+    void 'test insertPayment - existing'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-        def parameter = new Parameter()
+        Parameter parameter = new Parameter()
         parameter.parameterValue = 'val'
         parameter.parameterName = 'payment_account'
 
         when:
-        def isInserted = paymentService.insertPayment(payment)
+        Boolean isInserted = paymentService.insertPayment(payment)
 
         then:
         isInserted.is(true)
@@ -53,10 +53,10 @@ class PaymentServiceSpec extends Specification {
         0 * _
     }
 
-    void "test insertPayment - findByParameterName throws an exception"() {
+    void 'test insertPayment - findByParameterName throws an exception'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-        def parameter = new Parameter()
+        Parameter parameter = new Parameter()
         parameter.parameterValue = 'val'
         parameter.parameterName = 'payment_account'
 
@@ -67,8 +67,7 @@ class PaymentServiceSpec extends Specification {
         1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.empty()
         1 * mockValidator.validate(_) >> new HashSet()
         RuntimeException ex = thrown()
-        ex.getMessage().contains('failed to read the parm ')
+        ex.message.contains('failed to read the parm ')
         0 * _
     }
-
 }

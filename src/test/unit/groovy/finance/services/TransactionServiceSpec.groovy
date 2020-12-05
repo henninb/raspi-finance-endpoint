@@ -27,39 +27,39 @@ class TransactionServiceSpec extends Specification {
     TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
     Category category = CategoryBuilder.builder().build()
 
-    void "test transactionService - deleteByGuid"() {
+    void 'test transactionService - deleteByGuid'() {
         given:
-        def guid = '123'  // should use GUID generator
+        String guid = '123'  // should use GUID generator
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
         when:
-        def isDeleted = transactionService.deleteTransactionByGuid(guid)
+        Boolean isDeleted = transactionService.deleteTransactionByGuid(guid)
 
         then:
-        isDeleted
+        isDeleted.is(true)
         1 * mockTransactionRepository.deleteByGuid(guid)
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    void "test transactionService - deleteByGuid - no record returned because of invalid guid"() {
+    void 'test transactionService - deleteByGuid - no record returned because of invalid guid'() {
         given:
-        def guid = '123'
+        String guid = '123'
         Optional<Transaction> transactionOptional = Optional.empty()
 
         when:
-        def isDeleted = transactionService.deleteTransactionByGuid(guid)
+        Boolean isDeleted = transactionService.deleteTransactionByGuid(guid)
 
         then:
-        !isDeleted
+        isDeleted.is(false)
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    void "test transactionService - findByGuid"() {
+    void 'test transactionService - findByGuid'() {
         given:
-        def guid = '123'
+        String guid = '123'
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
@@ -71,9 +71,9 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void "test transactionService - findByGuid - duplicates returned"() {
+    void 'test transactionService - findByGuid - duplicates returned'() {
         given:
-        def guid = '123'
+        String guid = '123'
 
         when:
         transactionService.findTransactionByGuid(guid)
@@ -85,11 +85,11 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void "test transactionService - insert valid transaction"() {
+    void 'test transactionService - insert valid transaction'() {
         given:
-        def categoryName = 'my-category'
-        def accountName = 'my-account-name'
-        def guid = '123'
+        String categoryName = 'my-category'
+        String accountName = 'my-account-name'
+        String guid = '123'
         Transaction transaction = new Transaction()
         Account account = new Account()
         Category category = new Category()
@@ -100,7 +100,7 @@ class TransactionServiceSpec extends Specification {
         transaction.category = categoryName
 
         when:
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
@@ -113,11 +113,11 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void "test transactionService - attempt to insert duplicate transaction"() {
+    void 'test transactionService - attempt to insert duplicate transaction'() {
         given:
-        def categoryName = 'my-category'
-        def accountName = 'my-account-name'
-        def guid = '123'
+        String categoryName = 'my-category'
+        String accountName = 'my-account-name'
+        String guid = '123'
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
         transaction.guid = guid
@@ -125,20 +125,20 @@ class TransactionServiceSpec extends Specification {
         transaction.category = categoryName
 
         when:
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        !isInserted.is(true)
+        isInserted.is(false)
         1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
-    void "test transactionService - insert valid transaction where account name does exist"() {
+    void 'test transactionService - insert valid transaction where account name does exist'() {
         given:
-        def categoryName = 'my-category'
-        def accountName = 'my-account-name'
-        def guid = '123'
+        String categoryName = 'my-category'
+        String accountName = 'my-account-name'
+        String guid = '123'
         Transaction transaction = new Transaction()
         Account account = new Account()
         Category category = new Category()
@@ -149,7 +149,7 @@ class TransactionServiceSpec extends Specification {
         transaction.category = categoryName
 
         when:
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
@@ -162,11 +162,11 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void "test transactionService - insert valid transaction where account name does not exist"() {
+    void 'test transactionService - insert valid transaction where account name does not exist'() {
         given:
-        def categoryName = 'my-category'
-        def accountName = 'my-account-name'
-        def guid = '123'
+        String categoryName = 'my-category'
+        String accountName = 'my-account-name'
+        String guid = '123'
         Transaction transaction = new Transaction()
         Account account = transactionService.createDefaultAccount(accountName, AccountType.Undefined)
         Category category = CategoryBuilder.builder().build()
@@ -178,10 +178,10 @@ class TransactionServiceSpec extends Specification {
         transaction.category = categoryName
 
         when:
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        isInserted.is(true)
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
         1 * mockAccountRepository.saveAndFlush(account) >> true
@@ -195,11 +195,11 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void "test transactionService - insert a valid transaction where category name does not exist"() {
+    void 'test transactionService - insert a valid transaction where category name does not exist'() {
         given:
-        def categoryName = 'my-category'
-        def accountName = 'my-account-name'
-        def guid = '123'
+        String categoryName = 'my-category'
+        String accountName = 'my-account-name'
+        String guid = '123'
         Transaction transaction = new Transaction()
         Account account = new Account()
         Optional<Account> accountOptional = Optional.of(account)
@@ -210,10 +210,10 @@ class TransactionServiceSpec extends Specification {
         category.categoryId = 0
 
         when:
-        def isInserted = transactionService.insertTransaction(transaction)
+        Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        isInserted.is(true)
         1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
         1 * mockValidator.validate(transaction) >> new HashSet()
         1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional

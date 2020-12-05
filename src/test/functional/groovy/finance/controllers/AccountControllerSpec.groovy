@@ -1,6 +1,5 @@
 package finance.controllers
 
-
 import finance.Application
 import finance.domain.Account
 import finance.helpers.AccountBuilder
@@ -23,24 +22,24 @@ class AccountControllerSpec extends Specification {
     @LocalServerPort
     protected int port
 
-    TestRestTemplate restTemplate = new TestRestTemplate()
+    protected TestRestTemplate restTemplate = new TestRestTemplate()
 
     @Shared
-    HttpHeaders headers
+    protected HttpHeaders headers
 
     @Autowired
-    TransactionService transactionService
+    protected TransactionService transactionService
 
     @Autowired
-    AccountService accountService
+    protected AccountService accountService
 
     @Autowired
-    CategoryService categoryService
+    protected CategoryService categoryService
 
     @Shared
-    Account account
+    protected Account account
 
-    def setup() {
+    void setup() {
         headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
     }
@@ -49,7 +48,7 @@ class AccountControllerSpec extends Specification {
         return "http://localhost:" + port + uri
     }
 
-    void "test findAccount endpoint accountNameOwner found"() {
+    void 'test findAccount endpoint accountNameOwner found'() {
         given:
         account.accountNameOwner = 'found_test'
         accountService.insertAccount(account)
@@ -58,7 +57,7 @@ class AccountControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/select/" + account.accountNameOwner), HttpMethod.GET,
-                entity, String.class)
+                entity, String)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -68,20 +67,20 @@ class AccountControllerSpec extends Specification {
         accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 
-    void "test findAccount endpoint accountNameOwner not found"() {
+    void 'test findAccount endpoint accountNameOwner not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
-                entity, String.class)
+                entity, String)
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
-    void "test deleteAccount endpoint"() {
+    void 'test deleteAccount endpoint'() {
         given:
         account.accountNameOwner = 'random_test'
         accountService.insertAccount(account)
@@ -90,7 +89,7 @@ class AccountControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/delete/" + account.accountNameOwner), HttpMethod.DELETE,
-                entity, String.class)
+                entity, String)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -101,7 +100,7 @@ class AccountControllerSpec extends Specification {
     }
 
     //TODO: build failed started to fail noticed on 11/8/2020
-    void "test insertAccount endpoint bad data"() {
+    void 'test insertAccount endpoint bad data'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('accountBadData', headers)
@@ -109,14 +108,14 @@ class AccountControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
     //TODO: build failed started to fail noticed on 11/8/2020
-    void "test insertAccount endpoint - irrelevant payload"() {
+    void 'test insertAccount endpoint - irrelevant payload'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>('{"test":1}', headers)
@@ -124,7 +123,7 @@ class AccountControllerSpec extends Specification {
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
         then:
         //def ex = thrown(JsonParseException)
         //ex.getMessage().contains('Unrecognized token')
@@ -132,16 +131,16 @@ class AccountControllerSpec extends Specification {
         0 * _
     }
 
-    void "test findAccount endpoint empty accountNameOwner"() {
+    void 'test findAccount endpoint empty accountNameOwner'() {
         given:
         account.accountNameOwner = ''
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(account.toString(), headers)
+        HttpEntity entity = new HttpEntity<>(account, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String.class)
+                entity, String)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
