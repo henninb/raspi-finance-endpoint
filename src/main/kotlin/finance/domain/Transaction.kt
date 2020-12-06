@@ -82,8 +82,8 @@ data class Transaction(
         var category: String,
 
         @JsonProperty
-        @field:Digits(integer = 6, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-        @Column(name = "amount", nullable = false, precision = 6, scale = 2, columnDefinition = "NUMERIC(6,2) DEFAULT 0.00")
+        @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+        @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
         var amount: BigDecimal,
 
         @JsonProperty

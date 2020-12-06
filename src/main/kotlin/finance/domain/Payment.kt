@@ -46,8 +46,8 @@ data class Payment(
         var transactionDate: Date,
 
         @JsonProperty
-        @field:Digits(integer = 6, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
-        @Column(name = "amount", nullable = false)
+        @field:Digits(integer = 8, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
+        @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
         var amount: BigDecimal,
 
         @JsonProperty
