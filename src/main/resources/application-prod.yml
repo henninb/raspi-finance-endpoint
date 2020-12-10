@@ -88,6 +88,7 @@ custom:
       failed-json-parser-endpoint: "file:json_in/.not-processed-json-parsing-errors"
 
 logging:
+  config: classpath:logback.groovy
   level:
     org:
       flywaydb: DEBUG
@@ -123,3 +124,4 @@ management:
       exposure:
         include: "*"
 debug: false
+
