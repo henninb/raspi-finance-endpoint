@@ -87,12 +87,12 @@ custom:
       failed-Json-file-endpoint: "file:json_in/.not-processed-non-json-file"
       failed-json-parser-endpoint: "file:json_in/.not-processed-json-parsing-errors"
 
-logging:
-  config: classpath:logback.groovy
-  level:
-    org:
-      flywaydb: DEBUG
-      hibernate.SQL: WARN
+#logging:
+#  config: classpath:logback.groovy
+#  level:
+#    org:
+#      flywaydb: DEBUG
+#      hibernate.SQL: WARN
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
