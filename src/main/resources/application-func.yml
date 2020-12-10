@@ -99,8 +99,8 @@ custom:
 # ===============================
 # = Logging
 # ===============================
-logging:
-  level.org.hibernate.SQL: WARN
+#logging:
+#  level.org.hibernate.SQL: WARN
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database

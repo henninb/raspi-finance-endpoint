@@ -7,16 +7,41 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 //import static ch.qos.logback.classic.Level.INFO
 //import static ch.qos.logback.classic.Level.WARN
 
-
 //def MESSAGE_FORMAT = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 //def consoleAppender = "CONSOLE"
-String appNameValue = System.getProperty('spring.application.name')
-println appNameValue
-String appName = 'raspi-finance-endpoint'
-//String logFilePath = "/opt/${appName}/logs/${appName}.log"
-String logFilePath = "logs/${appName}-${appNameValue}.log"
-//String logArchiveFilePath = "/opt/${appName}/logs/archive/${appName}.%d{yyyy-MM-dd}.gz"
-String logArchiveFilePath = "logs/archive/${appName}.%d{yyyy-MM-dd}.gz"
+
+
+//statusListener(OnConsoleStatusListener)
+
+//def props = new Properties()
+//props.load(this.getClass().getClassLoader().getResourceAsStream("properties/application.properties"))
+//props.load(this.getClass().getClassLoader().getResourceAsStream("properties/application.properties"))
+
+def env = System.getenv()
+def springEnv = System.getProperty('spring.profiles.active')
+String appName = env['APP'] ?: 'raspi-finance-endpoint'
+String springProfile = env['SPRING_PROFILES_ACTIVE'] ?: 'unknown'
+//String springProfile = springEnv ?: 'unknown'
+String logFilePath = env['LOGS'] ?: 'logs'
+
+String logFileName = "${logFilePath}/${appName}-${springProfile}.log"
+String hibernateFileName = "${logFilePath}/${appName}-${springProfile}-hibernate.log"
+String errorFileName = "${logFilePath}/${appName}-${springProfile}-error.log"
+String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}.%d{yyyy-MM-dd}.gz"
+String hibernateArchiveFileName = "${logFilePath}/archive/${appName}-hibernate.%d{yyyy-MM-dd}.gz"
+String errorArchiveFileName = "${logFilePath}/archive/${appName}-error.%d{yyyy-MM-dd}.gz"
+
+//String appNameValue = System.getProperty('spring.application.name')
+//println appNameValue
+
+def sysProperties = System.properties
+def classLoader = getClass().getClassLoader()
+
+//String logFilePath = "/opt/${appName}/logs/${appName}-${springProfile}.log"
+//String logFilePath = "logs/${appName}-${springProfile}.log"
+
+//String logArchiveFilePath = "/opt/${appName}/logs/archive/${appName}-${springProfile}-.%d{yyyy-MM-dd}.gz"
+
 
 //String appName = config.app.name
 //appName = Application.DEFAULT_APP_NAME
@@ -24,14 +49,44 @@ String logArchiveFilePath = "logs/archive/${appName}.%d{yyyy-MM-dd}.gz"
 conversionRule("clr", ColorConverter)
 
 appender("fileAppender", RollingFileAppender) {
-    file = logFilePath
+    file = logFileName
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
     rollingPolicy(TimeBasedRollingPolicy) {
         totalSizeCap = "1MB"
         maxHistory = 20
-        fileNamePattern = logArchiveFilePath
+        fileNamePattern = logArchiveFileName
+    }
+    triggeringPolicy(SizeBasedTriggeringPolicy) {
+        maxFileSize = FileSize.valueOf('10MB')
+    }
+}
+
+appender("hibernateFileAppender", RollingFileAppender) {
+    file = hibernateFileName
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    }
+    rollingPolicy(TimeBasedRollingPolicy) {
+        totalSizeCap = "1MB"
+        maxHistory = 20
+        fileNamePattern = hibernateArchiveFileName
+    }
+    triggeringPolicy(SizeBasedTriggeringPolicy) {
+        maxFileSize = FileSize.valueOf('10MB')
+    }
+}
+
+appender("errorFileAppender", RollingFileAppender) {
+    file = errorFileName
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    }
+    rollingPolicy(TimeBasedRollingPolicy) {
+        totalSizeCap = "1MB"
+        maxHistory = 20
+        fileNamePattern = errorArchiveFileName
     }
     triggeringPolicy(SizeBasedTriggeringPolicy) {
         maxFileSize = FileSize.valueOf('10MB')
@@ -44,12 +99,12 @@ appender("consoleAppender", ConsoleAppender) {
     }
 }
 
-appender("asyncAppender", AsyncAppender) {
-    queueSize = 500
-    discardingThreshold = 0
-    includeCallerData = true
-    appenderRef('fileAppender')
-}
+//appender("asyncAppender", AsyncAppender) {
+//    queueSize = 500
+//    discardingThreshold = 0
+//    includeCallerData = true
+//    appenderRef('fileAppender')
+//}
 
 //***********************************
 // Standard Appender
@@ -73,9 +128,11 @@ appender("asyncAppender", AsyncAppender) {
 //    }
 //}
 
-logger('org.hibernate.SQL', TRACE)
-logger('org.apache.http', INFO)
-logger('finance', INFO)
 
-root(INFO, ['consoleAppender'])
-root(INFO, ['fileAppender'])
+logger('org.hibernate.SQL', TRACE, ['hibernateFileAppender'])
+logger('org', ERROR, ['errorFileAppender'])
+//logger('org.apache.http', INFO)
+//logger('finance', INFO)
+
+//root(WARN, ['errorFileAppender'])
+root(INFO, ['consoleAppender', 'fileAppender'])
