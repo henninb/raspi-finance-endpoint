@@ -1,8 +1,4 @@
-//import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-//import ch.qos.logback.core.ConsoleAppender
-//import ch.qos.logback.core.rolling.FixedWindowRollingPolicy
-//import ch.qos.logback.core.rolling.RollingFileAppender
-//import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy
+import ch.qos.logback.classic.AsyncAppender
 import ch.qos.logback.core.util.FileSize
 import org.springframework.boot.logging.logback.ColorConverter
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
@@ -14,7 +10,13 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 
 //def MESSAGE_FORMAT = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 //def consoleAppender = "CONSOLE"
-def appName = System.getProperty('spring.application.name')
+String appNameValue = System.getProperty('spring.application.name')
+println appNameValue
+String appName = 'raspi-finance-endpoint'
+//String logFilePath = "/opt/${appName}/logs/${appName}.log"
+String logFilePath = "logs/${appName}-${appNameValue}.log"
+//String logArchiveFilePath = "/opt/${appName}/logs/archive/${appName}.%d{yyyy-MM-dd}.gz"
+String logArchiveFilePath = "logs/archive/${appName}.%d{yyyy-MM-dd}.gz"
 
 //String appName = config.app.name
 //appName = Application.DEFAULT_APP_NAME
@@ -22,14 +24,14 @@ def appName = System.getProperty('spring.application.name')
 conversionRule("clr", ColorConverter)
 
 appender("fileAppender", RollingFileAppender) {
-    file = "/opt/raspi-finance-endpoint/logs/${appName}.log"
+    file = logFilePath
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
     rollingPolicy(TimeBasedRollingPolicy) {
-        totalSizeCap = "10MB"
-        maxHistory = 30
-        fileNamePattern = "/opt/raspi-finance-endpoint/logs/archive/${appName}.%d{yyyy-MM-dd}.gz"
+        totalSizeCap = "1MB"
+        maxHistory = 20
+        fileNamePattern = logArchiveFilePath
     }
     triggeringPolicy(SizeBasedTriggeringPolicy) {
         maxFileSize = FileSize.valueOf('10MB')
@@ -40,6 +42,13 @@ appender("consoleAppender", ConsoleAppender) {
     encoder(PatternLayoutEncoder) {
         pattern = '%clr(%d{yyyy-MM-dd HH:mm:ss}){blue} %clr([%thread]){green} - %clr(%-5level){yellow} %clr(%-36.36logger{36}){cyan} - %clr(%msg){magenta}%n'
     }
+}
+
+appender("asyncAppender", AsyncAppender) {
+    queueSize = 500
+    discardingThreshold = 0
+    includeCallerData = true
+    appenderRef('fileAppender')
 }
 
 //***********************************
@@ -64,7 +73,9 @@ appender("consoleAppender", ConsoleAppender) {
 //    }
 //}
 
+logger('org.hibernate.SQL', TRACE)
 logger('org.apache.http', INFO)
+logger('finance', INFO)
 
 root(INFO, ['consoleAppender'])
 root(INFO, ['fileAppender'])
