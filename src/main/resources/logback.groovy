@@ -1,11 +1,12 @@
 import ch.qos.logback.classic.AsyncAppender
+import ch.qos.logback.classic.filter.ThresholdFilter
 import ch.qos.logback.core.util.FileSize
 import org.springframework.boot.logging.logback.ColorConverter
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 
 def env = System.getenv()
-String appName = env['APPNAME'] ?: 'raspi-finance-endpoint'
-String springProfile = env['SPRING_PROFILES_ACTIVE'] ?: 'unknown'
+String appName = env['APPNAME'] ?: 'app'
+String springProfile = env['SPRING_PROFILES_ACTIVE'] ?: 'profile'
 String logFilePath = env['LOGS'] ?: 'logs'
 
 String logFileName = "${logFilePath}/${appName}-${springProfile}.log"
@@ -45,7 +46,13 @@ appender("hibernateFileAppender", RollingFileAppender) {
     triggeringPolicy(SizeBasedTriggeringPolicy) {
         maxFileSize = FileSize.valueOf('10MB')
     }
+
+    filter(ThresholdFilter) {
+        level = DEBUG
+    }
 }
+
+logger('org.hibernate.SQL', DEBUG, ['hibernateFileAppender'])
 
 appender("errorFileAppender", RollingFileAppender) {
     file = errorFileName
@@ -60,7 +67,13 @@ appender("errorFileAppender", RollingFileAppender) {
     triggeringPolicy(SizeBasedTriggeringPolicy) {
         maxFileSize = FileSize.valueOf('10MB')
     }
+
+    filter(ThresholdFilter) {
+        level = ERROR
+    }
 }
+logger('org', ERROR, ['errorFileAppender'])
+logger('finance', ERROR, ['errorFileAppender'])
 
 appender("consoleAppender", ConsoleAppender) {
     encoder(PatternLayoutEncoder) {
@@ -97,9 +110,6 @@ appender("consoleAppender", ConsoleAppender) {
 //    }
 //}
 
-
-logger('org.hibernate.SQL', TRACE, ['hibernateFileAppender'])
-logger('org', ERROR, ['errorFileAppender'])
 //logger('org.apache.http', INFO)
 //logger('finance', INFO)
 
