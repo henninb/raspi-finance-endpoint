@@ -2,26 +2,10 @@ import ch.qos.logback.classic.AsyncAppender
 import ch.qos.logback.core.util.FileSize
 import org.springframework.boot.logging.logback.ColorConverter
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-//import ch.qos.logback.core.ConsoleAppender
-//
-//import static ch.qos.logback.classic.Level.INFO
-//import static ch.qos.logback.classic.Level.WARN
-
-//def MESSAGE_FORMAT = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-//def consoleAppender = "CONSOLE"
-
-
-//statusListener(OnConsoleStatusListener)
-
-//def props = new Properties()
-//props.load(this.getClass().getClassLoader().getResourceAsStream("properties/application.properties"))
-//props.load(this.getClass().getClassLoader().getResourceAsStream("properties/application.properties"))
 
 def env = System.getenv()
-def springEnv = System.getProperty('spring.profiles.active')
-String appName = env['APP'] ?: 'raspi-finance-endpoint'
+String appName = env['APPNAME'] ?: 'raspi-finance-endpoint'
 String springProfile = env['SPRING_PROFILES_ACTIVE'] ?: 'unknown'
-//String springProfile = springEnv ?: 'unknown'
 String logFilePath = env['LOGS'] ?: 'logs'
 
 String logFileName = "${logFilePath}/${appName}-${springProfile}.log"
@@ -30,21 +14,6 @@ String errorFileName = "${logFilePath}/${appName}-${springProfile}-error.log"
 String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}.%d{yyyy-MM-dd}.gz"
 String hibernateArchiveFileName = "${logFilePath}/archive/${appName}-hibernate.%d{yyyy-MM-dd}.gz"
 String errorArchiveFileName = "${logFilePath}/archive/${appName}-error.%d{yyyy-MM-dd}.gz"
-
-//String appNameValue = System.getProperty('spring.application.name')
-//println appNameValue
-
-def sysProperties = System.properties
-def classLoader = getClass().getClassLoader()
-
-//String logFilePath = "/opt/${appName}/logs/${appName}-${springProfile}.log"
-//String logFilePath = "logs/${appName}-${springProfile}.log"
-
-//String logArchiveFilePath = "/opt/${appName}/logs/archive/${appName}-${springProfile}-.%d{yyyy-MM-dd}.gz"
-
-
-//String appName = config.app.name
-//appName = Application.DEFAULT_APP_NAME
 
 conversionRule("clr", ColorConverter)
 

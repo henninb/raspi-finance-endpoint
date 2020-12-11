@@ -82,31 +82,41 @@ test {
 }
 
 tasks.withType(Test) {
-    //TODO: not used
-    environment "INPUT_PATH", "excel_in"
-    //systemProperties = System.properties
-
     useJUnitPlatform()
     testLogging.showStandardStreams = true
-
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "unit"
+    environment "APPNAME", "raspi-finance-endpoint"
 }
 
 task integrationTest(type: Test) {
     description = "Runs the integration tests."
     testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
     classpath = project.sourceSets.integrationTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "int"
+    environment "APPNAME", "raspi-finance-endpoint"
 }
 
 task functionalTest(type: Test) {
     description = "Runs the functional tests."
     testClassesDirs = project.sourceSets.functionalTest.output.classesDirs
     classpath = project.sourceSets.functionalTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "func"
+    environment "APPNAME", "raspi-finance-endpoint"
 }
 
 task performanceTest(type: Test) {
     description = "Runs the performance tests."
     testClassesDirs = project.sourceSets.performanceTest.output.classesDirs
     classpath = project.sourceSets.performanceTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "perf"
+    environment "APPNAME", "raspi-finance-endpoint"
 }
 
 integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
