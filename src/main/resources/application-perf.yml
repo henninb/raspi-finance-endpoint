@@ -78,11 +78,8 @@ custom:
 # ===============================
 # = Logging
 # ===============================
-#logging:
-#  level:
-#    org:
-#      flywaydb: DEBUG
-#      hibernate.SQL: WARN
+logging:
+  config: classpath:logback.groovy
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
