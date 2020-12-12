@@ -135,9 +135,11 @@ appender("consoleAppender", ConsoleAppender) {
 //logger('debug-logger', TRACE, ['hibernateFileAppender'], false)
 //logger('error-logger', ERROR, ['errorFileAppender'])
 
+//https://howtodoinjava.com/spring-boot2/logging/multiple-log-files/
 
 //logger('org.hibernate.type.descriptor.sql.BasicBinder', TRACE, ['hibernateFileAppender'], false)
-logger('org.hibernate', TRACE, ['hibernateFileAppender'], false)
-//logger('org.flyway', WARN, ['flywayFileAppender'], false)
+logger('org.hibernate', DEBUG, ['consoleAppender', 'fileAppender', 'hibernateFileAppender'])
+logger('org.flywaydb', DEBUG, ['consoleAppender', 'fileAppender', 'flywayFileAppender'])
+logger("org.springframework", DEBUG, ['consoleAppender', 'fileAppender'])
 
 root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
