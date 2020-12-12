@@ -68,7 +68,7 @@ spring:
   # = Flyway
   # ===============================
   flyway:
-    enabled: false
+    enabled: true
     user: henninb
     password: monday1
     url: jdbc:postgresql://192.168.100.124:5432/finance_test_db
