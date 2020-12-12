@@ -1,8 +1,12 @@
 import ch.qos.logback.classic.AsyncAppender
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.filter.LevelFilter
 import ch.qos.logback.classic.filter.ThresholdFilter
 import ch.qos.logback.core.util.FileSize
 import org.springframework.boot.logging.logback.ColorConverter
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+
+statusListener(OnConsoleStatusListener)
 
 def env = System.getenv()
 String appName = env['APPNAME'] ?: 'app'
@@ -11,9 +15,11 @@ String logFilePath = env['LOGS'] ?: 'logs'
 
 String logFileName = "${logFilePath}/${appName}-${springProfile}.log"
 String hibernateFileName = "${logFilePath}/${appName}-${springProfile}-hibernate.log"
+String flywayFileName = "${logFilePath}/${appName}-${springProfile}-flyway.log"
 String errorFileName = "${logFilePath}/${appName}-${springProfile}-error.log"
 String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}.%d{yyyy-MM-dd}.gz"
 String hibernateArchiveFileName = "${logFilePath}/archive/${appName}-hibernate.%d{yyyy-MM-dd}.gz"
+String flywayArchiveFileName = "${logFilePath}/archive/${appName}-flyway.%d{yyyy-MM-dd}.gz"
 String errorArchiveFileName = "${logFilePath}/archive/${appName}-error.%d{yyyy-MM-dd}.gz"
 
 conversionRule("clr", ColorConverter)
@@ -47,12 +53,26 @@ appender("hibernateFileAppender", RollingFileAppender) {
         maxFileSize = FileSize.valueOf('10MB')
     }
 
-    filter(ThresholdFilter) {
-        level = DEBUG
+    //TODO: should I comment this out
+    filter(LevelFilter) {
+        level = TRACE
     }
 }
 
-logger('org.hibernate.SQL', DEBUG, ['hibernateFileAppender'])
+appender("flywayFileAppender", RollingFileAppender) {
+    file = flywayFileName
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    }
+    rollingPolicy(TimeBasedRollingPolicy) {
+        totalSizeCap = "1MB"
+        maxHistory = 20
+        fileNamePattern = flywayArchiveFileName
+    }
+    triggeringPolicy(SizeBasedTriggeringPolicy) {
+        maxFileSize = FileSize.valueOf('10MB')
+    }
+}
 
 appender("errorFileAppender", RollingFileAppender) {
     file = errorFileName
@@ -72,8 +92,6 @@ appender("errorFileAppender", RollingFileAppender) {
         level = ERROR
     }
 }
-logger('org', ERROR, ['errorFileAppender'])
-logger('finance', ERROR, ['errorFileAppender'])
 
 appender("consoleAppender", ConsoleAppender) {
     encoder(PatternLayoutEncoder) {
@@ -114,4 +132,12 @@ appender("consoleAppender", ConsoleAppender) {
 //logger('finance', INFO)
 
 //root(WARN, ['errorFileAppender'])
-root(INFO, ['consoleAppender', 'fileAppender'])
+//logger('debug-logger', TRACE, ['hibernateFileAppender'], false)
+//logger('error-logger', ERROR, ['errorFileAppender'])
+
+
+//logger('org.hibernate.type.descriptor.sql.BasicBinder', TRACE, ['hibernateFileAppender'], false)
+logger('org.hibernate', TRACE, ['hibernateFileAppender'], false)
+//logger('org.flyway', WARN, ['flywayFileAppender'], false)
+
+root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
