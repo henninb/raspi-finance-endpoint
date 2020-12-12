@@ -78,7 +78,7 @@ custom:
     camel-route:
       auto-start-route: true
       json-file-reader-route-id: jsonFileReaderRoute
-      json-file-reader-route: "file:json_in?delete=true&moveFailed=.not-processed-failed-with-errors"
+      json-file-reader-route: "file:json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
       transaction-to-database-route-id: transactionToDatabaseRoute
       transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route-id: jsonFileWriterRoute
@@ -87,12 +87,11 @@ custom:
       failed-Json-file-endpoint: "file:json_in/.not-processed-non-json-file"
       failed-json-parser-endpoint: "file:json_in/.not-processed-json-parsing-errors"
 
-#logging:
-#  config: classpath:logback.groovy
-#  level:
-#    org:
-#      flywaydb: DEBUG
-#      hibernate.SQL: WARN
+# ===============================
+# = Logging
+# ===============================
+logging:
+  config: classpath:logback.groovy
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database

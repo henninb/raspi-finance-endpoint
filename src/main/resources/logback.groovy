@@ -16,10 +16,12 @@ String logFilePath = env['LOGS'] ?: 'logs'
 String logFileName = "${logFilePath}/${appName}-${springProfile}.log"
 String hibernateFileName = "${logFilePath}/${appName}-${springProfile}-hibernate.log"
 String flywayFileName = "${logFilePath}/${appName}-${springProfile}-flyway.log"
+String camelFileName = "${logFilePath}/${appName}-${springProfile}-camel.log"
 String errorFileName = "${logFilePath}/${appName}-${springProfile}-error.log"
 String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}.%d{yyyy-MM-dd}.gz"
 String hibernateArchiveFileName = "${logFilePath}/archive/${appName}-hibernate.%d{yyyy-MM-dd}.gz"
 String flywayArchiveFileName = "${logFilePath}/archive/${appName}-flyway.%d{yyyy-MM-dd}.gz"
+String camelArchiveFileName = "${logFilePath}/archive/${appName}-camel.%d{yyyy-MM-dd}.gz"
 String errorArchiveFileName = "${logFilePath}/archive/${appName}-error.%d{yyyy-MM-dd}.gz"
 
 conversionRule("clr", ColorConverter)
@@ -68,6 +70,21 @@ appender("flywayFileAppender", RollingFileAppender) {
         totalSizeCap = "1MB"
         maxHistory = 20
         fileNamePattern = flywayArchiveFileName
+    }
+    triggeringPolicy(SizeBasedTriggeringPolicy) {
+        maxFileSize = FileSize.valueOf('10MB')
+    }
+}
+
+appender("camelFileAppender", RollingFileAppender) {
+    file = camelFileName
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    }
+    rollingPolicy(TimeBasedRollingPolicy) {
+        totalSizeCap = "1MB"
+        maxHistory = 20
+        fileNamePattern = camelArchiveFileName
     }
     triggeringPolicy(SizeBasedTriggeringPolicy) {
         maxFileSize = FileSize.valueOf('10MB')
@@ -128,18 +145,8 @@ appender("consoleAppender", ConsoleAppender) {
 //    }
 //}
 
-//logger('org.apache.http', INFO)
-//logger('finance', INFO)
-
-//root(WARN, ['errorFileAppender'])
-//logger('debug-logger', TRACE, ['hibernateFileAppender'], false)
-//logger('error-logger', ERROR, ['errorFileAppender'])
-
-//https://howtodoinjava.com/spring-boot2/logging/multiple-log-files/
-
-//logger('org.hibernate.type.descriptor.sql.BasicBinder', TRACE, ['hibernateFileAppender'], false)
-logger('org.hibernate', DEBUG, ['consoleAppender', 'fileAppender', 'hibernateFileAppender'])
-logger('org.flywaydb', DEBUG, ['consoleAppender', 'fileAppender', 'flywayFileAppender'])
-logger("org.springframework", DEBUG, ['consoleAppender', 'fileAppender'])
+logger('org.hibernate', DEBUG, ['fileAppender', 'hibernateFileAppender'])
+logger('org.flywaydb', DEBUG, ['fileAppender', 'flywayFileAppender'])
+logger('org.apache.camel', DEBUG, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
 
 root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
