@@ -1,3 +1,6 @@
+//def oracleUsername = hasProperty('mavenOracleUsername') ? mavenOracleUsername : System.getenv('mavenOracleUsername')
+//def oraclePassword = hasProperty('mavenOraclePassword') ? mavenOraclePassword : System.getenv('mavenOraclePassword')
+
 buildscript {
 }
 
@@ -6,6 +9,7 @@ plugins {
     id 'groovy'
     id 'idea'
     id 'scala'
+    id 'maven'
     id 'java-library'
     id 'jacoco'
     id 'codenarc'
@@ -22,17 +26,16 @@ apply from: "test.gradle"
 repositories {
 
     mavenCentral()
-    //maven {url "http://maven.icm.edu.pl/artifactory/repo/" }
     jcenter()
+    maven {
+        url "https://www.oracle.com/content/secure/maven/content"
+        credentials {
+            username ""
+            password ""
+        }
+    }
 
-//    maven {
-//        url "https://www.oracle.com/content/secure/maven/content"
-//        name "maven.oracle.com"
-//        credentials {
-//        username =
-//        password =
-//    }
-//        }
+    //maven {url "https://maven.xwiki.org/externals/"}
     google()
     flatDir {
         dirs "libs"
@@ -121,8 +124,8 @@ dependencies {
     runtimeOnly("com.h2database:h2:${h2Version}")
 
     // Oracle database
-//    runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
-//    implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
+    //runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
+    implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
 
     //Flyway
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
