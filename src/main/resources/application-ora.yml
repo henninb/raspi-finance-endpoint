@@ -1,0 +1,135 @@
+server:
+  port: ${SERVER_PORT}
+  ssl:
+    key-store: classpath:hornsup-raspi-finance-keystore.p12
+    key-store-password: none
+    key-store-type: pkcs12
+    key-alias: hornsup-raspi-finance
+    key-password: none
+    enabled: false
+    enabled-protocols: TLSv1.2
+spring:
+  application:
+    name: raspi-finance-endpoint
+  profiles:
+    active: func
+
+  # ===============================
+  # = Jackson Settings
+  # ===============================
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: non_null
+    mapper.accept-case-insensitive-enums: true
+
+  # ===============================
+  # = DATA SOURCE
+  # ===============================
+  datasource:
+    url: jdbc:oracle:thin:@192.168.100.208:1521/ORCLCDB.localdomain
+#    url: jdbc:postgresql://192.168.100.208:1521/finance_test_db
+    username: henninb
+    password: monday1
+    #driver-class-name: oracle.jdbc.OracleDriver
+    # testWhileIdle to persist the connection when idle for a long period of time
+    tomcat:
+      validation-query: SELECT 1
+      test-while-idle: true
+    Platform: org.hibernate.dialect.Oracle12cDialect
+    continue-on-error: false
+    # always if you want to utilize data.sql and schema.sql
+    # never Do not initialize the datasource
+    # embedded Only initialize an embedded datasource.
+    initialization-mode: embedded
+  thymeleaf:
+    cache: false
+  h2:
+    console:
+      enabled: false
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # ===============================
+  # = JPA / HIBERNATE
+  # ===============================
+  # Show or not log for each sql query
+  jpa:
+    show-sql: true
+    open-in-view: false
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  # ===============================
+  # = Flyway
+  # ===============================
+  flyway:
+    enabled: false
+    user: henninb
+    password: monday1
+    url: jdbc:postgresql://192.168.100.124:5432/finance_test_db
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+# ===============================
+# = Custom
+# ===============================
+custom:
+  project:
+    excel-password: n/a
+    excel-input-file-path: n/a
+    excluded-accounts:
+      - test_brian
+    camel-route:
+      auto-start-route: true
+      json-file-reader-route-id: jsonFileReaderRoute
+      json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
+      transaction-to-database-route-id: transactionToDatabaseRoute
+      transaction-to-database-Route: direct:transactionToDatabaseRoute
+      json-file-writer-route-id: jsonFileWriterRoute
+      json-file-writer-route: direct:jsonFileWriterRoute
+      saved-file-endpoint: "file:func_json_in/.processed-successfully"
+      failed-Json-file-endpoint: "file:func_json_in/.not-processed-non-json-file"
+      failed-json-parser-endpoint: "file:func_json_in/.not-processed-json-parsing-errors"
+
+# ===============================
+# = Logging
+# ===============================
+logging:
+  config: classpath:logback.groovy
+
+#spring.jpa.hibernate.ddl-auto: none
+# Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
+# schema will be automatically created afresh for every start of application
+#none is build from schema.sql (no Java classes)
+#update only add new tables in the schema.sql (starting from Java classes)
+
+#kebab-case '-' separated
+
+# ===============================
+# = Health and Metrics
+# ===============================
+management:
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      influx:
+        enabled: false
+        auto-create-db: true
+        db: metrics
+        compressed: false
+        uri: http://hornsup:8086
+        user-name: admin
+        password:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+debug: false
