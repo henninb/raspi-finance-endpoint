@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
-import org.apache.tomcat.jdbc.pool.DataSource;
+// import org.apache.tomcat.jdbc.pool.DataSource;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import java.util.Properties
