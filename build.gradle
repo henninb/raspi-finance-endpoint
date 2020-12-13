@@ -121,9 +121,9 @@ dependencies {
     runtimeOnly("com.h2database:h2:${h2Version}")
 
     // Oracle database
-    implementation("com.oracle.ojdbc:ojdbc8:${oracleVersion}")
-    implementation("com.oracle.jdbc:ojdbc8:${oracleVersion}")
-    implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
+    //implementation("com.oracle.ojdbc:ojdbc8:${oracleVersion}")
+    //implementation("com.oracle.jdbc:ojdbc8:${oracleVersion}")
+    //implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
 
     //Flyway
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
