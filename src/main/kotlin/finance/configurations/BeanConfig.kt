@@ -92,7 +92,4 @@ open class BeanConfig {
     //NioEndpoint - Error running socket processor, java.lang.NullPointerException
     //WORKAROUND: Disable TLSv1.3 and running with TLSv1.2 only. Or use OpenSSL for the encryption.
     //I simply changed the connector protocol from org.apache.coyote.http11.Http11Protocol to org.apache.coyote.http11.Http11NioProtocol
-
-
-
 }

@@ -37,6 +37,7 @@ ip
 .project
 .settings/
 bin/
+libs/
 
 build.gradle-verbose
 docker-compose-run.yml
