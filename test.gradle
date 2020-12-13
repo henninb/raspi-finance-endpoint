@@ -33,6 +33,13 @@ sourceSets {
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
+
+    oracleTest {
+        groovy.srcDir "src/test/oracle/groovy"
+        resources.srcDir "src/main/resources"
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
 }
 
 //provide dependency scopes
@@ -43,6 +50,8 @@ configurations {
     functionalTestRuntime.extendsFrom testRuntime
     performanceTestImplementation.extendsFrom testImplementation
     performanceRuntime.extendsFrom testRuntime
+    oracleTestImplementation.extendsFrom testImplementation
+    oracleRuntime.extendsFrom testRuntime
 }
 
 compileTestKotlin {
@@ -66,13 +75,13 @@ dependencies {
     //testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.0")
 }
 
-//provide dependency scopes
-configurations {
-    integrationTestImplementation.extendsFrom testImplementation
-    integrationTestRuntime.extendsFrom testRuntime
-    functionalTestCompile.extendsFrom testImplementation
-    testFunctionalCompile.extendsFrom testRuntime
-}
+////provide dependency scopes
+//configurations {
+//    integrationTestImplementation.extendsFrom testImplementation
+//    integrationTestRuntime.extendsFrom testRuntime
+//    functionalTestCompile.extendsFrom testImplementation
+//    testFunctionalCompile.extendsFrom testRuntime
+//}
 
 test {
     //useJUnitPlatform()
@@ -81,6 +90,7 @@ test {
 //    }
 }
 
+//TODO: fix this issue
 tasks.withType(Test) {
     useJUnitPlatform()
     testLogging.showStandardStreams = true
@@ -116,6 +126,16 @@ task performanceTest(type: Test) {
 
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "perf"
+    environment "APPNAME", "raspi-finance-endpoint"
+}
+
+task oracleTest(type: Test) {
+    description = "Runs the oracle tests."
+    testClassesDirs = project.sourceSets.oracleTest.output.classesDirs
+    classpath = project.sourceSets.oracleTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "ora"
     environment "APPNAME", "raspi-finance-endpoint"
 }
 
