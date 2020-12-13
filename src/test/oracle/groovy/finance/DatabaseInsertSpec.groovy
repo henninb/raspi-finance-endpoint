@@ -17,9 +17,8 @@ class DatabaseInsertSpec extends Specification {
     void 'test category - valid insert'() {
         given:
         Category category = new Category()
-        category.category = 'bar'
+        category.category = UUID.randomUUID().toString().substring(0,8)
         category.activeStatus = false
-        //category.categoryId = 1
 
         when:
         def result = categoryService.insertCategory(category)
