@@ -12,7 +12,7 @@ spring:
   application:
     name: raspi-finance-endpoint
   profiles:
-    active: func
+    active: ora
 
   # ===============================
   # = Jackson Settings
@@ -29,17 +29,17 @@ spring:
     url: jdbc:oracle:thin:@192.168.100.208:1521/ORCLCDB.localdomain
     username: henninb
     password: monday1
-    driver-class-name:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
     # testWhileIdle to persist the connection when idle for a long period of time
     tomcat:
       validation-query: SELECT 1
       test-while-idle: true
-    Platform: org.hibernate.dialect.Oracle12cDialect
+    #Platform: org.hibernate.dialect.OracleDialect
     continue-on-error: false
     # always if you want to utilize data.sql and schema.sql
     # never Do not initialize the datasource
     # embedded Only initialize an embedded datasource.
-    initialization-mode: embedded
+    #initialization-mode: embedded
   thymeleaf:
     cache: false
 
@@ -47,14 +47,18 @@ spring:
   # = JPA / HIBERNATE
   # ===============================
   # Show or not log for each sql query
+  # spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
   jpa:
+    #database-platform: org.hibernate.dialect
+    #database-platform: org.hibernate.dialect.OracleDialect
     show-sql: true
     open-in-view: false
     generate-ddl: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
         jdbc:
           time_zone: UTC
 
