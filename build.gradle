@@ -20,12 +20,24 @@ ext['groovy.version'] = '${gradleVersion}'
 apply from: "test.gradle"
 
 repositories {
+
     mavenCentral()
+    //maven {url "http://maven.icm.edu.pl/artifactory/repo/" }
     jcenter()
+
+//    maven {
+//        url "https://www.oracle.com/content/secure/maven/content"
+//        name "maven.oracle.com"
+//        credentials {
+//        username =
+//        password =
+//    }
+//        }
     google()
     flatDir {
         dirs "libs"
     }
+
 }
 
 configurations {
@@ -39,7 +51,6 @@ configurations {
 //        jvmTarget = "1.8"
 //    }
 //}
-
 
 codenarc {
     toolVersion = "$codenarcPluginVersion"
@@ -103,11 +114,15 @@ dependencies {
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:${apacheCamelVersion}")
     implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
-    //postgres
+    //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
 
     //h2 database
     runtimeOnly("com.h2database:h2:${h2Version}")
+
+    // Oracle database
+    runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
+    implementation "org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}"
 
     //Flyway
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
