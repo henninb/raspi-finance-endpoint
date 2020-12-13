@@ -27,10 +27,9 @@ spring:
   # ===============================
   datasource:
     url: jdbc:oracle:thin:@192.168.100.208:1521/ORCLCDB.localdomain
-#    url: jdbc:postgresql://192.168.100.208:1521/finance_test_db
     username: henninb
     password: monday1
-    #driver-class-name: oracle.jdbc.OracleDriver
+    driver-class-name:
     # testWhileIdle to persist the connection when idle for a long period of time
     tomcat:
       validation-query: SELECT 1
@@ -43,12 +42,6 @@ spring:
     initialization-mode: embedded
   thymeleaf:
     cache: false
-  h2:
-    console:
-      enabled: false
-      path: /h2-console
-      settings:
-        web-allow-others: true
 
   # ===============================
   # = JPA / HIBERNATE
@@ -70,11 +63,6 @@ spring:
   # ===============================
   flyway:
     enabled: false
-    user: henninb
-    password: monday1
-    url: jdbc:postgresql://192.168.100.124:5432/finance_test_db
-    baseline-on-migrate: true
-    locations: classpath:db/migration
 
 # ===============================
 # = Custom
