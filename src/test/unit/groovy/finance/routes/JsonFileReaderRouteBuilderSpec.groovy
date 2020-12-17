@@ -5,12 +5,9 @@ import finance.processors.ExceptionProcessor
 import finance.processors.JsonTransactionProcessor
 import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
-import org.apache.camel.builder.AdviceWithRouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.model.ModelCamelContext
-import org.apache.camel.model.RouteDefinition
-import org.apache.camel.reifier.RouteReifier
 import spock.lang.Ignore
 import spock.lang.Specification
 
@@ -77,19 +74,8 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         camelContext = new DefaultCamelContext()
         JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
         camelContext.addRoutes(router)
-
         camelContext.start()
-
-        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
-
-        camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
-            RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.jsonFileReaderRouteId), mcc, new AdviceWithRouteBuilder() {
-                @Override
-                void configure() throws Exception {
-                    mockEndpointsAndSkip('direct://toTransactionToDatabaseRoute')
-                }
-            })
-        }
+        //ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
     }
 
     void cleanup() {

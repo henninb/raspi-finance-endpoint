@@ -3,12 +3,9 @@ package finance.routes
 import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
 import org.apache.camel.ProducerTemplate
-import org.apache.camel.builder.AdviceWithRouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.model.ModelCamelContext
-import org.apache.camel.model.RouteDefinition
-import org.apache.camel.reifier.RouteReifier
 import spock.lang.Specification
 
 class JsonFileWriterRouteBuilderSpec extends Specification {
@@ -33,14 +30,6 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
         JsonFileWriterRouteBuilder router = new JsonFileWriterRouteBuilder(camelProperties, mockExceptionProcessor)
         camelContext.addRoutes(router)
         camelContext.start()
-        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext)
-        camelContext.routeDefinitions.toList().each { RouteDefinition routeDefinition ->
-            RouteReifier.adviceWith(mcc.getRouteDefinition(camelProperties.jsonFileWriterRouteId), mcc, new AdviceWithRouteBuilder() {
-                @Override
-                void configure() throws Exception {
-                }
-            })
-        }
     }
 
     void cleanup() {

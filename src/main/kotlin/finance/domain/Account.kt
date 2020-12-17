@@ -47,7 +47,7 @@ data class Account(
 
         @JsonProperty
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean?,
+        var activeStatus: Boolean = true,
 
         @JsonProperty
         @field:Pattern(regexp = "^[0-9]{4}$", message = "Must be 4 digits.")

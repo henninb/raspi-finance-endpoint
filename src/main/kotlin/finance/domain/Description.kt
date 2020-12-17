@@ -25,7 +25,7 @@ data class Description(
 
         @JsonProperty
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean,
+        var activeStatus: Boolean = true,
 
         @field:Size(min = 1, max = 50)
         @field:Convert(converter = LowerCaseConverter::class)

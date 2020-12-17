@@ -43,7 +43,6 @@ EXECUTE PROCEDURE fn_update_account();
 CREATE OR REPLACE FUNCTION fn_insert_account() RETURNS TRIGGER AS
 $$
 BEGIN
-    NEW.active_status := true;
     NEW.date_updated := CURRENT_TIMESTAMP;
     NEW.date_added := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -74,7 +73,6 @@ CREATE OR REPLACE FUNCTION fn_insert_category() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -143,7 +141,6 @@ CREATE OR REPLACE FUNCTION fn_insert_receipt_image() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -190,7 +187,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     category           TEXT          NOT NULL DEFAULT '',
     amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
     transaction_state  TEXT          NOT NULL DEFAULT 'undefined',
-    -- TODO: need to decommission
+    -- TODO: need to decommission reoccurring flag as it is replaced by reoccurring_type
     reoccurring        BOOLEAN       NOT NULL DEFAULT FALSE,
     reoccurring_type   TEXT          NULL     DEFAULT 'undefined',
     active_status      BOOLEAN       NOT NULL DEFAULT TRUE,
@@ -227,8 +224,6 @@ CREATE OR REPLACE FUNCTION fn_insert_transaction() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    NEW.reoccurring_type = 'undefined';
-    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -258,6 +253,7 @@ CREATE TRIGGER tr_update_transaction
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_transaction();
 
+-- DROP FUNCTION IF EXISTS fn_create_reoccurring_transaction();
 -- CREATE OR REPLACE FUNCTION fn_create_reoccurring_transaction() RETURNS TRIGGER AS
 -- $$
 -- DECLARE
@@ -288,8 +284,7 @@ CREATE TABLE IF NOT EXISTS t_payment
     amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
     guid_source        TEXT          NOT NULL,
     guid_destination   TEXT          NOT NULL,
-    --TODO: bh 11/11/2020 - need to add this field
-    --active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
+    active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
     date_updated       TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
@@ -301,8 +296,6 @@ CREATE OR REPLACE FUNCTION fn_insert_payment() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    --TODO: bh 11/11/2020 - need to add
-    --NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -353,7 +346,6 @@ CREATE OR REPLACE FUNCTION fn_insert_parm() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -402,7 +394,6 @@ CREATE OR REPLACE FUNCTION fn_insert_description() RETURNS TRIGGER AS
 $$
 DECLARE
 BEGIN
-    NEW.active_status := true;
     NEW.date_added := CURRENT_TIMESTAMP;
     NEW.date_updated := CURRENT_TIMESTAMP;
     RETURN NEW;
