@@ -153,7 +153,7 @@ dependencies {
 
     //Logging
     implementation("ch.qos.logback:logback-classic:${logbackVersion}")
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.0'
+    implementation("org.apache.logging.log4j:log4j-core:2.14.0")
 
 }
 
