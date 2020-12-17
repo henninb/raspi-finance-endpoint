@@ -16,16 +16,15 @@ import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
 
-
 @Service
-open class TransactionService @Autowired constructor(private var transactionRepository: TransactionRepository,
-                                                     private var accountService: AccountService,
-                                                     private var categoryService: CategoryService,
-                                                     private var receiptImageService: ReceiptImageService,
-                                                     private val validator: Validator,
-                                                     private var meterService: MeterService) {
-
-
+open class TransactionService @Autowired constructor(
+    private var transactionRepository: TransactionRepository,
+    private var accountService: AccountService,
+    private var categoryService: CategoryService,
+    private var receiptImageService: ReceiptImageService,
+    private val validator: Validator,
+    private var meterService: MeterService
+) {
 
     @Timed
     @Transactional
@@ -39,7 +38,7 @@ open class TransactionService @Autowired constructor(private var transactionRepo
                 transaction.categories.remove(categoryOptional.get())
             }
 
-            if( transaction.receiptImageId != null) {
+            if (transaction.receiptImageId != null) {
                 deleteReceiptImage(transaction)
                 transaction.receiptImageId = null
             }
@@ -204,10 +203,12 @@ open class TransactionService @Autowired constructor(private var transactionRepo
     @Timed
     @Transactional
     open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
-        val transactions: List<Transaction> = transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
+        val transactions: List<Transaction> =
+            transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
         //TODO: look into this type of error handling
 
-        val sortedTransactions = transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
+        val sortedTransactions =
+            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //TODO: return something here
@@ -282,10 +283,10 @@ open class TransactionService @Autowired constructor(private var transactionRepo
             val transaction = optionalTransaction.get()
 
             logger.info("receiptImageId: ${transaction.receiptImageId}")
-            if ( transaction.receiptImageId  != null ) {
+            if (transaction.receiptImageId != null) {
                 logger.info("update existing receipt image: ${transaction.transactionId}")
                 val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
-                if (receiptImageOptional.isPresent ) {
+                if (receiptImageOptional.isPresent) {
                     receiptImageOptional.get().jpgImage = jpgBase64Data
                     receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 } else {
@@ -311,7 +312,11 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
-    private fun setValuesForReoccurringTransactions(optionalTransaction: Optional<Transaction>, fixedMonthDay: Date, amount: String): Boolean {
+    private fun setValuesForReoccurringTransactions(
+        optionalTransaction: Optional<Transaction>,
+        fixedMonthDay: Date,
+        amount: String
+    ): Boolean {
         val oldTransaction = optionalTransaction.get()
         val transaction = Transaction()
         transaction.guid = UUID.randomUUID().toString()
@@ -374,14 +379,47 @@ open class TransactionService @Autowired constructor(private var transactionRepo
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
+
             transaction.transactionState = transactionState
             transactionRepository.saveAndFlush(transaction)
             //TODO: add metric here
+            if (transaction.transactionState == TransactionState.Cleared &&
+                transaction.reoccurring == true
+                && transaction.reoccurringType != ReoccurringType.Undefined
+            ) {
+                val transactionFuture: Transaction = createFutureTransaction(transaction)
+                logger.info("future = $transactionFuture")
+                transactionRepository.saveAndFlush(transactionFuture)
+            }
             return true
         }
         //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
         throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
+    }
+
+    private fun createFutureTransaction(transaction: Transaction): Transaction {
+        val calendar = Calendar.getInstance()
+        calendar.time = transaction.transactionDate
+        calendar.add(Calendar.YEAR, 1)
+
+        val transactionFuture = Transaction()
+        transactionFuture.guid = UUID.randomUUID().toString()
+        transactionFuture.account = transaction.account
+        transactionFuture.accountId = transaction.accountId
+        transactionFuture.accountNameOwner = transaction.accountNameOwner
+        transactionFuture.accountType = transaction.accountType
+        transactionFuture.activeStatus = transaction.activeStatus
+        transactionFuture.amount = transaction.amount
+        transactionFuture.category = transaction.category
+        transactionFuture.description = transaction.description
+        transactionFuture.receiptImageId = null
+        transactionFuture.notes = ""
+        transactionFuture.reoccurring = true
+        transactionFuture.reoccurringType = transaction.reoccurringType
+        transactionFuture.transactionState = TransactionState.Future
+        transactionFuture.transactionDate = Date(calendar.timeInMillis)
+        return transactionFuture
     }
 
     @Timed

@@ -11,7 +11,8 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
         return when (attribute) {
             ReoccurringType.Annually -> "annually"
             ReoccurringType.BiAnnually -> "bi_annually"
-            ReoccurringType.EveryTwoWeeks -> "every_two_weeks"
+            ReoccurringType.FortNightly -> "fort_nightly"
+            ReoccurringType.Quarterly -> "quarterly"
             ReoccurringType.Monthly -> "monthly"
             ReoccurringType.Undefined -> "undefined"
         }
@@ -21,7 +22,8 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
         return when (attribute.trim().toLowerCase()) {
             "annually" -> ReoccurringType.Annually
             "bi_annually" -> ReoccurringType.BiAnnually
-            "every_two_weeks" -> ReoccurringType.EveryTwoWeeks
+            "fort_nightly" -> ReoccurringType.FortNightly
+            "quarterly" -> ReoccurringType.Quarterly
             "monthly" -> ReoccurringType.Monthly
             "undefined" -> ReoccurringType.Undefined
             else -> throw RuntimeException("Unknown attribute: $attribute")
