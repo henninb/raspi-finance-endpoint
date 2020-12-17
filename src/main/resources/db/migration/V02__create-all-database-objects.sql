@@ -190,6 +190,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     category           TEXT          NOT NULL DEFAULT '',
     amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
     transaction_state  TEXT          NOT NULL DEFAULT 'undefined',
+    -- TODO: need to decommission
     reoccurring        BOOLEAN       NOT NULL DEFAULT FALSE,
     reoccurring_type   TEXT          NULL     DEFAULT 'undefined',
     active_status      BOOLEAN       NOT NULL DEFAULT TRUE,
@@ -206,7 +207,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
-                                          ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'quarterly', 'undefined')),
+                                          ('annually', 'bi-annually', 'fort_nightly', 'monthly', 'quarterly', 'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE,
     CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
@@ -218,7 +219,7 @@ ALTER TABLE t_receipt_image ADD CONSTRAINT fk_transaction FOREIGN KEY (transacti
 
 -- example
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined'));
+-- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fort_nightly', 'monthly', 'undefined'));
 -- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
 
@@ -257,24 +258,24 @@ CREATE TRIGGER tr_update_transaction
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_transaction();
 
-CREATE OR REPLACE FUNCTION fn_create_reoccurring_transaction() RETURNS TRIGGER AS
-$$
-DECLARE
-BEGIN
-    -- only do this if OLD is not undefined
-    INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date, description, category, amount, transaction_state, reoccurring, reoccurring_type, active_status, notes, receipt_image_id, date_updated, date_added)
-    VALUES(OLD.account_id, OLD.account_type, OLD.account_name_owner, uuid_generate_v4(), OLD.transaction_date + interval '1 year', OLD.description, OLD.category, OLD.amount, 'future', true, OLD.reoccurring_type, true, '', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-    RETURN NULL;
-END;
-$$ LANGUAGE PLPGSQL;
-
-DROP TRIGGER IF EXISTS tr_create_reoccurring_transaction ON t_transaction;
-CREATE TRIGGER tr_create_reoccurring_transaction
-    AFTER UPDATE
-    ON t_transaction
-    FOR EACH ROW
-    WHEN (NEW.reoccurring = true AND NEW.reoccurring_type != 'undefined' AND NEW.transaction_state = 'cleared' AND OLD.transaction_state != 'undefined')
-EXECUTE PROCEDURE fn_create_reoccurring_transaction();
+-- CREATE OR REPLACE FUNCTION fn_create_reoccurring_transaction() RETURNS TRIGGER AS
+-- $$
+-- DECLARE
+-- BEGIN
+--     -- only do this if OLD is not undefined
+--     INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date, description, category, amount, transaction_state, reoccurring, reoccurring_type, active_status, notes, receipt_image_id, date_updated, date_added)
+--     VALUES(OLD.account_id, OLD.account_type, OLD.account_name_owner, uuid_generate_v4(), OLD.transaction_date + interval '1 year', OLD.description, OLD.category, OLD.amount, 'future', true, OLD.reoccurring_type, true, '', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+--     RETURN NULL;
+-- END;
+-- $$ LANGUAGE PLPGSQL;
+--
+-- DROP TRIGGER IF EXISTS tr_create_reoccurring_transaction ON t_transaction;
+-- CREATE TRIGGER tr_create_reoccurring_transaction
+--     AFTER UPDATE
+--     ON t_transaction
+--     FOR EACH ROW
+--     WHEN (NEW.reoccurring = true AND NEW.reoccurring_type != 'undefined' AND NEW.transaction_state = 'cleared' AND OLD.transaction_state != 'undefined')
+-- EXECUTE PROCEDURE fn_create_reoccurring_transaction();
 
 -------------
 -- Payment --

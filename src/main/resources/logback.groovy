@@ -49,6 +49,7 @@ appender("hibernateFileAppender", RollingFileAppender) {
     rollingPolicy(TimeBasedRollingPolicy) {
         totalSizeCap = "1MB"
         maxHistory = 20
+        // not working?
         fileNamePattern = hibernateArchiveFileName
     }
     triggeringPolicy(SizeBasedTriggeringPolicy) {
