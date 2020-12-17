@@ -233,6 +233,12 @@ open class TransactionService @Autowired constructor(
                 logger.info("successful patch $transaction")
                 processCategory(transaction)
                 transactionRepository.saveAndFlush(transaction)
+                if (transaction.transactionState == TransactionState.Cleared &&
+                    transaction.reoccurring == true
+                    && transaction.reoccurringType != ReoccurringType.Undefined
+                ) {
+                    logger.info("TODO: need to insert future transaction = $transaction")
+                }
             } else {
                 logger.warn("GUID did not match any database records.")
                 return false
@@ -266,7 +272,7 @@ open class TransactionService @Autowired constructor(
             val fixedMonthDay: Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
 
             if (optionalTransaction.isPresent) {
-                setValuesForReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
+                setValuesForClearedReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
             } else {
                 logger.error("Cannot clone monthly transaction for a record found '${guid}'.")
                 throw RuntimeException("Cannot clone monthly transaction for a record found '${guid}'.")
@@ -312,7 +318,7 @@ open class TransactionService @Autowired constructor(
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
-    private fun setValuesForReoccurringTransactions(
+    private fun setValuesForClearedReoccurringTransactions(
         optionalTransaction: Optional<Transaction>,
         fixedMonthDay: Date,
         amount: String
@@ -388,8 +394,8 @@ open class TransactionService @Autowired constructor(
                 && transaction.reoccurringType != ReoccurringType.Undefined
             ) {
                 val transactionFuture: Transaction = createFutureTransaction(transaction)
-                logger.info("future = $transactionFuture")
                 transactionRepository.saveAndFlush(transactionFuture)
+                //TODO: add metric here
             }
             return true
         }
@@ -430,6 +436,12 @@ open class TransactionService @Autowired constructor(
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
             transactionRepository.saveAndFlush(transaction)
+            if (transaction.transactionState == TransactionState.Cleared &&
+                transaction.reoccurring == true
+                && transaction.reoccurringType != ReoccurringType.Undefined
+            ) {
+                logger.info("TODO: update to reoccurring state")
+            }
             //TODO: add metric here
             return true
         }

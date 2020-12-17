@@ -284,7 +284,7 @@ class TransactionControllerSpec extends Specification {
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.getStatusCode() == HttpStatus.BAD_REQUEST
+        response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
 
         cleanup:
