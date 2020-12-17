@@ -237,7 +237,8 @@ open class TransactionService @Autowired constructor(
                     transaction.reoccurring == true
                     && transaction.reoccurringType != ReoccurringType.Undefined
                 ) {
-                    logger.info("TODO: need to insert future transaction = $transaction")
+                    val transactionFuture: Transaction = createFutureTransaction(transaction)
+                    transactionRepository.saveAndFlush(transactionFuture)
                 }
             } else {
                 logger.warn("GUID did not match any database records.")
@@ -425,6 +426,11 @@ open class TransactionService @Autowired constructor(
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
         transactionFuture.transactionDate = Date(calendar.timeInMillis)
+        logger.info("1 future reoccurringType=" + transactionFuture.reoccurringType)
+        logger.info(transactionFuture.toString())
+        if (transactionFuture.reoccurringType == ReoccurringType.Undefined ) {
+            throw java.lang.RuntimeException("transaction state cannot be undefined for reoccurring transactions.")
+        }
         return transactionFuture
     }
 

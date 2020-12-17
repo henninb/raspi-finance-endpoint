@@ -95,7 +95,6 @@ dependencies {
     // Codenarc
     implementation("org.codenarc:CodeNarc:${codenarcPluginVersion}")
 
-
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
@@ -144,7 +143,7 @@ dependencies {
     //rest client
     implementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
 
-    //log
+    //logstash
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
 
     //hibernate

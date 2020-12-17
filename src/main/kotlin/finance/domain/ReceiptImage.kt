@@ -31,7 +31,7 @@ data class ReceiptImage(
 
         @JsonProperty
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean?
+        var activeStatus: Boolean = true
 ) {
 
     constructor() : this(0L, 0L, true)

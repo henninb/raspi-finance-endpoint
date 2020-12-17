@@ -29,7 +29,7 @@ data class Category(
 
         @JsonProperty
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean,
+        var activeStatus: Boolean = true,
 
         @field:Size(min = 1, max = 50)
         @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)

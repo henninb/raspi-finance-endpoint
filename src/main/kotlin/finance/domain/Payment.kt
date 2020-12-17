@@ -58,7 +58,11 @@ data class Payment(
         @JsonProperty
         @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
         @Column(name = "guid_destination", nullable = false)
-        var guidDestination: String?
+        var guidDestination: String?,
+
+        @JsonProperty
+        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+        var activeStatus: Boolean = true
 ) {
 
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")
