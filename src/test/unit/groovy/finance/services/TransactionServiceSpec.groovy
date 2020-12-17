@@ -3,8 +3,11 @@ package finance.services
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
+import finance.domain.ReoccurringType
 import finance.domain.Transaction
+import finance.domain.TransactionState
 import finance.helpers.CategoryBuilder
+import finance.helpers.TransactionBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.ReceiptImageRepository
@@ -13,6 +16,7 @@ import org.hibernate.NonUniqueResultException
 import spock.lang.Specification
 
 import javax.validation.Validator
+import java.time.LocalDate
 
 class TransactionServiceSpec extends Specification {
     protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
@@ -222,6 +226,62 @@ class TransactionServiceSpec extends Specification {
         1 * mockCategoryRepository.saveAndFlush(category)
         1 * mockTransactionRepository.saveAndFlush(transaction) >> true
         1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        0 * _
+    }
+
+    void 'test -- updateTransactionReoccurringState - not reoccurring'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        Boolean isUpdated = transactionService.updateTransactionReoccurringState(transaction.guid, false)
+
+        then:
+        isUpdated.is(true)
+        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction)
+        0 * _
+    }
+
+    void 'test -- updateTransactionState cleared and reoccurring'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.reoccurring = true
+        transaction.transactionState = TransactionState.Cleared
+        transaction.notes = 'my note will be removed'
+
+        when:
+        Boolean isUpdated = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+
+        then:
+        isUpdated.is(true)
+        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockTransactionRepository.saveAndFlush({ Transaction futureTransaction ->
+            assert 365L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
+            assert futureTransaction.transactionState == TransactionState.Future
+            assert futureTransaction.notes == ''
+            assert futureTransaction.reoccurring
+            futureTransaction
+        })
+        0 * _
+    }
+
+    void 'test -- updateTransactionState not cleared and reoccurring'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.reoccurring = true
+        transaction.transactionState = TransactionState.Cleared
+
+        when:
+        Boolean isUpdated = transactionService.updateTransactionState(transaction.guid, TransactionState.Future)
+
+        then:
+        isUpdated.is(true)
+        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction)
         0 * _
     }
 }
