@@ -268,7 +268,32 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void 'test -- updateTransactionState not cleared and reoccurring'() {
+    void 'test -- updateTransactionState cleared and reoccurring - fortnightly'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        transaction.reoccurringType = ReoccurringType.FortNightly
+        transaction.reoccurring = true
+        transaction.transactionState = TransactionState.Cleared
+        transaction.notes = 'my note will be removed'
+
+        when:
+        Boolean isUpdated = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+
+        then:
+        isUpdated.is(true)
+        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockTransactionRepository.saveAndFlush({ Transaction futureTransaction ->
+            assert 14L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
+            assert futureTransaction.transactionState == TransactionState.Future
+            assert futureTransaction.notes == ''
+            assert futureTransaction.reoccurring
+            futureTransaction
+        })
+        0 * _
+    }
+
+    void 'test -- updateTransactionState not cleared and reoccurring - monthly'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         transaction.reoccurringType = ReoccurringType.Monthly

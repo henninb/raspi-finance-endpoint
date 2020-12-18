@@ -237,8 +237,7 @@ open class TransactionService @Autowired constructor(
                     transaction.reoccurring == true
                     && transaction.reoccurringType != ReoccurringType.Undefined
                 ) {
-                    val transactionFuture: Transaction = createFutureTransaction(transaction)
-                    transactionRepository.saveAndFlush(transactionFuture)
+                    transactionRepository.saveAndFlush(createFutureTransaction(transaction))
                 }
             } else {
                 logger.warn("GUID did not match any database records.")
@@ -394,8 +393,7 @@ open class TransactionService @Autowired constructor(
                 transaction.reoccurring == true
                 && transaction.reoccurringType != ReoccurringType.Undefined
             ) {
-                val transactionFuture: Transaction = createFutureTransaction(transaction)
-                transactionRepository.saveAndFlush(transactionFuture)
+                transactionRepository.saveAndFlush(createFutureTransaction(transaction))
                 //TODO: add metric here
             }
             return true
@@ -408,7 +406,12 @@ open class TransactionService @Autowired constructor(
     private fun createFutureTransaction(transaction: Transaction): Transaction {
         val calendar = Calendar.getInstance()
         calendar.time = transaction.transactionDate
-        calendar.add(Calendar.YEAR, 1)
+
+        if( transaction.reoccurringType == ReoccurringType.FortNightly) {
+            calendar.add(Calendar.DATE, 14)
+        } else {
+            calendar.add(Calendar.YEAR, 1)
+        }
 
         val transactionFuture = Transaction()
         transactionFuture.guid = UUID.randomUUID().toString()
