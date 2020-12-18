@@ -39,7 +39,9 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(transactions)
     }
 
-    //curl https://hornsup:8080/transaction/account/totals/chase_brian
+    //transaction-management/
+    //accounts/{accountNameOwner}/transactions/totals
+    //curl -k https://hornsup:8080/transaction/account/totals/chase_brian
     @GetMapping(path = ["/account/totals/{accountNameOwner}"], produces = ["application/json"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val results: Map<String, BigDecimal> = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)

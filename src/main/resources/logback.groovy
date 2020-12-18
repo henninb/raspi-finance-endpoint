@@ -119,8 +119,8 @@ appender("consoleAppender", ConsoleAppender) {
 //    appenderRef('fileAppender')
 //}
 
-logger('org.hibernate', DEBUG, ['fileAppender', 'hibernateFileAppender'], false)
-logger('org.flywaydb', DEBUG, ['fileAppender', 'flywayFileAppender'])
-logger('org.apache.camel', DEBUG, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
+logger('org.hibernate', INFO, ['fileAppender', 'hibernateFileAppender'], false)
+logger('org.flywaydb', INFO, ['fileAppender', 'flywayFileAppender'])
+logger('org.apache.camel', INFO, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
 
 root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
