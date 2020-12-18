@@ -2,7 +2,8 @@ import ch.qos.logback.classic.AsyncAppender
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.filter.LevelFilter
 import ch.qos.logback.classic.filter.ThresholdFilter
-import ch.qos.logback.core.util.FileSize
+//import ch.qos.logback.core.util.FileSize
+import org.apache.logging.log4j.core.appender.rolling.FileSize
 import org.springframework.boot.logging.logback.ColorConverter
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 
@@ -18,11 +19,16 @@ String hibernateFileName = "${logFilePath}/${appName}-${springProfile}-hibernate
 String flywayFileName = "${logFilePath}/${appName}-${springProfile}-flyway.log"
 String camelFileName = "${logFilePath}/${appName}-${springProfile}-camel.log"
 String errorFileName = "${logFilePath}/${appName}-${springProfile}-error.log"
-String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}.%d{yyyy-MM-dd}.gz"
-String hibernateArchiveFileName = "${logFilePath}/archive/${appName}-hibernate.%d{yyyy-MM-dd}.gz"
-String flywayArchiveFileName = "${logFilePath}/archive/${appName}-flyway.%d{yyyy-MM-dd}.gz"
-String camelArchiveFileName = "${logFilePath}/archive/${appName}-camel.%d{yyyy-MM-dd}.gz"
-String errorArchiveFileName = "${logFilePath}/archive/${appName}-error.%d{yyyy-MM-dd}.gz"
+String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}"
+String hibernateArchiveFileName = "${logFilePath}/archive/${appName}-hibernate"
+String flywayArchiveFileName = "${logFilePath}/archive/${appName}-flyway"
+String camelArchiveFileName = "${logFilePath}/archive/${appName}-camel"
+String errorArchiveFileName = "${logFilePath}/archive/${appName}-error"
+
+//<configuration scan="true">
+//</configuration>
+//<configuration debug="true">
+//</configuration>
 
 conversionRule("clr", ColorConverter)
 
@@ -31,13 +37,11 @@ appender("fileAppender", RollingFileAppender) {
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
-    rollingPolicy(TimeBasedRollingPolicy) {
-        totalSizeCap = "1MB"
-        maxHistory = 20
-        fileNamePattern = logArchiveFileName
-    }
-    triggeringPolicy(SizeBasedTriggeringPolicy) {
-        maxFileSize = FileSize.valueOf('10MB')
+    rollingPolicy(SizeAndTimeBasedRollingPolicy) {
+        totalSizeCap = '10MB'
+        maxFileSize = '1MB'
+        maxHistory = 10
+        fileNamePattern = "${logArchiveFileName}-%d{yyyy-MM-dd}-%i.log.gz"
     }
 }
 
@@ -46,14 +50,11 @@ appender("hibernateFileAppender", RollingFileAppender) {
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
-    rollingPolicy(TimeBasedRollingPolicy) {
-        totalSizeCap = "1MB"
-        maxHistory = 20
-        // not working?
-        fileNamePattern = hibernateArchiveFileName
-    }
-    triggeringPolicy(SizeBasedTriggeringPolicy) {
-        maxFileSize = FileSize.valueOf('10MB')
+    rollingPolicy(SizeAndTimeBasedRollingPolicy) {
+        totalSizeCap = '10MB'
+        maxFileSize = '1MB'
+        maxHistory = 10
+        fileNamePattern = "${hibernateArchiveFileName}-%d{yyyy-MM-dd}-%i.log.gz"
     }
 
     //TODO: should I comment this out
@@ -67,13 +68,11 @@ appender("flywayFileAppender", RollingFileAppender) {
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
-    rollingPolicy(TimeBasedRollingPolicy) {
-        totalSizeCap = "1MB"
-        maxHistory = 20
-        fileNamePattern = flywayArchiveFileName
-    }
-    triggeringPolicy(SizeBasedTriggeringPolicy) {
-        maxFileSize = FileSize.valueOf('10MB')
+    rollingPolicy(SizeAndTimeBasedRollingPolicy) {
+        totalSizeCap = '10MB'
+        maxFileSize = '1MB'
+        maxHistory = 10
+        fileNamePattern = "${flywayArchiveFileName}-%d{yyyy-MM-dd}-%i.log.gz"
     }
 }
 
@@ -82,13 +81,11 @@ appender("camelFileAppender", RollingFileAppender) {
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
-    rollingPolicy(TimeBasedRollingPolicy) {
-        totalSizeCap = "1MB"
-        maxHistory = 20
-        fileNamePattern = camelArchiveFileName
-    }
-    triggeringPolicy(SizeBasedTriggeringPolicy) {
-        maxFileSize = FileSize.valueOf('10MB')
+    rollingPolicy(SizeAndTimeBasedRollingPolicy) {
+        totalSizeCap = '10MB'
+        maxFileSize = '1MB'
+        maxHistory = 10
+        fileNamePattern = "${camelArchiveFileName}-%d{yyyy-MM-dd}-%i.log.gz"
     }
 }
 
@@ -97,13 +94,11 @@ appender("errorFileAppender", RollingFileAppender) {
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
-    rollingPolicy(TimeBasedRollingPolicy) {
-        totalSizeCap = "1MB"
-        maxHistory = 20
-        fileNamePattern = errorArchiveFileName
-    }
-    triggeringPolicy(SizeBasedTriggeringPolicy) {
-        maxFileSize = FileSize.valueOf('10MB')
+    rollingPolicy(SizeAndTimeBasedRollingPolicy) {
+        totalSizeCap = '10MB'
+        maxFileSize = '1MB'
+        maxHistory = 10
+        fileNamePattern = "${errorArchiveFileName}-%d{yyyy-MM-dd}-%i.log.gz"
     }
 
     filter(ThresholdFilter) {
@@ -122,28 +117,6 @@ appender("consoleAppender", ConsoleAppender) {
 //    discardingThreshold = 0
 //    includeCallerData = true
 //    appenderRef('fileAppender')
-//}
-
-//***********************************
-// Standard Appender
-//***********************************
-//def createStandardAppender(String appenderName, String fileName) {
-//    def dir = logDirectory
-//    def format = logFormat
-//    println "Adding appender ${appenderName} with file name ${fileName} in directory ${dir}"
-//    appender(appenderName, RollingFileAppender) {
-//        file = "${dir}/${fileName}.log"
-//        encoder(PatternLayoutEncoder) {
-//            pattern = "$format"
-//        }
-//        rollingPolicy(FixedWindowRollingPolicy) {
-//            maxIndex = 4
-//            fileNamePattern = "${LOGS:-logs}/archive/${APPNAME:-app-test}.%d{yyyy-MM-dd}.%i.log.gz"
-//        }
-//        triggeringPolicy(SizeBasedTriggeringPolicy) {
-//            maxFileSize = FileSize.valueOf('10MB')
-//        }
-//    }
 //}
 
 logger('org.hibernate', DEBUG, ['fileAppender', 'hibernateFileAppender'], false)
