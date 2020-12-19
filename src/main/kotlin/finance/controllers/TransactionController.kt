@@ -83,7 +83,7 @@ class TransactionController @Autowired constructor(private var transactionServic
             val response: MutableMap<String, String> = HashMap()
             response["message"] = "updated transactionState"
             response["transactions"] = transactions.toString()
-            return ResponseEntity.ok(response.toString())
+            return ResponseEntity.ok(mapper.writeValueAsString(response))
         }
         throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
     }
@@ -98,7 +98,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     //TODO: should return a 201 CREATED
-    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d ''
+    //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
     @PostMapping(path = ["/insert"], consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
         logger.info("insert - transaction.transactionDate: $transaction")

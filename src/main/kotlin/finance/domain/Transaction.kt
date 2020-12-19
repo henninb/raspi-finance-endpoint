@@ -1,9 +1,6 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonGetter
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.*
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
@@ -31,6 +28,7 @@ import javax.validation.constraints.Size
 @Proxy(lazy = false)
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class Transaction(
     @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
