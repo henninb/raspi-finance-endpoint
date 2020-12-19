@@ -381,22 +381,25 @@ open class TransactionService @Autowired constructor(
 
     @Timed
     @Transactional
-    open fun updateTransactionState(guid: String, transactionState: TransactionState): Boolean {
+    open fun updateTransactionState(guid: String, transactionState: TransactionState): MutableList<Transaction> {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
+            val transactions = mutableListOf<Transaction>()
             val transaction = transactionOptional.get()
 
             transaction.transactionState = transactionState
-            transactionRepository.saveAndFlush(transaction)
+            val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)
+            transactions.add(databaseResponseUpdated)
             //TODO: add metric here
-            if (transaction.transactionState == TransactionState.Cleared &&
-                transaction.reoccurring == true
-                && transaction.reoccurringType != ReoccurringType.Undefined
+            if (databaseResponseUpdated.transactionState == TransactionState.Cleared &&
+                databaseResponseUpdated.reoccurring == true
+                && databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined
             ) {
-                transactionRepository.saveAndFlush(createFutureTransaction(transaction))
+                val databaseResponseInserted = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
+                transactions.add(databaseResponseInserted)
                 //TODO: add metric here
             }
-            return true
+            return transactions
         }
         //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
@@ -439,18 +442,12 @@ open class TransactionService @Autowired constructor(
 
     @Timed
     @Transactional
-    open fun updateTransactionReoccurringState(guid: String, reoccurring: Boolean): Boolean {
+    open fun updateTransactionReoccurringFlag(guid: String, reoccurring: Boolean): Boolean {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
             transactionRepository.saveAndFlush(transaction)
-            if (transaction.transactionState == TransactionState.Cleared &&
-                transaction.reoccurring == true
-                && transaction.reoccurringType != ReoccurringType.Undefined
-            ) {
-                logger.info("TODO: update to reoccurring state")
-            }
             //TODO: add metric here
             return true
         }

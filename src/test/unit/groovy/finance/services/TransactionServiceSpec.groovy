@@ -16,7 +16,6 @@ import org.hibernate.NonUniqueResultException
 import spock.lang.Specification
 
 import javax.validation.Validator
-import java.time.LocalDate
 
 class TransactionServiceSpec extends Specification {
     protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
@@ -234,7 +233,7 @@ class TransactionServiceSpec extends Specification {
         Transaction transaction = TransactionBuilder.builder().build()
 
         when:
-        Boolean isUpdated = transactionService.updateTransactionReoccurringState(transaction.guid, false)
+        Boolean isUpdated = transactionService.updateTransactionReoccurringFlag(transaction.guid, false)
 
         then:
         isUpdated.is(true)
@@ -252,19 +251,19 @@ class TransactionServiceSpec extends Specification {
         transaction.notes = 'my note will be removed'
 
         when:
-        Boolean isUpdated = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
 
         then:
-        isUpdated.is(true)
+        transactions.size() == 2
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction) >> transaction
         1 * mockTransactionRepository.saveAndFlush({ Transaction futureTransaction ->
             assert 365L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
             assert futureTransaction.transactionState == TransactionState.Future
             assert futureTransaction.notes == ''
             assert futureTransaction.reoccurring
             futureTransaction
-        })
+        }) >> transaction
         0 * _
     }
 
@@ -277,19 +276,19 @@ class TransactionServiceSpec extends Specification {
         transaction.notes = 'my note will be removed'
 
         when:
-        Boolean isUpdated = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
 
         then:
-        isUpdated.is(true)
+        transactions.size() == 2
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction) >> transaction
         1 * mockTransactionRepository.saveAndFlush({ Transaction futureTransaction ->
             assert 14L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
             assert futureTransaction.transactionState == TransactionState.Future
             assert futureTransaction.notes == ''
             assert futureTransaction.reoccurring
             futureTransaction
-        })
+        }) >> transaction
         0 * _
     }
 
@@ -301,12 +300,12 @@ class TransactionServiceSpec extends Specification {
         transaction.transactionState = TransactionState.Cleared
 
         when:
-        Boolean isUpdated = transactionService.updateTransactionState(transaction.guid, TransactionState.Future)
+        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Future)
 
         then:
-        isUpdated.is(true)
+        transactions.size() == 1
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockTransactionRepository.saveAndFlush(transaction) >> transaction
         0 * _
     }
 }

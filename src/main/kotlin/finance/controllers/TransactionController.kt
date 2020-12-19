@@ -16,7 +16,6 @@ import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
-import java.io.IOException
 import java.math.BigDecimal
 import java.util.*
 import javax.validation.ConstraintViolationException
@@ -65,28 +64,33 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }
 
+    //TODO: return the payload of the updated and the inserted
     @PutMapping(path = ["/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransaction(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
         if (updateStatus) {
-            return ResponseEntity.ok("transaction put")
+            return ResponseEntity.ok("transaction updated")
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
+    //TODO: return the payload of the updated and the inserted
     @PutMapping(path = ["/state/update/{guid}/{state}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransactionState(@PathVariable("guid") guid: String, @PathVariable("state") state: TransactionState): ResponseEntity<String> {
-        val updateStatus: Boolean = transactionService.updateTransactionState(guid, state)
-        if (updateStatus) {
-            return ResponseEntity.ok("transaction state updated")
+        val transactions = transactionService.updateTransactionState(guid, state)
+        if (transactions.isNotEmpty()) {
+            val response: MutableMap<String, String> = HashMap()
+            response["message"] = "updated transactionState"
+            response["transactions"] = transactions.toString()
+            return ResponseEntity.ok(response.toString())
         }
         throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
     }
 
     @PutMapping(path = ["/reoccurring/update/{guid}/{reoccurring}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransactionReoccurringState(@PathVariable("guid") guid: String, @PathVariable("reoccurring") reoccurring: Boolean): ResponseEntity<String> {
-        val updateStatus: Boolean = transactionService.updateTransactionReoccurringState(guid, reoccurring)
+        val updateStatus: Boolean = transactionService.updateTransactionReoccurringFlag(guid, reoccurring)
         if (updateStatus) {
             return ResponseEntity.ok("transaction reoccurring updated")
         }
@@ -105,8 +109,9 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
+    // change the account name owner of a given transaction
     @PutMapping(path = ["/update/account"], consumes = ["application/json"], produces = ["application/json"])
-    fun updateAccountByGuid(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
+    fun changeTransactionAccountNameOwner(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
         //TODO: need to complete action
         logger.info("value of accountNameOwner: " + payload["accountNameOwner"])
         logger.info("value of guid: " + payload["guid"])
@@ -124,14 +129,14 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok("transaction receipt image updated")
     }
 
-    //curl -s -X POST https://hornsup:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
-    @PostMapping(path = ["/clone"], consumes = ["application/json"], produces = ["application/json"])
-    fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
-        if (transactionService.cloneAsMonthlyTransaction(payload)) {
-            return ResponseEntity.ok("transaction inserted")
-        }
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
-    }
+//    //curl -s -X POST https://hornsup:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
+//    @PostMapping(path = ["/clone"], consumes = ["application/json"], produces = ["application/json"])
+//    fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
+//        if (transactionService.cloneAsMonthlyTransaction(payload)) {
+//            return ResponseEntity.ok("transaction inserted")
+//        }
+//        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
+//    }
 
     //curl --header "Content-Type: application/json" -X DELETE https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
     //curl --header "Content-Type: application/json" -X DELETE https://hornsup:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
