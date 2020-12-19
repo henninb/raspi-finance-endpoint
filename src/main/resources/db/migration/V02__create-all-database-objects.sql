@@ -215,8 +215,9 @@ ALTER TABLE t_receipt_image DROP CONSTRAINT IF EXISTS fk_transaction;
 ALTER TABLE t_receipt_image ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE;
 
 -- example
+-- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'undefined'));
+-- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined'));
 -- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
 
@@ -252,26 +253,6 @@ CREATE TRIGGER tr_update_transaction
     ON t_transaction
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_transaction();
-
--- DROP FUNCTION IF EXISTS fn_create_reoccurring_transaction();
--- CREATE OR REPLACE FUNCTION fn_create_reoccurring_transaction() RETURNS TRIGGER AS
--- $$
--- DECLARE
--- BEGIN
---     -- only do this if OLD is not undefined
---     INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date, description, category, amount, transaction_state, reoccurring, reoccurring_type, active_status, notes, receipt_image_id, date_updated, date_added)
---     VALUES(OLD.account_id, OLD.account_type, OLD.account_name_owner, uuid_generate_v4(), OLD.transaction_date + interval '1 year', OLD.description, OLD.category, OLD.amount, 'future', true, OLD.reoccurring_type, true, '', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
---     RETURN NULL;
--- END;
--- $$ LANGUAGE PLPGSQL;
---
--- DROP TRIGGER IF EXISTS tr_create_reoccurring_transaction ON t_transaction;
--- CREATE TRIGGER tr_create_reoccurring_transaction
---     AFTER UPDATE
---     ON t_transaction
---     FOR EACH ROW
---     WHEN (NEW.reoccurring = true AND NEW.reoccurring_type != 'undefined' AND NEW.transaction_state = 'cleared' AND OLD.transaction_state != 'undefined')
--- EXECUTE PROCEDURE fn_create_reoccurring_transaction();
 
 -------------
 -- Payment --
@@ -422,6 +403,14 @@ CREATE TRIGGER tr_update_description
     ON t_description
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_description();
+
+SELECT setval('t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM t_receipt_image)+1);
+SELECT setval('t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM t_transaction)+1);
+SELECT setval('t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM t_payment)+1);
+SELECT setval('t_account_account_id_seq', (SELECT MAX(account_id) FROM t_account)+1);
+SELECT setval('t_category_category_id_seq', (SELECT MAX(category_id) FROM t_category)+1);
+SELECT setval('t_description_description_id_seq', (SELECT MAX(description_id) FROM t_description)+1);
+SELECT setval('t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM t_parm)+1);
 
 COMMIT;
 
