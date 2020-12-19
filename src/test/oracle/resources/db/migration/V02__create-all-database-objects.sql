@@ -1,12 +1,6 @@
-set serveroutput on;
-
-select sysdate
-from dual;
-
 --------------
 -- Account --
 --------------
-drop table t_account cascade constraints;
 CREATE TABLE t_account
 (
     account_id         NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -27,12 +21,9 @@ CREATE TABLE t_account
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
--- describe t_account;
-
 --------------
 -- Category --
 --------------
-drop table t_category cascade constraints;
 CREATE TABLE t_category
 (
     category_id   NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -43,12 +34,9 @@ CREATE TABLE t_category
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
--- describe t_category;
-
 ---------------------------
 -- TransactionCategories --
 ---------------------------
-drop table t_transaction_categories cascade constraints;
 CREATE TABLE t_transaction_categories
 (
     category_id    NUMBER    NOT NULL,
@@ -57,12 +45,10 @@ CREATE TABLE t_transaction_categories
     date_added     TIMESTAMP NULL,
     PRIMARY KEY (category_id, transaction_id)
 );
--- describe t_transaction_categories;
 
 -------------------
 -- ReceiptImage  --
 -------------------
-drop table t_receipt_image cascade constraints;
 CREATE TABLE t_receipt_image
 (
     receipt_image_id NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -84,7 +70,6 @@ CREATE TABLE t_receipt_image
 -----------------
 -- Transaction --
 -----------------
-drop table t_transaction cascade constraints;
 CREATE TABLE t_transaction
 (
     transaction_id     NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -123,7 +108,6 @@ CREATE TABLE t_transaction
 -------------
 -- Payment --
 -------------
-drop table t_payment cascade constraints;
 CREATE TABLE t_payment
 (
     payment_id         NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -132,8 +116,7 @@ CREATE TABLE t_payment
     amount             NUMERIC(8, 2) DEFAULT 0.00 NOT NULL,
     guid_source        VARCHAR(40)                NOT NULL,
     guid_destination   VARCHAR(40)                NOT NULL,
-    --TODO: bh 11/11/2020 - need to add this field
-    --active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
+    active_status      CHAR(1)       DEFAULT 1    NOT NULL,
     date_updated       TIMESTAMP                  NULL,
     date_added         TIMESTAMP                  NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
@@ -144,7 +127,6 @@ CREATE TABLE t_payment
 -------------
 -- Parm --
 -------------
-drop table t_parm cascade constraints;
 CREATE TABLE t_parm
 (
     parm_id       NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -158,7 +140,6 @@ CREATE TABLE t_parm
 -----------------
 -- description --
 -----------------
-drop table t_description cascade constraints;
 CREATE TABLE t_description
 (
     description_id NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
@@ -168,15 +149,3 @@ CREATE TABLE t_description
     date_added     TIMESTAMP          NULL
     -- CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
-
---WHENEVER SQLERROR CONTINUE NONE
---DROP TABLE TABLE_NAME;
-
---BEGIN
---    FOR i IN (SELECT NULL FROM USER_OBJECTS WHERE OBJECT_TYPE = 'TABLE' AND OBJECT_NAME = 'T_ACCOUNT') LOOP
---           EXECUTE IMMEDIATE 'DROP TABLE T_ACCOUNT';
---    END LOOP;
---END;
-
-quit;
-/
