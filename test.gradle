@@ -1,9 +1,7 @@
 sourceSets {
     test {
         groovy.srcDir "src/test/unit/groovy"
-        java.srcDir "src/test/unit/java"
         resources.srcDir "src/main/resources"
-
 
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
@@ -11,7 +9,6 @@ sourceSets {
 
     integrationTest {
         groovy.srcDir "src/test/integration/groovy"
-        java.srcDir "src/test/integration/java"
         resources.srcDir "src/main/resources"
 
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
@@ -20,7 +17,6 @@ sourceSets {
 
     functionalTest {
         groovy.srcDir "src/test/functional/groovy"
-        java.srcDir "src/test/functional/java"
         resources.srcDir "src/main/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
@@ -28,7 +24,6 @@ sourceSets {
 
     performanceTest {
         groovy.srcDir "src/test/performance/groovy"
-        java.srcDir "src/test/performance/java"
         resources.srcDir "src/main/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
@@ -36,7 +31,7 @@ sourceSets {
 
     oracleTest {
         groovy.srcDir "src/test/oracle/groovy"
-        resources.srcDir "src/main/resources"
+        resources.srcDir "src/test/oracle/resources"
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
