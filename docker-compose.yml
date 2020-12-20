@@ -51,7 +51,7 @@ services:
     volumes:
       - ./grafana-data:/var/lib/grafana
   postgresql-server:
-    image: postgres:12.5
+    image: postgres:13.1
     user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: postgresql-server
     ports:
