@@ -67,9 +67,9 @@ compileKotlin {
 }
 
 sourceSets {
-    main.scala.srcDirs += "src/main/scala"
+    //main.scala.srcDirs += "src/main/scala"
     main.kotlin.srcDirs += "src/main/kotlin"
-    main.java.srcDirs += "src/main/java"
+    //main.java.srcDirs += "src/main/java"
 }
 
 compileJava {
