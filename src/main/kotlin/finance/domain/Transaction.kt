@@ -107,7 +107,7 @@ data class Transaction(
         @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "notes", nullable = false)
-        var notes: String
+        var notes: String = ""
 ) {
 
     constructor() : this(0L, "", 0, AccountType.Undefined, "", Date(0),
