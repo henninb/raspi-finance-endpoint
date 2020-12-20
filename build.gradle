@@ -123,6 +123,13 @@ dependencies {
     runtimeOnly("com.h2database:h2:${h2Version}")
 
     // Oracle database
+    //runtimeOnly files('libs/jackson-core-asl-1.9.2.jar')
+//    def oracleJar = $/./lib/ojdbc8.jar/$
+//    if( oracleJar.exists() ) {
+//
+//    }
+
+    runtimeOnly fileTree(dir: 'libs', include: '*.jar')
     //runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
     implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
 
