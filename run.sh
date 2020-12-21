@@ -59,6 +59,11 @@ mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
 
+# git will not pick up changes to oracle config
+git update-index --assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
+# undo
+# git update-index --no-assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
+
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
 if [ -x "$(command -v ctags)" ]; then
