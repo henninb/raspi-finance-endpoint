@@ -212,7 +212,7 @@ open class TransactionService @Autowired constructor(
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
             //TODO: return something here
-            meterService.incrementAccountListIsEmpty(accountNameOwner)
+            meterService.incrementAccountListIsEmpty("non-existent-accounts")
         }
         return sortedTransactions
     }

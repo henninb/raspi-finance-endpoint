@@ -2,17 +2,32 @@
 
 cat > /tmp/transaction-insert <<EOF
 {
-  "accountId": 0,
   "accountType": "credit",
   "transactionDate": "2020-09-04",
   "guid": "$(uuidgen)",
-  "accountNameOwner": "test_brian",
-  "description": "aliexpress.com",
+  "accountNameOwner": "foo_brian",
+  "description": "newegg.com",
   "category": "online",
   "amount": 0,
   "transactionState": "cleared",
   "reoccurring": false,
-  "notes": "my note to you",
+  "notes": "",
+  "activeStatus": "true"
+}
+EOF
+
+cat > /tmp/transaction-insert-debit <<EOF
+{
+  "accountType": "debit",
+  "transactionDate": "2020-09-04",
+  "guid": "$(uuidgen)",
+  "accountNameOwner": "bank_brian",
+  "description": "newegg.com",
+  "category": "online",
+  "amount": 0,
+  "transactionState": "cleared",
+  "reoccurring": false,
+  "notes": "",
   "activeStatus": "true"
 }
 EOF
@@ -22,24 +37,30 @@ cat > /tmp/account-insert <<EOF
   "accountNameOwner": "test_brian",
   "accountType": "credit",
   "moniker": "0000",
-  "totals": 0,
-  "totalsBalanced": 0,
-  "dateClosed": 0,
   "activeStatus": true
 }
 EOF
 
-cat /tmp/transaction-insert
-cat /tmp/account-insert
-
+echo
+echo payment required
 curl -k 'https://hornsup:8080/account/payment/required'
 
+
 exit 0
+# echo these break the code
+echo account
+curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"test_brian", "accountType":"credit", "moniker":"0000", "activeStatus":true}'
 
-
+echo
 echo account
 echo
-curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"test_brian", "accountType":"credit", "moniker":"0000", "totals":0, "totalsBalanced":0, "dateClosed":0, "activeStatus":true}'
+curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"bank_brian", "accountType":"debit", "moniker":"0000", "activeStatus":true}'
+
+
+echo
+echo transaction
+echo
+curl -k --header "Content-Type: application/json" https://localhost:8080/transaction/insert -X POST --data-binary @/tmp/transaction-insert
 
 echo
 echo payment
