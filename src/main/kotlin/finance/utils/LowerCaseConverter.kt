@@ -7,22 +7,20 @@ import javax.persistence.Converter
 @Converter
 class LowerCaseConverter : AttributeConverter<String, String> {
 
-    override fun convertToDatabaseColumn(attribute: String): String {
-        return try {
-            attribute.toLowerCase()
-        } catch( e: NullPointerException) {
-            logger.info(e.message)
-            ""
+    override fun convertToDatabaseColumn(attribute: String?): String {
+        if( attribute == null) {
+            return ""
         }
+
+        return attribute.toLowerCase()
     }
 
-    override fun convertToEntityAttribute(attribute: String): String {
-        return try {
-            attribute.toLowerCase()
-        } catch( e: NullPointerException) {
-            logger.info(e.message)
-            ""
+    override fun convertToEntityAttribute(attribute: String?): String {
+        if( attribute == null) {
+            return ""
         }
+
+        return attribute.toLowerCase()
     }
 
     companion object {
