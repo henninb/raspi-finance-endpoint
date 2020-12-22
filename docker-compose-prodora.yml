@@ -19,6 +19,10 @@ services:
     depends_on:
       - oracle-database-server
     restart: on-failure:10
+  # makes the `db` service available as the hostname `database`
+  # (implies depends_on)
+  # links:
+  #   - oracle-database-server:database
     # environment:
     #   WAIT_HOSTS: oracle:1521
     # command:
