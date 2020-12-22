@@ -1,0 +1,30 @@
+version: "3.7"
+services:
+  oracle-database-server:
+    image: store/oracle/database-enterprise:12.2.0.1
+    # user: "${CURRENT_UID}:${CURRENT_GID}"
+    container_name: oracle-database-server
+    # volumes:
+    #   - /opt/oracle-data:/ORCL
+    ports:
+      - "1521:1521"
+    expose:
+      - "1521"
+  raspi-finance-endpoint:
+    env_file:
+      - env.prodora
+    depends_on:
+      - oracle-database-server
+    restart: on-failure:3
+    # environment:
+    #   WAIT_HOSTS: oracle:1521
+    # command:
+    #   /bin/sh -c "ping 127.0.0.1 -c 10"
+      # /bin/sh -c "
+      #   echo Waiting for oracle service start...;
+      #   while ! nc -z rabbitmq 1521;
+      #   do
+      #     sleep 1;
+      #   done;
+      #   echo Connected!;
+     # "

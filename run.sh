@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-ENV=$1
+env=$1
 APP=raspi-finance-endpoint
 
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 <prod|func|perf>"
+  echo "Usage: $0 <prod|func|perf|prodora>"
   exit 1
 fi
 
-if [ "$ENV" = "prod" ] || [ "$ENV" = "func" ] || [ "$ENV" = "perf" ]; then
-  echo "${ENV}"
+if [ "$env" = "prod" ] || [ "$env" = "func" ] || [ "$env" = "perf" ] || [ "$env" = "prodora" ]; then
+  echo "${env}"
 else
-  echo "Usage: $0 <prod|func|perf>"
+  echo "Usage: $0 <prod|func|perf|prodora>"
   exit 2
 fi
 
@@ -70,7 +70,7 @@ if [ -x "$(command -v ctags)" ]; then
   git ls-files | ctags --links=no --languages=groovy,kotlin -L-
 fi
 
-if [ "$ENV" = "prod" ]; then
+if [ "$env" = "prod" ]; then
   if ! ./gradlew clean build functionalTest; then
     echo "gradle build failed."
     exit 1
@@ -96,8 +96,10 @@ if [ -n "${POSTGRESQL_CONTAINER}" ]; then
   docker rm -f "${POSTGRESQL_CONTAINER}" 2> /dev/null
 fi
 
+echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
 if [ -x "$(command -v docker-compose)" ]; then
-  if ! docker-compose -f docker-compose.yml -f "docker-compose-${ENV}.yml" config > docker-compose-run.yml; then
+
+  if ! docker-compose -f docker-compose.yml -f "docker-compose-${env}.yml" config > docker-compose-run.yml; then
     echo "docker-compose config failed."
     exit 1
   fi
