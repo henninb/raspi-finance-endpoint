@@ -1,18 +1,18 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT}
   ssl:
     key-store: classpath:hornsup-raspi-finance-keystore.p12
-    key-store-password: monday1
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: pkcs12
     key-alias: hornsup-raspi-finance
-    key-password: monday1
-    enabled: true
+    key-password: ${SSL_KEY_PASSWORD}
+    enabled: ${SSL_ENABLED}
     enabled-protocols: TLSv1.2
 spring:
   application:
     name: raspi-finance-endpoint
   profiles:
-    active: prodora
+    active: ${SPRING_PROFILES_ACTIVE}
 
   # ===============================
   # = Jackson Settings
@@ -26,9 +26,11 @@ spring:
   # = DATA SOURCE
   # ===============================
   datasource:
-    url: jdbc:oracle:thin:@192.168.100.208:1521/ORCLCDB.localdomain
-    username: henninb
-    password: monday1
+    url: jdbc:oracle:thin:@hornsup:1521/ORCLCDB.localdomain
+    #username: henninb
+    username: system
+    password: Oradoc_db1
+    #password: monday1
     driver-class-name: oracle.jdbc.OracleDriver
     # testWhileIdle to persist the connection when idle for a long period of time
     tomcat:
@@ -67,9 +69,11 @@ spring:
   # ===============================
   flyway:
     enabled: false
-    user: henninb
-    password: monday1
-    url: jdbc:oracle:thin:@192.168.100.208:1521/ORCLCDB.localdomain
+    #username: henninb
+    username: system
+    password: Oradoc_db1
+    #password: monday1
+    url: jdbc:oracle:thin:@hornsup:1521/ORCLCDB.localdomain
     baseline-on-migrate: true
     locations: classpath:db/migration
 #    validate-on-migrate: true
