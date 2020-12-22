@@ -10,12 +10,15 @@ services:
       - "1521:1521"
     expose:
       - "1521"
+    environment:
+      # - DB_SID=financedb
+      - DUMMY=true
   raspi-finance-endpoint:
     env_file:
       - env.prodora
     depends_on:
       - oracle-database-server
-    restart: on-failure:3
+    restart: on-failure:10
     # environment:
     #   WAIT_HOSTS: oracle:1521
     # command:

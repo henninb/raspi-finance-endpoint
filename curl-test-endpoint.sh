@@ -45,16 +45,21 @@ echo
 echo payment required
 curl -k 'https://hornsup:8080/account/payment/required'
 
+echo
+echo account
+echo
+curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"bank_brian", "accountType":"debit", "moniker":"0000", "activeStatus":true, "totals":0, "totalsBalanced":0, "dateClosed":0}'
+echo
+curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"chase_brian", "accountType":"credit", "moniker":"0000", "activeStatus":true, "totals":0, "totalsBalanced":0, "dateClosed":0}'
+
+echo
+echo parameter setup
+curl -k --header "Content-Type: application/json" -X POST -d '{"parameterName":"payment_account","parameterValue":"bank_brian", "activeStatus":true}' 'https://localhost:8080/parm/insert'
 
 exit 0
 # echo these break the code
 echo account
 curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"test_brian", "accountType":"credit", "moniker":"0000", "activeStatus":true}'
-
-echo
-echo account
-echo
-curl -k --header "Content-Type: application/json" https://localhost:8080/account/insert -X POST -d '{"accountNameOwner":"bank_brian", "accountType":"debit", "moniker":"0000", "activeStatus":true}'
 
 
 echo

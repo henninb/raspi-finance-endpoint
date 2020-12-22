@@ -68,14 +68,14 @@ spring:
   # = Flyway
   # ===============================
   flyway:
-    enabled: false
+    enabled: true
     #username: henninb
     username: system
     password: Oradoc_db1
     #password: monday1
     url: jdbc:oracle:thin:@hornsup:1521/ORCLCDB.localdomain
     baseline-on-migrate: true
-    locations: classpath:db/migration
+    locations: classpath:db/oracle
 #    validate-on-migrate: true
 
 # ===============================

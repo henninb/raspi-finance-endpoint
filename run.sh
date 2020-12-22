@@ -61,6 +61,7 @@ mkdir -p 'excel_in'
 
 # git will not pick up changes to oracle config
 git update-index --assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
+git update-index --assume-unchanged env.secrets
 # undo
 # git update-index --no-assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
 
