@@ -1,12 +1,11 @@
 package finance.utils
 
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 import java.sql.Timestamp
 import javax.validation.ConstraintValidator
 import javax.validation.ConstraintValidatorContext
 
 class TimestampValidator : ConstraintValidator<ValidTimestamp, Timestamp> {
-    private val logger = LoggerFactory.getLogger(this.javaClass)
 
     override fun initialize(constraintAnnotation: ValidTimestamp) {
     }
@@ -14,5 +13,9 @@ class TimestampValidator : ConstraintValidator<ValidTimestamp, Timestamp> {
     override fun isValid(value: Timestamp, context: ConstraintValidatorContext): Boolean {
         logger.info("timestampToBeEvaluated: $value")
         return value > Timestamp(946684800000)
+    }
+
+    companion object {
+        private val logger = LogManager.getLogger()
     }
 }
