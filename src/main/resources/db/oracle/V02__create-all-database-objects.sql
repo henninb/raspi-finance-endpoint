@@ -159,13 +159,25 @@ CREATE TABLE t_description
     -- CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
 
--- -- t_account
+--select * from USER_TRIGGERS;
+
+-- t_account
+CREATE OR REPLACE TRIGGER tr_insert_account
+    AFTER INSERT ON t_account FOR EACH ROW
+BEGIN
+dbms_output.put_line(
+                'account_name_owner: ' || :new.ACCOUNT_NAME || ' account_type: ' || :new.ACCOUNT_TYPE
+        );
+END;
+
+--ALTER TRIGGER tr_insert_account ENABLE;
+-- select TRIGGER_BODY from USER_TRIGGERS;
 -- CREATE OR REPLACE TRIGGER tr_insert_account
 -- AFTER INSERT
 --       ON t_account
 --           FOR EACH ROW
 -- BEGIN
--- UPDATE t_account(date_updated, date_added) VALUES(sysdate, sysdate);
+-- UPDATE t_account set date_updated=sysdate, date_added= sysdate;
 -- END;
 --
 -- -- t_transaction_categories
