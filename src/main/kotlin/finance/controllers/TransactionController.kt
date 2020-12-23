@@ -31,7 +31,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
-        if (transactions.isEmpty()) {
+        if (transactions.isEmpty() ) {
+            logger.error("transactions.size=${transactions.size}")
             //TODO: not found, should I take this action?
             ResponseEntity.notFound().build<List<Transaction>>()
         }

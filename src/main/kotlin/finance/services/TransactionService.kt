@@ -211,7 +211,6 @@ open class TransactionService @Autowired constructor(
             transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
             logger.error("an empty list of AccountNameOwner.")
-            //TODO: return something here
             meterService.incrementAccountListIsEmpty("non-existent-accounts")
         }
         return sortedTransactions

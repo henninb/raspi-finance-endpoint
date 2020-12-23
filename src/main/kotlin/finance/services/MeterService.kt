@@ -47,7 +47,8 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
 
     }
 
-    fun incrementExceptionCounter(exceptionName: String) {
+    @Transactional
+    open fun incrementExceptionCounter(exceptionName: String) {
         meterRegistry.counter(EXCEPTION_COUNTER, EXCEPTION_NAME_TYPE_TAG, exceptionName).increment()
     }
 
@@ -71,7 +72,8 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         meterRegistry.counter(TRANSACTION_RECEIVED_EVENT_COUNTER, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 
-    fun incrementAccountListIsEmpty(accountNameOwner: String) {
+    @Transactional
+    open fun incrementAccountListIsEmpty(accountNameOwner: String) {
         meterRegistry.counter(TRANSACTION_LIST_IS_EMPTY, ACCOUNT_NAME_TAG, accountNameOwner).increment()
     }
 
