@@ -123,4 +123,7 @@ logger('org.hibernate', INFO, ['fileAppender', 'hibernateFileAppender'], false)
 logger('org.flywaydb', INFO, ['fileAppender', 'flywayFileAppender'])
 logger('org.apache.camel', INFO, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
 
+//logger('ch.qos.logback', NONE, false)
+        //<logger name="ch.qos.logback" level="OFF" additivity="false" />
+
 root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
