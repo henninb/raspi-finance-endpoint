@@ -21,7 +21,6 @@ ADD ./build/libs/${APP}*.jar /opt/${APP}/bin/${APP}.jar
 RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 RUN apt -y update 2> /dev/null
 RUN apt install -y netcat 2> /dev/null
-# RUN while ! nc -z hornsup 1521; do sleep 1; done
 
 WORKDIR /opt/${APP}/bin
 USER ${USERNAME}
@@ -29,4 +28,7 @@ USER ${USERNAME}
 # RUN sleep 10
 
 # default on OSX was 522m, so increased to 2048
+# RUN echo while ! nc -z hornsup 1521; do sleep 1; done >  run
+# RUN echo java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar > run
+# RUN chmod 755 run
 CMD java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar

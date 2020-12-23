@@ -53,12 +53,15 @@ class TransactionSpec extends Specification {
 
         when:
         String json = mapper.writeValueAsString(transactionFromString)
+        println json
+        
 
         then:
         json.contains(transactionFromString.guid)
         json.contains(transactionFromString.description)
         json.contains(transactionFromString.notes)
         json.contains(transactionFromString.transactionState.toString())
+        json.contains(transactionFromString.transactionDate.toString())
         0 * _
     }
 

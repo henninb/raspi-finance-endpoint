@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Date
+import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -73,11 +74,13 @@ open class TransactionService @Autowired constructor(
 
         if (transactionOptional.isPresent) {
             val transactionDb = transactionOptional.get()
-            return updateTransaction(transactionDb, transaction)
+            return masterTransactionUpdater(transactionDb, transaction)
         }
 
         processAccount(transaction)
         processCategory(transaction)
+        transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        transaction.dateAdded = Timestamp(Calendar.getInstance().time.time)
         transactionRepository.saveAndFlush(transaction)
         meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
@@ -117,28 +120,63 @@ open class TransactionService @Autowired constructor(
         }
     }
 
-    private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {
-        if (transactionDb.accountNameOwner.trim() == transaction.accountNameOwner) {
-
-            if (transactionDb.amount != transaction.amount) {
-                logger.info("discrepancy in the amount for <${transactionDb.guid}>")
-                //TODO: add metric here
-                transactionRepository.setAmountByGuid(transaction.amount, transaction.guid)
-                return true
-            }
-
-            if (transactionDb.transactionState != transaction.transactionState) {
-                logger.info("discrepancy in the cleared value for <${transactionDb.guid}>")
-                //TODO: add metric here
-                transactionRepository.setTransactionStateByGuid(transaction.transactionState, transaction.guid)
-                return true
-            }
-        }
-
-        //TODO: add metric here
-        logger.info("transaction already exists, no transaction data inserted for ${transaction.guid}")
-        return false
-    }
+//    // TODO: set dateUpdated - not sure this is working
+//    private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {
+//        if (transactionDb.accountNameOwner == transaction.accountNameOwner) {
+//            var updateFlag = false
+//
+//            if (transactionDb.amount != transaction.amount) {
+//                transactionDb.amount = transaction.amount
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.transactionState != transaction.transactionState) {
+//                transactionDb.transactionState = transaction.transactionState
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.notes != transaction.notes) {
+//                transactionDb.notes = transaction.notes
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.reoccurring != transaction.reoccurring) {
+//                transactionDb.reoccurring = transaction.reoccurring
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.reoccurringType != transaction.reoccurringType) {
+//                transactionDb.reoccurringType = transaction.reoccurringType
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.transactionDate != transaction.transactionDate) {
+//                transactionDb.transactionDate = transaction.transactionDate
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.description != transaction.description) {
+//                transactionDb.description = transaction.description
+//                updateFlag = true
+//            }
+//
+//            if (transactionDb.category != transaction.category) {
+//                transactionDb.category = transaction.category
+//                updateFlag = true
+//            }
+//
+//            if( updateFlag ) {
+//                transactionDb.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+//                transactionRepository.saveAndFlush(transactionDb)
+//            }
+//
+//            return updateFlag
+//        }
+//
+//        //TODO: add metric here
+//        logger.error("transaction already exists, no transaction data inserted for ${transaction.guid}")
+//        return false
+//    }
 
     private fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
@@ -185,7 +223,7 @@ open class TransactionService @Autowired constructor(
             return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
         } catch (e: Exception) {
             meterService.incrementExceptionCounter(e.toString())
-            logger.error("empty getTotalsByAccountNameOwner failed.")
+            logger.error("Returned an empty getTotalsByAccountNameOwner result.")
         }
         return 0.00
     }
@@ -195,7 +233,7 @@ open class TransactionService @Autowired constructor(
             return transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
         } catch (e: Exception) {
             meterService.incrementExceptionCounter(e.toString())
-            logger.error("empty getTotalsByAccountNameOwnerCleared failed.")
+            logger.error("Returned an empty getTotalsByAccountNameOwnerCleared result.")
         }
         return 0.00
     }
@@ -210,7 +248,7 @@ open class TransactionService @Autowired constructor(
         val sortedTransactions =
             transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
         if (transactions.isEmpty()) {
-            logger.error("an empty list of AccountNameOwner.")
+            logger.error("Found an empty list of AccountNameOwner.")
             meterService.incrementAccountListIsEmpty("non-existent-accounts")
         }
         return sortedTransactions
@@ -225,60 +263,66 @@ open class TransactionService @Autowired constructor(
             throw ValidationException("Cannot update transaction as there is a constraint violation on the data.")
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
-        //TODO: add logic for patch
-        if (optionalTransaction.isPresent) {
+        return if (optionalTransaction.isPresent) {
             val fromDb = optionalTransaction.get()
-            if (fromDb.guid == transaction.guid) {
-                logger.info("successful patch $transaction")
-                processCategory(transaction)
-                transactionRepository.saveAndFlush(transaction)
-                if (transaction.transactionState == TransactionState.Cleared &&
-                    transaction.reoccurring == true
-                    && transaction.reoccurringType != ReoccurringType.Undefined
-                ) {
-                    transactionRepository.saveAndFlush(createFutureTransaction(transaction))
-                }
-            } else {
-                logger.warn("GUID did not match any database records.")
-                return false
-            }
+            masterTransactionUpdater(fromDb, transaction)
         } else {
-            logger.warn("WARN: cannot patch a transaction without a valid GUID.")
-            return false
+            logger.warn("cannot update a transaction without a valid guid.")
+            false
         }
-        return true
     }
 
-    @Timed
-    @Transactional
-    open fun cloneAsMonthlyTransaction(map: Map<String, String>): Boolean {
-        val guid: String = map["guid"] ?: error("guid must be set.")
-        val amount: String = map["amount"] ?: error("transactionDate must be set.")
-        val isMonthEnd = map["monthEnd"] ?: error("monthEnd must be set.")
-        val specificDay = map["specificDay"] ?: error("specificDay must be set.")
+    private fun masterTransactionUpdater( fromDb: Transaction,  transaction: Transaction): Boolean {
+        if (fromDb.guid == transaction.guid) {
 
-        val optionalTransaction = transactionRepository.findByGuid(guid)
+            processCategory(transaction)
+            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            transactionRepository.saveAndFlush(transaction)
+            logger.info("successfully updated ${transaction.guid}")
 
-        val calendar = Calendar.getInstance()
-        val month = calendar[Calendar.MONTH]
-        val year = calendar[Calendar.YEAR]
-        calendar.clear()
-        calendar[Calendar.YEAR] = year
-
-        for (currentMonth in month..11) {
-            calendar[Calendar.MONTH] = currentMonth
-
-            val fixedMonthDay: Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
-
-            if (optionalTransaction.isPresent) {
-                setValuesForClearedReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
-            } else {
-                logger.error("Cannot clone monthly transaction for a record found '${guid}'.")
-                throw RuntimeException("Cannot clone monthly transaction for a record found '${guid}'.")
+            if (transaction.transactionState == TransactionState.Cleared &&
+                transaction.reoccurring &&
+                transaction.reoccurringType != ReoccurringType.Undefined
+            ) {
+                val transactionReoccurring = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
+                logger.info("successfully added reoccurring transaction ${transactionReoccurring.guid}")
             }
+            return true
         }
+        logger.warn("guid did not match any database records.")
         return true
     }
+
+//    @Timed
+//    @Transactional
+//    open fun cloneAsMonthlyTransaction(map: Map<String, String>): Boolean {
+//        val guid: String = map["guid"] ?: error("guid must be set.")
+//        val amount: String = map["amount"] ?: error("transactionDate must be set.")
+//        val isMonthEnd = map["monthEnd"] ?: error("monthEnd must be set.")
+//        val specificDay = map["specificDay"] ?: error("specificDay must be set.")
+//
+//        val optionalTransaction = transactionRepository.findByGuid(guid)
+//
+//        val calendar = Calendar.getInstance()
+//        val month = calendar[Calendar.MONTH]
+//        val year = calendar[Calendar.YEAR]
+//        calendar.clear()
+//        calendar[Calendar.YEAR] = year
+//
+//        for (currentMonth in month..11) {
+//            calendar[Calendar.MONTH] = currentMonth
+//
+//            val fixedMonthDay: Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
+//
+//            if (optionalTransaction.isPresent) {
+//                setValuesForClearedReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
+//            } else {
+//                logger.error("Cannot clone monthly transaction for a record found '${guid}'.")
+//                throw RuntimeException("Cannot clone monthly transaction for a record found '${guid}'.")
+//            }
+//        }
+//        return true
+//    }
 
     @Timed
     @Transactional
@@ -307,7 +351,7 @@ open class TransactionService @Autowired constructor(
             receiptImage.jpgImage = jpgBase64Data
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = receiptImageId
-
+            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             transactionRepository.saveAndFlush(transaction)
             meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
             return true
@@ -317,38 +361,38 @@ open class TransactionService @Autowired constructor(
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
-    private fun setValuesForClearedReoccurringTransactions(
-        optionalTransaction: Optional<Transaction>,
-        fixedMonthDay: Date,
-        amount: String
-    ): Boolean {
-        val oldTransaction = optionalTransaction.get()
-        val transaction = Transaction()
-        transaction.guid = UUID.randomUUID().toString()
-        transaction.transactionDate = fixedMonthDay
-        transaction.description = oldTransaction.description
-        transaction.category = oldTransaction.category
-        transaction.amount = amount.toBigDecimal()
-        transaction.transactionState = TransactionState.Future
-        transaction.notes = oldTransaction.notes
-        transaction.reoccurring = oldTransaction.reoccurring
-        transaction.accountType = oldTransaction.accountType
-        transaction.accountId = oldTransaction.accountId
-        transaction.accountNameOwner = oldTransaction.accountNameOwner
-        transactionRepository.saveAndFlush(transaction)
-        return true
-    }
+//    private fun setValuesForClearedReoccurringTransactions(
+//        optionalTransaction: Optional<Transaction>,
+//        fixedMonthDay: Date,
+//        amount: String
+//    ): Boolean {
+//        val oldTransaction = optionalTransaction.get()
+//        val transaction = Transaction()
+//        transaction.guid = UUID.randomUUID().toString()
+//        transaction.transactionDate = fixedMonthDay
+//        transaction.description = oldTransaction.description
+//        transaction.category = oldTransaction.category
+//        transaction.amount = amount.toBigDecimal()
+//        transaction.transactionState = TransactionState.Future
+//        transaction.notes = oldTransaction.notes
+//        transaction.reoccurring = oldTransaction.reoccurring
+//        transaction.accountType = oldTransaction.accountType
+//        transaction.accountId = oldTransaction.accountId
+//        transaction.accountNameOwner = oldTransaction.accountNameOwner
+//        transactionRepository.saveAndFlush(transaction)
+//        return true
+//    }
 
-    private fun calculateDayOfTheMonth(isMonthEnd: String, calendar: Calendar, specificDay: String): Date {
-        if (isMonthEnd.toBoolean()) {
-            calendar[Calendar.DAY_OF_MONTH] = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-
-        } else {
-            calendar[Calendar.DAY_OF_MONTH] = specificDay.toInt()
-        }
-        val calendarDate = calendar.time
-        return Date(calendarDate.time)
-    }
+//    private fun calculateDayOfTheMonth(isMonthEnd: String, calendar: Calendar, specificDay: String): Date {
+//        if (isMonthEnd.toBoolean()) {
+//            calendar[Calendar.DAY_OF_MONTH] = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+//
+//        } else {
+//            calendar[Calendar.DAY_OF_MONTH] = specificDay.toInt()
+//        }
+//        val calendarDate = calendar.time
+//        return Date(calendarDate.time)
+//    }
 
     @Timed
     @Transactional
@@ -365,6 +409,7 @@ open class TransactionService @Autowired constructor(
                 val transaction = transactionOptional.get()
                 transaction.accountNameOwner = account.accountNameOwner
                 transaction.accountId = account.accountId
+                transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
                 transactionRepository.saveAndFlush(transaction)
                 return true
             } else {
@@ -391,8 +436,8 @@ open class TransactionService @Autowired constructor(
             transactions.add(databaseResponseUpdated)
             //TODO: add metric here
             if (databaseResponseUpdated.transactionState == TransactionState.Cleared &&
-                databaseResponseUpdated.reoccurring == true
-                && databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined
+                databaseResponseUpdated.reoccurring &&
+                databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined
             ) {
                 val databaseResponseInserted = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
                 transactions.add(databaseResponseInserted)
@@ -431,7 +476,8 @@ open class TransactionService @Autowired constructor(
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
         transactionFuture.transactionDate = Date(calendar.timeInMillis)
-        logger.info("1 future reoccurringType=" + transactionFuture.reoccurringType)
+        transactionFuture.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        transactionFuture.dateAdded = Timestamp(Calendar.getInstance().time.time)
         logger.info(transactionFuture.toString())
         if (transactionFuture.reoccurringType == ReoccurringType.Undefined ) {
             throw java.lang.RuntimeException("transaction state cannot be undefined for reoccurring transactions.")
@@ -446,6 +492,7 @@ open class TransactionService @Autowired constructor(
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
+            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             transactionRepository.saveAndFlush(transaction)
             //TODO: add metric here
             return true

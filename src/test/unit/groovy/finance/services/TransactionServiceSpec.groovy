@@ -116,7 +116,7 @@ class TransactionServiceSpec extends Specification {
         0 * _
     }
 
-    void 'test transactionService - attempt to insert duplicate transaction'() {
+    void 'test transactionService - attempt to insert duplicate transaction - update is called'() {
         given:
         String categoryName = 'my-category'
         String accountName = 'my-account-name'
@@ -131,9 +131,17 @@ class TransactionServiceSpec extends Specification {
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted.is(false)
+        isInserted.is(true)
         1 * mockValidator.validate(transaction) >> ([] as Set)
         1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        1 * mockCategoryRepository.findByCategory('my-category') >> Optional.of(new Category())
+        1 * mockTransactionRepository.saveAndFlush({ Transaction entity ->
+            assert entity.transactionDate == transaction.transactionDate
+            assert entity.category == transaction.category
+            assert entity.accountNameOwner == transaction.accountNameOwner
+            assert entity.guid == transaction.guid
+            assert entity.description == transaction.description
+        } )
         0 * _
     }
 
