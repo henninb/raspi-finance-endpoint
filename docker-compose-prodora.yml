@@ -13,18 +13,24 @@ services:
     environment:
       # - DB_SID=financedb
       - DUMMY=true
-    healthcheck:
-      test: [ "CMD-SHELL", "nc", "-zv", "127.0.0.1", "1521" ]
-      interval: 20s
-      timeout: 5s
-      retries: 100
+    # healthcheck:
+    #   test: [ "CMD", "ps", "-ef", "|", "grep", "pmon" ]
+    #   interval: 20s
+    #   timeout: 5s
+    #   retries: 100
   raspi-finance-endpoint:
     env_file:
       - env.prodora
     depends_on:
-      - oracle-database-server
-        # condition: service_healthy
-    restart: on-failure:20
+      oracle-database-server:
+        condition: service_healthy
+    restart: on-failure:10
+#    deploy:
+#      restart_policy:
+#        condition: on-failure
+#        delay: 45s
+#        max_attempts: 5
+#        window: 500s
 
     # depends_on:
   # postgres-database:
