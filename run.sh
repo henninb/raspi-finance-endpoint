@@ -83,7 +83,8 @@ else
   fi
 fi
 
-docker rmi -f $(docker images -q -f dangling=true)
+docker rmi -f $(docker images -q -f dangling=true) 2> /dev/null
+echo docker volume prune
 
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
 if [ -n "${INFLUX_CONTAINER}" ]; then
@@ -95,6 +96,12 @@ POSTGRESQL_CONTAINER=$(docker ps -a -f 'name=postgresql-server' --format "{{.ID}
 if [ -n "${POSTGRESQL_CONTAINER}" ]; then
   echo docker rm -f "${POSTGRESQL_CONTAINER}"
   docker rm -f "${POSTGRESQL_CONTAINER}" 2> /dev/null
+fi
+
+ORACLE_CONTAINER=$(docker ps -a -f 'name=oracle-database-server' --format "{{.ID}}") 2> /dev/null
+if [ -n "${ORACLE_CONTAINER}" ]; then
+  echo docker rm -f "${ORACLE_CONTAINER}"
+  docker rm -f "${ORACLE_CONTAINER}" 2> /dev/null
 fi
 
 echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
@@ -110,6 +117,7 @@ if [ -x "$(command -v docker-compose)" ]; then
     exit 1
   fi
 
+  echo docker-compose -f docker-compose-run.yml run --rm
   if ! docker-compose -f docker-compose-run.yml up; then
     echo "docker-compose up failed."
     exit 1

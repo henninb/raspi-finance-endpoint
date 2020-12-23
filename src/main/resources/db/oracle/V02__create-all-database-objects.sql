@@ -7,6 +7,41 @@
 -- drop table T_PARM cascade constraints;
 -- drop table T_DESCRIPTION cascade constraints;
 
+alter session set "_ORACLE_SCRIPT"=TRUE;
+create profile umlimited_attempts limit failed_login_attempts unlimited;
+
+create user henninb identified by monday1;
+grant connect, resource, create any context to henninb;
+GRANT CONNECT, RESOURCE, DBA TO henninb;
+-- GRANT sysdba to henninb;
+alter user henninb profile umlimited_attempts;
+alter user system profile umlimited_attempts;
+alter user henninb quota unlimited on users;
+alter user henninb quota unlimited on system;
+
+
+--ALTER USER system ACCOUNT UNLOCK
+
+-- CREATE TABLE "PUBLIC".atest
+-- (
+--     account_id         NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
+--     account_name_owner VARCHAR(30) UNIQUE                NOT NULL,
+--     account_name       VARCHAR(30), -- NULL for now
+--     account_owner      VARCHAR(30), -- NULL for now
+--     account_type       VARCHAR(20)   DEFAULT 'undefined' NOT NULL,
+--     active_status      NUMBER(1)       DEFAULT '1'         NOT NULL,
+--     moniker            VARCHAR(10)   DEFAULT '0000'      NOT NULL,
+--     totals             DECIMAL(8, 2) DEFAULT 0.0,
+--     totals_balanced    DECIMAL(8, 2) DEFAULT 0.0,
+--     date_closed        TIMESTAMP,
+--     date_updated       TIMESTAMP                         NULL,
+--     date_added         TIMESTAMP                         NULL,
+--     CONSTRAINT unique_account_name_owner_account_id UNIQUE (account_id, account_name_owner, account_type),
+--     CONSTRAINT unique_account_name_owner_account_type UNIQUE (account_name_owner, account_type),
+--     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
+--     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
+-- );
+
 --------------
 -- Account --
 --------------
@@ -160,6 +195,10 @@ CREATE TABLE t_description
 );
 
 --select * from USER_TRIGGERS;
+
+-- GRANT SELECT ON 't_transaction' to 'henninb';
+-- GRANT SELECT ON 't_account' to 'henninb';
+-- GRANT SELECT ON 't_category' to 'henninb';
 
 -- t_account
 CREATE OR REPLACE TRIGGER tr_insert_account

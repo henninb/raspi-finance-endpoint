@@ -17,7 +17,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Date
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
@@ -122,9 +124,16 @@ data class Transaction(
     @Column(name = "receipt_image_id", nullable = true)
     var receiptImageId: Long? = null
 
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
     //TODO: 11/19/2020 - cannot reference a transaction that does not exist
-    //Foreign key constraint
-    //TODO: Probably need to change to a OneToMany relationship
+    //TODO: 11/19/2020 - Probably need to change to a OneToMany relationship
     //Foreign key constraint (one transaction can have many receiptImages)
     //@OneToOne(mappedBy = "receiptImageId", cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)

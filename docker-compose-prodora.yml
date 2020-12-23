@@ -13,12 +13,23 @@ services:
     environment:
       # - DB_SID=financedb
       - DUMMY=true
+    healthcheck:
+      test: [ "CMD-SHELL", "nc", "-zv", "127.0.0.1", "1521" ]
+      interval: 20s
+      timeout: 5s
+      retries: 100
   raspi-finance-endpoint:
     env_file:
       - env.prodora
     depends_on:
       - oracle-database-server
-    restart: on-failure:10
+        # condition: service_healthy
+    restart: on-failure:20
+
+    # depends_on:
+  # postgres-database:
+    # condition: service_healthy
+
   # makes the `db` service available as the hostname `database`
   # (implies depends_on)
   # links:
