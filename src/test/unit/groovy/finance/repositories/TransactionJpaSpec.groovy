@@ -213,12 +213,4 @@ class TransactionJpaSpec extends Specification {
         0.0 == result
         0 * _
     }
-
-    void 'test transaction repository - setClearedByGuid - not in the database'() {
-        when:
-        transactionRepository.setTransactionStateByGuid(TransactionState.Cleared, 'guid-does-not-exist')
-
-        then:
-        0 * _
-    }
 }

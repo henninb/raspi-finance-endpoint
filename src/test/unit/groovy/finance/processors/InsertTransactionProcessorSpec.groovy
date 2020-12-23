@@ -40,16 +40,16 @@ class InsertTransactionProcessorSpec extends Specification {
     protected String jsonPayload = '''
         {"accountId":0,
         "accountType":"credit",
-        "transactionDate":1553645394,
-        "dateUpdated":1593981072000,
-        "dateAdded":1593981072000,
+        "transactionDate":"2020-12-22",
         "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
         "accountNameOwner":"chase_brian",
         "description":"aliexpress.com",
         "category":"online",
         "amount":3.14,
         "transactionState":"cleared",
+        "activeStatus":true,
         "reoccurring":false,
+        "reoccurringType":"undefined",
         "notes":"my note to you"}
         '''
 
@@ -65,7 +65,9 @@ class InsertTransactionProcessorSpec extends Specification {
         1 * mockMessage.getBody(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * mockValidator.validate(_) >> ([] as Set)
-        1 * mockMessage.setBody(transaction.toString())
+        1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.of(new Category())
+        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * mockMessage.setBody(mapper.writeValueAsString(transaction))
         0 * _
     }
 
