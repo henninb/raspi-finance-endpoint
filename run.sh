@@ -84,7 +84,7 @@ else
 fi
 
 docker rmi -f $(docker images -q -f dangling=true) 2> /dev/null
-echo docker volume prune
+docker volume prune -f
 
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
 if [ -n "${INFLUX_CONTAINER}" ]; then

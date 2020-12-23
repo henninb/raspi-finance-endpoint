@@ -14,10 +14,10 @@ services:
       # - DB_SID=financedb
       - DUMMY=true
     # healthcheck:
-    #   test: [ "CMD", "ps", "-ef", "|", "grep", "pmon" ]
-    #   interval: 20s
-    #   timeout: 5s
-    #   retries: 100
+    #    test: [ "CMD", "bash -c 'ps -ef| grep -v grep | grep pmon'" ]
+    #    interval: 20s
+    #    timeout: 5s
+    #    retries: 100
   raspi-finance-endpoint:
     env_file:
       - env.prodora
@@ -25,6 +25,8 @@ services:
       oracle-database-server:
         condition: service_healthy
     restart: on-failure:10
+    # command: [ "/bin/bash", "-c", "--" ]
+    # args: [ "while true; do sleep 5; done;" ]
 #    deploy:
 #      restart_policy:
 #        condition: on-failure

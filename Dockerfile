@@ -23,5 +23,7 @@ RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 WORKDIR /opt/${APP}/bin
 USER ${USERNAME}
 
+# RUN sleep 10
+
 # default on OSX was 522m, so increased to 2048
 CMD java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar
