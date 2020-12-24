@@ -12,6 +12,7 @@ import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
@@ -69,10 +70,13 @@ data class Account(
         var dateClosed: Timestamp
 ) {
 
-    constructor() : this(0L, "", AccountType.Credit, true,
+    constructor() : this(0L, "", AccountType.Undefined, true,
             "0000", BigDecimal(0.0), BigDecimal(0.0), Timestamp(0))
 
-    override fun toString(): String = mapper.writeValueAsString(this)
+    override fun toString(): String {
+        mapper.setTimeZone(TimeZone.getDefault())
+        return mapper.writeValueAsString(this)
+    }
 
     companion object {
         @JsonIgnore

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Proxy
 import org.hibernate.annotations.Type
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Min
 
@@ -47,7 +48,11 @@ data class ReceiptImage(
     @Column(name = "jpg_image", nullable = false)
     lateinit var jpgImage: ByteArray
 
-    override fun toString(): String = mapper.writeValueAsString(this)
+    override fun toString(): String {
+        mapper.setTimeZone(TimeZone.getDefault())
+        return mapper.writeValueAsString(this)
+    }
+
 
     companion object {
         @JsonIgnore

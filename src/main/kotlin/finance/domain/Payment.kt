@@ -14,6 +14,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Date
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
@@ -67,7 +68,10 @@ data class Payment(
 
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")
 
-    override fun toString(): String = mapper.writeValueAsString(this)
+    override fun toString(): String {
+        mapper.setTimeZone(TimeZone.getDefault())
+        return mapper.writeValueAsString(this)
+    }
 
     companion object {
         @JsonIgnore

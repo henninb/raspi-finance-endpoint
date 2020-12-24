@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Min
 import javax.validation.constraints.Size
@@ -35,7 +36,10 @@ data class Description(
 ) {
     constructor() : this(0L, true, "")
 
-    override fun toString(): String = mapper.writeValueAsString(this)
+    override fun toString(): String {
+        mapper.setTimeZone(TimeZone.getDefault())
+        return mapper.writeValueAsString(this)
+    }
 
     companion object {
         @JsonIgnore

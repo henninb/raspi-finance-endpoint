@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.TransactionBuilder
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -41,19 +42,24 @@ class TransactionSpec extends Specification {
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()
         validator = validatorFactory.getValidator()
+
+        //mapper.setTimeZone(TimeZone.getTimeZone("America/Chicago"))
+        mapper.setTimeZone(TimeZone.getDefault())
+
     }
 
     void cleanup() {
         validatorFactory.close()
     }
 
+    //@Ignore //TODO: needs to be fixed
     void 'test Transaction to JSON'() {
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
 
         when:
         String json = mapper.writeValueAsString(transactionFromString)
-        
+
         then:
         json.contains(transactionFromString.guid)
         json.contains(transactionFromString.description)
@@ -61,6 +67,30 @@ class TransactionSpec extends Specification {
         json.contains(transactionFromString.transactionState.toString())
         json.contains(transactionFromString.transactionDate.toString())
         0 * _
+    }
+
+    //TODO: need to fix the date bug
+    void 'test Transaction to JSON - date'() {
+        given:
+        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
+
+        when:
+        String json = mapper.writeValueAsString(transactionFromString)
+
+        and:
+        Transaction transactionDeserialized = mapper.readValue(json, Transaction)
+
+        then:
+        transactionFromString.transactionDate == transactionDeserialized.transactionDate
+        0 * _
+    }
+
+    void 'test - json timezone'() {
+        when:
+        TimeZone tz = TimeZone.getDefault()
+
+        then:
+        tz == TimeZone.getTimeZone('America/Chicago')
     }
 
     void 'test -- JSON deserialize to Transaction with valid payload'() {

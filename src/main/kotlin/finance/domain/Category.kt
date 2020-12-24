@@ -8,6 +8,7 @@ import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
+import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
@@ -40,7 +41,10 @@ data class Category(
 ) {
     constructor() : this(0L, true,"")
 
-    override fun toString(): String = mapper.writeValueAsString(this)
+    override fun toString(): String {
+        mapper.setTimeZone(TimeZone.getDefault())
+        return mapper.writeValueAsString(this)
+    }
 
     companion object {
         @JsonIgnore

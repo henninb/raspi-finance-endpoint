@@ -1,10 +1,18 @@
 package finance.configurations
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.aop.TimedAspect
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.util.*
+import java.text.SimpleDateFormat
+
+import java.text.DateFormat
+
+
+
 
 @Configuration
 open class BeanConfig {
@@ -20,6 +28,16 @@ open class BeanConfig {
     open fun timedAspect(registry: MeterRegistry): TimedAspect {
         return TimedAspect(registry)
     }
+
+//    @Bean
+//    open fun objectMapper(): ObjectMapper {
+//        val objectMapper = ObjectMapper()
+//        val dateFormat: DateFormat = SimpleDateFormat("yyyy-MM-dd")
+//        objectMapper.dateFormat = dateFormat
+//        //objectMapper.setTimeZone(TimeZone.getTimeZone("America/Chicago"))
+//        objectMapper.setTimeZone(TimeZone.getDefault())
+//        return objectMapper
+//    }
 
 //    @Bean
 //    open fun servletContainerFactory(): EmbeddedServletContainerFactory {
