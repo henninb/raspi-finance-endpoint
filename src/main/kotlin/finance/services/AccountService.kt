@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -64,10 +65,13 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         }
 
         if (!accountOptional.isPresent) {
+            account.dateAdded = Timestamp(Calendar.getInstance().time.time)
+            account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             accountRepository.saveAndFlush(account)
             logger.info("inserted account successfully.")
         } else {
-            logger.info("account not inserted as the account already exists ${account.accountNameOwner}.")
+            logger.error("account not inserted as the account already exists ${account.accountNameOwner}.")
+            return false
         }
 
         return true
@@ -77,6 +81,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         accountRepository.deleteByAccountNameOwner(accountNameOwner)
     }
 
+    // TODO: set the update timestamp
     fun updateTheGrandTotalForAllClearedTransactions() {
         try {
             logger.info("updateAccountGrandTotals")
@@ -84,15 +89,18 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
             logger.info("updateAccountClearedTotals")
             accountRepository.updateTheGrandTotalForAllTransactions()
             logger.info("updateAccountTotals")
+
         } catch (sqlGrammarException: InvalidDataAccessResourceUsageException) {
-            logger.info("empty database.")
+            logger.error("empty database.")
         }
     }
 
     //TODO: Complete the function
-    fun patchAccount(account: Account): Boolean {
+    fun updateAccount(account: Account): Boolean {
         val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
         if (optionalAccount.isPresent) {
+
+            //account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             logger.info("patch the account.")
             //var updateFlag = false
             //val fromDb = optionalAccount.get()

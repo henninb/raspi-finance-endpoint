@@ -73,6 +73,14 @@ data class Account(
     constructor() : this(0L, "", AccountType.Undefined, true,
             "0000", BigDecimal(0.0), BigDecimal(0.0), Timestamp(0))
 
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
     override fun toString(): String {
         mapper.setTimeZone(TimeZone.getDefault())
         return mapper.writeValueAsString(this)

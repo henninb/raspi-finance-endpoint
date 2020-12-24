@@ -5,25 +5,26 @@ import finance.domain.Parameter
 import finance.repositories.ParameterRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 import java.util.*
 
 @Service
 open class ParameterService(private var parameterRepository: ParameterRepository,
                             private var meterService: MeterService) {
 
-    fun insertParm(parameter: Parameter): Boolean {
+    fun insertParameter(parameter: Parameter): Boolean {
+        parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         parameterRepository.saveAndFlush(parameter)
         return true
     }
 
-    fun deleteByParmName(parmName: String) {
-        logger.info("deleteByCategory")
-
-        parameterRepository.deleteByParameterName(parmName)
+    fun deleteByParameterName(parameterName: String) {
+        parameterRepository.deleteByParameterName(parameterName)
     }
 
-    fun findByParm(parmName: String): Optional<Parameter> {
-        val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parmName)
+    fun findByParameter(parameterName: String): Optional<Parameter> {
+        val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parameterName)
         if (parameterOptional.isPresent) {
             return parameterOptional
         }

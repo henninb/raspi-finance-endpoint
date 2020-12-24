@@ -93,7 +93,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @PatchMapping(path = ["/update"], produces = ["application/json"])
     fun updateTransaction(@RequestBody account: Map<String, String>): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(account, Account::class.java)
-        val updateStatus: Boolean = accountService.patchAccount(toBePatchedTransaction)
+        val updateStatus: Boolean = accountService.updateAccount(toBePatchedTransaction)
         if (updateStatus) {
             return ResponseEntity.ok("account updated")
         }

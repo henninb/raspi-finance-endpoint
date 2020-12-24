@@ -85,7 +85,7 @@ class PaymentControllerSpec extends Specification {
 
     void 'test Payment endpoint existing payment inserted and then deleted'() {
         given:
-        parmService.insertParm(parameter)
+        parmService.insertParameter(parameter)
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
         payment.transactionDate = Date.valueOf('2020-10-12')
@@ -102,7 +102,7 @@ class PaymentControllerSpec extends Specification {
 
     void 'test Payment endpoint existing payment inserted and then attempt to delete a non existent payment'() {
         given:
-        parmService.insertParm(parameter)
+        parmService.insertParameter(parameter)
         payment.guidDestination = UUID.randomUUID()
         payment.guidSource = UUID.randomUUID()
         payment.transactionDate = Date.valueOf('2020-10-11')
@@ -126,7 +126,7 @@ class PaymentControllerSpec extends Specification {
 
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.insertParm(parameter)
+        parmService.insertParameter(parameter)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -140,7 +140,7 @@ class PaymentControllerSpec extends Specification {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.deleteByParmName(parameter.parameterName)
+        parmService.deleteByParameterName(parameter.parameterName)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -152,7 +152,7 @@ class PaymentControllerSpec extends Specification {
         0 * _
 
         cleanup:
-        parmService.insertParm(parameter)
+        parmService.insertParameter(parameter)
     }
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
@@ -160,9 +160,9 @@ class PaymentControllerSpec extends Specification {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         accountService.insertAccount(account)
-        parmService.deleteByParmName(parameter.parameterName)
+        parmService.deleteByParameterName(parameter.parameterName)
         parameter.parameterValue = account.accountNameOwner
-        parmService.insertParm(parameter)
+        parmService.insertParameter(parameter)
         HttpEntity entity = new HttpEntity<>(payment, headers)
 
         when:

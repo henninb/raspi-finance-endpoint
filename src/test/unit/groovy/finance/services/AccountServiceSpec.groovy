@@ -60,7 +60,7 @@ class AccountServiceSpec extends Specification {
         Boolean isInserted = accountService.insertAccount(account)
 
         then:
-        isInserted.is(true)
+        isInserted.is(false)
         1 * mockValidator.validate(account) >> ([] as Set)
         1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         0 * _
