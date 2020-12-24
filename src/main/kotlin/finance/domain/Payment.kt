@@ -10,10 +10,9 @@ import finance.utils.Constants.UUID_PATTERN
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Date
+import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Digits
@@ -68,6 +67,14 @@ data class Payment(
 
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")
 
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
     override fun toString(): String {
         mapper.setTimeZone(TimeZone.getDefault())
         return mapper.writeValueAsString(this)
@@ -76,7 +83,5 @@ data class Payment(
     companion object {
         @JsonIgnore
         private val mapper = ObjectMapper()
-        val logger: Logger
-            get() = LoggerFactory.getLogger(Payment::class.java)
     }
 }

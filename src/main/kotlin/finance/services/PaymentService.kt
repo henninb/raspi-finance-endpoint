@@ -45,7 +45,9 @@ class PaymentService(private var paymentRepository: PaymentRepository,
         transactionService.insertTransaction(transactionDebit)
         payment.guidDestination = transactionCredit.guid
         payment.guidSource = transactionDebit.guid
-        paymentRepository.save(payment)
+        payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        paymentRepository.saveAndFlush(payment)
         return true
     }
 
@@ -53,7 +55,7 @@ class PaymentService(private var paymentRepository: PaymentRepository,
     //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
     @Throws
     private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) : Boolean {
-        val optionalParameter = parameterService.findByParm("payment_account")
+        val optionalParameter = parameterService.findByParameter("payment_account")
         if (optionalParameter.isPresent) {
             transactionDebit.guid = UUID.randomUUID().toString()
             transactionDebit.transactionDate = payment.transactionDate

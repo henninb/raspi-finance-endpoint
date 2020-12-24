@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Proxy
 import org.hibernate.annotations.Type
+import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Min
@@ -36,6 +37,14 @@ data class ReceiptImage(
 ) {
 
     constructor() : this(0L, 0L, true)
+
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     @JsonGetter("jpgImage")
     fun jsonGetterJpgImage(): String {

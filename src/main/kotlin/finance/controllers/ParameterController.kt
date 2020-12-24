@@ -20,11 +20,11 @@ import javax.validation.ValidationException
 class ParameterController(private var parameterService: ParameterService) {
 
     //https://hornsup:8080/parm/select/payment_account
-    @GetMapping(path = ["/select/{parmName}"], produces = ["application/json"])
-    fun selectParm(@PathVariable parmName: String): ResponseEntity<Parameter> {
-        val parameterOptional: Optional<Parameter> = parameterService.findByParm(parmName)
+    @GetMapping(path = ["/select/{parameterName}"], produces = ["application/json"])
+    fun selectParameter(@PathVariable parameterName: String): ResponseEntity<Parameter> {
+        val parameterOptional: Optional<Parameter> = parameterService.findByParameter(parameterName)
         if (!parameterOptional.isPresent) {
-            logger.info("no parm found.")
+            logger.error("no parameter found.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find the parm.")
         }
         return ResponseEntity.ok(parameterOptional.get())
@@ -32,22 +32,22 @@ class ParameterController(private var parameterService: ParameterService) {
 
     //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8080/parm/insert
     @PostMapping(path = ["/insert"], produces = ["application/json"])
-    fun insertParm(@RequestBody parameter: Parameter): ResponseEntity<String> {
-        parameterService.insertParm(parameter)
-        logger.info("insertParm")
-        return ResponseEntity.ok("parm inserted")
+    fun insertParameter(@RequestBody parameter: Parameter): ResponseEntity<String> {
+        parameterService.insertParameter(parameter)
+        logger.debug("insertParameter")
+        return ResponseEntity.ok("parameter inserted")
     }
 
-    @DeleteMapping(path = ["/delete/{parmName}"], produces = ["application/json"])
-    fun deleteByParmName(@PathVariable parmName: String): ResponseEntity<String> {
-        parameterService.deleteByParmName(parmName)
-        return ResponseEntity.ok("payment deleted")
+    @DeleteMapping(path = ["/delete/{parameterName}"], produces = ["application/json"])
+    fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<String> {
+        parameterService.deleteByParameterName(parameterName)
+        return ResponseEntity.ok("parameter deleted")
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
     @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
         MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class])
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
+    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)
         response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message

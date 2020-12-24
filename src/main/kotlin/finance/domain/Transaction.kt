@@ -126,7 +126,6 @@ data class Transaction(
     @Column(name = "receipt_image_id", nullable = true)
     var receiptImageId: Long? = null
 
-    //TODO: what is the impact of setting the dateAdded
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)

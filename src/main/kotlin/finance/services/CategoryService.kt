@@ -5,6 +5,7 @@ import finance.domain.Category
 import finance.repositories.CategoryRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -21,7 +22,8 @@ class CategoryService(private var categoryRepository: CategoryRepository,
             logger.error("Cannot insert category as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert category as there is a constraint violation on the data.")
         }
-
+        category.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        category.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         categoryRepository.saveAndFlush(category)
         return true
     }

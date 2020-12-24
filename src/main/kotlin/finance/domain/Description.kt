@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
+import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Min
@@ -35,6 +36,14 @@ data class Description(
         var description: String
 ) {
     constructor() : this(0L, true, "")
+
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     override fun toString(): String {
         mapper.setTimeZone(TimeZone.getDefault())

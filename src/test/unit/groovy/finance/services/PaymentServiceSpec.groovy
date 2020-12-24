@@ -49,7 +49,7 @@ class PaymentServiceSpec extends Specification {
         2 * mockTransactionService.insertTransaction(_)
         1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.of(parameter)
         1 * mockValidator.validate(_) >> ([] as Set)
-        1 * mockPaymentRepository.save(payment)
+        1 * mockPaymentRepository.saveAndFlush(payment)
         0 * _
     }
 
