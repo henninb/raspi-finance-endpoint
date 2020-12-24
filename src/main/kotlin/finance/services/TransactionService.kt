@@ -151,42 +151,30 @@ open class TransactionService @Autowired constructor(
     @Transactional
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
+        val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+        var totals = BigDecimal(0)
+        var totalsCleared = BigDecimal(0)
+        transactions.forEach { transaction ->
+            totals += transaction.amount
+            when (transaction.transactionState) {
+                TransactionState.Cleared -> {
+                    totalsCleared += transaction.amount
+                }
+            }
+        }
+
         val result: MutableMap<String, BigDecimal> = HashMap()
-        val totalsCleared = retrieveAccountTotalsCleared(accountNameOwner)
-        val totals = retrieveAccountTotals(accountNameOwner)
 
-        result["totals"] = BigDecimal(totals).setScale(2, RoundingMode.HALF_UP)
-        result["totalsCleared"] = BigDecimal(totalsCleared).setScale(2, RoundingMode.HALF_UP)
+        result["totals"] = totals.setScale(2, RoundingMode.HALF_UP)
+        result["totalsCleared"] = totalsCleared.setScale(2, RoundingMode.HALF_UP)
         return result
-    }
-
-    // TODO: move the database logic into kotlin
-    private fun retrieveAccountTotals(accountNameOwner: String): Double {
-        try {
-            return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
-        } catch (e: Exception) {
-            meterService.incrementExceptionCounter(e.toString())
-            logger.error("Returned an empty getTotalsByAccountNameOwner result.")
-        }
-        return 0.00
-    }
-
-    // TODO: move the database logic into kotlin
-    private fun retrieveAccountTotalsCleared(accountNameOwner: String): Double {
-        try {
-            return transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
-        } catch (e: Exception) {
-            meterService.incrementExceptionCounter(e.toString())
-            logger.error("Returned an empty getTotalsByAccountNameOwnerCleared result.")
-        }
-        return 0.00
     }
 
     @Timed
     @Transactional
-    open fun findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
+    open fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> =
-            transactionRepository.findByAccountNameOwnerIgnoreCaseOrderByTransactionDateDesc(accountNameOwner)
+            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
         //TODO: look into this type of error handling
 
         val sortedTransactions =
