@@ -195,22 +195,4 @@ class TransactionJpaSpec extends Specification {
         transactionRepository.count() == 0L
         accountRepository.count() == 1L
     }
-
-    void 'test transaction repository - getTotalsByAccountNameOwner - empty'() {
-        when:
-        Double result = transactionRepository.getTotalsByAccountNameOwner('refa')
-
-        then:
-        0.0 == result
-        0 * _
-    }
-
-    void 'test transaction repository - getTotalsByAccountNameOwnerCleared - empty'() {
-        when:
-        Double result = transactionRepository.getTotalsByAccountNameOwnerTransactionState('some_account')
-
-        then:
-        0.0 == result
-        0 * _
-    }
 }

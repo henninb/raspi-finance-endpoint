@@ -30,7 +30,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
-        val transactions: List<Transaction> = transactionService.findByAccountNameOwnerIgnoreCaseOrderByTransactionDate(accountNameOwner)
+        val transactions: List<Transaction> = transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
         if (transactions.isEmpty() ) {
             logger.error("transactions.size=${transactions.size}")
             //TODO: not found, should I take this action?
@@ -44,7 +44,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl -k https://hornsup:8080/transaction/account/totals/chase_brian
     @GetMapping(path = ["/account/totals/{accountNameOwner}"], produces = ["application/json"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
-        val results: Map<String, BigDecimal> = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
+        val results: Map<String, BigDecimal> = transactionService.  fetchTotalsByAccountNameOwner(accountNameOwner)
 
         logger.info("totals=${results}")
 
