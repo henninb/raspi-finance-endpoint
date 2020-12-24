@@ -160,6 +160,7 @@ open class TransactionService @Autowired constructor(
         return result
     }
 
+    // TODO: move the database logic into kotlin
     private fun retrieveAccountTotals(accountNameOwner: String): Double {
         try {
             return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
@@ -170,6 +171,7 @@ open class TransactionService @Autowired constructor(
         return 0.00
     }
 
+    // TODO: move the database logic into kotlin
     private fun retrieveAccountTotalsCleared(accountNameOwner: String): Double {
         try {
             return transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
@@ -206,15 +208,15 @@ open class TransactionService @Autowired constructor(
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         return if (optionalTransaction.isPresent) {
-            val fromDb = optionalTransaction.get()
-            masterTransactionUpdater(fromDb, transaction)
+            val transactionFromDatabase = optionalTransaction.get()
+            masterTransactionUpdater(transactionFromDatabase, transaction)
         } else {
             logger.warn("cannot update a transaction without a valid guid.")
             false
         }
     }
 
-    private fun masterTransactionUpdater( fromDb: Transaction,  transaction: Transaction): Boolean {
+    private fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
         // TODO: need to add this logic
 //        val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
 //        if (constraintViolations.isNotEmpty()) {
@@ -223,9 +225,10 @@ open class TransactionService @Autowired constructor(
 //            throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
 //        }
 
-        if (fromDb.guid == transaction.guid) {
+        if (transactionFromDatabase.guid == transaction.guid) {
 
             processCategory(transaction)
+            transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             transactionRepository.saveAndFlush(transaction)
             logger.info("successfully updated ${transaction.guid}")
@@ -239,7 +242,7 @@ open class TransactionService @Autowired constructor(
             }
             return true
         }
-        logger.warn("guid did not match any database records.")
+        logger.warn("guid did not match any database records to update ${transaction.guid}.")
         return true
     }
 
@@ -318,6 +321,7 @@ open class TransactionService @Autowired constructor(
             val transaction = transactionOptional.get()
 
             transaction.transactionState = transactionState
+            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)
             transactions.add(databaseResponseUpdated)
             //TODO: add metric here

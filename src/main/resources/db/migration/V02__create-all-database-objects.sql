@@ -221,38 +221,10 @@ ALTER TABLE t_receipt_image ADD CONSTRAINT fk_transaction FOREIGN KEY (transacti
 -- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
 
-CREATE OR REPLACE FUNCTION fn_insert_transaction() RETURNS TRIGGER AS
-$$
-DECLARE
-BEGIN
-    NEW.date_added := CURRENT_TIMESTAMP;
-    NEW.date_updated := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE PLPGSQL;
-
+DROP FUNCTION IF EXISTS fn_insert_transaction();
 DROP TRIGGER IF EXISTS tr_insert_transaction ON t_transaction;
-CREATE TRIGGER tr_insert_transaction
-    BEFORE INSERT
-    ON t_transaction
-    FOR EACH ROW
-EXECUTE PROCEDURE fn_insert_transaction();
-
-CREATE OR REPLACE FUNCTION fn_update_transaction() RETURNS TRIGGER AS
-$$
-DECLARE
-BEGIN
-    NEW.date_updated := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE PLPGSQL;
-
+DROP FUNCTION IF EXISTS fn_update_transaction();
 DROP TRIGGER IF EXISTS tr_update_transaction ON t_transaction;
-CREATE TRIGGER tr_update_transaction
-    BEFORE UPDATE
-    ON t_transaction
-    FOR EACH ROW
-EXECUTE PROCEDURE fn_update_transaction();
 
 -------------
 -- Payment --
