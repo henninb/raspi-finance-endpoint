@@ -60,7 +60,7 @@ open class TransactionService @Autowired constructor(
         }
     }
 
-    //https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
+    // https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
     @Timed
     @Transactional
     open fun insertTransaction(transaction: Transaction): Boolean {
@@ -120,64 +120,6 @@ open class TransactionService @Autowired constructor(
         }
     }
 
-//    // TODO: set dateUpdated - not sure this is working
-//    private fun updateTransaction(transactionDb: Transaction, transaction: Transaction): Boolean {
-//        if (transactionDb.accountNameOwner == transaction.accountNameOwner) {
-//            var updateFlag = false
-//
-//            if (transactionDb.amount != transaction.amount) {
-//                transactionDb.amount = transaction.amount
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.transactionState != transaction.transactionState) {
-//                transactionDb.transactionState = transaction.transactionState
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.notes != transaction.notes) {
-//                transactionDb.notes = transaction.notes
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.reoccurring != transaction.reoccurring) {
-//                transactionDb.reoccurring = transaction.reoccurring
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.reoccurringType != transaction.reoccurringType) {
-//                transactionDb.reoccurringType = transaction.reoccurringType
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.transactionDate != transaction.transactionDate) {
-//                transactionDb.transactionDate = transaction.transactionDate
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.description != transaction.description) {
-//                transactionDb.description = transaction.description
-//                updateFlag = true
-//            }
-//
-//            if (transactionDb.category != transaction.category) {
-//                transactionDb.category = transaction.category
-//                updateFlag = true
-//            }
-//
-//            if( updateFlag ) {
-//                transactionDb.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-//                transactionRepository.saveAndFlush(transactionDb)
-//            }
-//
-//            return updateFlag
-//        }
-//
-//        //TODO: add metric here
-//        logger.error("transaction already exists, no transaction data inserted for ${transaction.guid}")
-//        return false
-//    }
-
     private fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
@@ -210,15 +152,15 @@ open class TransactionService @Autowired constructor(
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val result: MutableMap<String, BigDecimal> = HashMap()
-        val totalsCleared = retrieveTotalsCleared(accountNameOwner)
-        val totals = retrieveTotals(accountNameOwner)
+        val totalsCleared = retrieveAccountTotalsCleared(accountNameOwner)
+        val totals = retrieveAccountTotals(accountNameOwner)
 
         result["totals"] = BigDecimal(totals).setScale(2, RoundingMode.HALF_UP)
         result["totalsCleared"] = BigDecimal(totalsCleared).setScale(2, RoundingMode.HALF_UP)
         return result
     }
 
-    private fun retrieveTotals(accountNameOwner: String): Double {
+    private fun retrieveAccountTotals(accountNameOwner: String): Double {
         try {
             return transactionRepository.getTotalsByAccountNameOwner(accountNameOwner)
         } catch (e: Exception) {
@@ -228,7 +170,7 @@ open class TransactionService @Autowired constructor(
         return 0.00
     }
 
-    private fun retrieveTotalsCleared(accountNameOwner: String): Double {
+    private fun retrieveAccountTotalsCleared(accountNameOwner: String): Double {
         try {
             return transactionRepository.getTotalsByAccountNameOwnerTransactionState(accountNameOwner)
         } catch (e: Exception) {
@@ -301,37 +243,6 @@ open class TransactionService @Autowired constructor(
         return true
     }
 
-//    @Timed
-//    @Transactional
-//    open fun cloneAsMonthlyTransaction(map: Map<String, String>): Boolean {
-//        val guid: String = map["guid"] ?: error("guid must be set.")
-//        val amount: String = map["amount"] ?: error("transactionDate must be set.")
-//        val isMonthEnd = map["monthEnd"] ?: error("monthEnd must be set.")
-//        val specificDay = map["specificDay"] ?: error("specificDay must be set.")
-//
-//        val optionalTransaction = transactionRepository.findByGuid(guid)
-//
-//        val calendar = Calendar.getInstance()
-//        val month = calendar[Calendar.MONTH]
-//        val year = calendar[Calendar.YEAR]
-//        calendar.clear()
-//        calendar[Calendar.YEAR] = year
-//
-//        for (currentMonth in month..11) {
-//            calendar[Calendar.MONTH] = currentMonth
-//
-//            val fixedMonthDay: Date = calculateDayOfTheMonth(isMonthEnd, calendar, specificDay)
-//
-//            if (optionalTransaction.isPresent) {
-//                setValuesForClearedReoccurringTransactions(optionalTransaction, fixedMonthDay, amount)
-//            } else {
-//                logger.error("Cannot clone monthly transaction for a record found '${guid}'.")
-//                throw RuntimeException("Cannot clone monthly transaction for a record found '${guid}'.")
-//            }
-//        }
-//        return true
-//    }
-
     @Timed
     @Transactional
     open fun updateTransactionReceiptImageByGuid(guid: String, jpgBase64Data: ByteArray): Boolean {
@@ -368,39 +279,6 @@ open class TransactionService @Autowired constructor(
         logger.error("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
-
-//    private fun setValuesForClearedReoccurringTransactions(
-//        optionalTransaction: Optional<Transaction>,
-//        fixedMonthDay: Date,
-//        amount: String
-//    ): Boolean {
-//        val oldTransaction = optionalTransaction.get()
-//        val transaction = Transaction()
-//        transaction.guid = UUID.randomUUID().toString()
-//        transaction.transactionDate = fixedMonthDay
-//        transaction.description = oldTransaction.description
-//        transaction.category = oldTransaction.category
-//        transaction.amount = amount.toBigDecimal()
-//        transaction.transactionState = TransactionState.Future
-//        transaction.notes = oldTransaction.notes
-//        transaction.reoccurring = oldTransaction.reoccurring
-//        transaction.accountType = oldTransaction.accountType
-//        transaction.accountId = oldTransaction.accountId
-//        transaction.accountNameOwner = oldTransaction.accountNameOwner
-//        transactionRepository.saveAndFlush(transaction)
-//        return true
-//    }
-
-//    private fun calculateDayOfTheMonth(isMonthEnd: String, calendar: Calendar, specificDay: String): Date {
-//        if (isMonthEnd.toBoolean()) {
-//            calendar[Calendar.DAY_OF_MONTH] = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-//
-//        } else {
-//            calendar[Calendar.DAY_OF_MONTH] = specificDay.toInt()
-//        }
-//        val calendarDate = calendar.time
-//        return Date(calendarDate.time)
-//    }
 
     @Timed
     @Transactional
