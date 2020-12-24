@@ -9,6 +9,7 @@ import finance.repositories.PaymentRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -51,9 +52,9 @@ class PaymentService(private var paymentRepository: PaymentRepository,
     //TODO: 10/24/2020 - not sure if Throws annotation helps here?
     //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
     @Throws
-    private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) {
-        val optionalParm = parameterService.findByParm("payment_account")
-        if (optionalParm.isPresent) {
+    private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) : Boolean {
+        val optionalParameter = parameterService.findByParm("payment_account")
+        if (optionalParameter.isPresent) {
             transactionDebit.guid = UUID.randomUUID().toString()
             transactionDebit.transactionDate = payment.transactionDate
             transactionDebit.description = "payment"
@@ -67,10 +68,12 @@ class PaymentService(private var paymentRepository: PaymentRepository,
             transactionDebit.transactionState = TransactionState.Outstanding
             transactionDebit.accountType = AccountType.Debit
             transactionDebit.reoccurring = false
-            transactionDebit.accountNameOwner = optionalParm.get().parameterValue
-            //return true
+            transactionDebit.accountNameOwner = optionalParameter.get().parameterValue
+            transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
+            return true
         } else {
-            throw RuntimeException("failed to read the parm 'payment_account'.")
+            throw RuntimeException("failed to read the parameter 'payment_account'.")
         }
     }
 
@@ -80,16 +83,21 @@ class PaymentService(private var paymentRepository: PaymentRepository,
         transactionCredit.description = "payment"
         transactionCredit.category = "bill_pay"
         transactionCredit.notes = "from bcu"
-        if (payment.amount > BigDecimal(0.0)) {
-            transactionCredit.amount = payment.amount * BigDecimal(-1.0)
-        } else {
-            transactionCredit.amount = payment.amount
+        when {
+            payment.amount > BigDecimal(0.0) -> {
+                transactionCredit.amount = payment.amount * BigDecimal(-1.0)
+            }
+            else -> {
+                transactionCredit.amount = payment.amount
+            }
         }
 
         transactionCredit.transactionState = TransactionState.Outstanding
         transactionCredit.accountType = AccountType.Credit
         transactionCredit.reoccurring = false
         transactionCredit.accountNameOwner = payment.accountNameOwner
+        transactionCredit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        transactionCredit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
 
     fun deleteByPaymentId(paymentId: Long) {

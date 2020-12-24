@@ -67,7 +67,7 @@ class PaymentServiceSpec extends Specification {
         1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.empty()
         1 * mockValidator.validate(_) >> ([] as Set)
         RuntimeException ex = thrown()
-        ex.message.contains('failed to read the parm ')
+        ex.message.contains('failed to read the parameter ')
         0 * _
     }
 }

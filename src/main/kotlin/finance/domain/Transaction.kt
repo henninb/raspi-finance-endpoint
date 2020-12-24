@@ -118,7 +118,6 @@ data class Transaction(
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        //simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         simpleDateFormat.timeZone = TimeZone.getDefault()
         return simpleDateFormat.format(this.transactionDate)
     }
@@ -127,6 +126,7 @@ data class Transaction(
     @Column(name = "receipt_image_id", nullable = true)
     var receiptImageId: Long? = null
 
+    //TODO: what is the impact of setting the dateAdded
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
