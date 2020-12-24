@@ -29,7 +29,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     protected ProducerTemplate producer
     protected CamelContext camelContext
-    protected PollingConditions conditions = new PollingConditions(timeout: 10, initialDelay: 1.5, factor: 1.25)
+    protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
 
     void setup() {
         camelContext = jsonFileReaderRouteBuilder.context
@@ -71,7 +71,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         //def ex = thrown(RuntimeException)
         //ex.message.contains('transaction object has validation errors.')
         conditions.eventually {
-            1 == 1
+            true
             //transactionRepository.findByGuid(transaction.guid).get().guid == transaction.guid
         }
     }
@@ -86,7 +86,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         then:
         conditions.eventually {
-            1 == 1
+            true
         }
     }
 
@@ -97,7 +97,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         then:
         //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
         conditions.eventually {
-            1 == 1
+            true
         }
     }
 }

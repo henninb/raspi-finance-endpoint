@@ -273,6 +273,14 @@ open class TransactionService @Autowired constructor(
     }
 
     private fun masterTransactionUpdater( fromDb: Transaction,  transaction: Transaction): Boolean {
+        // TODO: need to add this logic
+//        val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
+//        if (constraintViolations.isNotEmpty()) {
+//            //TODO: add metric here
+//            logger.error("Cannot insert transaction as there is a constraint violation on the data.")
+//            throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
+//        }
+
         if (fromDb.guid == transaction.guid) {
 
             processCategory(transaction)

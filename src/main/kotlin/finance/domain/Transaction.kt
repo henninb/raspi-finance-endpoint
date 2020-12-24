@@ -117,7 +117,9 @@ data class Transaction(
 
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
-        return SimpleDateFormat("yyyy-MM-dd").format(this.transactionDate)
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        return simpleDateFormat.format(this.transactionDate)
     }
 
     @JsonIgnore
@@ -155,7 +157,10 @@ data class Transaction(
     @JsonIgnore
     var categories = mutableListOf<Category>()
 
-    override fun toString(): String = mapper.writeValueAsString(this)
+    override fun toString(): String {
+        mapper.setTimeZone(TimeZone.getDefault())
+        return mapper.writeValueAsString(this)
+    }
 
     companion object {
         @JsonIgnore
