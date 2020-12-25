@@ -68,7 +68,7 @@ $ ./gradlew clean performanceTest
 ## Select all active accounts
 
 ```shell
-$ curl localhost:8080/account/select/active
+$ curl -k 'https://localhost:8080/account/select/active'
 ```
 
 ## gradle wrapper update
@@ -100,7 +100,3 @@ https://wiki.openjdk.java.net/display/JDKUpdates/JDK11u
 
 ## external ip address
 dig +short myip.opendns.com @resolver1.opendns.com
-
-## download oracle
-mvn install:install-file -Dfile=ojdbc7.jar -DgroupId=com.oracle -DartifactId=ojdbc7 -Dversion=12.2.0.1.0 -Dpackaging=jar
-/usr/lib/oracle/19.3/client64/lib
