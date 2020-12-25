@@ -19,21 +19,21 @@ plugins {
     id "com.github.ben-manes.versions" version "${gradleVersionsPlugin}"
 }
 
-ext['groovy.version'] = '${gradleVersion}'
+//ext['groovy.version'] = '${gradleVersion}'
 
-apply from: "test.gradle"
+apply from: 'test.gradle'
 
 repositories {
 
     mavenCentral()
     jcenter()
-    maven {
-        url "https://www.oracle.com/content/secure/maven/content"
-        credentials {
-            username ""
-            password ""
-        }
-    }
+//    maven {
+//        url "https://www.oracle.com/content/secure/maven/content"
+//        credentials {
+//            username ""
+//            password ""
+//        }
+//    }
 
     //maven {url "https://maven.xwiki.org/externals/"}
     google()
@@ -159,7 +159,7 @@ dependencies {
 
     //Logging
     implementation("ch.qos.logback:logback-classic:${logbackVersion}")
-    implementation("org.apache.logging.log4j:log4j-core:2.14.0")
+    implementation("org.apache.logging.log4j:log4j-core:${apacheLoggingVersion}")
 
 }
 
@@ -168,6 +168,6 @@ dependencies {
 //}
 
 tasks.withType(CodeNarc) {
-    configFile = rootProject.file('config/codenarc/codenarcMain.groovy')
+    configFile = rootProject.file 'config/codenarc/codenarcMain.groovy'
     ignoreFailures = true
 }

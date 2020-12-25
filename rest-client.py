@@ -81,7 +81,7 @@ def main():
     # rows = separateByRow(fileContent)
     # for idx in range(len(rows)):
     #   processRow(rows[idx])
-    response = requests.get('http://192.168.100.97:8080/transaction/select/04ca4498-fa41-47f2-b501-9084e021998b')
+    response = requests.get('https://hornsup:8080/transaction/select/04ca4498-fa41-47f2-b501-9084e021998b')
     data = response.json()
     print(data)
     sys.exit(0)
