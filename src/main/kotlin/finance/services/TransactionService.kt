@@ -18,10 +18,6 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 import java.util.Calendar
 
-import java.util.GregorianCalendar
-
-
-
 
 @Service
 open class TransactionService @Autowired constructor(
@@ -163,10 +159,8 @@ open class TransactionService @Autowired constructor(
         var totalsCleared = BigDecimal(0)
         transactions.forEach { transaction ->
             totals += transaction.amount
-            when (transaction.transactionState) {
-                TransactionState.Cleared -> {
-                    totalsCleared += transaction.amount
-                }
+            if (transaction.transactionState == TransactionState.Cleared) {
+                totalsCleared += transaction.amount
             }
         }
 
@@ -393,10 +387,10 @@ open class TransactionService @Autowired constructor(
         val accountWithQuantity =
             accounts.filter { account -> !(account.totals == BigDecimal(0) && account.totalsBalanced == BigDecimal(0)) }
         val listWithCredit = accountWithQuantity.filter { account -> account.accountType == AccountType.Credit }
-        val accountOweMoney = listWithCredit.filter { account -> account.totalsBalanced > BigDecimal(0) }
-        val look = accountOweMoney.filter { account ->  account.totals != account.totalsBalanced}
+        //val accountOweMoney = listWithCredit.filter { account -> account.totalsBalanced > BigDecimal(0) }
+        val accountsToInvestigate = listWithCredit.filter { account ->  account.totals != account.totalsBalanced}
 
-        look.forEach { account ->
+        accountsToInvestigate.forEach { account ->
             var amount = BigDecimal(0)
             val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(account.accountNameOwner)
             val nonCleared = transactions.filter { transaction -> transaction.transactionState == TransactionState.Future  || transaction.transactionState == TransactionState.Outstanding}

@@ -44,6 +44,9 @@ EOF
 echo
 echo payment required
 curl -k 'https://hornsup:8080/account/payment/required'
+echo
+echo payment required
+curl -k 'https://hornsup:8080/transaction/payment/required' | jq
 
 echo
 echo account
