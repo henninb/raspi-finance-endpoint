@@ -7,6 +7,8 @@ import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
@@ -46,24 +48,24 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accountRepository.findAccountsThatRequirePayment()
     }
 
-    fun computeTheGrandTotalForAllTransactions(): Double {
-        val totals: Double
+    fun computeTheGrandTotalForAllTransactions(): BigDecimal {
+        val totals: BigDecimal
         try {
             totals = accountRepository.computeTheGrandTotalForAllTransactions()
         } catch (e: Exception) {
-            return 0.0
+            return BigDecimal(0.00)
         }
-        return totals
+        return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
-    fun computeTheGrandTotalForAllClearedTransactions(): Double {
-        val totals: Double
+    fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal {
+        val totals: BigDecimal
         try {
             totals = accountRepository.computeTheGrandTotalForAllClearedTransactions()
         } catch (e: Exception) {
-            return 0.0
+            return BigDecimal(0.00)
         }
-        return totals
+        return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
     fun insertAccount(account: Account): Boolean {
