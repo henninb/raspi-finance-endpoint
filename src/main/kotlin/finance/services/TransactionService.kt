@@ -16,6 +16,12 @@ import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
+import java.util.Calendar
+
+import java.util.GregorianCalendar
+
+
+
 
 @Service
 open class TransactionService @Autowired constructor(
@@ -151,7 +157,8 @@ open class TransactionService @Autowired constructor(
     @Transactional
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
-        val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+        val transactions =
+            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
         var totals = BigDecimal(0)
         var totalsCleared = BigDecimal(0)
         transactions.forEach { transaction ->
@@ -332,7 +339,7 @@ open class TransactionService @Autowired constructor(
         val calendar = Calendar.getInstance()
         calendar.time = transaction.transactionDate
 
-        if( transaction.reoccurringType == ReoccurringType.FortNightly) {
+        if (transaction.reoccurringType == ReoccurringType.FortNightly) {
             calendar.add(Calendar.DATE, 14)
         } else {
             calendar.add(Calendar.YEAR, 1)
@@ -357,8 +364,8 @@ open class TransactionService @Autowired constructor(
         transactionFuture.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionFuture.dateAdded = Timestamp(Calendar.getInstance().time.time)
         logger.info(transactionFuture.toString())
-        if (transactionFuture.reoccurringType == ReoccurringType.Undefined ) {
-            throw java.lang.RuntimeException("transaction state cannot be undefined for reoccurring transactions.")
+        if (transactionFuture.reoccurringType == ReoccurringType.Undefined) {
+            throw RuntimeException("transaction state cannot be undefined for reoccurring transactions.")
         }
         return transactionFuture
     }
@@ -378,6 +385,42 @@ open class TransactionService @Autowired constructor(
         //TODO: add metric here
         logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
+    }
+
+    fun findAccountsThatRequirePayment() : List<Account> {
+        val today = Date(Calendar.getInstance().time.time)
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_MONTH, 30)
+        val todayPlusThirty = Date(calendar.time.time)
+        val accountNeedingAttention = mutableListOf<Account>()
+
+        val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
+        val accountWithQuantity =
+            accounts.filter { account -> !(account.totals == BigDecimal(0) && account.totalsBalanced == BigDecimal(0)) }
+        val listWithCredit = accountWithQuantity.filter { account -> account.accountType == AccountType.Credit }
+        val accountOweMoney = listWithCredit.filter { account -> account.totalsBalanced > BigDecimal(0) }
+        val look = accountOweMoney.filter { account ->  account.totals != account.totalsBalanced}
+
+        look.forEach { account ->
+            var amount = BigDecimal(0)
+            val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(account.accountNameOwner)
+            val nonCleared = transactions.filter { transaction -> transaction.transactionState == TransactionState.Future  || transaction.transactionState == TransactionState.Outstanding}
+            val recent = nonCleared.filter {transaction ->  (transaction.transactionDate > today && transaction.transactionDate < todayPlusThirty)}
+
+            if(recent.isNotEmpty()) {
+                recent.forEach { transaction -> amount += transaction.amount }
+                accountNeedingAttention.add(account)
+            }
+        }
+
+        if(accountNeedingAttention.isNotEmpty()) {
+            logger.info(accountNeedingAttention)
+            logger.info("count={${accountNeedingAttention.size}}")
+        }
+        return accountNeedingAttention
+
+        //val transactions = transactionRepository.findByActiveStatus()
+        //transactions.forEach { transaction -> println(transaction) }
     }
 
     companion object {
