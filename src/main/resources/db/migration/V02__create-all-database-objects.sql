@@ -217,6 +217,39 @@ SELECT setval('t_category_category_id_seq', (SELECT MAX(category_id) FROM t_cate
 SELECT setval('t_description_description_id_seq', (SELECT MAX(description_id) FROM t_description)+1);
 SELECT setval('t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM t_parm)+1);
 
+--DROP FUNCTION IF EXISTS fn_update_transaction_categories();
+CREATE OR REPLACE FUNCTION fn_update_transaction_categories() RETURNS TRIGGER AS
+$$
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+--DROP FUNCTION IF EXISTS fn_insert_transaction_categories();
+CREATE OR REPLACE FUNCTION fn_insert_transaction_categories() RETURNS TRIGGER AS
+$$
+BEGIN
+    NEW.date_updated := CURRENT_TIMESTAMP;
+    NEW.date_added := CURRENT_TIMESTAMP;
+RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON t_transaction_categories;
+CREATE TRIGGER tr_insert_transaction_categories
+    BEFORE INSERT
+    ON t_transaction_categories
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_insert_transaction_categories();
+
+DROP TRIGGER IF EXISTS tr_update_transaction_categories ON t_transaction_categories;
+CREATE TRIGGER tr_update_transaction_categories
+    BEFORE UPDATE
+    ON t_transaction_categories
+    FOR EACH ROW
+    EXECUTE PROCEDURE fn_update_transaction_categories();
+
 COMMIT;
 
 -- check for locks
