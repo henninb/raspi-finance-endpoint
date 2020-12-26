@@ -38,6 +38,8 @@ elif [ "$OS" = "void" ]; then
   HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
+  export JAVA_HOME=/opt/openjdk-bin-11
+  export PATH=$JAVA_HOME/bin:$PATH
 else
   echo "$OS is not yet implemented."
   exit 1

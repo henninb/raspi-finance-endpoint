@@ -1,5 +1,6 @@
 # FROM openjdk:11.0.9.1
-FROM docker.io/openjdk:11.0.9.1
+FROM openjdk:11.0.9.1
+# FROM docker.io/openjdk:11.0.9.1
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
