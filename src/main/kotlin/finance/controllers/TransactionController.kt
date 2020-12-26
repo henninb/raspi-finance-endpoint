@@ -1,6 +1,7 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.domain.Account
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.TransactionService
@@ -207,6 +208,17 @@ class TransactionController @Autowired constructor(private var transactionServic
         response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
+    }
+
+    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/payment/required
+    @GetMapping(path = ["/payment/required"], produces = ["application/json"])
+    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
+
+        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
+        if (accountNameOwners.isEmpty()) {
+            logger.info("no accountNameOwners found.")
+        }
+        return ResponseEntity.ok(accountNameOwners)
     }
 
     companion object {

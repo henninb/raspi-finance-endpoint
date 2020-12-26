@@ -212,14 +212,7 @@ open class TransactionService @Autowired constructor(
     }
 
     private fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
-        // TODO: need to add this logic
-//        val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
-//        if (constraintViolations.isNotEmpty()) {
-//            //TODO: add metric here
-//            logger.error("Cannot insert transaction as there is a constraint violation on the data.")
-//            throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
-//        }
-
+        
         if (transactionFromDatabase.guid == transaction.guid) {
 
             processCategory(transaction)
@@ -387,7 +380,9 @@ open class TransactionService @Autowired constructor(
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
     }
 
-    fun findAccountsThatRequirePayment() : List<Account> {
+    @Timed
+    @Transactional
+    open fun findAccountsThatRequirePayment() : List<Account> {
         val today = Date(Calendar.getInstance().time.time)
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, 30)
