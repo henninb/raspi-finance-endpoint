@@ -344,9 +344,12 @@ class TransactionServiceSpec extends Specification {
         List<Account> accounts = transactionService.findAccountsThatRequirePayment()
 
         then:
-        accounts.size() == 1
-        1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]
-        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc('test3', true) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
+        accounts.size() == 3
+        1 * mockAccountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0) >> [account1, account2, account3]
+        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
+        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
+        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test3', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
         0 * _
+
     }
 }

@@ -22,6 +22,16 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
+    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner() : List<Account> {
+        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+        if (accounts.isEmpty()) {
+            logger.warn("findAllActiveAccounts - no accounts found.")
+        } else {
+            logger.info("findAllActiveAccounts - found accounts.")
+        }
+        return accounts
+    }
+
     fun findByActiveStatusOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {

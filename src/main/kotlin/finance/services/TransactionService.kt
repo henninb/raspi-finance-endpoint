@@ -382,19 +382,13 @@ open class TransactionService @Autowired constructor(
         calendar.add(Calendar.DAY_OF_MONTH, 30)
         val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
+        val transactionStates :List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
 
-        val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
-        val accountWithQuantity =
-            accounts.filter { account -> !(account.totals == BigDecimal(0) && account.totalsBalanced == BigDecimal(0)) }
-        val listWithCredit = accountWithQuantity.filter { account -> account.accountType == AccountType.Credit }
-        //val accountOweMoney = listWithCredit.filter { account -> account.totalsBalanced > BigDecimal(0) }
-        val accountsToInvestigate = listWithCredit.filter { account ->  account.totals != account.totalsBalanced}
-
+        val accountsToInvestigate = accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->
             var amount = BigDecimal(0)
-            val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(account.accountNameOwner)
-            val nonCleared = transactions.filter { transaction -> transaction.transactionState == TransactionState.Future  || transaction.transactionState == TransactionState.Outstanding}
-            val recent = nonCleared.filter {transaction ->  (transaction.transactionDate > today && transaction.transactionDate < todayPlusThirty)}
+            val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(account.accountNameOwner,true, transactionStates)
+            val recent = transactions.filter {transaction ->  (transaction.transactionDate > today && transaction.transactionDate < todayPlusThirty)}
 
             if(recent.isNotEmpty()) {
                 recent.forEach { transaction -> amount += transaction.amount }
