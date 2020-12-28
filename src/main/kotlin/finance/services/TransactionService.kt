@@ -377,7 +377,6 @@ open class TransactionService @Autowired constructor(
     @Timed
     @Transactional
     open fun findAccountsThatRequirePayment() : List<Account> {
-        val today = Date(Calendar.getInstance().time.time)
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, 30)
         val todayPlusThirty = Date(calendar.time.time)
@@ -386,19 +385,16 @@ open class TransactionService @Autowired constructor(
 
         val accountsToInvestigate = accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->
-            var amount = BigDecimal(0)
             val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(account.accountNameOwner,true, transactionStates)
-            val recent = transactions.filter {transaction ->  (transaction.transactionDate > today && transaction.transactionDate < todayPlusThirty)}
+            val recent = transactions.filter {transaction ->  ( transaction.transactionDate < todayPlusThirty)}
 
-            if(recent.isNotEmpty()) {
-                recent.forEach { transaction -> amount += transaction.amount }
+            //if(recent.isNotEmpty()) {
                 accountNeedingAttention.add(account)
-            }
+            //}
         }
 
         if(accountNeedingAttention.isNotEmpty()) {
-            logger.info(accountNeedingAttention)
-            logger.info("count={${accountNeedingAttention.size}}")
+            logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
         }
         return accountNeedingAttention
 
