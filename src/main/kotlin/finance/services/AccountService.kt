@@ -94,7 +94,13 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
     }
 
     // TODO: set the update timestamp
-    fun updateTheGrandTotalForAllClearedTransactions() {
+    fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
+        val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
+        accounts.forEach{account ->
+            //sum and update
+            println(account)
+        }
+
         try {
             logger.info("updateAccountGrandTotals")
             accountRepository.updateTheGrandTotalForAllClearedTransactions()
@@ -105,6 +111,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         } catch (sqlGrammarException: InvalidDataAccessResourceUsageException) {
             logger.error("empty database.")
         }
+        return true
     }
 
     //TODO: Complete the function
