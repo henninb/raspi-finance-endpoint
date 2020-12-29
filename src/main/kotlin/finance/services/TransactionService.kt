@@ -382,14 +382,15 @@ open class TransactionService @Autowired constructor(
         val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
         val transactionStates :List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
-
+        accountService.updateTheGrandTotalForAllClearedTransactions()
         val accountsToInvestigate = accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->
             val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(account.accountNameOwner,true, transactionStates)
             val recent = transactions.filter {transaction ->  ( transaction.transactionDate < todayPlusThirty)}
 
+
             //if(recent.isNotEmpty()) {
-                accountNeedingAttention.add(account)
+            accountNeedingAttention.add(account)
             //}
         }
 
