@@ -20,6 +20,12 @@ interface AccountRepository : JpaRepository<Account, Long> {
     @Modifying
     @Transactional
     @Query(value = "UPDATE t_account SET totals = x.totals FROM (SELECT account_name_owner, SUM(amount) AS totals FROM t_transaction WHERE active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true)
+    //SpEL
+//    UPDATE Persons
+//    SET  Persons.PersonCityName=(SELECT AddressList.PostCode
+//    FROM AddressList
+//    WHERE AddressList.PersonId = Persons.PersonId)
+    //@Query(value = "UPDATE #{entityName} SET totals=(SELECT SUM(amount) AS totals FROM Transaction WHERE active_status = true and Account.account_name_owner = x.account_name_owner")
     fun updateTheGrandTotalForAllTransactions()
 
     @Modifying
