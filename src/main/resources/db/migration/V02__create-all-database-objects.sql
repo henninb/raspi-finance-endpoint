@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS t_account
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
-DROP TRIGGER IF EXISTS tr_update_account ON t_account;
-DROP FUNCTION IF EXISTS fn_update_account();
-DROP TRIGGER IF EXISTS tr_insert_account ON t_account;
-DROP FUNCTION IF EXISTS fn_insert_account();
+-- DROP TRIGGER IF EXISTS tr_update_account ON t_account;
+-- DROP FUNCTION IF EXISTS fn_update_account();
+-- DROP TRIGGER IF EXISTS tr_insert_account ON t_account;
+-- DROP FUNCTION IF EXISTS fn_insert_account();
 
 --------------
 -- Category --
@@ -42,10 +42,10 @@ CREATE TABLE IF NOT EXISTS t_category
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
-DROP TRIGGER IF EXISTS tr_insert_category ON t_category;
-DROP TRIGGER IF EXISTS tr_update_category ON t_category;
-DROP FUNCTION IF EXISTS fn_insert_category();
-DROP FUNCTION IF EXISTS fn_update_category();
+-- DROP TRIGGER IF EXISTS tr_insert_category ON t_category;
+-- DROP TRIGGER IF EXISTS tr_update_category ON t_category;
+-- DROP FUNCTION IF EXISTS fn_insert_category();
+-- DROP FUNCTION IF EXISTS fn_update_category();
 
 ---------------------------
 -- TransactionCategories --
@@ -82,10 +82,10 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
 -- ALTER TABLE t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(receipt_image) <= 1024);
 -- select receipt_image_id, transaction_id, length(receipt_image)/1048576.0, left(encode(receipt_image,'hex'),100) from t_receipt_image;
 
-DROP TRIGGER IF EXISTS tr_update_receipt_image ON t_receipt_image;
-DROP TRIGGER IF EXISTS tr_insert_receipt_image ON t_receipt_image;
-DROP FUNCTION IF EXISTS fn_insert_receipt_image();
-DROP FUNCTION IF EXISTS fn_update_receipt_image();
+-- DROP TRIGGER IF EXISTS tr_update_receipt_image ON t_receipt_image;
+-- DROP TRIGGER IF EXISTS tr_insert_receipt_image ON t_receipt_image;
+-- DROP FUNCTION IF EXISTS fn_insert_receipt_image();
+-- DROP FUNCTION IF EXISTS fn_update_receipt_image();
 
 -----------------
 -- Transaction --
@@ -138,10 +138,10 @@ ALTER TABLE t_receipt_image ADD CONSTRAINT fk_transaction FOREIGN KEY (transacti
 -- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
 
-DROP TRIGGER IF EXISTS tr_insert_transaction ON t_transaction;
-DROP FUNCTION IF EXISTS fn_insert_transaction();
-DROP TRIGGER IF EXISTS tr_update_transaction ON t_transaction;
-DROP FUNCTION IF EXISTS fn_update_transaction();
+-- DROP TRIGGER IF EXISTS tr_insert_transaction ON t_transaction;
+-- DROP FUNCTION IF EXISTS fn_insert_transaction();
+-- DROP TRIGGER IF EXISTS tr_update_transaction ON t_transaction;
+-- DROP FUNCTION IF EXISTS fn_update_transaction();
 
 -------------
 -- Payment --
@@ -162,10 +162,10 @@ CREATE TABLE IF NOT EXISTS t_payment
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
 );
 
-DROP TRIGGER IF EXISTS tr_insert_payment ON t_payment;
-DROP FUNCTION IF EXISTS fn_insert_payment();
-DROP TRIGGER IF EXISTS tr_update_payment ON t_payment;
-DROP FUNCTION IF EXISTS fn_update_payment();
+-- DROP TRIGGER IF EXISTS tr_insert_payment ON t_payment;
+-- DROP FUNCTION IF EXISTS fn_insert_payment();
+-- DROP TRIGGER IF EXISTS tr_update_payment ON t_payment;
+-- DROP FUNCTION IF EXISTS fn_update_payment();
 
 -------------
 -- Parm --
@@ -184,10 +184,10 @@ CREATE TABLE IF NOT EXISTS t_parm
 -- ALTER TABLE t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
 -- insert into t_parm(parm_name, parm_value) VALUES('payment_account', '');
 
-DROP TRIGGER IF EXISTS tr_insert_parm ON t_parm;
-DROP FUNCTION IF EXISTS fn_insert_parm();
-DROP TRIGGER IF EXISTS tr_update_parm ON t_parm;
-DROP FUNCTION IF EXISTS fn_update_parm();
+-- DROP TRIGGER IF EXISTS tr_insert_parm ON t_parm;
+-- DROP FUNCTION IF EXISTS fn_insert_parm();
+-- DROP TRIGGER IF EXISTS tr_update_parm ON t_parm;
+-- DROP FUNCTION IF EXISTS fn_update_parm();
 
 -----------------
 -- description --
@@ -204,10 +204,10 @@ CREATE TABLE IF NOT EXISTS t_description
 
 --ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
-DROP TRIGGER IF EXISTS tr_insert_description ON t_description;
-DROP FUNCTION IF EXISTS fn_insert_description();
-DROP TRIGGER IF EXISTS tr_update_description ON t_description;
-DROP FUNCTION IF EXISTS fn_update_description();
+-- DROP TRIGGER IF EXISTS tr_insert_description ON t_description;
+-- DROP FUNCTION IF EXISTS fn_insert_description();
+-- DROP TRIGGER IF EXISTS tr_update_description ON t_description;
+-- DROP FUNCTION IF EXISTS fn_update_description();
 
 SELECT setval('t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM t_receipt_image)+1);
 SELECT setval('t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM t_transaction)+1);
@@ -250,7 +250,25 @@ CREATE TRIGGER tr_update_transaction_categories
     FOR EACH ROW
     EXECUTE PROCEDURE fn_update_transaction_categories();
 
-COMMIT;
+CREATE OR REPLACE FUNCTION fn_update_transaction() RETURNS TRIGGER AS
+$$
+BEGIN
+    if NEW.transaction_date > now() and NEW.transaction_state = 'cleared' then
+        RAISE EXCEPTION 'cannot have a cleared transactions with a future date.';
+    end if;
+    RETURN null;
+END;
+$$ LANGUAGE PLPGSQL;
 
+DROP TRIGGER IF EXISTS tr_update_transaction ON t_transaction;
+CREATE TRIGGER tr_update_transaction
+    BEFORE UPDATE
+    ON t_transaction
+    FOR EACH ROW
+EXECUTE PROCEDURE fn_update_transaction();
+
+COMMIT;
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;
+--select * from t_transaction where transaction_state = 'cleared' and transaction_date > now();
+--select * from t_transaction where transaction_state in ('future', 'outstanding') and transaction_date < now();
