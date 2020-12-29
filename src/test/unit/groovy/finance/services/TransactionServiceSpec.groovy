@@ -347,6 +347,7 @@ class TransactionServiceSpec extends Specification {
         accounts.size() == 3
         1 * mockAccountRepository.updateTheGrandTotalForAllClearedTransactions()
         1 * mockAccountRepository.updateTheGrandTotalForAllTransactions()
+        1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]
         1 * mockAccountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0) >> [account1, account2, account3]
         1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
         1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
