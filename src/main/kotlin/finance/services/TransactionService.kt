@@ -301,7 +301,10 @@ open class TransactionService @Autowired constructor(
         if (transactionOptional.isPresent) {
             val transactions = mutableListOf<Transaction>()
             val transaction = transactionOptional.get()
-
+            if (transactionState == TransactionState.Cleared &&
+                transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)) {
+                throw RuntimeException("Cannot set cleared status on a future dated transaction.")
+            }
             transaction.transactionState = transactionState
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)

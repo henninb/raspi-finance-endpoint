@@ -8,12 +8,9 @@ import finance.domain.Category
 
 import javax.validation.Validator
 
-class CategoryServiceSpec extends Specification {
-    protected Validator validatorMock = GroovyMock(Validator)
-    protected MeterService meterServiceMock = GroovyMock()
-    protected  CategoryRepository categoryRepositoryMock = GroovyMock(CategoryRepository)
+class CategoryServiceSpec extends BaseServiceSpec {
+
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterServiceMock)
-    protected ObjectMapper mapper = new ObjectMapper()
 
     void setup() {
     }
@@ -28,6 +25,18 @@ class CategoryServiceSpec extends Specification {
         then:
         1 * validatorMock.validate(category) >> ([] as Set)
         1 * categoryRepositoryMock.saveAndFlush(category)
+        0 * _
+    }
+
+    void 'test - delete category'() {
+        given:
+        Category category = CategoryBuilder.builder().build()
+
+        when:
+        categoryService.deleteByCategoryName(category.category)
+
+        then:
+        1 * categoryRepositoryMock.deleteByCategory(category.category)
         0 * _
     }
 }

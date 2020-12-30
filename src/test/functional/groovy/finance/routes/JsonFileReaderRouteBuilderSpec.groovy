@@ -10,7 +10,9 @@ import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.core.io.FileSystemResource
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.util.ResourceUtils
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
@@ -30,6 +32,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     protected ProducerTemplate producer
     protected CamelContext camelContext
     protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
+    protected String baseName = new FileSystemResource("").getFile().getAbsolutePath()
 
     void setup() {
         camelContext = jsonFileReaderRouteBuilder.context
@@ -40,7 +43,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
     }
 
-    void 'test -- jsonFileReaderRouteBuilder -- happy path'() {
+    void 'test -- jsonFileReaderRouteBuilder happy path'() {
         given:
         Transaction transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).build()
         List<Transaction> transactions = [transaction]
@@ -52,10 +55,11 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         conditions.eventually {
             Transaction databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
             databaseTransaction.guid == transaction.guid
+            ResourceUtils.getFile("${baseName}/func_json_in/.processed-successfully/${transaction.guid}.json")
         }
     }
 
-    void 'test -- jsonFileReaderRouteBuilder -- happy path - with empty description'() {
+    void 'test -- jsonFileReaderRouteBuilder - with empty description'() {
         given:
         Transaction transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).description('').build()
         List<Transaction> transactions = [transaction]
@@ -64,19 +68,12 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         producer.sendBodyAndHeader(transactions.toString(), Exchange.FILE_NAME, "${transaction.guid}.json")
 
         then:
-        //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
-        //sleep(5000)
-        //def result = transactionRepository.findByGuid(transaction.guid).get()
-        //result.guid == transaction.guid
-        //def ex = thrown(RuntimeException)
-        //ex.message.contains('transaction object has validation errors.')
         conditions.eventually {
-            true
-            //transactionRepository.findByGuid(transaction.guid).get().guid == transaction.guid
+            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-failed-with-errors/${transaction.guid}.json")
         }
     }
 
-    void 'test -- jsonFileReaderRouteBuilder - bad filename'() {
+    void 'test -- jsonFileReaderRouteBuilder - non json filename'() {
         given:
         Transaction transaction = TransactionBuilder.builder().guid(UUID.randomUUID().toString()).build()
         List<Transaction> transactions = [transaction]
@@ -86,18 +83,19 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
         then:
         conditions.eventually {
-            true
+            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-non-json-file/${transaction.guid}.txt")
         }
     }
 
     void 'test -- jsonFileReaderRouteBuilder -- bad file'() {
+        given:
+        String fname = UUID.randomUUID().toString() + ".json"
         when:
-        producer.sendBodyAndHeader('trash content', Exchange.FILE_NAME, 'foo_trash.json')
+        producer.sendBodyAndHeader('invalid content', Exchange.FILE_NAME, fname)
 
         then:
-        //TODO: bh 11/9/2020 - how to address this async issue without using a sleep?
         conditions.eventually {
-            true
+            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-json-parsing-errors/${fname}")
         }
     }
 }
