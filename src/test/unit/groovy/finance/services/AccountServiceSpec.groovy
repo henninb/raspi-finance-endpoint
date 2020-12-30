@@ -27,44 +27,62 @@ class AccountServiceSpec extends BaseServiceSpec {
     void 'test findAllActiveAccounts'() {
         given:
         Account account = AccountBuilder.builder().build()
-        List<Account> accounts = []
-        accounts.add(account)
+        List<Account> accounts = [account, account, account, account]
 
         when:
         List<Account> results = accountService.findByActiveStatusOrderByAccountNameOwner()
 
         then:
-        results.size() == 1
+        results.size() == 4
         1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
         0 * _
     }
 
-    void 'test insertAccount - existing'() {
+    void 'test insertAccount - attempt to insert a preexisting account'() {
         given:
-        String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
-        Account account = mapper.readValue(jsonPayload, Account)
+        Account account = AccountBuilder.builder().build()
+        Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         Boolean isInserted = accountService.insertAccount(account)
 
         then:
         isInserted.is(false)
-        1 * validatorMock.validate(account) >> ([] as Set)
+        constraintViolations.size() == 0
+        1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         0 * _
     }
 
+    void 'test insertAccount - attempt to insert a empty accountNameOwner'() {
+        given:
+        Account account = AccountBuilder.builder().accountNameOwner('').build()
+        Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
+
+        when:
+        accountService.insertAccount(account)
+
+        then:
+        thrown(ValidationException)
+        constraintViolations.size() == 2
+        1 * validatorMock.validate(account) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        0 * _
+    }
+
+
     void 'test insertAccount - json inserted success'() {
         given:
-        String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+        String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0}"
         Account account = mapper.readValue(jsonPayload, Account)
+        Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         Boolean isInserted = accountService.insertAccount(account)
 
         then:
         isInserted.is(true)
-        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
         1 * accountRepositoryMock.saveAndFlush(account)
         0 * _
@@ -72,35 +90,14 @@ class AccountServiceSpec extends BaseServiceSpec {
 
     void 'test insertAccount - invalid moniker'() {
         given:
-        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"12345\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
-        Account account = mapper.readValue(jsonPayload, Account)
-        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()
-        Validator validator = validatorFactory.validator
+        Account account = AccountBuilder.builder().moniker('12345').build()
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         accountService.insertAccount(account)
 
         then:
-        ValidationException ex = thrown(ValidationException)
-        ex.message.contains('Cannot insert account as there is a constraint violation')
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * validatorMock.validate(account) >> constraintViolations
-        0 * _
-    }
-
-    void 'test insertAccount - invalid dateAdded'() {
-        given:
-        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.0112,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394}"
-        Account account = mapper.readValue(jsonPayload, Account)
-        ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()
-        Validator validator = validatorFactory.validator
-        Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
-
-        when:
-        accountService.insertAccount(account)
-
-        then:
+        constraintViolations.size() == 1
         ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
@@ -110,7 +107,7 @@ class AccountServiceSpec extends BaseServiceSpec {
 
     void 'test insertAccount - bad json - accountType'() {
         given:
-        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0,\"dateUpdated\":1553645394000,\"dateAdded\":1553645394000}"
+        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0}"
 
         when:
         mapper.readValue(jsonPayload, Account)

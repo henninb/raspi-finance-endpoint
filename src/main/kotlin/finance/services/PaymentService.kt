@@ -38,53 +38,52 @@ class PaymentService(private var paymentRepository: PaymentRepository,
             throw ValidationException("Cannot insert payment as there is a constraint violation on the data.")
         }
 
-        populateCreditTransaction(transactionCredit, payment)
-        populateDebitTransaction(transactionDebit, payment)
+        val optionalParameter = parameterService.findByParameter("payment_account")
+        if (optionalParameter.isPresent) {
+            val paymentAccountNameOwner = optionalParameter.get().parameterValue
+            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
+            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
 
-        transactionService.insertTransaction(transactionCredit)
-        transactionService.insertTransaction(transactionDebit)
-        payment.guidDestination = transactionCredit.guid
-        payment.guidSource = transactionDebit.guid
-        payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
-        paymentRepository.saveAndFlush(payment)
-        return true
+            transactionService.insertTransaction(transactionCredit)
+            transactionService.insertTransaction(transactionDebit)
+            payment.guidDestination = transactionCredit.guid
+            payment.guidSource = transactionDebit.guid
+            payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
+            paymentRepository.saveAndFlush(payment)
+            return true
+        }
+        throw RuntimeException("failed to read the parameter 'payment_account'.")
     }
 
     //TODO: 10/24/2020 - not sure if Throws annotation helps here?
     //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
     @Throws
-    private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment) : Boolean {
-        val optionalParameter = parameterService.findByParameter("payment_account")
-        if (optionalParameter.isPresent) {
-            transactionDebit.guid = UUID.randomUUID().toString()
-            transactionDebit.transactionDate = payment.transactionDate
-            transactionDebit.description = "payment"
-            transactionDebit.category = "bill_pay"
-            transactionDebit.notes = "to ${payment.accountNameOwner}"
-            if (payment.amount > BigDecimal(0.0)) {
-                transactionDebit.amount = payment.amount * BigDecimal(-1.0)
-            } else {
-                transactionDebit.amount = payment.amount
-            }
-            transactionDebit.transactionState = TransactionState.Outstanding
-            transactionDebit.accountType = AccountType.Debit
-            transactionDebit.reoccurring = false
-            transactionDebit.accountNameOwner = optionalParameter.get().parameterValue
-            transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
-            return true
+    private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment, paymentAccountNameOwner: String) {
+        transactionDebit.guid = UUID.randomUUID().toString()
+        transactionDebit.transactionDate = payment.transactionDate
+        transactionDebit.description = "payment"
+        transactionDebit.category = "bill_pay"
+        transactionDebit.notes = "to ${payment.accountNameOwner}"
+        if (payment.amount > BigDecimal(0.0)) {
+            transactionDebit.amount = payment.amount * BigDecimal(-1.0)
         } else {
-            throw RuntimeException("failed to read the parameter 'payment_account'.")
+            transactionDebit.amount = payment.amount
         }
+        transactionDebit.transactionState = TransactionState.Outstanding
+        transactionDebit.accountType = AccountType.Debit
+        transactionDebit.reoccurring = false
+        transactionDebit.accountNameOwner = paymentAccountNameOwner
+        transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
 
-    private fun populateCreditTransaction(transactionCredit: Transaction, payment: Payment) {
+    private fun populateCreditTransaction(transactionCredit: Transaction, payment: Payment, paymentAccountNameOwner: String) {
         transactionCredit.guid = UUID.randomUUID().toString()
         transactionCredit.transactionDate = payment.transactionDate
         transactionCredit.description = "payment"
         transactionCredit.category = "bill_pay"
-        transactionCredit.notes = "from bcu"
+        transactionCredit.notes = "from $paymentAccountNameOwner"
         when {
             payment.amount > BigDecimal(0.0) -> {
                 transactionCredit.amount = payment.amount * BigDecimal(-1.0)
