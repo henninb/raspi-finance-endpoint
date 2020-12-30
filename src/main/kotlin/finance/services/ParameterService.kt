@@ -2,17 +2,28 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parameter
+import finance.domain.Payment
 import finance.repositories.ParameterRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
+import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
+import javax.validation.Validator
 
 @Service
 open class ParameterService(private var parameterRepository: ParameterRepository,
+                            private val validator: Validator,
                             private var meterService: MeterService) {
 
     fun insertParameter(parameter: Parameter): Boolean {
+        val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
+        if (constraintViolations.isNotEmpty()) {
+            logger.error("Cannot insert parameter as there is a constraint violation on the data.")
+            throw ValidationException("Cannot insert parameter as there is a constraint violation on the data.")
+        }
+
         parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
         parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         parameterRepository.saveAndFlush(parameter)

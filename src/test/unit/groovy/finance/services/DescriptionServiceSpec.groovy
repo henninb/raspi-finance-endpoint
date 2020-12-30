@@ -18,7 +18,6 @@ import javax.xml.transform.Source
 
 class DescriptionServiceSpec extends BaseServiceSpec {
     protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, validatorMock, meterServiceMock)
-    //Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
 
     void setup() {
     }
