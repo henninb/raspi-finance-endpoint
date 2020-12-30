@@ -1,25 +1,13 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
-import finance.repositories.AccountRepository
-import spock.lang.Specification
+import javax.validation.*
 
-import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.ValidationException
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
-
-class AccountServiceSpec extends Specification {
-
-    protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
-    protected Validator mockValidator = GroovyMock(Validator)
-    protected MeterService mockMeterService = GroovyMock()
-    protected AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
-    protected ObjectMapper mapper = new ObjectMapper()
+class AccountServiceSpec extends BaseServiceSpec {
+    protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)
 
     void 'test findAllActiveAccounts empty'() {
         given:
@@ -32,7 +20,7 @@ class AccountServiceSpec extends Specification {
 
         then:
         results.size() == 1
-        1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
         0 * _
     }
 
@@ -47,7 +35,7 @@ class AccountServiceSpec extends Specification {
 
         then:
         results.size() == 1
-        1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
         0 * _
     }
 
@@ -61,8 +49,8 @@ class AccountServiceSpec extends Specification {
 
         then:
         isInserted.is(false)
-        1 * mockValidator.validate(account) >> ([] as Set)
-        1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         0 * _
     }
 
@@ -76,9 +64,9 @@ class AccountServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockValidator.validate(account) >> ([] as Set)
-        1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
-        1 * mockAccountRepository.saveAndFlush(account)
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.saveAndFlush(account)
         0 * _
     }
 
@@ -96,8 +84,8 @@ class AccountServiceSpec extends Specification {
         then:
         ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert account as there is a constraint violation')
-        1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * mockValidator.validate(account) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * validatorMock.validate(account) >> constraintViolations
         0 * _
     }
 
@@ -115,8 +103,8 @@ class AccountServiceSpec extends Specification {
         then:
         ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert account as there is a constraint violation')
-        1 * mockAccountRepository.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * mockValidator.validate(account) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
+        1 * validatorMock.validate(account) >> constraintViolations
         0 * _
     }
 

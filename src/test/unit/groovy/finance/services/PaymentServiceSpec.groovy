@@ -9,15 +9,9 @@ import spock.lang.Specification
 
 import javax.validation.Validator
 
-class PaymentServiceSpec extends Specification {
-    protected PaymentRepository mockPaymentRepository = GroovyMock(PaymentRepository)
-    protected ParameterRepository mockParameterRepository = GroovyMock(ParameterRepository)
-    protected TransactionService mockTransactionService = GroovyMock(TransactionService)
-    protected MeterService mockMeterService = GroovyMock(MeterService)
-    protected ParameterService mockParameterService = new ParameterService(mockParameterRepository, mockMeterService)
-    protected Validator mockValidator = GroovyMock(Validator)
-    protected MeterService mockkMeterService = GroovyMock(MeterService)
-    protected PaymentService paymentService = new PaymentService(mockPaymentRepository, mockTransactionService, mockParameterService, mockValidator, mockMeterService)
+class PaymentServiceSpec extends BaseServiceSpec {
+    protected ParameterService mockParameterService = new ParameterService(parameterRepositoryMock, meterServiceMock)
+    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, mockParameterService, validatorMock, meterServiceMock)
 
     void 'test findAll payments empty'() {
         given:
@@ -30,7 +24,7 @@ class PaymentServiceSpec extends Specification {
 
         then:
         results.size() == 1
-        1 * mockPaymentRepository.findAll() >> payments
+        1 * paymentRepositoryMock.findAll() >> payments
         0 * _
     }
 
@@ -46,10 +40,10 @@ class PaymentServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        2 * mockTransactionService.insertTransaction(_)
-        1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.of(parameter)
-        1 * mockValidator.validate(_) >> ([] as Set)
-        1 * mockPaymentRepository.saveAndFlush(payment)
+        2 * transactionServiceMock.insertTransaction(_)
+        1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.of(parameter)
+        1 * validatorMock.validate(_) >> ([] as Set)
+        1 * paymentRepositoryMock.saveAndFlush(payment)
         0 * _
     }
 
@@ -64,8 +58,8 @@ class PaymentServiceSpec extends Specification {
         paymentService.insertPayment(payment)
 
         then:
-        1 * mockParameterRepository.findByParameterName('payment_account') >> Optional.empty()
-        1 * mockValidator.validate(_) >> ([] as Set)
+        1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.empty()
+        1 * validatorMock.validate(_) >> ([] as Set)
         RuntimeException ex = thrown()
         ex.message.contains('failed to read the parameter ')
         0 * _

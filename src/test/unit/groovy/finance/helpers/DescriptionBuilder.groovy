@@ -4,7 +4,7 @@ import finance.domain.Description
 
 class DescriptionBuilder {
 
-    String description = 'foo'
+    String descriptionName = 'foo'
     boolean activeStatus = true
 
     static DescriptionBuilder builder() {
@@ -13,13 +13,13 @@ class DescriptionBuilder {
 
     Description build() {
         Description description = new Description()
-        description.description = description
+        description.description = descriptionName
         description.activeStatus = activeStatus
         return description
     }
 
     DescriptionBuilder description(String description) {
-        this.description = description
+        this.descriptionName = description
         return this
     }
 

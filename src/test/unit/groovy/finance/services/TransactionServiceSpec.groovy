@@ -1,34 +1,18 @@
 package finance.services
 
-import finance.domain.Account
-import finance.domain.AccountType
-import finance.domain.Category
-import finance.domain.ReoccurringType
-import finance.domain.Transaction
-import finance.domain.TransactionState
+import finance.domain.*
 import finance.helpers.CategoryBuilder
 import finance.helpers.TransactionBuilder
-import finance.repositories.AccountRepository
-import finance.repositories.CategoryRepository
-import finance.repositories.ReceiptImageRepository
-import finance.repositories.TransactionRepository
 import org.hibernate.NonUniqueResultException
-import spock.lang.Specification
 
-import javax.validation.Validator
 import java.sql.Date
 
-class TransactionServiceSpec extends Specification {
-    protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
-    protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
-    protected Validator mockValidator = GroovyMock(Validator)
-    protected MeterService mockMeterService = GroovyMock()
-    protected AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
-    protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    protected CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
-    protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
-    protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
+class TransactionServiceSpec extends BaseServiceSpec {
+    protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
+    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterServiceMock)
+    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterServiceMock)
+
     protected Category category = CategoryBuilder.builder().build()
 
     void 'test transactionService - deleteByGuid'() {
@@ -42,8 +26,8 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isDeleted.is(true)
-        1 * mockTransactionRepository.deleteByGuid(guid)
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        1 * transactionRepositoryMock.deleteByGuid(guid)
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
@@ -57,7 +41,7 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isDeleted.is(false)
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
@@ -71,7 +55,7 @@ class TransactionServiceSpec extends Specification {
         transactionService.findTransactionByGuid(guid)
 
         then:
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
 
@@ -85,7 +69,7 @@ class TransactionServiceSpec extends Specification {
         then:
         NonUniqueResultException ex = thrown()
         ex.message.contains("query did not return a unique result")
-        1 * mockTransactionRepository.findByGuid(guid) >> { throw new NonUniqueResultException(2) }
+        1 * transactionRepositoryMock.findByGuid(guid) >> { throw new NonUniqueResultException(2) }
         0 * _
     }
 
@@ -108,12 +92,12 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockValidator.validate(transaction) >> ([] as Set)
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
-        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * validatorMock.validate(transaction) >> ([] as Set)
+        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
+        1 * categoryRepositoryMock.findByCategory(categoryName) >> categoryOptional
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -133,16 +117,16 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockValidator.validate(transaction) >> ([] as Set)
-        1 * mockTransactionRepository.findByGuid(guid) >> transactionOptional
-        1 * mockCategoryRepository.findByCategory('my-category') >> Optional.of(new Category())
-        1 * mockTransactionRepository.saveAndFlush({ Transaction entity ->
+        1 * validatorMock.validate(transaction) >> ([] as Set)
+        1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
+        1 * categoryRepositoryMock.findByCategory('my-category') >> Optional.of(new Category())
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction entity ->
             assert entity.transactionDate == transaction.transactionDate
             assert entity.category == transaction.category
             assert entity.accountNameOwner == transaction.accountNameOwner
             assert entity.guid == transaction.guid
             assert entity.description == transaction.description
-        } )
+        })
         0 * _
     }
 
@@ -165,12 +149,12 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockValidator.validate(transaction) >> ([] as Set)
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
-        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
+        1 * validatorMock.validate(transaction) >> ([] as Set)
+        1 * categoryRepositoryMock.findByCategory(categoryName) >> categoryOptional
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -194,16 +178,16 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
-        1 * mockAccountRepository.saveAndFlush(account) >> true
-        1 * mockValidator.validate(transaction) >> ([] as Set)
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockValidator.validate(account) >> ([] as Set)
-        1 * mockCategoryRepository.findByCategory(categoryName) >> categoryOptional
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
-        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> Optional.empty()
+        1 * accountRepositoryMock.saveAndFlush(account) >> true
+        1 * validatorMock.validate(transaction) >> ([] as Set)
+        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * categoryRepositoryMock.findByCategory(categoryName) >> categoryOptional
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -226,14 +210,14 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isInserted.is(true)
-        1 * mockTransactionRepository.findByGuid(guid) >> Optional.empty()
-        1 * mockValidator.validate(transaction) >> ([] as Set)
-        1 * mockAccountRepository.findByAccountNameOwner(accountName) >> accountOptional
-        1 * mockCategoryRepository.findByCategory(categoryName) >> Optional.empty()
-        1 * mockValidator.validate(category) >> ([] as Set)
-        1 * mockCategoryRepository.saveAndFlush(category)
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> true
-        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * validatorMock.validate(transaction) >> ([] as Set)
+        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
+        1 * categoryRepositoryMock.findByCategory(categoryName) >> Optional.empty()
+        1 * validatorMock.validate(category) >> ([] as Set)
+        1 * categoryRepositoryMock.saveAndFlush(category)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -246,8 +230,8 @@ class TransactionServiceSpec extends Specification {
 
         then:
         isUpdated.is(true)
-        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
         0 * _
     }
 
@@ -264,9 +248,9 @@ class TransactionServiceSpec extends Specification {
 
         then:
         transactions.size() == 2
-        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> transaction
-        1 * mockTransactionRepository.saveAndFlush({ Transaction futureTransaction ->
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction futureTransaction ->
             assert 365L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
             assert futureTransaction.transactionState == TransactionState.Future
             assert futureTransaction.notes == ''
@@ -289,9 +273,9 @@ class TransactionServiceSpec extends Specification {
 
         then:
         transactions.size() == 2
-        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> transaction
-        1 * mockTransactionRepository.saveAndFlush({ Transaction futureTransaction ->
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction futureTransaction ->
             assert 14L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
             assert futureTransaction.transactionState == TransactionState.Future
             assert futureTransaction.notes == ''
@@ -313,8 +297,8 @@ class TransactionServiceSpec extends Specification {
 
         then:
         transactions.size() == 1
-        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockTransactionRepository.saveAndFlush(transaction) >> transaction
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         0 * _
     }
 
@@ -331,11 +315,11 @@ class TransactionServiceSpec extends Specification {
         calendar.add(Calendar.DAY_OF_MONTH, 35)
         Date todayPlusPastThirty = new Date(calendar.time.time)
         Account account1 = new Account(accountNameOwner: 'test1', accountType: AccountType.Credit)
-        Account account2 = new Account(accountNameOwner: 'test2', accountType: AccountType.Credit, totals: new BigDecimal(2), totalsBalanced: new BigDecimal(2) )
+        Account account2 = new Account(accountNameOwner: 'test2', accountType: AccountType.Credit, totals: new BigDecimal(2), totalsBalanced: new BigDecimal(2))
         Account account3 = new Account(accountNameOwner: 'test3', accountType: AccountType.Credit, totalsBalanced: new BigDecimal(5))
         Transaction transaction1 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Future, transactionDate: todayPlusPastThirty, amount: new BigDecimal(2.01))
         Transaction transaction2 = new Transaction(accountNameOwner: 'test2', transactionState: TransactionState.Future, transactionDate: todayPlusFifteen, amount: new BigDecimal(2.02))
-        Transaction transaction3 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Outstanding, transactionDate: todayPlusPastThirty , amount: new BigDecimal(4.03))
+        Transaction transaction3 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Outstanding, transactionDate: todayPlusPastThirty, amount: new BigDecimal(4.03))
         Transaction transaction4 = new Transaction(accountNameOwner: 'test3', transactionState: TransactionState.Future, transactionDate: todayPlusSeventeen, amount: new BigDecimal(3.04))
         Transaction transaction5 = new Transaction(accountNameOwner: 'test2', transactionState: TransactionState.Future, transactionDate: todayPlusSixteen, amount: new BigDecimal(2.05))
         Transaction transaction6 = new Transaction(accountNameOwner: 'test1', amount: new BigDecimal(2.05))
@@ -345,14 +329,13 @@ class TransactionServiceSpec extends Specification {
 
         then:
         accounts.size() == 3
-        1 * mockAccountRepository.updateTheGrandTotalForAllClearedTransactions()
-        1 * mockAccountRepository.updateTheGrandTotalForAllTransactions()
-        1 * mockAccountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]
-        1 * mockAccountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0) >> [account1, account2, account3]
-        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
-        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
-        1 * mockTransactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test3', true, _) >> [transaction1, transaction2, transaction3,transaction4, transaction5,transaction6]
+        1 * accountRepositoryMock.updateTheGrandTotalForAllClearedTransactions()
+        1 * accountRepositoryMock.updateTheGrandTotalForAllTransactions()
+        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]
+        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0) >> [account1, account2, account3]
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
+        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test3', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
         0 * _
-
     }
 }
