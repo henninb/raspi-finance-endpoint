@@ -72,6 +72,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
+            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert account as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert account as there is a constraint violation on the data.")
         }

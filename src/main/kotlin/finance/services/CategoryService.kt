@@ -19,6 +19,7 @@ class CategoryService(private var categoryRepository: CategoryRepository,
     fun insertCategory(category: Category): Boolean {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
         if (constraintViolations.isNotEmpty()) {
+            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert category as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert category as there is a constraint violation on the data.")
         }

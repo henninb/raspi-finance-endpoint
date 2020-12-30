@@ -19,6 +19,7 @@ open class DescriptionService(private var descriptionRepository: DescriptionRepo
     fun insertDescription(description: Description): Boolean {
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
         if (constraintViolations.isNotEmpty()) {
+            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert description as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert description as there is a constraint violation on the data.")
         }
