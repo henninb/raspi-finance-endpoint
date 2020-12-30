@@ -13,8 +13,10 @@ import javax.validation.ConstraintViolation
 import javax.validation.Validator
 
 @Component
-open class JsonTransactionProcessor @Autowired constructor(private val validator: Validator,
-                                                           private var meterService: MeterService) : Processor {
+open class JsonTransactionProcessor @Autowired constructor(
+    private val validator: Validator,
+    private var meterService: MeterService
+) : Processor {
 
     @Throws(Exception::class)
     @Timed("json.transaction.processor.timer")

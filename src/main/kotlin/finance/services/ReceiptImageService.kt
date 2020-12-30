@@ -24,12 +24,12 @@ open class ReceiptImageService @Autowired constructor(private var receiptImageRe
     }
 
     @Transactional
-    open fun findByReceiptImageId(receiptImageId: Long) : Optional<ReceiptImage> {
+    open fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
     }
 
     @Transactional
-    open fun deleteReceiptImage(receiptImage: ReceiptImage) :  Boolean {
+    open fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
         receiptImageRepository.deleteById(receiptImage.receiptImageId)
         return true
     }

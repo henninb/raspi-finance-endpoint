@@ -16,7 +16,6 @@ import java.util.*
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
-import java.util.Calendar
 
 
 @Service
@@ -207,7 +206,7 @@ open class TransactionService @Autowired constructor(
     }
 
     private fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
-        
+
         if (transactionFromDatabase.guid == transaction.guid) {
 
             processCategory(transaction)
@@ -303,7 +302,8 @@ open class TransactionService @Autowired constructor(
             val transactions = mutableListOf<Transaction>()
             val transaction = transactionOptional.get()
             if (transactionState == TransactionState.Cleared &&
-                transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)) {
+                transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)
+            ) {
                 throw RuntimeException("Cannot set cleared status on a future dated transaction.")
             }
             transaction.transactionState = transactionState
@@ -380,17 +380,23 @@ open class TransactionService @Autowired constructor(
 
     @Timed
     @Transactional
-    open fun findAccountsThatRequirePayment() : List<Account> {
+    open fun findAccountsThatRequirePayment(): List<Account> {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, 30)
         val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
-        val transactionStates :List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
+        val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
         accountService.updateTheGrandTotalForAllClearedTransactions()
-        val accountsToInvestigate = accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+        val accountsToInvestigate =
+            accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->
-            val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(account.accountNameOwner,true, transactionStates)
-            val recent = transactions.filter {transaction ->  ( transaction.transactionDate < todayPlusThirty)}
+            val transactions =
+                transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
+                    account.accountNameOwner,
+                    true,
+                    transactionStates
+                )
+            val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
 
 
             //if(recent.isNotEmpty()) {
@@ -398,7 +404,7 @@ open class TransactionService @Autowired constructor(
             //}
         }
 
-        if(accountNeedingAttention.isNotEmpty()) {
+        if (accountNeedingAttention.isNotEmpty()) {
             logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
         }
         return accountNeedingAttention

@@ -17,23 +17,23 @@ import javax.validation.constraints.Size
 @Table(name = "t_description")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Description(
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @SequenceGenerator(name = "t_description_description_id_seq")
-        @field:Min(value = 0L)
-        @JsonProperty
-        @Column(name = "description_id", nullable = false)
-        var descriptionId: Long,
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "t_description_description_id_seq")
+    @field:Min(value = 0L)
+    @JsonProperty
+    @Column(name = "description_id", nullable = false)
+    var descriptionId: Long,
 
-        @JsonProperty
-        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean = true,
+    @JsonProperty
+    @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    var activeStatus: Boolean = true,
 
-        @field:Size(min = 1, max = 50)
-        @field:Convert(converter = LowerCaseConverter::class)
-        @Column(name = "description", unique = true, nullable = false)
-        @JsonProperty
-        var description: String
+    @field:Size(min = 1, max = 50)
+    @field:Convert(converter = LowerCaseConverter::class)
+    @Column(name = "description", unique = true, nullable = false)
+    @JsonProperty
+    var description: String
 ) {
     constructor() : this(0L, true, "")
 

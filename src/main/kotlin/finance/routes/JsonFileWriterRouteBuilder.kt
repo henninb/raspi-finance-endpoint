@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 @ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
 class JsonFileWriterRouteBuilder @Autowired constructor(
-        private var camelProperties: CamelProperties, private var exceptionProcessor: ExceptionProcessor
+    private var camelProperties: CamelProperties, private var exceptionProcessor: ExceptionProcessor
 ) : RouteBuilder() {
 
     @Throws(Exception::class)
@@ -20,23 +20,23 @@ class JsonFileWriterRouteBuilder @Autowired constructor(
         println(camelProperties.savedFileEndpoint)
 
         onException(RuntimeException::class.java)
-                .log(LoggingLevel.INFO, "filename issue :: \${exception.message}")
-                .process(exceptionProcessor)
-                .handled(true)
-                .end()
+            .log(LoggingLevel.INFO, "filename issue :: \${exception.message}")
+            .process(exceptionProcessor)
+            .handled(true)
+            .end()
 
         from(camelProperties.jsonFileWriterRoute)
-                .autoStartup(camelProperties.autoStartRoute)
-                .routeId(camelProperties.jsonFileWriterRouteId)
-                .setHeader(Exchange.FILE_NAME, header("guid"))
-                .choice()
-                .`when`(header("CamelFileName").isNotNull)
-                .log(LoggingLevel.INFO, "wrote processed data to file.")
-                .to(camelProperties.savedFileEndpoint)
-                .log(LoggingLevel.INFO, "message saved to file.")
-                .otherwise()
-                .throwException(RuntimeException("filename cannot be set to null."))
-                .endChoice()
-                .end()
+            .autoStartup(camelProperties.autoStartRoute)
+            .routeId(camelProperties.jsonFileWriterRouteId)
+            .setHeader(Exchange.FILE_NAME, header("guid"))
+            .choice()
+            .`when`(header("CamelFileName").isNotNull)
+            .log(LoggingLevel.INFO, "wrote processed data to file.")
+            .to(camelProperties.savedFileEndpoint)
+            .log(LoggingLevel.INFO, "message saved to file.")
+            .otherwise()
+            .throwException(RuntimeException("filename cannot be set to null."))
+            .endChoice()
+            .end()
     }
 }

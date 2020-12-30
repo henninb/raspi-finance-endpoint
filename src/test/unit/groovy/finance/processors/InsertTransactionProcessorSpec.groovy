@@ -10,11 +10,7 @@ import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.ReceiptImageRepository
 import finance.repositories.TransactionRepository
-import finance.services.AccountService
-import finance.services.CategoryService
-import finance.services.MeterService
-import finance.services.ReceiptImageService
-import finance.services.TransactionService
+import finance.services.*
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification

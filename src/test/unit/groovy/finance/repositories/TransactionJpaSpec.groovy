@@ -3,7 +3,6 @@ package finance.repositories
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.domain.Transaction
-import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
 import org.springframework.beans.factory.annotation.Autowired

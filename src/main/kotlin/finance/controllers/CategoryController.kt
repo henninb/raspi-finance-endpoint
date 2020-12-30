@@ -53,8 +53,10 @@ class CategoryController(private var categoryService: CategoryService) {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
-        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class])
+    @ExceptionHandler(
+        value = [ConstraintViolationException::class, NumberFormatException::class,
+            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class]
+    )
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)
@@ -67,7 +69,8 @@ class CategoryController(private var categoryService: CategoryService) {
     fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
-        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        response["response"] =
+            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
     }

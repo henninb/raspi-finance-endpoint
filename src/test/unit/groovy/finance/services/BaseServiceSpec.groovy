@@ -1,19 +1,13 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.repositories.AccountRepository
-import finance.repositories.CategoryRepository
-import finance.repositories.DescriptionRepository
-import finance.repositories.ParameterRepository
-import finance.repositories.PaymentRepository
-import finance.repositories.ReceiptImageRepository
-import finance.repositories.TransactionRepository
+import finance.repositories.*
 import spock.lang.Specification
 
 import javax.validation.Validation
 import javax.validation.Validator
 
-class BaseServiceSpec extends Specification{
+class BaseServiceSpec extends Specification {
     protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
     protected Validator validatorMock = GroovyMock(Validator)
     protected MeterService meterServiceMock = GroovyMock(MeterService)

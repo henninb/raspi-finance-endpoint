@@ -29,7 +29,7 @@ class DatabaseInsertSpec extends Specification {
     void 'test category - valid insert'() {
         given:
         Category category = new Category()
-        category.category = UUID.randomUUID().toString().substring(0,8)
+        category.category = UUID.randomUUID().toString().substring(0, 8)
         category.activeStatus = false
 
         when:
@@ -40,7 +40,7 @@ class DatabaseInsertSpec extends Specification {
         0 * _
     }
 
-    void 'test account - valid insert' () {
+    void 'test account - valid insert'() {
         given:
         Account account = AccountBuilder.builder().build()
 
@@ -52,7 +52,7 @@ class DatabaseInsertSpec extends Specification {
         0 * _
     }
 
-    void 'test transaction - valid insert' () {
+    void 'test transaction - valid insert'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
 

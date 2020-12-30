@@ -17,14 +17,17 @@ import java.io.*
 import java.util.stream.IntStream
 
 @Service
-class ExcelFileService @Autowired constructor(private val customProperties: CustomProperties,
-                                              private val transactionService: TransactionService,
-                                              private var meterService: MeterService) {
+class ExcelFileService @Autowired constructor(
+    private val customProperties: CustomProperties,
+    private val transactionService: TransactionService,
+    private var meterService: MeterService
+) {
 
     @Throws(Exception::class)
     fun processProtectedExcelFile(inputExcelFileName: String) {
         logger.info("${customProperties.excelInputFilePath}/${inputExcelFileName}")
-        val fileStream = POIFSFileSystem(FileInputStream("${customProperties.excelInputFilePath}/${inputExcelFileName}"))
+        val fileStream =
+            POIFSFileSystem(FileInputStream("${customProperties.excelInputFilePath}/${inputExcelFileName}"))
         val encryptionInfo = EncryptionInfo(fileStream)
         val decryptor = Decryptor.getInstance(encryptionInfo)
         decryptor.verifyPassword(customProperties.excelPassword)
@@ -57,7 +60,10 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
     }
 
     private fun filterWorkbookThenImportTransactions(workbook: Workbook) {
-        IntStream.range(0, workbook.numberOfSheets).filter { idx: Int -> (workbook.getSheetName(idx).contains("_brian") || workbook.getSheetName(idx).contains("_kari")) && !workbook.isSheetHidden(idx) }.forEach { idx: Int ->
+        IntStream.range(0, workbook.numberOfSheets).filter { idx: Int ->
+            (workbook.getSheetName(idx).contains("_brian") || workbook.getSheetName(idx)
+                .contains("_kari")) && !workbook.isSheetHidden(idx)
+        }.forEach { idx: Int ->
             if (!isExcludedAccount(customProperties.excludedAccounts, workbook.getSheetName(idx))) {
                 processEachExcelSheet(workbook, idx)
             }
@@ -67,7 +73,9 @@ class ExcelFileService @Autowired constructor(private val customProperties: Cust
     @Throws(IOException::class)
     private fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
-        val transactionList = transactionService.findByAccountNameOwnerOrderByTransactionDate(workbook.getSheetName(sheetNumber).replace('.', '-'))
+        val transactionList = transactionService.findByAccountNameOwnerOrderByTransactionDate(
+            workbook.getSheetName(sheetNumber).replace('.', '-')
+        )
 
         logger.info(workbook.getSheetName(sheetNumber))
         removeEachRowInTheWorksheet(currentSheet)

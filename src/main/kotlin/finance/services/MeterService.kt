@@ -18,32 +18,32 @@ import org.springframework.transaction.annotation.Transactional
 open class MeterService(private var meterRegistry: MeterRegistry) {
     init {
         Counter.builder(TRANSACTION_RECEIVED_EVENT_COUNTER)
-                .tag(ACCOUNT_NAME_TAG, "")
-                .register(meterRegistry)
+            .tag(ACCOUNT_NAME_TAG, "")
+            .register(meterRegistry)
 
         Counter.builder(TRANSACTION_ALREADY_EXISTS_COUNTER)
-                .tag(ACCOUNT_NAME_TAG, "")
-                .register(meterRegistry)
+            .tag(ACCOUNT_NAME_TAG, "")
+            .register(meterRegistry)
 
         Counter.builder(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER)
-                .tag(ACCOUNT_NAME_TAG, "")
-                .register(meterRegistry)
+            .tag(ACCOUNT_NAME_TAG, "")
+            .register(meterRegistry)
 
         Counter.builder(TRANSACTION_UPDATE_CLEARED_COUNTER)
-                .tag(ACCOUNT_NAME_TAG, "")
-                .register(meterRegistry)
+            .tag(ACCOUNT_NAME_TAG, "")
+            .register(meterRegistry)
 
         Counter.builder(EXCEPTION_COUNTER)
-                .tag(EXCEPTION_NAME_TYPE_TAG, "")
-                .register(meterRegistry)
+            .tag(EXCEPTION_NAME_TYPE_TAG, "")
+            .register(meterRegistry)
 
         Counter.builder(TRANSACTION_RECEIPT_IMAGE)
-                .tag(ACCOUNT_NAME_TAG, "")
-                .register(meterRegistry)
+            .tag(ACCOUNT_NAME_TAG, "")
+            .register(meterRegistry)
 
         Counter.builder(TRANSACTION_LIST_IS_EMPTY)
-                .tag(ACCOUNT_NAME_TAG, "")
-                .register(meterRegistry)
+            .tag(ACCOUNT_NAME_TAG, "")
+            .register(meterRegistry)
 
     }
 

@@ -8,4 +8,8 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [DateValidator::class])
-annotation class ValidDate(val message: String = "date must be greater than 1/1/2000.", val groups: Array<KClass<*>> = [], val payload: Array<KClass<out Payload>> = [])
+annotation class ValidDate(
+    val message: String = "date must be greater than 1/1/2000.",
+    val groups: Array<KClass<*>> = [],
+    val payload: Array<KClass<out Payload>> = []
+)

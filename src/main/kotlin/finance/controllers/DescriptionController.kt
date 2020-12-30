@@ -42,8 +42,10 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class,
-        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class])
+    @ExceptionHandler(
+        value = [ConstraintViolationException::class, NumberFormatException::class,
+            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class]
+    )
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
         val response: MutableMap<String, String> = HashMap()
         logger.error("Bad Request", throwable)

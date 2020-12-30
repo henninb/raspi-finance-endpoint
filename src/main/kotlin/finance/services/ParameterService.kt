@@ -2,7 +2,6 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parameter
-import finance.domain.Payment
 import finance.repositories.ParameterRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
@@ -13,9 +12,11 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-open class ParameterService(private var parameterRepository: ParameterRepository,
-                            private val validator: Validator,
-                            private var meterService: MeterService) {
+open class ParameterService(
+    private var parameterRepository: ParameterRepository,
+    private val validator: Validator,
+    private var meterService: MeterService
+) {
 
     fun insertParameter(parameter: Parameter): Boolean {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)

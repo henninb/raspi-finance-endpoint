@@ -1,10 +1,8 @@
 package finance.services
 
-import finance.domain.Category
+
 import finance.domain.Parameter
-import finance.helpers.CategoryBuilder
 import finance.helpers.ParameterBuilder
-import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
 

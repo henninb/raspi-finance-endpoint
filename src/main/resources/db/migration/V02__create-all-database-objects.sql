@@ -121,15 +121,18 @@ CREATE TABLE IF NOT EXISTS t_transaction
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
-                                          ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined')),
+                                          ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly',
+                                           'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE,
     CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
 );
 
 -- Required to happen after the t_transaction table is created
-ALTER TABLE t_receipt_image DROP CONSTRAINT IF EXISTS fk_transaction;
-ALTER TABLE t_receipt_image ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE;
+ALTER TABLE t_receipt_image
+    DROP CONSTRAINT IF EXISTS fk_transaction;
+ALTER TABLE t_receipt_image
+    ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE;
 
 -- example
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
@@ -154,7 +157,7 @@ CREATE TABLE IF NOT EXISTS t_payment
     amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
     guid_source        TEXT          NOT NULL,
     guid_destination   TEXT          NOT NULL,
-    active_status      BOOLEAN        NOT NULL DEFAULT TRUE,
+    active_status      BOOLEAN       NOT NULL DEFAULT TRUE,
     date_updated       TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
@@ -209,20 +212,20 @@ CREATE TABLE IF NOT EXISTS t_description
 -- DROP TRIGGER IF EXISTS tr_update_description ON t_description;
 -- DROP FUNCTION IF EXISTS fn_update_description();
 
-SELECT setval('t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM t_receipt_image)+1);
-SELECT setval('t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM t_transaction)+1);
-SELECT setval('t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM t_payment)+1);
-SELECT setval('t_account_account_id_seq', (SELECT MAX(account_id) FROM t_account)+1);
-SELECT setval('t_category_category_id_seq', (SELECT MAX(category_id) FROM t_category)+1);
-SELECT setval('t_description_description_id_seq', (SELECT MAX(description_id) FROM t_description)+1);
-SELECT setval('t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM t_parm)+1);
+SELECT setval('t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM t_receipt_image) + 1);
+SELECT setval('t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM t_transaction) + 1);
+SELECT setval('t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM t_payment) + 1);
+SELECT setval('t_account_account_id_seq', (SELECT MAX(account_id) FROM t_account) + 1);
+SELECT setval('t_category_category_id_seq', (SELECT MAX(category_id) FROM t_category) + 1);
+SELECT setval('t_description_description_id_seq', (SELECT MAX(description_id) FROM t_description) + 1);
+SELECT setval('t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM t_parm) + 1);
 
 --DROP FUNCTION IF EXISTS fn_update_transaction_categories();
 CREATE OR REPLACE FUNCTION fn_update_transaction_categories() RETURNS TRIGGER AS
 $$
 BEGIN
     NEW.date_updated := CURRENT_TIMESTAMP;
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE PLPGSQL;
 
@@ -232,7 +235,7 @@ $$
 BEGIN
     NEW.date_updated := CURRENT_TIMESTAMP;
     NEW.date_added := CURRENT_TIMESTAMP;
-RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE PLPGSQL;
 
@@ -241,14 +244,14 @@ CREATE TRIGGER tr_insert_transaction_categories
     BEFORE INSERT
     ON t_transaction_categories
     FOR EACH ROW
-    EXECUTE PROCEDURE fn_insert_transaction_categories();
+EXECUTE PROCEDURE fn_insert_transaction_categories();
 
 DROP TRIGGER IF EXISTS tr_update_transaction_categories ON t_transaction_categories;
 CREATE TRIGGER tr_update_transaction_categories
     BEFORE UPDATE
     ON t_transaction_categories
     FOR EACH ROW
-    EXECUTE PROCEDURE fn_update_transaction_categories();
+EXECUTE PROCEDURE fn_update_transaction_categories();
 
 CREATE OR REPLACE FUNCTION fn_update_transaction() RETURNS TRIGGER AS
 $$
