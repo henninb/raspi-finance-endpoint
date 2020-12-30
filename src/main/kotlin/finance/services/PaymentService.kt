@@ -34,6 +34,7 @@ class PaymentService(private var paymentRepository: PaymentRepository,
 
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         if (constraintViolations.isNotEmpty()) {
+            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert payment as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert payment as there is a constraint violation on the data.")
         }

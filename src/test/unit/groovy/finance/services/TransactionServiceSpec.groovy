@@ -5,6 +5,7 @@ import finance.helpers.CategoryBuilder
 import finance.helpers.TransactionBuilder
 import org.hibernate.NonUniqueResultException
 
+import javax.validation.ConstraintViolation
 import java.sql.Date
 
 class TransactionServiceSpec extends BaseServiceSpec {
@@ -17,7 +18,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - deleteByGuid'() {
         given:
-        String guid = '123'  // should use GUID generator
+        String guid = UUID.randomUUID() // should use GUID generator
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
@@ -33,7 +34,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - deleteByGuid - no record returned because of invalid guid'() {
         given:
-        String guid = '123'
+        String guid = UUID.randomUUID()
         Optional<Transaction> transactionOptional = Optional.empty()
 
         when:
@@ -47,7 +48,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - findByGuid'() {
         given:
-        String guid = '123'
+        String guid = UUID.randomUUID()
         Transaction transaction = new Transaction()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
 
@@ -61,7 +62,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - findByGuid - duplicates returned'() {
         given:
-        String guid = '123'
+        String guid = UUID.randomUUID()
 
         when:
         transactionService.findTransactionByGuid(guid)
@@ -75,27 +76,24 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - insert valid transaction'() {
         given:
-        String categoryName = 'my-category'
-        String accountName = 'my-account-name'
-        String guid = '123'
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
+        constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-        1 * validatorMock.validate(transaction) >> ([] as Set)
-        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
-        1 * categoryRepositoryMock.findByCategory(categoryName) >> categoryOptional
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
         1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
@@ -103,23 +101,20 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - attempt to insert duplicate transaction - update is called'() {
         given:
-        String categoryName = 'my-category'
-        String accountName = 'my-account-name'
-        String guid = '123'
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
-        1 * validatorMock.validate(transaction) >> ([] as Set)
+        constraintViolations.size() == 0
+        1 * validatorMock.validate(transaction) >> constraintViolations
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
-        1 * categoryRepositoryMock.findByCategory('my-category') >> Optional.of(new Category())
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.of(new Category())
         1 * transactionRepositoryMock.saveAndFlush({ Transaction entity ->
             assert entity.transactionDate == transaction.transactionDate
             assert entity.category == transaction.category
@@ -132,27 +127,24 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - insert valid transaction where account name does exist'() {
         given:
-        String categoryName = 'my-category'
-        String accountName = 'my-account-name'
-        String guid = '123'
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
+        constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
-        1 * validatorMock.validate(transaction) >> ([] as Set)
-        1 * categoryRepositoryMock.findByCategory(categoryName) >> categoryOptional
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
         1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
@@ -160,32 +152,30 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - insert valid transaction where account name does not exist'() {
         given:
-        String categoryName = 'my-category'
-        String accountName = 'my-account-name'
-        String guid = '123'
-        Transaction transaction = new Transaction()
-        Account account = transactionService.createDefaultAccount(accountName, AccountType.Undefined)
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
+        Account account = transactionService.createDefaultAccount(transaction.accountNameOwner, AccountType.Credit)
         Category category = CategoryBuilder.builder().build()
-        category.category = categoryName
+        category.category = transaction.category
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
-        transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
+        Set<ConstraintViolation<Account>> constraintViolationsAccount = validator.validate(account)
 
         when:
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
+        constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
         1 * accountRepositoryMock.saveAndFlush(account) >> true
-        1 * validatorMock.validate(transaction) >> ([] as Set)
-        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> Optional.empty()
-        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
-        1 * validatorMock.validate(account) >> ([] as Set)
-        1 * categoryRepositoryMock.findByCategory(categoryName) >> categoryOptional
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * validatorMock.validate(account) >> constraintViolationsAccount
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
         1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         0 * _
@@ -193,27 +183,25 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test transactionService - insert a valid transaction where category name does not exist'() {
         given:
-        String categoryName = 'my-category'
-        String accountName = 'my-account-name'
-        String guid = '123'
-        Transaction transaction = new Transaction()
+        String guid = UUID.randomUUID()
+        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
         Account account = new Account()
         Optional<Account> accountOptional = Optional.of(account)
         transaction.guid = guid
-        transaction.accountNameOwner = accountName
-        transaction.category = categoryName
-        category.category = categoryName
+        category.category = transaction.category
         category.categoryId = 0
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
         isInserted.is(true)
+        constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-        1 * validatorMock.validate(transaction) >> ([] as Set)
-        1 * accountRepositoryMock.findByAccountNameOwner(accountName) >> accountOptional
-        1 * categoryRepositoryMock.findByCategory(categoryName) >> Optional.empty()
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.empty()
         1 * validatorMock.validate(category) >> ([] as Set)
         1 * categoryRepositoryMock.saveAndFlush(category)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true

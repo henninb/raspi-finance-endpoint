@@ -20,6 +20,7 @@ open class ParameterService(private var parameterRepository: ParameterRepository
     fun insertParameter(parameter: Parameter): Boolean {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
         if (constraintViolations.isNotEmpty()) {
+            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert parameter as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert parameter as there is a constraint violation on the data.")
         }

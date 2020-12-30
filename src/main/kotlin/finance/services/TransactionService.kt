@@ -69,6 +69,7 @@ open class TransactionService @Autowired constructor(
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             //TODO: add metric here
+            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert transaction as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
         }
