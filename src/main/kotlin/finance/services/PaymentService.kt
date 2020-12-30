@@ -16,11 +16,13 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class PaymentService(private var paymentRepository: PaymentRepository,
-                     private var transactionService: TransactionService,
-                     private var parameterService: ParameterService,
-                     private val validator: Validator,
-                     private var meterService: MeterService) {
+class PaymentService(
+    private var paymentRepository: PaymentRepository,
+    private var transactionService: TransactionService,
+    private var parameterService: ParameterService,
+    private val validator: Validator,
+    private var meterService: MeterService
+) {
 
     fun findAllPayments(): List<Payment> {
         return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
@@ -60,7 +62,11 @@ class PaymentService(private var paymentRepository: PaymentRepository,
     //TODO: 10/24/2020 - not sure if Throws annotation helps here?
     //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
     @Throws
-    private fun populateDebitTransaction(transactionDebit: Transaction, payment: Payment, paymentAccountNameOwner: String) {
+    private fun populateDebitTransaction(
+        transactionDebit: Transaction,
+        payment: Payment,
+        paymentAccountNameOwner: String
+    ) {
         transactionDebit.guid = UUID.randomUUID().toString()
         transactionDebit.transactionDate = payment.transactionDate
         transactionDebit.description = "payment"
@@ -79,7 +85,11 @@ class PaymentService(private var paymentRepository: PaymentRepository,
         transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
 
-    private fun populateCreditTransaction(transactionCredit: Transaction, payment: Payment, paymentAccountNameOwner: String) {
+    private fun populateCreditTransaction(
+        transactionCredit: Transaction,
+        payment: Payment,
+        paymentAccountNameOwner: String
+    ) {
         transactionCredit.guid = UUID.randomUUID().toString()
         transactionCredit.transactionDate = payment.transactionDate
         transactionCredit.description = "payment"

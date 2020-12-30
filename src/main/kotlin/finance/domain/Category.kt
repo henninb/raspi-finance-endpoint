@@ -21,26 +21,26 @@ import javax.validation.constraints.Size
 @Table(name = "t_category")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Category(
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @SequenceGenerator(name = "t_category_category_id_seq")
-        @field:Min(value = 0L)
-        @JsonProperty
-        @Column(name = "category_id", nullable = false)
-        var categoryId: Long,
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "t_category_category_id_seq")
+    @field:Min(value = 0L)
+    @JsonProperty
+    @Column(name = "category_id", nullable = false)
+    var categoryId: Long,
 
-        @JsonProperty
-        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean = true,
+    @JsonProperty
+    @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    var activeStatus: Boolean = true,
 
-        @field:Size(min = 1, max = 50)
-        @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
-        @field:Convert(converter = LowerCaseConverter::class)
-        @Column(name = "category", unique = true, nullable = false)
-        @JsonProperty
-        var category: String
+    @field:Size(min = 1, max = 50)
+    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
+    @field:Convert(converter = LowerCaseConverter::class)
+    @Column(name = "category", unique = true, nullable = false)
+    @JsonProperty
+    var category: String
 ) {
-    constructor() : this(0L, true,"")
+    constructor() : this(0L, true, "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

@@ -31,8 +31,9 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
-        val transactions: List<Transaction> = transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
-        if (transactions.isEmpty() ) {
+        val transactions: List<Transaction> =
+            transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
+        if (transactions.isEmpty()) {
             logger.error("transactions.size=${transactions.size}")
             //TODO: not found, should I take this action?
             ResponseEntity.notFound().build<List<Transaction>>()
@@ -45,7 +46,7 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl -k https://hornsup:8080/transaction/account/totals/chase_brian
     @GetMapping(path = ["/account/totals/{accountNameOwner}"], produces = ["application/json"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
-        val results: Map<String, BigDecimal> = transactionService.  fetchTotalsByAccountNameOwner(accountNameOwner)
+        val results: Map<String, BigDecimal> = transactionService.fetchTotalsByAccountNameOwner(accountNameOwner)
 
         logger.info("totals=${results}")
 
@@ -68,7 +69,10 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //TODO: return the payload of the updated and the inserted
     @PutMapping(path = ["/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
-    fun updateTransaction(@PathVariable("guid") guid: String, @RequestBody transaction: Map<String, String>): ResponseEntity<String> {
+    fun updateTransaction(
+        @PathVariable("guid") guid: String,
+        @RequestBody transaction: Map<String, String>
+    ): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
         if (updateStatus) {
@@ -78,8 +82,15 @@ class TransactionController @Autowired constructor(private var transactionServic
     }
 
     //TODO: return the payload of the updated and the inserted
-    @PutMapping(path = ["/state/update/{guid}/{state}"], consumes = ["application/json"], produces = ["application/json"])
-    fun updateTransactionState(@PathVariable("guid") guid: String, @PathVariable("state") state: TransactionState): ResponseEntity<String> {
+    @PutMapping(
+        path = ["/state/update/{guid}/{state}"],
+        consumes = ["application/json"],
+        produces = ["application/json"]
+    )
+    fun updateTransactionState(
+        @PathVariable("guid") guid: String,
+        @PathVariable("state") state: TransactionState
+    ): ResponseEntity<String> {
         val transactions = transactionService.updateTransactionState(guid, state)
         if (transactions.isNotEmpty()) {
             val response: MutableMap<String, String> = HashMap()
@@ -90,8 +101,15 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
     }
 
-    @PutMapping(path = ["/reoccurring/update/{guid}/{reoccurring}"], consumes = ["application/json"], produces = ["application/json"])
-    fun updateTransactionReoccurringState(@PathVariable("guid") guid: String, @PathVariable("reoccurring") reoccurring: Boolean): ResponseEntity<String> {
+    @PutMapping(
+        path = ["/reoccurring/update/{guid}/{reoccurring}"],
+        consumes = ["application/json"],
+        produces = ["application/json"]
+    )
+    fun updateTransactionReoccurringState(
+        @PathVariable("guid") guid: String,
+        @PathVariable("reoccurring") reoccurring: Boolean
+    ): ResponseEntity<String> {
         val updateStatus: Boolean = transactionService.updateTransactionReoccurringFlag(guid, reoccurring)
         if (updateStatus) {
             return ResponseEntity.ok("transaction reoccurring updated")
@@ -125,7 +143,10 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
     @PutMapping(path = ["/update/receipt/image/{guid}"], produces = ["application/json"])
-    fun updateTransactionReceiptImageByGuid(@PathVariable("guid") guid: String, @RequestBody payload: String): ResponseEntity<String> {
+    fun updateTransactionReceiptImageByGuid(
+        @PathVariable("guid") guid: String,
+        @RequestBody payload: String
+    ): ResponseEntity<String> {
         transactionService.updateTransactionReceiptImageByGuid(guid, payload.toByteArray())
         logger.info("set transaction receipt image for guid = $guid")
         return ResponseEntity.ok("transaction receipt image updated")
@@ -158,9 +179,11 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
     //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"amount":"abc"}'
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
-        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-        IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class])
+    @ExceptionHandler(
+        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
+            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
+    )
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.info("Bad Request: ", throwable)
@@ -205,7 +228,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
-        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        response["response"] =
+            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
     }

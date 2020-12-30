@@ -1,20 +1,11 @@
 package finance.services
 
-import finance.domain.Category
+
 import finance.domain.Description
-import finance.helpers.CategoryBuilder
 import finance.helpers.DescriptionBuilder
-import org.w3c.dom.ls.LSResourceResolver
-import org.xml.sax.ErrorHandler
-import org.xml.sax.SAXException
-import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.xml.transform.Result
-import javax.xml.transform.Source
-
+import javax.validation.ValidationException
 
 class DescriptionServiceSpec extends BaseServiceSpec {
     protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, validatorMock, meterServiceMock)
@@ -33,6 +24,21 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         then:
         1 * validatorMock.validate(description) >> constraintViolations
         1 * descriptionRepositoryMock.saveAndFlush(description)
+        0 * _
+    }
+
+    void 'test - insert description - empty descriptionName'() {
+        given:
+        Description description = DescriptionBuilder.builder().description('').build()
+        Set<ConstraintViolation<Description>> constraintViolations = validator.validate(description)
+
+        when:
+        descriptionService.insertDescription(description)
+
+        then:
+        constraintViolations.size() == 1
+        thrown(ValidationException)
+        1 * validatorMock.validate(description) >> constraintViolations
         0 * _
     }
 }

@@ -1,11 +1,7 @@
-import ch.qos.logback.classic.AsyncAppender
-import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.filter.LevelFilter
 import ch.qos.logback.classic.filter.ThresholdFilter
-//import ch.qos.logback.core.util.FileSize
-import org.apache.logging.log4j.core.appender.rolling.FileSize
 import org.springframework.boot.logging.logback.ColorConverter
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 
 statusListener(OnConsoleStatusListener)
 
@@ -124,6 +120,6 @@ logger('org.flywaydb', INFO, ['fileAppender', 'flywayFileAppender'])
 logger('org.apache.camel', INFO, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
 
 //logger('ch.qos.logback', NONE, false)
-        //<logger name="ch.qos.logback" level="OFF" additivity="false" />
+//<logger name="ch.qos.logback" level="OFF" additivity="false" />
 
 root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])

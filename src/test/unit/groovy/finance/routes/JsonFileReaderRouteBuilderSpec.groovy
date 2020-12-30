@@ -9,7 +9,6 @@ import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.model.ModelCamelContext
-import spock.lang.Ignore
 import spock.lang.Specification
 
 class JsonFileReaderRouteBuilderSpec extends Specification {

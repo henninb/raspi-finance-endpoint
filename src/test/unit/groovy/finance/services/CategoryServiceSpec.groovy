@@ -1,14 +1,11 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Account
-import finance.helpers.CategoryBuilder
-import finance.repositories.CategoryRepository
-import spock.lang.Specification
+
 import finance.domain.Category
+import finance.helpers.CategoryBuilder
 
 import javax.validation.ConstraintViolation
-import javax.validation.Validator
+import javax.validation.ValidationException
 
 class CategoryServiceSpec extends BaseServiceSpec {
 
@@ -28,6 +25,21 @@ class CategoryServiceSpec extends BaseServiceSpec {
         then:
         1 * validatorMock.validate(category) >> constraintViolations
         1 * categoryRepositoryMock.saveAndFlush(category)
+        0 * _
+    }
+
+    void 'test - insert category empty categoryName'() {
+        given:
+        Category category = CategoryBuilder.builder().category('').build()
+        Set<ConstraintViolation<Category>> constraintViolations = validator.validate(category)
+
+        when:
+        categoryService.insertCategory(category)
+
+        then:
+        constraintViolations.size() == 1
+        thrown(ValidationException)
+        1 * validatorMock.validate(category) >> constraintViolations
         0 * _
     }
 

@@ -15,10 +15,10 @@ import org.springframework.stereotype.Component
 @ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
 class TransactionToDatabaseRouteBuilder @Autowired constructor(
-        private var camelProperties: CamelProperties,
-        private var stringTransactionProcessor: StringTransactionProcessor,
-        private var insertTransactionProcessor: InsertTransactionProcessor,
-        private var exceptionProcessor: ExceptionProcessor
+    private var camelProperties: CamelProperties,
+    private var stringTransactionProcessor: StringTransactionProcessor,
+    private var insertTransactionProcessor: InsertTransactionProcessor,
+    private var exceptionProcessor: ExceptionProcessor
 ) : RouteBuilder() {
 
 
@@ -26,24 +26,24 @@ class TransactionToDatabaseRouteBuilder @Autowired constructor(
     override fun configure() {
 
         onException(InvalidPayloadException::class.java)
-                .log(LoggingLevel.INFO, "invalid payload :: \${exception.message}")
-                .process(exceptionProcessor)
-                .handled(true)
-                .end()
+            .log(LoggingLevel.INFO, "invalid payload :: \${exception.message}")
+            .process(exceptionProcessor)
+            .handled(true)
+            .end()
 
         from(camelProperties.transactionToDatabaseRoute)
-                .autoStartup(camelProperties.autoStartRoute)
-                .routeId(camelProperties.transactionToDatabaseRouteId)
-                .split(body())
-                .log(LoggingLevel.INFO, "split body completed.")
-                .convertBodyTo(Transaction::class.java)
-                .log(LoggingLevel.INFO, "converted body to string.")
-                .process(stringTransactionProcessor)
-                .convertBodyTo(String::class.java)
+            .autoStartup(camelProperties.autoStartRoute)
+            .routeId(camelProperties.transactionToDatabaseRouteId)
+            .split(body())
+            .log(LoggingLevel.INFO, "split body completed.")
+            .convertBodyTo(Transaction::class.java)
+            .log(LoggingLevel.INFO, "converted body to string.")
+            .process(stringTransactionProcessor)
+            .convertBodyTo(String::class.java)
 
-                .process(insertTransactionProcessor)
-                .to(camelProperties.jsonFileWriterRoute)
-                .log(LoggingLevel.INFO, "message was processed by insertTransactionProcessor.")
-                .end()
+            .process(insertTransactionProcessor)
+            .to(camelProperties.jsonFileWriterRoute)
+            .log(LoggingLevel.INFO, "message was processed by insertTransactionProcessor.")
+            .end()
     }
 }

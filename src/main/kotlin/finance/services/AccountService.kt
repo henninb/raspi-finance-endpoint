@@ -16,15 +16,17 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class AccountService @Autowired constructor(private var accountRepository: AccountRepository,
-                                            private val validator: Validator,
-                                            private var meterService: MeterService) {
+class AccountService @Autowired constructor(
+    private var accountRepository: AccountRepository,
+    private val validator: Validator,
+    private var meterService: MeterService
+) {
 
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
-    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner() : List<Account> {
+    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
@@ -97,7 +99,7 @@ class AccountService @Autowired constructor(private var accountRepository: Accou
     // TODO: set the update timestamp
     fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
-        accounts.forEach{account ->
+        accounts.forEach { account ->
             //sum and update
             println(account)
         }

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.TransactionBuilder
-import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -78,15 +77,6 @@ class TransactionSpec extends Specification {
         then:
         transactionFromString.transactionDate == transactionDeserialized.transactionDate
         0 * _
-    }
-
-    @Ignore
-    void 'test - json timezone'() {
-        when:
-        TimeZone tz = TimeZone.getDefault()
-
-        then:
-        tz == TimeZone.getTimeZone('America/Chicago')
     }
 
     void 'test -- JSON deserialize to Transaction with valid payload'() {

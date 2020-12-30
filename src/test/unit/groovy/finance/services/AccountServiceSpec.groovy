@@ -1,10 +1,11 @@
 package finance.services
 
-
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
-import javax.validation.*
+
+import javax.validation.ConstraintViolation
+import javax.validation.ValidationException
 
 class AccountServiceSpec extends BaseServiceSpec {
     protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)

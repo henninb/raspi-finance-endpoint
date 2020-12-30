@@ -49,9 +49,11 @@ class PaymentController(private var paymentService: PaymentService) {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
-        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-        IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class])
+    @ExceptionHandler(
+        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
+            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
+    )
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.info("Bad Request: ", throwable)
@@ -74,7 +76,8 @@ class PaymentController(private var paymentService: PaymentService) {
     fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
-        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        response["response"] =
+            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
     }

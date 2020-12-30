@@ -98,13 +98,18 @@ class AccountController @Autowired constructor(private var accountService: Accou
             return ResponseEntity.ok("account updated")
         }
 
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not update this account: ${toBePatchedTransaction.accountNameOwner}.")
+        throw ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "could not update this account: ${toBePatchedTransaction.accountNameOwner}."
+        )
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
-        MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-        IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class])
+    @ExceptionHandler(
+        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
+            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
+    )
     fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.info("Bad Request: ", throwable)
@@ -136,7 +141,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
     fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         logger.error("internal server error: ", throwable)
-        response["response"] = "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        response["response"] =
+            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
     }

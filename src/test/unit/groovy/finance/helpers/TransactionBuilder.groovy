@@ -4,7 +4,7 @@ import finance.domain.AccountType
 import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
-import groovy.transform.builder.Builder
+
 import java.sql.Date
 
 class TransactionBuilder {

@@ -5,12 +5,8 @@ import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.Transaction
 import finance.helpers.PaymentBuilder
-import finance.repositories.ParameterRepository
-import finance.repositories.PaymentRepository
-import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
-import javax.validation.Validator
 
 class PaymentServiceSpec extends BaseServiceSpec {
     protected ParameterService mockParameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterServiceMock)
@@ -55,7 +51,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
             assert transactionCredit.category == 'bill_pay'
             assert transactionCredit.description == 'payment'
             assert transactionCredit.notes == 'from ' + parameter.parameterValue
-            assert transactionCredit.amount ==  (payment.amount * -1.0)
+            assert transactionCredit.amount == (payment.amount * -1.0)
             assert transactionCredit.accountType == AccountType.Credit
         })
         1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.of(parameter)

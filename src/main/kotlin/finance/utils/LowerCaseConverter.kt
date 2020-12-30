@@ -8,7 +8,7 @@ import javax.persistence.Converter
 class LowerCaseConverter : AttributeConverter<String, String> {
 
     override fun convertToDatabaseColumn(attribute: String?): String {
-        if( attribute == null) {
+        if (attribute == null) {
             return ""
         }
 
@@ -16,7 +16,7 @@ class LowerCaseConverter : AttributeConverter<String, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String?): String {
-        if( attribute == null) {
+        if (attribute == null) {
             return ""
         }
 

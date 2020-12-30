@@ -17,23 +17,23 @@ import javax.validation.constraints.Min
 @Table(name = "t_receipt_image")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReceiptImage(
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        @SequenceGenerator(name = "t_receipt_image_receipt_image_id_seq")
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "t_receipt_image_receipt_image_id_seq")
 
-        @field:Min(value = 0L)
-        @JsonIgnore
-        @Column(name = "receipt_image_id", nullable = false)
-        var receiptImageId: Long,
+    @field:Min(value = 0L)
+    @JsonIgnore
+    @Column(name = "receipt_image_id", nullable = false)
+    var receiptImageId: Long,
 
-        @JsonIgnore
-        @field:Min(value = 0L)
-        @Column(name = "transaction_id", nullable = false)
-        var transactionId: Long,
+    @JsonIgnore
+    @field:Min(value = 0L)
+    @Column(name = "transaction_id", nullable = false)
+    var transactionId: Long,
 
-        @JsonProperty
-        @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-        var activeStatus: Boolean = true
+    @JsonProperty
+    @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    var activeStatus: Boolean = true
 ) {
 
     constructor() : this(0L, 0L, true)
