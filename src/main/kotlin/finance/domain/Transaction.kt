@@ -12,6 +12,7 @@ import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
+import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.Proxy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -127,10 +128,10 @@ data class Transaction(
 
     @JsonSetter("transactionDate")
     fun jsonSetterTransactionDate(stringDate: String) {
-        logger.info("stringDate = ${stringDate}")
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        //simpleDateFormat.timeZone = TimeZone.getDefault()
-        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        logger.info("stringDate = $stringDate")
+//        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+//        //simpleDateFormat.timeZone = TimeZone.getDefault()
+//        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         this.transactionDate = Date.valueOf(stringDate)
     }
 
@@ -179,7 +180,7 @@ data class Transaction(
     companion object {
         @JsonIgnore
         private val mapper = ObjectMapper()
-        val logger: Logger
-            get() = LoggerFactory.getLogger(Transaction::class.java)
+        @JsonIgnore
+        private val logger = LogManager.getLogger()
     }
 }
