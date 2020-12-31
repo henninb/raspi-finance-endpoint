@@ -32,9 +32,7 @@ class TransactionJpaSpec extends Specification {
     protected String jsonPayload = '''
 {"accountId":0,
 "accountType":"credit",
-"transactionDate":1553645394,
-"dateUpdated":1593981072000,
-"dateAdded":1593981072000,
+"transactionDate":"2020-12-02",
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
 "accountNameOwner":"chase_brian",
 "description":"aliexpress.com",
@@ -45,7 +43,7 @@ class TransactionJpaSpec extends Specification {
 "notes":"my note to you"}
 '''
 
-    void "test Transaction to JSON - valid insert"() {
+    void 'test Transaction to JSON - valid insert'() {
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
         Account account = new AccountBuilder().build()
@@ -61,7 +59,7 @@ class TransactionJpaSpec extends Specification {
         result.guid == transactionFromString.guid
     }
 
-    void "test Transaction to JSON - attempt to insert same record twice - different uuid"() {
+    void 'test Transaction to JSON - attempt to insert same record twice - different uuid'() {
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
         Account account = new AccountBuilder().builder().build()
@@ -81,7 +79,7 @@ class TransactionJpaSpec extends Specification {
         transactionRepository.count() == 2L
     }
 
-    void "test Transaction to JSON - attempt to insert same record twice - different guid"() {
+    void 'test Transaction to JSON - attempt to insert same record twice - different guid'() {
         given:
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
         transactionFromString.category = ''
@@ -104,7 +102,7 @@ class TransactionJpaSpec extends Specification {
         transactionRepository.count() == 2L
     }
 
-    void "test transaction repository - insert a valid record"() {
+    void 'test transaction repository - insert a valid record'() {
         given:
         Transaction transaction = new TransactionBuilder().build()
         Account account = new AccountBuilder().build()
@@ -121,7 +119,7 @@ class TransactionJpaSpec extends Specification {
         transactionResult.guid == transaction.guid
     }
 
-    void "test transaction repository - insert 2 records with duplicate guid - throws an exception."() {
+    void 'test transaction repository - insert 2 records with duplicate guid - throws an exception'() {
         given:
         Transaction transaction1 = new TransactionBuilder().build()
         Transaction transaction2 = new TransactionBuilder().build()
@@ -140,7 +138,7 @@ class TransactionJpaSpec extends Specification {
         entityManager.persist(transaction2)
 
         then:
-        PersistenceException ex = thrown()
+        PersistenceException ex = thrown(PersistenceException)
         ex.message.contains('ConstraintViolationException: could not execute statement')
     }
 

@@ -6,13 +6,19 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 
 import java.sql.Date
+import java.text.SimpleDateFormat
 
 class TransactionBuilder {
+    //SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd")
+    //simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    //println("***** " + simpleDateFormat.format(this.transactionDate))
+    //return simpleDateFormat.format(this.transactionDate)
+
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
-    Date transactionDate = Date.valueOf('2020-12-30')
+    Date transactionDate = Date.valueOf('2020-12-01') //new Date(Calendar.getInstance(TimeZone.getTimeZone("UTC")).time.time)
     String description = 'aliexpress.com'
     String category = 'online'
     BigDecimal amount = 3.14G

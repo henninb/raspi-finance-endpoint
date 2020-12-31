@@ -25,20 +25,18 @@ open class JsonTransactionProcessor @Autowired constructor(
         val payload = message.getBody(String::class.java)
 
         val transactions = mapper.readValue(payload, Array<Transaction>::class.java)
-        logger.info(transactions.toString())
+        //logger.info(transactions.toString())
+
         for (transaction in transactions) {
             val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
             if (constraintViolations.isNotEmpty()) {
-                //TODO: handle the violation
-
-                logger.error("the json <${transaction}>")
-                logger.error("do not load into the database.")
+                logger.error("the payload=$transaction")
                 //meterService.incrementErrorCounter(transaction.accountNameOwner, MeterService.ErrorType.VALIDATION_ERROR)
                 logger.error("METRIC_TRANSACTION_VALIDATOR_FAILED_COUNTER")
                 throw RuntimeException("transaction object has validation errors.")
             }
         }
-        logger.info("JsonTransactionProcessor size: ${transactions.size}")
+        logger.info("JsonTransactionProcessor size = ${transactions.size}")
         message.body = transactions
     }
 
