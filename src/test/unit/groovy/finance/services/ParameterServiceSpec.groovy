@@ -1,6 +1,5 @@
 package finance.services
 
-
 import finance.domain.Parameter
 import finance.helpers.ParameterBuilder
 

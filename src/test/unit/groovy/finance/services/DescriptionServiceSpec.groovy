@@ -1,6 +1,5 @@
 package finance.services
 
-
 import finance.domain.Description
 import finance.helpers.DescriptionBuilder
 
