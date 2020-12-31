@@ -72,10 +72,9 @@ class PaymentServiceSpec extends BaseServiceSpec {
         paymentService.insertPayment(payment)
 
         then:
+        thrown(RuntimeException)
         1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.empty()
-        1 * validatorMock.validate(_) >> constraintViolations
-        RuntimeException ex = thrown()
-        ex.message.contains('failed to read the parameter ')
+        1 * validatorMock.validate(payment) >> constraintViolations
         0 * _
     }
 }

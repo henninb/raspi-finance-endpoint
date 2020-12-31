@@ -2,6 +2,7 @@ package finance.routes
 
 import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
+import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
@@ -64,7 +65,7 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
 
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 0
-        1 * mockExceptionProcessor.process(_)
+        1 * mockExceptionProcessor.process(_ as Exchange)
         mockTestOutputEndpoint.assertIsSatisfied()
         0 * _
     }

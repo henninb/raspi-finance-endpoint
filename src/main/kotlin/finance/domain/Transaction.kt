@@ -120,8 +120,18 @@ data class Transaction(
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.timeZone = TimeZone.getDefault()
+        //simpleDateFormat.timeZone = TimeZone.getDefault()
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return simpleDateFormat.format(this.transactionDate)
+    }
+
+    @JsonSetter("transactionDate")
+    fun jsonSetterTransactionDate(stringDate: String) {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        //simpleDateFormat.timeZone = TimeZone.getDefault()
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        println("***** jsonSetterTransactionDate " + Date.valueOf(stringDate))
+        this.transactionDate = Date.valueOf(stringDate)
     }
 
     @JsonIgnore

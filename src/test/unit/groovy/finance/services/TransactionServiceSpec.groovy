@@ -202,7 +202,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.empty()
-        1 * validatorMock.validate(category) >> ([] as Set)
+        1 * validatorMock.validate(category) >> constraintViolations
         1 * categoryRepositoryMock.saveAndFlush(category)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
         1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)

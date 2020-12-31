@@ -6,6 +6,7 @@ import finance.helpers.TransactionBuilder
 import finance.processors.ExceptionProcessor
 import finance.processors.InsertTransactionProcessor
 import finance.processors.StringTransactionProcessor
+import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
@@ -56,8 +57,8 @@ class TransactionToDatabaseRouteBuilderSpec extends Specification {
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 2
         mockTestOutputEndpoint.assertIsSatisfied()
-        2 * stringTransactionProcessorMock.process(_)
-        2 * insertTransactionProcessorMock.process(_)
+        2 * stringTransactionProcessorMock.process(_ as Exchange)
+        2 * insertTransactionProcessorMock.process(_ as Exchange)
         0 * _
     }
 
@@ -75,9 +76,9 @@ class TransactionToDatabaseRouteBuilderSpec extends Specification {
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 0
         mockTestOutputEndpoint.assertIsSatisfied()
-        0 * stringTransactionProcessorMock.process(_)
-        0 * insertTransactionProcessorMock.process(_)
-        2 * mockExceptionProcessor.process(_)
+        0 * stringTransactionProcessorMock.process(_ as Exchange)
+        0 * insertTransactionProcessorMock.process(_ as Exchange)
+        2 * mockExceptionProcessor.process(_ as Exchange)
         0 * _
     }
 }
