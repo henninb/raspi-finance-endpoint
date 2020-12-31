@@ -71,7 +71,6 @@ class AccountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-
     void 'test insertAccount - json inserted success'() {
         given:
         String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0}"

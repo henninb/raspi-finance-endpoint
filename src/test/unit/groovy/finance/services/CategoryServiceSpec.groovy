@@ -1,6 +1,5 @@
 package finance.services
 
-
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
 
