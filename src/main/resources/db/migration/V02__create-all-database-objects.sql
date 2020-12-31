@@ -253,25 +253,26 @@ CREATE TRIGGER tr_update_transaction_categories
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_transaction_categories();
 
-CREATE OR REPLACE FUNCTION fn_update_transaction() RETURNS TRIGGER AS
-$$
-BEGIN
-    if NEW.transaction_date > now() and NEW.transaction_state = 'cleared' then
-        RAISE EXCEPTION 'cannot have a cleared transactions with a future date.';
-    end if;
-    RETURN null;
-END;
-$$ LANGUAGE PLPGSQL;
-
-DROP TRIGGER IF EXISTS tr_update_transaction ON t_transaction;
-CREATE TRIGGER tr_update_transaction
-    BEFORE UPDATE
-    ON t_transaction
-    FOR EACH ROW
-EXECUTE PROCEDURE fn_update_transaction();
+-- CREATE OR REPLACE FUNCTION fn_update_transaction() RETURNS TRIGGER AS
+-- $$
+-- BEGIN
+--     if NEW.transaction_date > now() and NEW.transaction_state = 'cleared' then
+--         RAISE EXCEPTION 'cannot have a cleared transactions with a future date.';
+--     end if;
+--     RETURN null;
+-- END;
+-- $$ LANGUAGE PLPGSQL;
+--
+-- DROP TRIGGER IF EXISTS tr_update_transaction ON t_transaction;
+-- CREATE TRIGGER tr_update_transaction
+--     BEFORE UPDATE
+--     ON t_transaction
+--     FOR EACH ROW
+-- EXECUTE PROCEDURE fn_update_transaction();
 
 COMMIT;
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;
+
 --select * from t_transaction where transaction_state = 'cleared' and transaction_date > now();
 --select * from t_transaction where transaction_state in ('future', 'outstanding') and transaction_date < now();
