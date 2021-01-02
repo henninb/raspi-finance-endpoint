@@ -413,6 +413,14 @@ open class TransactionService @Autowired constructor(
         //transactions.forEach { transaction -> println(transaction) }
     }
 
+    private fun nextTimestampMillis(lastTimestamp: Long): Long {
+        var timestamp = System.currentTimeMillis()
+        while (timestamp <= lastTimestamp) {
+            timestamp = System.currentTimeMillis()
+        }
+        return timestamp
+    }
+
     companion object {
         private val mapper = ObjectMapper()
         private val logger = LogManager.getLogger()

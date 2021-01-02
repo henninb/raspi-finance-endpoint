@@ -24,4 +24,13 @@ class SqlDateTool {
     fun currentSqlDate(): Date {
         return Date(Calendar.getInstance().timeInMillis)
     }
+
+    private fun tilNextMillis(lastTimestamp: Long): Long {
+        var timestamp = System.currentTimeMillis()
+        while (timestamp <= lastTimestamp) {
+            timestamp = System.currentTimeMillis()
+        }
+        return timestamp
+    }
+
 }
