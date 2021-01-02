@@ -81,8 +81,8 @@ open class TransactionService @Autowired constructor(
 
         processAccount(transaction)
         processCategory(transaction)
-        transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transaction.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        transaction.dateUpdated = Timestamp(nextTimestampMillis())
+        transaction.dateAdded = Timestamp(nextTimestampMillis())
         transactionRepository.saveAndFlush(transaction)
         meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
@@ -255,7 +255,7 @@ open class TransactionService @Autowired constructor(
             receiptImage.jpgImage = jpgBase64Data
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = receiptImageId
-            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            transaction.dateUpdated = Timestamp(nextTimestampMillis())
             transactionRepository.saveAndFlush(transaction)
             meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
             return true
@@ -280,7 +280,7 @@ open class TransactionService @Autowired constructor(
                 val transaction = transactionOptional.get()
                 transaction.accountNameOwner = account.accountNameOwner
                 transaction.accountId = account.accountId
-                transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+                transaction.dateUpdated = Timestamp(nextTimestampMillis())
                 transactionRepository.saveAndFlush(transaction)
                 return true
             } else {
@@ -307,7 +307,7 @@ open class TransactionService @Autowired constructor(
                 throw RuntimeException("Cannot set cleared status on a future dated transaction.")
             }
             transaction.transactionState = transactionState
-            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            transaction.dateUpdated = Timestamp(nextTimestampMillis())
             val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)
             transactions.add(databaseResponseUpdated)
             //TODO: add metric here
@@ -352,8 +352,8 @@ open class TransactionService @Autowired constructor(
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
         transactionFuture.transactionDate = Date(calendar.timeInMillis)
-        transactionFuture.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transactionFuture.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        transactionFuture.dateUpdated = Timestamp(nextTimestampMillis())
+        transactionFuture.dateAdded = Timestamp(nextTimestampMillis())
         logger.info(transactionFuture.toString())
         if (transactionFuture.reoccurringType == ReoccurringType.Undefined) {
             throw RuntimeException("transaction state cannot be undefined for reoccurring transactions.")
@@ -368,7 +368,7 @@ open class TransactionService @Autowired constructor(
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             transaction.reoccurring = reoccurring
-            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            transaction.dateUpdated = Timestamp(nextTimestampMillis())
             transactionRepository.saveAndFlush(transaction)
             //TODO: add metric here
             return true
@@ -413,9 +413,10 @@ open class TransactionService @Autowired constructor(
         //transactions.forEach { transaction -> println(transaction) }
     }
 
-    private fun nextTimestampMillis(lastTimestamp: Long): Long {
+    private fun nextTimestampMillis(): Long {
+        val lastTimestamp = System.currentTimeMillis()
         var timestamp = System.currentTimeMillis()
-        while (timestamp <= lastTimestamp) {
+        while (timestamp < lastTimestamp) {
             timestamp = System.currentTimeMillis()
         }
         return timestamp
