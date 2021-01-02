@@ -26,6 +26,10 @@ import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
+import java.text.DateFormat
+
+
+
 
 @Entity
 @Proxy(lazy = false)
@@ -122,16 +126,17 @@ data class Transaction(
     fun jsonGetterTransactionDate(): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
         //simpleDateFormat.timeZone = TimeZone.getDefault()
-        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        //simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return simpleDateFormat.format(this.transactionDate)
     }
 
     @JsonSetter("transactionDate")
     fun jsonSetterTransactionDate(stringDate: String) {
         logger.info("stringDate = $stringDate")
-//        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-//        //simpleDateFormat.timeZone = TimeZone.getDefault()
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        simpleDateFormat.timeZone = TimeZone.getDefault()
 //        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+//        this.transactionDate=  simpleDateFormat.parse(stringDate)
         this.transactionDate = Date.valueOf(stringDate)
     }
 

@@ -1,10 +1,12 @@
 package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.TransactionBuilder
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -24,8 +26,6 @@ class TransactionSpec extends Specification {
 "accountId":0,
 "accountType":"credit",
 "transactionDate":"2020-10-05",
-"dateUpdated":1593981072000,
-"dateAdded":1593981072000,
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
 "accountNameOwner":"chase_brian",
 "description":"aliexpress.com",
@@ -88,6 +88,49 @@ class TransactionSpec extends Specification {
         transaction.guid == '4ea3be58-3993-46de-88a2-4ffc7f1d73bd'
         transaction.transactionId == 0
         0 * _
+    }
+
+    void 'test - transaction non date'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        when:
+        transaction.jsonSetterTransactionDate('junk')
+
+        then:
+        thrown(IllegalArgumentException)
+        0 * _
+    }
+
+    @Ignore
+    void 'test - transaction bad date'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        when:
+        transaction.jsonSetterTransactionDate('2020-11-31')
+
+        then:
+        true
+        0 * _
+    }
+
+    @Unroll
+    void 'test - transaction bad data in json'() {
+        when:
+        mapper.readValue(payload, Transaction)
+
+        then:
+        thrown(thownExecption)
+        0 * _
+
+        where:
+        payload                           | thownExecption
+        '{"transactionDate":1234}'        | JsonMappingException
+        '{"transactionDate":"1/20/2020"}' | JsonMappingException
+        '{"accountType":"notValid"}'      | JsonMappingException
+        '{"accountType":"notValid"}'      | JsonMappingException
+        '{"reoccurringType":"notValid"}'  | JsonMappingException
+        '{"amount":"1.222a"}'             | JsonMappingException
+        'invalid'                         | JsonParseException
     }
 
     @Unroll
