@@ -125,19 +125,19 @@ data class Transaction(
     @JsonGetter("transactionDate")
     fun jsonGetterTransactionDate(): String {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        //simpleDateFormat.timeZone = TimeZone.getDefault()
-        //simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        simpleDateFormat.isLenient = false
+//        simpleDateFormat.timeZone = TimeZone.getDefault()
+//        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return simpleDateFormat.format(this.transactionDate)
     }
 
     @JsonSetter("transactionDate")
     fun jsonSetterTransactionDate(stringDate: String) {
-        logger.info("stringDate = $stringDate")
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.timeZone = TimeZone.getDefault()
+        simpleDateFormat.isLenient = false
+//        simpleDateFormat.timeZone = TimeZone.getDefault()
 //        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-//        this.transactionDate=  simpleDateFormat.parse(stringDate)
-        this.transactionDate = Date.valueOf(stringDate)
+        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
     }
 
     @JsonIgnore
@@ -178,7 +178,6 @@ data class Transaction(
     var categories = mutableListOf<Category>()
 
     override fun toString(): String {
-        mapper.setTimeZone(TimeZone.getDefault())
         return mapper.writeValueAsString(this)
     }
 

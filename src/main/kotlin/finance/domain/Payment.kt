@@ -79,7 +79,6 @@ data class Payment(
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     override fun toString(): String {
-        mapper.setTimeZone(TimeZone.getDefault())
         return mapper.writeValueAsString(this)
     }
 

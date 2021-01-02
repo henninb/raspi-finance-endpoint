@@ -58,7 +58,6 @@ data class ReceiptImage(
     lateinit var jpgImage: ByteArray
 
     override fun toString(): String {
-        mapper.setTimeZone(TimeZone.getDefault())
         return mapper.writeValueAsString(this)
     }
 
