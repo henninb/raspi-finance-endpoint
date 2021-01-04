@@ -20,7 +20,7 @@ import javax.validation.ValidationException
 @CrossOrigin
 @RestController
 @RequestMapping("/payment")
-class PaymentController(private var paymentService: PaymentService) {
+class PaymentController(private var paymentService: PaymentService): BaseController() {
 
     @GetMapping(path = ["/select"], produces = ["application/json"])
     fun selectAllPayments(): ResponseEntity<List<Payment>> {
@@ -46,44 +46,5 @@ class PaymentController(private var paymentService: PaymentService) {
             return ResponseEntity.ok("payment deleted")
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $paymentId")
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
-            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
-    )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.info("Bad Request: ", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info(response.toString())
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value = [ResponseStatusException::class])
-    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not found: ", throwable)
-        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("internal server error: ", throwable)
-        response["response"] =
-            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info("response: $response")
-        return response
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

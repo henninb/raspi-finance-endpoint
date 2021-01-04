@@ -18,7 +18,7 @@ import javax.validation.ValidationException
 @CrossOrigin
 @RestController
 @RequestMapping("/description")
-class DescriptionController(private var descriptionService: DescriptionService) {
+class DescriptionController(private var descriptionService: DescriptionService) : BaseController() {
 
     //https://hornsup:8080/description/select/all
     @GetMapping(path = ["/select/all"], produces = ["application/json"])
@@ -51,22 +51,5 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         descriptionService.deleteByDescription(description)
         logger.info("description deleted")
         return ResponseEntity.ok("payment deleted")
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, DataIntegrityViolationException::class,
-            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class]
-    )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("Bad Request", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }
