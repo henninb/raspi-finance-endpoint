@@ -1,26 +1,17 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.services.MeterService
 import finance.services.TransactionService
-import org.apache.catalina.connector.ClientAbortException
-import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.converter.HttpMessageNotReadableException
-import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.util.*
-import javax.validation.ConstraintViolationException
-import javax.validation.ValidationException
 
 @CrossOrigin
 @RestController

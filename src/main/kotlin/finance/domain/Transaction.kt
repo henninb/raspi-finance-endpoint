@@ -14,8 +14,6 @@ import finance.utils.Constants.MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.Proxy
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -26,9 +24,6 @@ import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
-import java.text.DateFormat
-
-
 
 
 @Entity
@@ -184,6 +179,7 @@ data class Transaction(
     companion object {
         @JsonIgnore
         private val mapper = ObjectMapper()
+
         @JsonIgnore
         private val logger = LogManager.getLogger()
     }

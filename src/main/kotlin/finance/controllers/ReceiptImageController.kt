@@ -1,5 +1,6 @@
 package finance.controllers
 
+import finance.services.MeterService
 import finance.services.ReceiptImageService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

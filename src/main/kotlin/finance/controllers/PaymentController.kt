@@ -1,21 +1,13 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Payment
+import finance.services.MeterService
 import finance.services.PaymentService
-import org.apache.logging.log4j.LogManager
-import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.converter.HttpMessageNotReadableException
-import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
-import javax.validation.ConstraintViolationException
-import javax.validation.ValidationException
 
 @CrossOrigin
 @RestController
