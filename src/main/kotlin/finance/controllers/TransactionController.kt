@@ -22,8 +22,6 @@ import java.util.*
 import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
-
-//@CrossOrigin(origins = arrayOf("http://localhost:3000"))
 @CrossOrigin
 @RestController
 @RequestMapping("/transaction")
@@ -152,17 +150,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok("transaction receipt image updated")
     }
 
-//    //curl -s -X POST https://hornsup:8080/transaction/clone -d '{"guid":"458a619e-b035-4b43-b406-96b8b2ae7340", "transactionDate":"2020-11-30", "amount":0.00}' -H "Content-Type: application/json"
-//    @PostMapping(path = ["/clone"], consumes = ["application/json"], produces = ["application/json"])
-//    fun cloneTransaction(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
-//        if (transactionService.cloneAsMonthlyTransaction(payload)) {
-//            return ResponseEntity.ok("transaction inserted")
-//        }
-//        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
-//    }
-
-    //curl --header "Content-Type: application/json" -X DELETE https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
-    //curl --header "Content-Type: application/json" -X DELETE https://hornsup:8080/transaction/delete/00000000-e2c6-41cc-82c2-d41f39a33f9a
+    //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'
     @DeleteMapping(path = ["/delete/{guid}"], produces = ["application/json"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
@@ -174,6 +162,17 @@ class TransactionController @Autowired constructor(private var transactionServic
             //return ResponseEntity.badRequest("")
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+    }
+
+    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/payment/required
+    @GetMapping(path = ["/payment/required"], produces = ["application/json"])
+    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
+
+        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
+        if (accountNameOwners.isEmpty()) {
+            logger.error("no accountNameOwners found.")
+        }
+        return ResponseEntity.ok(accountNameOwners)
     }
 
     //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
@@ -216,11 +215,6 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun handleServiceUnavailable(throwable: Throwable) {
         logger.error("client connection aborted")
         logger.error(throwable.message)
-//        if (e.message!!.contains("Broken pipe")) {
-//            return        //socket is closed, cannot return any response
-//        } else {
-//            return new HttpEntity<>(e.getMessage());
-//        }
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -232,17 +226,6 @@ class TransactionController @Autowired constructor(private var transactionServic
             "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
         logger.info("response: $response")
         return response
-    }
-
-    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/payment/required
-    @GetMapping(path = ["/payment/required"], produces = ["application/json"])
-    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
-
-        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
-        if (accountNameOwners.isEmpty()) {
-            logger.info("no accountNameOwners found.")
-        }
-        return ResponseEntity.ok(accountNameOwners)
     }
 
     companion object {

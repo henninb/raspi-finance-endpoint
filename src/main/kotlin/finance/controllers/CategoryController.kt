@@ -1,24 +1,17 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Category
 import finance.services.CategoryService
-import org.apache.logging.log4j.LogManager
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
-import java.util.*
-import javax.validation.ConstraintViolationException
-import javax.validation.ValidationException
 
 @CrossOrigin
 @RestController
 @RequestMapping("/category")
 //@Validated
-class CategoryController(private var categoryService: CategoryService) {
+class CategoryController(private var categoryService: CategoryService) : BaseController() {
 
     //http://localhost:8080/category/select/active
     @GetMapping(path = ["/select/active"], produces = ["application/json"])
@@ -42,41 +35,7 @@ class CategoryController(private var categoryService: CategoryService) {
 
     @DeleteMapping(path = ["/delete/{categoryName}"], produces = ["application/json"])
     fun deleteByCategoryName(@PathVariable categoryName: String): ResponseEntity<String> {
-        //val paymentOptional: Optional<Payment> = categoryService.findByPaymentId(paymentId)
-
-        //logger.info("deleteByPaymentId controller - $paymentId")
-        //if (paymentOptional.isPresent) {
         categoryService.deleteByCategoryName(categoryName)
         return ResponseEntity.ok("payment deleted")
-        //}
-        //throw EmptyAccountException("payment not deleted.")
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class,
-            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class]
-    )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String>? {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("Bad Request", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("internal server error: ", throwable)
-        response["response"] =
-            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info("response: $response")
-        return response
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }
