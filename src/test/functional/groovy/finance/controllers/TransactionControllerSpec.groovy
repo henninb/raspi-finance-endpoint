@@ -24,10 +24,7 @@ import spock.lang.Unroll
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TransactionControllerSpec extends Specification {
-
-    @LocalServerPort
-    protected int port
+class TransactionControllerSpec extends BaseControllerSpec {
 
     @Autowired
     protected TransactionService transactionService
@@ -37,11 +34,6 @@ class TransactionControllerSpec extends Specification {
 
     @Autowired
     protected CategoryService categoryService
-
-    protected TestRestTemplate restTemplate = new TestRestTemplate()
-
-    @Shared
-    protected HttpHeaders headers
 
     @Shared
     protected Transaction transaction
@@ -124,7 +116,6 @@ class TransactionControllerSpec extends Specification {
     protected Transaction transactionOldTransactionDate = TransactionBuilder.builder().build()
 
     void setupSpec() {
-        headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
         category = CategoryBuilder.builder().build()
         transaction = TransactionBuilder.builder().build()
@@ -134,10 +125,6 @@ class TransactionControllerSpec extends Specification {
         categoryName = transaction.category
         accountNameOwner = transaction.accountNameOwner
         transactionOldTransactionDate.transactionDate = new java.sql.Date(100000)
-    }
-
-    private String createURLWithPort(String uri) {
-        return 'http://localhost:' + port + uri
     }
 
     void 'test -- findTransaction endpoint insert - find - delete'() {

@@ -18,15 +18,7 @@ import spock.lang.Unroll
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class AccountControllerSpec extends Specification {
-
-    @LocalServerPort
-    protected int port
-
-    protected TestRestTemplate restTemplate = new TestRestTemplate()
-
-    @Shared
-    protected HttpHeaders headers
+class AccountControllerSpec extends BaseControllerSpec {
 
     @Autowired
     protected TransactionService transactionService
@@ -62,12 +54,7 @@ class AccountControllerSpec extends Specification {
 '''
 
     void setup() {
-        headers = new HttpHeaders()
         account = AccountBuilder.builder().build()
-    }
-
-    private String createURLWithPort(String uri) {
-        return "http://localhost:" + port + uri
     }
 
     void 'test findAccount endpoint accountNameOwner found'() {
@@ -168,6 +155,5 @@ class AccountControllerSpec extends Specification {
         jsonPayloadEmptyAccountNameOwner | HttpStatus.BAD_REQUEST | 'Cannot insert account as there is a constraint violation on the data'
         jsonPayloadInvalidAccountType    | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type `finance.domain.AccountType'
         jsonPayloadInvalidTotals         | HttpStatus.BAD_REQUEST | 'Cannot insert account as there is a constraint violation on the data.'
-
     }
 }

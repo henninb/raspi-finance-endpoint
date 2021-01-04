@@ -17,24 +17,13 @@ import spock.lang.Unroll
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class CategoryControllerSpec extends Specification {
-
-    @LocalServerPort
-    protected int port
-
-    protected TestRestTemplate restTemplate = new TestRestTemplate()
-
-    @Shared
-    protected HttpHeaders headers
+class CategoryControllerSpec extends BaseControllerSpec {
 
     @Autowired
     protected CategoryService categoryService
 
     @Autowired
     protected AccountService accountService
-
-    @Shared
-    protected Category category
 
     @Shared
     protected jsonPayloadInvalidActiveStatus = '''
@@ -46,18 +35,9 @@ class CategoryControllerSpec extends Specification {
 {"activeStatus":true}
 '''
 
-    void setup() {
-        headers = new HttpHeaders()
-        category = CategoryBuilder.builder().build()
-        category.category = UUID.randomUUID()
-    }
-
-    private String createURLWithPort(String uri) {
-        return "http://localhost:" + port + uri
-    }
-
-    void 'test -- Payment endpoint paymentId found and deleted'() {
+    void 'test -- Category endpoint category found and deleted'() {
         given:
+        Category category = CategoryBuilder.builder().build()
         categoryService.insertCategory(category)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -86,6 +66,7 @@ class CategoryControllerSpec extends Specification {
 
     void 'test -- deleteCategory endpoint'() {
         given:
+        Category category = CategoryBuilder.builder().build()
         categoryService.insertCategory(category)
 
         HttpEntity entity = new HttpEntity<>(null, headers)
@@ -104,6 +85,7 @@ class CategoryControllerSpec extends Specification {
 
     void 'test -- insertCategory endpoint'() {
         given:
+        Category category = CategoryBuilder.builder().build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(category, headers)
 
@@ -118,7 +100,7 @@ class CategoryControllerSpec extends Specification {
     }
 
     @Unroll
-    void 'test insertCategory endpoint - failure for irregular payload'() {
+    void 'test -- insertCategory endpoint - failure for irregular payload'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payload, headers)
