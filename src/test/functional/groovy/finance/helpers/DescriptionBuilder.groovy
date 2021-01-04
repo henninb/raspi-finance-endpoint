@@ -19,7 +19,7 @@ class DescriptionBuilder {
     }
 
     DescriptionBuilder description(String description) {
-        this.description = description
+        this.descriptionName = description
         return this
     }
 

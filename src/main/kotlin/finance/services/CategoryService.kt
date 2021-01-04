@@ -2,6 +2,7 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Category
+import finance.domain.Description
 import finance.repositories.CategoryRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
@@ -45,6 +46,10 @@ class CategoryService(
 
     fun fetchAllActiveCategories(): List<Category> {
         return categoryRepository.findByActiveStatusOrderByCategory(true)
+    }
+
+    fun findByCategoryName(categoryName: String): Optional<Category> {
+        return categoryRepository.findByCategory(categoryName)
     }
 
     companion object {

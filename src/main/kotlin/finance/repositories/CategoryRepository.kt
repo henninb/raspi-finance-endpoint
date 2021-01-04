@@ -7,7 +7,7 @@ import javax.transaction.Transactional
 
 interface CategoryRepository : JpaRepository<Category, Long> {
 
-    fun findByCategory(category: String): Optional<Category>
+    fun findByCategory(categoryName: String): Optional<Category>
 
     fun findByActiveStatusOrderByCategory(activeStatus: Boolean): List<Category>
 
