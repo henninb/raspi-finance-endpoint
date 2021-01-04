@@ -20,7 +20,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
 
     //https://hornsup:8080/description/select/all
     @GetMapping(path = ["/select/all"], produces = ["application/json"])
-    fun selectDescription(): ResponseEntity<List<Description>> {
+    fun selectAllDescriptions(): ResponseEntity<List<Description>> {
         val descriptions = descriptionService.fetchAllDescriptions()
 
         return ResponseEntity.ok(descriptions)

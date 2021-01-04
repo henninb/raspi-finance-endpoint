@@ -24,16 +24,7 @@ import java.sql.Date
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class PaymentControllerSpec extends Specification {
-
-    @LocalServerPort
-    protected int port
-
-    @Shared
-    protected TestRestTemplate restTemplate
-
-    @Shared
-    protected HttpHeaders headers
+class PaymentControllerSpec extends BaseControllerSpec {
 
     @Autowired
     protected PaymentService paymentService
@@ -64,8 +55,6 @@ class PaymentControllerSpec extends Specification {
     protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.1288888, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     void setupSpec() {
-        restTemplate = new TestRestTemplate()
-        headers = new HttpHeaders()
         payment = PaymentBuilder.builder().build()
 
         parameter = new Parameter()
@@ -77,10 +66,6 @@ class PaymentControllerSpec extends Specification {
         account = AccountBuilder.builder().build()
         account.accountType = AccountType.Credit
         account.accountNameOwner = 'blah_brian'
-    }
-
-    private String createURLWithPort(String uri) {
-        return 'http://localhost:' + port + uri
     }
 
     void 'test Payment endpoint existing payment inserted and then deleted'() {
