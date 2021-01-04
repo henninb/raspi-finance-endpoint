@@ -1,9 +1,11 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.services.MeterService
 import org.apache.catalina.connector.ClientAbortException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
@@ -13,11 +15,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
-import java.util.HashMap
+import java.util.*
 import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
-open class BaseController {
+open class BaseController () {
+
+    @Autowired
+    lateinit var meterService: MeterService
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(
