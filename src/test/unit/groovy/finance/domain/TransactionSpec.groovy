@@ -150,9 +150,9 @@ class TransactionSpec extends Specification {
     void 'test validation invalid #invalidField has error expectedError'() {
         given:
         Transaction transaction = new TransactionBuilder().builder()
-                .guid(guid)
-                .accountId(accountId)
-                .accountType(accountType)
+                .withGuid(guid)
+                .withAccountId(accountId)
+                .withAccountType(accountType)
                 .accountNameOwner(accountNameOwner)
                 .transactionDate(transactionDate)
                 .description(description)

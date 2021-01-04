@@ -12,16 +12,11 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin
 @RestController
 @RequestMapping("/excel")
-class ExcelFileController(private var excelFileService: ExcelFileService) {
+class ExcelFileController(private var excelFileService: ExcelFileService) : BaseController() {
 
     @GetMapping(path = ["/file/export"], produces = ["application/json"])
     fun exportExcelFile(): ResponseEntity<String> {
         excelFileService.processProtectedExcelFile("finance_db_master.xlsm")
         return ResponseEntity.ok("finished loading and saving excel file")
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

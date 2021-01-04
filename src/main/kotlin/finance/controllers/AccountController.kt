@@ -1,27 +1,18 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.services.AccountService
-import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.converter.HttpMessageNotReadableException
-import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
-import javax.validation.ConstraintViolationException
-import javax.validation.ValidationException
 
 @CrossOrigin
 @RestController
 @RequestMapping("/account")
-class AccountController @Autowired constructor(private var accountService: AccountService) {
+class AccountController @Autowired constructor(private var accountService: AccountService) : BaseController() {
 
     //http://localhost:8080/account/totals
     @GetMapping(path = ["totals"], produces = ["application/json"])
@@ -68,16 +59,14 @@ class AccountController @Autowired constructor(private var accountService: Accou
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find this account.")
     }
 
-    //curl --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' http://localhost:8080/account/insert
-    //http://localhost:8080/account/insert
+    //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
     @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<String> {
         accountService.insertAccount(account)
         return ResponseEntity.ok("account inserted")
     }
 
-    //http://localhost:8080/account/delete/amex_brian
-    //curl --header "Content-Type: application/json" --request DELETE http://localhost:8080/account/delete/test_brian
+    //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8080/account/delete/test_brian'
     @DeleteMapping(path = ["/delete/{accountNameOwner}"], produces = ["application/json"])
     fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<String> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
@@ -102,53 +91,5 @@ class AccountController @Autowired constructor(private var accountService: Accou
             HttpStatus.BAD_REQUEST,
             "could not update this account: ${toBePatchedTransaction.accountNameOwner}."
         )
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
-            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
-    )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.info("Bad Request: ", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info(response.toString())
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value = [ResponseStatusException::class])
-    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not found: ", throwable)
-        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.NOT_MODIFIED)
-    //@ExceptionHandler(value = [EmptyTransactionException::class])
-    fun handleHttpNotModified(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not modified: ", throwable)
-        response["response"] = "NOT_MODIFIED: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("internal server error: ", throwable)
-        response["response"] =
-            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info("response: $response")
-        return response
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

@@ -48,17 +48,17 @@ class TransactionBuilder {
         return transaction
     }
 
-    TransactionBuilder guid(String guid) {
+    TransactionBuilder withGuid(String guid) {
         this.guid = guid
         return this
     }
 
-    TransactionBuilder accountId(Long accountId) {
+    TransactionBuilder withAccountId(Long accountId) {
         this.accountId = accountId
         return this
     }
 
-    TransactionBuilder accountType(AccountType accountType) {
+    TransactionBuilder withAccountType(AccountType accountType) {
         this.accountType = accountType
         return this
     }

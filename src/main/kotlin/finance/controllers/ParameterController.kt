@@ -17,7 +17,7 @@ import javax.validation.ValidationException
 @CrossOrigin
 @RestController
 @RequestMapping("/parm")
-class ParameterController(private var parameterService: ParameterService) {
+class ParameterController(private var parameterService: ParameterService) : BaseController() {
 
     //https://hornsup:8080/parm/select/payment_account
     @GetMapping(path = ["/select/{parameterName}"], produces = ["application/json"])
@@ -42,33 +42,5 @@ class ParameterController(private var parameterService: ParameterService) {
     fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<String> {
         parameterService.deleteByParameterName(parameterName)
         return ResponseEntity.ok("parameter deleted")
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class,
-            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, ValidationException::class]
-    )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("Bad Request", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("internal server error: ", throwable)
-        response["response"] =
-            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info("response: $response")
-        return response
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

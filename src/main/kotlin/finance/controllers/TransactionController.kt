@@ -25,7 +25,7 @@ import javax.validation.ValidationException
 @CrossOrigin
 @RestController
 @RequestMapping("/transaction")
-class TransactionController @Autowired constructor(private var transactionService: TransactionService) {
+class TransactionController @Autowired constructor(private var transactionService: TransactionService) : BaseController()   {
     //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
@@ -173,63 +173,5 @@ class TransactionController @Autowired constructor(private var transactionServic
             logger.error("no accountNameOwners found.")
         }
         return ResponseEntity.ok(accountNameOwners)
-    }
-
-    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"accountType":"Credit"}'
-    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/insert -X POST -d '{"amount":"abc"}'
-    @ResponseStatus(HttpStatus.BAD_REQUEST) //400
-    @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
-            MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
-    )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.info("Bad Request: ", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info(response.toString())
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value = [ResponseStatusException::class])
-    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not found: ", throwable)
-        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.NOT_MODIFIED)
-    //@ExceptionHandler(value = [EmptyTransactionException::class])
-    fun handleHttpNotModified(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not modified: ", throwable)
-        response["response"] = "NOT_MODIFIED: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    //TODO: look to move this to the other controllers
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    @ExceptionHandler(value = [ClientAbortException::class])
-    fun handleServiceUnavailable(throwable: Throwable) {
-        logger.error("client connection aborted")
-        logger.error(throwable.message)
-    }
-
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("internal server error: ", throwable)
-        response["response"] =
-            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info("response: $response")
-        return response
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

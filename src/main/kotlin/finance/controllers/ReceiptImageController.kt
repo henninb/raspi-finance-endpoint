@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/receipt/image")
-class ReceiptImageController(private var receiptImageService: ReceiptImageService) {
+class ReceiptImageController(private var receiptImageService: ReceiptImageService): BaseController() {
 
     // curl -k 'https://localhost:8080/receipt/image/select/1'
     @GetMapping(path = ["/select/{receipt_image_id}"])

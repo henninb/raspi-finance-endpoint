@@ -77,7 +77,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void 'test transactionService - insert valid transaction'() {
         given:
         String guid = UUID.randomUUID()
-        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
@@ -102,7 +102,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void 'test transactionService - attempt to insert duplicate transaction - update is called'() {
         given:
         String guid = UUID.randomUUID()
-        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Optional<Transaction> transactionOptional = Optional.of(transaction)
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
@@ -128,7 +128,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void 'test transactionService - insert valid transaction where account name does exist'() {
         given:
         String guid = UUID.randomUUID()
-        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = new Account()
         Category category = new Category()
         Optional<Account> accountOptional = Optional.of(account)
@@ -153,7 +153,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void 'test transactionService - insert valid transaction where account name does not exist'() {
         given:
         String guid = UUID.randomUUID()
-        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = transactionService.createDefaultAccount(transaction.accountNameOwner, AccountType.Credit)
         Category category = CategoryBuilder.builder().build()
         category.category = transaction.category
@@ -184,7 +184,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void 'test transactionService - insert a valid transaction where category name does not exist'() {
         given:
         String guid = UUID.randomUUID()
-        Transaction transaction = TransactionBuilder.builder().guid(guid).build()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = new Account()
         Optional<Account> accountOptional = Optional.of(account)
         transaction.guid = guid
