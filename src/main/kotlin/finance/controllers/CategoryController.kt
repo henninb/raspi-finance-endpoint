@@ -18,8 +18,8 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     fun selectAllActiveCategories(): ResponseEntity<List<Category>> {
         val categories: List<Category> = categoryService.fetchAllActiveCategories()
         if (categories.isEmpty()) {
-            logger.info("no category found.")
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any categories.")
+            logger.error("no categories found in the datastore.")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any categories in the datastore.")
         }
         logger.info("select active categories: ${categories.size}")
         return ResponseEntity.ok(categories)
