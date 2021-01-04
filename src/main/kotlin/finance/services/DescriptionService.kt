@@ -40,6 +40,10 @@ open class DescriptionService(
         return descriptionRepository.findByActiveStatusOrderByDescription(true)
     }
 
+    fun findByDescriptionName(descriptionName: String): Optional<Description> {
+       return descriptionRepository.findByDescription(descriptionName)
+    }
+
     companion object {
         private val mapper = ObjectMapper()
         private val logger = LogManager.getLogger()
