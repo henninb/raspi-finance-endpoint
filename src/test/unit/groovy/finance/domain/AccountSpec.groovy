@@ -88,12 +88,12 @@ class AccountSpec extends Specification {
     void 'test validation invalid #invalidField has error #expectedError'() {
         given:
         Account account = new AccountBuilder()
-                .accountType(accountType)
-                .moniker(moniker)
-                .accountNameOwner(accountNameOwner)
-                .activeStatus(activeStatus)
-                .totals(totals)
-                .totalsBalanced(totalsBalanced)
+                .withAccountType(accountType)
+                .withMoniker(moniker)
+                .withAccountNameOwner(accountNameOwner)
+                .withActiveStatus(activeStatus)
+                .withTotals(totals)
+                .withTotalsBalanced(totalsBalanced)
                 .build()
 
         when:

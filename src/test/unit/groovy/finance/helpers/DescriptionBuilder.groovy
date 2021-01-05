@@ -18,12 +18,12 @@ class DescriptionBuilder {
         return description
     }
 
-    DescriptionBuilder description(String description) {
+    DescriptionBuilder withDescription(String description) {
         this.descriptionName = description
         return this
     }
 
-    DescriptionBuilder activeStatus(Boolean activeStatus) {
+    DescriptionBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
         return this
     }

@@ -4,6 +4,7 @@ import finance.domain.Category
 
 class CategoryBuilder {
     String categoryName = 'foo'
+    Boolean activeStatus = true
 
     static CategoryBuilder builder() {
         return new CategoryBuilder()
@@ -12,11 +13,17 @@ class CategoryBuilder {
     Category build() {
         Category category = new Category()
         category.category = categoryName
+        category.activeStatus = activeStatus
         return category
     }
 
-    CategoryBuilder category(String category) {
+    CategoryBuilder withCategory(String category) {
         this.categoryName = category
+        return this
+    }
+
+    CategoryBuilder withActiveStatus(Boolean activeStatus) {
+        this.activeStatus = activeStatus
         return this
     }
 }

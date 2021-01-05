@@ -3,18 +3,11 @@ package finance.controllers
 import finance.Application
 import finance.domain.Account
 import finance.helpers.AccountBuilder
-import finance.services.AccountService
-import finance.services.CategoryService
-import finance.services.TransactionService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.lang.Unroll
 
@@ -66,7 +59,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore('should duplicate Accounts return 200')
+    @Ignore('should duplicate Accounts return 200?')
     void 'test insert Account - duplicate'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -84,7 +77,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     void 'test insert Account - empty'() {
         given:
-        Account account = AccountBuilder.builder().accountNameOwner('').build()
+        Account account = AccountBuilder.builder().withAccountNameOwner('').build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(account, headers)
 

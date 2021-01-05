@@ -84,7 +84,7 @@ class TransactionJpaSpec extends Specification {
         Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
         transactionFromString.category = ''
         Transaction transaction1 = TransactionBuilder.builder().build()
-        Account account = new AccountBuilder().accountNameOwner('trash_id').build()
+        Account account = new AccountBuilder().withAccountNameOwner('trash_id').build()
         Account res = entityManager.persist(account)
         transaction1.accountId = res.accountId
         transaction1.accountNameOwner = res.accountNameOwner

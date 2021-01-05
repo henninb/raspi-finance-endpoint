@@ -57,7 +57,7 @@ class AccountServiceSpec extends BaseServiceSpec {
 
     void 'test insertAccount - attempt to insert a empty accountNameOwner'() {
         given:
-        Account account = AccountBuilder.builder().accountNameOwner('').build()
+        Account account = AccountBuilder.builder().withAccountNameOwner('').build()
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
@@ -90,7 +90,7 @@ class AccountServiceSpec extends BaseServiceSpec {
 
     void 'test insertAccount - invalid moniker'() {
         given:
-        Account account = AccountBuilder.builder().moniker('12345').build()
+        Account account = AccountBuilder.builder().withMoniker('12345').build()
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:

@@ -9,16 +9,11 @@ import java.sql.Date
 import java.text.SimpleDateFormat
 
 class TransactionBuilder {
-    //SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd")
-    //simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-    //println("***** " + simpleDateFormat.format(this.transactionDate))
-    //return simpleDateFormat.format(this.transactionDate)
-
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
-    Date transactionDate = Date.valueOf('2020-12-01') //new Date(Calendar.getInstance(TimeZone.getTimeZone("UTC")).time.time)
+    Date transactionDate = Date.valueOf('2020-12-01')
     String description = 'aliexpress.com'
     String category = 'online'
     BigDecimal amount = 3.14G
@@ -26,6 +21,7 @@ class TransactionBuilder {
     Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined
     String notes = 'my note to you'
+    Boolean activeStatus = true
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
@@ -45,6 +41,7 @@ class TransactionBuilder {
         transaction.reoccurring = reoccurring
         transaction.reoccurringType = reoccurringType
         transaction.notes = notes
+        transaction.activeStatus = activeStatus
         return transaction
     }
 
@@ -63,48 +60,53 @@ class TransactionBuilder {
         return this
     }
 
-    TransactionBuilder accountNameOwner(String accountNameOwner) {
+    TransactionBuilder withAccountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    TransactionBuilder transactionDate(Date transactionDate) {
+    TransactionBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
 
-    TransactionBuilder description(String description) {
+    TransactionBuilder withDescription(String description) {
         this.description = description
         return this
     }
 
-    TransactionBuilder category(String category) {
+    TransactionBuilder withCategory(String category) {
         this.category = category
         return this
     }
 
-    TransactionBuilder amount(BigDecimal amount) {
+    TransactionBuilder withAmount(BigDecimal amount) {
         this.amount = amount
         return this
     }
 
-    TransactionBuilder transactionState(TransactionState transactionState) {
+    TransactionBuilder withTransactionState(TransactionState transactionState) {
         this.transactionState = transactionState
         return this
     }
 
-    TransactionBuilder reoccurring(Boolean reoccurring) {
+    TransactionBuilder withReoccurring(Boolean reoccurring) {
         this.reoccurring = reoccurring
         return this
     }
 
-    TransactionBuilder reoccurringType(ReoccurringType reoccurringType) {
+    TransactionBuilder withReoccurringType(ReoccurringType reoccurringType) {
         this.reoccurringType = reoccurringType
         return this
     }
 
-    TransactionBuilder notes(String notes) {
+    TransactionBuilder withNotes(String notes) {
         this.notes = notes
+        return this
+    }
+
+    TransactionBuilder withActiveStatus(Boolean activeStatus) {
+        this.activeStatus = activeStatus
         return this
     }
 }

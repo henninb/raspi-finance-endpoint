@@ -28,7 +28,7 @@ class DescriptionServiceSpec extends BaseServiceSpec {
 
     void 'test - insert description - empty descriptionName'() {
         given:
-        Description description = DescriptionBuilder.builder().description('').build()
+        Description description = DescriptionBuilder.builder().withDescription('').build()
         Set<ConstraintViolation<Description>> constraintViolations = validator.validate(description)
 
         when:

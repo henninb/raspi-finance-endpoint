@@ -17,12 +17,12 @@ class CategoryBuilder {
         return category
     }
 
-    CategoryBuilder category(String category) {
+    CategoryBuilder withCategory(String category) {
         this.categoryName = category
         return this
     }
 
-    CategoryBuilder activeStatus(Boolean activeStatus) {
+    CategoryBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
         return this
     }

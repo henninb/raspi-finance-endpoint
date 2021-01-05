@@ -31,37 +31,37 @@ class AccountBuilder {
         return account
     }
 
-    AccountBuilder accountNameOwner(String accountNameOwner) {
+    AccountBuilder withAccountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    AccountBuilder accountType(AccountType accountType) {
+    AccountBuilder withAccountType(AccountType accountType) {
         this.accountType = accountType
         return this
     }
 
-    AccountBuilder activeStatus(Boolean activeStatus) {
+    AccountBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
         return this
     }
 
-    AccountBuilder moniker(String moniker) {
+    AccountBuilder withMoniker(String moniker) {
         this.moniker = moniker
         return this
     }
 
-    AccountBuilder dateClosed(Timestamp dateClosed) {
+    AccountBuilder withDateClosed(Timestamp dateClosed) {
         this.dateClosed = dateClosed
         return this
     }
 
-    AccountBuilder totals(BigDecimal totals) {
+    AccountBuilder withTotals(BigDecimal totals) {
         this.totals = totals
         return this
     }
 
-    AccountBuilder totalsBalanced(BigDecimal totalsBalanced) {
+    AccountBuilder withTotalsBalanced(BigDecimal totalsBalanced) {
         this.totalsBalanced = totalsBalanced
         return this
     }
