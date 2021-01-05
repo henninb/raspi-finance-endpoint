@@ -18,13 +18,14 @@ class PaymentBuilder {
     }
 
     Payment build() {
-        Payment payment = new Payment()
-        payment.accountNameOwner = accountNameOwner
-        payment.amount = amount
-        payment.transactionDate = transactionDate
-        payment.guidSource = guidSource
-        payment.guidDestination = guidDestination
-        payment.activeStatus = activeStatus
+        Payment payment = new Payment().with {
+            it.accountNameOwner = this.accountNameOwner
+            it.amount = this.amount
+            it.transactionDate = this.transactionDate
+            it.guidSource = this.guidSource
+            it.guidDestination = this.guidDestination
+            return it
+        }
         return payment
     }
 

@@ -13,9 +13,11 @@ class ParameterBuilder {
     }
 
     Parameter build() {
-        Parameter parameter = new Parameter()
-        parameter.parameterName = parameterName
-        parameter.parameterValue = parameterValue
+        Parameter parameter = new Parameter().with {
+            it.parameterName = this.parameterName
+            it.parameterValue = this.parameterValue
+            return it
+        }
         return parameter
     }
 
