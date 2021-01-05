@@ -12,12 +12,9 @@ import finance.services.ParameterService
 import finance.services.PaymentService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.sql.Date
@@ -46,7 +43,6 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     @Shared
     protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
-
 
     @Shared
     protected String jsonPayloadMissingAmount = '{"accountNameOwner":"foo_test", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
@@ -120,8 +116,6 @@ class PaymentControllerSpec extends BaseControllerSpec {
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
-
-
 
     void 'test insertPayment failed due to setup issues'() {
         given:

@@ -19,10 +19,10 @@ import spock.lang.Stepwise
 class DescriptionControllerSpec extends BaseControllerSpec {
 
     @Shared
-    Description description = DescriptionBuilder.builder().build()
+    protected Description description = DescriptionBuilder.builder().build()
 
     @Shared
-    Description emptyDescription = DescriptionBuilder.builder().withDescription('').build()
+    protected Description emptyDescription = DescriptionBuilder.builder().withDescription('').build()
 
     void 'test insert Description'() {
         given:
@@ -75,7 +75,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/description/select/' + description.description), HttpMethod.GET,
+                createURLWithPort("/description/select/${description.description}"), HttpMethod.GET,
                 entity, String)
         then:
         response.statusCode == HttpStatus.OK
@@ -88,7 +88,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/description/delete/' + description.description), HttpMethod.DELETE, entity, String)
+                createURLWithPort("/description/delete/${description.description}"), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.OK
         0 * _
@@ -100,7 +100,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/description/select/' + description.description), HttpMethod.GET,
+                createURLWithPort("/description/select/${description.description}"), HttpMethod.GET,
                 entity, String)
         then:
         response.statusCode == HttpStatus.NOT_FOUND

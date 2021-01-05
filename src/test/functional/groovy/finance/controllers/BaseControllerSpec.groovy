@@ -1,6 +1,5 @@
 package finance.controllers
 
-import finance.helpers.CategoryBuilder
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.HttpHeaders
@@ -20,7 +19,7 @@ class BaseControllerSpec extends Specification {
         headers = new HttpHeaders()
     }
 
-    def String createURLWithPort(String uri) {
+    String createURLWithPort(String uri) {
         return "http://localhost:" + port + uri
     }
 }
