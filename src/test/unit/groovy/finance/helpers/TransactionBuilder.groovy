@@ -6,7 +6,6 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 
 import java.sql.Date
-import java.text.SimpleDateFormat
 
 class TransactionBuilder {
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'

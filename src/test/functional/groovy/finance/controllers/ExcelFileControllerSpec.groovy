@@ -13,7 +13,6 @@ import spock.lang.Ignore
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ExcelFileControllerSpec extends BaseControllerSpec {
 
-
     @Ignore
     void "test Excel File controller"() {
         given:

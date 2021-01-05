@@ -111,7 +111,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/" + UUID.randomUUID().toString()), HttpMethod.GET,
+                createURLWithPort("/account/select/" + UUID.randomUUID()), HttpMethod.GET,
                 entity, String)
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
@@ -166,18 +166,17 @@ class AccountControllerSpec extends BaseControllerSpec {
                 entity, String)
         then:
         response.statusCode.is(httpStatus)
-        response.body.contains(responseBody)
         0 * _
 
         where:
-        payload                          | httpStatus             | responseBody
-        jsonPayloadMissingAccountType    | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountType due to missing'
-        '{"test":1}'                     | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountNameOwner due to missing'
-        'badJson'                        | HttpStatus.BAD_REQUEST | 'Unrecognized token'
-        '{malformedJson:"test"}'         | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
-        jsonPayloadInvalidActiveStatus   | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type'
-        jsonPayloadEmptyAccountNameOwner | HttpStatus.BAD_REQUEST | 'Cannot insert account as there is a constraint violation on the data'
-        jsonPayloadInvalidAccountType    | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type `finance.domain.AccountType'
-        jsonPayloadInvalidTotals         | HttpStatus.BAD_REQUEST | 'Cannot insert account as there is a constraint violation on the data.'
+        payload                          | httpStatus
+        jsonPayloadMissingAccountType    | HttpStatus.BAD_REQUEST
+        '{"test":1}'                     | HttpStatus.BAD_REQUEST
+        'badJson'                        | HttpStatus.BAD_REQUEST
+        '{malformedJson:"test"}'         | HttpStatus.BAD_REQUEST
+        jsonPayloadInvalidActiveStatus   | HttpStatus.BAD_REQUEST
+        jsonPayloadEmptyAccountNameOwner | HttpStatus.BAD_REQUEST
+        jsonPayloadInvalidAccountType    | HttpStatus.BAD_REQUEST
+        jsonPayloadInvalidTotals         | HttpStatus.BAD_REQUEST
     }
 }
