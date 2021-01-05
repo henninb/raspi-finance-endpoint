@@ -68,6 +68,25 @@ class PaymentControllerSpec extends BaseControllerSpec {
         account.accountNameOwner = 'blah_brian'
     }
 
+    void 'test insertPayment endpoint'() {
+        given:
+        payment.accountNameOwner = 'happy-path_brian'
+        payment.guidDestination = UUID.randomUUID()
+        payment.guidSource = UUID.randomUUID()
+        payment.transactionDate = Date.valueOf('2020-10-10')
+
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(payment, headers)
+        parmService.insertParameter(parameter)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+        then:
+        response.statusCode.is(HttpStatus.OK)
+        0 * _
+    }
+
     void 'test Payment endpoint existing payment inserted and then deleted'() {
         given:
         parmService.insertParameter(parameter)
@@ -102,24 +121,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insertPayment endpoint - happy path'() {
-        given:
-        payment.accountNameOwner = 'happy-path_brian'
-        payment.guidDestination = UUID.randomUUID()
-        payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf('2020-10-10') //new Date(1605300155000)
 
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.insertParameter(parameter)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
-        then:
-        response.statusCode.is(HttpStatus.OK)
-        0 * _
-    }
 
     void 'test insertPayment failed due to setup issues'() {
         given:
