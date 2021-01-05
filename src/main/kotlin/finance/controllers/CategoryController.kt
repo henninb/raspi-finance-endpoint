@@ -25,6 +25,15 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
         return ResponseEntity.ok(categories)
     }
 
+    @GetMapping(path = ["/select/{category_name}"])
+    fun selectCategoryName(@PathVariable("category_name") categoryName: String): ResponseEntity<String> {
+        val categoryOptional = categoryService.findByCategory(categoryName)
+        if (categoryOptional.isPresent) {
+            return ResponseEntity.ok(mapper.writeValueAsString(categoryOptional.get()))
+        }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "category not found for: $categoryName")
+    }
+
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
     @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<String> {

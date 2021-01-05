@@ -12,22 +12,16 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Stepwise
 import spock.lang.Unroll
 
+@Stepwise
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AccountControllerSpec extends BaseControllerSpec {
-
-    @Autowired
-    protected TransactionService transactionService
-
-    @Autowired
-    protected AccountService accountService
-
-    @Autowired
-    protected CategoryService categoryService
 
     @Shared
     protected Account account
@@ -57,10 +51,55 @@ class AccountControllerSpec extends BaseControllerSpec {
         account = AccountBuilder.builder().build()
     }
 
-    void 'test findAccount endpoint accountNameOwner found'() {
+    void 'test insert Account'() {
         given:
-        account.accountNameOwner = 'found_test'
-        accountService.insertAccount(account)
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(account, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    @Ignore('should duplicate Accounts return 200')
+    void 'test insert Account - duplicate'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(account, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
+
+    void 'test insert Account - empty'() {
+        given:
+        Account account = AccountBuilder.builder().accountNameOwner('').build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(account, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
+
+    void 'test find Account found'() {
+        given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
@@ -71,12 +110,9 @@ class AccountControllerSpec extends BaseControllerSpec {
         then:
         response.statusCode == HttpStatus.OK
         0 * _
-
-        cleanup:
-        accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 
-    void 'test findAccount endpoint accountNameOwner not found'() {
+    void 'test find Account - not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
@@ -91,8 +127,6 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     void 'test deleteAccount endpoint'() {
         given:
-        account.accountNameOwner = 'random_test'
-        accountService.insertAccount(account)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
@@ -103,9 +137,6 @@ class AccountControllerSpec extends BaseControllerSpec {
         then:
         response.statusCode == HttpStatus.OK
         0 * _
-
-        cleanup:
-        accountService.deleteByAccountNameOwner(account.accountNameOwner)
     }
 
     @Unroll
