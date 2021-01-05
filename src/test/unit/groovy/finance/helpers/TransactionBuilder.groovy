@@ -27,23 +27,25 @@ class TransactionBuilder {
     }
 
     Transaction build() {
-        Transaction transaction = new Transaction()
-        transaction.guid = guid
-        transaction.accountId = accountId
-        transaction.accountType = accountType
-        transaction.accountNameOwner = accountNameOwner
-        transaction.transactionDate = transactionDate
-        transaction.description = description
-        transaction.category = category
-        transaction.amount = amount
-        transaction.transactionState = transactionState
-        transaction.reoccurring = reoccurring
-        transaction.reoccurringType = reoccurringType
-        transaction.notes = notes
-        transaction.activeStatus = activeStatus
-        return transaction
-    }
+        return new Transaction().with() {
+            it.guid = this.guid
+            it.accountId = this.accountId
+            it.accountType = this.accountType
+            it.accountNameOwner = this.accountNameOwner
+            it.transactionDate = this.transactionDate
+            it.description = this.description
+            it.category = this.category
+            it.amount = this.amount
+            it.transactionState = this.transactionState
+            it.reoccurring = this.reoccurring
+            it.reoccurringType = this.reoccurringType
+            it.notes = this.notes
+            it.activeStatus = this.activeStatus
 
+            return it
+        }
+    }
+    
     TransactionBuilder withGuid(String guid) {
         this.guid = guid
         return this

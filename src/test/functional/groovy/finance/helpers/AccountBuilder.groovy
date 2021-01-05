@@ -10,9 +10,9 @@ class AccountBuilder {
     String accountNameOwner = 'foo_brian'
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
-    String moniker = '1234'
-    BigDecimal totals = 0.00G
-    BigDecimal totalsBalanced = 0.00G
+    String moniker = '0000'
+    BigDecimal totals = 0G
+    BigDecimal totalsBalanced = 0G
     Timestamp dateClosed = new Timestamp(0)
 
     static AccountBuilder builder() {
@@ -20,14 +20,16 @@ class AccountBuilder {
     }
 
     Account build() {
-        Account account = new Account()
-        account.accountNameOwner = accountNameOwner
-        account.accountType = accountType
-        account.activeStatus = activeStatus
-        account.moniker = moniker
-        account.totals = totals
-        account.totalsBalanced = totalsBalanced
-        account.dateClosed = dateClosed
+        Account account = new Account().with {
+            it.accountNameOwner = this.accountNameOwner
+            it.accountType = this.accountType
+            it.activeStatus = this.activeStatus
+            it.moniker = this.moniker
+            it.totals = this.totals
+            it.totalsBalanced = this.totalsBalanced
+            it.dateClosed = this.dateClosed
+            return it
+        }
         return account
     }
 
