@@ -45,7 +45,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void 'test -- jsonFileReaderRouteBuilder happy path'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).build()
+        Transaction transaction = TransactionBuilder.builder().withAmount(0.00).withGuid(UUID.randomUUID().toString()).build()
         List<Transaction> transactions = [transaction]
 
         when:
@@ -61,7 +61,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void 'test -- jsonFileReaderRouteBuilder - with empty description'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().amount(0.00).guid(UUID.randomUUID().toString()).description('').build()
+        Transaction transaction = TransactionBuilder.builder().withAmount(0.00).withGuid(UUID.randomUUID().toString()).withDescription('').build()
         List<Transaction> transactions = [transaction]
 
         when:
@@ -75,7 +75,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void 'test -- jsonFileReaderRouteBuilder - non json filename'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().guid(UUID.randomUUID().toString()).build()
+        Transaction transaction = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
         List<Transaction> transactions = [transaction]
 
         when:

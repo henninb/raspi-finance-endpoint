@@ -8,9 +8,10 @@ class PaymentBuilder {
 
     String accountNameOwner = 'foo_brian'
     BigDecimal amount = 0.00G
-    Date transactionDate = new Date(1605300155000)
+    Date transactionDate = Date.valueOf('2020-12-11')
     String guidSource = UUID.randomUUID().toString()
     String guidDestination = UUID.randomUUID().toString()
+    Boolean activeStatus = true
 
     static PaymentBuilder builder() {
         return new PaymentBuilder()
@@ -23,31 +24,37 @@ class PaymentBuilder {
         payment.transactionDate = transactionDate
         payment.guidSource = guidSource
         payment.guidDestination = guidDestination
+        payment.activeStatus = activeStatus
         return payment
     }
 
-    PaymentBuilder accountNameOwner(String accountNameOwner) {
+    PaymentBuilder withAccountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    PaymentBuilder amount(BigDecimal amount) {
+    PaymentBuilder withAmount(BigDecimal amount) {
         this.amount = amount
         return this
     }
 
-    PaymentBuilder transactionDate(Date transactionDate) {
+    PaymentBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
 
-    PaymentBuilder guidSource(String guidSource) {
+    PaymentBuilder withGuidSource(String guidSource) {
         this.guidSource = guidSource
         return this
     }
 
-    PaymentBuilder guidDestination(String guidDestination) {
+    PaymentBuilder withGuidDestination(String guidDestination) {
         this.guidDestination = guidDestination
+        return this
+    }
+
+    PaymentBuilder withActiveStatus(Boolean activeStatus) {
+        this.activeStatus = activeStatus
         return this
     }
 }

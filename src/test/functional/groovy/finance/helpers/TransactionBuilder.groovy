@@ -20,6 +20,7 @@ class TransactionBuilder {
     Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined
     String notes = 'my note to you'
+    Boolean activeStatus = true
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
@@ -39,66 +40,72 @@ class TransactionBuilder {
         transaction.reoccurring = reoccurring
         transaction.reoccurringType = reoccurringType
         transaction.notes = notes
+        transaction.activeStatus = activeStatus
         return transaction
     }
 
-    TransactionBuilder guid(String guid) {
+    TransactionBuilder withGuid(String guid) {
         this.guid = guid
         return this
     }
 
-    TransactionBuilder accountId(Long accountId) {
+    TransactionBuilder withAccountId(Long accountId) {
         this.accountId = accountId
         return this
     }
 
-    TransactionBuilder accountType(AccountType accountType) {
+    TransactionBuilder withAccountType(AccountType accountType) {
         this.accountType = accountType
         return this
     }
 
-    TransactionBuilder accountNameOwner(String accountNameOwner) {
+    TransactionBuilder withAccountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
         return this
     }
 
-    TransactionBuilder transactionDate(Date transactionDate) {
+    TransactionBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
 
-    TransactionBuilder description(String description) {
+    TransactionBuilder withDescription(String description) {
         this.description = description
         return this
     }
 
-    TransactionBuilder category(String category) {
+    TransactionBuilder withCategory(String category) {
         this.category = category
         return this
     }
 
-    TransactionBuilder amount(BigDecimal amount) {
+    TransactionBuilder withAmount(BigDecimal amount) {
         this.amount = amount
         return this
     }
 
-    TransactionBuilder transactionState(TransactionState transactionState) {
+    TransactionBuilder withTransactionState(TransactionState transactionState) {
         this.transactionState = transactionState
         return this
     }
 
-    TransactionBuilder reoccurring(Boolean reoccurring) {
+    TransactionBuilder withReoccurring(Boolean reoccurring) {
         this.reoccurring = reoccurring
         return this
     }
 
-    TransactionBuilder reoccurringType(ReoccurringType reoccurringType) {
+    TransactionBuilder withReoccurringType(ReoccurringType reoccurringType) {
         this.reoccurringType = reoccurringType
         return this
     }
 
-    TransactionBuilder notes(String notes) {
+    TransactionBuilder withNotes(String notes) {
         this.notes = notes
+        return this
+    }
+
+    TransactionBuilder withActiveStatus(Boolean activeStatus) {
+        this.activeStatus = activeStatus
         return this
     }
 }

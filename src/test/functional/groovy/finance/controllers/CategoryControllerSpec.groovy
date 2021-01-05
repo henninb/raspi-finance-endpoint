@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Stepwise
 import spock.lang.Unroll
@@ -56,7 +55,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test insert Category - empty'() {
         given:
-        Category category = CategoryBuilder.builder().category('').build()
+        Category category = CategoryBuilder.builder().withCategory('').build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(category, headers)
 

@@ -29,7 +29,7 @@ class CategoryServiceSpec extends BaseServiceSpec {
 
     void 'test - insert category empty categoryName'() {
         given:
-        Category category = CategoryBuilder.builder().category('').build()
+        Category category = CategoryBuilder.builder().withCategory('').build()
         Set<ConstraintViolation<Category>> constraintViolations = validator.validate(category)
 
         when:

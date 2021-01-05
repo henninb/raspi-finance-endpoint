@@ -29,7 +29,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
     void 'test insertPayment - existing'() {
         given:
-        Payment payment = PaymentBuilder.builder().amount(5.0).build()
+        Payment payment = PaymentBuilder.builder().withAmount(5.0).build()
         Parameter parameter = new Parameter()
         parameter.parameterValue = 'val'
         parameter.parameterName = 'payment_account'

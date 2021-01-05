@@ -10,7 +10,6 @@ import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Stepwise
 import spock.lang.Unroll
-import java.sql.Date
 
 @Stepwise
 @ActiveProfiles("func")
@@ -109,7 +108,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
     void 'test insert Transaction empty'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().description('').build()
+        Transaction transaction = TransactionBuilder.builder().withDescription('').build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 

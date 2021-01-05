@@ -74,11 +74,11 @@ class PaymentSpec extends Specification {
     void 'test validation invalid #invalidField has error expectedError'() {
         given:
         Payment payment = new PaymentBuilder().builder()
-                .accountNameOwner(accountNameOwner)
-                .transactionDate(transactionDate)
-                .amount(amount)
-                .guidDestination(guidDestination)
-                .guidSource(guidSource)
+                .withAccountNameOwner(accountNameOwner)
+                .withTransactionDate(transactionDate)
+                .withAmount(amount)
+                .withGuidDestination(guidDestination)
+                .withGuidSource(guidSource)
                 .build()
 
         when:

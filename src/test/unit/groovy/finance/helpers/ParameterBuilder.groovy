@@ -6,6 +6,7 @@ class ParameterBuilder {
 
     String parameterName = 'foo'
     String parameterValue = 'bar'
+    Boolean activeStatus = true
 
     static ParameterBuilder builder() {
         return new ParameterBuilder()
@@ -18,13 +19,18 @@ class ParameterBuilder {
         return parameter
     }
 
-    ParameterBuilder parameterName(String parameterName) {
+    ParameterBuilder withParameterName(String parameterName) {
         this.parameterName = parameterName
         return this
     }
 
-    ParameterBuilder parameterValue(String parameterValue) {
+    ParameterBuilder withParameterValue(String parameterValue) {
         this.parameterValue = parameterValue
+        return this
+    }
+
+    ParameterBuilder withActiveStatus(Boolean activeStatus) {
+        this.activeStatus = activeStatus
         return this
     }
 }

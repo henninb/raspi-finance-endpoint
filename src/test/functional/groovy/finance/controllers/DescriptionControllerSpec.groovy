@@ -22,7 +22,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
     Description description = DescriptionBuilder.builder().build()
 
     @Shared
-    Description emptyDescription = DescriptionBuilder.builder().description('').build()
+    Description emptyDescription = DescriptionBuilder.builder().withDescription('').build()
 
     void 'test insert Description'() {
         given:
