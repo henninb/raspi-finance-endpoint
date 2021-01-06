@@ -94,6 +94,18 @@ class DescriptionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
+    void 'test delete Description - not found'() {
+        given:
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/description/delete/${UUID.randomUUID()}"), HttpMethod.DELETE, entity, String)
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
     void 'test find description - not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)

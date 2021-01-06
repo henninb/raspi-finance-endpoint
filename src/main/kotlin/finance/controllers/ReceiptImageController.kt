@@ -1,5 +1,7 @@
 package finance.controllers
 
+import finance.domain.Payment
+import finance.domain.ReceiptImage
 import finance.services.MeterService
 import finance.services.ReceiptImageService
 import org.springframework.http.HttpStatus
@@ -11,6 +13,12 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/receipt/image")
 class ReceiptImageController(private var receiptImageService: ReceiptImageService): BaseController() {
+
+    @PostMapping(path = ["/insert"], produces = ["application/json"])
+    fun insertReceiptImage(@RequestBody receiptImage: ReceiptImage): ResponseEntity<String> {
+        receiptImageService.insertReceiptImage(receiptImage)
+        return ResponseEntity.ok("receiptImage inserted")
+    }
 
     // curl -k 'https://localhost:8080/receipt/image/select/1'
     @GetMapping(path = ["/select/{receipt_image_id}"])

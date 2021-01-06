@@ -132,6 +132,20 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
+    void 'test delete Account - not found'() {
+        given:
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/account/delete/${UUID.randomUUID()}"), HttpMethod.DELETE,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
     @Unroll
     void 'test deleteAccount endpoint - failure for irregular payload'() {
         given:
