@@ -92,17 +92,18 @@ class AccountService @Autowired constructor(
         return true
     }
 
-    fun deleteByAccountNameOwner(accountNameOwner: String) {
+    fun deleteByAccountNameOwner(accountNameOwner: String) : Boolean {
         accountRepository.deleteByAccountNameOwner(accountNameOwner)
+        return true
     }
 
     // TODO: set the update timestamp
     fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
-        accounts.forEach { account ->
-            //sum and update
-            println(account)
-        }
+        //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
+//        accounts.forEach { account ->
+//            //sum and update
+//        }
 
         try {
             logger.info("updateAccountGrandTotals")

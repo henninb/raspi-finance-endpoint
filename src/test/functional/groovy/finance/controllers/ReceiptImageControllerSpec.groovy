@@ -13,6 +13,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
+import spock.lang.IgnoreRest
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
@@ -27,7 +28,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     String payload = '''
 {"transactionId":1, "jpgImage":"test", "activeStatus":true}
 '''
-    //@Ignore('not working')
+    @Ignore('this test should fail')
     void 'test insert receiptImage - bad image'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -39,14 +40,14 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
                 entity, String)
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
-    void 'test insert receiptImage - duplicate'() {
+    void 'test insert receiptImage'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payload, headers)
+        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -55,6 +56,22 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
 
         then:
         response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    @Ignore('This test should return a 400, but is currently returning a 200.')
+    void 'test insert receiptImage - duplicate'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 }

@@ -7,9 +7,8 @@ import java.nio.charset.Charset
 class ReceiptImageBuilder {
     Long transactionId = 1001
     Boolean activeStatus = true
-    String jpgImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
-    //Byte[] jpgImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==".getBytes(Charset.forName("UTF-8"))
-    //Byte[] jpgImage = "data:image/jpg;base64,iVBORw0KGgoAAA".getBytes()
+    //String jpgImage = "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
+    String jpgImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
 
     static ReceiptImageBuilder builder() {
         return new ReceiptImageBuilder()
