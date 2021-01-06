@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Stepwise
 import spock.lang.Unroll
@@ -119,6 +120,21 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
         then:
         response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    @Ignore('should fail')
+    void 'test Category delete - not found'() {
+        given:
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/category/delete/${UUID.randomUUID()}"), HttpMethod.DELETE,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
