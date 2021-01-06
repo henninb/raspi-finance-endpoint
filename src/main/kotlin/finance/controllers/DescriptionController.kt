@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import java.util.*
 
 @CrossOrigin
 @RestController
@@ -38,10 +39,15 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "description not found for: $descriptionName")
     }
 
-    @DeleteMapping(path = ["/delete/{description}"], produces = ["application/json"])
-    fun deleteByDescription(@PathVariable description: String): ResponseEntity<String> {
-        descriptionService.deleteByDescription(description)
-        logger.info("description deleted")
-        return ResponseEntity.ok("payment deleted")
+    @DeleteMapping(path = ["/delete/{descriptionName}"], produces = ["application/json"])
+    fun deleteByDescription(@PathVariable descriptionName: String): ResponseEntity<String> {
+        val descriptionOptional: Optional<Description> = descriptionService.findByDescriptionName(descriptionName)
+
+        if (descriptionOptional.isPresent) {
+            descriptionService.deleteByDescriptionName(descriptionName)
+            return ResponseEntity.ok("description deleted")
+        }
+
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete the description: $descriptionName.")
     }
 }

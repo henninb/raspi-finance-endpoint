@@ -64,7 +64,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         account.accountNameOwner = 'blah_brian'
     }
 
-    void 'test insertPayment endpoint'() {
+    void 'test insert Payment'() {
         given:
         payment.accountNameOwner = 'happy-path_brian'
         payment.guidDestination = UUID.randomUUID()

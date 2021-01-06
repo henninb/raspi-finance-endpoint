@@ -31,7 +31,7 @@ open class DescriptionService(
         return true
     }
 
-    fun deleteByDescription(description: String): Boolean {
+    fun deleteByDescriptionName(description: String): Boolean {
         descriptionRepository.deleteByDescription(description)
         return true
     }

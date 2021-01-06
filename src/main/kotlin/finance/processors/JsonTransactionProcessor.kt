@@ -31,6 +31,7 @@ open class JsonTransactionProcessor @Autowired constructor(
             val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
             if (constraintViolations.isNotEmpty()) {
                 logger.error("the payload=$transaction")
+                constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
                 //meterService.incrementErrorCounter(transaction.accountNameOwner, MeterService.ErrorType.VALIDATION_ERROR)
                 logger.error("METRIC_TRANSACTION_VALIDATOR_FAILED_COUNTER")
                 throw RuntimeException("transaction object has validation errors.")

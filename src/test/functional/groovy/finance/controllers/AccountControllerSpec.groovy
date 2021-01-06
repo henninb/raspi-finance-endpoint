@@ -59,7 +59,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore('should duplicate Accounts return 200?')
+    @Ignore('should duplicate Accounts return 200? probably not')
     void 'test insert Account - duplicate'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)

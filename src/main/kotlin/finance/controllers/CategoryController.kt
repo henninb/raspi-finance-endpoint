@@ -6,11 +6,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import java.util.*
 
 @CrossOrigin
 @RestController
 @RequestMapping("/category")
-//@Validated
 class CategoryController(private var categoryService: CategoryService) : BaseController() {
 
     //http://localhost:8080/category/select/active
@@ -44,7 +44,13 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
 
     @DeleteMapping(path = ["/delete/{categoryName}"], produces = ["application/json"])
     fun deleteByCategoryName(@PathVariable categoryName: String): ResponseEntity<String> {
-        categoryService.deleteByCategoryName(categoryName)
-        return ResponseEntity.ok("payment deleted")
+        val categoryOptional: Optional<Category> = categoryService.findByCategoryName(categoryName)
+
+        if (categoryOptional.isPresent) {
+            categoryService.deleteByCategoryName(categoryName)
+            return ResponseEntity.ok("category deleted")
+        }
+
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this category: $categoryName.")
     }
 }

@@ -40,8 +40,9 @@ class CategoryService(
         return Optional.empty()
     }
 
-    fun deleteByCategoryName(categoryName: String) {
+    fun deleteByCategoryName(categoryName: String): Boolean {
         categoryRepository.deleteByCategory(categoryName)
+        return true
     }
 
     fun fetchAllActiveCategories(): List<Category> {

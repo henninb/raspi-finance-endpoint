@@ -5,8 +5,8 @@ import finance.domain.ReceiptImage
 class ReceiptImageBuilder {
     Long transactionId = 1001
     Boolean activeStatus = true
-    Byte[] jpgImage = null
-
+    String jpgImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
+    
     static ReceiptImageBuilder builder() {
         return new ReceiptImageBuilder()
     }
@@ -15,13 +15,13 @@ class ReceiptImageBuilder {
         ReceiptImage receiptImage = new ReceiptImage().with {
             it.transactionId = this.transactionId
             it.activeStatus = this.activeStatus
-            it.jpgImage = this.jpgImage
+            it.jpgImage = this.jpgImage.getBytes()
             return it
         }
         return receiptImage
     }
 
-    ReceiptImageBuilder withJpgImage(Byte[] jpgImage) {
+    ReceiptImageBuilder withJpgImage(String jpgImage) {
         this.jpgImage = jpgImage
         return this
     }

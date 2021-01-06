@@ -102,7 +102,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/description/delete/${UUID.randomUUID()}"), HttpMethod.DELETE, entity, String)
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
