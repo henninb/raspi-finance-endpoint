@@ -1,10 +1,7 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.AccountType
-import finance.domain.Payment
-import finance.domain.Transaction
-import finance.domain.TransactionState
+import finance.domain.*
 import finance.repositories.PaymentRepository
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
@@ -19,6 +16,7 @@ import javax.validation.Validator
 class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,
+    private var accountService: AccountService,
     private var parameterService: ParameterService,
     private val validator: Validator,
     private var meterService: MeterService
@@ -39,6 +37,16 @@ class PaymentService(
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert payment as there is a constraint violation on the data.")
             throw ValidationException("Cannot insert payment as there is a constraint violation on the data.")
+        }
+        val optionalAccount = accountService.findByAccountNameOwner(payment.accountNameOwner)
+        if(optionalAccount.isEmpty) {
+            logger.error("account not found ${payment.accountNameOwner}")
+            throw RuntimeException("account not found ${payment.accountNameOwner}")
+        } else {
+            if( optionalAccount.get().accountType == AccountType.Debit ) {
+                logger.error("account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                throw RuntimeException("account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+            }
         }
 
         val optionalParameter = parameterService.findByParameter("payment_account")

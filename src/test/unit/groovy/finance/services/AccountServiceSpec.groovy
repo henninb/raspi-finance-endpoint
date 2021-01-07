@@ -10,6 +10,17 @@ import javax.validation.ValidationException
 class AccountServiceSpec extends BaseServiceSpec {
     protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)
 
+    protected validJsonPayload  = '''
+{
+"accountNameOwner": "test_brian",
+"accountType": "credit",
+"activeStatus": "true",
+"moniker": "0000",
+"totals": 0.00,
+"totalsBalanced": 0.00,
+"dateClosed": 0
+}
+'''
     void 'test findAllActiveAccounts empty'() {
         given:
         Account account = AccountBuilder.builder().build()
@@ -48,7 +59,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         Boolean isInserted = accountService.insertAccount(account)
 
         then:
-        isInserted.is(false)
+        !isInserted
         constraintViolations.size() == 0
         1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
@@ -73,15 +84,14 @@ class AccountServiceSpec extends BaseServiceSpec {
 
     void 'test insertAccount - json inserted success'() {
         given:
-        String jsonPayload = "{\"accountNameOwner\":\"discover_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0}"
-        Account account = mapper.readValue(jsonPayload, Account)
+        Account account = mapper.readValue(validJsonPayload, Account)
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
         Boolean isInserted = accountService.insertAccount(account)
 
         then:
-        isInserted.is(true)
+        isInserted
         1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
         1 * accountRepositoryMock.saveAndFlush(account)

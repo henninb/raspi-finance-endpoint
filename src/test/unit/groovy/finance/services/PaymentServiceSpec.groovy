@@ -1,16 +1,21 @@
 package finance.services
 
+import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.Transaction
+import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
 
 import javax.validation.ConstraintViolation
 
 class PaymentServiceSpec extends BaseServiceSpec {
     protected ParameterService mockParameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterServiceMock)
-    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, mockParameterService, validatorMock, meterServiceMock)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)
+    //TODO: should move to the Base
+    //protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterServiceMock)
+    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, mockParameterService, validatorMock, meterServiceMock)
 
     void 'test findAll payments empty'() {
         given:
@@ -30,6 +35,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
     void 'test insertPayment - existing'() {
         given:
         Payment payment = PaymentBuilder.builder().withAmount(5.0).build()
+        Account account = AccountBuilder.builder().build()
         Parameter parameter = new Parameter()
         parameter.parameterValue = 'val'
         parameter.parameterName = 'payment_account'
@@ -40,6 +46,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then:
         isInserted.is(true)
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * transactionServiceMock.insertTransaction({ Transaction transactionDebit ->
             assert transactionDebit.category == 'bill_pay'
             assert transactionDebit.description == 'payment'
@@ -63,6 +70,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
     void 'test insertPayment - findByParameterName throws an exception'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
+        Account account = AccountBuilder.builder().build()
         Parameter parameter = new Parameter()
         parameter.parameterValue = 'val'
         parameter.parameterName = 'payment_account'
@@ -73,6 +81,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then:
         thrown(RuntimeException)
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.empty()
         1 * validatorMock.validate(payment) >> constraintViolations
         0 * _

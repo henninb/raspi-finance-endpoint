@@ -123,7 +123,6 @@ class CategoryControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    //@Ignore('should fail')
     void 'test Category delete - not found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)

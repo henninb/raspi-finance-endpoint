@@ -26,7 +26,7 @@ open class BaseController () {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class, RuntimeException::class,
             MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
             IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
     )
