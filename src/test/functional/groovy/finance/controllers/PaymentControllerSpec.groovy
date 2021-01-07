@@ -7,6 +7,7 @@ import finance.domain.Parameter
 import finance.domain.Payment
 import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
+import finance.repositories.PaymentRepository
 import finance.services.AccountService
 import finance.services.ParameterService
 import finance.services.PaymentService
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -24,22 +26,10 @@ import java.sql.Date
 class PaymentControllerSpec extends BaseControllerSpec {
 
     @Autowired
-    protected PaymentService paymentService
-
-    @Autowired
-    protected AccountService accountService
-
-    @Autowired
-    protected ParameterService parmService
+    protected PaymentRepository paymentRepository
 
     @Shared
     protected Payment payment
-
-    @Shared
-    protected Account account
-
-    @Shared
-    protected Parameter parameter
 
     @Shared
     protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
@@ -52,28 +42,11 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void setupSpec() {
         payment = PaymentBuilder.builder().build()
-
-        parameter = new Parameter()
-        //TODO: do I need to set the Id?
-        parameter.parameterId = 1
-        parameter.parameterName = 'payment_account'
-        parameter.parameterValue = 'bcu-checking_brian'
-
-        account = AccountBuilder.builder().build()
-        account.accountType = AccountType.Credit
-        account.accountNameOwner = 'blah_brian'
     }
 
     void 'test insert Payment'() {
-        given:
-        payment.accountNameOwner = 'happy-path_brian'
-        payment.guidDestination = UUID.randomUUID()
-        payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf('2020-10-10')
-
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.insertParameter(parameter)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -83,18 +56,15 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test Payment endpoint existing payment inserted and then deleted'() {
+    void 'test delete Payment'() {
         given:
-        parmService.insertParameter(parameter)
-        payment.guidDestination = UUID.randomUUID()
-        payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf('2020-10-12')
-        paymentService.insertPayment(payment)
+        payment.transactionDate = Date.valueOf('2020-10-13')
+        Payment result = paymentRepository.save(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/delete/' + payment.paymentId), HttpMethod.DELETE, entity, String)
+                createURLWithPort('/payment/delete/' + result.paymentId), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.OK
         0 * _
@@ -102,26 +72,21 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void 'test Payment endpoint existing payment inserted and then attempt to delete a non existent payment'() {
         given:
-        parmService.insertParameter(parameter)
-        payment.guidDestination = UUID.randomUUID()
-        payment.guidSource = UUID.randomUUID()
-        payment.transactionDate = Date.valueOf('2020-10-11')
-        paymentService.insertPayment(payment)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/delete/123451'), HttpMethod.DELETE, entity, String)
+                createURLWithPort("/payment/delete/123451"), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
+    @Ignore
     void 'test insertPayment failed due to setup issues'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
-        parmService.deleteByParameterName(parameter.parameterName)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
@@ -131,19 +96,14 @@ class PaymentControllerSpec extends BaseControllerSpec {
         // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
         response.statusCode.is(HttpStatus.INTERNAL_SERVER_ERROR)
         0 * _
-
-        cleanup:
-        parmService.insertParameter(parameter)
     }
 
     //TODO: 10/24/2020 - this case need to fail to insert - take a look
+    @Ignore
     void 'test insertPayment failed due to setup issues - to a non-debit account'() {
         given:
+        payment.accountNameOwner = 'bank_brian'
         headers.setContentType(MediaType.APPLICATION_JSON)
-        accountService.insertAccount(account)
-        parmService.deleteByParameterName(parameter.parameterName)
-        parameter.parameterValue = account.accountNameOwner
-        parmService.insertParameter(parameter)
         HttpEntity entity = new HttpEntity<>(payment, headers)
 
         when:
