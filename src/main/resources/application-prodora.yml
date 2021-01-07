@@ -37,20 +37,14 @@ spring:
     tomcat:
       validation-query: SELECT 1
       test-while-idle: true
-    #Platform: org.hibernate.dialect.OracleDialect
     continue-on-error: false
-    # always if you want to utilize data.sql and schema.sql
-    # never Do not initialize the datasource
-    # embedded Only initialize an embedded datasource.
-    #initialization-mode: embedded
+    initialization-mode: never
   thymeleaf:
     cache: false
 
   # ===============================
   # = JPA / HIBERNATE
   # ===============================
-  # Show or not log for each sql query
-  # spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
   jpa:
     #database-platform: org.hibernate.dialect
     #database-platform: org.hibernate.dialect.OracleDialect

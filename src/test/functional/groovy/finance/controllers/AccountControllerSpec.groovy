@@ -118,13 +118,13 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test deleteAccount endpoint'() {
+    void 'test delete Account'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/delete/" + account.accountNameOwner), HttpMethod.DELETE,
+                createURLWithPort("/account/delete/${account.accountNameOwner}"), HttpMethod.DELETE,
                 entity, String)
 
         then:
@@ -132,17 +132,18 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Account - not found'() {
+    @Ignore
+    void 'test delete Account - referenced by a transaction'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/delete/${UUID.randomUUID()}"), HttpMethod.DELETE,
+                createURLWithPort("/account/delete/${account.accountNameOwner}"), HttpMethod.DELETE,
                 entity, String)
 
         then:
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 

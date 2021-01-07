@@ -36,8 +36,7 @@ spring:
       validation-Query: SELECT 1
     platform: ${DATASOURCE_PLATFORM}
     continue-On-Error: false
-    # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql
-    #initialization-mode: always
+    # always - utilize data.sql and schema.sql
     initialization-mode: never
 
   # ===============================

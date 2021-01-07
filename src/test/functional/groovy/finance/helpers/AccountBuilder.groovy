@@ -7,7 +7,7 @@ import java.sql.Timestamp
 
 class AccountBuilder {
 
-    String accountNameOwner = 'foo_brian'
+    String accountNameOwner = 'bar_brian'
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
     String moniker = '0000'

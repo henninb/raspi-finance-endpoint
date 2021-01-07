@@ -1,9 +1,7 @@
 package finance.controllers
 
 import finance.Application
-import finance.domain.Category
 import finance.domain.ReceiptImage
-import finance.helpers.CategoryBuilder
 import finance.helpers.ReceiptImageBuilder
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpEntity
@@ -13,9 +11,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
-import spock.lang.IgnoreRest
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Stepwise
 
 @Stepwise
@@ -44,6 +40,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
+    @Ignore
     void 'test insert receiptImage'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
