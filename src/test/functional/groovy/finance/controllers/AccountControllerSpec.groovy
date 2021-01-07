@@ -132,14 +132,14 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore
     void 'test delete Account - referenced by a transaction'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
+        String referencedByTransaction = 'foo_brian'
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/delete/${account.accountNameOwner}"), HttpMethod.DELETE,
+                createURLWithPort("/account/delete/${referencedByTransaction}"), HttpMethod.DELETE,
                 entity, String)
 
         then:

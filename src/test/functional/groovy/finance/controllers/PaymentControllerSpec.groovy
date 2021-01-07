@@ -1,32 +1,33 @@
 package finance.controllers
 
 import finance.Application
-import finance.domain.Account
-import finance.domain.AccountType
 import finance.domain.Parameter
 import finance.domain.Payment
-import finance.helpers.AccountBuilder
+import finance.helpers.ParameterBuilder
 import finance.helpers.PaymentBuilder
+import finance.repositories.ParameterRepository
 import finance.repositories.PaymentRepository
-import finance.services.AccountService
-import finance.services.ParameterService
-import finance.services.PaymentService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
+import spock.lang.Stepwise
 import spock.lang.Unroll
 
+import javax.transaction.Transactional
 import java.sql.Date
 
+@Stepwise
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class PaymentControllerSpec extends BaseControllerSpec {
 
     @Autowired
     protected PaymentRepository paymentRepository
+
+    @Autowired
+    protected ParameterRepository parameterRepository
 
     @Shared
     protected Payment payment
@@ -82,25 +83,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore
-    void 'test insertPayment failed due to setup issues'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
-
-        then:
-        // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
-        response.statusCode.is(HttpStatus.INTERNAL_SERVER_ERROR)
-        0 * _
-    }
-
-    //TODO: 10/24/2020 - this case need to fail to insert - take a look
-    @Ignore
-    void 'test insertPayment failed due to setup issues - to a non-debit account'() {
+    void 'test insert Payment - pay a debit account'() {
         given:
         payment.accountNameOwner = 'bank_brian'
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -111,7 +94,6 @@ class PaymentControllerSpec extends BaseControllerSpec {
                 createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
 
         then:
-        // TODO: Should this happen at the endpoint "thrown(RuntimeException)" or a 500?
         response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
     }
@@ -139,5 +121,26 @@ class PaymentControllerSpec extends BaseControllerSpec {
         jsonPayloadInvalidAmount     | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data.'
         jsonPayloadMissingAmount     | HttpStatus.BAD_REQUEST | 'value failed for JSON property amount due to missing'
         jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data'
+    }
+
+//    @Transactional
+    void 'test insert Payment - missing payment setup'() {
+        given:
+        Payment payment = PaymentBuilder.builder().build()
+//        Parameter parameter = ParameterBuilder.builder()
+//                .withParameterName('payment_account')
+//                .withParameterValue('bank_brian')
+//                .build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(payment, headers)
+        parameterRepository.deleteByParameterName('payment_account')
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+
+        then:
+        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        0 * _
     }
 }

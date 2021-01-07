@@ -4,8 +4,8 @@ import finance.domain.Parameter
 
 class ParameterBuilder {
 
-    String parameterName = 'foo'
-    String parameterValue = 'bar'
+    String parameterName = 'payment_account'
+    String parameterValue = 'bank_brian'
     Boolean activeStatus = true
 
     static ParameterBuilder builder() {

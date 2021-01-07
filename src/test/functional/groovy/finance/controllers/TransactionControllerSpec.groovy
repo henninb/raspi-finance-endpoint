@@ -213,35 +213,21 @@ class TransactionControllerSpec extends BaseControllerSpec {
         //TransactionBuilder.builder().transactionDate(Date.valueOf("1999-10-15")).build() | HttpStatus.BAD_REQUEST
     }
 
-    //TODO: bh fix the multiple category delete issue
-    @Ignore
-    void 'test -- deleteTransaction endpoint insert delete guid found - multiple categories associated'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/delete/' + transaction.guid), HttpMethod.DELETE,
-                entity, String)
-        then:
-        response.statusCode.is(HttpStatus.OK)
-        0 * _
-    }
-
-    //TODO: should this fail as a bad request?
-    @Ignore
+    @Ignore('error for duplicate constraint and not sure why')
     void 'test update Transaction'() {
         given:
-        String guid = UUID.randomUUID()
+        String updateGud = 'ba665bc2-22b6-4123-a566-6f5ab3d796df'
+        Transaction transaction1 = TransactionBuilder.builder().withGuid(updateGud).build()
+
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(transaction, headers)
+        HttpEntity entity = new HttpEntity<>(transaction1, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort('/transaction/update/' + guid),
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/transaction/update/${updateGud}"),
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 }
