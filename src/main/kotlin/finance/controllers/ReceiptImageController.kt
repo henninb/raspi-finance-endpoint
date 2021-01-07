@@ -16,8 +16,8 @@ class ReceiptImageController(private var receiptImageService: ReceiptImageServic
 
     @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertReceiptImage(@RequestBody receiptImage: ReceiptImage): ResponseEntity<String> {
-        receiptImageService.insertReceiptImage(receiptImage)
-        return ResponseEntity.ok("receiptImage inserted")
+        val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
+        return ResponseEntity.ok("receiptImage inserted $receiptImageId")
     }
 
     // curl -k 'https://localhost:8080/receipt/image/select/1'
