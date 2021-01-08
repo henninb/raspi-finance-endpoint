@@ -91,11 +91,34 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
+    void 'test insert Account - not active'() {
+        given:
+        Account account = AccountBuilder.builder()
+                .withAccountNameOwner('test_brian')
+                .withActiveStatus(false)
+                .build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(account, headers)
+        restTemplate.exchange(
+                createURLWithPort('/account/insert/'), HttpMethod.POST,
+                entity, String)
+        when:
+        entity = new HttpEntity<>(null, headers)
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/account/select/" + account.accountNameOwner), HttpMethod.GET,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
     void 'test find Account found'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
+        entity = new HttpEntity<>(null, headers)
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/select/" + account.accountNameOwner), HttpMethod.GET,
                 entity, String)

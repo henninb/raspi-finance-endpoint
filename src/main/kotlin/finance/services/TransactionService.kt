@@ -8,11 +8,15 @@ import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.util.Base64Utils
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
+import javax.imageio.ImageIO
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
@@ -230,7 +234,10 @@ open class TransactionService @Autowired constructor(
 
     @Timed
     @Transactional
-    open fun updateTransactionReceiptImageByGuid(guid: String, jpgBase64Data: ByteArray): Boolean {
+    open fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): Boolean {
+        val imageBase64String = imageBase64Payload.replace("\\^data:image\\/[a-z]+;base64,", "")
+        val imageBase64Raw = Base64Utils.decodeFromString(imageBase64String)
+        val thumbnail = ImageIO.read(ByteArrayInputStream(imageBase64Raw)).getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH)
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
@@ -240,7 +247,7 @@ open class TransactionService @Autowired constructor(
                 logger.info("update existing receipt image: ${transaction.transactionId}")
                 val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
                 if (receiptImageOptional.isPresent) {
-                    receiptImageOptional.get().jpgImage = jpgBase64Data
+                    receiptImageOptional.get().jpgImage = imageBase64Raw
                     receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 } else {
                     throw RuntimeException("failed to update receipt image for transaction ${transaction.guid}")
@@ -252,7 +259,7 @@ open class TransactionService @Autowired constructor(
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
             receiptImage.transactionId = transaction.transactionId
-            receiptImage.jpgImage = jpgBase64Data
+            receiptImage.jpgImage = imageBase64Raw
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = receiptImageId
             transaction.dateUpdated = Timestamp(nextTimestampMillis())

@@ -40,7 +40,22 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore
+    void 'test insert receiptImage - transaction does not exist'() {
+        given:
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder().withTransactionId(0).build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
+
     void 'test insert receiptImage'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -56,8 +71,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore
-    //@Ignore('This test should return a 400, but is currently returning a 200.')
+    @Ignore('This test should return a 400, but is currently returning a 200.')
     void 'test insert receiptImage - duplicate'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
