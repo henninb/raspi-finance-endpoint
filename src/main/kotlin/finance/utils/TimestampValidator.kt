@@ -12,7 +12,7 @@ class TimestampValidator : ConstraintValidator<ValidTimestamp, Timestamp> {
 
     override fun isValid(value: Timestamp, context: ConstraintValidatorContext): Boolean {
         logger.info("timestampToBeEvaluated: $value")
-        return value > Timestamp(946684800000)
+        return value > Timestamp.valueOf("2001-01-01") //Timestamp(946684800000)
     }
 
     companion object {
