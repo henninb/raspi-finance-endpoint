@@ -3,6 +3,8 @@ package finance.controllers
 import finance.Application
 import finance.domain.ReceiptImage
 import finance.helpers.ReceiptImageBuilder
+import finance.repositories.ReceiptImageRepository
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -21,10 +23,13 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     @Shared
     protected ReceiptImage receiptImage = ReceiptImageBuilder.builder().build()
 
+    @Autowired
+    ReceiptImageRepository receiptImageRepository
+
     String payload = '''
 {"transactionId":1, "jpgImage":"test", "activeStatus":true}
 '''
-    //@Ignore('this test should fail')
+
     void 'test insert receiptImage - bad image'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -65,6 +70,24 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
                 entity, String)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    void 'test insert receiptImage - find'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(null, headers)
+        Optional<ReceiptImage> receiptImageOptional = receiptImageRepository.findByTransactionId(receiptImage.transactionId)
+        Long receiptImageId = receiptImageOptional.get().receiptImageId
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/receipt/image/select/$receiptImageId"), HttpMethod.GET,
+                entity, String)
+        println(response.body)
 
         then:
         response.statusCode == HttpStatus.OK

@@ -25,7 +25,8 @@ class ReceiptImageController(private var receiptImageService: ReceiptImageServic
     fun selectReceiptImage(@PathVariable("receipt_image_id") receiptImageId: Long): ResponseEntity<String> {
         val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)
         if (receiptImageOptional.isPresent) {
-            return ResponseEntity.ok(receiptImageOptional.get().jpgImage.toString(Charsets.UTF_8))
+            //return ResponseEntity.ok(receiptImageOptional.get().jpgImage.toString(Charsets.UTF_8))
+            return ResponseEntity.ok(receiptImageOptional.get().toString())
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "receipt image not found for: $receiptImageId")
     }
