@@ -48,7 +48,8 @@ data class ReceiptImage(
 
     @JsonGetter("jpgImage")
     fun jsonGetterJpgImage(): String {
-        return this.jpgImage.toString(Charsets.UTF_8)
+        //https://cryptii.com/pipes/base64-to-hex
+        return Base64.getEncoder().encodeToString(this.jpgImage)
     }
 
     @Lob

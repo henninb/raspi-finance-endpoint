@@ -55,7 +55,6 @@ $ ./gradlew clean integrationTest
 ## Find Integration functional test results
 
 ```shell
-$ ./run.sh local
 $ ./gradlew clean funtionalTest
 ```
 
