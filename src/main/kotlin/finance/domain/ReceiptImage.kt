@@ -7,8 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Proxy
 import org.hibernate.annotations.Type
+import java.io.ByteArrayInputStream
 import java.sql.Timestamp
 import java.util.*
+import javax.imageio.ImageIO
 import javax.persistence.*
 import javax.validation.constraints.Min
 
@@ -49,7 +51,29 @@ data class ReceiptImage(
     @JsonGetter("jpgImage")
     fun jsonGetterJpgImage(): String {
         //https://cryptii.com/pipes/base64-to-hex
+        println(this.jpgImage.toHexString())
+
+        val image = ImageIO.read(ByteArrayInputStream(this.jpgImage))
+        println(image)
+
+//        // PNG = 0x50 0x4e 0x47
+//        val str : String = String(this.jpgImage.sliceArray(1..3))
+//        if(String(this.jpgImage.sliceArray(1..3)) == "PNG") {
+//            println("valid PNG")
+//        } else if ( this.jpgImage.sliceArray(1..3).toHexString() == "ffd8" ){
+//            println("valid JPEG")
+//        } else {
+//            println("unknown data type")
+//        }
+
         return Base64.getEncoder().encodeToString(this.jpgImage)
+    }
+
+    //TODO: temporary method
+    private fun ByteArray.toHexString() : String {
+        return this.joinToString("") {
+            String.format("%02x", it)
+        }
     }
 
     @Lob

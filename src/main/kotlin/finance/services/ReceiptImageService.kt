@@ -14,7 +14,6 @@ import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
 
-//TODO: add meter service
 @Service
 open class ReceiptImageService @Autowired constructor(private var receiptImageRepository: ReceiptImageRepository,
                                                       private val validator: Validator,
