@@ -136,7 +136,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         @PathVariable("guid") guid: String,
         @RequestBody payload: String
     ): ResponseEntity<String> {
-        transactionService.updateTransactionReceiptImageByGuid(guid, payload.toByteArray())
+        transactionService.updateTransactionReceiptImageByGuid(guid, payload)
         logger.info("set transaction receipt image for guid = $guid")
         return ResponseEntity.ok("transaction receipt image updated")
     }

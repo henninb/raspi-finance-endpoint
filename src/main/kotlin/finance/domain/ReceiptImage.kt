@@ -26,7 +26,7 @@ data class ReceiptImage(
     @Column(name = "receipt_image_id", nullable = false)
     var receiptImageId: Long,
 
-    @JsonIgnore
+    @JsonProperty
     @field:Min(value = 0L)
     @Column(name = "transaction_id", nullable = false)
     var transactionId: Long,

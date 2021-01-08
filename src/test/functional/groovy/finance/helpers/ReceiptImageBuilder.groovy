@@ -1,11 +1,12 @@
 package finance.helpers
 
 import finance.domain.ReceiptImage
+import org.springframework.util.Base64Utils
 
 import java.nio.charset.Charset
 
 class ReceiptImageBuilder {
-    Long transactionId = 1001
+    Long transactionId = 22530
     Boolean activeStatus = true
     //String jpgImage = "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
     String jpgImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="

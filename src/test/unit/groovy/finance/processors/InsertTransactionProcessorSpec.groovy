@@ -24,16 +24,16 @@ class InsertTransactionProcessorSpec extends Specification {
     protected Exchange mockExchange = GroovyMock(Exchange)
     protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
     protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
-    protected Validator mockValidator = GroovyMock(Validator)
-    protected MeterService mockMeterService = GroovyMock()
-    protected AccountService accountService = new AccountService(mockAccountRepository, mockValidator, mockMeterService)
+    protected Validator validatorMock = GroovyMock(Validator)
+    protected MeterService meterServiceMock = GroovyMock()
+    protected AccountService accountService = new AccountService(mockAccountRepository, validatorMock, meterServiceMock)
     protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    protected CategoryService categoryService = new CategoryService(mockCategoryRepository, mockValidator, mockMeterService)
+    protected CategoryService categoryService = new CategoryService(mockCategoryRepository, validatorMock, meterServiceMock)
     protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository,validatorMock, meterServiceMock)
     protected ObjectMapper mapper = new ObjectMapper()
-    protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, mockValidator, mockMeterService)
-    protected InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, mockMeterService)
+    protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, validatorMock, meterServiceMock)
+    protected InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, meterServiceMock)
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
 
     protected String jsonPayload = '''
@@ -64,7 +64,7 @@ class InsertTransactionProcessorSpec extends Specification {
         1 * mockExchange.in >> mockMessage
         1 * mockMessage.getBody(String) >> jsonPayload
         1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * mockValidator.validate(transaction) >> constraintViolations
+        1 * validatorMock.validate(transaction) >> constraintViolations
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.of(new Category())
         1 * mockTransactionRepository.saveAndFlush(transaction)
         1 * mockMessage.setBody(mapper.writeValueAsString(transaction))
@@ -93,11 +93,11 @@ class InsertTransactionProcessorSpec extends Specification {
         2 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.empty()
         1 * mockCategoryRepository.saveAndFlush(category)
-        1 * mockValidator.validate(transaction) >> constraintViolations
-        1 * mockValidator.validate(account) >> constraintViolationsAccount
-        1 * mockValidator.validate(category) >> constraintViolationsCategory
+        1 * validatorMock.validate(transaction) >> constraintViolations
+        1 * validatorMock.validate(account) >> constraintViolationsAccount
+        1 * validatorMock.validate(category) >> constraintViolationsCategory
         1 * mockTransactionRepository.saveAndFlush(transaction)
-        1 * mockMeterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
+        1 * meterServiceMock.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         1 * mockMessage.setBody(transaction.toString())
         0 * _
     }
