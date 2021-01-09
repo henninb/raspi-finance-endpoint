@@ -61,8 +61,31 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert receiptImage'() {
+    void 'test insert receiptImage - jpeg'() {
         given:
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder()
+                .withJpgImage('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                .withTransactionId(22530)
+                .build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
+                entity, String)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    void 'test insert receiptImage - png'() {
+        given:
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder()
+                .withJpgImage('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
+                .withTransactionId(22531)
+                .build()
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(receiptImage, headers)
 

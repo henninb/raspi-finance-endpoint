@@ -2,6 +2,7 @@ package finance.services
 
 import finance.domain.*
 import finance.helpers.CategoryBuilder
+import finance.helpers.ReceiptImageBuilder
 import finance.helpers.TransactionBuilder
 import org.hibernate.NonUniqueResultException
 
@@ -287,6 +288,29 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactions.size() == 1
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        0 * _
+    }
+
+    void 'test updateTransactionReceiptImageByGuid' () {
+        given:
+        Transaction transaction = TransactionBuilder.builder()
+                .build()
+        transaction.transactionId = 1
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder()
+                .build()
+        receiptImage.receiptImageId = 1
+        Set<ConstraintViolation<ReceiptImage>> constraintViolations = validator.validate(receiptImage)
+        String base64Jpeg = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='
+
+        when:
+        transactionService.updateTransactionReceiptImageByGuid(transaction.guid, base64Jpeg)
+
+        then:
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * validatorMock.validate(_ as ReceiptImage) >> constraintViolations
+        1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
+        1 * meterServiceMock.incrementTransactionReceiptImage(transaction.accountNameOwner)
         0 * _
     }
 

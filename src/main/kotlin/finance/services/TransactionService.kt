@@ -232,12 +232,22 @@ open class TransactionService @Autowired constructor(
         return true
     }
 
+    private fun ByteArray.toHexString() : String {
+        return this.joinToString("") {
+            String.format("%02x", it)
+        }
+    }
+
     @Timed
     @Transactional
     open fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): Boolean {
-        val imageBase64String = imageBase64Payload.replace("\\^data:image\\/[a-z]+;base64,", "")
+        val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
         val imageBase64Raw = Base64Utils.decodeFromString(imageBase64String)
-        val thumbnail = ImageIO.read(ByteArrayInputStream(imageBase64Raw)).getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH)
+
+        val hex = imageBase64Raw.toHexString()
+        //val imageBase64Raw = Base64.getDecoder().decode(imageBase64Payload)
+
+        //val thumbnail = ImageIO.read(ByteArrayInputStream(imageBase64Raw)).getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH)
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
@@ -260,6 +270,7 @@ open class TransactionService @Autowired constructor(
             val receiptImage = ReceiptImage()
             receiptImage.transactionId = transaction.transactionId
             receiptImage.jpgImage = imageBase64Raw
+            val x = receiptImage.jpgImage.toHexString()
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = receiptImageId
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
