@@ -99,3 +99,5 @@ https://wiki.openjdk.java.net/display/JDKUpdates/JDK11u
 
 ## external ip address
 dig +short myip.opendns.com @resolver1.opendns.com
+
+## docker pull arm32v7/openjdk
