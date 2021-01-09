@@ -30,26 +30,6 @@ alter
 
 --ALTER USER system ACCOUNT UNLOCK
 
--- CREATE TABLE "PUBLIC".atest
--- (
---     account_id         NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
---     account_name_owner VARCHAR(30) UNIQUE                NOT NULL,
---     account_name       VARCHAR(30), -- NULL for now
---     account_owner      VARCHAR(30), -- NULL for now
---     account_type       VARCHAR(20)   DEFAULT 'undefined' NOT NULL,
---     active_status      NUMBER(1)       DEFAULT '1'         NOT NULL,
---     moniker            VARCHAR(10)   DEFAULT '0000'      NOT NULL,
---     totals             DECIMAL(8, 2) DEFAULT 0.0,
---     totals_balanced    DECIMAL(8, 2) DEFAULT 0.0,
---     date_closed        TIMESTAMP,
---     date_updated       TIMESTAMP                         NULL,
---     date_added         TIMESTAMP                         NULL,
---     CONSTRAINT unique_account_name_owner_account_id UNIQUE (account_id, account_name_owner, account_type),
---     CONSTRAINT unique_account_name_owner_account_type UNIQUE (account_name_owner, account_type),
---     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
---     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
--- );
-
 --------------
 -- Account --
 --------------
@@ -106,20 +86,15 @@ CREATE TABLE t_receipt_image
     receipt_image_id  NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
     transaction_id    NUMBER                          NOT NULL,
     jpg_image         BLOB                            NOT NULL,
-    thumbnail         BLOB                            NULL,
+    thumbnail         BLOB                            NOT NULL,
     image_format_type VARCHAR(10) DEFAULT 'undefined' NOT NULL,
     active_status     NUMBER(1)   DEFAULT 1           NOT NULL,
     date_updated      TIMESTAMP                       NOT NULL,
     date_added        TIMESTAMP                       NOT NULL,
-    CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576) -- 1024 kb file size limit
-    --646174613a696d6167652f706e673b626173653634 = data:image/png;base64
-    --646174613a696d6167652f6a7065673b626173653634 = data:image/jpeg;base64
-    --CONSTRAINT ck_image_type_png CHECK(left(encode(receipt_image,'hex'),42) = '646174613a696d6167652f706e673b626173653634'),
-    --CONSTRAINT ck_image_type_jpg CHECK (left(encode(jpg_image, 'hex'), 44) =
-    --                                   '646174613a696d6167652f6a7065673b626173653634')
+    CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576), -- 1024 kb file size limit
+    CONSTRAINT ck_account_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
     --CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE
 );
-
 
 -----------------
 -- Transaction --
@@ -132,6 +107,7 @@ CREATE TABLE t_transaction
     account_name_owner VARCHAR(25)                       NOT NULL,
     guid               VARCHAR(40)                       NOT NULL UNIQUE,
     transaction_date   DATE                              NOT NULL,
+    due_date           DATE                              NULL,
     description        VARCHAR(50)                       NOT NULL,
     category           VARCHAR(30)   DEFAULT ''          NOT NULL,
     amount             DECIMAL(8, 2) DEFAULT 0.0         NOT NULL,
@@ -146,7 +122,6 @@ CREATE TABLE t_transaction
     CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
                                               notes),
     CONSTRAINT t_transaction_description_lowercase_ck CHECK (description = lower(description)),
-    -- removed because of how oracle treats lower case
     CONSTRAINT t_transaction_category_lowercase_ck CHECK (category = lower(category)),
     --CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),

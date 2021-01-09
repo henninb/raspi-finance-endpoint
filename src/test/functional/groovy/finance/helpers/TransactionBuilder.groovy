@@ -13,6 +13,7 @@ class TransactionBuilder {
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
     Date transactionDate = Date.valueOf('2020-12-01')
+    Date dueDate = Date.valueOf('2020-12-01')
     String description = 'aliexpress.com'
     String category = 'online'
     BigDecimal amount = new BigDecimal('3.14')
@@ -33,6 +34,7 @@ class TransactionBuilder {
             accountType = this.accountType
             accountNameOwner = this.accountNameOwner
             transactionDate = this.transactionDate
+            dueDate = this.dueDate
             description = this.description
             category = this.category
             amount = this.amount
@@ -68,6 +70,11 @@ class TransactionBuilder {
 
     TransactionBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
+        return this
+    }
+
+    TransactionBuilder withDueDate(Date dueDate) {
+        this.dueDate = dueDate
         return this
     }
 

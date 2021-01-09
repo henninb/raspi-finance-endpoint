@@ -154,7 +154,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         response.statusCode == HttpStatus.OK
         0 * _
     }
-    
+
     void 'test delete Account - referenced by a transaction from a payment'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)

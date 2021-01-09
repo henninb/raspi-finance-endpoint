@@ -70,7 +70,7 @@ data class ReceiptImage(
     }
 
     @JsonProperty
-    @Column(name = "image_format_type", nullable = true)
+    @Column(name = "image_format_type", nullable = false)
     @Convert(converter = ImageFormatTypeConverter::class)
     var imageFormatType: ImageFormatType = ImageFormatType.Undefined
 
@@ -84,8 +84,9 @@ data class ReceiptImage(
 
     @Lob
     @JsonProperty
+    @field:ValidImage
     @Type(type = "org.hibernate.type.BinaryType") //TODO: do I need this anymore?
-    @Column(name = "thumbnail", nullable = true)
+    @Column(name = "thumbnail", nullable = false)
     var thumbnail: ByteArray? = null
 
     override fun toString(): String {
