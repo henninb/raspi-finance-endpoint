@@ -18,10 +18,10 @@ class ReceiptImageBuilder {
 
     ReceiptImage build() {
         ReceiptImage receiptImage = new ReceiptImage().with {
-            it.transactionId = this.transactionId
-            it.activeStatus = this.activeStatus
-            //it.jpgImage = this.jpgImage.getBytes()
-            it.jpgImage = Base64Utils.decodeFromString(this.jpgImage)
+            transactionId = this.transactionId
+            activeStatus = this.activeStatus
+            //jpgImage = this.jpgImage.getBytes()
+            jpgImage = Base64Utils.decodeFromString(this.jpgImage)
             return it
         }
         return receiptImage

@@ -41,7 +41,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 '''
 
     void setup() {
-        account = AccountBuilder.builder().build()
+        account = AccountBuilder.builder().withAccountNameOwner('unique_brian').build()
     }
 
     void 'test insert Account'() {
@@ -94,7 +94,7 @@ class AccountControllerSpec extends BaseControllerSpec {
     void 'test insert Account - not active'() {
         given:
         Account account = AccountBuilder.builder()
-                .withAccountNameOwner('test_brian')
+                .withAccountNameOwner('non-active_brian')
                 .withActiveStatus(false)
                 .build()
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         when:
         entity = new HttpEntity<>(null, headers)
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/" + account.accountNameOwner), HttpMethod.GET,
+                createURLWithPort("/account/select/${account.accountNameOwner}"), HttpMethod.GET,
                 entity, String)
 
         then:
@@ -120,7 +120,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         when:
         entity = new HttpEntity<>(null, headers)
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/" + account.accountNameOwner), HttpMethod.GET,
+                createURLWithPort("/account/select/${account.accountNameOwner}"), HttpMethod.GET,
                 entity, String)
 
         then:
@@ -134,7 +134,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/" + UUID.randomUUID()), HttpMethod.GET,
+                createURLWithPort("/account/select/${UUID.randomUUID()}"), HttpMethod.GET,
                 entity, String)
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
@@ -154,11 +154,11 @@ class AccountControllerSpec extends BaseControllerSpec {
         response.statusCode == HttpStatus.OK
         0 * _
     }
-
-    void 'test delete Account - referenced by a transaction'() {
+    
+    void 'test delete Account - referenced by a transaction from a payment'() {
         given:
         HttpEntity entity = new HttpEntity<>(null, headers)
-        String referencedByTransaction = 'foo_brian'
+        String referencedByTransaction = 'referenced_brian'
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(

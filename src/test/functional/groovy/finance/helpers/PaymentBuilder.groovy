@@ -19,11 +19,11 @@ class PaymentBuilder {
 
     Payment build() {
         Payment payment = new Payment().with {
-            it.accountNameOwner = this.accountNameOwner
-            it.amount = this.amount
-            it.transactionDate = this.transactionDate
-            it.guidSource = this.guidSource
-            it.guidDestination = this.guidDestination
+            accountNameOwner = this.accountNameOwner
+            amount = this.amount
+            transactionDate = this.transactionDate
+            guidSource = this.guidSource
+            guidDestination = this.guidDestination
             return it
         }
         return payment

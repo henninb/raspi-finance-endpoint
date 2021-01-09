@@ -13,8 +13,8 @@ class DescriptionBuilder {
 
     Description build() {
         Description description = new Description().with {
-            it.description = this.descriptionName
-            it.activeStatus = this.activeStatus
+            description = this.descriptionName
+            activeStatus = this.activeStatus
             return it
         }
         return description

@@ -24,9 +24,9 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     protected ReceiptImage receiptImage = ReceiptImageBuilder.builder().build()
 
     @Autowired
-    ReceiptImageRepository receiptImageRepository
+    protected ReceiptImageRepository receiptImageRepository
 
-    String payload = '''
+    protected String payload = '''
 {"transactionId":1, "jpgImage":"test", "activeStatus":true}
 '''
 
@@ -110,7 +110,6 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/receipt/image/select/$receiptImageId"), HttpMethod.GET,
                 entity, String)
-        println(response.body)
 
         then:
         response.statusCode == HttpStatus.OK

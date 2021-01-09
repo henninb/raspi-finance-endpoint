@@ -14,8 +14,8 @@ class ParameterBuilder {
 
     Parameter build() {
         Parameter parameter = new Parameter().with {
-            it.parameterName = this.parameterName
-            it.parameterValue = this.parameterValue
+            parameterName = this.parameterName
+            parameterValue = this.parameterValue
             return it
         }
         return parameter

@@ -11,7 +11,7 @@ import java.sql.Date
 
 class TransactionServiceSpec extends BaseServiceSpec {
     protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock,validatorMock, meterServiceMock)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, validatorMock, meterServiceMock)
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterServiceMock)
     protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterServiceMock)
 

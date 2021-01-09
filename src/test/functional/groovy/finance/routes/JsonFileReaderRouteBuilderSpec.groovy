@@ -32,7 +32,7 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
     protected ProducerTemplate producer
     protected CamelContext camelContext
     protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
-    protected String baseName = new FileSystemResource("").getFile().getAbsolutePath()
+    protected String baseName = new FileSystemResource("").file.absolutePath
 
     void setup() {
         camelContext = jsonFileReaderRouteBuilder.context

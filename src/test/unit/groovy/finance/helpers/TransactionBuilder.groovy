@@ -15,7 +15,7 @@ class TransactionBuilder {
     Date transactionDate = Date.valueOf('2020-12-01')
     String description = 'aliexpress.com'
     String category = 'online'
-    BigDecimal amount = 3.14G
+    BigDecimal amount = new BigDecimal('3.14')
     TransactionState transactionState = TransactionState.Cleared
     Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined
@@ -27,25 +27,25 @@ class TransactionBuilder {
     }
 
     Transaction build() {
-        return new Transaction().with() {
-            it.guid = this.guid
-            it.accountId = this.accountId
-            it.accountType = this.accountType
-            it.accountNameOwner = this.accountNameOwner
-            it.transactionDate = this.transactionDate
-            it.description = this.description
-            it.category = this.category
-            it.amount = this.amount
-            it.transactionState = this.transactionState
-            it.reoccurring = this.reoccurring
-            it.reoccurringType = this.reoccurringType
-            it.notes = this.notes
-            it.activeStatus = this.activeStatus
+        return new Transaction().with {
+            guid = this.guid
+            accountId = this.accountId
+            accountType = this.accountType
+            accountNameOwner = this.accountNameOwner
+            transactionDate = this.transactionDate
+            description = this.description
+            category = this.category
+            amount = this.amount
+            transactionState = this.transactionState
+            reoccurring = this.reoccurring
+            reoccurringType = this.reoccurringType
+            notes = this.notes
+            activeStatus = this.activeStatus
 
             return it
         }
     }
-    
+
     TransactionBuilder withGuid(String guid) {
         this.guid = guid
         return this

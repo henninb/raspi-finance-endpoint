@@ -30,7 +30,7 @@ class InsertTransactionProcessorSpec extends Specification {
     protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     protected CategoryService categoryService = new CategoryService(mockCategoryRepository, validatorMock, meterServiceMock)
     protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository,validatorMock, meterServiceMock)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository, validatorMock, meterServiceMock)
     protected ObjectMapper mapper = new ObjectMapper()
     protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, validatorMock, meterServiceMock)
     protected InsertTransactionProcessor processor = new InsertTransactionProcessor(transactionService, meterServiceMock)
