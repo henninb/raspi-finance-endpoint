@@ -8,14 +8,14 @@
 -- drop table T_DESCRIPTION cascade constraints;
 
 alter
-    session set "_ORACLE_SCRIPT"= TRUE;
+session
+set "_ORACLE_SCRIPT" = TRUE;
 create
-    profile umlimited_attempts limit failed_login_attempts unlimited;
+profile umlimited_attempts limit failed_login_attempts unlimited;
 
 create
     user henninb identified by monday1;
-grant connect, resource, create
-    any context to henninb;
+grant connect, resource, create any context to henninb;
 GRANT CONNECT, RESOURCE, DBA TO henninb;
 -- GRANT sysdba to henninb;
 alter
@@ -85,13 +85,13 @@ CREATE TABLE t_receipt_image
 (
     receipt_image_id  NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
     transaction_id    NUMBER                          NOT NULL,
-    jpg_image         BLOB                            NOT NULL,
+    image             BLOB                            NOT NULL,
     thumbnail         BLOB                            NOT NULL,
     image_format_type VARCHAR(10) DEFAULT 'undefined' NOT NULL,
     active_status     NUMBER(1)   DEFAULT 1           NOT NULL,
     date_updated      TIMESTAMP                       NOT NULL,
     date_added        TIMESTAMP                       NOT NULL,
-    CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576), -- 1024 kb file size limit
+    CONSTRAINT ck_jpg_size CHECK (length(image) <= 1048576), -- 1024 kb file size limit
     CONSTRAINT ck_account_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
     --CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE
 );
@@ -180,12 +180,15 @@ CREATE TABLE t_description
 
 -- t_account
 CREATE
-    OR REPLACE TRIGGER tr_insert_account
-    AFTER INSERT
-    ON t_account
+OR
+REPLACE
+TRIGGER tr_insert_account
+    AFTER
+INSERT
+ON t_account
     FOR EACH ROW
 BEGIN
-    dbms_output.put_line
+dbms_output.put_line
         (
                 'account_name_owner: ' || :new.ACCOUNT_NAME || ' account_type: ' || :new.ACCOUNT_TYPE
         );

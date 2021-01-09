@@ -24,7 +24,7 @@ class ReceiptImageBuilder {
             activeStatus = this.activeStatus
             imageFormatType = this.imageFormatType
             thumbnail = Base64Utils.decodeFromString(this.thumbnail)
-            jpgImage = Base64Utils.decodeFromString(this.jpgImage)
+            image = Base64Utils.decodeFromString(this.jpgImage)
             return it
         }
         return receiptImage
