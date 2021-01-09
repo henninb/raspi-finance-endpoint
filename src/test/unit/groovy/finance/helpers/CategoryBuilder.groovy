@@ -12,8 +12,8 @@ class CategoryBuilder {
 
     Category build() {
         Category category = new Category(). with {
-            it.category = this.categoryName
-            it.activeStatus = this.activeStatus
+            category = this.categoryName
+            activeStatus = this.activeStatus
             return it
         }
         return category

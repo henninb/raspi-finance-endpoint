@@ -7,7 +7,7 @@ import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 
 class ParameterServiceSpec extends BaseServiceSpec {
-    ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterServiceMock)
+    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterServiceMock)
 
     void setup() {
     }

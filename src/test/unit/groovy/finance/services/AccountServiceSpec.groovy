@@ -10,7 +10,7 @@ import javax.validation.ValidationException
 class AccountServiceSpec extends BaseServiceSpec {
     protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterServiceMock)
 
-    protected validJsonPayload  = '''
+    protected String validJsonPayload  = '''
 {
 "accountNameOwner": "test_brian",
 "accountType": "credit",

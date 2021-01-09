@@ -13,7 +13,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class ParameterControllerSpec extends Specification {
-    static final String BASE_URL = "http://url.com"
+    protected static final String BASE_URL = "http://url.com"
 
     @Shared
     protected NetworkBehavior behavior = NetworkBehavior.create()
@@ -59,6 +59,6 @@ class ParameterControllerSpec extends Specification {
         mockParameterService.selectParameter('test').execute()
 
         then:
-        IOException ex = thrown(IOException)
+        thrown(IOException)
     }
 }

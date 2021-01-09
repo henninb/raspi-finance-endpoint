@@ -237,9 +237,9 @@ ruleset {
         comesBefore = false
     }
 
-    NoWildcardImports {
-        ignoreStaticImports = true
-    }
+//    NoWildcardImports {
+//        ignoreStaticImports = true
+//    }
     UnnecessaryGroovyImport
     UnusedImport
 

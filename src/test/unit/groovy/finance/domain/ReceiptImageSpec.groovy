@@ -11,7 +11,7 @@ import javax.validation.ValidatorFactory
 class ReceiptImageSpec extends Specification {
     protected ValidatorFactory validatorFactory
     protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper().setBase64Variant(Base64Variants.MIME_NO_LINEFEEDS);
+    protected ObjectMapper mapper = new ObjectMapper().setBase64Variant(Base64Variants.MIME_NO_LINEFEEDS)
 
 //    String payload = """
 //{"transactionId":1, "jpgImage":"data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==", "activeStatus":true}
@@ -20,7 +20,7 @@ class ReceiptImageSpec extends Specification {
 //{"transactionId":1, "jpgImage":"data:image/jpeg;base64,amFja3Nvbg==", "activeStatus":true}
 //"""
 
-    String payload = """
+    protected String payload = """
 {"transactionId":1, "jpgImage":"amFja3Nvbg==", "activeStatus":true}
 """
 
@@ -35,7 +35,6 @@ class ReceiptImageSpec extends Specification {
 
     void 'test ReceiptImage to JSON'() {
         when:
-        println(payload)
         ReceiptImage receiptImageFromJson = mapper.readValue(payload, ReceiptImage)
         and:
         String result = new String (receiptImageFromJson.jpgImage)
