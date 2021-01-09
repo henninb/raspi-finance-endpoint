@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.Application
+import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 import finance.helpers.ReceiptImageBuilder
 import finance.repositories.ReceiptImageRepository
@@ -65,6 +66,8 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         given:
         ReceiptImage receiptImage = ReceiptImageBuilder.builder()
                 .withJpgImage('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                .withThumbnail('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                .withImageFormatType(ImageFormatType.Jpeg)
                 .withTransactionId(22530)
                 .build()
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -84,6 +87,8 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         given:
         ReceiptImage receiptImage = ReceiptImageBuilder.builder()
                 .withJpgImage('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
+                .withThumbnail('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
+                .withImageFormatType(ImageFormatType.Png)
                 .withTransactionId(22531)
                 .build()
         headers.setContentType(MediaType.APPLICATION_JSON)

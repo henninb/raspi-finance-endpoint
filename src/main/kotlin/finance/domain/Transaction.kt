@@ -135,6 +135,10 @@ data class Transaction(
         this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
     }
 
+    @Column(name = "due_date", columnDefinition = "DATE", nullable = true)
+    @JsonProperty
+    var dueDate: Date? = null
+
     @JsonIgnore
     @Column(name = "receipt_image_id", nullable = true)
     var receiptImageId: Long? = null

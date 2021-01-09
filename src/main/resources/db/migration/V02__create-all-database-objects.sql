@@ -56,21 +56,20 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
 (
     receipt_image_id  BIGSERIAL PRIMARY KEY,
     transaction_id    BIGINT    NOT NULL,
-    jpg_image         BYTEA     NOT NULL,
-    thumbnail         BYTEA     NULL,
-    image_format_type TEXT      NULL     DEFAULT 'undefined',
+    jpg_image         BYTEA     NOT NULL,                        -- rename to image
+    thumbnail         BYTEA     NOT NULL,
+    image_format_type TEXT      NOT NULL DEFAULT 'undefined',
     active_status     BOOLEAN   NOT NULL DEFAULT TRUE,
     date_updated      TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added        TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576) -- 1024 kb file size limit
+    CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576), -- 1024 kb file size limit
+    CONSTRAINT ck_account_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
     --TODO: change the names to image ^^^
-    --646174613a696d6167652f706e673b626173653634 = data:image/png;base64
-    --646174613a696d6167652f6a7065673b626173653634 = data:image/jpeg;base64
-    --CONSTRAINT ck_image_type_png CHECK(left(encode(receipt_image,'hex'),42) = '646174613a696d6167652f706e673b626173653634'),
---     CONSTRAINT ck_image_type_jpg CHECK (left(encode(jpg_image, 'hex'), 44) =
---                                         '646174613a696d6167652f6a7065673b626173653634')
 );
+
 -- example
+-- alter table t_receipt_image alter column thumbnail set not null;
+-- alter table t_receipt_image alter column image_format_type set not null;
 -- ALTER TABLE t_receipt_image DROP CONSTRAINT ck_image_type_jpg;
 -- ALTER TABLE t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
 -- ALTER TABLE t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(receipt_image) <= 1024);
@@ -89,6 +88,7 @@ CREATE TABLE IF NOT EXISTS t_transaction
     account_name_owner TEXT          NOT NULL,
     guid               TEXT          NOT NULL UNIQUE,
     transaction_date   DATE          NOT NULL,
+    due_date           DATE          NULL,
     description        TEXT          NOT NULL,
     category           TEXT          NOT NULL DEFAULT '',
     amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,

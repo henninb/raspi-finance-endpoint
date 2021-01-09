@@ -1,5 +1,6 @@
 package finance.helpers
 
+import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 import org.springframework.util.Base64Utils
 
@@ -8,7 +9,8 @@ import org.springframework.util.Base64Utils
 class ReceiptImageBuilder {
     Long transactionId = 22530
     Boolean activeStatus = true
-    //String jpgImage = "data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
+    ImageFormatType imageFormatType = ImageFormatType.Png
+    String thumbnail = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
     String jpgImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
     //String jpgImage = "/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k="
 
@@ -20,7 +22,8 @@ class ReceiptImageBuilder {
         ReceiptImage receiptImage = new ReceiptImage().with {
             transactionId = this.transactionId
             activeStatus = this.activeStatus
-            //jpgImage = this.jpgImage.getBytes()
+            imageFormatType = this.imageFormatType
+            thumbnail = Base64Utils.decodeFromString(this.thumbnail)
             jpgImage = Base64Utils.decodeFromString(this.jpgImage)
             return it
         }
@@ -29,6 +32,16 @@ class ReceiptImageBuilder {
 
     ReceiptImageBuilder withJpgImage(String jpgImage) {
         this.jpgImage = jpgImage
+        return this
+    }
+
+    ReceiptImageBuilder withThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail
+        return this
+    }
+
+    ReceiptImageBuilder withImageFormatType(ImageFormatType imageFormatType) {
+        this.imageFormatType = imageFormatType
         return this
     }
 
