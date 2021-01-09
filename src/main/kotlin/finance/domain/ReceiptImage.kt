@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.AccountTypeConverter
+import finance.utils.ImageFormatTypeConverter
 import finance.utils.ValidDate
 import finance.utils.ValidImage
 import org.apache.logging.log4j.LogManager
@@ -67,12 +69,24 @@ data class ReceiptImage(
         }
     }
 
+    @JsonProperty
+    @Column(name = "image_format_type", nullable = true)
+    @Convert(converter = ImageFormatTypeConverter::class)
+    var imageFormatType: ImageFormatType = ImageFormatType.Undefined
+
+    // TODO: should I turn this into a string?
     @Lob
     @JsonProperty
-    @Type(type = "org.hibernate.type.BinaryType")
+    @Type(type = "org.hibernate.type.BinaryType") //TODO: do I need this anymore?
     @field:ValidImage
     @Column(name = "jpg_image", nullable = false)
     lateinit var jpgImage: ByteArray
+
+    @Lob
+    @JsonProperty
+    @Type(type = "org.hibernate.type.BinaryType") //TODO: do I need this anymore?
+    @Column(name = "thumbnail", nullable = true)
+    var thumbnail: ByteArray? = null
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)
