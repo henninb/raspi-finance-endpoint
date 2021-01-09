@@ -54,13 +54,14 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 -------------------
 CREATE TABLE IF NOT EXISTS t_receipt_image
 (
-    receipt_image_id BIGSERIAL PRIMARY KEY,
-    transaction_id   BIGINT    NOT NULL,
-    jpg_image        BYTEA     NOT NULL,
-    thumbnail        BYTEA     NULL,
-    active_status    BOOLEAN   NOT NULL DEFAULT TRUE,
-    date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added       TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    receipt_image_id  BIGSERIAL PRIMARY KEY,
+    transaction_id    BIGINT    NOT NULL,
+    jpg_image         BYTEA     NOT NULL,
+    thumbnail         BYTEA     NULL,
+    image_format_type TEXT      NULL     DEFAULT 'undefined',
+    active_status     BOOLEAN   NOT NULL DEFAULT TRUE,
+    date_updated      TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    date_added        TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576) -- 1024 kb file size limit
     --TODO: change the names to image ^^^
     --646174613a696d6167652f706e673b626173653634 = data:image/png;base64

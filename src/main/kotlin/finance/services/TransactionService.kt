@@ -4,23 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.*
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
+import net.coobird.thumbnailator.Thumbnails
 import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.Base64Utils
-import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
+import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
 
+import javax.imageio.ImageReader
 
 @Service
 open class TransactionService @Autowired constructor(
@@ -242,12 +245,9 @@ open class TransactionService @Autowired constructor(
     @Transactional
     open fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): Boolean {
         val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
-        val imageBase64Raw = Base64Utils.decodeFromString(imageBase64String)
-
-        val hex = imageBase64Raw.toHexString()
-        //val imageBase64Raw = Base64.getDecoder().decode(imageBase64Payload)
-
-        //val thumbnail = ImageIO.read(ByteArrayInputStream(imageBase64Raw)).getScaledInstance(100, 100, BufferedImage.SCALE_SMOOTH)
+        val rawImage = Base64Utils.decodeFromString(imageBase64String)
+        val imageFormatType = getImageFormatType(rawImage)
+        val thumbnail = createThumbnail(rawImage, imageFormatType)
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
@@ -257,7 +257,10 @@ open class TransactionService @Autowired constructor(
                 logger.info("update existing receipt image: ${transaction.transactionId}")
                 val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
                 if (receiptImageOptional.isPresent) {
-                    receiptImageOptional.get().jpgImage = imageBase64Raw
+                    val existingReceiptImage = receiptImageOptional.get()
+                    existingReceiptImage.thumbnail = thumbnail
+                    existingReceiptImage.jpgImage = rawImage
+                    existingReceiptImage.imageFormatType = imageFormatType
                     receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 } else {
                     throw RuntimeException("failed to update receipt image for transaction ${transaction.guid}")
@@ -269,8 +272,9 @@ open class TransactionService @Autowired constructor(
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
             receiptImage.transactionId = transaction.transactionId
-            receiptImage.jpgImage = imageBase64Raw
-            val x = receiptImage.jpgImage.toHexString()
+            receiptImage.jpgImage = rawImage
+            receiptImage.thumbnail = thumbnail
+            receiptImage.imageFormatType = imageFormatType
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = receiptImageId
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
@@ -342,6 +346,44 @@ open class TransactionService @Autowired constructor(
         //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
         throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
+    }
+
+    private fun createThumbnail( rawImage: ByteArray, imageFormatType: ImageFormatType ) : ByteArray {
+        try {
+            val bufferedImage = ImageIO.read(ByteArrayInputStream(rawImage))
+
+            val thumbnail = Thumbnails.of(bufferedImage).size(100,100).asBufferedImage()
+
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            ImageIO.write(thumbnail, imageFormatType.toString(), byteArrayOutputStream)
+            return byteArrayOutputStream.toByteArray()
+        } catch ( ex: IIOException) {
+           logger.error(ex.message)
+        }
+        return byteArrayOf()
+    }
+
+    private fun getImageFormatType( rawImage: ByteArray ) : ImageFormatType {
+        val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(rawImage))
+        val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
+        var format = ImageFormatType.Undefined
+
+        imageReaders.forEachRemaining { imageReader ->
+            format = when {
+                imageReader.formatName.toLowerCase() == "jpeg" -> {
+                    logger.info(imageReader.formatName)
+                    ImageFormatType.Jpeg
+                }
+                imageReader.formatName.toLowerCase() == "png" -> {
+                    logger.info(imageReader.formatName)
+                    ImageFormatType.Png
+                }
+                else -> {
+                    ImageFormatType.Undefined
+                }
+            }
+        }
+        return format
     }
 
     private fun createFutureTransaction(transaction: Transaction): Transaction {

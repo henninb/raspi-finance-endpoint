@@ -151,7 +151,10 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
 
     //logstash
-    runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
+    //runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
+
+    // graphics  TODO: externalize
+    implementation("net.coobird:thumbnailator:0.4.13")
 
     //hibernate
     implementation("org.hibernate:hibernate-core:${hibernateVersion}")

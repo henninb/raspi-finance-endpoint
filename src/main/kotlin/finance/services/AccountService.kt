@@ -99,8 +99,8 @@ class AccountService @Autowired constructor(
 
     // TODO: set the update timestamp
     fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
-        val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
         //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
+        //val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
 //        accounts.forEach { account ->
 //            //sum and update
 //        }

@@ -8,24 +8,24 @@
 -- drop table T_DESCRIPTION cascade constraints;
 
 alter
-session set "_ORACLE_SCRIPT"= TRUE;
+    session set "_ORACLE_SCRIPT"= TRUE;
 create
-profile umlimited_attempts limit failed_login_attempts unlimited;
+    profile umlimited_attempts limit failed_login_attempts unlimited;
 
 create
-user henninb identified by monday1;
+    user henninb identified by monday1;
 grant connect, resource, create
-any context to henninb;
+    any context to henninb;
 GRANT CONNECT, RESOURCE, DBA TO henninb;
 -- GRANT sysdba to henninb;
 alter
-user henninb profile umlimited_attempts;
+    user henninb profile umlimited_attempts;
 alter
-user system profile umlimited_attempts;
+    user system profile umlimited_attempts;
 alter
-user henninb quota unlimited on users;
+    user henninb quota unlimited on users;
 alter
-user henninb quota unlimited on system;
+    user henninb quota unlimited on system;
 
 
 --ALTER USER system ACCOUNT UNLOCK
@@ -60,7 +60,7 @@ CREATE TABLE t_account
     account_name       VARCHAR(30), -- NULL for now
     account_owner      VARCHAR(30), -- NULL for now
     account_type       VARCHAR(20)   DEFAULT 'undefined' NOT NULL,
-    active_status      NUMBER(1) DEFAULT '1' NOT NULL,
+    active_status      NUMBER(1)     DEFAULT '1'         NOT NULL,
     moniker            VARCHAR(10)   DEFAULT '0000'      NOT NULL,
     totals             DECIMAL(8, 2) DEFAULT 0.0,
     totals_balanced    DECIMAL(8, 2) DEFAULT 0.0,
@@ -79,10 +79,10 @@ CREATE TABLE t_account
 CREATE TABLE t_category
 (
     category_id   NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    category      VARCHAR(30) UNIQUE NOT NULL,
+    category      VARCHAR(30) UNIQUE  NOT NULL,
     active_status NUMBER(1) DEFAULT 1 NOT NULL,
-    date_updated  TIMESTAMP          NOT NULL,
-    date_added    TIMESTAMP          NOT NULL,
+    date_updated  TIMESTAMP           NOT NULL,
+    date_added    TIMESTAMP           NOT NULL,
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
@@ -103,12 +103,14 @@ CREATE TABLE t_category
 -------------------
 CREATE TABLE t_receipt_image
 (
-    receipt_image_id NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    transaction_id   NUMBER    NOT NULL,
-    jpg_image        BLOB      NOT NULL,                        -- ADD the not NULL constraint
-    active_status    NUMBER(1) DEFAULT 1 NOT NULL,
-    date_updated     TIMESTAMP NOT NULL,
-    date_added       TIMESTAMP NOT NULL,
+    receipt_image_id  NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
+    transaction_id    NUMBER                          NOT NULL,
+    jpg_image         BLOB                            NOT NULL,
+    thumbnail         BLOB                            NULL,
+    image_format_type VARCHAR(10) DEFAULT 'undefined' NOT NULL,
+    active_status     NUMBER(1)   DEFAULT 1           NOT NULL,
+    date_updated      TIMESTAMP                       NOT NULL,
+    date_added        TIMESTAMP                       NOT NULL,
     CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576) -- 1024 kb file size limit
     --646174613a696d6167652f706e673b626173653634 = data:image/png;base64
     --646174613a696d6167652f6a7065673b626173653634 = data:image/jpeg;base64
@@ -136,9 +138,9 @@ CREATE TABLE t_transaction
     transaction_state  VARCHAR(30)                       NOT NULL,
     reoccurring        CHAR(1)       DEFAULT 1           NOT NULL,
     reoccurring_type   VARCHAR(30)   DEFAULT 'undefined' NULL,
-    active_status      NUMBER(1) DEFAULT 1 NOT NULL,
-    notes              VARCHAR(100)  DEFAULT '' NULL,
-    receipt_image_id   NUMBER NULL,
+    active_status      NUMBER(1)     DEFAULT 1           NOT NULL,
+    notes              VARCHAR(100)  DEFAULT ''          NULL,
+    receipt_image_id   NUMBER                            NULL,
     date_updated       TIMESTAMP                         NOT NULL,
     date_added         TIMESTAMP                         NOT NULL,
     CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
@@ -147,7 +149,6 @@ CREATE TABLE t_transaction
     -- removed because of how oracle treats lower case
     CONSTRAINT t_transaction_category_lowercase_ck CHECK (category = lower(category)),
     --CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
-    --CONSTRAINT fk_category_id_transaction_id FOREIGN KEY(transaction_id) REFERENCES t_transaction_categories(category_id, transaction_id) ON DELETE CASCADE,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT check_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
@@ -169,7 +170,7 @@ CREATE TABLE t_payment
     amount             NUMERIC(8, 2) DEFAULT 0.00 NOT NULL,
     guid_source        VARCHAR(40)                NOT NULL,
     guid_destination   VARCHAR(40)                NOT NULL,
-    active_status      NUMBER(1) DEFAULT 1 NOT NULL,
+    active_status      NUMBER(1)     DEFAULT 1    NOT NULL,
     date_updated       TIMESTAMP                  NOT NULL,
     date_added         TIMESTAMP                  NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
@@ -177,17 +178,17 @@ CREATE TABLE t_payment
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
 );
 
--------------
+----------
 -- Parm --
--------------
+----------
 CREATE TABLE t_parm
 (
     parm_id       NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    parm_name     VARCHAR(30) UNIQUE NOT NULL,
-    parm_value    VARCHAR(30)        NOT NULL,
+    parm_name     VARCHAR(30) UNIQUE  NOT NULL,
+    parm_value    VARCHAR(30)         NOT NULL,
     active_status NUMBER(1) DEFAULT 1 NOT NULL,
-    date_updated  TIMESTAMP          NOT NULL,
-    date_added    TIMESTAMP          NOT NULL
+    date_updated  TIMESTAMP           NOT NULL,
+    date_added    TIMESTAMP           NOT NULL
 );
 -----------------
 -- description --
@@ -195,29 +196,25 @@ CREATE TABLE t_parm
 CREATE TABLE t_description
 (
     description_id NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    description    VARCHAR(50) UNIQUE NOT NULL,
+    description    VARCHAR(50) UNIQUE  NOT NULL,
     active_status  NUMBER(1) DEFAULT 1 NOT NULL,
-    date_updated   TIMESTAMP          NOT NULL,
-    date_added     TIMESTAMP          NOT NULL
+    date_updated   TIMESTAMP           NOT NULL,
+    date_added     TIMESTAMP           NOT NULL
     -- CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
 
 -- t_account
 CREATE
-OR REPLACE TRIGGER tr_insert_account
+    OR REPLACE TRIGGER tr_insert_account
     AFTER INSERT
     ON t_account
     FOR EACH ROW
 BEGIN
     dbms_output.put_line
-(
+        (
                 'account_name_owner: ' || :new.ACCOUNT_NAME || ' account_type: ' || :new.ACCOUNT_TYPE
         );
 END;
 
 
 --select * from USER_TRIGGERS;
-
--- GRANT SELECT ON 't_transaction' to 'henninb';
--- GRANT SELECT ON 't_account' to 'henninb';
--- GRANT SELECT ON 't_category' to 'henninb';
