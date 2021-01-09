@@ -56,18 +56,19 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
 (
     receipt_image_id  BIGSERIAL PRIMARY KEY,
     transaction_id    BIGINT    NOT NULL,
-    jpg_image         BYTEA     NOT NULL,                        -- rename to image
+    image             BYTEA     NOT NULL,                    -- rename to image
     thumbnail         BYTEA     NOT NULL,
     image_format_type TEXT      NOT NULL DEFAULT 'undefined',
     active_status     BOOLEAN   NOT NULL DEFAULT TRUE,
     date_updated      TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added        TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    CONSTRAINT ck_jpg_size CHECK (length(jpg_image) <= 1048576), -- 1024 kb file size limit
+    CONSTRAINT ck_jpg_size CHECK (length(image) <= 1048576), -- 1024 kb file size limit
     CONSTRAINT ck_account_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
     --TODO: change the names to image ^^^
 );
 
 -- example
+-- alter table t_receipt_image rename column jpg_image to image;
 -- alter table t_receipt_image alter column thumbnail set not null;
 -- alter table t_receipt_image alter column image_format_type set not null;
 -- ALTER TABLE t_receipt_image DROP CONSTRAINT ck_image_type_jpg;

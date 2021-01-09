@@ -59,7 +59,7 @@ data class ReceiptImage(
         //https://cryptii.com/pipes/base64-to-hex
         //logger.info(this.jpgImage.toHexString())
 
-        return Base64.getEncoder().encodeToString(this.jpgImage)
+        return Base64.getEncoder().encodeToString(this.image)
     }
 
     //TODO: temporary method
@@ -79,8 +79,8 @@ data class ReceiptImage(
     @JsonProperty
     @Type(type = "org.hibernate.type.BinaryType") //TODO: do I need this anymore?
     @field:ValidImage
-    @Column(name = "jpg_image", nullable = false)
-    lateinit var jpgImage: ByteArray
+    @Column(name = "image", nullable = false)
+    lateinit var image: ByteArray
 
     @Lob
     @JsonProperty

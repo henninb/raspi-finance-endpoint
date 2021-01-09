@@ -259,7 +259,7 @@ open class TransactionService @Autowired constructor(
                 if (receiptImageOptional.isPresent) {
                     val existingReceiptImage = receiptImageOptional.get()
                     existingReceiptImage.thumbnail = thumbnail
-                    existingReceiptImage.jpgImage = rawImage
+                    existingReceiptImage.image = rawImage
                     existingReceiptImage.imageFormatType = imageFormatType
                     receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 } else {
@@ -272,7 +272,7 @@ open class TransactionService @Autowired constructor(
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
             receiptImage.transactionId = transaction.transactionId
-            receiptImage.jpgImage = rawImage
+            receiptImage.image = rawImage
             receiptImage.thumbnail = thumbnail
             receiptImage.imageFormatType = imageFormatType
             val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)

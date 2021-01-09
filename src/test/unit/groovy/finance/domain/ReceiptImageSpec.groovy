@@ -21,7 +21,7 @@ class ReceiptImageSpec extends Specification {
 //"""
 
     protected String payload = """
-{"transactionId":1, "jpgImage":"amFja3Nvbg==", "activeStatus":true}
+{"transactionId":1, "image":"amFja3Nvbg==", "activeStatus":true}
 """
 
     void setup() {
@@ -37,7 +37,7 @@ class ReceiptImageSpec extends Specification {
         when:
         ReceiptImage receiptImageFromJson = mapper.readValue(payload, ReceiptImage)
         and:
-        String result = new String (receiptImageFromJson.jpgImage)
+        String result = new String (receiptImageFromJson.image)
 
         then:
         result == 'jackson'
