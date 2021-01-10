@@ -145,9 +145,14 @@ CREATE TABLE IF NOT EXISTS t_payment
     date_updated       TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
     date_added         TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
-    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid),
-    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
+    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid) ON DELETE CASCADE,
+    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE
 );
+
+--example
+-- alter table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid) ON DELETE CASCADE;
+-- alter table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE;
+
 
 -------------
 -- Parm    --

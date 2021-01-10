@@ -149,8 +149,8 @@ CREATE TABLE t_payment
     date_updated       TIMESTAMP                  NOT NULL,
     date_added         TIMESTAMP                  NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
-    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid),
-    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid)
+    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid) ON DELETE CASCADE,
+    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE
 );
 
 ----------

@@ -22,6 +22,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 "accountId":0,
 "accountType":"credit",
 "transactionDate":"2020-10-05",
+"dueDate":"2020-10-07",
 "dateUpdated":1593981072000,
 "dateAdded":1593981072000,
 "guid":"badGuid",
