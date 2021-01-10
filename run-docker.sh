@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 
-ENV=$1
+env=$1
 APP=raspi-finance-convert
 
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 <prod|local|stage|perf>"
+  echo "Usage: $0 <prod|stage|prodora>"
   exit 1
 fi
 
-if [ "$ENV" = "prod" ] || [ "$ENV" = "local" ] || [ "$ENV" = "stage" ] || [ "$ENV" = "perf" ]; then
-  echo "${ENV}"
+if [ "$env" = "prod" ] || [ "$env" = "stage" ] || [ "$env" = "prodora" ]; then
+  echo "${env}"
 else
-  echo "Usage: $0 <prod|local|stage|perf>"
+  echo "Usage: $0 <prod|stage|prodora>"
   exit 2
 fi
+
+if [ ! -x "$(command -v ./os-env)" ]; then
+  echo "./os-env is need to set the environment variable OS."
+  exit 3
+fi
+
+./os-env
 
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
@@ -36,28 +43,16 @@ else
   exit 1
 fi
 
-if [ ! -x "$(command -v ./os-env)" ]; then
-  echo "./os-env is need to set the environment variable OS."
-  exit 3
-fi
-
-./os-env
-
 export HOST_IP
 export CURRENT_UID="$(id -u)"
 export CURRENT_GID="$(id -g)"
 
 mkdir -p 'src/main/scala'
-mkdir -p 'src/main/java'
 mkdir -p 'src/main/kotlin'
 mkdir -p 'src/test/unit/groovy'
-mkdir -p 'src/test/unit/java'
 mkdir -p 'src/test/integration/groovy'
-mkdir -p 'src/test/integration/java'
 mkdir -p 'src/test/functional/groovy'
-mkdir -p 'src/test/functional/java'
 mkdir -p 'src/test/performance/groovy'
-mkdir -p 'src/test/performance/java'
 mkdir -p 'postgresql-data'
 mkdir -p 'influxdb-data'
 mkdir -p 'grafana-data'
@@ -94,7 +89,7 @@ echo curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=metr
 echo curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=metrics" -u "henninb:monday1" --data-urlencode "q=SHOW measurements on metrics"
 
 if [ -x "$(command -v docker-compose)" ]; then
-  if ! docker-compose -f docker-compose.yml -f "docker-compose-${ENV}.yml" config > docker-compose-run.yml; then
+  if ! docker-compose -f docker-compose.yml -f "docker-compose-${env}.yml" config > docker-compose-run.yml; then
     echo "docker-compose config failed."
     exit 1
   fi

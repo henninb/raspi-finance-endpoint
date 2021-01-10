@@ -20,7 +20,7 @@ open class ReceiptImageService @Autowired constructor(private var receiptImageRe
                                                       private var meterService: MeterService) {
 
     @Transactional
-    open fun insertReceiptImage(receiptImage: ReceiptImage): Long {
+    open fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
 
         val constraintViolations: Set<ConstraintViolation<ReceiptImage>> = validator.validate(receiptImage)
         if (constraintViolations.isNotEmpty()) {
@@ -32,8 +32,7 @@ open class ReceiptImageService @Autowired constructor(private var receiptImageRe
         receiptImage.dateAdded = Timestamp(Calendar.getInstance().time.time)
         receiptImage.dateUpdated = Timestamp(Calendar.getInstance().time.time)
 
-        val response = receiptImageRepository.saveAndFlush(receiptImage)
-        return response.receiptImageId
+        return receiptImageRepository.saveAndFlush(receiptImage)
     }
 
     @Transactional

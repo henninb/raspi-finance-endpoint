@@ -56,11 +56,13 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }
 
-    //TODO: return the payload of the updated and the inserted
-    @PutMapping(path = ["/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
+    //TODO: 2021-01-10, return the payload of the updated and the inserted
+    //TODO: 2021-01-10, consumes JSON should be turned back on
+    @PutMapping(path = ["/update/{guid}"], produces = ["application/json"])
+    //@PutMapping(path = ["/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
     fun updateTransaction(
         @PathVariable("guid") guid: String,
-        @RequestBody transaction: Map<String, String>
+        @RequestBody transaction: Map<String, Any>
     ): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
@@ -136,7 +138,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         @PathVariable("guid") guid: String,
         @RequestBody payload: String
     ): ResponseEntity<String> {
-        transactionService.updateTransactionReceiptImageByGuid(guid, payload)
+        val receiptImage = transactionService.updateTransactionReceiptImageByGuid(guid, payload)
         logger.info("set transaction receipt image for guid = $guid")
         return ResponseEntity.ok("transaction receipt image updated")
     }

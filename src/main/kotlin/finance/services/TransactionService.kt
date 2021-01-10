@@ -216,6 +216,11 @@ open class TransactionService @Autowired constructor(
 
         if (transactionFromDatabase.guid == transaction.guid) {
 
+            //TODO: this is a workaround - currently the receiptImageId is not being passed to the update.
+            if( transactionFromDatabase.receiptImageId != null ) {
+                transaction.receiptImageId = transactionFromDatabase.receiptImageId
+            }
+
             processCategory(transaction)
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
@@ -243,7 +248,7 @@ open class TransactionService @Autowired constructor(
 
     @Timed
     @Transactional
-    open fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): Boolean {
+    open fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
         val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
         val rawImage = Base64Utils.decodeFromString(imageBase64String)
         val imageFormatType = getImageFormatType(rawImage)
@@ -254,20 +259,17 @@ open class TransactionService @Autowired constructor(
 
             logger.info("receiptImageId: ${transaction.receiptImageId}")
             if (transaction.receiptImageId != null) {
-                logger.info("update existing receipt image: ${transaction.transactionId}")
                 val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
                 if (receiptImageOptional.isPresent) {
                     val existingReceiptImage = receiptImageOptional.get()
                     existingReceiptImage.thumbnail = thumbnail
                     existingReceiptImage.image = rawImage
                     existingReceiptImage.imageFormatType = imageFormatType
-                    receiptImageService.insertReceiptImage(receiptImageOptional.get())
-                } else {
-                    throw RuntimeException("failed to update receipt image for transaction ${transaction.guid}")
+                    val response = receiptImageService.insertReceiptImage(receiptImageOptional.get())
+                    meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
+                    return response
                 }
-
-                meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
-                return true
+                throw RuntimeException("failed to update receipt image for transaction ${transaction.guid}")
             }
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
@@ -275,12 +277,12 @@ open class TransactionService @Autowired constructor(
             receiptImage.image = rawImage
             receiptImage.thumbnail = thumbnail
             receiptImage.imageFormatType = imageFormatType
-            val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
-            transaction.receiptImageId = receiptImageId
+            val response = receiptImageService.insertReceiptImage(receiptImage)
+            transaction.receiptImageId = response.receiptImageId
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
             transactionRepository.saveAndFlush(transaction)
             meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
-            return true
+            return response
         }
         //TODO: add metric here
         logger.error("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
