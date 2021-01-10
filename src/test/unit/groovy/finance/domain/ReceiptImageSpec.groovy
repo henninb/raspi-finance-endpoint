@@ -14,10 +14,10 @@ class ReceiptImageSpec extends Specification {
     protected ObjectMapper mapper = new ObjectMapper().setBase64Variant(Base64Variants.MIME_NO_LINEFEEDS)
 
 //    String payload = """
-//{"transactionId":1, "jpgImage":"data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==", "activeStatus":true}
+//{"transactionId":1, "image":"data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==", "activeStatus":true}
 //"""
 //    String payload = """
-//{"transactionId":1, "jpgImage":"data:image/jpeg;base64,amFja3Nvbg==", "activeStatus":true}
+//{"transactionId":1, "image":"data:image/jpeg;base64,amFja3Nvbg==", "activeStatus":true}
 //"""
 
     protected String payload = """

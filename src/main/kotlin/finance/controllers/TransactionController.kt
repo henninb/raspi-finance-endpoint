@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.Account
+import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.MeterService
@@ -137,10 +138,11 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun updateTransactionReceiptImageByGuid(
         @PathVariable("guid") guid: String,
         @RequestBody payload: String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ReceiptImage> {
         val receiptImage = transactionService.updateTransactionReceiptImageByGuid(guid, payload)
         logger.info("set transaction receipt image for guid = $guid")
-        return ResponseEntity.ok("transaction receipt image updated")
+        //return ResponseEntity.ok("transaction receipt image updated")
+        return ResponseEntity.ok(receiptImage)
     }
 
     //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'

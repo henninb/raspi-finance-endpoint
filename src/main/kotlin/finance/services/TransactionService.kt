@@ -215,12 +215,6 @@ open class TransactionService @Autowired constructor(
     private fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
 
         if (transactionFromDatabase.guid == transaction.guid) {
-
-            //TODO: this is a workaround - currently the receiptImageId is not being passed to the update.
-            if( transactionFromDatabase.receiptImageId != null ) {
-                transaction.receiptImageId = transactionFromDatabase.receiptImageId
-            }
-
             processCategory(transaction)
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
