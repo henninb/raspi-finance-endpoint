@@ -2,17 +2,17 @@ server:
   port: ${SERVER_PORT}
   ssl:
     key-store: classpath:hornsup-raspi-finance-keystore.p12
-    key-store-password: none
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: pkcs12
     key-alias: hornsup-raspi-finance
-    key-password: none
-    enabled: false
+    key-password: ${SSL_KEY_PASSWORD}
+    enabled: ${SSL_ENABLED}
     enabled-protocols: TLSv1.2
 spring:
   application:
     name: raspi-finance-endpoint
   profiles:
-    active: stage
+    active: ${SPRING_PROFILES_ACTIVE}
 
   # ===============================
   # = Jackson Settings
@@ -37,8 +37,7 @@ spring:
       validation-Query: SELECT 1
     platform: ${DATASOURCE_PLATFORM}
     continue-On-Error: false
-    # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql
-    #initialization-mode: always
+    # always - utilize data.sql and schema.sql
     initialization-mode: never
 
   # ===============================
@@ -60,7 +59,7 @@ spring:
   # = Flyway
   # ===============================
   flyway:
-    enabled: true
+    enabled: ${FLYWAY_ENABLED}
     user: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
     url: ${DATASOURCE}
@@ -76,6 +75,17 @@ custom:
     excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
     excluded-accounts:
       - test_brian
+    camel-route:
+      auto-start-route: true
+      json-file-reader-route-id: jsonFileReaderRoute
+      json-file-reader-route: "file:json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
+      transaction-to-database-route-id: transactionToDatabaseRoute
+      transaction-to-database-Route: direct:transactionToDatabaseRoute
+      json-file-writer-route-id: jsonFileWriterRoute
+      json-file-writer-route: direct:jsonFileWriterRoute
+      saved-file-endpoint: "file:json_in/.processed-successfully"
+      failed-Json-file-endpoint: "file:json_in/.not-processed-non-json-file"
+      failed-json-parser-endpoint: "file:json_in/.not-processed-json-parsing-errors"
 
 # ===============================
 # = Logging
@@ -103,11 +113,11 @@ management:
       influx:
         enabled: true
         auto-create-db: true
-        db: metrics-test
+        db: metrics
         compressed: false
-        uri: http://hornsup:8086
-        user-name: admin
-        password:
+        uri: ${INFLUXDB_URL}
+        user-name: ${INFLUXDB_ADMIN_USERNAME}
+        password: ${INFLUXDB_ADMIN_PASSWORD}
   endpoints:
     web:
       exposure:
