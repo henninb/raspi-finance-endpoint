@@ -4,14 +4,14 @@ env=$1
 APP=raspi-finance-endpoint
 
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 <prod|func|perf|prodora>"
+  echo "Usage: $0 <prod|stage|prodora>"
   exit 1
 fi
 
-if [ "$env" = "prod" ] || [ "$env" = "func" ] || [ "$env" = "perf" ] || [ "$env" = "prodora" ]; then
+if [ "$env" = "prod" ] || [ "$env" = "stage" ] || [ "$env" = "prodora" ]; then
   echo "${env}"
 else
-  echo "Usage: $0 <prod|func|perf|prodora>"
+  echo "Usage: $0 <prod|stage|prodora>"
   exit 2
 fi
 
