@@ -17,7 +17,7 @@ import spock.lang.Unroll
 class AccountControllerSpec extends BaseControllerSpec {
 
     @Shared
-    protected Account account
+    protected Account account = AccountBuilder.builder().withAccountNameOwner('unique_brian').build()
 
     @Shared
     protected String jsonPayloadInvalidActiveStatus = '''
@@ -39,10 +39,6 @@ class AccountControllerSpec extends BaseControllerSpec {
     protected String jsonPayloadInvalidAccountType = '''
 {"accountNameOwner":"test_brian","accountType":"invalid","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
 '''
-
-    void setup() {
-        account = AccountBuilder.builder().withAccountNameOwner('unique_brian').build()
-    }
 
     void 'test insert Account'() {
         given:
@@ -166,7 +162,7 @@ class AccountControllerSpec extends BaseControllerSpec {
                 entity, String)
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 

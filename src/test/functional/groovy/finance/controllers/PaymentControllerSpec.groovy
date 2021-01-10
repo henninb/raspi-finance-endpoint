@@ -31,7 +31,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
     protected ParameterRepository parameterRepository
 
     @Shared
-    protected Payment payment
+    protected Payment payment = PaymentBuilder.builder().build()
 
     @Shared
     protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
@@ -41,10 +41,6 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     @Shared
     protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.1288888, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
-
-    void setupSpec() {
-        payment = PaymentBuilder.builder().build()
-    }
 
     void 'test insert Payment'() {
         headers.setContentType(MediaType.APPLICATION_JSON)

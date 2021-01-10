@@ -15,11 +15,11 @@ class BaseControllerSpec extends Specification {
     @Shared
     protected HttpHeaders headers
 
-    void setup() {
+    protected void setup() {
         headers = new HttpHeaders()
     }
 
-    String createURLWithPort(String uri) {
+    protected String createURLWithPort(String uri) {
         return "http://localhost:" + port + uri
     }
 }
