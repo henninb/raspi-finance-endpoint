@@ -28,7 +28,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     protected ReceiptImageRepository receiptImageRepository
 
     protected String payload = '''
-{"transactionId":1, "jpgImage":"test", "activeStatus":true}
+{"transactionId":1, "image":"test", "activeStatus":true}
 '''
 
     void 'test insert receiptImage - bad image'() {

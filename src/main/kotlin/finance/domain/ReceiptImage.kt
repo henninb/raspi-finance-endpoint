@@ -28,9 +28,8 @@ data class ReceiptImage(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_receipt_image_receipt_image_id_seq")
-
+    @JsonProperty
     @field:Min(value = 0L)
-    @JsonIgnore
     @Column(name = "receipt_image_id", nullable = false)
     var receiptImageId: Long,
 
@@ -54,15 +53,15 @@ data class ReceiptImage(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    @JsonGetter("jpgImage")
+    @JsonGetter("image")
     fun jsonGetterJpgImage(): String {
         //https://cryptii.com/pipes/base64-to-hex
-        //logger.info(this.jpgImage.toHexString())
+        //logger.info(this.image.toHexString())
 
         return Base64.getEncoder().encodeToString(this.image)
     }
 
-    //TODO: temporary method
+    //TODO: 2021-01-09, temporary method
     private fun ByteArray.toHexString() : String {
         return this.joinToString("") {
             String.format("%02x", it)

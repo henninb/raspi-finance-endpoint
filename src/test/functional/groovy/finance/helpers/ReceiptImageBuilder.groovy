@@ -4,15 +4,15 @@ import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 import org.springframework.util.Base64Utils
 
-// curl -k --header "Content-Type: application/json" 'https://localhost:8080/receipt/image/insert' -X POST -d '{"activeStatus":true,"transactionId": 23189, "jpgImage":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==" }'
+// curl -k --header "Content-Type: application/json" 'https://localhost:8080/receipt/image/insert' -X POST -d '{"activeStatus":true,"transactionId": 23189, "image":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==" }'
 // https://cryptii.com/pipes/base64-to-hex
 class ReceiptImageBuilder {
     Long transactionId = 22530
     Boolean activeStatus = true
     ImageFormatType imageFormatType = ImageFormatType.Png
     String thumbnail = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
-    String jpgImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
-    //String jpgImage = "/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k="
+    String image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
+    //String image = "/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k="
 
     static ReceiptImageBuilder builder() {
         return new ReceiptImageBuilder()
@@ -24,14 +24,14 @@ class ReceiptImageBuilder {
             activeStatus = this.activeStatus
             imageFormatType = this.imageFormatType
             thumbnail = Base64Utils.decodeFromString(this.thumbnail)
-            image = Base64Utils.decodeFromString(this.jpgImage)
+            image = Base64Utils.decodeFromString(this.image)
             return it
         }
         return receiptImage
     }
 
-    ReceiptImageBuilder withJpgImage(String jpgImage) {
-        this.jpgImage = jpgImage
+    ReceiptImageBuilder withJpgImage(String image) {
+        this.image = image
         return this
     }
 
