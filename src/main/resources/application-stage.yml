@@ -38,7 +38,7 @@ spring:
     platform: ${DATASOURCE_PLATFORM}
     continue-On-Error: false
     # always - utilize data.sql and schema.sql
-    initialization-mode: never
+    initialization-mode: always
 
   # ===============================
   # = JPA / HIBERNATE
