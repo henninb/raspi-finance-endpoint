@@ -1,22 +1,20 @@
 package finance.controllers
 
 import finance.Application
-import finance.domain.Parameter
 import finance.domain.Payment
-import finance.helpers.ParameterBuilder
+import finance.domain.Transaction
 import finance.helpers.PaymentBuilder
 import finance.repositories.ParameterRepository
 import finance.repositories.PaymentRepository
+import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Stepwise
 import spock.lang.Unroll
 
-import javax.transaction.Transactional
 import java.sql.Date
 
 @Stepwise
@@ -30,6 +28,9 @@ class PaymentControllerSpec extends BaseControllerSpec {
     @Autowired
     protected ParameterRepository parameterRepository
 
+    @Autowired
+    protected TransactionRepository transactionRepository
+
     @Shared
     protected Payment payment = PaymentBuilder.builder().build()
 
@@ -42,7 +43,11 @@ class PaymentControllerSpec extends BaseControllerSpec {
     @Shared
     protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.1288888, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
+    @Shared
+    protected Long paymentId = 0
+
     void 'test insert Payment'() {
+        given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payment, headers)
 
@@ -54,19 +59,68 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore('need to rethink the logic')
+    void 'test insert Payment - prepare for delete'() {
+        given:
+        String accountNameOwner = 'delete-test_brian'
+        Payment payment = PaymentBuilder.builder()
+                .withTransactionDate(Date.valueOf('2020-10-13'))
+                .withAccountNameOwner(accountNameOwner)
+                .build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(payment, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+
+        then:
+        response.statusCode.is(HttpStatus.OK)
+        0 * _
+    }
+
     void 'test delete Payment'() {
         given:
-        payment.transactionDate = Date.valueOf('2020-10-13')
-        Payment result = paymentRepository.save(payment)
+        Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == 'delete-test_brian'}
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/delete/' + result.paymentId), HttpMethod.DELETE, entity, String)
+                createURLWithPort('/payment/delete/' + payment1.paymentId), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.OK
         0 * _
+    }
+
+    void 'test insert Payment - to prepare the delete transaction'() {
+        given:
+        String accountNameOwner = 'delete-me_brian'
+        Payment payment = PaymentBuilder.builder()
+                .withTransactionDate(Date.valueOf('2020-12-13'))
+                .withAccountNameOwner(accountNameOwner)
+                .build()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(payment, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+
+        then:
+        response.statusCode.is(HttpStatus.OK)
+        0 * _
+    }
+
+    void 'test delete transaction of a payment'() {
+        given:
+        Transaction transaction = transactionRepository.findAll().find {it.accountNameOwner == 'delete-me_brian'}
+        Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == 'delete-me_brian'}
+
+        when:
+        transactionRepository.deleteByGuid(transaction.guid)
+
+        then:
+        paymentRepository.findById(payment1.paymentId).isEmpty()
+        noExceptionThrown()
     }
 
     void 'test Payment endpoint existing payment inserted and then attempt to delete a non existent payment'() {

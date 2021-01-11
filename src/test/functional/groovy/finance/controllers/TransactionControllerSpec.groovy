@@ -144,7 +144,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/select/' + transaction.guid), HttpMethod.GET,
+                createURLWithPort("/transaction/select/${transaction.guid}"), HttpMethod.GET,
                 entity, String)
 
         then:
@@ -158,7 +158,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/select/" + UUID.randomUUID()), HttpMethod.GET,
+                createURLWithPort("/transaction/select/${UUID.randomUUID()}"), HttpMethod.GET,
                 entity, String)
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
@@ -171,7 +171,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/delete/" + UUID.randomUUID()), HttpMethod.DELETE,
+                createURLWithPort("/transaction/delete/${UUID.randomUUID()}"), HttpMethod.DELETE,
                 entity, String)
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
@@ -184,7 +184,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(transaction, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort('/transaction/update/' + UUID.randomUUID()),
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/transaction/update/${UUID.randomUUID()}"),
                 HttpMethod.PUT, entity, String)
 
         then:
@@ -198,7 +198,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/delete/' + transaction.guid), HttpMethod.DELETE,
+                createURLWithPort("/transaction/delete/${transaction.guid}"), HttpMethod.DELETE,
                 entity, String)
         then:
         response.statusCode.is(HttpStatus.OK)
