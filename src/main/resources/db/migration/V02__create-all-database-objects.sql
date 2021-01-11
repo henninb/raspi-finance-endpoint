@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS t_account
     account_owner      TEXT, -- NULL for now
     account_type       TEXT        NOT NULL DEFAULT 'unknown',
     active_status      BOOLEAN     NOT NULL DEFAULT TRUE,
+    payment_required   BOOLEAN     NULL     DEFAULT TRUE,
     moniker            TEXT        NOT NULL DEFAULT '0000',
     totals             NUMERIC(8, 2)        DEFAULT 0.00,
     totals_balanced    NUMERIC(8, 2)        DEFAULT 0.00,
@@ -23,6 +24,8 @@ CREATE TABLE IF NOT EXISTS t_account
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
+
+-- ALTER TABLE t_account ADD COLUMN payment_required   BOOLEAN     NULL     DEFAULT TRUE;
 
 --------------
 -- Category --
@@ -67,7 +70,6 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
     --TODO: change the names to image ^^^
 );
 
--- example
 -- alter table t_receipt_image rename column jpg_image to image;
 -- alter table t_receipt_image alter column thumbnail set not null;
 -- alter table t_receipt_image alter column image_format_type set not null;
@@ -123,7 +125,6 @@ ALTER TABLE t_receipt_image
 ALTER TABLE t_receipt_image
     ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE;
 
--- example
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
 -- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined'));
@@ -149,10 +150,8 @@ CREATE TABLE IF NOT EXISTS t_payment
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE
 );
 
---example
--- alter table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid) ON DELETE CASCADE;
--- alter table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE;
-
+-- ALTER table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid) ON DELETE CASCADE;
+-- ALTER table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE;
 
 -------------
 -- Parm    --
@@ -167,9 +166,8 @@ CREATE TABLE IF NOT EXISTS t_parm
     date_added    TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
--- example
 -- ALTER TABLE t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
--- insert into t_parm(parm_name, parm_value) VALUES('payment_account', '');
+-- INSERT into t_parm(parm_name, parm_value) VALUES('payment_account', '');
 
 -----------------
 -- description --
@@ -184,7 +182,7 @@ CREATE TABLE IF NOT EXISTS t_description
     CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
 
---ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
+-- ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
 SELECT setval('t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM t_receipt_image) + 1);
 SELECT setval('t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM t_transaction) + 1);
