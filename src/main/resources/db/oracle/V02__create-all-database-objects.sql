@@ -41,6 +41,7 @@ CREATE TABLE t_account
     account_owner      VARCHAR(30), -- NULL for now
     account_type       VARCHAR(20)   DEFAULT 'undefined' NOT NULL,
     active_status      NUMBER(1)     DEFAULT '1'         NOT NULL,
+    payment_required   NUMBER(1)     DEFAULT '1'         NULL,
     moniker            VARCHAR(10)   DEFAULT '0000'      NOT NULL,
     totals             DECIMAL(8, 2) DEFAULT 0.0,
     totals_balanced    DECIMAL(8, 2) DEFAULT 0.0,
