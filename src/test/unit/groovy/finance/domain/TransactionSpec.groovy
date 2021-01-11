@@ -23,9 +23,10 @@ class TransactionSpec extends Specification {
     protected ObjectMapper mapper = new ObjectMapper()
     protected String jsonPayload = '''
 {
-"accountId":0,
+"accountId":1,
 "accountType":"credit",
 "transactionDate":"2020-10-05",
+"dueDate":"2020-10-15",
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bd",
 "accountNameOwner":"chase_brian",
 "description":"aliexpress.com",

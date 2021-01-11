@@ -73,10 +73,9 @@ data class ReceiptImage(
     @Convert(converter = ImageFormatTypeConverter::class)
     var imageFormatType: ImageFormatType = ImageFormatType.Undefined
 
-    // TODO: should I turn this into a string?
     @Lob
     @JsonProperty
-    @Type(type = "org.hibernate.type.BinaryType") //TODO: do I need this anymore?
+    @Type(type = "org.hibernate.type.BinaryType")
     @field:ValidImage
     @Column(name = "image", nullable = false)
     lateinit var image: ByteArray
@@ -84,9 +83,9 @@ data class ReceiptImage(
     @Lob
     @JsonProperty
     @field:ValidImage
-    @Type(type = "org.hibernate.type.BinaryType") //TODO: do I need this anymore?
+    @Type(type = "org.hibernate.type.BinaryType")
     @Column(name = "thumbnail", nullable = false)
-    var thumbnail: ByteArray? = null
+    lateinit var thumbnail: ByteArray
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)

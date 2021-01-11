@@ -13,7 +13,7 @@ class TransactionBuilder {
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
     Date transactionDate = Date.valueOf('2020-12-01')
-    Date dueDate = Date.valueOf('2020-12-01')
+    Date dueDate = Date.valueOf('2020-12-02')
     String description = 'aliexpress.com'
     String category = 'online'
     BigDecimal amount = new BigDecimal('3.14')

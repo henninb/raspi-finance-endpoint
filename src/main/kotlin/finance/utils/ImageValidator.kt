@@ -13,28 +13,31 @@ class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
 
     override fun isValid(value: ByteArray, context: ConstraintValidatorContext): Boolean {
 
-//        var flag = false
-//        val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(value))
-//        val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
-//
-//        imageReaders.forEachRemaining { imageReader ->
-//            flag = when {
-//                imageReader.formatName.toLowerCase() == "jpeg" -> {
-//                    logger.info(imageReader.formatName)
-//                    true
-//                }
-//                imageReader.formatName.toLowerCase() == "png" -> {
-//                    logger.info(imageReader.formatName)
-//                    true
-//                }
-//                else -> {
-//                    false
-//                }
-//            }
-//        }
-//
-//        return flag
-        return true
+        if(value.isEmpty()) {
+            return true
+        }
+
+        var flag = false
+        val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(value))
+        val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
+
+        imageReaders.forEachRemaining { imageReader ->
+            flag = when {
+                imageReader.formatName.toLowerCase() == "jpeg" -> {
+                    logger.info(imageReader.formatName)
+                    true
+                }
+                imageReader.formatName.toLowerCase() == "png" -> {
+                    logger.info(imageReader.formatName)
+                    true
+                }
+                else -> {
+                    false
+                }
+            }
+        }
+
+        return flag
     }
 
     companion object {
