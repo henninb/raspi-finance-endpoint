@@ -17,6 +17,7 @@ class PaymentBuilder {
         return new PaymentBuilder()
     }
 
+    //TODO: setting the guids below does not set them as they are set automatically
     Payment build() {
         Payment payment = new Payment().with {
             accountNameOwner = this.accountNameOwner

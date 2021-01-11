@@ -1,9 +1,6 @@
 package finance.helpers
 
-import finance.domain.AccountType
-import finance.domain.ReoccurringType
-import finance.domain.Transaction
-import finance.domain.TransactionState
+import finance.domain.*
 
 import java.sql.Date
 
@@ -22,6 +19,8 @@ class TransactionBuilder {
     ReoccurringType reoccurringType = ReoccurringType.Undefined
     String notes = 'my note to you'
     Boolean activeStatus = true
+    Long receiptImageId = null
+    ReceiptImage receiptImage = null
 
     static TransactionBuilder builder() {
         return new TransactionBuilder()
@@ -43,6 +42,8 @@ class TransactionBuilder {
             reoccurringType = this.reoccurringType
             notes = this.notes
             activeStatus = this.activeStatus
+            receiptImageId = this.receiptImageId
+            receiptImage = this.receiptImage
 
             return it
         }
@@ -115,6 +116,16 @@ class TransactionBuilder {
 
     TransactionBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
+        return this
+    }
+
+    TransactionBuilder withReceiptImageId(Long receiptImageId) {
+        this.receiptImageId = receiptImageId
+        return this
+    }
+
+    TransactionBuilder withImage() {
+        this.receiptImage = ReceiptImageBuilder.builder().build()
         return this
     }
 }
