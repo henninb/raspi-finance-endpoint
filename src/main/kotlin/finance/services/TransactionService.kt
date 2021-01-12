@@ -403,6 +403,7 @@ open class TransactionService @Autowired constructor(
         transactionFuture.category = transaction.category
         transactionFuture.description = transaction.description
         transactionFuture.receiptImageId = null
+        transactionFuture.dueDate = transaction.dueDate
         transactionFuture.notes = ""
         transactionFuture.reoccurring = true
         transactionFuture.reoccurringType = transaction.reoccurringType
