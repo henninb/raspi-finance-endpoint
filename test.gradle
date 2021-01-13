@@ -136,4 +136,4 @@ task oracleTest(type: Test) {
 integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
 functionalTest.reports.html.destination = file("$buildDir/reports/test/functional")
 performanceTest.reports.html.destination = file("$buildDir/reports/test/performance")
-//test.dependsOn functionalTest
+test.dependsOn functionalTest
