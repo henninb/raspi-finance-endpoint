@@ -293,11 +293,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     void 'test updateTransactionReceiptImageByGuid' () {
         given:
-        Transaction transaction = TransactionBuilder.builder()
-                .build()
+        Transaction transaction = TransactionBuilder.builder().build()
         transaction.transactionId = 1
-        ReceiptImage receiptImage = ReceiptImageBuilder.builder()
-                .build()
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder().build()
         receiptImage.receiptImageId = 1
         Set<ConstraintViolation<ReceiptImage>> constraintViolations = validator.validate(receiptImage)
         String base64Jpeg = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='
@@ -311,6 +309,70 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
         1 * transactionRepositoryMock.saveAndFlush(transaction)
         1 * meterServiceMock.incrementTransactionReceiptImage(transaction.accountNameOwner)
+        0 * _
+    }
+
+    void 'create Future Transaction with jan 1 of leap year'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2020-01-01'))
+                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        result.transactionDate == Date.valueOf('2021-01-01')
+        0 * _
+    }
+
+    void 'create Future Transaction with Feb 29'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2020-02-29'))
+                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        result.transactionDate == Date.valueOf('2021-02-28')
+        0 * _
+    }
+
+    void 'create Future Transaction with leap year in play'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2019-03-01'))
+                .withReoccurringType(ReoccurringType.Monthly)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        Transaction result = transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        result.transactionDate == Date.valueOf('2020-03-01')
+        0 * _
+    }
+
+    void 'create Future Transaction with reoccurringType undefined'() {
+        given:
+        Transaction preLeapYearTransaction = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2019-11-01'))
+                .withReoccurringType(ReoccurringType.Undefined)
+                .withReoccurring(true)
+                .build()
+
+        when:
+        transactionService.createFutureTransaction(preLeapYearTransaction)
+
+        then:
+        thrown(RuntimeException)
         0 * _
     }
 
