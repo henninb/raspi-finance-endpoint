@@ -389,7 +389,7 @@ open class TransactionService @Autowired constructor(
         if (transaction.reoccurringType == ReoccurringType.FortNightly) {
             calendar.add(Calendar.DATE, 14)
         } else {
-            calendar.add(Calendar.YEAR, 1)
+            calendar.add(Calendar.YEAR, 1) //Assumption this works for leap years
         }
 
         val transactionFuture = Transaction()
