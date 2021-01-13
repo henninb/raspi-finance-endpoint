@@ -57,7 +57,6 @@ compileTestKotlin {
 }
 
 dependencies {
-
     testImplementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
     testImplementation("org.spockframework:spock-core:${spockVersion}")
@@ -66,8 +65,8 @@ dependencies {
     testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
     testImplementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
     testImplementation("com.squareup.retrofit2:retrofit-mock:${retrofitVersion}")
-    //testImplementation("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    //testImplementation("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+    //h2 database
+    runtimeOnly("com.h2database:h2:${h2Version}")
 }
 
 ////provide dependency scopes

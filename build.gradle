@@ -19,8 +19,6 @@ plugins {
     id "com.github.ben-manes.versions" version "${gradleVersionsPlugin}"
 }
 
-//ext['groovy.version'] = '${gradleVersion}'
-
 apply from: 'test.gradle'
 
 repositories {
@@ -49,12 +47,6 @@ configurations {
     }
 }
 
-//tasks.withType(KotlinCompile).all {
-//    kotlinOptions {
-//        jvmTarget = "1.8"
-//    }
-//}
-
 codenarc {
     toolVersion = "$codenarcPluginVersion"
 }
@@ -63,13 +55,10 @@ compileKotlin {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
     kotlinOptions.jvmTarget = JavaVersion.VERSION_11
-//    kotlinOptions.jvmTarget = "1.8"
 }
 
 sourceSets {
-    //main.scala.srcDirs += "src/main/scala"
     main.kotlin.srcDirs += "src/main/kotlin"
-    //main.java.srcDirs += "src/main/java"
 }
 
 compileJava {
@@ -98,7 +87,6 @@ dependencies {
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
-    // implementation("org.springframework.boot:spring-boot-starter-data-mongodb:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
@@ -118,9 +106,6 @@ dependencies {
 
     //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
-
-    //h2 database
-    runtimeOnly("com.h2database:h2:${h2Version}")
 
     // Oracle database
     //runtimeOnly files('libs/jackson-core-asl-1.9.2.jar')
@@ -147,14 +132,11 @@ dependencies {
     implementation("javax.validation:validation-api:${validationVersion}")
     //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
 
-    //rest client
-    implementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
-
     //logstash
     //runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
 
-    // graphics  TODO: externalize
-    implementation("net.coobird:thumbnailator:0.4.13")
+    //graphics
+    implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")
 
     //hibernate
     implementation("org.hibernate:hibernate-core:${hibernateVersion}")
