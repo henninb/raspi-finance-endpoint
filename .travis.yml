@@ -6,7 +6,7 @@ addons:
 
 before_script:
   - psql -c 'CREATE DATABASE finance_test_db;' -U postgres
-  - psql -c 'CREATE ROLE henninb WITH LOGIN PASSWORD 'monday1';' -U postgres
+  - psql -c "CREATE USER henninb WITH PASSWORD 'monday1';" -U postgres
   - psql -c 'ALTER USER henninb CREATEDB;' -U postgres
   - psql -c 'ALTER USER henninb SUPERUSER;' -U postgres
   - psql -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U postgres
