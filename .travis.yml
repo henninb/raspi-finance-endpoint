@@ -1,3 +1,23 @@
+addons:
+  apt:
+    packages:
+      - postgresql-12
+      - postgresql-client-12
+
+before_script:
+  - psql -c 'CREATE DATABASE finance_test_db;' -U postgres
+  - psql -c 'CREATE ROLE henninb WITH LOGIN PASSWORD 'monday1';' -U postgres
+  - psql -c 'ALTER USER henninb CREATEDB;' -U postgres
+  - psql -c 'ALTER USER henninb SUPERUSER;' -U postgres
+  - psql -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U postgres
+services:
+  - postgresql
+
+#env:
+#  global:
+#    - PGPORT=5432
+#    - PGVER=12
+
 language: java
 jdk:
   - openjdk11
