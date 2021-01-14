@@ -27,19 +27,15 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     @Autowired
     protected ReceiptImageRepository receiptImageRepository
 
-    protected String payload = '''
-{"transactionId":1, "image":"test", "activeStatus":true}
-'''
+    @Shared
+    protected String endpointName = 'receipt/image'
 
     void 'test insert receiptImage - bad image'() {
         given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payload, headers)
-
+        String payload = '{"transactionId":1, "image":"test", "activeStatus":true}'
+        
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payload.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -49,13 +45,9 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     void 'test insert receiptImage - transaction does not exist'() {
         given:
         ReceiptImage receiptImage = ReceiptImageBuilder.builder().withTransactionId(0).build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -70,13 +62,9 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
                 .withImageFormatType(ImageFormatType.Jpeg)
                 .withTransactionId(22530)
                 .build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
 
         then:
         response.statusCode == HttpStatus.OK
@@ -91,13 +79,9 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
                 .withImageFormatType(ImageFormatType.Png)
                 .withTransactionId(22531)
                 .build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
 
         then:
         response.statusCode == HttpStatus.OK
@@ -123,17 +107,11 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
 
     @Ignore('This test should return a 400, but is currently returning a 200.')
     void 'test insert receiptImage - duplicate'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(receiptImage, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/receipt/image/insert'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 }

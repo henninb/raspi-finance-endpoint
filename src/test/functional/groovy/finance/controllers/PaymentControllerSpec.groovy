@@ -46,16 +46,24 @@ class PaymentControllerSpec extends BaseControllerSpec {
     @Shared
     protected Long paymentId = 0
 
-    void 'test insert Payment'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
+    @Shared
+    protected String endpointName = 'payment'
 
+    void 'test insert Payment'() {
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
+
         then:
         response.statusCode.is(HttpStatus.OK)
+        0 * _
+    }
+
+    void 'test insert Payment - duplicate'() {
+        when:
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
+
+        then:
+        response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
     }
 
@@ -66,12 +74,9 @@ class PaymentControllerSpec extends BaseControllerSpec {
                 .withTransactionDate(Date.valueOf('2020-10-13'))
                 .withAccountNameOwner(accountNameOwner)
                 .build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
         response.statusCode.is(HttpStatus.OK)
