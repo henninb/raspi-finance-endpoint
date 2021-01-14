@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Stepwise
 
@@ -36,6 +37,52 @@ class ParameterControllerSpec extends BaseControllerSpec {
 
         then:
         response.statusCode.is(HttpStatus.BAD_REQUEST)
+        0 * _
+    }
+
+    void 'test find parameter - not found'() {
+        when:
+        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
+    void 'test find parameter'() {
+        when:
+        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    void 'test delete parameter'() {
+        when:
+        ResponseEntity<String> response = deleteEndpoint(endpointName, parameter.parameterName)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    void 'test find description - not found after removal'() {
+        when:
+        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
+    @Ignore('should return a 404 NOT_FOUND')
+    void 'test delete parameter - not found'() {
+        when:
+        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 }

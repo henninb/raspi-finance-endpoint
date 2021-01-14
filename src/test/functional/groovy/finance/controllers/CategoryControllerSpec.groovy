@@ -57,26 +57,18 @@ class CategoryControllerSpec extends BaseControllerSpec {
     }
 
     void 'test find category - not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/category/select/' + UUID.randomUUID()), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
     void 'test find Category'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/category/select/${category.category}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, category.category)
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _
@@ -96,13 +88,8 @@ class CategoryControllerSpec extends BaseControllerSpec {
     }
 
     void 'test Category delete'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/category/delete/${category.category}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, category.category)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -110,13 +97,8 @@ class CategoryControllerSpec extends BaseControllerSpec {
     }
 
     void 'test Category delete - not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/category/delete/${UUID.randomUUID()}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
@@ -125,14 +107,9 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     @Unroll
     void 'test insert Category - failure for irregular payload'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payload, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/category/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payload)
+
         then:
         response.statusCode.is(httpStatus)
         response.body.contains(responseBody)

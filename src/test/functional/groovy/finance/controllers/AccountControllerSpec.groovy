@@ -80,29 +80,25 @@ class AccountControllerSpec extends BaseControllerSpec {
                 .withAccountNameOwner('non-active_brian')
                 .withActiveStatus(false)
                 .build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(null, headers)
-        insertEndpoint(endpointName, account.toString())
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/${account.accountNameOwner}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> insertResponse = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        insertResponse.statusCode == HttpStatus.OK
+        0 * _
+
+        when:
+        ResponseEntity<String> selectResponse = selectEndpoint(endpointName, account.accountNameOwner)
+
+        then:
+        selectResponse.statusCode == HttpStatus.OK
         0 * _
     }
 
     void 'test find Account found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        entity = new HttpEntity<>(null, headers)
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/${account.accountNameOwner}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, account.accountNameOwner)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -110,26 +106,17 @@ class AccountControllerSpec extends BaseControllerSpec {
     }
 
     void 'test find Account - not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/${UUID.randomUUID()}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
         0 * _
     }
 
     void 'test delete Account'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/delete/${account.accountNameOwner}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, account.accountNameOwner)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -138,13 +125,10 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     void 'test delete Account - referenced by a transaction from a payment'() {
         given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
         String referencedByTransaction = 'referenced_brian'
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/delete/${referencedByTransaction}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, referencedByTransaction)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -153,13 +137,8 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     @Unroll
     void 'test deleteAccount endpoint - failure for irregular payload'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/delete/${accountNameOwner}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, accountNameOwner)
 
         then:
         response.statusCode.is(httpStatus)
@@ -175,14 +154,9 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     @Unroll
     void 'test insertAccount endpoint - failure for irregular payload'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payload, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payload)
+
         then:
         response.statusCode.is(httpStatus)
         0 * _
