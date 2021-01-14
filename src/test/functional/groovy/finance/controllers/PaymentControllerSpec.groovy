@@ -1,8 +1,10 @@
 package finance.controllers
 
 import finance.Application
+import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.Transaction
+import finance.helpers.ParameterBuilder
 import finance.helpers.PaymentBuilder
 import finance.repositories.ParameterRepository
 import finance.repositories.PaymentRepository
@@ -44,9 +46,6 @@ class PaymentControllerSpec extends BaseControllerSpec {
     protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.1288888, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
-    protected Long paymentId = 0
-
-    @Shared
     protected String endpointName = 'payment'
 
     void 'test insert Payment'() {
@@ -86,55 +85,53 @@ class PaymentControllerSpec extends BaseControllerSpec {
     void 'test delete Payment'() {
         given:
         Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == 'delete-test_brian'}
-        HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/delete/' + payment1.paymentId), HttpMethod.DELETE, entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, payment1.paymentId.toString())
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _
     }
 
-    void 'test insert Payment - to prepare the delete transaction'() {
+    void 'test delete transaction of a payment'() {
         given:
         String accountNameOwner = 'delete-me_brian'
         Payment payment = PaymentBuilder.builder()
                 .withTransactionDate(Date.valueOf('2020-12-13'))
                 .withAccountNameOwner(accountNameOwner)
                 .build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
         response.statusCode.is(HttpStatus.OK)
-        0 * _
-    }
-
-    void 'test delete transaction of a payment'() {
-        given:
-        Transaction transaction = transactionRepository.findAll().find {it.accountNameOwner == 'delete-me_brian'}
-        Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == 'delete-me_brian'}
 
         when:
-        transactionRepository.deleteByGuid(transaction.guid)
+        Transaction transaction = transactionRepository.findAll().find {it.accountNameOwner == accountNameOwner}
 
         then:
+        transaction.accountNameOwner == accountNameOwner
+
+        when:
+        Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == accountNameOwner}
+
+        then:
+        payment1.accountNameOwner == accountNameOwner
+
+        when:
+        ResponseEntity<String> responseDelete = deleteEndpoint('transaction', transaction.guid)
+
+        then:
+        responseDelete.statusCode.is(HttpStatus.OK)
         paymentRepository.findById(payment1.paymentId).isEmpty()
-        noExceptionThrown()
     }
 
     void 'test Payment endpoint existing payment inserted and then attempt to delete a non existent payment'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/payment/delete/123451"), HttpMethod.DELETE, entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, '1234567890')
+
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
@@ -143,12 +140,9 @@ class PaymentControllerSpec extends BaseControllerSpec {
     void 'test insert Payment - pay a debit account'() {
         given:
         payment.accountNameOwner = 'bank_brian'
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
         response.statusCode.is(HttpStatus.BAD_REQUEST)
@@ -157,14 +151,9 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     @Unroll
     void 'test insertPayment endpoint - failure for irregular payload'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payload, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payload)
+
         then:
         response.statusCode.is(httpStatus)
         response.body.contains(responseBody)
@@ -180,24 +169,30 @@ class PaymentControllerSpec extends BaseControllerSpec {
         jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data'
     }
 
-//    @Transactional
     void 'test insert Payment - missing payment setup'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-//        Parameter parameter = ParameterBuilder.builder()
-//                .withParameterName('payment_account')
-//                .withParameterValue('bank_brian')
-//                .build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payment, headers)
-        parameterRepository.deleteByParameterName('payment_account')
+        Parameter parameter = ParameterBuilder.builder()
+                .withParameterName('payment_account')
+                .withParameterValue('bank_brian')
+                .build()
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/payment/insert/'), HttpMethod.POST, entity, String)
+        ResponseEntity<String> responseDelete = deleteEndpoint('parm', parameter.parameterName)
+
+        then:
+        responseDelete.statusCode.is(HttpStatus.OK)
+
+        when:
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
         response.statusCode.is(HttpStatus.BAD_REQUEST)
-        0 * _
+
+        when:
+        ResponseEntity<String> responseInsert = insertEndpoint('parm', parameter.toString())
+
+        then:
+        responseInsert.statusCode.is(HttpStatus.OK)
     }
 }

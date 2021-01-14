@@ -18,7 +18,7 @@ class BaseServiceSpec extends Specification {
     protected ParameterRepository parameterRepositoryMock = GroovyMock(ParameterRepository)
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
     protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
-    protected AccountService accountServiceMock = GroovyMock(AccountService)
+    // protected AccountService accountServiceMock = GroovyMock(AccountService)
     protected ObjectMapper mapper = new ObjectMapper()
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
 }

@@ -22,9 +22,6 @@ class DescriptionControllerSpec extends BaseControllerSpec {
     protected Description description = DescriptionBuilder.builder().build()
 
     @Shared
-    protected Description emptyDescription = DescriptionBuilder.builder().withDescription('').build()
-
-    @Shared
     protected String endpointName = 'description'
 
     void 'test insert Description'() {
@@ -55,50 +52,45 @@ class DescriptionControllerSpec extends BaseControllerSpec {
     }
 
     void 'test find description'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/description/select/${description.description}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, description.description)
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _
     }
 
-    void 'test delete Description'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
+    void 'test find description - not found'() {
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/description/delete/${description.description}"), HttpMethod.DELETE, entity, String)
-        then:
-        response.statusCode == HttpStatus.OK
-        0 * _
-    }
+        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
 
-    void 'test delete Description - not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/description/delete/${UUID.randomUUID()}"), HttpMethod.DELETE, entity, String)
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
-    void 'test find description - not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
-
+    void 'test delete description'() {
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/description/select/${description.description}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, description.description)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+    void 'test find description - not found after removal'() {
+        when:
+        ResponseEntity<String> response = selectEndpoint(endpointName, description.description)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
+    void 'test delete Description - not found'() {
+        when:
+        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         0 * _
