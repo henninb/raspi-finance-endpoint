@@ -40,47 +40,34 @@ class AccountControllerSpec extends BaseControllerSpec {
 {"accountNameOwner":"test_brian","accountType":"invalid","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
 '''
 
-    void 'test insert Account'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(account, headers)
+    @Shared
+    protected String endpointName = 'account'
 
+    void 'test insert Account'() {
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
     @Ignore('should duplicate Accounts return 200? probably not')
     void 'test insert Account - duplicate'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(account, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
     void 'test insert Account - empty'() {
         given:
         Account account = AccountBuilder.builder().withAccountNameOwner('').build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(account, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -94,12 +81,10 @@ class AccountControllerSpec extends BaseControllerSpec {
                 .withActiveStatus(false)
                 .build()
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(account, headers)
-        restTemplate.exchange(
-                createURLWithPort('/account/insert/'), HttpMethod.POST,
-                entity, String)
+        HttpEntity entity = new HttpEntity<>(null, headers)
+        insertEndpoint(endpointName, account.toString())
+
         when:
-        entity = new HttpEntity<>(null, headers)
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/select/${account.accountNameOwner}"), HttpMethod.GET,
                 entity, String)

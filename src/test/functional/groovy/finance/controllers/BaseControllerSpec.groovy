@@ -11,6 +11,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class BaseControllerSpec extends Specification {
+
     @LocalServerPort
     protected int port
 

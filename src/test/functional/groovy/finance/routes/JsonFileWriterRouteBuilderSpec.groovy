@@ -14,18 +14,10 @@ import spock.util.concurrent.PollingConditions
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class JsonFileWriterRouteBuilderSpec extends Specification {
+class JsonFileWriterRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     @Autowired
     protected JsonFileWriterRouteBuilder jsonFileWriterRouteBuilder
-
-    @Autowired
-    protected CamelProperties camelProperties
-
-    protected ProducerTemplate producer
-    protected CamelContext camelContext
-    protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
-    protected String baseName = new FileSystemResource("").file.absolute
 
     void setup() {
         camelContext = jsonFileWriterRouteBuilder.context

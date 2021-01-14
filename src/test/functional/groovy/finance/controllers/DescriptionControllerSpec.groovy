@@ -24,15 +24,12 @@ class DescriptionControllerSpec extends BaseControllerSpec {
     @Shared
     protected Description emptyDescription = DescriptionBuilder.builder().withDescription('').build()
 
-    void 'test insert Description'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(description, headers)
+    @Shared
+    protected String endpointName = 'description'
 
+    void 'test insert Description'() {
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/description/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
 
         then:
         response.statusCode == HttpStatus.OK
@@ -40,14 +37,8 @@ class DescriptionControllerSpec extends BaseControllerSpec {
     }
 
     void 'test insert Description - duplicate'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(description, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/description/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -55,14 +46,8 @@ class DescriptionControllerSpec extends BaseControllerSpec {
     }
 
     void 'test insert Description - empty'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(emptyDescription, headers)
-
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/description/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
