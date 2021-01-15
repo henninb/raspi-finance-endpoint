@@ -64,9 +64,8 @@ class JsonFileWriterRouteBuilderSpec extends Specification {
         producer.sendBody('theDataWithoutHeader')
 
         then:
+        thrown(RuntimeException)
         mockTestOutputEndpoint.receivedExchanges.size() == 0
-        1 * mockExceptionProcessor.process(_ as Exchange)
-        mockTestOutputEndpoint.assertIsSatisfied()
         0 * _
     }
 }
