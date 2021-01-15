@@ -19,4 +19,7 @@ class BaseRouteBuilderSpec extends Specification {
     protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
     protected String baseName = new FileSystemResource("").file.absolutePath
 
+    void cleanup() {
+        camelContext.stop()
+    }
 }

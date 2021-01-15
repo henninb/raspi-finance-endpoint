@@ -25,28 +25,28 @@ class JsonFileReaderRouteBuilder @Autowired constructor(
     override fun configure() {
 
         onException(JsonParseException::class.java)
-            .log(LoggingLevel.INFO, "Jason parsing issue :: \${exception.message}")
+            .log(LoggingLevel.ERROR, "Jason parsing issue :: \${exception.message}")
             .process(exceptionProcessor)
             .to(camelProperties.failedJsonParserEndpoint)
             .handled(true)
             .end()
 
         onException(InvalidFormatException::class.java)
-            .log(LoggingLevel.INFO, "Invalid format :: \${exception.message}")
+            .log(LoggingLevel.ERROR, "Invalid format :: \${exception.message}")
             .process(exceptionProcessor)
             .to(camelProperties.failedJsonParserEndpoint)
             .handled(true)
             .end()
 
         onException(UnrecognizedPropertyException::class.java)
-            .log(LoggingLevel.INFO, "Unrecognized Property :: \${exception.message}")
+            .log(LoggingLevel.ERROR, "Unrecognized Property :: \${exception.message}")
             .process(exceptionProcessor)
             .to(camelProperties.failedJsonParserEndpoint)
             .handled(true)
             .end()
 
         onException(InvalidPayloadException::class.java)
-            .log(LoggingLevel.INFO, "invalid payload :: \${exception.message}")
+            .log(LoggingLevel.ERROR, "invalid payload :: \${exception.message}")
             .process(exceptionProcessor)
             .handled(true)
             .end()
@@ -64,7 +64,7 @@ class JsonFileReaderRouteBuilder @Autowired constructor(
             .log(LoggingLevel.INFO, "JSON file processed successfully.")
             .otherwise()
             .to(camelProperties.failedJsonFileEndpoint)
-            .log(LoggingLevel.INFO, "Not a JSON file, NOT processed successfully.")
+            .log(LoggingLevel.ERROR, "Not a JSON file, NOT processed successfully.")
             .endChoice()
             .end()
     }
