@@ -1,16 +1,10 @@
 package finance.routes
 
 import finance.Application
-import finance.configurations.CamelProperties
-import org.apache.camel.CamelContext
-import org.apache.camel.ProducerTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.core.io.FileSystemResource
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.util.ResourceUtils
-import spock.lang.Specification
-import spock.util.concurrent.PollingConditions
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,20 +22,40 @@ class JsonFileWriterRouteBuilderSpec extends BaseRouteBuilderSpec {
         producer.setDefaultEndpointUri(camelProperties.jsonFileWriterRoute)
     }
 
-    void cleanup() {
-        camelContext.stop()
-    }
-
-    void 'test -- valid payload - 1 messages'() {
+    void 'test valid payload - 1 messages'() {
         given:
-        String fname = UUID.randomUUID()
+        String fileName = UUID.randomUUID()
+        String filePath = "${baseName}/func_json_in/.processed-successfully/${fileName}"
+
         when:
-        producer.sendBodyAndHeader('fileContent', 'guid', fname)
+        producer.sendBodyAndHeader('fileContent', 'guid', fileName)
 
         then:
         conditions.eventually {
-            ResourceUtils.getFile("${baseName}/func_json_in/.processed-successfully/${fname}")
+            ResourceUtils.getFile("$filePath").exists()
         }
+        0 * _
+    }
+
+    void 'test valid payload - incorrect header'() {
+        given:
+        String fileName = UUID.randomUUID()
+        when:
+        producer.sendBodyAndHeader('fileContent', 'incorrect-header', fileName)
+
+        then:
+        thrown(RuntimeException)
+        0 * _
+    }
+
+    void 'test valid payload - null fileName'() {
+        given:
+        String fileName = null
+        when:
+        producer.sendBodyAndHeader('fileContent', 'guid', fileName)
+
+        then:
+        thrown(RuntimeException)
         0 * _
     }
 }

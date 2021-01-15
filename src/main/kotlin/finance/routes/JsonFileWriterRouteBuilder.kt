@@ -17,13 +17,6 @@ class JsonFileWriterRouteBuilder @Autowired constructor(
 
     @Throws(Exception::class)
     override fun configure() {
-        println(camelProperties.savedFileEndpoint)
-
-        onException(RuntimeException::class.java)
-            .log(LoggingLevel.INFO, "filename issue :: \${exception.message}")
-            .process(exceptionProcessor)
-            .handled(true)
-            .end()
 
         from(camelProperties.jsonFileWriterRoute)
             .autoStartup(camelProperties.autoStartRoute)
@@ -31,11 +24,11 @@ class JsonFileWriterRouteBuilder @Autowired constructor(
             .setHeader(Exchange.FILE_NAME, header("guid"))
             .choice()
             .`when`(header("CamelFileName").isNotNull)
-            .log(LoggingLevel.INFO, "wrote processed data to file.")
-            .to(camelProperties.savedFileEndpoint)
-            .log(LoggingLevel.INFO, "message saved to file.")
+                .log(LoggingLevel.INFO, "wrote processed data to file.")
+                .to(camelProperties.savedFileEndpoint)
+                .log(LoggingLevel.INFO, "message saved to file.")
             .otherwise()
-            .throwException(RuntimeException("filename cannot be set to null."))
+                .throwException(RuntimeException("filename is not set."))
             .endChoice()
             .end()
     }
