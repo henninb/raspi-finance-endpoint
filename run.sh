@@ -74,7 +74,7 @@ if [ -x "$(command -v ctags)" ]; then
 fi
 
 if [ "$env" = "prod" ]; then
-  if ! ./gradlew clean build functionalTest; then
+  if ! ./gradlew clean build; then
     echo "gradle build failed."
     exit 1
   fi
