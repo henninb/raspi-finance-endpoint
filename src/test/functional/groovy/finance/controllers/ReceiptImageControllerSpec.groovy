@@ -90,16 +90,12 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
 
     void 'test insert receiptImage - find'() {
         given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(null, headers)
         Optional<ReceiptImage> receiptImageOptional = receiptImageRepository.findByTransactionId(receiptImage.transactionId)
         Long receiptImageId = receiptImageOptional.get().receiptImageId
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/receipt/image/select/$receiptImageId"), HttpMethod.GET,
-                entity, String)
-
+        ResponseEntity<String> response = selectEndpoint(endpointName, receiptImageId.toString())
+        
         then:
         response.statusCode == HttpStatus.OK
         0 * _

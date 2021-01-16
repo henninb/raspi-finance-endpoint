@@ -43,6 +43,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 "accountId":0,
 "accountType":"credit",
 "transactionDate":"2020-10-05",
+"dueDate":"2020-10-07",
 "dateUpdated":1593981072000,
 "dateAdded":1593981072000,
 "accountNameOwner":"chase_brian",
@@ -62,6 +63,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
 "accountId":0,
 "accountType":"credit",
 "transactionDate":"2020-10-05",
+"dueDate":"2020-10-07",
 "dateUpdated":1593981072000,
 "dateAdded":1593981072000,
 "accountNameOwner":"chase_brian",
@@ -93,34 +95,27 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/transaction/update/receipt/image/${guid}"), HttpMethod.PUT,
                 entity, String)
+
         then:
         response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
     void 'test insert Transaction'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
+
         then:
         response.statusCode.is(HttpStatus.OK)
         0 * _
     }
 
     void 'test insert Transaction duplicate'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
+
         then:
         response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
@@ -129,13 +124,10 @@ class TransactionControllerSpec extends BaseControllerSpec {
     void 'test insert Transaction empty'() {
         given:
         Transaction transaction = TransactionBuilder.builder().withDescription('').build()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(transaction.toString(), headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
+
         then:
         response.statusCode.is(HttpStatus.BAD_REQUEST)
         0 * _
@@ -146,9 +138,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/select/${transaction.guid}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, transaction.guid)
 
         then:
         response.statusCode.is(HttpStatus.OK)
@@ -156,26 +146,20 @@ class TransactionControllerSpec extends BaseControllerSpec {
     }
 
     void 'test find Transaction guid is not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/select/${UUID.randomUUID()}"), HttpMethod.GET,
-                entity, String)
+        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
         0 * _
     }
 
     void 'test delete Transaction - guid not found'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/delete/${UUID.randomUUID()}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+
         then:
         response.statusCode.is(HttpStatus.NOT_FOUND)
         0 * _
@@ -196,13 +180,10 @@ class TransactionControllerSpec extends BaseControllerSpec {
     }
 
     void 'test delete Transaction'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/transaction/delete/${transaction.guid}"), HttpMethod.DELETE,
-                entity, String)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)
+
         then:
         response.statusCode.is(HttpStatus.OK)
         0 * _
@@ -210,14 +191,10 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
     @Unroll
     void 'test insertTransaction endpoint - failure for irregular payload'() {
-        given:
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(payload, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/transaction/insert/'), HttpMethod.POST,
-                entity, String)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payload)
+
         then:
         response.statusCode.is(httpStatus)
         0 * _
