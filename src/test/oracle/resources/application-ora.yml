@@ -11,8 +11,6 @@ server:
 spring:
   application:
     name: raspi-finance-endpoint
-  profiles:
-    active: ora
 
   # ===============================
   # = Jackson Settings
