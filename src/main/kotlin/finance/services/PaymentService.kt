@@ -39,7 +39,7 @@ class PaymentService(
             throw ValidationException("Cannot insert payment as there is a constraint violation on the data.")
         }
         val optionalAccount = accountService.findByAccountNameOwner(payment.accountNameOwner)
-        if(optionalAccount.isEmpty) {
+        if(!optionalAccount.isPresent) {
             logger.error("account not found ${payment.accountNameOwner}")
             throw RuntimeException("account not found ${payment.accountNameOwner}")
         } else {
