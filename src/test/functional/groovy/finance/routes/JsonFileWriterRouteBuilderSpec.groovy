@@ -28,10 +28,6 @@ class JsonFileWriterRouteBuilderSpec extends BaseRouteBuilderSpec {
         producer.setDefaultEndpointUri(camelProperties.jsonFileWriterRoute)
     }
 
-    void cleanup() {
-        camelContext.stop()
-    }
-
     void 'test -- valid payload - 1 messages'() {
         given:
         String fname = UUID.randomUUID()

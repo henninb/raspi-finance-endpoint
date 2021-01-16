@@ -16,6 +16,7 @@ LOG_PATH_IS_UNDEFINED/
 logs/
 json_in/
 func_json_in/
+int_json_in/
 ssl/
 
 ### File types ###
