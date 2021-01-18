@@ -14,11 +14,9 @@ services:
       - "8080:8080"
     expose:
       - "8080"
-#    mem_limit: 1024m
     hostname: hornsup-endpoint
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
-      # - ./ssl:/opt/raspi-finance-endpoint/ssl
       - ./excel_in:/opt/raspi-finance-endpoint/excel_in
       - ./json_in:/opt/raspi-finance-endpoint/json_in
     extra_hosts:
@@ -27,7 +25,6 @@ services:
       - env.secrets
     depends_on:
       - influxdb-server
-      - postgresql-server
       - grafana-server
   influxdb-server:
     image: influxdb:1.8.3
@@ -50,19 +47,6 @@ services:
       - "3001:3000"
     volumes:
       - ./grafana-data:/var/lib/grafana
-  postgresql-server:
-    image: postgres:13.1
-    user: "${CURRENT_UID}:${CURRENT_GID}"
-    container_name: postgresql-server
-    ports:
-      - "5433:5432"
-    expose:
-      - "5433"
-    env_file:
-      - env.postgresql
-    hostname: postgresql-server
-    volumes:
-      - ./postgresql-data:/var/lib/postgresql/data
 networks:
   default:
     name: finance-net

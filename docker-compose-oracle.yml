@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  oracle-database-server:
+    image: store/oracle/database-enterprise:12.2.0.1
+    container_name: oracle-database-server
+    ports:
+      - "1521:1521"
+    expose:
+      - "1521"
+    environment:
+      - DUMMY=true
+  raspi-finance-endpoint:
+    depends_on:
+      oracle-database-server:
+        condition: service_healthy
+    restart: on-failure:10

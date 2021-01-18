@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
 env=$1
+test_flag=$2
+datastore=$3
+in_hosts="$(grep -n hornsup /etc/hosts | cut -f1 -d:)"
 APP=raspi-finance-endpoint
 
-if [ $# -ne 1 ]; then
-  echo "Usage: $0 <prod|stage|prodora>"
+if [ $# -ne 1 ] && [ $# -ne 2 ] && [ $# -ne 3 ]; then
+  echo "Usage: $0 <prod|stage|prodora> [test_flag] [datastore]"
   exit 1
 fi
 
@@ -13,6 +16,14 @@ if [ "$env" = "prod" ] || [ "$env" = "stage" ] || [ "$env" = "prodora" ]; then
 else
   echo "Usage: $0 <prod|stage|prodora>"
   exit 2
+fi
+
+if [ -z "${test_flag}" ]; then
+  test_flag=false
+fi
+
+if [ -z "${datastore}" ]; then
+  datastore=postgresql
 fi
 
 if [ ! -x "$(command -v ./os-env)" ]; then
@@ -68,6 +79,11 @@ if [ ! -f "ssl/hornsup-raspi-finance-keystore.jks" ]; then
   exit 1
 fi
 
+if [ -z "${in_hosts}" ]; then
+  echo "The 'hornsup' hostname needs to be added to /etc/hosts."
+  exit 2
+fi
+
 # git will not pick up changes to oracle config
 git update-index --assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
 git update-index --assume-unchanged env.secrets
@@ -80,7 +96,7 @@ if [ -x "$(command -v ctags)" ]; then
   git ls-files | ctags --links=no --languages=groovy,kotlin -L-
 fi
 
-if [ "$env" = "prod" ]; then
+if [ "${test_flag}" = "true" ]; then
   if ! ./gradlew clean build; then
     echo "gradle build failed."
     exit 1
@@ -116,7 +132,7 @@ fi
 # echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
 if [ -x "$(command -v docker-compose)" ]; then
 
-  if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" config > docker-compose.yml; then
+  if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" config > docker-compose.yml; then
     echo "docker-compose config failed."
     exit 1
   fi
