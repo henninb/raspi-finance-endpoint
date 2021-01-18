@@ -126,6 +126,13 @@ data class Transaction(
         return simpleDateFormat.format(this.transactionDate)
     }
 
+//    @JsonGetter("dueDate")
+//    fun jsonGetterDueDate(): String {
+//        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+//        simpleDateFormat.isLenient = false
+//        return simpleDateFormat.format(this.dueDate)
+//    }
+
     @JsonSetter("transactionDate")
     fun jsonSetterTransactionDate(stringDate: String) {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
@@ -134,6 +141,13 @@ data class Transaction(
 //        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
         this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
     }
+
+//    @JsonSetter("dueDate")
+//    fun jsonSetterDueDate(stringDate: String) {
+//        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+//        simpleDateFormat.isLenient = false
+//        this.dueDate = Date(simpleDateFormat.parse(stringDate).time)
+//    }
 
     @Column(name = "due_date", columnDefinition = "DATE", nullable = true)
     @JsonProperty

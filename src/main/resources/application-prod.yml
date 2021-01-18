@@ -78,14 +78,14 @@ custom:
     camel-route:
       auto-start-route: true
       json-file-reader-route-id: jsonFileReaderRoute
-      json-file-reader-route: "file:json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
+      json-file-reader-route: "file:${JSON_FILES_INPUT_PATH}?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
       transaction-to-database-route-id: transactionToDatabaseRoute
       transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route-id: jsonFileWriterRoute
       json-file-writer-route: direct:jsonFileWriterRoute
-      saved-file-endpoint: "file:json_in/.processed-successfully"
-      failed-Json-file-endpoint: "file:json_in/.not-processed-non-json-file"
-      failed-json-parser-endpoint: "file:json_in/.not-processed-json-parsing-errors"
+      saved-file-endpoint: "file:${JSON_FILES_INPUT_PATH}/.processed-successfully"
+      failed-Json-file-endpoint: "file:${JSON_FILES_INPUT_PATH}/.not-processed-non-json-file"
+      failed-json-parser-endpoint: "file:${JSON_FILES_INPUT_PATH}/.not-processed-json-parsing-errors"
 
 # ===============================
 # = Logging
