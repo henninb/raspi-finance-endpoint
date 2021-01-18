@@ -61,6 +61,12 @@ mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
 
+if [ ! -f "ssl/hornsup-raspi-finance-keystore.jks" ]; then
+# cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-endpoint/ssl"
+  echo "need to install the certs, cert-install.sh"
+  exit 1
+fi
+
 # git will not pick up changes to oracle config
 git update-index --assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
 git update-index --assume-unchanged env.secrets
