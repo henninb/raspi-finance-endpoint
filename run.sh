@@ -60,6 +60,7 @@ mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
+rm -rf docker-compose.yml
 
 if [ ! -f "ssl/hornsup-raspi-finance-keystore.jks" ]; then
 # cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-endpoint/ssl"
@@ -112,25 +113,24 @@ if [ -n "${ORACLE_CONTAINER}" ]; then
   docker rm -f "${ORACLE_CONTAINER}" 2> /dev/null
 fi
 
-echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
+# echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
 if [ -x "$(command -v docker-compose)" ]; then
 
-  if ! docker-compose -f docker-compose.yml -f "docker-compose-${env}.yml" config > docker-compose-run.yml; then
+  if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" config > docker-compose.yml; then
     echo "docker-compose config failed."
     exit 1
   fi
 
-  if ! docker-compose -f docker-compose-run.yml build; then
+  if ! docker-compose build; then
     echo "docker-compose build failed."
     exit 1
   fi
 
-  echo docker-compose -f docker-compose-run.yml run --rm
-  if ! docker-compose -f docker-compose-run.yml up; then
+  if ! docker-compose up; then
     echo "docker-compose up failed."
     exit 1
   fi
-  rm docker-compose-run.yml
+  # rm docker-compose-run.yml
 else
   set -a
   # shellcheck disable=SC1091
