@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
     --TODO: change the names to image ^^^
 );
 
+-- TODO: rename constraints above, ck_jpg_size and ck_account_type
+
 -- alter table t_receipt_image rename column jpg_image to image;
 -- alter table t_receipt_image alter column thumbnail set not null;
 -- alter table t_receipt_image alter column image_format_type set not null;

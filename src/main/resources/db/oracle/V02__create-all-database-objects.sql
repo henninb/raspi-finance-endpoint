@@ -92,8 +92,8 @@ CREATE TABLE t_receipt_image
     active_status     NUMBER(1)   DEFAULT 1           NOT NULL,
     date_updated      TIMESTAMP                       NOT NULL,
     date_added        TIMESTAMP                       NOT NULL,
-    CONSTRAINT ck_jpg_size CHECK (length(image) <= 1048576), -- 1024 kb file size limit
-    CONSTRAINT ck_account_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
+    CONSTRAINT ck_image_size CHECK (length(image) <= 1048576), -- 1024 kb file size limit
+    CONSTRAINT ck_image_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
     --CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES t_transaction (transaction_id) ON DELETE CASCADE
 );
 
