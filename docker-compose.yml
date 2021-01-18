@@ -7,7 +7,7 @@ services:
       args:
        - APP=raspi-finance-endpoint
        - TIMEZONE=America/Chicago
-       - USERNAME=henninb
+       - USERNAME=${USER}
       dockerfile: Dockerfile
     container_name: raspi-finance-endpoint
     ports:
