@@ -7,18 +7,18 @@ SET client_min_messages TO WARNING;
 CREATE TABLE IF NOT EXISTS t_account
 (
     account_id         BIGSERIAL PRIMARY KEY,
-    account_name_owner TEXT UNIQUE NOT NULL,
-    account_name       TEXT, -- NULL for now
-    account_owner      TEXT, -- NULL for now
-    account_type       TEXT        NOT NULL DEFAULT 'unknown',
-    active_status      BOOLEAN     NOT NULL DEFAULT TRUE,
-    payment_required   BOOLEAN     NULL     DEFAULT TRUE,
-    moniker            TEXT        NOT NULL DEFAULT '0000',
-    totals             NUMERIC(8, 2)        DEFAULT 0.00,
-    totals_balanced    NUMERIC(8, 2)        DEFAULT 0.00,
-    date_closed        TIMESTAMP            DEFAULT TO_TIMESTAMP(0),
-    date_updated       TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added         TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    account_name_owner TEXT UNIQUE                           NOT NULL,
+    account_name       TEXT                                  NULL,     -- NULL for now
+    account_owner      TEXT                                  NULL,     -- NULL for now
+    account_type       TEXT          DEFAULT 'unknown'       NOT NULL,
+    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
+    payment_required   BOOLEAN                               NULL DEFAULT TRUE,
+    moniker            TEXT          DEFAULT '0000'          NOT NULL,
+    totals             NUMERIC(8, 2) DEFAULT 0.00            NULL,
+    totals_balanced    NUMERIC(8, 2) DEFAULT 0.00            NULL,
+    date_closed        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL, -- TODO: should be null by default
+    date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT unique_account_name_owner_account_id UNIQUE (account_id, account_name_owner, account_type),
     CONSTRAINT unique_account_name_owner_account_type UNIQUE (account_name_owner, account_type),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
@@ -33,10 +33,10 @@ CREATE TABLE IF NOT EXISTS t_account
 CREATE TABLE IF NOT EXISTS t_category
 (
     category_id   BIGSERIAL PRIMARY KEY,
-    category      TEXT UNIQUE NOT NULL,
-    active_status BOOLEAN     NOT NULL DEFAULT TRUE,
-    date_updated  TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added    TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    category      TEXT UNIQUE                       NOT NULL,
+    active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
@@ -45,10 +45,10 @@ CREATE TABLE IF NOT EXISTS t_category
 ---------------------------
 CREATE TABLE IF NOT EXISTS t_transaction_categories
 (
-    category_id    BIGINT    NOT NULL,
-    transaction_id BIGINT    NOT NULL,
-    date_updated   TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    category_id    BIGINT                            NOT NULL,
+    transaction_id BIGINT                            NOT NULL,
+    date_updated   TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added     TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     PRIMARY KEY (category_id, transaction_id)
 );
 
@@ -58,13 +58,13 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 CREATE TABLE IF NOT EXISTS t_receipt_image
 (
     receipt_image_id  BIGSERIAL PRIMARY KEY,
-    transaction_id    BIGINT    NOT NULL,
-    image             BYTEA     NOT NULL,                    -- rename to image
-    thumbnail         BYTEA     NOT NULL,
-    image_format_type TEXT      NOT NULL DEFAULT 'undefined',
-    active_status     BOOLEAN   NOT NULL DEFAULT TRUE,
-    date_updated      TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added        TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0),
+    transaction_id    BIGINT                            NOT NULL,
+    image             BYTEA                             NOT NULL,
+    thumbnail         BYTEA                             NOT NULL,
+    image_format_type TEXT      DEFAULT 'undefined'     NOT NULL,
+    active_status     BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated      TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added        TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT ck_image_size CHECK (length(image) <= 1048576), -- 1024 kb file size limit
     CONSTRAINT ck_image_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
 );
@@ -85,24 +85,24 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
 CREATE TABLE IF NOT EXISTS t_transaction
 (
     transaction_id     BIGSERIAL PRIMARY KEY,
-    account_id         BIGINT        NOT NULL,
-    account_type       TEXT          NOT NULL DEFAULT 'undefined',
-    account_name_owner TEXT          NOT NULL,
-    guid               TEXT          NOT NULL UNIQUE,
-    transaction_date   DATE          NOT NULL,
-    due_date           DATE          NULL,
-    description        TEXT          NOT NULL,
-    category           TEXT          NOT NULL DEFAULT '',
-    amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
-    transaction_state  TEXT          NOT NULL DEFAULT 'undefined',
+    account_id         BIGINT                                NOT NULL,
+    account_type       TEXT          DEFAULT 'undefined'     NOT NULL,
+    account_name_owner TEXT                                  NOT NULL,
+    guid               TEXT UNIQUE                           NOT NULL,
+    transaction_date   DATE                                  NOT NULL,
+    due_date           DATE                                  NULL,
+    description        TEXT                                  NOT NULL,
+    category           TEXT          DEFAULT ''              NOT NULL,
+    amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
+    transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
     -- TODO: need to decommission reoccurring flag as it is replaced by reoccurring_type
-    reoccurring        BOOLEAN       NOT NULL DEFAULT FALSE,
-    reoccurring_type   TEXT          NULL     DEFAULT 'undefined',
-    active_status      BOOLEAN       NOT NULL DEFAULT TRUE,
-    notes              TEXT          NOT NULL DEFAULT '',
-    receipt_image_id   BIGINT        NULL,
-    date_updated       TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added         TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
+    reoccurring        BOOLEAN       DEFAULT FALSE           NOT NULL,
+    reoccurring_type   TEXT          DEFAULT 'undefined'     NULL,
+    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
+    notes              TEXT          DEFAULT ''              NOT NULL,
+    receipt_image_id   BIGINT                                NULL,
+    date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT transaction_constraint UNIQUE (account_name_owner, transaction_date, description, category, amount,
                                               notes),
     CONSTRAINT t_transaction_description_lowercase_ck CHECK (description = lower(description)),
@@ -136,14 +136,14 @@ ALTER TABLE t_receipt_image
 CREATE TABLE IF NOT EXISTS t_payment
 (
     payment_id         BIGSERIAL PRIMARY KEY,
-    account_name_owner TEXT          NOT NULL,
-    transaction_date   DATE          NOT NULL,
-    amount             NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
-    guid_source        TEXT          NOT NULL,
-    guid_destination   TEXT          NOT NULL,
-    active_status      BOOLEAN       NOT NULL DEFAULT TRUE,
-    date_updated       TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added         TIMESTAMP     NOT NULL DEFAULT TO_TIMESTAMP(0),
+    account_name_owner TEXT                                  NOT NULL,
+    transaction_date   DATE                                  NOT NULL,
+    amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
+    guid_source        TEXT                                  NOT NULL,
+    guid_destination   TEXT                                  NOT NULL,
+    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
+    date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
     CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES t_transaction (guid) ON DELETE CASCADE,
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES t_transaction (guid) ON DELETE CASCADE
@@ -158,11 +158,11 @@ CREATE TABLE IF NOT EXISTS t_payment
 CREATE TABLE IF NOT EXISTS t_parm
 (
     parm_id       BIGSERIAL PRIMARY KEY,
-    parm_name     TEXT UNIQUE NOT NULL,
-    parm_value    TEXT        NOT NULL,
-    active_status BOOLEAN     NOT NULL DEFAULT TRUE,
-    date_updated  TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added    TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0)
+    parm_name     TEXT UNIQUE                       NOT NULL,
+    parm_value    TEXT                              NOT NULL,
+    active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP                         NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
 -- ALTER TABLE t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
@@ -174,10 +174,10 @@ CREATE TABLE IF NOT EXISTS t_parm
 CREATE TABLE IF NOT EXISTS t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
-    description    TEXT UNIQUE NOT NULL,
-    active_status  BOOLEAN     NOT NULL DEFAULT TRUE,
-    date_updated   TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
-    date_added     TIMESTAMP   NOT NULL DEFAULT TO_TIMESTAMP(0),
+    description    TEXT UNIQUE                       NOT NULL,
+    active_status  BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated   TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added     TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
 
