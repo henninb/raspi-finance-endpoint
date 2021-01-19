@@ -65,13 +65,13 @@ spring:
   flyway:
     enabled: true
     #username: henninb
-    username: system
+    user: system
     password: Oradoc_db1
     #password: monday1
     url: jdbc:oracle:thin:@hornsup:1521/ORCLCDB.localdomain
     baseline-on-migrate: true
     locations: classpath:db/oracle
-#    validate-on-migrate: true
+    validate-on-migrate: true
 
 # ===============================
 # = Custom
@@ -120,7 +120,7 @@ management:
       influx:
         enabled: false
         auto-create-db: true
-        db: metrics
+        db: metrics-prodora
         compressed: false
         uri: http://hornsup:8086
         user-name: admin
