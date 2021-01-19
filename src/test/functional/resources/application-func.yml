@@ -64,6 +64,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/finance_test_db
     baseline-on-migrate: true
     locations: classpath:db/migration
+    validate-on-migrate: true
 
 # ===============================
 # = Custom
@@ -112,7 +113,7 @@ management:
       influx:
         enabled: false
         auto-create-db: true
-        db: metrics
+        db: metrics-func
         compressed: false
         uri: http://hornsup:8086
         user-name: admin
