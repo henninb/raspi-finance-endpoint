@@ -8,8 +8,17 @@ ARG APP="set the app at build time"
 ENV APP ${APP}
 ARG USERNAME="set the username as build time"
 ENV USERNAME ${USERNAME}
+ARG CURRENT_GID="set the gid"
+ENV CURRENT_GID ${CURRENT_GID}
+ARG CURRENT_UID="set the uid"
+ENV CURRENT_UID ${CURRENT_UID}
 
-RUN useradd -M ${USERNAME}
+# RUN groupadd -g ${CURRENT_GID} brian
+# RUN useradd -M ${USERNAME}
+RUN echo ${CURRENT_UID}
+# RUN useradd ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID} -m -s /bin/bash
+RUN groupadd -g ${CURRENT_GID} ${USERNAME}
+RUN useradd ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID}
 
 RUN cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 RUN mkdir -p -m 0755 /opt/${APP}/bin
@@ -27,7 +36,5 @@ WORKDIR /opt/${APP}/bin
 USER ${USERNAME}
 
 # default on OSX was 522m, so increased to 2048
-# RUN echo while ! nc -z hornsup 1521; do sleep 1; done >  run
-# RUN echo java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar > run
-# RUN chmod 755 run
+# CMD /bin/sh -c "while true; do echo hello world; sleep 1; done"
 CMD java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar
