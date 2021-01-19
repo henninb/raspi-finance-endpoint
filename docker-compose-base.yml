@@ -8,6 +8,8 @@ services:
        - APP=raspi-finance-endpoint
        - TIMEZONE=America/Chicago
        - USERNAME=${USER}
+       - CURRENT_UID=${CURRENT_UID}
+       - CURRENT_GID=${CURRENT_GID}
       dockerfile: Dockerfile
     container_name: raspi-finance-endpoint
     ports:
