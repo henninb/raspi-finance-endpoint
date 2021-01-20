@@ -101,3 +101,10 @@ https://wiki.openjdk.java.net/display/JDKUpdates/JDK11u
 dig +short myip.opendns.com @resolver1.opendns.com
 
 ## docker pull arm32v7/openjdk
+
+## git preserve
+```
+git update-index --assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
+git update-index --assume-unchanged env.secrets
+git update-index --no-assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
+```

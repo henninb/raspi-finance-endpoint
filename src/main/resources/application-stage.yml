@@ -10,7 +10,7 @@ server:
     enabled-protocols: TLSv1.2
 spring:
   application:
-    name: raspi-finance-endpoint
+    name: ${APPNAME}
 #  profiles:
 #    active: ${SPRING_PROFILES_ACTIVE}
 
@@ -35,7 +35,7 @@ spring:
     tomcat:
       test-While-Idle: true
       validation-Query: SELECT 1
-    platform: ${DATASOURCE_PLATFORM}
+    # platform: ${DATASOURCE_PLATFORM}
     continue-On-Error: false
     # always - utilize data.sql and schema.sql
     initialization-mode: always
@@ -112,7 +112,7 @@ management:
   metrics:
     export:
       influx:
-        enabled: true
+        enabled: ${INFLUXDB_ENABLED}
         auto-create-db: true
         db: metrics-stage
         compressed: false

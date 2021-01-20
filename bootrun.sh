@@ -1,20 +1,8 @@
 #!/usr/bin/env bash
 
-#if [ "$OSTYPE" = "linux-gnu" ]; then
-##  export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
-#  JAVA_HOME=$(dirname "$(dirname "$(readlink -f "$(readlink -f "$(which javac)")" || readlink -f "$(which javac)")")")
-#else
-#  # macos
-#  JAVA_HOME=$(/usr/libexec/java_home)
-##  JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_191.jdk/Contents/Home/
-#  #JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-11.0.2.jdk/Contents/Home
-#fi
-
-#export JAVA_HOME
-#export PATH=${JAVA_HOME}/bin:${PATH}
-
-touch env.secrets
-touch env.bootrun
+rm -rf env.bootrun
+sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
+sed -i "s/INFLUXDB_ENABLED=true/INFLUXDB_ENABLED=false/g" env.bootrun
 
 set -a
 # shellcheck disable=SC1091

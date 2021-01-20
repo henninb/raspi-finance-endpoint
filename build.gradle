@@ -1,6 +1,3 @@
-//def oracleUsername = hasProperty('mavenOracleUsername') ? mavenOracleUsername : System.getenv('mavenOracleUsername')
-//def oraclePassword = hasProperty('mavenOraclePassword') ? mavenOraclePassword : System.getenv('mavenOraclePassword')
-
 buildscript {
 }
 
@@ -108,13 +105,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
 
     // Oracle database
-    //runtimeOnly files('libs/jackson-core-asl-1.9.2.jar')
-//    def oracleJar = $/./lib/ojdbc8.jar/$
-//    if( oracleJar.exists() ) {
-//
-//    }
-
-    runtimeOnly fileTree(dir: 'libs', include: '*.jar')
+    runtimeOnly fileTree(dir: 'libs', include: 'ojdbc8.jar')
     //runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
     implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
 
