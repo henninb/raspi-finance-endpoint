@@ -4,7 +4,9 @@ env=$1
 test_flag=$2
 datastore=$3
 in_hosts="$(grep -n hornsup /etc/hosts | cut -f1 -d:)"
-APP=raspi-finance-endpoint
+APPNAME=raspi-finance-endpoint
+CURRENT_UID="$(id -u)"
+CURRENT_GID="$(id -g)"
 
 if [ $# -ne 1 ] && [ $# -ne 2 ] && [ $# -ne 3 ]; then
   echo "Usage: $0 <prod|stage|prodora> [test_flag] [datastore]"
@@ -24,6 +26,10 @@ fi
 
 if [ -z "${datastore}" ]; then
   datastore=postgresql
+fi
+
+if [ "$env" == "prodora" ]; then
+  datastore=oracle
 fi
 
 if [ ! -x "$(command -v ./os-env)" ]; then
@@ -56,9 +62,10 @@ else
   exit 1
 fi
 
+export APPNAME
 export HOST_IP
-export CURRENT_UID="$(id -u)"
-export CURRENT_GID="$(id -g)"
+export CURRENT_UID
+export CURRENT_GID
 
 mkdir -p 'src/main/kotlin'
 mkdir -p 'src/test/unit/groovy'
@@ -84,11 +91,8 @@ if [ -z "${in_hosts}" ]; then
   exit 2
 fi
 
-# git will not pick up changes to oracle config
-git update-index --assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
+# preserve local secret changes
 git update-index --assume-unchanged env.secrets
-# undo
-# git update-index --no-assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
@@ -108,8 +112,8 @@ else
   fi
 fi
 
-docker rmi -f $(docker images -q -f dangling=true) 2> /dev/null
-docker volume prune -f
+docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
+docker volume prune -f 2> /dev/null
 
 INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
 if [ -n "${INFLUX_CONTAINER}" ]; then
@@ -146,7 +150,6 @@ if [ -x "$(command -v docker-compose)" ]; then
     echo "docker-compose up failed."
     exit 1
   fi
-  # rm docker-compose-run.yml
 else
   set -a
   # shellcheck disable=SC1091
