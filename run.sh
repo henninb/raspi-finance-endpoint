@@ -153,12 +153,12 @@ if [ -x "$(command -v docker-compose)" ]; then
 else
   set -a
   # shellcheck disable=SC1091
-  source env.prod
+  source env.bootrun
   # shellcheck disable=SC1091
   source env.secrets
   set +a
 
-  ./gradlew clean build bootRun
+  ./gradlew clean build bootRun -x test
 fi
 
 exit 0
