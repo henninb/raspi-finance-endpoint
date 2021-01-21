@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://192.168.100.124:8086
+    user: henninb
+    database: metrics
+    basicAuth: true
+    isDefault: true
+    editable: true
+    basicAuthUser: henninb
+    basicAuthPassword: monday1
+    withCredentials: true
+    jsonData:
+      httpMode: POST
+    secureJsonData:
+      password: monday1
