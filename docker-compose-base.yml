@@ -50,7 +50,7 @@ services:
     volumes:
       - ./grafana-data:/var/lib/grafana
       - ./grafana-datasources:/etc/grafana/provisioning/datasources
-       # - /path/to/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards
     env_file:
       - env.grafana
 networks:
