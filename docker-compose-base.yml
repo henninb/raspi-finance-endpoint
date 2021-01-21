@@ -26,21 +26,21 @@ services:
     env_file:
       - env.secrets
     depends_on:
-      - influxdb-server
       - grafana-server
-  influxdb-server:
-    image: influxdb:1.8.3
-    user: "${CURRENT_UID}:${CURRENT_GID}"
-    container_name: influxdb-server
-    volumes:
-      - ./influxdb-data:/var/lib/influxdb
-    ports:
-      - "8086:8086"
-    expose:
-      - "8086"
-    env_file:
-      - env.influx
-      - env.secrets
+      # - influxdb-server
+  # influxdb-server:
+  #   image: influxdb:1.8.3
+  #   user: "${CURRENT_UID}:${CURRENT_GID}"
+  #   container_name: influxdb-server
+  #   volumes:
+  #     - ./influxdb-data:/var/lib/influxdb
+  #   ports:
+  #     - "8086:8086"
+  #   expose:
+  #     - "8086"
+  #   env_file:
+  #     - env.influx
+  #     - env.secrets
   grafana-server:
     image: grafana/grafana:7.3.4
     user: "${CURRENT_UID}:${CURRENT_GID}"
