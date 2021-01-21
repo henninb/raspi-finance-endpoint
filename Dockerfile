@@ -18,7 +18,7 @@ ENV CURRENT_UID ${CURRENT_UID}
 RUN echo ${CURRENT_UID}
 # RUN useradd ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID} -m -s /bin/bash
 RUN groupadd -g ${CURRENT_GID} ${USERNAME}
-RUN useradd ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID}
+RUN useradd -l ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID}
 
 RUN cp /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 RUN mkdir -p -m 0755 /opt/${APP}/bin
