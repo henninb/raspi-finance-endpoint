@@ -49,6 +49,10 @@ services:
       - "3001:3000"
     volumes:
       - ./grafana-data:/var/lib/grafana
+      - ./grafana-datasources:/etc/grafana/provisioning/datasources
+       # - /path/to/grafana.ini:/opt/bitnami/grafana/conf/grafana.ini
+    env_file:
+      - env.grafana
 networks:
   default:
     name: finance-net

@@ -108,3 +108,7 @@ git update-index --assume-unchanged src/main/kotlin/finance/configurations/Oracl
 git update-index --assume-unchanged env.secrets
 git update-index --no-assume-unchanged src/main/kotlin/finance/configurations/OracleConfig.kt
 ```
+
+
+## grafana setup
+https://riamf.github.io/posts/dockerized_grafana_setup/
