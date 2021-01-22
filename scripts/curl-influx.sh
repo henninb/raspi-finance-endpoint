@@ -9,6 +9,7 @@ curl -s -G "http://${server}:8086/query?pretty=true" --data-urlencode "db=metric
 curl -s -G "http://${server}:8086/query?pretty=true" --data-urlencode "db=metrics" -u "henninb:monday1" --data-urlencode "q=SHOW SERIES ON metrics" > metrics-series.json
 
 curl -s -G "http://${server}:8086/query?pretty=true" --data-urlencode "db=metrics" -u "henninb:monday1" --data-urlencode "q=SELECT value from metrics" > metrics-values.json
+curl -s -G "http://${server}:8086/query?pretty=true" --data-urlencode "db=metrics" -u "henninb:monday1" --data-urlencode "q=SELECT value from metrics-func" > metrics-func_values.json
 
 curl -s -G "http://${server}:8086/query?pretty=true" --data-urlencode "db=metrics" -u "henninb:monday1" --data-urlencode "q=SHOW measurements on metrics" > metrics-measurements.json
 
