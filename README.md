@@ -112,3 +112,5 @@ git update-index --no-assume-unchanged src/main/kotlin/finance/configurations/Or
 
 ## grafana setup
 https://riamf.github.io/posts/dockerized_grafana_setup/
+[Deprecated] the dashboard provisioning config is outdated. please upgrade" logger=provisioning.dashboard filename=/etc/grafana/provisioning/dashboards/dashboard.yml
+grafana-server            | t=2021-01-22T13:15:44+0000 lvl=warn msg="[Deprecated] The folder property is deprecated. Please use path instead." logger=provisioning.dashboard type=file name=default

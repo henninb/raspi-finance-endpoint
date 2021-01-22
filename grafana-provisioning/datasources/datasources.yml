@@ -11,9 +11,9 @@ datasources:
     isDefault: true
     editable: true
     basicAuthUser: henninb
-    basicAuthPassword: monday1
     withCredentials: true
     jsonData:
       httpMode: POST
     secureJsonData:
       password: monday1
+      basicAuthPassword: monday1

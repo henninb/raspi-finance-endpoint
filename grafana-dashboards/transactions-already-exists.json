@@ -15,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
@@ -80,10 +79,11 @@
               "type": "fill"
             }
           ],
+          "measurement": "TRANSACTION_ALREADY_EXISTS_COUNTER",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
-          "resultFormat": "time_series",
+          "resultFormat": "table",
           "select": [
             [
               {
@@ -94,7 +94,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "count"
               }
             ]
           ],
@@ -105,7 +105,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Panel Title",
+      "title": "Transaction Already Exists",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -150,12 +150,12 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "payments",
+  "title": "Transactions",
   "uid": "IjZnFLfMk",
   "version": 1
 }
