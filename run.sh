@@ -151,6 +151,8 @@ if [ -x "$(command -v docker-compose)" ]; then
     exit 1
   fi
 else
+  rm -rf env.bootrun
+  sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
   set -a
   # shellcheck disable=SC1091
   source env.bootrun
