@@ -2,10 +2,11 @@ package finance.services
 
 import finance.utils.Constants.ACCOUNT_NAME_OWNER_TAG
 import finance.utils.Constants.EXCEPTION_CAUGHT_COUNTER
-import finance.utils.Constants.EXCEPTION_THROWN_COUNTER
 import finance.utils.Constants.EXCEPTION_NAME_TAG
-import finance.utils.Constants.TRANSACTION_ALREADY_EXISTS_COUNTER
+import finance.utils.Constants.EXCEPTION_THROWN_COUNTER
+import finance.utils.Constants.SERVER_NAME_TAG
 import finance.utils.Constants.TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER
+import finance.utils.Constants.TRANSACTION_ALREADY_EXISTS_COUNTER
 import finance.utils.Constants.TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER
 import finance.utils.Constants.TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER
 import finance.utils.Constants.TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER
@@ -14,100 +15,140 @@ import finance.utils.Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER
 import finance.utils.Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 open class MeterService(private var meterRegistry: MeterRegistry) {
-    init {
-        Counter.builder(TRANSACTION_ALREADY_EXISTS_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
 
-        Counter.builder(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
+    private val hostName = "server" //setHostName()
 
-        Counter.builder(TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(EXCEPTION_THROWN_COUNTER)
-            .tag(EXCEPTION_NAME_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(EXCEPTION_CAUGHT_COUNTER)
-            .tag(EXCEPTION_NAME_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
-
-        Counter.builder(TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER)
-            .tag(ACCOUNT_NAME_OWNER_TAG, "")
-            .register(meterRegistry)
+    fun setHostName(): String? {
+        val env = System.getenv()
+        return if (env.containsKey("COMPUTERNAME")) env["COMPUTERNAME"] else if (env.containsKey("HOSTNAME")) env["HOSTNAME"] else "Unknown"
     }
 
     @Transactional
-    open fun incrementExceptionThrownCounter(exceptionName: String) {
-        meterRegistry.counter(EXCEPTION_THROWN_COUNTER, EXCEPTION_NAME_TAG, exceptionName).increment()
-    }
+    open fun incrementExceptionThrownCounter(exceptionName: String): Unit = Counter
+        .builder(EXCEPTION_THROWN_COUNTER)
+        .description("Increments the counter for every exception thrown.")
+        .tags(
+            listOfNotNull(
+                Tag.of(EXCEPTION_NAME_TAG, exceptionName),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementExceptionCaughtCounter(exceptionName: String) {
-        meterRegistry.counter(EXCEPTION_THROWN_COUNTER, EXCEPTION_NAME_TAG, exceptionName).increment()
-    }
+    open fun incrementExceptionCaughtCounter(exceptionName: String): Unit = Counter
+        .builder(EXCEPTION_CAUGHT_COUNTER)
+        .description("Increments the counter for every exception caught.")
+        .tags(
+            listOfNotNull(
+                Tag.of(EXCEPTION_NAME_TAG, exceptionName),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionUpdateClearedCounter(accountName: String) {
-        meterRegistry.counter(TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountName).increment()
-    }
+    open fun incrementTransactionUpdateClearedCounter(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER)
+        .description("Increments the counter for each transaction state toggled to cleared.")
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionSuccessfullyInsertedCounter(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementTransactionSuccessfullyInsertedCounter(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionAlreadyExistsCounter(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_ALREADY_EXISTS_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementTransactionAlreadyExistsCounter(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_ALREADY_EXISTS_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionRestSelectNoneFoundCounter(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementTransactionRestSelectNoneFoundCounter(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionRestTransactionStateUpdateFailureCounter(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementTransactionRestTransactionStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionRestReoccurringStateUpdateFailureCounter(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementTransactionRestReoccurringStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementAccountListIsEmpty(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementAccountListIsEmpty(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 
     @Transactional
-    open fun incrementTransactionReceiptImageInserted(accountNameOwner: String) {
-        meterRegistry.counter(TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER, ACCOUNT_NAME_OWNER_TAG, accountNameOwner).increment()
-    }
+    open fun incrementTransactionReceiptImageInserted(accountNameOwner: String): Unit = Counter
+        .builder(TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER)
+        .tags(
+            listOfNotNull(
+                Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                Tag.of(SERVER_NAME_TAG, hostName),
+            )
+        )
+        .register(meterRegistry)
+        .increment()
 }

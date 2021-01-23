@@ -5,6 +5,7 @@ object Constants {
     const val EXCEPTION_THROWN_COUNTER = "exception.thrown.counter"
     const val EXCEPTION_CAUGHT_COUNTER = "exception.caught.counter"
     const val EXCEPTION_NAME_TAG = "exception.name.tag"
+    const val SERVER_NAME_TAG = "server.name.tag"
     const val ACCOUNT_NAME_OWNER_TAG = "account.name.owner.tag"
     const val TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER = "transaction.account.list.none.found.counter"
     const val TRANSACTION_ALREADY_EXISTS_COUNTER = "transaction.already.exists.counter"
