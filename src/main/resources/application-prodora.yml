@@ -113,7 +113,7 @@ management:
       influx:
         enabled: ${INFLUXDB_ENABLED}
         auto-create-db: true
-        db: metrics
+        db: metrics_ora
         compressed: false
         uri: ${INFLUXDB_URL}
         user-name: ${INFLUXDB_ADMIN_USERNAME}
