@@ -23,6 +23,7 @@ open class DescriptionService(
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert description as there is a constraint violation on the data.")
+            meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert description as there is a constraint violation on the data.")
         }
         description.dateAdded = Timestamp(Calendar.getInstance().time.time)

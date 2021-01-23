@@ -39,8 +39,10 @@ class ExcelFileService @Autowired constructor(
 
         try {
             saveProtectedExcelFile(inputExcelFileName, workbook, encryptionInfo)
-        } catch (e: OutOfMemoryError) {
-            logger.error("Saving this excel file requires more memory to be provided to the Java JVM.")
+        } catch (outOfMemoryError: OutOfMemoryError) {
+            logger.warn("Saving this excel file requires more memory to be provided to the Java JVM.")
+            logger.warn("OutOfMemoryError, ${outOfMemoryError.message}")
+            meterService.incrementExceptionCaughtCounter("OutOfMemoryError")
         }
     }
 
@@ -113,7 +115,9 @@ class ExcelFileService @Autowired constructor(
                     newCell.setCellValue(transaction.notes)
                 }
                 else -> {
-                    throw RuntimeException("no column match for transaction guid value:  ${transaction.guid}")
+                    logger.error("No column match for transaction guid value:  ${transaction.guid}")
+                    meterService.incrementExceptionThrownCounter("RuntimeException")
+                    throw RuntimeException("No column match for transaction guid value:  ${transaction.guid}")
                 }
             }
         }
@@ -125,8 +129,9 @@ class ExcelFileService @Autowired constructor(
             logger.info("currentSheet.lastRowNum = ${currentSheet.lastRowNum}")
             logger.info("currentSheet.physicalNumberOfRows = ${currentSheet.physicalNumberOfRows}")
             currentSheet.shiftRows(2, currentSheet.lastRowNum, -1)
-        } catch (e: IllegalArgumentException) {
-            logger.info("issues with this index")
+        } catch (illegalArgumentException: IllegalArgumentException) {
+            logger.warn("IllegalArgumentException: ${illegalArgumentException.message}")
+            meterService.incrementExceptionCaughtCounter("IllegalArgumentException")
         }
 
         for (rowNumber in currentSheet.lastRowNum downTo 1) {

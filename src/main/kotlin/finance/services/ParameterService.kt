@@ -23,6 +23,7 @@ open class ParameterService(
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert parameter as there is a constraint violation on the data.")
+            meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert parameter as there is a constraint violation on the data.")
         }
 

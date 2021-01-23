@@ -68,6 +68,7 @@ class InsertTransactionProcessorSpec extends Specification {
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.of(new Category())
         1 * mockTransactionRepository.saveAndFlush(transaction)
         1 * mockMessage.setBody(mapper.writeValueAsString(transaction))
+        1 * meterServiceMock.incrementTransactionAlreadyExistsCounter(transaction.accountNameOwner)
         0 * _
     }
 

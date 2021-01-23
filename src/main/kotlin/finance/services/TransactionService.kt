@@ -19,11 +19,10 @@ import java.sql.Timestamp
 import java.util.*
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
+import javax.imageio.ImageReader
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
-
-import javax.imageio.ImageReader
 
 @Service
 open class TransactionService @Autowired constructor(
@@ -77,13 +76,15 @@ open class TransactionService @Autowired constructor(
             //TODO: add metric here
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert transaction as there is a constraint violation on the data.")
+            meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
         }
         val transactionOptional = findTransactionByGuid(transaction.guid)
 
         if (transactionOptional.isPresent) {
-            val transactionDb = transactionOptional.get()
-            return masterTransactionUpdater(transactionDb, transaction)
+            val transactionFromDatabase = transactionOptional.get()
+            meterService.incrementTransactionAlreadyExistsCounter(transactionFromDatabase.accountNameOwner)
+            return masterTransactionUpdater(transactionFromDatabase, transaction)
         }
 
         processAccount(transaction)
@@ -199,8 +200,9 @@ open class TransactionService @Autowired constructor(
     open fun updateTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
-            logger.error("Cannot update transaction as there is a constraint violation on the data.")
-            throw ValidationException("Cannot update transaction as there is a constraint violation on the data.")
+            logger.error("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
+            meterService.incrementExceptionThrownCounter("ValidationException")
+            throw ValidationException("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         return if (optionalTransaction.isPresent) {
@@ -234,7 +236,7 @@ open class TransactionService @Autowired constructor(
         return true
     }
 
-    private fun ByteArray.toHexString() : String {
+    private fun ByteArray.toHexString(): String {
         return this.joinToString("") {
             String.format("%02x", it)
         }
@@ -260,10 +262,11 @@ open class TransactionService @Autowired constructor(
                     existingReceiptImage.image = rawImage
                     existingReceiptImage.imageFormatType = imageFormatType
                     val response = receiptImageService.insertReceiptImage(receiptImageOptional.get())
-                    meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
                     return response
                 }
-                throw RuntimeException("failed to update receipt image for transaction ${transaction.guid}")
+                logger.error("Failed to update receipt image for transaction ${transaction.guid}")
+                meterService.incrementExceptionThrownCounter("RuntimeException")
+                throw RuntimeException("Failed to update receipt image for transaction ${transaction.guid}")
             }
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
@@ -275,11 +278,12 @@ open class TransactionService @Autowired constructor(
             transaction.receiptImageId = response.receiptImageId
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
             transactionRepository.saveAndFlush(transaction)
-            meterService.incrementTransactionReceiptImage(transaction.accountNameOwner)
+            meterService.incrementTransactionReceiptImageInserted(transaction.accountNameOwner)
             return response
         }
         //TODO: add metric here
         logger.error("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
+        meterService.incrementExceptionThrownCounter("RuntimeException")
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
@@ -309,6 +313,7 @@ open class TransactionService @Autowired constructor(
         }
         //TODO: add metric here
         logger.error("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
+        meterService.incrementExceptionThrownCounter("RuntimeException")
         throw RuntimeException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
     }
 
@@ -322,8 +327,11 @@ open class TransactionService @Autowired constructor(
             if (transactionState == TransactionState.Cleared &&
                 transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)
             ) {
-                throw RuntimeException("Cannot set cleared status on a future dated transaction.")
+                logger.error("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
+                meterService.incrementExceptionThrownCounter("RuntimeException")
+                throw RuntimeException("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
             }
+            meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
             transaction.transactionState = transactionState
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
             val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)
@@ -341,25 +349,27 @@ open class TransactionService @Autowired constructor(
         }
         //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
+        meterService.incrementExceptionThrownCounter("RuntimeException")
         throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
     }
 
-    private fun createThumbnail( rawImage: ByteArray, imageFormatType: ImageFormatType ) : ByteArray {
+    private fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
         try {
             val bufferedImage = ImageIO.read(ByteArrayInputStream(rawImage))
 
-            val thumbnail = Thumbnails.of(bufferedImage).size(100,100).asBufferedImage()
+            val thumbnail = Thumbnails.of(bufferedImage).size(100, 100).asBufferedImage()
 
             val byteArrayOutputStream = ByteArrayOutputStream()
             ImageIO.write(thumbnail, imageFormatType.toString(), byteArrayOutputStream)
             return byteArrayOutputStream.toByteArray()
-        } catch ( ex: IIOException) {
-           logger.error(ex.message)
+        } catch (iIOException: IIOException) {
+            logger.warn("IIOException, ${iIOException.message}")
+            meterService.incrementExceptionCaughtCounter("IIOException")
         }
         return byteArrayOf()
     }
 
-    private fun getImageFormatType( rawImage: ByteArray ) : ImageFormatType {
+    private fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
         val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(rawImage))
         val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
         var format = ImageFormatType.Undefined
@@ -413,7 +423,9 @@ open class TransactionService @Autowired constructor(
         transactionFuture.dateAdded = Timestamp(nextTimestampMillis())
         logger.info(transactionFuture.toString())
         if (transactionFuture.reoccurringType == ReoccurringType.Undefined) {
-            throw RuntimeException("transaction state cannot be undefined for reoccurring transactions.")
+            logger.error("TransactionState cannot be undefined for reoccurring transactions.")
+            meterService.incrementExceptionThrownCounter("RuntimeException")
+            throw RuntimeException("TransactionState cannot be undefined for reoccurring transactions.")
         }
         return transactionFuture
     }
@@ -432,6 +444,7 @@ open class TransactionService @Autowired constructor(
         }
         //TODO: add metric here
         logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
+        meterService.incrementExceptionThrownCounter("RuntimeException")
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
     }
 

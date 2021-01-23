@@ -24,6 +24,7 @@ class CategoryService(
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert category as there is a constraint violation on the data.")
+            meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert category as there is a constraint violation on the data.")
         }
         category.dateAdded = Timestamp(Calendar.getInstance().time.time)
