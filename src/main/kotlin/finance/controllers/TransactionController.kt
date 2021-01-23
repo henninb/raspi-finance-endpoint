@@ -18,6 +18,10 @@ import java.util.*
 @RestController
 @RequestMapping("/transaction")
 class TransactionController @Autowired constructor(private var transactionService: TransactionService) : BaseController()   {
+
+    @Autowired
+    lateinit var meterService: MeterService
+
     //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
     @GetMapping(path = ["/account/select/{accountNameOwner}"], produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
@@ -53,8 +57,9 @@ class TransactionController @Autowired constructor(private var transactionServic
             return ResponseEntity.ok(transaction)
         }
 
-        logger.info("guid not found = $guid")
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+        logger.error("Transaction not found, guid = $guid")
+        meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found, guid: $guid")
     }
 
     //TODO: 2021-01-10, return the payload of the updated and the inserted
@@ -90,7 +95,9 @@ class TransactionController @Autowired constructor(private var transactionServic
             response["transactions"] = transactions.toString()
             return ResponseEntity.ok(mapper.writeValueAsString(response))
         }
-        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
+        logger.error("The transaction guid = $guid could not be updated for transaction state.")
+        meterService.incrementTransactionRestTransactionStateUpdateFailureCounter("unknown")
+        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "The transaction guid = $guid could not be updated for transaction state.")
     }
 
     @PutMapping(
@@ -106,7 +113,9 @@ class TransactionController @Autowired constructor(private var transactionServic
         if (updateStatus) {
             return ResponseEntity.ok("transaction reoccurring updated")
         }
-        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction.")
+        logger.error("The transaction guid = $guid could not be updated for reoccurring state.")
+        meterService.incrementTransactionRestReoccurringStateUpdateFailureCounter("unknown")
+        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction for reoccurring state.")
     }
 
     //TODO: should return a 201 CREATED

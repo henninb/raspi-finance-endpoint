@@ -26,6 +26,7 @@ open class ReceiptImageService @Autowired constructor(private var receiptImageRe
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert receiptImage as there is a constraint violation on the data.")
+            meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert receiptImage as there is a constraint violation on the data.")
         }
 

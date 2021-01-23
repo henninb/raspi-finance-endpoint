@@ -35,17 +35,20 @@ class PaymentService(
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert payment as there is a constraint violation on the data.")
-            throw ValidationException("Cannot insert payment as there is a constraint violation on the data.")
+            logger.error("Cannot insert payment as there is a constraint violation on the data")
+            meterService.incrementExceptionThrownCounter("ValidationException")
+            throw ValidationException("Cannot insert payment as there is a constraint violation on the data")
         }
         val optionalAccount = accountService.findByAccountNameOwner(payment.accountNameOwner)
         if(!optionalAccount.isPresent) {
-            logger.error("account not found ${payment.accountNameOwner}")
-            throw RuntimeException("account not found ${payment.accountNameOwner}")
+            logger.error("Account not found ${payment.accountNameOwner}")
+            meterService.incrementExceptionThrownCounter("RuntimeException")
+            throw RuntimeException("Account not found ${payment.accountNameOwner}")
         } else {
             if( optionalAccount.get().accountType == AccountType.Debit ) {
-                logger.error("account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-                throw RuntimeException("account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                meterService.incrementExceptionThrownCounter("RuntimeException")
+                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
             }
         }
 

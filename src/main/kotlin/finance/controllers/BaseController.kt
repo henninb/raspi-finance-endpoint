@@ -21,8 +21,7 @@ import javax.validation.ValidationException
 
 open class BaseController () {
 
-    @Autowired
-    lateinit var meterService: MeterService
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(

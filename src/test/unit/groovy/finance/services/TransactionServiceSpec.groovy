@@ -123,6 +123,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert entity.guid == transaction.guid
             assert entity.description == transaction.description
         })
+        1 * meterServiceMock.incrementTransactionAlreadyExistsCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -246,6 +247,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert futureTransaction.reoccurring
             futureTransaction
         }) >> transaction
+        1 * meterServiceMock.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -271,6 +273,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert futureTransaction.reoccurring
             futureTransaction
         }) >> transaction
+        1 * meterServiceMock.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -288,6 +291,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactions.size() == 1
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * meterServiceMock.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
         0 * _
     }
 
@@ -308,7 +312,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(_ as ReceiptImage) >> constraintViolations
         1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
         1 * transactionRepositoryMock.saveAndFlush(transaction)
-        1 * meterServiceMock.incrementTransactionReceiptImage(transaction.accountNameOwner)
+        1 * meterServiceMock.incrementTransactionReceiptImageInserted(transaction.accountNameOwner)
+        1 * meterServiceMock.incrementExceptionCaughtCounter('IIOException')
         0 * _
     }
 
@@ -372,6 +377,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactionService.createFutureTransaction(preLeapYearTransaction)
 
         then:
+        1 * meterServiceMock.incrementExceptionThrownCounter('RuntimeException')
         thrown(RuntimeException)
         0 * _
     }

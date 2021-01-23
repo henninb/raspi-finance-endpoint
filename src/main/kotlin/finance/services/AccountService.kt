@@ -54,7 +54,9 @@ class AccountService @Autowired constructor(
         val totals: BigDecimal
         try {
             totals = accountRepository.computeTheGrandTotalForAllTransactions()
-        } catch (e: Exception) {
+        } catch (exception: Exception) {
+            logger.warn("Exception: ${exception.message}")
+            meterService.incrementExceptionCaughtCounter("Exception")
             return BigDecimal(0.00)
         }
         return totals.setScale(2, RoundingMode.HALF_UP)
@@ -64,7 +66,9 @@ class AccountService @Autowired constructor(
         val totals: BigDecimal
         try {
             totals = accountRepository.computeTheGrandTotalForAllClearedTransactions()
-        } catch (e: Exception) {
+        } catch (exception: Exception) {
+            logger.warn("Exception: ${exception.message}")
+            meterService.incrementExceptionCaughtCounter("Exception")
             return BigDecimal(0.00)
         }
         return totals.setScale(2, RoundingMode.HALF_UP)
@@ -76,6 +80,7 @@ class AccountService @Autowired constructor(
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert account as there is a constraint violation on the data.")
+            meterService.incrementExceptionCaughtCounter("ValidationException")
             throw ValidationException("Cannot insert account as there is a constraint violation on the data.")
         }
 
@@ -112,8 +117,9 @@ class AccountService @Autowired constructor(
             accountRepository.updateTheGrandTotalForAllTransactions()
             logger.info("updateAccountTotals")
 
-        } catch (sqlGrammarException: InvalidDataAccessResourceUsageException) {
-            logger.error("empty database.")
+        } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
+            meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
+            logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
         }
         return true
     }
