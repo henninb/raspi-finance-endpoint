@@ -13,15 +13,10 @@ before_script:
 services:
   - postgresql
 
-#env:
-#  global:
-#    - PGPORT=5432
-#    - PGVER=12
-
 language: java
 jdk:
   - openjdk11
-script: ./gradlew clean build
+script: ./gradlew clean test integrationTest functionalTest
 
 notifications:
   email: henninb@msn.com

@@ -1,14 +1,14 @@
 package finance.services
 
 import finance.configurations.CustomProperties
+import finance.domain.Transaction
+import finance.helpers.TransactionBuilder
 import org.springframework.core.io.FileSystemResource
 import spock.lang.Ignore
 
 class ExcelFileServiceSpec extends BaseServiceSpec {
-
-    //private val customProperties: CustomProperties,
     protected String baseName = new FileSystemResource("").file.absolutePath
-    CustomProperties customProperties = new CustomProperties(excludedAccounts: ['amazongift_brian', '401k_kari', '401k_brian', 'pension_brian', 'pension_kari','scottrade_ira_brian'], excelPassword: 'monday1', excelInputFilePath: baseName + '/excel_in')
+    CustomProperties customProperties = new CustomProperties(excludedAccounts: [], excelPassword: 'monday1', excelInputFilePath: baseName + '/excel_in')
     ExcelFileService excelFileService = new ExcelFileService(customProperties, transactionServiceMock, meterServiceMock)
 
     void 'test try to open a file that is not found'() {
@@ -20,23 +20,21 @@ class ExcelFileServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    @Ignore
     void 'test try to open a file that exists, and with a valid password'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
         when:
-        excelFileService.processProtectedExcelFile('finance_db_master.xlsm')
+        excelFileService.processProtectedExcelFile('finance_test_db_master.xlsm')
 
         then:
-        1 * transactionServiceMock.findByAccountNameOwnerOrderByTransactionDate('amazon-store_brian') >> []
-        1 * transactionServiceMock.findByAccountNameOwnerOrderByTransactionDate('amazon_brian') >> []
-        1 * transactionServiceMock.findByAccountNameOwnerOrderByTransactionDate('amex_brian') >> []
-        50 * transactionServiceMock.findByAccountNameOwnerOrderByTransactionDate(_ as String) >> []
+        17 * transactionServiceMock.findByAccountNameOwnerOrderByTransactionDate(_ as String) >> [transaction]
+        17 * meterServiceMock.incrementExceptionCaughtCounter("IllegalArgumentException")
         0 * _
     }
 
-    @Ignore
     void 'test try to open a file that exists, but with an invalid password'() {
         when:
-        excelFileService.processProtectedExcelFile('finance_db_master.xlsm')
+        excelFileService.processProtectedExcelFile('finance_test_db-bad-password.xlsm')
 
         then:
         thrown(RuntimeException)
