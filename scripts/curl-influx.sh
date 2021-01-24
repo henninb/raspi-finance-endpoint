@@ -21,5 +21,8 @@ curl -s -G "http://${server}:8086/query?pretty=true" --data-urlencode "db=metric
 # drop series from exception_counter;
 # select * from method_timed;
 # select mean from method_timed where mean > 0;
+# CREATE RETENTION POLICY <retention_policy_name> ON <database_name> DURATION <duration> REPLICATION <n> [DEFAULT]
+# DELETE FROM foo WHERE time > '2014-06-30' and time < '2014-06-30 15:16:01'
+# CREATE RETENTION POLICY "thirtydaypolicy" ON metrics DURATION 30d REPLICATION 1 DEFAULT
 
 exit 0

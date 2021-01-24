@@ -313,7 +313,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
         1 * transactionRepositoryMock.saveAndFlush(transaction)
         1 * meterServiceMock.incrementTransactionReceiptImageInserted(transaction.accountNameOwner)
-        1 * meterServiceMock.incrementExceptionCaughtCounter('IIOException')
         0 * _
     }
 
