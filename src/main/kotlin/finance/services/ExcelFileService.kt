@@ -30,7 +30,10 @@ class ExcelFileService @Autowired constructor(
             POIFSFileSystem(FileInputStream("${customProperties.excelInputFilePath}/${inputExcelFileName}"))
         val encryptionInfo = EncryptionInfo(fileStream)
         val decryptor = Decryptor.getInstance(encryptionInfo)
-        decryptor.verifyPassword(customProperties.excelPassword)
+        val validPassword = decryptor.verifyPassword(customProperties.excelPassword)
+        if(!validPassword) {
+            throw RuntimeException("Password is not valid for file: $inputExcelFileName")
+        }
         val inputStream = decryptor.getDataStream(fileStream)
 
         val workbook: Workbook = XSSFWorkbook(inputStream)
