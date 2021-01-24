@@ -24,7 +24,7 @@ class CamelSpec extends  Specification {
     @Autowired
     protected TransactionRepository transactionRepository
 
-    @Ignore
+    //@Ignore
     void 'test camel send data'() {
         given:
         File source = new File(ResourceUtils.getResource('/camel-input.json').file)
