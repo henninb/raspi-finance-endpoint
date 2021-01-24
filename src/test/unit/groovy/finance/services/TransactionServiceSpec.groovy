@@ -5,6 +5,7 @@ import finance.helpers.CategoryBuilder
 import finance.helpers.ReceiptImageBuilder
 import finance.helpers.TransactionBuilder
 import org.hibernate.NonUniqueResultException
+import org.springframework.util.ResourceUtils
 
 import javax.validation.ConstraintViolation
 import java.sql.Date
@@ -303,6 +304,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         receiptImage.receiptImageId = 1
         Set<ConstraintViolation<ReceiptImage>> constraintViolations = validator.validate(receiptImage)
         String base64Jpeg = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='
+        def jpgFileBytes = ResourceUtils.getFile("${baseName}/src/test/unit/resources/viking-icon.jpg").getBytes()
+        base64Jpeg = Base64.getEncoder().encodeToString(jpgFileBytes)
 
         when:
         transactionService.updateTransactionReceiptImageByGuid(transaction.guid, base64Jpeg)

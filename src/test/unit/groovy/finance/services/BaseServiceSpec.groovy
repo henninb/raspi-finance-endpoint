@@ -2,6 +2,7 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.repositories.*
+import org.springframework.core.io.FileSystemResource
 import spock.lang.Specification
 
 import javax.validation.Validation
@@ -18,7 +19,7 @@ class BaseServiceSpec extends Specification {
     protected ParameterRepository parameterRepositoryMock = GroovyMock(ParameterRepository)
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
     protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
-    // protected AccountService accountServiceMock = GroovyMock(AccountService)
     protected ObjectMapper mapper = new ObjectMapper()
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
+    protected String baseName = new FileSystemResource("").file.absolutePath
 }

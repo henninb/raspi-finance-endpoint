@@ -101,7 +101,7 @@ if [ -x "$(command -v ctags)" ]; then
 fi
 
 if [ "${test_flag}" = "true" ]; then
-  if ! ./gradlew clean build; then
+  if ! ./gradlew clean build test integrationTest functionalTest; then
     echo "gradle build failed."
     exit 1
   fi
