@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.Tag
 import spock.lang.Ignore
 import spock.lang.Specification
 
+
 class MeterServiceSpec extends Specification {
 
     protected MeterRegistry meterRegistryMock = GroovyMock(MeterRegistry)
@@ -18,7 +19,7 @@ class MeterServiceSpec extends Specification {
 
         then:
         //1 * meterRegistryMock.counter(Constants.TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER, [Tag.of(Constants.ACCOUNT_NAME_OWNER_TAG, 'test'), Tag.of(Constants.SERVER_NAME_TAG, 'server')])
-        1 * meterRegistryMock.counter(_, _)
+        1 * meterRegistryMock.counter(_)
         noExceptionThrown()
         0 * _
     }
