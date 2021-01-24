@@ -367,7 +367,8 @@ open class TransactionService @Autowired constructor(
             return byteArrayOutputStream.toByteArray()
         } catch (iIOException: IIOException) {
             logger.warn("IIOException, ${iIOException.message}")
-            meterService.incrementExceptionCaughtCounter("IIOException")
+            //TODO: need to fix this
+            //meterService.incrementExceptionCaughtCounter("IIOException")
         }
         return byteArrayOf()
     }
