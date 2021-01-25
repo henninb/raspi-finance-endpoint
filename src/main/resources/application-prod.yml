@@ -63,7 +63,7 @@ spring:
     password: ${DATASOURCE_PASSWORD}
     url: ${DATASOURCE}
     baseline-on-migrate: true
-    schemas: prod
+#    schemas: prod
     locations: classpath:db/migration
     validate-on-migrate: true
 
