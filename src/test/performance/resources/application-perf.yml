@@ -30,9 +30,8 @@ spring:
     password: monday1
     driver-class-name: org.postgresql.Driver
     # testWhileIdle to persist the connection when idle for a long period of time
-    tomcat:
-      test-While-Idle: true
-      validation-Query: SELECT 1
+    hikari:
+      schema: perf
     platform: postgresql
     continue-On-Error: false
     # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql

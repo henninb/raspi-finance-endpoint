@@ -1,12 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 SET client_min_messages TO WARNING;
 
-CREATE SCHEMA IF NOT EXISTS public;
+CREATE SCHEMA IF NOT EXISTS int;
 
 -------------
 -- Account --
 -------------
-CREATE TABLE IF NOT EXISTS public.t_account
+CREATE TABLE IF NOT EXISTS int.t_account
 (
     account_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT UNIQUE                           NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.t_account
 --------------
 -- Category --
 --------------
-CREATE TABLE IF NOT EXISTS public.t_category
+CREATE TABLE IF NOT EXISTS int.t_category
 (
     category_id   BIGSERIAL PRIMARY KEY,
     category      TEXT UNIQUE                       NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.t_category
 ---------------------------
 -- TransactionCategories --
 ---------------------------
-CREATE TABLE IF NOT EXISTS public.t_transaction_categories
+CREATE TABLE IF NOT EXISTS int.t_transaction_categories
 (
     category_id    BIGINT                            NOT NULL,
     transaction_id BIGINT                            NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction_categories
 -------------------
 -- ReceiptImage  --
 -------------------
-CREATE TABLE IF NOT EXISTS public.t_receipt_image
+CREATE TABLE IF NOT EXISTS int.t_receipt_image
 (
     receipt_image_id  BIGSERIAL PRIMARY KEY,
     transaction_id    BIGINT                            NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS public.t_receipt_image
 -----------------
 --CREATE TYPE transaction_state_enum AS ENUM ('outstanding','future','cleared', 'undefined');
 --CREATE TYPE account_type_enum AS ENUM ('credit','debit', 'undefined');
-CREATE TABLE IF NOT EXISTS public.t_transaction
+CREATE TABLE IF NOT EXISTS int.t_transaction
 (
     transaction_id     BIGSERIAL PRIMARY KEY,
     account_id         BIGINT                                NOT NULL,
@@ -115,16 +115,16 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly',
                                            'undefined')),
-    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
-    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category) ON DELETE CASCADE
+    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES int.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
+    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES int.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES int.t_category (category) ON DELETE CASCADE
 );
 
 -- Required to happen after the t_transaction table is created
-ALTER TABLE public.t_receipt_image
+ALTER TABLE int.t_receipt_image
     DROP CONSTRAINT IF EXISTS fk_transaction;
-ALTER TABLE public.t_receipt_image
-    ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES public.t_transaction (transaction_id) ON DELETE CASCADE;
+ALTER TABLE int.t_receipt_image
+    ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES int.t_transaction (transaction_id) ON DELETE CASCADE;
 
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
@@ -135,7 +135,7 @@ ALTER TABLE public.t_receipt_image
 -------------
 -- Payment --
 -------------
-CREATE TABLE IF NOT EXISTS public.t_payment
+CREATE TABLE IF NOT EXISTS int.t_payment
 (
     payment_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT                                  NOT NULL,
@@ -147,17 +147,17 @@ CREATE TABLE IF NOT EXISTS public.t_payment
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
-    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE,
-    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
+    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES int.t_transaction (guid) ON DELETE CASCADE,
+    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES int.t_transaction (guid) ON DELETE CASCADE
 );
 
--- ALTER table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
--- ALTER table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
+-- ALTER table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES int.t_transaction (guid) ON DELETE CASCADE;
+-- ALTER table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES int.t_transaction (guid) ON DELETE CASCADE;
 
 -------------
 -- Parm    --
 -------------
-CREATE TABLE IF NOT EXISTS public.t_parm
+CREATE TABLE IF NOT EXISTS int.t_parm
 (
     parm_id       BIGSERIAL PRIMARY KEY,
     parm_name     TEXT UNIQUE                       NOT NULL,
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS public.t_parm
 -----------------
 -- description --
 -----------------
-CREATE TABLE IF NOT EXISTS public.t_description
+CREATE TABLE IF NOT EXISTS int.t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
     description    TEXT UNIQUE                       NOT NULL,
@@ -185,19 +185,20 @@ CREATE TABLE IF NOT EXISTS public.t_description
 
 -- ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
-SELECT setval('public.t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM public.t_receipt_image) + 1);
-SELECT setval('public.t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM public.t_transaction) + 1);
-SELECT setval('public.t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM public.t_payment) + 1);
-SELECT setval('public.t_account_account_id_seq', (SELECT MAX(account_id) FROM public.t_account) + 1);
-SELECT setval('public.t_category_category_id_seq', (SELECT MAX(category_id) FROM public.t_category) + 1);
-SELECT setval('public.t_description_description_id_seq', (SELECT MAX(description_id) FROM public.t_description) + 1);
-SELECT setval('public.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM public.t_parm) + 1);
+SELECT setval('int.t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM int.t_receipt_image) + 1);
+SELECT setval('int.t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM int.t_transaction) + 1);
+SELECT setval('int.t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM int.t_payment) + 1);
+SELECT setval('int.t_account_account_id_seq', (SELECT MAX(account_id) FROM int.t_account) + 1);
+SELECT setval('int.t_category_category_id_seq', (SELECT MAX(category_id) FROM int.t_category) + 1);
+SELECT setval('int.t_description_description_id_seq', (SELECT MAX(description_id) FROM int.t_description) + 1);
+SELECT setval('int.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM int.t_parm) + 1);
+
 
 CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
     RETURNS TRIGGER
-    SET SCHEMA 'public'
+    SET SCHEMA 'int'
     LANGUAGE PLPGSQL
-AS $$
+    AS $$
     BEGIN
       NEW.date_updated := CURRENT_TIMESTAMP;
       RETURN NEW;
@@ -206,9 +207,9 @@ AS $$
 
 CREATE OR REPLACE FUNCTION fn_insert_transaction_categories()
     RETURNS TRIGGER
-    SET SCHEMA 'public'
+    SET SCHEMA 'int'
     LANGUAGE PLPGSQL
-AS $$
+    AS $$
     BEGIN
       NEW.date_updated := CURRENT_TIMESTAMP;
       NEW.date_added := CURRENT_TIMESTAMP;
@@ -216,17 +217,17 @@ AS $$
     END;
     $$;
 
-DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON public.t_transaction_categories;
+DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON int.t_transaction_categories;
 CREATE TRIGGER tr_insert_transaction_categories
     BEFORE INSERT
-    ON public.t_transaction_categories
+    ON int.t_transaction_categories
     FOR EACH ROW
 EXECUTE PROCEDURE fn_insert_transaction_categories();
 
-DROP TRIGGER IF EXISTS tr_update_transaction_categories ON public.t_transaction_categories;
+DROP TRIGGER IF EXISTS tr_update_transaction_categories ON int.t_transaction_categories;
 CREATE TRIGGER tr_update_transaction_categories
     BEFORE UPDATE
-    ON public.t_transaction_categories
+    ON int.t_transaction_categories
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_transaction_categories();
 

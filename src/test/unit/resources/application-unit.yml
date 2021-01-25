@@ -29,10 +29,8 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
-    # testWhileIdle to persist the connection when idle for a long period of time
-    tomcat:
-      validation-query: SELECT 1
-      test-while-idle: true
+    hikari:
+      schema: unit
     platform: h2
     continue-on-error: false
 #    schema: classpath:schema-unit-h2.sql
@@ -87,6 +85,10 @@ management:
     health:
       show-details: always
   metrics:
+    distribution:
+      percentiles:
+        method.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
+        query.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
     export:
       influx:
         enabled: false
