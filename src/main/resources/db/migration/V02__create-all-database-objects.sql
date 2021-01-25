@@ -4,7 +4,7 @@ SET client_min_messages TO WARNING;
 -------------
 -- Account --
 -------------
-CREATE TABLE IF NOT EXISTS t_account
+CREATE TABLE IF NOT EXISTS public.t_account
 (
     account_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT UNIQUE                           NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS t_account
 --------------
 -- Category --
 --------------
-CREATE TABLE IF NOT EXISTS t_category
+CREATE TABLE IF NOT EXISTS public.t_category
 (
     category_id   BIGSERIAL PRIMARY KEY,
     category      TEXT UNIQUE                       NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS t_category
 ---------------------------
 -- TransactionCategories --
 ---------------------------
-CREATE TABLE IF NOT EXISTS t_transaction_categories
+CREATE TABLE IF NOT EXISTS public.t_transaction_categories
 (
     category_id    BIGINT                            NOT NULL,
     transaction_id BIGINT                            NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS t_transaction_categories
 -------------------
 -- ReceiptImage  --
 -------------------
-CREATE TABLE IF NOT EXISTS t_receipt_image
+CREATE TABLE IF NOT EXISTS public.t_receipt_image
 (
     receipt_image_id  BIGSERIAL PRIMARY KEY,
     transaction_id    BIGINT                            NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS t_receipt_image
 -----------------
 --CREATE TYPE transaction_state_enum AS ENUM ('outstanding','future','cleared', 'undefined');
 --CREATE TYPE account_type_enum AS ENUM ('credit','debit', 'undefined');
-CREATE TABLE IF NOT EXISTS t_transaction
+CREATE TABLE IF NOT EXISTS public.t_transaction
 (
     transaction_id     BIGSERIAL PRIMARY KEY,
     account_id         BIGINT                                NOT NULL,
@@ -133,7 +133,7 @@ ALTER TABLE t_receipt_image
 -------------
 -- Payment --
 -------------
-CREATE TABLE IF NOT EXISTS t_payment
+CREATE TABLE IF NOT EXISTS public.t_payment
 (
     payment_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT                                  NOT NULL,
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS t_payment
 -------------
 -- Parm    --
 -------------
-CREATE TABLE IF NOT EXISTS t_parm
+CREATE TABLE IF NOT EXISTS public.t_parm
 (
     parm_id       BIGSERIAL PRIMARY KEY,
     parm_name     TEXT UNIQUE                       NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS t_parm
 -----------------
 -- description --
 -----------------
-CREATE TABLE IF NOT EXISTS t_description
+CREATE TABLE IF NOT EXISTS public.t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
     description    TEXT UNIQUE                       NOT NULL,
@@ -213,14 +213,14 @@ $$ LANGUAGE PLPGSQL;
 DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON t_transaction_categories;
 CREATE TRIGGER tr_insert_transaction_categories
     BEFORE INSERT
-    ON t_transaction_categories
+    ON public.t_transaction_categories
     FOR EACH ROW
 EXECUTE PROCEDURE fn_insert_transaction_categories();
 
 DROP TRIGGER IF EXISTS tr_update_transaction_categories ON t_transaction_categories;
 CREATE TRIGGER tr_update_transaction_categories
     BEFORE UPDATE
-    ON t_transaction_categories
+    ON public.t_transaction_categories
     FOR EACH ROW
 EXECUTE PROCEDURE fn_update_transaction_categories();
 
