@@ -29,10 +29,6 @@ spring:
     username: henninb
     password: monday1
     driver-class-name: oracle.jdbc.OracleDriver
-    # testWhileIdle to persist the connection when idle for a long period of time
-    tomcat:
-      validation-query: SELECT 1
-      test-while-idle: true
     #Platform: org.hibernate.dialect.OracleDialect
     continue-on-error: false
     # always if you want to utilize data.sql and schema.sql
@@ -116,6 +112,10 @@ management:
     health:
       show-details: always
   metrics:
+    distribution:
+      percentiles:
+        method.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
+        query.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
     export:
       influx:
         enabled: false

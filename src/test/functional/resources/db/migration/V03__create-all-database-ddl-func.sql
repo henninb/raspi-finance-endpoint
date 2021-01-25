@@ -1,6 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 SET client_min_messages TO WARNING;
 
+CREATE SCHEMA IF NOT EXISTS func;
+
 -------------
 -- Account --
 -------------
@@ -202,7 +204,6 @@ CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
       RETURN NEW;
     END;
     $$;
-
 
 CREATE OR REPLACE FUNCTION fn_insert_transaction_categories()
     RETURNS TRIGGER

@@ -30,12 +30,10 @@ spring:
     url: ${DATASOURCE}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
+    schema: stage
     driver-class-name: ${DATASOURCE_DRIVER}
-    # testWhileIdle to persist the connection when idle for a long period of time
-    tomcat:
-      test-While-Idle: true
-      validation-Query: SELECT 1
-    # platform: ${DATASOURCE_PLATFORM}
+    hikari:
+      schema: stage
     continue-On-Error: false
     # always - utilize data.sql and schema.sql
     initialization-mode: always
@@ -111,6 +109,10 @@ management:
     health:
       show-details: always
   metrics:
+    distribution:
+      percentiles:
+        method.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
+        query.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
     export:
       influx:
         enabled: ${INFLUXDB_ENABLED}
