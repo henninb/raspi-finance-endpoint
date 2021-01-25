@@ -64,6 +64,7 @@ spring:
     password: ${DATASOURCE_PASSWORD}
     url: ${DATASOURCE}
     baseline-on-migrate: true
+    schemas: int,func,prod,stage
     locations: classpath:db/migration
     validate-on-migrate: true
 
@@ -114,7 +115,7 @@ management:
       influx:
         enabled: ${INFLUXDB_ENABLED}
         auto-create-db: true
-        db: metrics-stage
+        db: metrics_stage
         compressed: false
         uri: ${INFLUXDB_URL}
         user-name: ${INFLUXDB_ADMIN_USERNAME}
