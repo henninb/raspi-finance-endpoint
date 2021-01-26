@@ -14,7 +14,7 @@ import javax.validation.Validator
 
 @Service
 @Timed(value = "description.services.timed", histogram = true)
-open class DescriptionService(
+class DescriptionService(
     private var descriptionRepository: DescriptionRepository,
     private val validator: Validator,
     private var meterService: MeterService
