@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 import javax.validation.Validator
 
 @Service
-open class BaseService {
+class BaseService {
 
 //    @Autowired
 //    lateinit var meterService: MeterService

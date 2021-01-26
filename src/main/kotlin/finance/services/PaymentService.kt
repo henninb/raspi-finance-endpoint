@@ -15,7 +15,7 @@ import javax.validation.Validator
 
 @Service
 @Timed(value = "payment.services.timed", histogram = true)
-open class PaymentService(
+class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,
     private var accountService: AccountService,

@@ -22,7 +22,7 @@ class ReceiptImageService(
     private val validator: Validator,
     private var meterService: MeterService
 ) {
-    
+
     fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
 
         val constraintViolations: Set<ConstraintViolation<ReceiptImage>> = validator.validate(receiptImage)

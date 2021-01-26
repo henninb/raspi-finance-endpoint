@@ -14,7 +14,7 @@ import javax.validation.Validator
 
 @Service
 @Timed(value = "parameter.services.timed", histogram = true)
-open class ParameterService(
+class ParameterService(
     private var parameterRepository: ParameterRepository,
     private val validator: Validator,
     private var meterService: MeterService
