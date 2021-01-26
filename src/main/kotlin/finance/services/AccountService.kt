@@ -3,8 +3,8 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.repositories.AccountRepository
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -16,7 +16,8 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class AccountService @Autowired constructor(
+@Timed(value = "account.services.timed", histogram = true)
+class AccountService (
     private var accountRepository: AccountRepository,
     private val validator: Validator,
     private var meterService: MeterService
