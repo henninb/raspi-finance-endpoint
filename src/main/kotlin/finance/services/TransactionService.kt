@@ -34,7 +34,7 @@ open class TransactionService @Autowired constructor(
     private var meterService: MeterService
 ) {
 
-    @Timed("timed.delete.transaction.by.guid")
+    @Timed
     @Transactional
     open fun deleteTransactionByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
@@ -68,7 +68,7 @@ open class TransactionService @Autowired constructor(
     }
 
     // https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
-    @Timed("timed.insert.transaction")
+    @Timed
     @Transactional
     open fun insertTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
@@ -114,7 +114,7 @@ open class TransactionService @Autowired constructor(
         }
     }
 
-    @Timed("timed.process.category")
+    @Timed
     private fun processCategory(transaction: Transaction) {
         when {
             transaction.category != "" -> {
@@ -131,7 +131,7 @@ open class TransactionService @Autowired constructor(
         }
     }
 
-    @Timed("timed.create.default.category")
+    @Timed
     private fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
@@ -139,7 +139,7 @@ open class TransactionService @Autowired constructor(
         return category
     }
 
-    @Timed("timed.create.default.account")
+    @Timed
     private fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
         val account = Account()
 
@@ -150,7 +150,7 @@ open class TransactionService @Autowired constructor(
         return account
     }
 
-    @Timed("timed.find.transaction.by.guid")
+    @Timed
     @Transactional
     open fun findTransactionByGuid(guid: String): Optional<Transaction> {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
@@ -160,7 +160,7 @@ open class TransactionService @Autowired constructor(
         return Optional.empty()
     }
 
-    @Timed("timed.fetch.by.account.name.owner")
+    @Timed
     @Transactional
     open fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
@@ -182,7 +182,7 @@ open class TransactionService @Autowired constructor(
         return result
     }
 
-    @Timed("timed.account.name.owner.owner.by.transaction.date")
+    @Timed
     @Transactional
     open fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> =
@@ -198,7 +198,7 @@ open class TransactionService @Autowired constructor(
         return sortedTransactions
     }
 
-    @Timed("timed.update.transaction")
+    @Timed
     @Transactional
     open fun updateTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
@@ -217,6 +217,7 @@ open class TransactionService @Autowired constructor(
         }
     }
 
+    @Timed
     private fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
 
         if (transactionFromDatabase.guid == transaction.guid) {
@@ -245,7 +246,7 @@ open class TransactionService @Autowired constructor(
         }
     }
 
-    @Timed("timed.update.transaction.receipt.image.by.guid")
+    @Timed
     @Transactional
     open fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
         val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
@@ -290,7 +291,7 @@ open class TransactionService @Autowired constructor(
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
-    @Timed("timed.change.account.name.owner")
+    @Timed
     @Transactional
     open fun changeAccountNameOwner(map: Map<String, String>): Boolean {
         val accountNameOwner = map["accountNameOwner"]
