@@ -17,10 +17,9 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
-open class MeterService(private var meterRegistry: MeterRegistry) {
+class MeterService(private var meterRegistry: MeterRegistry) {
 
     private val hostName = "server" //setHostName()
 
@@ -29,8 +28,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         return if (env.containsKey("COMPUTERNAME")) env["COMPUTERNAME"] else if (env.containsKey("HOSTNAME")) env["HOSTNAME"] else "Unknown"
     }
 
-    @Transactional
-    open fun incrementExceptionThrownCounter(exceptionName: String): Unit = Counter
+    fun incrementExceptionThrownCounter(exceptionName: String): Unit = Counter
         .builder(EXCEPTION_THROWN_COUNTER)
         .description("Increments the counter for every exception thrown.")
         .tags(
@@ -42,8 +40,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementExceptionCaughtCounter(exceptionName: String): Unit = Counter
+    fun incrementExceptionCaughtCounter(exceptionName: String): Unit = Counter
         .builder(EXCEPTION_CAUGHT_COUNTER)
         .description("Increments the counter for every exception caught.")
         .tags(
@@ -55,8 +52,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionUpdateClearedCounter(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionUpdateClearedCounter(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER)
         .description("Increments the counter for each transaction state toggled to cleared.")
         .tags(
@@ -68,8 +64,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionSuccessfullyInsertedCounter(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionSuccessfullyInsertedCounter(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER)
         .tags(
             listOfNotNull(
@@ -80,8 +75,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionAlreadyExistsCounter(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionAlreadyExistsCounter(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_ALREADY_EXISTS_COUNTER)
         .tags(
             listOfNotNull(
@@ -92,8 +86,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionRestSelectNoneFoundCounter(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionRestSelectNoneFoundCounter(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER)
         .tags(
             listOfNotNull(
@@ -104,8 +97,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionRestTransactionStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionRestTransactionStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER)
         .tags(
             listOfNotNull(
@@ -116,8 +108,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionRestReoccurringStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionRestReoccurringStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER)
         .tags(
             listOfNotNull(
@@ -128,8 +119,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementAccountListIsEmpty(accountNameOwner: String): Unit = Counter
+    fun incrementAccountListIsEmpty(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER)
         .tags(
             listOfNotNull(
@@ -140,8 +130,7 @@ open class MeterService(private var meterRegistry: MeterRegistry) {
         .register(meterRegistry)
         .increment()
 
-    @Transactional
-    open fun incrementTransactionReceiptImageInserted(accountNameOwner: String): Unit = Counter
+    fun incrementTransactionReceiptImageInserted(accountNameOwner: String): Unit = Counter
         .builder(TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER)
         .tags(
             listOfNotNull(
