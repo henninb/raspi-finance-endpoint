@@ -20,7 +20,7 @@ open class InsertTransactionProcessor @Autowired constructor(
     //private val logger = LoggerFactory.getLogger(javaClass)
 
     @Throws(Exception::class)
-    @Timed("insert.transaction.processor.timer")
+    @Timed
     override fun process(exchange: Exchange) {
         val message = exchange.`in`
         val payload = message.getBody(String::class.java)

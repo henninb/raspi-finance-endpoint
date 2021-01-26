@@ -16,7 +16,7 @@ open class StringTransactionProcessor @Autowired constructor(private var meterSe
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     @Throws(Exception::class)
-    @Timed("string.transaction.processor.timer")
+    @Timed
     override fun process(exchange: Exchange) {
         logger.info("StringTransactionProcessor called.")
         val message = exchange.`in`

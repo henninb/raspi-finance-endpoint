@@ -21,7 +21,7 @@ open class JsonTransactionProcessor @Autowired constructor(
 ) : Processor {
 
     @Throws(Exception::class)
-    @Timed("json.transaction.processor.timer")
+    @Timed
     override fun process(exchange: Exchange) {
         val message = exchange.`in`
         val payload = message.getBody(String::class.java)

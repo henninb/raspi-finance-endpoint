@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.*
 import finance.repositories.PaymentRepository
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -13,7 +14,8 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class PaymentService(
+@Timed(value = "payment.services.timed", histogram = true)
+open class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,
     private var accountService: AccountService,
@@ -27,7 +29,6 @@ class PaymentService(
     }
 
     //TODO: make this method transactional - what happens if one inserts fails?
-    //@Timed
     fun insertPayment(payment: Payment): Boolean {
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()

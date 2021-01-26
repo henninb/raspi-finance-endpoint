@@ -1,12 +1,13 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.repositories.ReceiptImageRepository
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.util.*
@@ -15,12 +16,14 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-open class ReceiptImageService @Autowired constructor(private var receiptImageRepository: ReceiptImageRepository,
-                                                      private val validator: Validator,
-                                                      private var meterService: MeterService) {
-
-    @Transactional
-    open fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
+@Timed(value = "receipt.image.services.timed", histogram = true)
+class ReceiptImageService(
+    private var receiptImageRepository: ReceiptImageRepository,
+    private val validator: Validator,
+    private var meterService: MeterService
+) {
+    
+    fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
 
         val constraintViolations: Set<ConstraintViolation<ReceiptImage>> = validator.validate(receiptImage)
         if (constraintViolations.isNotEmpty()) {
@@ -36,13 +39,11 @@ open class ReceiptImageService @Autowired constructor(private var receiptImageRe
         return receiptImageRepository.saveAndFlush(receiptImage)
     }
 
-    @Transactional
-    open fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
+    fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
     }
 
-    @Transactional
-    open fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
+    fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
         receiptImageRepository.deleteById(receiptImage.receiptImageId)
         return true
     }

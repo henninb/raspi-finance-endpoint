@@ -25,7 +25,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-open class TransactionService @Autowired constructor(
+open class TransactionService(
     private var transactionRepository: TransactionRepository,
     private var accountService: AccountService,
     private var categoryService: CategoryService,
@@ -239,12 +239,13 @@ open class TransactionService @Autowired constructor(
         logger.warn("guid did not match any database records to update ${transaction.guid}.")
         return true
     }
-
-    private fun ByteArray.toHexString(): String {
-        return this.joinToString("") {
-            String.format("%02x", it)
-        }
-    }
+//
+//    @Timed
+//    private fun ByteArray.toHexString(): String {
+//        return this.joinToString("") {
+//            String.format("%02x", it)
+//        }
+//    }
 
     @Timed
     @Transactional

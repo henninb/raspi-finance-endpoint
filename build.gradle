@@ -126,6 +126,10 @@ dependencies {
     //logstash
     //runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
 
+    //Used for transactional
+    implementation 'org.aspectj:aspectjweaver:1.9.5'
+
+
     //graphics
     implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")
 

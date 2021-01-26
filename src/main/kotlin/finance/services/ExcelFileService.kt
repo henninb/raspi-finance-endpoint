@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.CustomProperties
 import finance.domain.Transaction
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.apache.poi.poifs.crypt.Decryptor
 import org.apache.poi.poifs.crypt.EncryptionInfo
@@ -11,13 +12,14 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.springframework.beans.factory.annotation.Autowired
+
 import org.springframework.stereotype.Service
 import java.io.*
 import java.util.stream.IntStream
 
 @Service
-class ExcelFileService @Autowired constructor(
+@Timed(value = "excel.file.services.timed", histogram = true)
+class ExcelFileService (
     private val customProperties: CustomProperties,
     private val transactionService: TransactionService,
     private var meterService: MeterService
@@ -150,6 +152,7 @@ class ExcelFileService @Autowired constructor(
     }
 
     companion object {
+        //TODO: convert this to an enum
         const val COL_GUID = 1
         const val COL_TRANSACTION_DATE = 2
         const val COL_DESCRIPTION = 3
