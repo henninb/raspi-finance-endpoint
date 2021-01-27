@@ -4,12 +4,14 @@ import finance.domain.*
 import finance.helpers.CategoryBuilder
 import finance.helpers.ReceiptImageBuilder
 import finance.helpers.TransactionBuilder
+import finance.utils.Constants
 import org.hibernate.NonUniqueResultException
 import org.springframework.util.ResourceUtils
 
 import javax.validation.ConstraintViolation
 import java.sql.Date
 
+@SuppressWarnings("GroovyAccessibility")
 class TransactionServiceSpec extends BaseServiceSpec {
 
     protected Category category = CategoryBuilder.builder().build()
@@ -72,6 +74,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
+
     void 'test transactionService - insert valid transaction'() {
         given:
         String guid = UUID.randomUUID()
@@ -94,7 +97,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
         //1 * meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -122,8 +125,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert entity.guid == transaction.guid
             assert entity.description == transaction.description
         })
-        //1 * meterService.incrementTransactionAlreadyExistsCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -149,8 +151,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
-        //1 * meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -182,8 +183,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(account) >> constraintViolationsAccount
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
-        //1 * meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -212,8 +212,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(category) >> constraintViolations
         1 * categoryRepositoryMock.saveAndFlush(category)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
-        //1 * meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -254,8 +253,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert futureTransaction.reoccurring
             futureTransaction
         }) >> transaction
-        //1 * meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -282,8 +280,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert futureTransaction.reoccurring
             futureTransaction
         }) >> transaction
-        //1 * meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -302,8 +299,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactions.size() == 1
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-        //1 * meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -327,8 +323,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(_ as ReceiptImage) >> constraintViolations
         1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
         1 * transactionRepositoryMock.saveAndFlush(transaction)
-        //1 * meterService.incrementTransactionReceiptImageInserted(transaction.accountNameOwner)
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -392,10 +387,11 @@ class TransactionServiceSpec extends BaseServiceSpec {
         when:
         transactionService.createFutureTransaction(preLeapYearTransaction)
 
+
         then:
-        1 * meterRegistryMock.counter(_) >> counter
-        1 * counter.increment()
         thrown(RuntimeException)
+        1 * meterRegistryMock.counter(runtimeExceptionThrownMeter) >> counter
+        1 * counter.increment()
         0 * _
     }
 

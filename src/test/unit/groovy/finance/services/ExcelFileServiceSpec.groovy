@@ -6,6 +6,7 @@ import finance.helpers.TransactionBuilder
 import org.springframework.core.io.FileSystemResource
 import spock.lang.Ignore
 
+@SuppressWarnings("GroovyAccessibility")
 class ExcelFileServiceSpec extends BaseServiceSpec {
     protected String baseName = new FileSystemResource("").file.absolutePath
     CustomProperties customProperties = new CustomProperties(excludedAccounts: [], excelPassword: 'monday1', excelInputFilePath: baseName + '/excel_in')
@@ -20,7 +21,6 @@ class ExcelFileServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-@Ignore
     void 'test try to open a file that exists, and with a valid password'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
@@ -28,11 +28,9 @@ class ExcelFileServiceSpec extends BaseServiceSpec {
         excelFileService.processProtectedExcelFile('finance_test_db_master.xlsm')
 
         then:
-        17 * transactionServiceMock.findByAccountNameOwnerOrderByTransactionDate(_ as String) >> [transaction]
-        //17 * meterService.incrementExceptionCaughtCounter("IllegalArgumentException")
         17 * meterRegistryMock.counter(_) >> counter
         17 * counter.increment()
-        17 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(_, true)
+        17 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(_, true) >> [transaction]
         0 * _
     }
 

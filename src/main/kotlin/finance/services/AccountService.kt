@@ -81,7 +81,7 @@ class AccountService (
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
             logger.error("Cannot insert account as there is a constraint violation on the data.")
-            meterService.incrementExceptionCaughtCounter("ValidationException")
+            meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert account as there is a constraint violation on the data.")
         }
 
