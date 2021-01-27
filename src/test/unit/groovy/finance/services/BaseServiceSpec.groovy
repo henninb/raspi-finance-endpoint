@@ -2,6 +2,7 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.repositories.*
+import finance.utils.Constants
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Meter
 import io.micrometer.core.instrument.MeterRegistry
@@ -33,12 +34,23 @@ class BaseServiceSpec extends Specification {
     protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, validatorMock, meterService)
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterService)
     protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterService)
-
+    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterService)
+    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService, validatorMock, meterService)
 
     //TODO: turn this into a method
-    Tag validationExceptionTag = Tag.of('exception.name.tag', 'ValidationException')
-    Tag serverNameTag = Tag.of('server.name.tag', 'server')
-    Tags tags = Tags.of(validationExceptionTag, serverNameTag)
-    Meter.Id id = new Meter.Id("exception.caught.counter", tags, null, null, Meter.Type.COUNTER)
+    protected Tag validationExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'ValidationException')
+    protected Tag runtimeExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'RuntimeException')
+    protected Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'server')
+    protected Tags validationExceptionTags = Tags.of(validationExceptionTag, serverNameTag)
+    protected Tags runtimeExceptionTags = Tags.of(runtimeExceptionTag, serverNameTag)
+    protected Meter.Id validationExceptionThrownMeter = new Meter.Id(Constants.EXCEPTION_THROWN_COUNTER, validationExceptionTags, null, null, Meter.Type.COUNTER)
+    protected Meter.Id runtimeExceptionThrownMeter = new Meter.Id(Constants.EXCEPTION_THROWN_COUNTER, runtimeExceptionTags, null, null, Meter.Type.COUNTER)
+    protected Meter.Id runtimeExceptionCaughtMeter = new Meter.Id(Constants.EXCEPTION_CAUGHT_COUNTER, runtimeExceptionTags, null, null, Meter.Type.COUNTER)
 
+    static Meter.Id setMeterId(String counterName, String accountNameOwner) {
+        Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'server')
+        Tag accountNameOwnerTag = Tag.of(Constants.ACCOUNT_NAME_OWNER_TAG, accountNameOwner)
+        Tags tags = Tags.of(accountNameOwnerTag, serverNameTag)
+        return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)
+    }
 }

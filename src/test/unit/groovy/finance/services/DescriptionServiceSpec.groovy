@@ -6,6 +6,7 @@ import finance.helpers.DescriptionBuilder
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 
+@SuppressWarnings("GroovyAccessibility")
 class DescriptionServiceSpec extends BaseServiceSpec {
     protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, validatorMock, meterService)
 
@@ -38,8 +39,7 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 1
         thrown(ValidationException)
         1 * validatorMock.validate(description) >> constraintViolations
-        //1 * meterService.incrementExceptionThrownCounter('ValidationException')
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
         0 * _
     }

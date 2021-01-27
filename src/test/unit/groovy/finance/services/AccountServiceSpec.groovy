@@ -3,13 +3,11 @@ package finance.services
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
 import finance.helpers.AccountBuilder
-import io.micrometer.core.instrument.Meter
-import io.micrometer.core.instrument.Tag
-import io.micrometer.core.instrument.Tags
 
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 
+@SuppressWarnings("GroovyAccessibility")
 class AccountServiceSpec extends BaseServiceSpec {
     protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterService)
 
@@ -73,8 +71,6 @@ class AccountServiceSpec extends BaseServiceSpec {
         given:
         Account account = AccountBuilder.builder().withAccountNameOwner('').build()
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
-        Tags tags = Tags.of(validationExceptionTag, serverNameTag)
-        Meter.Id id = new Meter.Id("exception.caught.counter", tags, null, null, Meter.Type.COUNTER)
 
         when:
         accountService.insertAccount(account)
@@ -84,7 +80,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 2
         1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * meterRegistryMock.counter(id) >> counter
+        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -119,7 +115,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         ex.message.contains('Cannot insert account as there is a constraint violation')
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * validatorMock.validate(account) >> constraintViolations
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
         0 * _
     }

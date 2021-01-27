@@ -6,6 +6,7 @@ import finance.helpers.ParameterBuilder
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 
+@SuppressWarnings("GroovyAccessibility")
 class ParameterServiceSpec extends BaseServiceSpec {
     protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterService)
 
@@ -38,8 +39,7 @@ class ParameterServiceSpec extends BaseServiceSpec {
         thrown(ValidationException)
         constraintViolations.size() == 1
         1 * validatorMock.validate(parameter) >> constraintViolations
-        //1 * meterService.incrementExceptionThrownCounter('ValidationException')
-        1 * meterRegistryMock.counter(_) >> counter
+        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
         0 * _
     }
