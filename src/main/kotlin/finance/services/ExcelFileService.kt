@@ -2,6 +2,7 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.CustomProperties
+import finance.domain.ExcelFileColumn
 import finance.domain.Transaction
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
@@ -95,34 +96,30 @@ class ExcelFileService (
 
     private fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction) {
         val newRow = currentSheet.createRow(rowNumber)
+        //ExcelFileColumn.values().forEach { println(it) }
         for (columnNumber in 1 until 8) {
             val newCell = newRow.createCell(columnNumber)
-            when (columnNumber) {
-                COL_GUID -> {
+            when (ExcelFileColumn.fromInt(columnNumber)) {
+                ExcelFileColumn.Guid -> {
                     newCell.setCellValue(transaction.guid)
                 }
-                COL_TRANSACTION_DATE -> {
+                ExcelFileColumn.TransactionDate -> {
                     newCell.setCellValue(transaction.transactionDate)
                 }
-                COL_DESCRIPTION -> {
+                ExcelFileColumn.Description -> {
                     newCell.setCellValue(transaction.description)
                 }
-                COL_CATEGORY -> {
+                ExcelFileColumn.Category -> {
                     newCell.setCellValue(transaction.category)
                 }
-                COL_AMOUNT -> {
+                ExcelFileColumn.Amount -> {
                     newCell.setCellValue(transaction.amount.toDouble())
                 }
-                COL_CLEARED -> {
+                ExcelFileColumn.TransactionState -> {
                     newCell.setCellValue(transaction.transactionState.toString())
                 }
-                COL_NOTES -> {
+                ExcelFileColumn.Notes -> {
                     newCell.setCellValue(transaction.notes)
-                }
-                else -> {
-                    logger.error("No column match for transaction guid value:  ${transaction.guid}")
-                    meterService.incrementExceptionThrownCounter("RuntimeException")
-                    throw RuntimeException("No column match for transaction guid value:  ${transaction.guid}")
                 }
             }
         }

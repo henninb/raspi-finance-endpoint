@@ -8,7 +8,7 @@ import javax.validation.ValidationException
 
 class CategoryServiceSpec extends BaseServiceSpec {
 
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterServiceMock)
+    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterService)
 
     void setup() {
     }
@@ -39,7 +39,9 @@ class CategoryServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 1
         thrown(ValidationException)
         1 * validatorMock.validate(category) >> constraintViolations
-        1 * meterServiceMock.incrementExceptionThrownCounter('ValidationException')
+        //1 * meterService.incrementExceptionThrownCounter('ValidationException')
+        1 * meterRegistryMock.counter(_) >> counter
+        1 * counter.increment()
         0 * _
     }
 

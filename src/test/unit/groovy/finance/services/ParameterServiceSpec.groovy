@@ -7,7 +7,7 @@ import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 
 class ParameterServiceSpec extends BaseServiceSpec {
-    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterServiceMock)
+    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterService)
 
     void setup() {
     }
@@ -38,7 +38,9 @@ class ParameterServiceSpec extends BaseServiceSpec {
         thrown(ValidationException)
         constraintViolations.size() == 1
         1 * validatorMock.validate(parameter) >> constraintViolations
-        1 * meterServiceMock.incrementExceptionThrownCounter('ValidationException')
+        //1 * meterService.incrementExceptionThrownCounter('ValidationException')
+        1 * meterRegistryMock.counter(_) >> counter
+        1 * counter.increment()
         0 * _
     }
 }
