@@ -16,7 +16,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed(value = "receipt.image.services.timed", histogram = true)
+@Timed
 class ReceiptImageService(
     private var receiptImageRepository: ReceiptImageRepository,
     private val validator: Validator,

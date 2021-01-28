@@ -14,7 +14,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed(value = "category.services.timed", histogram = true)
+@Timed
 class CategoryService(
     private var categoryRepository: CategoryRepository,
     private val validator: Validator,
