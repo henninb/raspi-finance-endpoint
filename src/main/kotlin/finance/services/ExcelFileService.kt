@@ -149,14 +149,6 @@ class ExcelFileService (
     }
 
     companion object {
-        //TODO: convert this to an enum
-        const val COL_GUID = 1
-        const val COL_TRANSACTION_DATE = 2
-        const val COL_DESCRIPTION = 3
-        const val COL_CATEGORY = 4
-        const val COL_AMOUNT = 5
-        const val COL_CLEARED = 6
-        const val COL_NOTES = 7
         private val mapper = ObjectMapper()
         private val logger = LogManager.getLogger()
     }
