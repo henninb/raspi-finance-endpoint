@@ -16,18 +16,19 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
-class AccountService (
+open class AccountService (
     private var accountRepository: AccountRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : IAccountService {
 
-    fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
+    @Timed
+    override fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
-    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
+    @Timed
+    override fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
@@ -37,7 +38,8 @@ class AccountService (
         return accounts
     }
 
-    fun findByActiveStatusOrderByAccountNameOwner(): List<Account> {
+    @Timed
+    override fun findByActiveStatusOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
@@ -47,11 +49,13 @@ class AccountService (
         return accounts
     }
 
-    fun findAccountsThatRequirePayment(): List<String> {
+    @Timed
+    override fun findAccountsThatRequirePayment(): List<String> {
         return accountRepository.findAccountsThatRequirePayment()
     }
 
-    fun computeTheGrandTotalForAllTransactions(): BigDecimal {
+    @Timed
+    override fun computeTheGrandTotalForAllTransactions(): BigDecimal {
         val totals: BigDecimal
         try {
             totals = accountRepository.computeTheGrandTotalForAllTransactions()
@@ -63,7 +67,8 @@ class AccountService (
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
-    fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal {
+    @Timed
+    override fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal {
         val totals: BigDecimal
         try {
             totals = accountRepository.computeTheGrandTotalForAllClearedTransactions()
@@ -75,7 +80,8 @@ class AccountService (
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
-    fun insertAccount(account: Account): Boolean {
+    @Timed
+    override fun insertAccount(account: Account): Boolean {
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
@@ -98,13 +104,15 @@ class AccountService (
         return true
     }
 
-    fun deleteByAccountNameOwner(accountNameOwner: String) : Boolean {
+    @Timed
+    override fun deleteByAccountNameOwner(accountNameOwner: String) : Boolean {
         accountRepository.deleteByAccountNameOwner(accountNameOwner)
         return true
     }
 
-    // TODO: set the update timestamp
-    fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
+    // TODO: set the update timestamp logic
+    @Timed
+    override fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
         //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
         //val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
 //        accounts.forEach { account ->
@@ -125,8 +133,9 @@ class AccountService (
         return true
     }
 
-    //TODO: Complete the function
-    fun updateAccount(account: Account): Boolean {
+    //TODO: Complete the method logic
+    @Timed
+    override fun updateAccount(account: Account): Boolean {
         val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
         if (optionalAccount.isPresent) {
 
