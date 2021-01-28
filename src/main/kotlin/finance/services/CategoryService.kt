@@ -14,14 +14,14 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
-class CategoryService(
+open class CategoryService(
     private var categoryRepository: CategoryRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : ICategoryService {
 
-    fun insertCategory(category: Category): Boolean {
+    @Timed
+    override fun insertCategory(category: Category): Boolean {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -35,7 +35,8 @@ class CategoryService(
         return true
     }
 
-    fun findByCategory(categoryName: String): Optional<Category> {
+    @Timed
+    override fun findByCategory(categoryName: String): Optional<Category> {
         val categoryOptional: Optional<Category> = categoryRepository.findByCategory(categoryName)
         if (categoryOptional.isPresent) {
             return categoryOptional
@@ -43,16 +44,19 @@ class CategoryService(
         return Optional.empty()
     }
 
-    fun deleteByCategoryName(categoryName: String): Boolean {
+    @Timed
+    override fun deleteByCategoryName(categoryName: String): Boolean {
         categoryRepository.deleteByCategory(categoryName)
         return true
     }
 
-    fun fetchAllActiveCategories(): List<Category> {
+    @Timed
+    override fun fetchAllActiveCategories(): List<Category> {
         return categoryRepository.findByActiveStatusOrderByCategory(true)
     }
 
-    fun findByCategoryName(categoryName: String): Optional<Category> {
+    @Timed
+    override fun findByCategoryName(categoryName: String): Optional<Category> {
         return categoryRepository.findByCategory(categoryName)
     }
 

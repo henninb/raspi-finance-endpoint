@@ -13,14 +13,14 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
-class DescriptionService(
+open class DescriptionService(
     private var descriptionRepository: DescriptionRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : IDescriptionService {
 
-    fun insertDescription(description: Description): Boolean {
+    @Timed
+    override fun insertDescription(description: Description): Boolean {
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -34,16 +34,19 @@ class DescriptionService(
         return true
     }
 
-    fun deleteByDescriptionName(description: String): Boolean {
+    @Timed
+    override fun deleteByDescriptionName(description: String): Boolean {
         descriptionRepository.deleteByDescription(description)
         return true
     }
 
-    fun fetchAllDescriptions(): List<Description> {
+    @Timed
+    override fun fetchAllDescriptions(): List<Description> {
         return descriptionRepository.findByActiveStatusOrderByDescription(true)
     }
 
-    fun findByDescriptionName(descriptionName: String): Optional<Description> {
+    @Timed
+    override fun findByDescriptionName(descriptionName: String): Optional<Description> {
        return descriptionRepository.findByDescription(descriptionName)
     }
 
