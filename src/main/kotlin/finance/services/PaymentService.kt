@@ -14,7 +14,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed(value = "payment.services.timed", histogram = true)
+@Timed
 class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,

@@ -13,7 +13,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed(value = "description.services.timed", histogram = true)
+@Timed
 class DescriptionService(
     private var descriptionRepository: DescriptionRepository,
     private val validator: Validator,

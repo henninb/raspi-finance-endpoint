@@ -26,7 +26,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isDeleted = transactionService.deleteTransactionByGuid(guid)
 
         then:
-        isDeleted.is(true)
+        isDeleted
         1 * transactionRepositoryMock.deleteByGuid(guid)
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
@@ -41,7 +41,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isDeleted = transactionService.deleteTransactionByGuid(guid)
 
         then:
-        isDeleted.is(false)
+        isDeleted == false
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }
@@ -89,7 +89,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted.is(true)
+        isInserted
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * validatorMock.validate(transaction) >> constraintViolations
@@ -113,7 +113,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted.is(true)
+        isInserted
         constraintViolations.size() == 0
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
@@ -144,7 +144,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted.is(true)
+        isInserted
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
@@ -172,7 +172,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted.is(true)
+        isInserted
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
@@ -203,7 +203,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted.is(true)
+        isInserted
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * validatorMock.validate(transaction) >> constraintViolations
@@ -225,7 +225,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Boolean isUpdated = transactionService.updateTransactionReoccurringFlag(transaction.guid, false)
 
         then:
-        isUpdated.is(true)
+        isUpdated
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction)
         0 * _

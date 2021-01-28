@@ -23,8 +23,8 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed(value = "transaction.services.timed", histogram = true)
-open class TransactionService(
+@Timed
+class TransactionService(
     private var transactionRepository: TransactionRepository,
     private var accountService: AccountService,
     private var categoryService: CategoryService,

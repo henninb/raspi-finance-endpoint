@@ -19,7 +19,7 @@ import java.io.*
 import java.util.stream.IntStream
 
 @Service
-@Timed(value = "excel.file.services.timed", histogram = true)
+@Timed
 class ExcelFileService (
     private val customProperties: CustomProperties,
     private val transactionService: TransactionService,
