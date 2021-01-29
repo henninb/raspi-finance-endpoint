@@ -1,7 +1,6 @@
 package finance.services
 
 import finance.domain.Category
-import io.micrometer.core.annotation.Timed
 import java.util.*
 
 interface ICategoryService {

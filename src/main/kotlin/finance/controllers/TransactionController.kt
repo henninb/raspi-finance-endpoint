@@ -17,7 +17,8 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/transaction")
-class TransactionController @Autowired constructor(private var transactionService: TransactionService) : BaseController()   {
+class TransactionController @Autowired constructor(private var transactionService: TransactionService) :
+    BaseController() {
 
     @Autowired
     lateinit var meterService: MeterService
@@ -97,7 +98,10 @@ class TransactionController @Autowired constructor(private var transactionServic
         }
         logger.error("The transaction guid = $guid could not be updated for transaction state.")
         meterService.incrementTransactionRestTransactionStateUpdateFailureCounter("unknown")
-        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "The transaction guid = $guid could not be updated for transaction state.")
+        throw ResponseStatusException(
+            HttpStatus.NOT_MODIFIED,
+            "The transaction guid = $guid could not be updated for transaction state."
+        )
     }
 
     @PutMapping(

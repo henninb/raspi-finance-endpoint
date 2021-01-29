@@ -1,7 +1,6 @@
 package finance.controllers
 
 import finance.domain.Parameter
-import finance.services.MeterService
 import finance.services.ParameterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

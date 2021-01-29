@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
+
 import javax.validation.ConstraintViolation
 
 @SuppressWarnings("GroovyAccessibility")
@@ -32,7 +33,7 @@ class JsonTransactionProcessorSpec extends BaseProcessor {
 
     void 'test JsonTransactionProcessor - process - invalid records'() {
         given:
-        List<Transaction> transactions =  mapper.readValue(payloadInvalid, Transaction[])
+        List<Transaction> transactions = mapper.readValue(payloadInvalid, Transaction[])
         Set<ConstraintViolation<Transaction>> constraintViolations1 = validator.validate(transactions[0])
         Set<ConstraintViolation<Transaction>> constraintViolations2 = validator.validate(transactions[1])
         exchange.in.setBody(payloadInvalid)

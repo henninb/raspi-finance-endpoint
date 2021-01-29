@@ -4,7 +4,6 @@ import finance.configurations.CustomProperties
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import org.springframework.core.io.FileSystemResource
-import spock.lang.Ignore
 
 @SuppressWarnings("GroovyAccessibility")
 class ExcelFileServiceSpec extends BaseServiceSpec {

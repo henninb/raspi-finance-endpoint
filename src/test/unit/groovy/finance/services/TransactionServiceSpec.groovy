@@ -304,7 +304,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    void 'test updateTransactionReceiptImageByGuid' () {
+    void 'test updateTransactionReceiptImageByGuid'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         transaction.transactionId = 1

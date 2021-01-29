@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.CustomProperties
 import finance.domain.ExcelFileColumn
 import finance.domain.Transaction
-import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.apache.poi.poifs.crypt.Decryptor
 import org.apache.poi.poifs.crypt.EncryptionInfo
@@ -13,13 +12,12 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-
 import org.springframework.stereotype.Service
 import java.io.*
 import java.util.stream.IntStream
 
 @Service
-class ExcelFileService (
+class ExcelFileService(
     private val customProperties: CustomProperties,
     private val transactionService: TransactionService,
     private var meterService: MeterService
@@ -33,7 +31,7 @@ class ExcelFileService (
         val encryptionInfo = EncryptionInfo(fileStream)
         val decryptor = Decryptor.getInstance(encryptionInfo)
         val validPassword = decryptor.verifyPassword(customProperties.excelPassword)
-        if(!validPassword) {
+        if (!validPassword) {
             throw RuntimeException("Password is not valid for file: $inputExcelFileName")
         }
         val inputStream = decryptor.getDataStream(fileStream)
@@ -51,7 +49,11 @@ class ExcelFileService (
         }
     }
 
-    override fun saveProtectedExcelFile(inputExcelFileName: String, workbook: Workbook, encryptionInfo: EncryptionInfo) {
+    override fun saveProtectedExcelFile(
+        inputExcelFileName: String,
+        workbook: Workbook,
+        encryptionInfo: EncryptionInfo
+    ) {
         val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/new-${inputExcelFileName}"))
         val poiFileSystem = POIFSFileSystem()
 

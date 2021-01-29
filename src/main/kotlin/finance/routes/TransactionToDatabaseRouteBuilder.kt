@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 
 @ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-class TransactionToDatabaseRouteBuilder @Autowired constructor(
+class TransactionToDatabaseRouteBuilder (
     private var camelProperties: CamelProperties,
     private var stringTransactionProcessor: StringTransactionProcessor,
     private var insertTransactionProcessor: InsertTransactionProcessor,

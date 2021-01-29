@@ -5,20 +5,11 @@ import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.ReceiptImageRepository
 import finance.repositories.TransactionRepository
-import finance.services.AccountService
-import finance.services.CategoryService
-import finance.services.MeterService
-import finance.services.ReceiptImageService
-import finance.services.TransactionService
+import finance.services.*
 import finance.utils.Constants
-import io.micrometer.core.instrument.Counter
-import io.micrometer.core.instrument.Meter
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Tag
-import io.micrometer.core.instrument.Tags
+import io.micrometer.core.instrument.*
 import org.apache.camel.CamelContext
 import org.apache.camel.Exchange
-import org.apache.camel.Message
 import org.apache.camel.builder.ExchangeBuilder
 import org.apache.camel.impl.DefaultCamelContext
 import spock.lang.Specification
@@ -66,7 +57,7 @@ class BaseProcessor extends Specification {
         return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)
     }
 
-    def setup(){
+    def setup() {
 //        RouteBuilder route = new InitialRoute(
 //                premiumGreeting,
 //                standardGreeting,

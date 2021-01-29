@@ -1,22 +1,14 @@
 package finance.routes
 
 import finance.Application
-import finance.configurations.CamelProperties
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.repositories.TransactionRepository
-import org.apache.camel.CamelContext
 import org.apache.camel.Exchange
-import org.apache.camel.ProducerTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.core.io.FileSystemResource
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.util.ResourceUtils
-import spock.lang.Specification
-import spock.util.concurrent.PollingConditions
-
-import javax.validation.ValidationException
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

@@ -1,11 +1,9 @@
 package finance.services
 
-import finance.utils.Constants
+
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Tag
 import spock.lang.Ignore
 import spock.lang.Specification
-
 
 class MeterServiceSpec extends Specification {
 
@@ -13,7 +11,7 @@ class MeterServiceSpec extends Specification {
     protected MeterService meterService = new MeterService(meterRegistryMock)
 
     @Ignore
-    void 'test increment account list is empty' () {
+    void 'test increment account list is empty'() {
         when:
         meterService.incrementAccountListIsEmpty('test')
 

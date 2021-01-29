@@ -10,11 +10,14 @@ object Constants {
     const val TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER = "transaction.account.list.none.found.counter"
     const val TRANSACTION_ALREADY_EXISTS_COUNTER = "transaction.already.exists.counter"
     const val TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER = "transaction.successfully.inserted.counter"
-    const val TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER = "transaction.transaction.state.updated.cleared.counter"
+    const val TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER =
+        "transaction.transaction.state.updated.cleared.counter"
     const val TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER = "transaction.receipt.image.inserted.counter"
     const val TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER = "transaction.rest.select.none.found.counter"
-    const val TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER = "transaction.rest.transaction.state.update.failure.counter"
-    const val TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER = "transaction.rest.reoccurring.state.update.failure.counter"
+    const val TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER =
+        "transaction.rest.transaction.state.update.failure.counter"
+    const val TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER =
+        "transaction.rest.reoccurring.state.update.failure.counter"
     const val CAMEL_STRING_PROCESSOR_COUNTER = "camel.string.processor.counter"
     const val CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER = "camel.transaction.successfully.inserted.counter"
 

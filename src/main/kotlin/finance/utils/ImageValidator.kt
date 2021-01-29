@@ -13,7 +13,7 @@ class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
 
     override fun isValid(value: ByteArray, context: ConstraintValidatorContext): Boolean {
 
-        if(value.isEmpty()) {
+        if (value.isEmpty()) {
             return true
         }
 

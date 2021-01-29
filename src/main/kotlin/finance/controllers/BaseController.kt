@@ -1,11 +1,9 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.services.MeterService
 import org.apache.catalina.connector.ClientAbortException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
@@ -19,8 +17,7 @@ import java.util.*
 import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
-open class BaseController () {
-
+open class BaseController {
 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -7,10 +7,7 @@ import finance.helpers.ReceiptImageBuilder
 import finance.repositories.ReceiptImageRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
@@ -33,7 +30,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     void 'test insert receiptImage - bad image'() {
         given:
         String payload = '{"transactionId":1, "image":"test", "activeStatus":true}'
-        
+
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payload.toString())
 
@@ -95,7 +92,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = selectEndpoint(endpointName, receiptImageId.toString())
-        
+
         then:
         response.statusCode == HttpStatus.OK
         0 * _

@@ -185,7 +185,8 @@ CREATE TABLE IF NOT EXISTS func.t_description
 
 -- ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
-SELECT setval('func.t_receipt_image_receipt_image_id_seq', (SELECT MAX(receipt_image_id) FROM func.t_receipt_image) + 1);
+SELECT setval('func.t_receipt_image_receipt_image_id_seq',
+              (SELECT MAX(receipt_image_id) FROM func.t_receipt_image) + 1);
 SELECT setval('func.t_transaction_transaction_id_seq', (SELECT MAX(transaction_id) FROM func.t_transaction) + 1);
 SELECT setval('func.t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM func.t_payment) + 1);
 SELECT setval('func.t_account_account_id_seq', (SELECT MAX(account_id) FROM func.t_account) + 1);
@@ -198,24 +199,28 @@ CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
     RETURNS TRIGGER
     SET SCHEMA 'func'
     LANGUAGE PLPGSQL
-    AS $$
+AS
+$$
     BEGIN
       NEW.date_updated := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
-    $$;
+
+$$;
 
 CREATE OR REPLACE FUNCTION fn_insert_transaction_categories()
     RETURNS TRIGGER
     SET SCHEMA 'func'
     LANGUAGE PLPGSQL
-    AS $$
+AS
+$$
     BEGIN
       NEW.date_updated := CURRENT_TIMESTAMP;
       NEW.date_added := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
-    $$;
+
+$$;
 
 DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON func.t_transaction_categories;
 CREATE TRIGGER tr_insert_transaction_categories

@@ -5,18 +5,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.AccountTypeConverter
 import finance.utils.ImageFormatTypeConverter
-import finance.utils.ValidDate
 import finance.utils.ValidImage
 import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.Proxy
 import org.hibernate.annotations.Type
-import java.io.ByteArrayInputStream
 import java.sql.Timestamp
 import java.util.*
-import javax.imageio.ImageIO
-import javax.imageio.ImageReader
 import javax.persistence.*
 import javax.validation.constraints.Min
 
@@ -62,7 +57,7 @@ data class ReceiptImage(
     }
 
     //TODO: 2021-01-09, temporary method
-    private fun ByteArray.toHexString() : String {
+    private fun ByteArray.toHexString(): String {
         return this.joinToString("") {
             String.format("%02x", it)
         }
