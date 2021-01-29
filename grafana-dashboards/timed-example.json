@@ -15,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 4,
   "links": [],
   "panels": [
     {
@@ -66,7 +65,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "groupBy": [],
+          "groupBy": [
+            {
+              "params": [
+                "class"
+              ],
+              "type": "tag"
+            }
+          ],
           "measurement": "method_timed",
           "orderByTime": "ASC",
           "policy": "default",
@@ -82,13 +88,7 @@
               }
             ]
           ],
-          "tags": [
-            {
-              "key": "method",
-              "operator": "=",
-              "value": "fetchTotalsByAccountNameOwner"
-            }
-          ]
+          "tags": []
         }
       ],
       "thresholds": [],
@@ -141,12 +141,12 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "timed",
   "uid": "B90arRLGk",
-  "version": 1
+  "version": 332
 }
