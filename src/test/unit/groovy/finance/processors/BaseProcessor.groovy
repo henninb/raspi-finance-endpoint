@@ -10,8 +10,12 @@ import finance.services.CategoryService
 import finance.services.MeterService
 import finance.services.ReceiptImageService
 import finance.services.TransactionService
+import finance.utils.Constants
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.Meter
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.Tags
 import org.apache.camel.Exchange
 import org.apache.camel.Message
 import spock.lang.Specification
@@ -41,4 +45,10 @@ class BaseProcessor extends Specification {
     protected InsertTransactionProcessor insertTransactionProcessor = new InsertTransactionProcessor(transactionService, meterService)
     protected StringTransactionProcessor stringTransactionProcessor = new StringTransactionProcessor(meterService)
 
+    static Meter.Id setMeterId(String counterName, String accountNameOwner) {
+        Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'server')
+        Tag accountNameOwnerTag = Tag.of(Constants.ACCOUNT_NAME_OWNER_TAG, accountNameOwner)
+        Tags tags = Tags.of(accountNameOwnerTag, serverNameTag)
+        return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)
+    }
 }
