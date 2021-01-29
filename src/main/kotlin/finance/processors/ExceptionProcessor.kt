@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-open class ExceptionProcessor @Autowired constructor() : Processor {
+open class ExceptionProcessor() : Processor {
 
     @Timed
     override fun process(exchange: Exchange) {

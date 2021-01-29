@@ -2,6 +2,7 @@ package finance.services
 
 import finance.utils.Constants.ACCOUNT_NAME_OWNER_TAG
 import finance.utils.Constants.CAMEL_STRING_PROCESSOR_COUNTER
+import finance.utils.Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER
 import finance.utils.Constants.EXCEPTION_CAUGHT_COUNTER
 import finance.utils.Constants.EXCEPTION_NAME_TAG
 import finance.utils.Constants.EXCEPTION_THROWN_COUNTER
@@ -155,4 +156,16 @@ class MeterService(private var meterRegistry: MeterRegistry) {
             .increment()
     }
 
+    fun incrementCamelTransactionSuccessfullyInsertedCounter(accountNameOwner: String): Unit {
+        Counter
+            .builder(CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER)
+            .tags(
+                listOfNotNull(
+                    Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
+                    Tag.of(SERVER_NAME_TAG, hostName),
+                )
+            )
+            .register(meterRegistry)
+            .increment()
+    }
 }
