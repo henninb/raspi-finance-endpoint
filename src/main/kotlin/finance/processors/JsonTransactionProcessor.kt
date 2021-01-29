@@ -15,7 +15,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Component
-open class JsonTransactionProcessor @Autowired constructor(
+open class JsonTransactionProcessor(
     private val validator: Validator,
     private var meterService: MeterService
 ) : Processor {

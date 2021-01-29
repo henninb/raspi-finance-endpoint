@@ -15,6 +15,7 @@ object Constants {
     const val TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER = "transaction.rest.select.none.found.counter"
     const val TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER = "transaction.rest.transaction.state.update.failure.counter"
     const val TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER = "transaction.rest.reoccurring.state.update.failure.counter"
+    const val CAMEL_STRING_PROCESSOR_COUNTER = "camel.string.processor.counter"
 
     const val ALPHA_NUMERIC_NO_SPACE = "^[a-z0-9_-]*$"
     const val ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$"

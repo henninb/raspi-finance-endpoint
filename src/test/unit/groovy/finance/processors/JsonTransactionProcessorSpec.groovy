@@ -1,25 +1,11 @@
 package finance.processors
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
-import finance.services.MeterService
-import org.apache.camel.Exchange
-import org.apache.camel.Message
-import spock.lang.Specification
-
 import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
 
-class JsonTransactionProcessorSpec extends Specification {
-    protected Validator mockValidator = GroovyMock(Validator)
-    protected MeterService mockMeterService = GroovyMock(MeterService)
-    protected JsonTransactionProcessor processor = new JsonTransactionProcessor(mockValidator, mockMeterService)
-    protected Exchange mockExchange = GroovyMock(Exchange)
-    protected Message mockMessage = GroovyMock(Message)
-    protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
-    protected ObjectMapper mapper = new ObjectMapper()
+@SuppressWarnings("GroovyAccessibility")
+class JsonTransactionProcessorSpec extends BaseProcessor {
 
     protected String payloadInvalid = '''
 
@@ -37,7 +23,7 @@ class JsonTransactionProcessorSpec extends Specification {
         List<Transaction> transactions = [transaction]
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transactions[0])
         when:
-        processor.process(mockExchange)
+        jsonTransactionProcessor.process(mockExchange)
 
         then:
         1 * mockExchange.in >> mockMessage
@@ -60,7 +46,7 @@ class JsonTransactionProcessorSpec extends Specification {
         Set<ConstraintViolation<Transaction>> constraintViolations2 = validator.validate(transactions[1])
 
         when:
-        processor.process(mockExchange)
+        jsonTransactionProcessor.process(mockExchange)
 
         then:
         constraintViolations1.size() == 0
