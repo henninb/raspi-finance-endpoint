@@ -23,17 +23,17 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
-class TransactionService(
+open class TransactionService(
     private var transactionRepository: TransactionRepository,
     private var accountService: AccountService,
     private var categoryService: CategoryService,
     private var receiptImageService: ReceiptImageService,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : ITransactionService {
 
-    fun deleteTransactionByGuid(guid: String): Boolean {
+    @Timed
+    override fun deleteTransactionByGuid(guid: String): Boolean {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
@@ -56,7 +56,8 @@ class TransactionService(
         return false
     }
 
-    private fun deleteReceiptImage(transaction: Transaction) {
+    @Timed
+    override fun deleteReceiptImage(transaction: Transaction) {
         val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
         if (receiptImageOptional.isPresent) {
             receiptImageService.deleteReceiptImage(receiptImageOptional.get())
@@ -65,7 +66,8 @@ class TransactionService(
     }
 
     // https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
-    fun insertTransaction(transaction: Transaction): Boolean {
+    @Timed
+    override fun insertTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             //TODO: add metric here
@@ -92,7 +94,8 @@ class TransactionService(
         return true
     }
 
-    private fun processAccount(transaction: Transaction) {
+    @Timed
+    override fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
             transaction.accountId = accountOptional.get().accountId
@@ -109,7 +112,8 @@ class TransactionService(
         }
     }
 
-    private fun processCategory(transaction: Transaction) {
+    @Timed
+    override fun processCategory(transaction: Transaction) {
         when {
             transaction.category != "" -> {
                 val optionalCategory = categoryService.findByCategory(transaction.category)
@@ -125,15 +129,16 @@ class TransactionService(
         }
     }
 
-    private fun createDefaultCategory(categoryName: String): Category {
+    @Timed
+    override fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
         category.category = categoryName
         return category
     }
 
-
-    private fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
+    @Timed
+    override fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
         val account = Account()
 
         account.accountNameOwner = accountNameOwner
@@ -143,7 +148,8 @@ class TransactionService(
         return account
     }
 
-    fun findTransactionByGuid(guid: String): Optional<Transaction> {
+    @Timed
+    override fun findTransactionByGuid(guid: String): Optional<Transaction> {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             return transactionOptional
@@ -151,7 +157,8 @@ class TransactionService(
         return Optional.empty()
     }
 
-    fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+    @Timed
+    override fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
 
         val transactions =
             transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
@@ -171,7 +178,8 @@ class TransactionService(
         return result
     }
 
-    fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
+    @Timed
+    override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val transactions: List<Transaction> =
             transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
         //TODO: look into this type of error handling
@@ -185,7 +193,8 @@ class TransactionService(
         return sortedTransactions
     }
 
-    fun updateTransaction(transaction: Transaction): Boolean {
+    @Timed
+    override fun updateTransaction(transaction: Transaction): Boolean {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.error("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
@@ -202,7 +211,8 @@ class TransactionService(
         }
     }
 
-    private fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
+    @Timed
+    override fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
 
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
@@ -231,7 +241,8 @@ class TransactionService(
 //        }
 //    }
 
-    fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
+    @Timed
+    override fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
         val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
         val rawImage = Base64Utils.decodeFromString(imageBase64String)
         val imageFormatType = getImageFormatType(rawImage)
@@ -274,7 +285,8 @@ class TransactionService(
         throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
-    fun changeAccountNameOwner(map: Map<String, String>): Boolean {
+    @Timed
+    override fun changeAccountNameOwner(map: Map<String, String>): Boolean {
         val accountNameOwner = map["accountNameOwner"]
         val guid = map["guid"]
 
@@ -302,7 +314,8 @@ class TransactionService(
         throw RuntimeException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
     }
 
-    fun updateTransactionState(guid: String, transactionState: TransactionState): MutableList<Transaction> {
+    @Timed
+    override fun updateTransactionState(guid: String, transactionState: TransactionState): MutableList<Transaction> {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transactions = mutableListOf<Transaction>()
@@ -336,7 +349,8 @@ class TransactionService(
         throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
     }
 
-    private fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
+    @Timed
+    override fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
         try {
             val bufferedImage = ImageIO.read(ByteArrayInputStream(rawImage))
 
@@ -353,7 +367,8 @@ class TransactionService(
         return byteArrayOf()
     }
 
-    private fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
+    @Timed
+    override fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
         val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(rawImage))
         val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
         var format = ImageFormatType.Undefined
@@ -376,7 +391,8 @@ class TransactionService(
         return format
     }
 
-    private fun createFutureTransaction(transaction: Transaction): Transaction {
+    @Timed
+    override fun createFutureTransaction(transaction: Transaction): Transaction {
         val calendar = Calendar.getInstance()
         calendar.time = transaction.transactionDate
 
@@ -414,7 +430,8 @@ class TransactionService(
         return transactionFuture
     }
 
-    fun updateTransactionReoccurringFlag(guid: String, reoccurring: Boolean): Boolean {
+    @Timed
+    override fun updateTransactionReoccurringFlag(guid: String, reoccurring: Boolean): Boolean {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
@@ -430,7 +447,8 @@ class TransactionService(
         throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
     }
 
-    fun findAccountsThatRequirePayment(): List<Account> {
+    @Timed
+    override fun findAccountsThatRequirePayment(): List<Account> {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, 30)
         val todayPlusThirty = Date(calendar.time.time)
@@ -458,12 +476,9 @@ class TransactionService(
             logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
         }
         return accountNeedingAttention
-
-        //val transactions = transactionRepository.findByActiveStatus()
-        //transactions.forEach { transaction -> println(transaction) }
     }
 
-    private fun nextTimestampMillis(): Long {
+    override fun nextTimestampMillis(): Long {
         val lastTimestamp = System.currentTimeMillis()
         var timestamp = System.currentTimeMillis()
         while (timestamp < lastTimestamp) {

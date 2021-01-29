@@ -13,14 +13,13 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
 class ParameterService(
     private var parameterRepository: ParameterRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : IParameterService {
 
-    fun insertParameter(parameter: Parameter): Boolean {
+    override fun insertParameter(parameter: Parameter): Boolean {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -35,11 +34,11 @@ class ParameterService(
         return true
     }
 
-    fun deleteByParameterName(parameterName: String) {
+    override fun deleteByParameterName(parameterName: String) {
         parameterRepository.deleteByParameterName(parameterName)
     }
 
-    fun findByParameter(parameterName: String): Optional<Parameter> {
+    override fun findByParameter(parameterName: String): Optional<Parameter> {
         val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parameterName)
         if (parameterOptional.isPresent) {
             return parameterOptional

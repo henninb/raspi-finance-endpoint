@@ -19,15 +19,14 @@ import java.io.*
 import java.util.stream.IntStream
 
 @Service
-@Timed
 class ExcelFileService (
     private val customProperties: CustomProperties,
     private val transactionService: TransactionService,
     private var meterService: MeterService
-) {
+) : IExcelFileService {
 
     @Throws(Exception::class)
-    fun processProtectedExcelFile(inputExcelFileName: String) {
+    override fun processProtectedExcelFile(inputExcelFileName: String) {
         logger.info("${customProperties.excelInputFilePath}/${inputExcelFileName}")
         val fileStream =
             POIFSFileSystem(FileInputStream("${customProperties.excelInputFilePath}/${inputExcelFileName}"))
@@ -52,7 +51,7 @@ class ExcelFileService (
         }
     }
 
-    private fun saveProtectedExcelFile(inputExcelFileName: String, workbook: Workbook, encryptionInfo: EncryptionInfo) {
+    override fun saveProtectedExcelFile(inputExcelFileName: String, workbook: Workbook, encryptionInfo: EncryptionInfo) {
         val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/new-${inputExcelFileName}"))
         val poiFileSystem = POIFSFileSystem()
 
@@ -67,7 +66,7 @@ class ExcelFileService (
         poiFileSystem.close()
     }
 
-    private fun filterWorkbookThenImportTransactions(workbook: Workbook) {
+    override fun filterWorkbookThenImportTransactions(workbook: Workbook) {
         IntStream.range(0, workbook.numberOfSheets).filter { idx: Int ->
             (workbook.getSheetName(idx).contains("_brian") || workbook.getSheetName(idx)
                 .contains("_kari")) && !workbook.isSheetHidden(idx)
@@ -79,7 +78,7 @@ class ExcelFileService (
     }
 
     @Throws(IOException::class)
-    private fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
+    override fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
         val transactionList = transactionService.findByAccountNameOwnerOrderByTransactionDate(
             workbook.getSheetName(sheetNumber).replace('.', '-')
@@ -94,7 +93,7 @@ class ExcelFileService (
         }
     }
 
-    private fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction) {
+    override fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction) {
         val newRow = currentSheet.createRow(rowNumber)
         //ExcelFileColumn.values().forEach { println(it) }
         for (columnNumber in 1 until 8) {
@@ -125,7 +124,7 @@ class ExcelFileService (
         }
     }
 
-    private fun removeEachRowInTheWorksheet(currentSheet: Sheet) {
+    override fun removeEachRowInTheWorksheet(currentSheet: Sheet) {
 
         try {
             logger.info("currentSheet.lastRowNum = ${currentSheet.lastRowNum}")
@@ -144,7 +143,7 @@ class ExcelFileService (
         }
     }
 
-    private fun isExcludedAccount(accountExcludedList: List<String>, accountNameOwner: String): Boolean {
+    override fun isExcludedAccount(accountExcludedList: List<String>, accountNameOwner: String): Boolean {
         return accountExcludedList.stream().anyMatch { str: String -> str.trim { it <= ' ' } == accountNameOwner }
     }
 

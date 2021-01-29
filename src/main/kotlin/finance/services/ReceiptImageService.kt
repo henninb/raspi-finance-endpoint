@@ -16,14 +16,13 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
 class ReceiptImageService(
     private var receiptImageRepository: ReceiptImageRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : IReceiptImageService {
 
-    fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
+    override fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
 
         val constraintViolations: Set<ConstraintViolation<ReceiptImage>> = validator.validate(receiptImage)
         if (constraintViolations.isNotEmpty()) {
@@ -39,11 +38,11 @@ class ReceiptImageService(
         return receiptImageRepository.saveAndFlush(receiptImage)
     }
 
-    fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
+    override fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
     }
 
-    fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
+    override fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
         receiptImageRepository.deleteById(receiptImage.receiptImageId)
         return true
     }

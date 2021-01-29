@@ -14,22 +14,23 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-@Timed
-class PaymentService(
+open class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,
     private var accountService: AccountService,
     private var parameterService: ParameterService,
     private val validator: Validator,
     private var meterService: MeterService
-) {
+) : IPaymentService {
 
-    fun findAllPayments(): List<Payment> {
+    @Timed
+    override fun findAllPayments(): List<Payment> {
         return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
     }
 
     //TODO: make this method transactional - what happens if one inserts fails?
-    fun insertPayment(payment: Payment): Boolean {
+    @Timed
+    override fun insertPayment(payment: Payment): Boolean {
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
 
@@ -74,7 +75,8 @@ class PaymentService(
     //TODO: 10/24/2020 - not sure if Throws annotation helps here?
     //TODO: 10/24/2020 - Should an exception throw a 500 at the endpoint?
     @Throws
-    private fun populateDebitTransaction(
+    @Timed
+    override fun populateDebitTransaction(
         transactionDebit: Transaction,
         payment: Payment,
         paymentAccountNameOwner: String
@@ -97,7 +99,8 @@ class PaymentService(
         transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
 
-    private fun populateCreditTransaction(
+    @Timed
+    override fun populateCreditTransaction(
         transactionCredit: Transaction,
         payment: Payment,
         paymentAccountNameOwner: String
@@ -124,12 +127,14 @@ class PaymentService(
         transactionCredit.dateAdded = Timestamp(Calendar.getInstance().time.time)
     }
 
-    fun deleteByPaymentId(paymentId: Long) {
+    @Timed
+    override fun deleteByPaymentId(paymentId: Long) {
         logger.info("service - deleteByPaymentId = $paymentId")
         paymentRepository.deleteByPaymentId(paymentId)
     }
 
-    fun findByPaymentId(paymentId: Long): Optional<Payment> {
+    @Timed
+    override fun findByPaymentId(paymentId: Long): Optional<Payment> {
         logger.info("service - findByPaymentId = $paymentId")
         val paymentOptional: Optional<Payment> = paymentRepository.findByPaymentId(paymentId)
         if (paymentOptional.isPresent) {
