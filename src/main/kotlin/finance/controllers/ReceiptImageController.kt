@@ -1,8 +1,6 @@
 package finance.controllers
 
-import finance.domain.Payment
 import finance.domain.ReceiptImage
-import finance.services.MeterService
 import finance.services.ReceiptImageService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -12,7 +10,7 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/receipt/image")
-class ReceiptImageController(private var receiptImageService: ReceiptImageService): BaseController() {
+class ReceiptImageController(private var receiptImageService: ReceiptImageService) : BaseController() {
 
     @PostMapping(path = ["/insert"], produces = ["application/json"])
     fun insertReceiptImage(@RequestBody receiptImage: ReceiptImage): ResponseEntity<String> {

@@ -11,7 +11,8 @@ import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.*
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 import spock.lang.Stepwise
@@ -84,7 +85,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void 'test delete Payment'() {
         given:
-        Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == 'delete-test_brian'}
+        Payment payment1 = paymentRepository.findAll().find { it.accountNameOwner == 'delete-test_brian' }
 
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, payment1.paymentId.toString())
@@ -109,13 +110,13 @@ class PaymentControllerSpec extends BaseControllerSpec {
         response.statusCode.is(HttpStatus.OK)
 
         when:
-        Transaction transaction = transactionRepository.findAll().find {it.accountNameOwner == accountNameOwner}
+        Transaction transaction = transactionRepository.findAll().find { it.accountNameOwner == accountNameOwner }
 
         then:
         transaction.accountNameOwner == accountNameOwner
 
         when:
-        Payment payment1 = paymentRepository.findAll().find {it.accountNameOwner == accountNameOwner}
+        Payment payment1 = paymentRepository.findAll().find { it.accountNameOwner == accountNameOwner }
 
         then:
         payment1.accountNameOwner == accountNameOwner

@@ -9,7 +9,6 @@ import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
 import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
 import finance.utils.LowerCaseConverter
-import groovy.transform.builder.Builder
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp

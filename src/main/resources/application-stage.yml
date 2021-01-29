@@ -11,8 +11,8 @@ server:
 spring:
   application:
     name: ${APPNAME}
-#  profiles:
-#    active: ${SPRING_PROFILES_ACTIVE}
+  #  profiles:
+  #    active: ${SPRING_PROFILES_ACTIVE}
 
   # ===============================
   # = Jackson Settings

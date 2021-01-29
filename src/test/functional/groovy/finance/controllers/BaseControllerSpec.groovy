@@ -3,11 +3,7 @@ package finance.controllers
 import groovy.util.logging.Slf4j
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import spock.lang.Shared
 import spock.lang.Specification
 

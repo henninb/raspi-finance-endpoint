@@ -11,8 +11,8 @@ server:
 spring:
   application:
     name: raspi-finance-endpoint
-#  profiles:
-#    active: ${SPRING_PROFILES_ACTIVE}
+  #  profiles:
+  #    active: ${SPRING_PROFILES_ACTIVE}
 
   # ===============================
   # = Jackson Settings
@@ -61,7 +61,7 @@ spring:
     password: ${DATASOURCE_PASSWORD}
     url: ${DATASOURCE}
     baseline-on-migrate: true
-#    schemas: prod
+    #    schemas: prod
     locations: classpath:db/migration
     validate-on-migrate: true
 

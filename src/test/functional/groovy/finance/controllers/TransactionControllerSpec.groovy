@@ -200,13 +200,13 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
 
         where:
-        payload                                                                          | httpStatus
-        'badJson'                                                                        | HttpStatus.BAD_REQUEST
-        '{"test":1}'                                                                     | HttpStatus.BAD_REQUEST
-        '{badJson:"test"}'                                                               | HttpStatus.BAD_REQUEST
-        jsonPayloadInvalidGuid                                                           | HttpStatus.BAD_REQUEST
-        jsonPayloadMissingGuid                                                           | HttpStatus.BAD_REQUEST
-        jsonPayloadInvalidCategory                                                       | HttpStatus.BAD_REQUEST
+        payload                    | httpStatus
+        'badJson'                  | HttpStatus.BAD_REQUEST
+        '{"test":1}'               | HttpStatus.BAD_REQUEST
+        '{badJson:"test"}'         | HttpStatus.BAD_REQUEST
+        jsonPayloadInvalidGuid     | HttpStatus.BAD_REQUEST
+        jsonPayloadMissingGuid     | HttpStatus.BAD_REQUEST
+        jsonPayloadInvalidCategory | HttpStatus.BAD_REQUEST
         //TransactionBuilder.builder().transactionDate(Date.valueOf("1999-10-15")).build() | HttpStatus.BAD_REQUEST
     }
 

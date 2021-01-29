@@ -6,16 +6,14 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.FileSystemResource
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.util.ResourceUtils
-import spock.lang.Ignore
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
 import java.nio.file.Files
 
-
 @ActiveProfiles("int")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class CamelSpec extends  Specification {
+class CamelSpec extends Specification {
 
     protected String baseName = new FileSystemResource("").file.absolutePath
 

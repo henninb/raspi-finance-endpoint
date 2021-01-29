@@ -1,7 +1,10 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.*
+import finance.domain.AccountType
+import finance.domain.Payment
+import finance.domain.Transaction
+import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
@@ -42,12 +45,12 @@ open class PaymentService(
             throw ValidationException("Cannot insert payment as there is a constraint violation on the data")
         }
         val optionalAccount = accountService.findByAccountNameOwner(payment.accountNameOwner)
-        if(!optionalAccount.isPresent) {
+        if (!optionalAccount.isPresent) {
             logger.error("Account not found ${payment.accountNameOwner}")
             meterService.incrementExceptionThrownCounter("RuntimeException")
             throw RuntimeException("Account not found ${payment.accountNameOwner}")
         } else {
-            if( optionalAccount.get().accountType == AccountType.Debit ) {
+            if (optionalAccount.get().accountType == AccountType.Debit) {
                 logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
                 meterService.incrementExceptionThrownCounter("RuntimeException")
                 throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")

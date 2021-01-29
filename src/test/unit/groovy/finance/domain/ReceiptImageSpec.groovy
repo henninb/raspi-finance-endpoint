@@ -37,7 +37,7 @@ class ReceiptImageSpec extends Specification {
         when:
         ReceiptImage receiptImageFromJson = mapper.readValue(payload, ReceiptImage)
         and:
-        String result = new String (receiptImageFromJson.image)
+        String result = new String(receiptImageFromJson.image)
 
         then:
         result == 'jackson'

@@ -16,7 +16,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-open class AccountService (
+open class AccountService(
     private var accountRepository: AccountRepository,
     private val validator: Validator,
     private var meterService: MeterService
@@ -105,7 +105,7 @@ open class AccountService (
     }
 
     @Timed
-    override fun deleteByAccountNameOwner(accountNameOwner: String) : Boolean {
+    override fun deleteByAccountNameOwner(accountNameOwner: String): Boolean {
         accountRepository.deleteByAccountNameOwner(accountNameOwner)
         return true
     }

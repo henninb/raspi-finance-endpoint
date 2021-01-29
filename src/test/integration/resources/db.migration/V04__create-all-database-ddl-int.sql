@@ -198,24 +198,28 @@ CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
     RETURNS TRIGGER
     SET SCHEMA 'int'
     LANGUAGE PLPGSQL
-    AS $$
+AS
+$$
     BEGIN
       NEW.date_updated := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
-    $$;
+
+$$;
 
 CREATE OR REPLACE FUNCTION fn_insert_transaction_categories()
     RETURNS TRIGGER
     SET SCHEMA 'int'
     LANGUAGE PLPGSQL
-    AS $$
+AS
+$$
     BEGIN
       NEW.date_updated := CURRENT_TIMESTAMP;
       NEW.date_added := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
-    $$;
+
+$$;
 
 DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON int.t_transaction_categories;
 CREATE TRIGGER tr_insert_transaction_categories

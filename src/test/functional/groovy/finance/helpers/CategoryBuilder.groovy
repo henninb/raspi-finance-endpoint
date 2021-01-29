@@ -11,7 +11,7 @@ class CategoryBuilder {
     }
 
     Category build() {
-        Category category = new Category(). with {
+        Category category = new Category().with {
             category = this.categoryName
             activeStatus = this.activeStatus
             return it

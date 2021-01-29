@@ -3,12 +3,8 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.ReceiptImage
 import finance.repositories.ReceiptImageRepository
-import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Propagation
-import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation

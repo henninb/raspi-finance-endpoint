@@ -47,7 +47,7 @@ open class DescriptionService(
 
     @Timed
     override fun findByDescriptionName(descriptionName: String): Optional<Description> {
-       return descriptionRepository.findByDescription(descriptionName)
+        return descriptionRepository.findByDescription(descriptionName)
     }
 
     companion object {

@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 
 interface ReceiptImageRepository : JpaRepository<ReceiptImage, Long> {
-    fun findByTransactionId( transactionId: Long) : Optional<ReceiptImage>
+    fun findByTransactionId(transactionId: Long): Optional<ReceiptImage>
 }

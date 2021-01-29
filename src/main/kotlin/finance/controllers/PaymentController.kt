@@ -1,7 +1,6 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.MeterService
 import finance.services.PaymentService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -12,7 +11,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/payment")
-class PaymentController(private var paymentService: PaymentService): BaseController() {
+class PaymentController(private var paymentService: PaymentService) : BaseController() {
 
     @GetMapping(path = ["/select"], produces = ["application/json"])
     fun selectAllPayments(): ResponseEntity<List<Payment>> {

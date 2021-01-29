@@ -11,7 +11,7 @@ import javax.validation.ValidationException
 class AccountServiceSpec extends BaseServiceSpec {
     protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterService)
 
-    protected String validJsonPayload  = '''
+    protected String validJsonPayload = '''
 {
 "accountNameOwner": "test_brian",
 "accountType": "credit",
@@ -22,6 +22,7 @@ class AccountServiceSpec extends BaseServiceSpec {
 "dateClosed": 0
 }
 '''
+
     void 'test findAllActiveAccounts empty'() {
         given:
         Account account = AccountBuilder.builder().build()

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 
 @ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-class JsonFileReaderRouteBuilder @Autowired constructor(
+class JsonFileReaderRouteBuilder(
     private var camelProperties: CamelProperties,
     private var jsonTransactionProcessor: JsonTransactionProcessor,
     private var exceptionProcessor: ExceptionProcessor

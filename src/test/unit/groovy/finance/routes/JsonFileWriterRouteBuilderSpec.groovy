@@ -2,7 +2,6 @@ package finance.routes
 
 import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
-import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext

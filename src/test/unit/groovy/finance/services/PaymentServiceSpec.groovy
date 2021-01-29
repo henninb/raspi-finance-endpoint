@@ -1,10 +1,6 @@
 package finance.services
 
-import finance.domain.Account
-import finance.domain.AccountType
-import finance.domain.Parameter
-import finance.domain.Payment
-import finance.domain.Transaction
+import finance.domain.*
 import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
 import finance.helpers.TransactionBuilder

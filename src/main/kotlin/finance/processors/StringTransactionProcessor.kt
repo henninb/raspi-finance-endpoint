@@ -16,7 +16,8 @@ open class StringTransactionProcessor(private var meterService: MeterService) : 
     @Timed
     override fun process(exchange: Exchange) {
         val message = exchange.`in`
-        val transaction = message.getBody(Transaction::class.java) ?: throw RuntimeException("Invalid object exchanged.")
+        val transaction =
+            message.getBody(Transaction::class.java) ?: throw RuntimeException("Invalid object exchanged.")
         logger.debug("transaction.guid=${transaction.guid}")
         exchange.setProperty("guid", transaction.guid)
         message.body = transaction.toString()

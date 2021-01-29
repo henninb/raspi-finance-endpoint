@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 
 @ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-class JsonFileWriterRouteBuilder @Autowired constructor(
+class JsonFileWriterRouteBuilder (
     private var camelProperties: CamelProperties, private var exceptionProcessor: ExceptionProcessor
 ) : RouteBuilder() {
 
@@ -24,11 +24,11 @@ class JsonFileWriterRouteBuilder @Autowired constructor(
             .setHeader(Exchange.FILE_NAME, header("guid"))
             .choice()
             .`when`(header("CamelFileName").isNotNull)
-                .log(LoggingLevel.INFO, "wrote processed data to file.")
-                .to(camelProperties.savedFileEndpoint)
-                .log(LoggingLevel.INFO, "message saved to file.")
+            .log(LoggingLevel.INFO, "wrote processed data to file.")
+            .to(camelProperties.savedFileEndpoint)
+            .log(LoggingLevel.INFO, "message saved to file.")
             .otherwise()
-                .throwException(RuntimeException("filename is not set."))
+            .throwException(RuntimeException("filename is not set."))
             .endChoice()
             .end()
     }

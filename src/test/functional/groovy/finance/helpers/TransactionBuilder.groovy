@@ -1,10 +1,6 @@
 package finance.helpers
 
-import finance.domain.AccountType
-import finance.domain.ReceiptImage
-import finance.domain.ReoccurringType
-import finance.domain.Transaction
-import finance.domain.TransactionState
+import finance.domain.*
 
 import java.sql.Date
 
