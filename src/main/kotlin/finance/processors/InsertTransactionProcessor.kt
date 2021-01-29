@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-open class InsertTransactionProcessor @Autowired constructor(
+open class InsertTransactionProcessor(
     private var transactionService: TransactionService,
     private var meterService: MeterService
 ) : Processor {
