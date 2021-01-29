@@ -24,18 +24,14 @@ open class InsertTransactionProcessor(
     override fun process(exchange: Exchange) {
         val message = exchange.`in`
         val payload = message.getBody(String::class.java)
-        logger.info("payload=$payload")
+        logger.debug("payload = $payload")
         val transaction = mapper.readValue(payload, Transaction::class.java)
-        logger.info("will call to insertTransaction(), guid=${transaction.guid} description=${transaction.description}")
+        logger.debug("will call to insertTransaction(), guid=${transaction.guid} description=${transaction.description}")
 
-//        meterRegistry.timer(METRIC_INSERT_TRANSACTION_TIMER).record {
-//            transactionService.insertTransaction(transaction)
-//        }
         transactionService.insertTransaction(transaction)
-
-        logger.info("called to insertTransaction(), guid=${transaction.guid} description=${transaction.description}")
+        meterService.incrementCamelTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         message.body = transaction.toString()
-        logger.debug("InsertTransactionProcessor completed")
+        logger.info("InsertTransactionProcessor completed for guid=${transaction.guid}.")
     }
 
     companion object {
