@@ -46,7 +46,6 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
 
         then:
         thrown(CamelExecutionException)
-        //noExceptionThrown()
         0 * _
     }
 
