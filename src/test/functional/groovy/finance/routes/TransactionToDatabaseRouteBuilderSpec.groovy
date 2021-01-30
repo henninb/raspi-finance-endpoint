@@ -3,12 +3,11 @@ package finance.routes
 import finance.Application
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
+import org.apache.camel.CamelExecutionException
 import org.apache.camel.InvalidPayloadException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-
-import javax.validation.ValidationException
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -46,7 +45,8 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         producer.sendBody([transaction])
 
         then:
-        noExceptionThrown()
+        thrown(CamelExecutionException)
+        //noExceptionThrown()
         0 * _
     }
 
@@ -55,7 +55,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         producer.sendBody('transaction')
 
         then:
-        thrown(InvalidPayloadException)
+        thrown(CamelExecutionException)
         0 * _
     }
 }

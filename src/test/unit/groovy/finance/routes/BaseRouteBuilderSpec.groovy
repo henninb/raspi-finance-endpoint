@@ -1,6 +1,7 @@
 package finance.routes
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
 import finance.processors.InsertTransactionProcessor
 import finance.processors.JsonTransactionProcessor
@@ -50,15 +51,19 @@ class BaseRouteBuilderSpec extends Specification {
         return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)
     }
 
-//    protected CamelProperties camelProperties = new CamelProperties(
-//            "true",
-//            'jsonFileReaderRoute',
-//            'direct:routeFromLocal',
-//            'fileWriterRoute',
-//            'direct:routeFromLocal',
-//            'transactionToDatabaseRoute',
-//            'mock:toTransactionToDatabaseRoute',
-//            'mock:toSavedFileEndpoint',
-//            'mock:toFailedJsonFileEndpoint',
-//            'mock:toFailedJsonParserEndpoint')
+    void cleanup() {
+        camelContext.stop()
+    }
+
+    protected CamelProperties camelProperties = new CamelProperties(
+            "true",
+            "jsonFileReaderRoute",
+            "jsonFileReaderRoute",
+            "fileWriterRoute",
+            "jsonFileWriterRoute",
+            "transactionToDatabaseRoute",
+            "mock:toTransactionToDatabaseRoute",
+            "mock:toSavedFileEndpoint",
+            "mock:toFailedJsonFileEndpoint",
+            "mock:toFailedJsonParserEndpoint")
 }
