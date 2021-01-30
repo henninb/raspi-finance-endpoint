@@ -133,4 +133,26 @@ class AccountServiceSpec extends BaseServiceSpec {
         ex.message.contains('not one of the values accepted for Enum class')
         0 * _
     }
+
+    void 'computeTheGrandTotalForAllTransactions'() {
+        when:
+        accountService.computeTheGrandTotalForAllTransactions()
+
+        then:
+        1 * accountRepositoryMock.computeTheGrandTotalForAllTransactions() >> { throw new Exception() }
+        1 * meterRegistryMock.counter(_) >> counter
+        1 * counter.increment()
+        0 * _
+    }
+
+    void 'computeTheGrandTotalForAllClearedTransactions'() {
+        when:
+        accountService.computeTheGrandTotalForAllClearedTransactions()
+
+        then:
+        1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> { throw new Exception() }
+        1 * meterRegistryMock.counter(_) >> counter
+        1 * counter.increment()
+        0 * _
+    }
 }

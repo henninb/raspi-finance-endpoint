@@ -4,7 +4,6 @@ import finance.Application
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import org.apache.camel.CamelExecutionException
-import org.apache.camel.InvalidPayloadException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles

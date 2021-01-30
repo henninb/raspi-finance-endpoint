@@ -21,7 +21,6 @@ class BaseServiceSpec extends Specification {
     protected PaymentRepository paymentRepositoryMock = GroovyMock(PaymentRepository)
     protected ParameterRepository parameterRepositoryMock = GroovyMock(ParameterRepository)
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
-    //protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
     protected ObjectMapper mapper = new ObjectMapper()
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").file.absolutePath
@@ -36,6 +35,7 @@ class BaseServiceSpec extends Specification {
     //TODO: turn this into a method
     protected Tag validationExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'ValidationException')
     protected Tag runtimeExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'RuntimeException')
+    protected Tag exceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'Exception')
     protected Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'server')
     protected Tags validationExceptionTags = Tags.of(validationExceptionTag, serverNameTag)
     protected Tags runtimeExceptionTags = Tags.of(runtimeExceptionTag, serverNameTag)
