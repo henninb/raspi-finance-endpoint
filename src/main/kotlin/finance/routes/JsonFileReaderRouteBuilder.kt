@@ -48,6 +48,7 @@ class JsonFileReaderRouteBuilder(
         onException(InvalidPayloadException::class.java)
             .log(LoggingLevel.ERROR, "invalid payload :: \${exception.message}")
             .process(exceptionProcessor)
+            .to(camelProperties.failedJsonParserEndpoint)
             .handled(true)
             .end()
 

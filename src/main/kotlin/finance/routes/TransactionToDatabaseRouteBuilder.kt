@@ -28,7 +28,6 @@ class TransactionToDatabaseRouteBuilder (
         onException(InvalidPayloadException::class.java)
             .log(LoggingLevel.INFO, "invalid payload :: \${exception.message}")
             .process(exceptionProcessor)
-            .handled(true)
             .end()
 
         from(camelProperties.transactionToDatabaseRoute)
