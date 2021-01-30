@@ -3,7 +3,6 @@ package finance.configurations
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 
-//@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Configuration
 @ConfigurationProperties(prefix = "custom.project.camel-route", ignoreUnknownFields = false)
 open class CamelProperties(
