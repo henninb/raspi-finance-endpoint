@@ -1,6 +1,7 @@
 package finance.routes
 
 import finance.configurations.CamelProperties
+import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.processors.ExceptionProcessor
 import finance.processors.JsonTransactionProcessor
@@ -11,12 +12,10 @@ import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.model.ModelCamelContext
 import spock.lang.Specification
 
-class JsonFileReaderRouteBuilderSpec extends Specification {
-    protected ModelCamelContext camelContext
-    protected JsonTransactionProcessor mockJsonTransactionProcessor = GroovyMock(JsonTransactionProcessor)
-    protected ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
-    protected String payload = TransactionBuilder.builder().build()
+import javax.validation.ConstraintViolation
 
+class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
+    
     protected CamelProperties camelProperties = new CamelProperties(
             "true",
             "jsonFileReaderRoute",
@@ -45,10 +44,10 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonFileEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
         ProducerTemplate producer = camelContext.createProducerTemplate()
-        producer.setDefaultEndpointUri('direct:routeFromLocal')
+        producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
 
         when:
-        producer.sendBodyAndHeader(payload, Exchange.FILE_NAME, 'foo_brian.bad')
+        producer.sendBodyAndHeader('payload', Exchange.FILE_NAME, 'foo_brian.bad')
 
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 1
@@ -58,10 +57,13 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
 
     void 'test -- valid payload and valid fileName'() {
         given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        String payload = [transaction]
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
         mockTestOutputEndpoint.expectedCount = 1
         ProducerTemplate producer = camelContext.createProducerTemplate()
-        producer.setDefaultEndpointUri('direct:routeFromLocal')
+        producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
         producer.sendBodyAndHeader(payload, Exchange.FILE_NAME, 'foo_brian.json')
@@ -69,24 +71,24 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 1
         mockTestOutputEndpoint.assertIsSatisfied()
-        1 * mockJsonTransactionProcessor.process(_ as Exchange)
+        1 * validatorMock.validate(transaction) >> constraintViolations
         0 * _
     }
 
     void 'test -- invalid json payload and valid fileName'() {
         given:
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonParserEndpoint)
-        mockTestOutputEndpoint.expectedCount = 0
+        mockTestOutputEndpoint.expectedCount = 1
         ProducerTemplate producer = camelContext.createProducerTemplate()
-        producer.setDefaultEndpointUri('direct:routeFromLocal')
+        producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
 
         when:
         producer.sendBodyAndHeader('invalidJsonPayload', Exchange.FILE_NAME, 'foo_brian.json')
 
         then:
-        mockTestOutputEndpoint.receivedExchanges.size() == 0
+        mockTestOutputEndpoint.receivedExchanges.size() == 1
         mockTestOutputEndpoint.assertIsSatisfied()
-        1 * mockJsonTransactionProcessor.process(_ as Exchange)
+        //1 * mockJsonTransactionProcessor.process(_ as Exchange)
         0 * _
     }
 
@@ -95,16 +97,18 @@ class JsonFileReaderRouteBuilderSpec extends Specification {
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.transactionToDatabaseRoute)
         mockTestOutputEndpoint.expectedCount = 1
         ProducerTemplate producer = camelContext.createProducerTemplate()
-        producer.setDefaultEndpointUri('direct:routeFromLocal')
+        producer.setDefaultEndpointUri(camelProperties.jsonFileReaderRoute)
         String myPayload = '[{"test":1}]'
+        Transaction transaction = TransactionBuilder.builder().build()
+        Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
         producer.sendBodyAndHeader(myPayload, Exchange.FILE_NAME, 'foo_brian.json')
 
         then:
-        mockTestOutputEndpoint.receivedExchanges.size() == 1
-        mockTestOutputEndpoint.assertIsSatisfied()
-        1 * mockJsonTransactionProcessor.process(_ as Exchange)
+        //mockTestOutputEndpoint.receivedExchanges.size() == 1
+        //mockTestOutputEndpoint.assertIsSatisfied()
+        1 * validatorMock.validate(_) >> constraintViolations
         0 * _
     }
 }

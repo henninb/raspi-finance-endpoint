@@ -8,10 +8,7 @@ import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.model.ModelCamelContext
 import spock.lang.Specification
 
-class JsonFileWriterRouteBuilderSpec extends Specification {
-
-    protected ModelCamelContext camelContext
-    protected ExceptionProcessor mockExceptionProcessor = GroovyMock(ExceptionProcessor)
+class JsonFileWriterRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     protected CamelProperties camelProperties = new CamelProperties(
             "true",
