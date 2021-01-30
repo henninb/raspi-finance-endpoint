@@ -15,31 +15,16 @@ import spock.lang.Specification
 import javax.validation.ConstraintViolation
 
 class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
-    
-    protected CamelProperties camelProperties = new CamelProperties(
-            "true",
-            "jsonFileReaderRoute",
-            "direct:routeFromLocal",
-            "fileWriterRoute",
-            "direct:routeFromLocal",
-            "transactionToDatabaseRoute",
-            "mock:toTransactionToDatabaseRoute",
-            "mock:toSavedFileEndpoint",
-            "mock:toFailedJsonFileEndpoint",
-            "mock:toFailedJsonParserEndpoint")
 
     void setup() {
+        camelProperties.jsonFileReaderRoute = 'direct:routeFromLocal'
         camelContext = new DefaultCamelContext()
         JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
         camelContext.addRoutes(router)
         camelContext.start()
     }
 
-    void cleanup() {
-        camelContext.stop()
-    }
-
-    void 'test -- with invalid file name'() {
+    void 'test - with invalid file name'() {
         given:
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.failedJsonFileEndpoint)
         mockTestOutputEndpoint.expectedCount = 1
@@ -55,7 +40,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
         0 * _
     }
 
-    void 'test -- valid payload and valid fileName'() {
+    void 'test - valid payload and valid fileName'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         String payload = [transaction]

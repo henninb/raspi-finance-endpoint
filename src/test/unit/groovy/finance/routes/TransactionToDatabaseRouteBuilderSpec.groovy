@@ -1,6 +1,5 @@
 package finance.routes
 
-import finance.configurations.CamelProperties
 import finance.domain.Transaction
 import finance.helpers.CategoryBuilder
 import finance.helpers.TransactionBuilder
@@ -15,28 +14,13 @@ import javax.validation.ConstraintViolation
 @SuppressWarnings("GroovyAccessibility")
 class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
 
-    protected CamelProperties camelProperties = new CamelProperties(
-            'true',
-            'n/a',
-            'n/a',
-            'fileWriterRoute',
-            'mock:toEnd',
-            'transactionToDatabaseRoute',
-            'direct:routeFromLocal',
-            'mock:toSavedFileEndpoint',
-            'mock:toFailedJsonFileEndpoint',
-            'mock:toFailedJsonParserEndpoint')
-
     void setup() {
+        camelProperties.transactionToDatabaseRoute = 'direct:routeFromLocal'
+        camelProperties.jsonFileWriterRoute = 'mock:toEnd'
         camelContext = new DefaultCamelContext()
         TransactionToDatabaseRouteBuilder router = new TransactionToDatabaseRouteBuilder(camelProperties, stringTransactionProcessorMock, insertTransactionProcessorMock, mockExceptionProcessor)
         camelContext.addRoutes(router)
-
         camelContext.start()
-    }
-
-    void cleanup() {
-        camelContext.stop()
     }
 
     void 'test -- valid payload - 1 messages'() {
@@ -112,7 +96,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         MockEndpoint mockTestOutputEndpoint = MockEndpoint.resolve(camelContext, camelProperties.jsonFileWriterRoute)
         mockTestOutputEndpoint.expectedCount = 0
         ProducerTemplate producer = camelContext.createProducerTemplate()
-        producer.setDefaultEndpointUri('direct:routeFromLocal')
+        producer.setDefaultEndpointUri(camelProperties.transactionToDatabaseRoute)
         List<String> transactions = ['junk1', 'junk2']
 
         when:
