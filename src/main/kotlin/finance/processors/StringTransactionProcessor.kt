@@ -19,6 +19,7 @@ open class StringTransactionProcessor(private var meterService: MeterService) : 
         val transaction =
             message.getBody(Transaction::class.java) ?: throw RuntimeException("Invalid object exchanged.")
         logger.debug("transaction.guid=${transaction.guid}")
+        logger.debug("exchangeId=${exchange.exchangeId}")
         exchange.setProperty("guid", transaction.guid)
         message.body = transaction.toString()
         meterService.incrementCamelStringProcessor(transaction.accountNameOwner)
