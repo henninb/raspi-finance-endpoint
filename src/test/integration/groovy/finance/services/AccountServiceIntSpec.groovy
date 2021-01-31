@@ -15,10 +15,9 @@ class AccountServiceIntSpec extends Specification {
 
     void 'computeTheGrandTotalForAllTransactions'() {
         when:
-        BigDecimal totals = accountService.computeTheGrandTotalForAllTransactions()
+        accountService.computeTheGrandTotalForAllTransactions()
 
         then:
-        totals == 0.0
         noExceptionThrown()
         0 * _
     }
