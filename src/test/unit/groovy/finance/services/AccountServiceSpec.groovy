@@ -6,6 +6,7 @@ import finance.helpers.AccountBuilder
 
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
+import java.math.RoundingMode
 
 @SuppressWarnings("GroovyAccessibility")
 class AccountServiceSpec extends BaseServiceSpec {
@@ -135,24 +136,38 @@ class AccountServiceSpec extends BaseServiceSpec {
     }
 
     void 'computeTheGrandTotalForAllTransactions'() {
+        given:
+        BigDecimal desiredResult = new BigDecimal(5.75).setScale(2, RoundingMode.HALF_UP)
         when:
-        accountService.computeTheGrandTotalForAllTransactions()
+        BigDecimal result = accountService.computeTheGrandTotalForAllTransactions()
 
         then:
-        1 * accountRepositoryMock.computeTheGrandTotalForAllTransactions() >> { throw new Exception() }
-        1 * meterRegistryMock.counter(_) >> counter
-        1 * counter.increment()
+        result == desiredResult
+        1 * accountRepositoryMock.computeTheGrandTotalForAllTransactions() >> desiredResult
         0 * _
     }
 
     void 'computeTheGrandTotalForAllClearedTransactions'() {
+        given:
+        BigDecimal desiredResult = new BigDecimal(8.92).setScale(2, RoundingMode.HALF_UP)
         when:
-        accountService.computeTheGrandTotalForAllClearedTransactions()
+        BigDecimal result = accountService.computeTheGrandTotalForAllClearedTransactions()
 
         then:
-        1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> { throw new Exception() }
-        1 * meterRegistryMock.counter(_) >> counter
-        1 * counter.increment()
+        result == desiredResult
+        1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> desiredResult
+        0 * _
+    }
+
+    void 'computeTheGrandTotalForAllClearedTransactions - 3 decimal'() {
+        given:
+        BigDecimal desiredResult = new BigDecimal(8.923).setScale(3, RoundingMode.HALF_UP)
+        when:
+        BigDecimal result = accountService.computeTheGrandTotalForAllClearedTransactions()
+
+        then:
+        result != desiredResult
+        1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> desiredResult
         0 * _
     }
 }
