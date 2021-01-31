@@ -62,8 +62,9 @@ spring:
     password: ${DATASOURCE_PASSWORD}
     url: ${DATASOURCE}
     baseline-on-migrate: true
-    schemas: int,func,prod,stage
-    locations: classpath:db/migration
+    baseline-version: 0
+    schemas: stage
+    locations: classpath:db/migration/stage
     validate-on-migrate: true
 
 # ===============================
@@ -126,4 +127,4 @@ management:
     web:
       exposure:
         include: "*"
-debug: false
+debug: true

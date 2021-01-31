@@ -66,7 +66,8 @@ spring:
     password: monday1
     url: jdbc:oracle:thin:@192.168.100.208:1521/ORCLCDB.localdomain
     baseline-on-migrate: true
-    locations: classpath:db/migration
+    baseline-version: 0
+    locations: classpath:db/migration/oracle
 #    validate-on-migrate: true
 
 # ===============================
@@ -81,10 +82,10 @@ custom:
     camel-route:
       auto-start-route: true
       json-file-reader-route-id: jsonFileReaderRoute
-      json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
       transaction-to-database-route-id: transactionToDatabaseRoute
-      transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route-id: jsonFileWriterRoute
+      json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
+      transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route: direct:jsonFileWriterRoute
       saved-file-endpoint: "file:func_json_in/.processed-successfully"
       failed-Json-file-endpoint: "file:func_json_in/.not-processed-non-json-file"
@@ -129,4 +130,4 @@ management:
     web:
       exposure:
         include: "*"
-debug: false
+debug: true
