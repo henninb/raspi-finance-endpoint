@@ -56,27 +56,13 @@ open class AccountService(
 
     @Timed
     override fun computeTheGrandTotalForAllTransactions(): BigDecimal {
-        val totals: BigDecimal
-        try {
-            totals = accountRepository.computeTheGrandTotalForAllTransactions()
-        } catch (exception: Exception) {
-            logger.warn("Exception: ${exception.message}")
-            meterService.incrementExceptionCaughtCounter("Exception")
-            return BigDecimal(0.00)
-        }
+        val totals: BigDecimal = accountRepository.computeTheGrandTotalForAllTransactions()
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
     @Timed
     override fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal {
-        val totals: BigDecimal
-        try {
-            totals = accountRepository.computeTheGrandTotalForAllClearedTransactions()
-        } catch (exception: Exception) {
-            logger.warn("Exception: ${exception.message}")
-            meterService.incrementExceptionCaughtCounter("Exception")
-            return BigDecimal(0.00)
-        }
+        val totals: BigDecimal = accountRepository.computeTheGrandTotalForAllClearedTransactions()
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 

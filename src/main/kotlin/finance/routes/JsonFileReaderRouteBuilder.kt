@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
-@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
+//@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
 class JsonFileReaderRouteBuilder(
     private var camelProperties: CamelProperties,
