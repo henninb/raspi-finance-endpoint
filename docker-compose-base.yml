@@ -27,6 +27,8 @@ services:
       - env.secrets
     depends_on:
       - grafana-server
+      - elasticsearch-server
+      - logstash-server
       # - influxdb-server
   # influxdb-server:
   #   image: influxdb:1.8.3
@@ -41,12 +43,35 @@ services:
   #   env_file:
   #     - env.influx
   #     - env.secrets
+  elasticsearch-server:
+    image: elasticsearch:7.10.1
+    user: "${CURRENT_UID}:${CURRENT_GID}"
+    container_name: elasticsearch-server
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    expose:
+      - "9200"
+  logstash-server:
+    image: logstash:7.10.1
+    user: "${CURRENT_UID}:${CURRENT_GID}"
+    container_name: logstash-server
+    ports:
+      - "9600:9600"
+    expose:
+      - "9600"
   grafana-server:
     image: grafana/grafana:7.3.4
     user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: grafana-server
     ports:
       - "3001:3000"
+    expose:
+      - "3001"
     volumes:
       - ./grafana-data:/var/lib/grafana
       # - ./grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards

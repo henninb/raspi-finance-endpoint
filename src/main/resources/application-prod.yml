@@ -77,11 +77,8 @@ custom:
       - test_brian
     camel-route:
       auto-start-route: true
-      json-file-reader-route-id: jsonFileReaderRoute
       json-file-reader-route: "file:${JSON_FILES_INPUT_PATH}?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
-      transaction-to-database-route-id: transactionToDatabaseRoute
       transaction-to-database-Route: direct:transactionToDatabaseRoute
-      json-file-writer-route-id: jsonFileWriterRoute
       json-file-writer-route: direct:jsonFileWriterRoute
       saved-file-endpoint: "file:${JSON_FILES_INPUT_PATH}/.processed-successfully"
       failed-Json-file-endpoint: "file:${JSON_FILES_INPUT_PATH}/.not-processed-non-json-file"
@@ -92,6 +89,9 @@ custom:
 # ===============================
 logging:
   config: classpath:logback.groovy
+#  logstash:
+#    enabled: true
+#    url: 192.168.99.100:5000
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database

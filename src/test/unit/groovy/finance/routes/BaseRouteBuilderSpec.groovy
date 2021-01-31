@@ -57,9 +57,6 @@ class BaseRouteBuilderSpec extends Specification {
 
     protected CamelProperties camelProperties = new CamelProperties(
             "true",
-            "jsonFileReaderRoute",
-            "jsonFileReaderRoute",
-            "fileWriterRoute",
             "jsonFileWriterRoute",
             "transactionToDatabaseRoute",
             "mock:toTransactionToDatabaseRoute",

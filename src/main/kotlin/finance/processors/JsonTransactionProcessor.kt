@@ -30,7 +30,6 @@ open class JsonTransactionProcessor(
             val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
             if (constraintViolations.isNotEmpty()) {
                 logger.error("payload: $transaction")
-                logger.error("METRIC_TRANSACTION_VALIDATOR_FAILED_COUNTER")
                 constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
                 logger.error("Cannot insert transaction as there is a constraint violation on the data.")
                 throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
