@@ -54,7 +54,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -63,7 +63,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -79,7 +79,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -107,7 +107,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
 
         when:
         Transaction transaction = transactionRepository.findAll().find { it.accountNameOwner == accountNameOwner }
@@ -146,7 +146,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -188,7 +188,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
 
         when:
         ResponseEntity<String> responseInsert = insertEndpoint('parm', parameter.toString())

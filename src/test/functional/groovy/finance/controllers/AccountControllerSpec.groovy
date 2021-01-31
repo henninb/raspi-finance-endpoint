@@ -49,7 +49,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -59,7 +59,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -111,7 +111,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
 
         then:
-        response.statusCode.is(HttpStatus.NOT_FOUND)
+        response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
