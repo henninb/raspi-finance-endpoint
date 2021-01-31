@@ -30,7 +30,7 @@ spring:
     password: monday1
     driver-class-name: org.postgresql.Driver
     hikari:
-      schema: func
+      schema: int
     platform: postgresql
     continue-on-error: false
     # always - utilize data.sql and schema.sql
