@@ -8,7 +8,6 @@ import finance.processors.StringTransactionProcessor
 import org.apache.camel.InvalidPayloadException
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
@@ -32,7 +31,8 @@ class TransactionToDatabaseRouteBuilder (
 
         from(camelProperties.transactionToDatabaseRoute)
             .autoStartup(camelProperties.autoStartRoute)
-            .routeId(camelProperties.transactionToDatabaseRouteId)
+            //.routeId(camelProperties.transactionToDatabaseRouteId)
+            .routeId(TransactionToDatabaseRouteBuilder::class.java.simpleName.toString().replace("Builder", ""))
             .split(body())
             .log(LoggingLevel.INFO, "split body completed.")
             .convertBodyTo(Transaction::class.java)

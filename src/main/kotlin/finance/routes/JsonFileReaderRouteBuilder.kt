@@ -52,13 +52,13 @@ class JsonFileReaderRouteBuilder(
             .handled(true)
             .end()
 
+
         from(camelProperties.jsonFileReaderRoute)
             .autoStartup(camelProperties.autoStartRoute)
 
                 //TODO: change how the routeId is set
-            //.routeId(this.getClass().getName())
-            .routeId(camelProperties.jsonFileReaderRouteId)
-            .log("choice for: " + camelProperties.jsonFileReaderRouteId)
+            .routeId(JsonFileReaderRouteBuilder::class.java.simpleName.toString().replace("Builder", ""))
+            //.routeId(camelProperties.jsonFileReaderRouteId)
             .log("fname = \${header.CamelFileName}")
             .choice()
             .`when`(header("CamelFileName").endsWith(".json"))
