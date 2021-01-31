@@ -97,7 +97,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
                 entity, String)
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -107,7 +107,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -117,7 +117,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -129,19 +129,17 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
     void 'test find Transaction'() {
-        given:
-        HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = selectEndpoint(endpointName, transaction.guid)
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -151,7 +149,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
 
         then:
-        response.statusCode.is(HttpStatus.NOT_FOUND)
+        response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
@@ -161,7 +159,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
 
         then:
-        response.statusCode.is(HttpStatus.NOT_FOUND)
+        response.statusCode == HttpStatus.NOT_FOUND
         0 * _
     }
 
@@ -175,7 +173,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -185,7 +183,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -196,7 +194,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payload)
 
         then:
-        response.statusCode.is(httpStatus)
+        response.statusCode == httpStatus
         0 * _
 
         where:
@@ -224,7 +222,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 }

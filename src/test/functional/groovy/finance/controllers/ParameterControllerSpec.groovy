@@ -27,7 +27,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, parameter.toString())
 
         then:
-        response.statusCode.is(HttpStatus.OK)
+        response.statusCode
         0 * _
     }
 
@@ -36,7 +36,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, parameter.toString())
 
         then:
-        response.statusCode.is(HttpStatus.BAD_REQUEST)
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
