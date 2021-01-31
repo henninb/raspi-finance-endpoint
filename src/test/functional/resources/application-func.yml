@@ -61,8 +61,9 @@ spring:
     password: monday1
     url: jdbc:postgresql://localhost:5432/finance_test_db
     baseline-on-migrate: true
+    baseline-version: 0
     schemas: func
-    locations: classpath:db/migration
+    locations: classpath:db/migration/func
     validate-on-migrate: true
 
 # ===============================
@@ -125,4 +126,4 @@ management:
     web:
       exposure:
         include: "*"
-debug: false
+debug: true

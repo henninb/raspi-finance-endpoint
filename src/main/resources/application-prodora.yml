@@ -63,7 +63,8 @@ spring:
     password: ${ORACLE_PASSWORD}
     url: ${DATASOURCE}
     baseline-on-migrate: true
-    locations: classpath:db/oracle
+    baseline-version: 0
+    locations: classpath:db/migration/prodora
     validate-on-migrate: true
 
 # ===============================
