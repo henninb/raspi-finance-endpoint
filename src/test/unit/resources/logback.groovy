@@ -1,6 +1,8 @@
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.filter.LevelFilter
 import ch.qos.logback.classic.filter.ThresholdFilter
+import net.logstash.logback.appender.LogstashTcpSocketAppender
+import net.logstash.logback.encoder.LogstashEncoder
 import org.springframework.boot.logging.logback.ColorConverter
 
 statusListener(OnConsoleStatusListener)
@@ -101,6 +103,23 @@ appender("errorFileAppender", RollingFileAppender) {
         level = ERROR
     }
 }
+
+
+appender("logstashAppender", LogstashTcpSocketAppender) {
+    remoteHost = 'localhost'
+    port = 9600
+    encoder(LogstashEncoder) {
+        
+    }
+}
+
+//<remoteHost>localhost</remoteHost>
+//        <port>5000</port>
+//<encoder class="net.logstash.logback.encoder.LogstashEncoder">
+//<customFields>{"app_name":"YourApp", "app_port": "YourPort"}</customFields>
+//        </encoder>
+//
+
 
 appender("consoleAppender", ConsoleAppender) {
     encoder(PatternLayoutEncoder) {
