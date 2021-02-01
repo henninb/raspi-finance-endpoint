@@ -8,7 +8,9 @@ services:
     expose:
       - "1521"
     environment:
-      - DUMMY=true
+#TODO: these passwords do not work
+      - PASS=monday1
+      - ORACLE_PWD=monday1
   raspi-finance-endpoint:
     depends_on:
       oracle-database-server:

@@ -62,8 +62,12 @@ services:
     container_name: logstash-server
     ports:
       - "9600:9600"
+      - "4560:4560"
     expose:
       - "9600"
+      - "4560"
+    volumes:
+      - ./logstash-pipeline:/usr/share/logstash/pipeline
   grafana-server:
     image: grafana/grafana:7.3.4
     user: "${CURRENT_UID}:${CURRENT_GID}"
