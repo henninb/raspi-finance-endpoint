@@ -26,9 +26,10 @@ services:
     env_file:
       - env.secrets
     depends_on:
-      - grafana-server
-      - elasticsearch-server
-      - logstash-server
+      logstash-server:
+#         condition: service_started
+         condition: service_healthy
+    #command: ["curl", "192.168.100.97:9600"]
       # - influxdb-server
   # influxdb-server:
   #   image: influxdb:1.8.3
@@ -43,22 +44,22 @@ services:
   #   env_file:
   #     - env.influx
   #     - env.secrets
-  elasticsearch-server:
-    image: elasticsearch:7.10.1
-    user: "${CURRENT_UID}:${CURRENT_GID}"
-    container_name: elasticsearch-server
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    expose:
-      - "9200"
+#  elasticsearch-server:
+#    image: elasticsearch:7.10.1
+#    user: "${CURRENT_UID}:${CURRENT_GID}"
+#    container_name: elasticsearch-server
+#    environment:
+#      - cluster.name=docker-cluster
+#      - bootstrap.memory_lock=true
+#      - discovery.type=single-node
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#    ports:
+#      - "9200:9200"
+#    expose:
+#      - "9200"
   logstash-server:
     image: logstash:7.10.1
-    user: "${CURRENT_UID}:${CURRENT_GID}"
+    # user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: logstash-server
     ports:
       - "9600:9600"
@@ -68,6 +69,12 @@ services:
       - "4560"
     volumes:
       - ./logstash-pipeline:/usr/share/logstash/pipeline
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/true"]
+#      test: ["CMD-SHELL", "curl", "-f", "192.168.100.97:9600"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   grafana-server:
     image: grafana/grafana:7.3.4
     user: "${CURRENT_UID}:${CURRENT_GID}"

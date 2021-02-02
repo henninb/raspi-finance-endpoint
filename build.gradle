@@ -19,8 +19,6 @@ plugins {
 apply from: 'test.gradle'
 
 repositories {
-
-    mavenCentral()
     jcenter()
 //    maven {
 //        url "https://www.oracle.com/content/secure/maven/content"
@@ -31,10 +29,10 @@ repositories {
 //    }
 
     //maven {url "https://maven.xwiki.org/externals/"}
-    google()
-    flatDir {
-        dirs "libs"
-    }
+    //google()
+//    flatDir {
+//        dirs "libs"
+//    }
 
 }
 

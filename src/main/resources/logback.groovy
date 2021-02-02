@@ -1,9 +1,13 @@
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.filter.LevelFilter
 import ch.qos.logback.classic.filter.ThresholdFilter
+import net.logstash.logback.appender.LogstashTcpSocketAppender
+import net.logstash.logback.composite.loggingevent.LoggingEventJsonProviders
+import net.logstash.logback.encoder.LogstashEncoder
 import org.springframework.boot.logging.logback.ColorConverter
 
-statusListener(OnConsoleStatusListener)
+statusListener(NopStatusListener)
+//statusListener(OnConsoleStatusListener)
 
 def env = System.getenv()
 String appName = env['APPNAME'] ?: 'app'
@@ -30,6 +34,7 @@ conversionRule("clr", ColorConverter)
 
 appender("fileAppender", RollingFileAppender) {
     file = logFileName
+    append = true
     encoder(PatternLayoutEncoder) {
         pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     }
@@ -39,7 +44,24 @@ appender("fileAppender", RollingFileAppender) {
         maxHistory = 10
         fileNamePattern = "${logArchiveFileName}-%d{yyyy-MM-dd}-%i.log.gz"
     }
+    encoder(PatternLayoutEncoder) {
+        pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    }
 }
+
+//appender("TEXT_FILE", RollingFileAppender) {
+//    file = "${LOGS:-logs}/${APPNAME:-app-test}.log"
+//    append = true
+//    rollingPolicy(SizeAndTimeBasedRollingPolicy) {
+//        fileNamePattern = "${LOGS:-logs}/archive/${APPNAME:-app-test}.%d{yyyy-MM-dd}.%i.log.gz"
+//        maxFileSize = "10MB"
+//        maxHistory = 14
+//        totalSizeCap = "1GB"
+//    }
+//    encoder(PatternLayoutEncoder) {
+//        pattern = "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+//    }
+//}
 
 appender("hibernateFileAppender", RollingFileAppender) {
     file = hibernateFileName
@@ -108,18 +130,18 @@ appender("consoleAppender", ConsoleAppender) {
     }
 }
 
-//appender("asyncAppender", AsyncAppender) {
-//    queueSize = 500
-//    discardingThreshold = 0
-//    includeCallerData = true
-//    appenderRef('fileAppender')
-//}
+appender("logstashAppender", LogstashTcpSocketAppender) {
+    remoteHost = 'hornsup'
+    port = 4560
+    encoder(LogstashEncoder) {
+        providers(LoggingEventJsonProviders) {
+        }
+    }
+    //keepAliveDuration = "5 minutes"
+}
 
-logger('org.hibernate', INFO, ['fileAppender', 'hibernateFileAppender'], false)
-logger('org.flywaydb', INFO, ['fileAppender', 'flywayFileAppender'])
-logger('org.apache.camel', INFO, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
+logger('org.hibernate', INFO, ['fileAppender', 'hibernateFileAppender', 'logstashAppender'], false)
+logger('org.flywaydb', INFO, ['fileAppender', 'flywayFileAppender', 'logstashAppender'])
+logger('org.apache.camel', INFO, ['consoleAppender', 'fileAppender', 'camelFileAppender', 'logstashAppender'])
 
-//logger('ch.qos.logback', NONE, false)
-//<logger name="ch.qos.logback" level="OFF" additivity="false" />
-
-root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
+root(INFO, ['consoleAppender', 'fileAppender', 'errorFileAppender', 'logstashAppender'])
