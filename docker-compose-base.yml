@@ -27,7 +27,6 @@ services:
       - env.secrets
     depends_on:
       logstash-server:
-#         condition: service_started
          condition: service_healthy
     #command: ["curl", "192.168.100.97:9600"]
       # - influxdb-server
@@ -44,19 +43,21 @@ services:
   #   env_file:
   #     - env.influx
   #     - env.secrets
-#  elasticsearch-server:
-#    image: elasticsearch:7.10.1
-#    user: "${CURRENT_UID}:${CURRENT_GID}"
-#    container_name: elasticsearch-server
-#    environment:
-#      - cluster.name=docker-cluster
-#      - bootstrap.memory_lock=true
-#      - discovery.type=single-node
-#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-#    ports:
-#      - "9200:9200"
-#    expose:
-#      - "9200"
+  elasticsearch-server:
+    image: elasticsearch:7.10.1
+    user: "${CURRENT_UID}:${CURRENT_GID}"
+    container_name: elasticsearch-server
+    environment:
+    #  - cluster.name=docker-cluster
+    #  - bootstrap.memory_lock=true
+      - discovery.type=single-node
+    #  - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    expose:
+      - "9200"
+      - "9300"
   logstash-server:
     image: logstash:7.10.1
     # user: "${CURRENT_UID}:${CURRENT_GID}"
