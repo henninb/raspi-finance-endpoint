@@ -30,7 +30,6 @@ spring:
     url: ${DATASOURCE}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
-    schema: stage
     driver-class-name: ${DATASOURCE_DRIVER}
     hikari:
       schema: stage
@@ -89,7 +88,7 @@ custom:
 # = Logging
 # ===============================
 logging:
-  config: classpath:logback.groovy
+  config: classpath:logback-stage.groovy
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
@@ -124,4 +123,4 @@ management:
     web:
       exposure:
         include: "*"
-debug: true
+debug: false
