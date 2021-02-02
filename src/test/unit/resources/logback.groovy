@@ -108,97 +108,16 @@ appender("errorFileAppender", RollingFileAppender) {
     }
 }
 
-
 appender("logstashAppender", LogstashTcpSocketAppender) {
-    destination = "localhost:4560"
-    remoteHost = 'localhost'
-    //port = 9600
-    port = 4560
+    destination = "hornsup:4560"
+//    remoteHost = 'hornsup'
+//    port = 4560
     encoder(LogstashEncoder) {
         providers(LoggingEventJsonProviders) {
         }
     }
+    keepAliveDuration = "5 minutes"
 }
-
-
-//appender("logstash", LogstashTcpSocketAppender) {
-//    destination = "elk:4560"
-//    encoder(LogstashEncoder) {
-//        // You MUST add an import declaration as appropriate for [FieldNames]
-//        FieldNames... aFieldNames = new FieldNames()
-//        aFieldNames.message = "log_message"
-//        if(aFieldNames instanceof LifeCycle)
-//            aFieldNames.start()
-//        fieldNames = aFieldNames
-//    }
-//    keepAliveDuration = "5 minutes"
-//}
-
-
-//
-//<?xml version="1.0" encoding="UTF-8"?>
-//<configuration>
-//    <include resource="org\/springframework\/boot\/logging\/logback\/base.xml"\/>
-//    <logger name="org.springframework" level="INFO"\/>
-//
-//    <!-- Logstash-Configuration -->
-//    <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-//        <destination>elk:4560<\/destination>
-//        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-//            <customFields>{"service_name":"SpringBootLogger"}<\/customFields>
-//            <fieldNames>
-//                <message>log_message<\/message>
-//            <\/fieldNames>
-//        <\/encoder>
-//        <keepAliveDuration>5 minutes<\/keepAliveDuration>
-//    <\/appender>
-//
-//    <root level="INFO">
-//        <appender-ref ref="logstash" \/>
-//    <\/root>
-//<\/configuration>
-
-
-//appender("tcp", LogstashTcpSocketAppender) {
-//    destination = "localhost:4560"
-//    remoteHost = 'localhost'
-//    port = '9200'
-
-//    encoder(LoggingEventCompositeJsonEncoder) {
-//
-////        FieldNames... aFieldNames = new FieldNames()
-////        aFieldNames.timestamp = "time"
-////        aFieldNames.message = "msg"
-//        providers(LoggingEventJsonProviders) {
-//            message(MessageJsonProvider)
-//            //mdc(MdcJsonProvider)
-//            //arguments(ArgumentsJsonProvider)
-//        }
-//    }
-}
-
-//appender("tcp", LogstashTcpSocketAppender) {
-//    destination = "localhost:4560"
-//    encoder(LoggingEventCompositeJsonEncoder) {
-//        // You MUST add an import declaration as appropriate for [Providers]
-//        Providers... aProviders = new Providers()
-//        aProviders.message =
-//                aProviders.mdc =
-//                        aProviders.arguments =
-//        if(aProviders instanceof LifeCycle)
-//            aProviders.start()
-//        providers = aProviders
-//    }
-
-
-
-//<remoteHost>localhost</remoteHost>
-//        <port>5000</port>
-//<encoder class="net.logstash.logback.encoder.LogstashEncoder">
-//<customFields>{"app_name":"YourApp", "app_port": "YourPort"}</customFields>
-//        </encoder>
-//
-
 
 appender("consoleAppender", ConsoleAppender) {
     encoder(PatternLayoutEncoder) {
@@ -218,7 +137,4 @@ logger('org.flywaydb', INFO, ['fileAppender', 'flywayFileAppender'])
 //logger('org.apache.camel.processor', DEBUG, ['consoleAppender'])
 //logger('org.apache.camel', INFO, ['consoleAppender', 'fileAppender', 'camelFileAppender'])
 
-logger('finance', DEBUG, ['consoleAppender'])
-
-
-root(DEBUG, ['consoleAppender', 'fileAppender', 'errorFileAppender'])
+root(DEBUG, ['consoleAppender', 'fileAppender', 'errorFileAppender', 'logstashAppender'])
