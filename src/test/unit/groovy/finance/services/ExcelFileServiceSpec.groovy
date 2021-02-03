@@ -9,7 +9,7 @@ import org.springframework.core.io.FileSystemResource
 class ExcelFileServiceSpec extends BaseServiceSpec {
     protected String baseName = new FileSystemResource("").file.absolutePath
     CustomProperties customProperties = new CustomProperties(excludedAccounts: [], excelPassword: 'monday1', excelInputFilePath: baseName + '/excel_in')
-    ExcelFileService excelFileService = new ExcelFileService(customProperties, transactionService, meterService)
+    ExcelFileService excelFileService = new ExcelFileService(customProperties, transactionService, accountService, meterService)
 
     void 'test try to open a file that is not found'() {
         when:
@@ -27,9 +27,9 @@ class ExcelFileServiceSpec extends BaseServiceSpec {
         excelFileService.processProtectedExcelFile('finance_test_db_master.xlsm')
 
         then:
-        17 * meterRegistryMock.counter(_) >> counter
-        17 * counter.increment()
-        17 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(_, true) >> [transaction]
+        4 * meterRegistryMock.counter(_) >> counter
+        4 * counter.increment()
+        4 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(_, true) >> [transaction]
         0 * _
     }
 
