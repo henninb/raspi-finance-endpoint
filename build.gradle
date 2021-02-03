@@ -29,7 +29,7 @@ repositories {
 //    }
 
     //maven {url "https://maven.xwiki.org/externals/"}
-    //google()
+    google()
 //    flatDir {
 //        dirs "libs"
 //    }

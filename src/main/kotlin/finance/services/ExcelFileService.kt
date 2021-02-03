@@ -14,12 +14,14 @@ import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.stereotype.Service
 import java.io.*
+import java.util.*
 import java.util.stream.IntStream
 
 @Service
 class ExcelFileService(
     private val customProperties: CustomProperties,
     private val transactionService: TransactionService,
+    private val accountService: AccountService,
     private var meterService: MeterService
 ) : IExcelFileService {
 
@@ -54,7 +56,7 @@ class ExcelFileService(
         workbook: Workbook,
         encryptionInfo: EncryptionInfo
     ) {
-        val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/new-${inputExcelFileName}"))
+        val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/${UUID.randomUUID()}-${inputExcelFileName}"))
         val poiFileSystem = POIFSFileSystem()
 
         val encryptor: Encryptor = encryptionInfo.encryptor
@@ -69,9 +71,13 @@ class ExcelFileService(
     }
 
     override fun filterWorkbookThenImportTransactions(workbook: Workbook) {
+
+//        val newSheet = workbook.cloneSheet(workbook.getSheetIndex("template"))
+//        val newIndex = workbook.getSheetIndex(newSheet)
+//        workbook.setSheetName(newIndex, "newName")
+
         IntStream.range(0, workbook.numberOfSheets).filter { idx: Int ->
-            (workbook.getSheetName(idx).contains("_brian") || workbook.getSheetName(idx)
-                .contains("_kari")) && !workbook.isSheetHidden(idx)
+            workbook.getSheetName(idx).contains("_")
         }.forEach { idx: Int ->
             if (!isExcludedAccount(customProperties.excludedAccounts, workbook.getSheetName(idx))) {
                 processEachExcelSheet(workbook, idx)
