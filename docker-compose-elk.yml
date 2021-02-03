@@ -1,0 +1,52 @@
+volumes:
+  elasticsearch-volume:
+    driver: local
+  elasticsearch-server:
+    image: elasticsearch:7.10.1
+    container_name: elasticsearch-server
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - elasticsearch-volume:/usr/share/elasticsearch/data:rw
+    ports:
+      - "9200:9200"
+    expose:
+      - "9200"
+    extra_hosts:
+      - "hornsup:${HOST_IP}"
+    depends_on:
+      - logstash-server
+  kibana-server:
+    image: kibana:7.10.1
+    container_name: kibana-server
+    ports:
+      - "5601:5601"
+    expose:
+      - "5601"
+    depends_on:
+      - elasticsearch-server
+    extra_hosts:
+      - "hornsup:${HOST_IP}"
+      - "elasticsearch:${HOST_IP}"
+  logstash-server:
+    image: logstash:7.10.1
+    container_name: logstash-server
+    environment:
+      - monitoring.elasticsearch.hosts=http://hornsup:9200
+    ports:
+      - "9600:9600"
+      - "4560:4560"
+    expose:
+      - "9600"
+      - "4560"
+    volumes:
+      - ./logstash-pipeline:/usr/share/logstash/pipeline
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/true"]
+#      test: ["CMD-SHELL", "curl", "-f", "192.168.100.97:9600"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    extra_hosts:
+      - "hornsup:${HOST_IP}"
+      - "elasticsearch:${HOST_IP}"

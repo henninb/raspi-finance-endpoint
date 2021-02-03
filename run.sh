@@ -25,7 +25,7 @@ if [ -z "${test_flag}" ]; then
 fi
 
 if [ -z "${datastore}" ]; then
-  datastore=postgresql
+  datastore=base
 fi
 
 if [ "$env" == "prodora" ]; then
@@ -72,7 +72,7 @@ mkdir -p 'src/test/unit/groovy'
 mkdir -p 'src/test/integration/groovy'
 mkdir -p 'src/test/functional/groovy'
 mkdir -p 'src/test/performance/groovy'
-mkdir -p 'postgresql-data'
+# mkdir -p 'postgresql-data'
 mkdir -p 'influxdb-data'
 mkdir -p 'grafana-data'
 mkdir -p 'logs'
@@ -121,11 +121,11 @@ if [ -n "${INFLUX_CONTAINER}" ]; then
   docker rm -f "${INFLUX_CONTAINER}" 2> /dev/null
 fi
 
-POSTGRESQL_CONTAINER=$(docker ps -a -f 'name=postgresql-server' --format "{{.ID}}") 2> /dev/null
-if [ -n "${POSTGRESQL_CONTAINER}" ]; then
-  echo docker rm -f "${POSTGRESQL_CONTAINER}"
-  docker rm -f "${POSTGRESQL_CONTAINER}" 2> /dev/null
-fi
+# POSTGRESQL_CONTAINER=$(docker ps -a -f 'name=postgresql-server' --format "{{.ID}}") 2> /dev/null
+# if [ -n "${POSTGRESQL_CONTAINER}" ]; then
+#   echo docker rm -f "${POSTGRESQL_CONTAINER}"
+#   docker rm -f "${POSTGRESQL_CONTAINER}" 2> /dev/null
+# fi
 
 ORACLE_CONTAINER=$(docker ps -a -f 'name=oracle-database-server' --format "{{.ID}}") 2> /dev/null
 if [ -n "${ORACLE_CONTAINER}" ]; then
