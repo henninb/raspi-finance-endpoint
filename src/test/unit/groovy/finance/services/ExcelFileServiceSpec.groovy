@@ -1,7 +1,9 @@
 package finance.services
 
 import finance.configurations.CustomProperties
+import finance.domain.Account
 import finance.domain.Transaction
+import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
 import org.springframework.core.io.FileSystemResource
 
@@ -23,13 +25,15 @@ class ExcelFileServiceSpec extends BaseServiceSpec {
     void 'test try to open a file that exists, and with a valid password'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
+        Account account1 = AccountBuilder.builder().withAccountNameOwner('test1_brian')build()
+        Account account2 = AccountBuilder.builder().withAccountNameOwner('test2_brian').build()
+
         when:
         excelFileService.processProtectedExcelFile('finance_test_db_master.xlsm')
 
         then:
-        4 * meterRegistryMock.counter(_) >> counter
-        4 * counter.increment()
-        4 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(_, true) >> [transaction]
+        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2]
+        2 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(_, true) >> [transaction, transaction, transaction]
         0 * _
     }
 
