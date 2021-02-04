@@ -91,7 +91,7 @@ custom:
 # = Logging
 # ===============================
 logging:
-  config: classpath:logback.groovy
+  config: classpath:logback-func.groovy
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database

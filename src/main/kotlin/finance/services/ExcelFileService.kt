@@ -34,6 +34,7 @@ class ExcelFileService(
         val decryptor = Decryptor.getInstance(encryptionInfo)
         val validPassword = decryptor.verifyPassword(customProperties.excelPassword)
         if (!validPassword) {
+            //TODO: add metric
             throw RuntimeException("Password is not valid for file: $inputExcelFileName")
         }
         val inputStream = decryptor.getDataStream(fileStream)
@@ -71,18 +72,22 @@ class ExcelFileService(
     }
 
     override fun filterWorkbookThenImportTransactions(workbook: Workbook) {
-
-//        val newSheet = workbook.cloneSheet(workbook.getSheetIndex("template"))
-//        val newIndex = workbook.getSheetIndex(newSheet)
-//        workbook.setSheetName(newIndex, "newName")
-
+        val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
+        accounts.forEach { account ->
+            cloneSheetTemplate(workbook, account.accountNameOwner)
+        }
+        logger.debug("workbook.numberOfSheets: ${workbook.numberOfSheets}")
         IntStream.range(0, workbook.numberOfSheets).filter { idx: Int ->
             workbook.getSheetName(idx).contains("_")
         }.forEach { idx: Int ->
-            if (!isExcludedAccount(customProperties.excludedAccounts, workbook.getSheetName(idx))) {
-                processEachExcelSheet(workbook, idx)
-            }
+            processEachExcelSheet(workbook, idx)
         }
+    }
+
+    private fun cloneSheetTemplate(workbook: Workbook, newName: String) {
+        val newSheet = workbook.cloneSheet(workbook.getSheetIndex("template"))
+        val newIndex = workbook.getSheetIndex(newSheet)
+        workbook.setSheetName(newIndex, newName)
     }
 
     @Throws(IOException::class)
@@ -92,8 +97,7 @@ class ExcelFileService(
             workbook.getSheetName(sheetNumber).replace('.', '-')
         )
 
-        logger.info(workbook.getSheetName(sheetNumber))
-        removeEachRowInTheWorksheet(currentSheet)
+        logger.debug("sheetName: ${workbook.getSheetName(sheetNumber)}")
         var currentRow = 1
         for (transaction in transactionList) {
             insertNewRow(currentSheet, currentRow, transaction)
@@ -103,7 +107,6 @@ class ExcelFileService(
 
     override fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction) {
         val newRow = currentSheet.createRow(rowNumber)
-        //ExcelFileColumn.values().forEach { println(it) }
         for (columnNumber in 1 until 8) {
             val newCell = newRow.createCell(columnNumber)
             when (ExcelFileColumn.fromInt(columnNumber)) {
@@ -130,29 +133,6 @@ class ExcelFileService(
                 }
             }
         }
-    }
-
-    override fun removeEachRowInTheWorksheet(currentSheet: Sheet) {
-
-        try {
-            logger.info("currentSheet.lastRowNum = ${currentSheet.lastRowNum}")
-            logger.info("currentSheet.physicalNumberOfRows = ${currentSheet.physicalNumberOfRows}")
-            currentSheet.shiftRows(2, currentSheet.lastRowNum, -1)
-        } catch (illegalArgumentException: IllegalArgumentException) {
-            logger.warn("IllegalArgumentException: ${illegalArgumentException.message}")
-            meterService.incrementExceptionCaughtCounter("IllegalArgumentException")
-        }
-
-        for (rowNumber in currentSheet.lastRowNum downTo 1) {
-            val row = currentSheet.getRow(rowNumber)
-            if (row != null) {
-                currentSheet.removeRow(row)
-            }
-        }
-    }
-
-    override fun isExcludedAccount(accountExcludedList: List<String>, accountNameOwner: String): Boolean {
-        return accountExcludedList.stream().anyMatch { str: String -> str.trim { it <= ' ' } == accountNameOwner }
     }
 
     companion object {
