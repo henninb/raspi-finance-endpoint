@@ -122,8 +122,8 @@ dependencies {
     //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
 
     //logstash
-    // runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
-    implementation("net.logstash.logback:logstash-logback-encoder:4.11")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
+    //implementation("net.logstash.logback:logstash-logback-encoder:4.11")
 
     //Used for transactional
     // implementation("org.aspectj:aspectjweaver:1.9.6")
