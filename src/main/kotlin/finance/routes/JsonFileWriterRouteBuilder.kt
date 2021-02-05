@@ -2,6 +2,7 @@ package finance.routes
 
 import finance.configurations.CamelProperties
 import finance.processors.ExceptionProcessor
+import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
@@ -11,10 +12,11 @@ import org.springframework.stereotype.Component
 
 //@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-class JsonFileWriterRouteBuilder (
+open class JsonFileWriterRouteBuilder (
     private var camelProperties: CamelProperties, private var exceptionProcessor: ExceptionProcessor
 ) : RouteBuilder() {
 
+    @Timed
     @Throws(Exception::class)
     override fun configure() {
 

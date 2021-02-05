@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.CustomProperties
 import finance.domain.ExcelFileColumn
 import finance.domain.Transaction
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.apache.poi.poifs.crypt.Decryptor
 import org.apache.poi.poifs.crypt.EncryptionInfo
@@ -18,13 +19,14 @@ import java.util.*
 import java.util.stream.IntStream
 
 @Service
-class ExcelFileService(
+open class ExcelFileService(
     private val customProperties: CustomProperties,
     private val transactionService: TransactionService,
     private val accountService: AccountService,
     private var meterService: MeterService
 ) : IExcelFileService {
 
+    @Timed
     @Throws(Exception::class)
     override fun processProtectedExcelFile(inputExcelFileName: String) {
         logger.info("${customProperties.excelInputFilePath}/${inputExcelFileName}")
@@ -52,12 +54,14 @@ class ExcelFileService(
         }
     }
 
+    @Timed
     override fun saveProtectedExcelFile(
         inputExcelFileName: String,
         workbook: Workbook,
         encryptionInfo: EncryptionInfo
     ) {
-        val fileOutStream = FileOutputStream(File("${customProperties.excelInputFilePath}/${UUID.randomUUID()}-${inputExcelFileName}"))
+        val fileOutStream =
+            FileOutputStream(File("${customProperties.excelInputFilePath}/${UUID.randomUUID()}-${inputExcelFileName}"))
         val poiFileSystem = POIFSFileSystem()
 
         val encryptor: Encryptor = encryptionInfo.encryptor
@@ -71,6 +75,7 @@ class ExcelFileService(
         poiFileSystem.close()
     }
 
+    @Timed
     override fun filterWorkbookThenImportTransactions(workbook: Workbook) {
         val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
         accounts.forEach { account ->
@@ -84,12 +89,14 @@ class ExcelFileService(
         }
     }
 
-    private fun cloneSheetTemplate(workbook: Workbook, newName: String) {
+    @Timed
+    override fun cloneSheetTemplate(workbook: Workbook, newName: String) {
         val newSheet = workbook.cloneSheet(workbook.getSheetIndex("template"))
         val newIndex = workbook.getSheetIndex(newSheet)
         workbook.setSheetName(newIndex, newName)
     }
 
+    @Timed
     @Throws(IOException::class)
     override fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int) {
         val currentSheet = workbook.getSheetAt(sheetNumber)
@@ -105,6 +112,7 @@ class ExcelFileService(
         }
     }
 
+    @Timed
     override fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction) {
         val newRow = currentSheet.createRow(rowNumber)
         for (columnNumber in 1 until 8) {
