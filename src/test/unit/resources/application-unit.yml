@@ -67,7 +67,7 @@ spring:
 # = Logging
 # ===============================
 logging:
-  config: classpath:logback-unit.groovy
+  config: classpath:logback.groovy
 
 #  level:
 #    root: DEBUG

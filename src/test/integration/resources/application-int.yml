@@ -87,7 +87,7 @@ custom:
 # = Logging
 # ===============================
 logging:
-  config: classpath:logback-int.groovy
+  config: classpath:logback.groovy
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database
@@ -122,4 +122,4 @@ management:
     web:
       exposure:
         include: "*"
-debug: true
+debug: false

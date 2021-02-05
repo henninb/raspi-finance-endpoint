@@ -1,16 +1,16 @@
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.classic.filter.LevelFilter
-import ch.qos.logback.classic.filter.ThresholdFilter
+import ch.qos.logback.core.ConsoleAppender
+import ch.qos.logback.core.rolling.RollingFileAppender
+import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy
+import ch.qos.logback.core.status.NopStatusListener
 import org.springframework.boot.logging.logback.ColorConverter
 
 statusListener(NopStatusListener)
-//statusListener(OnConsoleStatusListener)
 
 def env = System.getenv()
 String appName = env['APPNAME'] ?: 'app'
 String springProfile = env['SPRING_PROFILES_ACTIVE'] ?: 'profile'
 String logFilePath = env['LOGS'] ?: 'logs'
-
 String logFileName = "${logFilePath}/${appName}-${springProfile}.log"
 String logArchiveFileName = "${logFilePath}/archive/${appName}-${springProfile}"
 

@@ -78,18 +78,38 @@ class AccountController @Autowired constructor(private var accountService: Accou
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this account: $accountNameOwner.")
     }
 
-    //http://localhost:8080/account/update
-    @PatchMapping(path = ["/update"], produces = ["application/json"])
-    fun updateTransaction(@RequestBody account: Map<String, String>): ResponseEntity<String> {
-        val toBePatchedTransaction = mapper.convertValue(account, Account::class.java)
-        val updateStatus: Boolean = accountService.updateAccount(toBePatchedTransaction)
+    //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8080/account/update/test_account' --data '{}'
+    @PutMapping(path = ["/update/{accountNameOwner}"], produces = ["application/json"])
+    fun updateAccount(
+        @PathVariable("accountNameOwner") guid: String,
+        @RequestBody account: Map<String, Any>
+    ): ResponseEntity<String> {
+        val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
+        val updateStatus: Boolean = accountService.updateAccount(accountToBeUpdated)
         if (updateStatus) {
             return ResponseEntity.ok("account updated")
         }
 
         throw ResponseStatusException(
             HttpStatus.BAD_REQUEST,
-            "could not update this account: ${toBePatchedTransaction.accountNameOwner}."
+            "could not update this account: ${accountToBeUpdated.accountNameOwner}."
+        )
+    }
+
+    //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8080/account/rename?old=test_brian&new=testnew_brian'
+    @PutMapping(path = ["/rename"], produces = ["application/json"])
+    fun renameAccountNameOwner(
+        @RequestParam(value = "old")  oldAccountNameOwner: String,
+        @RequestParam("new")  newAccountNameOwner: String
+    ): ResponseEntity<String> {
+        val updateStatus: Boolean = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
+        if (updateStatus) {
+            return ResponseEntity.ok("accountNameOwner renamed")
+        }
+
+        throw ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "could not rename this account: ${oldAccountNameOwner}."
         )
     }
 }

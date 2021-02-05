@@ -4,7 +4,10 @@ import finance.Application
 import finance.domain.Account
 import finance.helpers.AccountBuilder
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
@@ -133,6 +136,23 @@ class AccountControllerSpec extends BaseControllerSpec {
 
         then:
         response.statusCode == HttpStatus.OK
+        0 * _
+    }
+
+
+    void 'test rename AccountNameOwner'() {
+        given:
+        String oldName = 'foo_brian'
+        String newName = 'new_brian'
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/account/rename?old=${oldName}&new=${newName}"),
+                HttpMethod.PUT, entity, String)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
