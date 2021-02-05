@@ -124,13 +124,27 @@ open class AccountService(
     override fun updateAccount(account: Account): Boolean {
         val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
         if (optionalAccount.isPresent) {
-
+            val accountToBeUpdated = optionalAccount.get()
             //account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            logger.info("patch the account.")
+            logger.info("updated the account.")
             //var updateFlag = false
             //val fromDb = optionalAccount.get()
+            accountRepository.saveAndFlush(accountToBeUpdated)
+            return true
         }
 
+        return false
+    }
+
+    @Timed
+    override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean {
+        val accountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
+        if (accountOptional.isPresent) {
+            val account = accountOptional.get()
+            account.accountNameOwner = newAccountNameOwner
+            accountRepository.saveAndFlush(account)
+            return true
+        }
         return false
     }
 
