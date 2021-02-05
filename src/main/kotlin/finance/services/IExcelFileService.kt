@@ -13,6 +13,5 @@ interface IExcelFileService {
 
     fun processEachExcelSheet(workbook: Workbook, sheetNumber: Int)
     fun insertNewRow(currentSheet: Sheet, rowNumber: Int, transaction: Transaction)
-    //fun removeEachRowInTheWorksheet(currentSheet: Sheet)
-    //fun isExcludedAccount(accountExcludedList: List<String>, accountNameOwner: String): Boolean
+    fun cloneSheetTemplate(workbook: Workbook, newName: String)
 }

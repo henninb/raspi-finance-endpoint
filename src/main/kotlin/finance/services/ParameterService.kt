@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parameter
 import finance.repositories.ParameterRepository
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
@@ -12,12 +13,13 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class ParameterService(
+open class ParameterService(
     private var parameterRepository: ParameterRepository,
     private val validator: Validator,
     private var meterService: MeterService
 ) : IParameterService {
 
+    @Timed
     override fun insertParameter(parameter: Parameter): Boolean {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
         if (constraintViolations.isNotEmpty()) {
@@ -33,10 +35,12 @@ class ParameterService(
         return true
     }
 
+    @Timed
     override fun deleteByParameterName(parameterName: String) {
         parameterRepository.deleteByParameterName(parameterName)
     }
 
+    @Timed
     override fun findByParameter(parameterName: String): Optional<Parameter> {
         val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parameterName)
         if (parameterOptional.isPresent) {

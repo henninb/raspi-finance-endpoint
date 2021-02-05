@@ -5,6 +5,7 @@ import finance.domain.Transaction
 import finance.processors.ExceptionProcessor
 import finance.processors.InsertTransactionProcessor
 import finance.processors.StringTransactionProcessor
+import io.micrometer.core.annotation.Timed
 import org.apache.camel.InvalidPayloadException
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component
 
 //@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-class TransactionToDatabaseRouteBuilder (
+open class TransactionToDatabaseRouteBuilder (
     private var camelProperties: CamelProperties,
     private var stringTransactionProcessor: StringTransactionProcessor,
     private var insertTransactionProcessor: InsertTransactionProcessor,
@@ -21,6 +22,7 @@ class TransactionToDatabaseRouteBuilder (
 ) : RouteBuilder() {
 
 
+    @Timed
     @Throws(Exception::class)
     override fun configure() {
 

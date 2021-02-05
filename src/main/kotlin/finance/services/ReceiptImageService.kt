@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.ReceiptImage
 import finance.repositories.ReceiptImageRepository
+import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
@@ -12,12 +13,13 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-class ReceiptImageService(
+open class ReceiptImageService(
     private var receiptImageRepository: ReceiptImageRepository,
     private val validator: Validator,
     private var meterService: MeterService
 ) : IReceiptImageService {
 
+    @Timed
     override fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
 
         val constraintViolations: Set<ConstraintViolation<ReceiptImage>> = validator.validate(receiptImage)
@@ -34,10 +36,12 @@ class ReceiptImageService(
         return receiptImageRepository.saveAndFlush(receiptImage)
     }
 
+    @Timed
     override fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
         return receiptImageRepository.findById(receiptImageId)
     }
 
+    @Timed
     override fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
         receiptImageRepository.deleteById(receiptImage.receiptImageId)
         return true

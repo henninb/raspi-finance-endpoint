@@ -478,6 +478,7 @@ open class TransactionService(
         return accountNeedingAttention
     }
 
+    @Timed
     override fun nextTimestampMillis(): Long {
         val lastTimestamp = System.currentTimeMillis()
         var timestamp = System.currentTimeMillis()
