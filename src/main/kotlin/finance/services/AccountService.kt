@@ -3,6 +3,7 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.repositories.AccountRepository
+import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.dao.InvalidDataAccessResourceUsageException
@@ -18,6 +19,7 @@ import javax.validation.Validator
 @Service
 open class AccountService(
     private var accountRepository: AccountRepository,
+    private var transactionRepository: TransactionRepository,
     private val validator: Validator,
     private var meterService: MeterService
 ) : IAccountService {
@@ -138,14 +140,36 @@ open class AccountService(
 
     @Timed
     override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean {
-        val accountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
-        if (accountOptional.isPresent) {
-            val account = accountOptional.get()
-            account.accountNameOwner = newAccountNameOwner
-            accountRepository.saveAndFlush(account)
-            return true
+
+
+        val newAccountOptional = accountRepository.findByAccountNameOwner(newAccountNameOwner)
+        val oldAccountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
+
+        if (oldAccountOptional.isEmpty) {
+            throw RuntimeException("Cannot find the original account to rename: $oldAccountNameOwner")
+
         }
-        return false
+        if (newAccountOptional.isPresent) {
+           throw RuntimeException("Cannot overwrite new account with an existing account : $newAccountNameOwner")
+        }
+        val oldAccount = oldAccountOptional.get()
+        val newAccount = Account()
+        newAccount.accountType = oldAccount.accountType
+        newAccount.activeStatus = oldAccount.activeStatus
+        newAccount.moniker = oldAccount.moniker
+        newAccount.accountNameOwner = newAccountNameOwner
+        val newlySavedAccount = accountRepository.saveAndFlush(newAccount)
+
+        val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(oldAccountNameOwner)
+        transactions.forEach { transaction ->
+            transaction.accountNameOwner = newlySavedAccount.accountNameOwner
+            transaction.accountId = newlySavedAccount.accountId
+            transaction.accountType = newlySavedAccount.accountType
+            transaction.activeStatus = newlySavedAccount.activeStatus
+            transactionRepository.saveAndFlush(transaction)
+        }
+        accountRepository.deleteByAccountNameOwner(oldAccountNameOwner)
+        return true
     }
 
     companion object {

@@ -10,7 +10,7 @@ import java.math.RoundingMode
 
 @SuppressWarnings("GroovyAccessibility")
 class AccountServiceSpec extends BaseServiceSpec {
-    protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterService)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
 
     protected String validJsonPayload = '''
 {

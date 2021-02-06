@@ -39,10 +39,10 @@ class InsertTransactionProcessorSpec extends BaseProcessor {
         insertTransactionProcessor.process(exchange)
 
         then:
-        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.of(new Category())
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         2 * counter.increment()
@@ -82,15 +82,15 @@ class InsertTransactionProcessorSpec extends BaseProcessor {
         insertTransactionProcessor.process(exchange)
 
         then:
-        1 * mockTransactionRepository.findByGuid(transaction.guid) >> Optional.empty()
-        1 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
-        2 * mockAccountRepository.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
+        2 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.empty()
         1 * mockCategoryRepository.saveAndFlush(category)
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * validatorMock.validate(account) >> constraintViolationsAccount
         1 * validatorMock.validate(category) >> constraintViolationsCategory
-        1 * mockTransactionRepository.saveAndFlush(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction)
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         2 * counter.increment()

@@ -139,6 +139,21 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
+    void 'test rename AccountNameOwner - existing new account'() {
+        given:
+        String newName = 'foo_brian'
+        String oldName = 'new_brian'
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/account/rename?old=${oldName}&new=${newName}"),
+                HttpMethod.PUT, entity, String)
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
 
     void 'test rename AccountNameOwner'() {
         given:
@@ -152,7 +167,7 @@ class AccountControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
