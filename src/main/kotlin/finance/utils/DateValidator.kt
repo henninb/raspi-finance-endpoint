@@ -10,7 +10,7 @@ class DateValidator : ConstraintValidator<ValidDate, Date> {
     }
 
     override fun isValid(value: Date, context: ConstraintValidatorContext): Boolean {
-        logger.info("dateToBeEvaluated: $value")
+        logger.debug("dateToBeEvaluated: $value")
         return value > Date.valueOf("2000-01-01")
     }
 

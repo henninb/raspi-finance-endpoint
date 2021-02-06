@@ -11,7 +11,7 @@ class LowerCaseConverter : AttributeConverter<String, String> {
         if (attribute == null) {
             return ""
         }
-
+        logger.debug("convertToDatabaseColumn - converted to lowercase")
         return attribute.toLowerCase()
     }
 
@@ -20,6 +20,7 @@ class LowerCaseConverter : AttributeConverter<String, String> {
             return ""
         }
 
+        logger.debug("convertToEntityAttribute - converted to lowercase")
         return attribute.toLowerCase()
     }
 

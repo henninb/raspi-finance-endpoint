@@ -96,7 +96,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
         )
     }
 
-    //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8080/account/rename?old=test_brian&new=testnew_brian'
+    //curl -k -X PUT 'https://hornsup:8080/account/rename?old=gap_kari&new=oldnavy_kari'
+    //curl -k --header "Content-Type: application/json" --request PUT 'https://hornsup:8080/account/rename?old=test_brian&new=testnew_brian'
     @PutMapping(path = ["/rename"], produces = ["application/json"])
     fun renameAccountNameOwner(
         @RequestParam(value = "old")  oldAccountNameOwner: String,
