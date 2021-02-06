@@ -25,7 +25,7 @@ class BaseServiceSpec extends Specification {
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").file.absolutePath
     protected Counter counter = Mock(Counter)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, validatorMock, meterService)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
     protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, validatorMock, meterService)
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterService)
     protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterService)

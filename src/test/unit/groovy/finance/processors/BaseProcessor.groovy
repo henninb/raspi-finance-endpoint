@@ -18,20 +18,18 @@ import javax.validation.Validation
 import javax.validation.Validator
 
 class BaseProcessor extends Specification {
-    //protected Message mockMessage = GroovyMock(Message)
-    //protected Exchange mockExchange = GroovyMock(Exchange)
-    protected TransactionRepository mockTransactionRepository = GroovyMock(TransactionRepository)
-    protected AccountRepository mockAccountRepository = GroovyMock(AccountRepository)
+    protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
+    protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
     protected Validator validatorMock = GroovyMock(Validator)
     protected MeterRegistry meterRegistryMock = GroovyMock(MeterRegistry)
     protected MeterService meterService = new MeterService(meterRegistryMock)
-    protected AccountService accountService = new AccountService(mockAccountRepository, validatorMock, meterService)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
     protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
     protected CategoryService categoryService = new CategoryService(mockCategoryRepository, validatorMock, meterService)
     protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
     protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository, validatorMock, meterService)
     protected ObjectMapper mapper = new ObjectMapper()
-    protected TransactionService transactionService = new TransactionService(mockTransactionRepository, accountService, categoryService, receiptImageService, validatorMock, meterService)
+    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterService)
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected Counter counter = GroovyMock(Counter)
     protected Validator mockValidator = GroovyMock(Validator)
@@ -55,17 +53,5 @@ class BaseProcessor extends Specification {
         Tag accountNameOwnerTag = Tag.of(Constants.ACCOUNT_NAME_OWNER_TAG, accountNameOwner)
         Tags tags = Tags.of(accountNameOwnerTag, serverNameTag)
         return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)
-    }
-
-    def setup() {
-//        RouteBuilder route = new InitialRoute(
-//                premiumGreeting,
-//                standardGreeting,
-//                basicGreeting,
-//                isPremiumUser,
-//                isStandardUser,
-//                isBasicUser)
-//        camelContext.addRoutes(route)
-//        camelContext.start()
     }
 }
