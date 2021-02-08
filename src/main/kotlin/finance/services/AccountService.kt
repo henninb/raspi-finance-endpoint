@@ -145,9 +145,8 @@ open class AccountService(
         val newAccountOptional = accountRepository.findByAccountNameOwner(newAccountNameOwner)
         val oldAccountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
 
-        if (oldAccountOptional.isEmpty()) {
+        if (!oldAccountOptional.isPresent) {
             throw RuntimeException("Cannot find the original account to rename: $oldAccountNameOwner")
-
         }
         if (newAccountOptional.isPresent) {
            throw RuntimeException("Cannot overwrite new account with an existing account : $newAccountNameOwner")
