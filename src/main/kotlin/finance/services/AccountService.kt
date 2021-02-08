@@ -145,7 +145,7 @@ open class AccountService(
         val newAccountOptional = accountRepository.findByAccountNameOwner(newAccountNameOwner)
         val oldAccountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
 
-        if (oldAccountOptional.isEmpty) {
+        if (oldAccountOptional.isEmpty()) {
             throw RuntimeException("Cannot find the original account to rename: $oldAccountNameOwner")
 
         }
