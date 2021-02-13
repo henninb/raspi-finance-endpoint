@@ -95,7 +95,7 @@ services:
       - "hornsup:${HOST_IP}"
       - "elasticsearch:${HOST_IP}"
   grafana-server:
-    image: grafana/grafana:7.3.4
+    image: grafana/grafana:7.4.0
     user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: grafana-server
     ports:
