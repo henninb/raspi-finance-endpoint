@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   postgresql-server:
-    image: postgres:13.1
+    image: postgres:13.2
     # user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: postgresql-server
     ports:

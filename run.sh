@@ -41,7 +41,7 @@ fi
 
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-elif [ "$OS" = "Arch Linux" ]; then
+elif [ "$OS" = "Arch Linux" ] || [ "$OS" = "ArcoLinux" ]; then
   HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
 elif [ "$OS" = "openSUSE Tumbleweed" ]; then
   HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
