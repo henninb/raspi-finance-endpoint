@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ ! -x "$(command -v uuidgen)" ]; then
+  echo "install uuidgen for your system."
+  exit 1
+fi
+
 cat > /tmp/transaction-insert <<EOF
 {
   "accountType": "credit",
@@ -82,6 +87,8 @@ echo
 curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST -d '{"accountId":0, "accountType":"credit", "transactionDate":"2020-09-04", "guid":"$(uuidgen)", "accountNameOwner":"test_brian","description":"aliexpress.com", "category":"online","amount":0.00,"transactionState":"cleared","reoccurring":false, "notes":"my note to you", "activeStatus":"true"}'
 
 
-curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST -d '{ "accountId":1001, "accountType":"credit", "transactionDate":"2020-10-01", "dueDate":"2020-10-07", "guid":"2eba99af-6625-4f11-a65f-e24783ab6000", "accountNameOwner":"amazon-store_brian", "description":"aliexpress.com", "category":"online", "amount":0.00, "transactionState":"cleared", "reoccurring":false, "reoccurringType":"undefined", "notes":"my note to you" }'
+echo
+echo transaction
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST -d '{ "accountId":1001, "accountType":"credit", "transactionDate":"2020-10-01", "dueDate":"2020-10-07", "guid":"$(uuidgen)", "accountNameOwner":"amazon-store_brian", "description":"aliexpress.com", "category":"online", "amount":0.00, "transactionState":"cleared", "reoccurring":false, "reoccurringType":"undefined", "notes":"my note to you" }'
 
 exit 0
