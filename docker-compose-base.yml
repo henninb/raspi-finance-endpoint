@@ -28,20 +28,6 @@ services:
     depends_on:
       logstash-server:
          condition: service_healthy
-      # - influxdb-server
-  # influxdb-server:
-  #   image: influxdb:1.8.3
-  #   user: "${CURRENT_UID}:${CURRENT_GID}"
-  #   container_name: influxdb-server
-  #   volumes:
-  #     - ./influxdb-data:/var/lib/influxdb
-  #   ports:
-  #     - "8086:8086"
-  #   expose:
-  #     - "8086"
-  #   env_file:
-  #     - env.influx
-  #     - env.secrets
   elasticsearch-server:
     image: elasticsearch:7.10.1
     # user: "${CURRENT_UID}:${CURRENT_GID}"
