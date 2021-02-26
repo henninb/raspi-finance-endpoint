@@ -205,6 +205,7 @@ $$
       RETURN NEW;
     END;
 
+
 $$;
 
 CREATE OR REPLACE FUNCTION fn_insert_transaction_categories()
@@ -218,6 +219,7 @@ $$
       NEW.date_added := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
+
 
 $$;
 

@@ -62,7 +62,7 @@ spring:
     url: ${DATASOURCE}
     baseline-on-migrate: true
     baseline-version: 0
-#    schemas: prod
+    #    schemas: prod
     locations: classpath:db/migration/prod
     validate-on-migrate: true
 

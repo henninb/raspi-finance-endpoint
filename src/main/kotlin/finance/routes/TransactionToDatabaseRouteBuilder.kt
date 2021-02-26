@@ -9,12 +9,11 @@ import io.micrometer.core.annotation.Timed
 import org.apache.camel.InvalidPayloadException
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 //@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-open class TransactionToDatabaseRouteBuilder (
+open class TransactionToDatabaseRouteBuilder(
     private var camelProperties: CamelProperties,
     private var stringTransactionProcessor: StringTransactionProcessor,
     private var insertTransactionProcessor: InsertTransactionProcessor,

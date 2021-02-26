@@ -1,8 +1,4 @@
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.core.ConsoleAppender
-import ch.qos.logback.core.rolling.RollingFileAppender
-import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy
-import ch.qos.logback.core.status.NopStatusListener
 import org.springframework.boot.logging.logback.ColorConverter
 
 statusListener(NopStatusListener)

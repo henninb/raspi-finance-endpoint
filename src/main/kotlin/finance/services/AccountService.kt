@@ -149,7 +149,7 @@ open class AccountService(
             throw RuntimeException("Cannot find the original account to rename: $oldAccountNameOwner")
         }
         if (newAccountOptional.isPresent) {
-           throw RuntimeException("Cannot overwrite new account with an existing account : $newAccountNameOwner")
+            throw RuntimeException("Cannot overwrite new account with an existing account : $newAccountNameOwner")
         }
         val oldAccount = oldAccountOptional.get()
         val newAccount = Account()
@@ -159,7 +159,8 @@ open class AccountService(
         newAccount.accountNameOwner = newAccountNameOwner
         val newlySavedAccount = accountRepository.saveAndFlush(newAccount)
 
-        val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(oldAccountNameOwner)
+        val transactions =
+            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(oldAccountNameOwner)
         transactions.forEach { transaction ->
             transaction.accountNameOwner = newlySavedAccount.accountNameOwner
             transaction.accountId = newlySavedAccount.accountId
