@@ -10,8 +10,6 @@ import io.micrometer.core.annotation.Timed
 import org.apache.camel.InvalidPayloadException
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 //@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
@@ -58,7 +56,7 @@ open class JsonFileReaderRouteBuilder(
         from(camelProperties.jsonFileReaderRoute)
             .autoStartup(camelProperties.autoStartRoute)
 
-                //TODO: change how the routeId is set
+            //TODO: change how the routeId is set
             .routeId(JsonFileReaderRouteBuilder::class.java.simpleName.toString().replace("Builder", ""))
             //.routeId(camelProperties.jsonFileReaderRouteId)
             .log("fname = \${header.CamelFileName}")

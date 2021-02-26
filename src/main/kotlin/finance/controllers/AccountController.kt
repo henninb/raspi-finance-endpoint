@@ -100,8 +100,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
     //curl -k --header "Content-Type: application/json" --request PUT 'https://hornsup:8080/account/rename?old=test_brian&new=testnew_brian'
     @PutMapping(path = ["/rename"], produces = ["application/json"])
     fun renameAccountNameOwner(
-        @RequestParam(value = "old")  oldAccountNameOwner: String,
-        @RequestParam("new")  newAccountNameOwner: String
+        @RequestParam(value = "old") oldAccountNameOwner: String,
+        @RequestParam("new") newAccountNameOwner: String
     ): ResponseEntity<String> {
         val updateStatus: Boolean = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
         if (updateStatus) {

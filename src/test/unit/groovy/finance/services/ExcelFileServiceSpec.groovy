@@ -25,7 +25,7 @@ class ExcelFileServiceSpec extends BaseServiceSpec {
     void 'test try to open a file that exists, and with a valid password'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
-        Account account1 = AccountBuilder.builder().withAccountNameOwner('test1_brian')build()
+        Account account1 = AccountBuilder.builder().withAccountNameOwner('test1_brian') build()
         Account account2 = AccountBuilder.builder().withAccountNameOwner('test2_brian').build()
 
         when:

@@ -6,13 +6,11 @@ import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 //@ConditionalOnProperty(name = ["camel.enabled"], havingValue = "true", matchIfMissing = true)
 @Component
-open class JsonFileWriterRouteBuilder (
+open class JsonFileWriterRouteBuilder(
     private var camelProperties: CamelProperties, private var exceptionProcessor: ExceptionProcessor
 ) : RouteBuilder() {
 

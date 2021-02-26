@@ -1,16 +1,12 @@
 package finance.routes
 
-import finance.configurations.CamelProperties
+
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
-import finance.processors.ExceptionProcessor
-import finance.processors.JsonTransactionProcessor
 import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
-import org.apache.camel.model.ModelCamelContext
-import spock.lang.Specification
 
 import javax.validation.ConstraintViolation
 

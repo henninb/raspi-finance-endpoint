@@ -1,12 +1,9 @@
 package finance.routes
 
-import finance.configurations.CamelProperties
-import finance.processors.ExceptionProcessor
+
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
-import org.apache.camel.model.ModelCamelContext
-import spock.lang.Specification
 
 class JsonFileWriterRouteBuilderSpec extends BaseRouteBuilderSpec {
 

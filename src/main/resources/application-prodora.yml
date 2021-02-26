@@ -64,7 +64,7 @@ spring:
     url: ${DATASOURCE}
     baseline-on-migrate: true
     baseline-version: 0
-#    schemas: prod
+    #    schemas: prod
     locations: classpath:db/migration/prodora
     validate-on-migrate: true
 #    create-schemas: true
