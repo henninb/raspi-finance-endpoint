@@ -244,7 +244,8 @@ open class TransactionService(
     @Timed
     override fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
         val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
-        val rawImage = Base64Utils.decodeFromString(imageBase64String)
+        //val rawImage = Base64Utils.decodeFromString(imageBase64String)
+        val rawImage = Base64.getDecoder().decode(imageBase64String)
         val imageFormatType = getImageFormatType(rawImage)
         val thumbnail = createThumbnail(rawImage, imageFormatType)
         val optionalTransaction = transactionRepository.findByGuid(guid)

@@ -140,8 +140,6 @@ open class AccountService(
 
     @Timed
     override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean {
-
-
         val newAccountOptional = accountRepository.findByAccountNameOwner(newAccountNameOwner)
         val oldAccountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
 
