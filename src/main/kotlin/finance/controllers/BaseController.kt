@@ -18,8 +18,6 @@ import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
 open class BaseController {
-
-
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(
         value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class, RuntimeException::class,

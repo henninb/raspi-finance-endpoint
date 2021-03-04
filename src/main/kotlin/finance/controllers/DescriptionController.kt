@@ -14,7 +14,7 @@ import java.util.*
 class DescriptionController(private var descriptionService: DescriptionService) : BaseController() {
 
     //https://hornsup:8080/description/select/all
-    @GetMapping(path = ["/select/all"], produces = ["application/json"])
+    @GetMapping("/select/all", produces = ["application/json"])
     fun selectAllDescriptions(): ResponseEntity<List<Description>> {
         val descriptions = descriptionService.fetchAllDescriptions()
 
@@ -22,7 +22,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     }
 
     //curl -k --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' 'https://hornsup:8080/description/insert'
-    @PostMapping(path = ["/insert"], produces = ["application/json"])
+    @PostMapping("/insert", produces = ["application/json"])
     fun insertDescription(@RequestBody description: Description): ResponseEntity<String> {
         descriptionService.insertDescription(description)
         logger.info("description inserted")
@@ -30,7 +30,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     }
 
     //curl -k 'https://localhost:8080/description/select/zzz'
-    @GetMapping(path = ["/select/{description_name}"])
+    @GetMapping("/select/{description_name}")
     fun selectDescriptionName(@PathVariable("description_name") descriptionName: String): ResponseEntity<String> {
         val descriptionOptional = descriptionService.findByDescriptionName(descriptionName)
         if (descriptionOptional.isPresent) {
@@ -39,7 +39,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "description not found for: $descriptionName")
     }
 
-    @DeleteMapping(path = ["/delete/{descriptionName}"], produces = ["application/json"])
+    @DeleteMapping("/delete/{descriptionName}", produces = ["application/json"])
     fun deleteByDescription(@PathVariable descriptionName: String): ResponseEntity<String> {
         val descriptionOptional: Optional<Description> = descriptionService.findByDescriptionName(descriptionName)
 

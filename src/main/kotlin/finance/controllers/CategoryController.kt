@@ -14,7 +14,7 @@ import java.util.*
 class CategoryController(private var categoryService: CategoryService) : BaseController() {
 
     //http://localhost:8080/category/select/active
-    @GetMapping(path = ["/select/active"], produces = ["application/json"])
+    @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllActiveCategories(): ResponseEntity<List<Category>> {
         val categories: List<Category> = categoryService.fetchAllActiveCategories()
         if (categories.isEmpty()) {
@@ -25,7 +25,7 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
         return ResponseEntity.ok(categories)
     }
 
-    @GetMapping(path = ["/select/{category_name}"])
+    @GetMapping("/select/{category_name}")
     fun selectCategoryName(@PathVariable("category_name") categoryName: String): ResponseEntity<String> {
         val categoryOptional = categoryService.findByCategory(categoryName)
         if (categoryOptional.isPresent) {
@@ -35,14 +35,14 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     }
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
-    @PostMapping(path = ["/insert"], produces = ["application/json"])
+    @PostMapping("/insert", produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<String> {
         categoryService.insertCategory(category)
         logger.info("insertCategory")
         return ResponseEntity.ok("category inserted")
     }
 
-    @DeleteMapping(path = ["/delete/{categoryName}"], produces = ["application/json"])
+    @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])
     fun deleteByCategoryName(@PathVariable categoryName: String): ResponseEntity<String> {
         val categoryOptional: Optional<Category> = categoryService.findByCategoryName(categoryName)
 

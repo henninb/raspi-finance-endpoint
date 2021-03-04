@@ -13,21 +13,21 @@ import java.util.*
 @RequestMapping("/payment")
 class PaymentController(private var paymentService: PaymentService) : BaseController() {
 
-    @GetMapping(path = ["/select"], produces = ["application/json"])
+    @GetMapping("/select", produces = ["application/json"])
     fun selectAllPayments(): ResponseEntity<List<Payment>> {
         val payments = paymentService.findAllPayments()
 
         return ResponseEntity.ok(payments)
     }
 
-    @PostMapping(path = ["/insert"], produces = ["application/json"])
+    @PostMapping("/insert", produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<String> {
         paymentService.insertPayment(payment)
         return ResponseEntity.ok("payment inserted")
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/payment/delete/1001
-    @DeleteMapping(path = ["/delete/{paymentId}"], produces = ["application/json"])
+    @DeleteMapping("/delete/{paymentId}", produces = ["application/json"])
     fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<String> {
         val paymentOptional: Optional<Payment> = paymentService.findByPaymentId(paymentId)
 
