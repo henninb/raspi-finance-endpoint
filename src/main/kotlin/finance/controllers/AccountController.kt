@@ -15,7 +15,7 @@ import java.util.*
 class AccountController @Autowired constructor(private var accountService: AccountService) : BaseController() {
 
     //http://localhost:8080/account/totals
-    @GetMapping(path = ["totals"], produces = ["application/json"])
+    @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
         response["totals"] = accountService.computeTheGrandTotalForAllTransactions().toString()
@@ -24,7 +24,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //curl --header "Content-Type: application/json" https://hornsup:8080/account/payment/required
-    @GetMapping(path = ["/payment/required"], produces = ["application/json"])
+    @GetMapping("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): ResponseEntity<List<String>> {
 
         val accountNameOwners = accountService.findAccountsThatRequirePayment()
@@ -36,7 +36,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //http://localhost:8080/account/select/active
-    @GetMapping(path = ["/select/active"], produces = ["application/json"])
+    @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
         accountService.updateTheGrandTotalForAllClearedTransactions()
@@ -50,7 +50,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //http://localhost:8080/account/select/test_brian
-    @GetMapping(path = ["/select/{accountNameOwner}"], produces = ["application/json"])
+    @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
         if (accountOptional.isPresent) {
@@ -60,14 +60,14 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
-    @PostMapping(path = ["/insert"], produces = ["application/json"])
+    @PostMapping("/insert", produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<String> {
         accountService.insertAccount(account)
         return ResponseEntity.ok("account inserted")
     }
 
     //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8080/account/delete/test_brian'
-    @DeleteMapping(path = ["/delete/{accountNameOwner}"], produces = ["application/json"])
+    @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
     fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<String> {
         val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
 
@@ -79,7 +79,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8080/account/update/test_account' --data '{}'
-    @PutMapping(path = ["/update/{accountNameOwner}"], produces = ["application/json"])
+    @PutMapping("/update/{accountNameOwner}", produces = ["application/json"])
     fun updateAccount(
         @PathVariable("accountNameOwner") guid: String,
         @RequestBody account: Map<String, Any>
@@ -98,7 +98,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //curl -k -X PUT 'https://hornsup:8080/account/rename?old=gap_kari&new=oldnavy_kari'
     //curl -k --header "Content-Type: application/json" --request PUT 'https://hornsup:8080/account/rename?old=test_brian&new=testnew_brian'
-    @PutMapping(path = ["/rename"], produces = ["application/json"])
+    @PutMapping("/rename", produces = ["application/json"])
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,
         @RequestParam("new") newAccountNameOwner: String

@@ -12,14 +12,14 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/receipt/image")
 class ReceiptImageController(private var receiptImageService: ReceiptImageService) : BaseController() {
 
-    @PostMapping(path = ["/insert"], produces = ["application/json"])
+    @PostMapping("/insert", produces = ["application/json"])
     fun insertReceiptImage(@RequestBody receiptImage: ReceiptImage): ResponseEntity<String> {
         val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
         return ResponseEntity.ok("receiptImage inserted $receiptImageId")
     }
 
     // curl -k 'https://localhost:8080/receipt/image/select/1'
-    @GetMapping(path = ["/select/{receipt_image_id}"])
+    @GetMapping("/select/{receipt_image_id}")
     fun selectReceiptImage(@PathVariable("receipt_image_id") receiptImageId: Long): ResponseEntity<String> {
         val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)
         if (receiptImageOptional.isPresent) {
