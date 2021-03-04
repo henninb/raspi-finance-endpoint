@@ -8,7 +8,6 @@ import javax.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class ParameterServiceSpec extends BaseServiceSpec {
-    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterService)
 
     void setup() {
     }
