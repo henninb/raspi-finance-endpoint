@@ -9,8 +9,6 @@ import javax.validation.ValidationException
 @SuppressWarnings("GroovyAccessibility")
 class CategoryServiceSpec extends BaseServiceSpec {
 
-    //protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterService)
-
     void setup() {
     }
 
