@@ -397,11 +397,7 @@ open class TransactionService(
         val calendar = Calendar.getInstance()
         calendar.time = transaction.transactionDate
 
-        if (transaction.reoccurringType == ReoccurringType.FortNightly) {
-            calendar.add(Calendar.DATE, 14)
-        } else {
-            calendar.add(Calendar.YEAR, 1) //Assumption this works for leap years
-        }
+        calculateFutureDate(transaction, calendar)
 
         val transactionFuture = Transaction()
         transactionFuture.guid = UUID.randomUUID().toString()
@@ -429,6 +425,22 @@ open class TransactionService(
             throw RuntimeException("TransactionState cannot be undefined for reoccurring transactions.")
         }
         return transactionFuture
+    }
+
+    private fun calculateFutureDate(transaction: Transaction, calendar: Calendar) {
+        if (transaction.reoccurringType == ReoccurringType.FortNightly) {
+            calendar.add(Calendar.DATE, 14)
+        } else {
+            if (transaction.accountType == AccountType.Debit) {
+                if (transaction.reoccurringType == ReoccurringType.Monthly) {
+                    calendar.add(Calendar.MONTH, 1);
+                } else {
+                    throw java.lang.RuntimeException("debit transaction ReoccurringType needs to be configured.")
+                }
+            } else {
+                calendar.add(Calendar.YEAR, 1) //Assumption this method works for leap years
+            }
+        }
     }
 
     @Timed
