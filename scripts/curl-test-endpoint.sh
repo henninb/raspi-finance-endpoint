@@ -5,7 +5,7 @@ if [ ! -x "$(command -v uuidgen)" ]; then
   exit 1
 fi
 
-cat > /tmp/transaction-insert <<EOF
+cat > /tmp/01-transaction-insert <<EOF
 {
   "accountType": "credit",
   "transactionDate": "2020-09-04",
@@ -21,7 +21,23 @@ cat > /tmp/transaction-insert <<EOF
 }
 EOF
 
-cat > /tmp/transaction-insert-debit <<EOF
+cat > /tmp/02-transaction-insert <<EOF
+{
+  "accountType": "credit",
+  "transactionDate": "2020-09-04",
+  "guid": "$(uuidgen)",
+  "accountNameOwner": "foo_brian",
+  "description": "newegg.com",
+  "category": "online",
+  "amount": 0,
+  "transactionState": "cleared",
+  "reoccurring": false,
+  "notes": "",
+  "activeStatus": "true"
+}
+EOF
+
+cat > /tmp/03-transaction-insert <<EOF
 {
   "accountType": "debit",
   "transactionDate": "2020-09-04",
@@ -37,7 +53,7 @@ cat > /tmp/transaction-insert-debit <<EOF
 }
 EOF
 
-cat > /tmp/account-insert <<EOF
+cat > /tmp/01-account-insert <<EOF
 {
   "accountNameOwner": "test_brian",
   "accountType": "credit",
@@ -60,21 +76,29 @@ curl -k --header "Content-Type: application/json" 'https://localhost:8080/accoun
 echo
 curl -k --header "Content-Type: application/json" 'https://localhost:8080/account/insert' -X POST -d '{"accountNameOwner":"chase_brian", "accountType":"credit", "moniker":"0000", "activeStatus":true, "totals":0, "totalsBalanced":0, "dateClosed":0}'
 
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/account/insert' -X POST -d '{"accountNameOwner":"test_brian", "accountType":"credit", "moniker":"0000", "activeStatus":true, "totals":0, "totalsBalanced":0, "dateClosed":0}'
+
 echo
 echo parameter setup
 curl -k --header "Content-Type: application/json" -X POST -d '{"parameterName":"payment_account","parameterValue":"bank_brian", "activeStatus":true}' 'https://localhost:8080/parm/insert'
 curl -k --header "Content-Type: application/json" -X POST -d '{"parameterName":"timezone","parameterValue":"America/Chicago", "activeStatus":true}' 'https://localhost:8080/parm/insert'
 
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/01-transaction-insert
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/02-transaction-insert
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/03-transaction-insert
+
 exit 0
 # echo these break the code
 echo account
 curl -k --header "Content-Type: application/json" 'https://localhost:8080/account/insert' -X POST -d '{"accountNameOwner":"test_brian", "accountType":"credit", "moniker":"0000", "activeStatus":true}'
-
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/account/insert' -X POST --data-binary @/tmp/01-account-insert
 
 echo
-echo transaction
+echo transactions
 echo
-curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/transaction-insert
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/01-transaction-insert
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/02-transaction-insert
+curl -k --header "Content-Type: application/json" 'https://localhost:8080/transaction/insert' -X POST --data-binary @/tmp/03-transaction-insert
 
 echo
 echo payment
