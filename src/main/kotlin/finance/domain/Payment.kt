@@ -1,8 +1,6 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
 import finance.utils.Constants.MUST_BE_UUID_MESSAGE
@@ -13,6 +11,7 @@ import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Digits
@@ -69,6 +68,20 @@ data class Payment(
 ) {
 
     constructor() : this(0L, "", Date(0), BigDecimal(0.00), "", "")
+
+    @JsonGetter("transactionDate")
+    fun jsonGetterPaymentDate(): String {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        simpleDateFormat.isLenient = false
+        return simpleDateFormat.format(this.transactionDate)
+    }
+
+    @JsonSetter("transactionDate")
+    fun jsonSetterPaymentDate(stringDate: String) {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        simpleDateFormat.isLenient = false
+        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
+    }
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
