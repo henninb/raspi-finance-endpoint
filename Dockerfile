@@ -26,7 +26,7 @@ RUN mkdir -p -m 0755 /opt/${APP}/ssl
 RUN mkdir -p -m 0755 /opt/${APP}/excel_in
 RUN mkdir -p -m 0755 /opt/${APP}/json_in
 COPY ./ssl /opt/${APP}/ssl
-ADD ./build/libs/${APP}*.jar /opt/${APP}/bin/${APP}.jar
+ADD ./build/libs/${APP}.jar /opt/${APP}/bin/${APP}.jar
 RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 # RUN apt -y update 2> /dev/null
 # RUN apt install -y netcat 2> /dev/null
