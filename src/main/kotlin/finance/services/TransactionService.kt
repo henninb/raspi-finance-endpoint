@@ -7,7 +7,6 @@ import io.micrometer.core.annotation.Timed
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
-import org.springframework.util.Base64Utils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
@@ -21,6 +20,7 @@ import javax.imageio.ImageReader
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
+import kotlin.system.measureTimeMillis
 
 @Service
 open class TransactionService(
@@ -158,18 +158,16 @@ open class TransactionService(
     }
 
     @Timed
-    override fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
-
-        val transactions =
-            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
-        var totals = BigDecimal(0)
-        var totalsCleared = BigDecimal(0)
-        transactions.forEach { transaction ->
-            totals += transaction.amount
-            if (transaction.transactionState == TransactionState.Cleared) {
-                totalsCleared += transaction.amount
-            }
+    override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+        var resultSet: List<Any>
+        val queryTimeInMillis = measureTimeMillis {
+            resultSet =
+                transactionRepository.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
         }
+        val list = resultSet.first() as Array<*>
+        logger.info("The query took $queryTimeInMillis ms")
+        val totals = BigDecimal(list.get(0).toString())
+        val totalsCleared = BigDecimal(list.get(1).toString())
 
         val result: MutableMap<String, BigDecimal> = HashMap()
 
