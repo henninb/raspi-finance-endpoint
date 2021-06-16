@@ -13,7 +13,7 @@ interface ITransactionService {
     fun createDefaultCategory(categoryName: String): Category
     fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account
     fun findTransactionByGuid(guid: String): Optional<Transaction>
-    fun fetchTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal>
+    fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal>
     fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction>
     fun updateTransaction(transaction: Transaction): Boolean
     fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean
