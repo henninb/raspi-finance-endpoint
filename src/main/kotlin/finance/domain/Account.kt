@@ -61,6 +61,21 @@ data class Account(
 
     @JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+    @Column(name = "outstanding", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    var outstanding: BigDecimal,
+
+    @JsonProperty
+    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+    @Column(name = "future", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    var future: BigDecimal,
+
+    @JsonProperty
+    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+    @Column(name = "cleared", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    var cleared: BigDecimal,
+
+    @JsonProperty
+    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
     @Column(name = "totals", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var totals: BigDecimal,
 
@@ -76,7 +91,7 @@ data class Account(
 
     constructor() : this(
         0L, "", AccountType.Undefined, true,
-        "0000", BigDecimal(0.0), BigDecimal(0.0), Timestamp(0)
+        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0)
     )
 
     @JsonIgnore

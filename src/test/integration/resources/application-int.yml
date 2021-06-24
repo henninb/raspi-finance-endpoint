@@ -31,13 +31,16 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       schema: int
-    platform: postgresql
-    continue-on-error: false
-    # always - utilize data.sql and schema.sql
-    # never - Do not initialize the datasource
-    # embedded - Only initialize an embedded datasource.
-    initialization-mode: never
-    data: classpath:data.sql
+  sql:
+    init:
+      platform: postgresql
+      continue-on-error: false
+      enabled: off
+      data-locations: classpath:data.sql
+
+  # ===============================
+  # = Thymeleaf
+  # ===============================
   thymeleaf:
     cache: false
 
@@ -52,6 +55,7 @@ spring:
     hibernate:
       ddl-auto: none
 
+
   # ===============================
   # = Flyway
   # ===============================
@@ -64,6 +68,7 @@ spring:
     baseline-version: 0
     schemas: int
     locations: classpath:db/migration/int
+
 
 # ===============================
 # = Custom
