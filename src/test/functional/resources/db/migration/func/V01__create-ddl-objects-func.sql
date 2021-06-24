@@ -19,8 +19,6 @@ CREATE TABLE IF NOT EXISTS func.t_account
     totals             NUMERIC(8, 2) DEFAULT 0.00            NULL,
     totals_balanced    NUMERIC(8, 2) DEFAULT 0.00            NULL,
     future             NUMERIC(8, 2) DEFAULT 0.00            NULL,
-    outstanding        NUMERIC(8, 2) DEFAULT 0.00            NULL,
-    cleared            NUMERIC(8, 2) DEFAULT 0.00            NULL,
     date_closed        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL, -- TODO: should be null by default
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
