@@ -32,14 +32,14 @@ class AccountSpec extends Specification {
     @Shared
     protected String jsonPayload = '''
 {"accountNameOwner":"discover_brian","accountType":"credit","activeStatus":true,
-"moniker":"1234","totals":0.01,"totalsBalanced":0.02,
+"moniker":"1234","future":0.01,"outstanding":0.02,"cleared":0.02,
 "dateClosed":0}
 '''
 
     @Shared
     protected String jsonPayloadInvalidAccountType = '''
 {"accountNameOwner":"discover_brian","accountType":"non-valid","activeStatus":true,
-"moniker":"1234","totals":0.01,"totalsBalanced":0.02,
+"moniker":"1234","future":0.01,"outstanding":0.02,"cleared":0.02,
 "dateClosed":0,"dateUpdated":1553645394000,"dateAdded":1553645394000}
 '''
 
@@ -92,8 +92,9 @@ class AccountSpec extends Specification {
                 .withMoniker(moniker)
                 .withAccountNameOwner(accountNameOwner)
                 .withActiveStatus(activeStatus)
-                .withTotals(totals)
-                .withTotalsBalanced(totalsBalanced)
+                .withFuture(future)
+                .withOutstanding(outstanding)
+                .withCleared(cleared)
                 .build()
 
         when:
@@ -105,11 +106,11 @@ class AccountSpec extends Specification {
         violations.iterator().next().invalidValue == account.properties[invalidField]
 
         where:
-        invalidField       | accountType        | accountNameOwner   | moniker | activeStatus | totals | totalsBalanced | expectedError                              | errorCount
-        'accountNameOwner' | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | 0.00G  | 0.00G          | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | AccountType.Credit | '_b'               | '0000'  | true         | 0.00G  | 0.00G          | 'size must be between 3 and 40'            | 1
-        'moniker'          | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | 0.00G  | 0.00G          | 'Must be 4 digits.'                        | 1
-        'moniker'          | AccountType.Credit | 'chase_brian'      | '00001' | true         | 0.00G  | 0.00G          | 'Must be 4 digits.'                        | 1
-        //'accountType'     | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | 0.00G | 0.00G | 'Must be 4 digits.'                        | 1
+        invalidField       | accountType        | accountNameOwner   | moniker | activeStatus | future | outstanding    | cleared | expectedError                              | errorCount
+        'accountNameOwner' | AccountType.Debit  | 'blah_chase_brian' | '0000'  | true         | 0.00G  | 0.00G          | 0.00G          |'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | AccountType.Credit | '_b'               | '0000'  | true         | 0.00G  | 0.00G          | 0.00G          |'size must be between 3 and 40'            | 1
+        'moniker'          | AccountType.Credit | 'chase_brian'      | 'abc'   | true         | 0.00G  | 0.00G          | 0.00G          |'Must be 4 digits.'                        | 1
+        'moniker'          | AccountType.Credit | 'chase_brian'      | '00001' | true         | 0.00G  | 0.00G          | 0.00G          |'Must be 4 digits.'                        | 1
+        //'accountType'     | AccountType.valueOf("invalid") | 'chase_brian'      | '00001' | true         | 0.00G | 0.00G | 0.00G          |'Must be 4 digits.'                        | 1
     }
 }

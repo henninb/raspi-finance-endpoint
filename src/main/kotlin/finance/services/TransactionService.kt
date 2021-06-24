@@ -465,7 +465,7 @@ open class TransactionService(
         val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
         val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
-        accountService.updateTheGrandTotalForAllClearedTransactions()
+        accountService.updateTheGrandTotalsForAllAccounts()
         val accountsToInvestigate =
             accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->

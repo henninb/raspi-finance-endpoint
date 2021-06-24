@@ -408,8 +408,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         calendar.add(Calendar.DAY_OF_MONTH, 35)
         Date todayPlusPastThirty = new Date(calendar.time.time)
         Account account1 = new Account(accountNameOwner: 'test1', accountType: AccountType.Credit)
-        Account account2 = new Account(accountNameOwner: 'test2', accountType: AccountType.Credit, totals: new BigDecimal(2), totalsBalanced: new BigDecimal(2))
-        Account account3 = new Account(accountNameOwner: 'test3', accountType: AccountType.Credit, totalsBalanced: new BigDecimal(5))
+        Account account2 = new Account(accountNameOwner: 'test2', accountType: AccountType.Credit, future: new BigDecimal(2), cleared: new BigDecimal(2))
+        Account account3 = new Account(accountNameOwner: 'test3', accountType: AccountType.Credit, cleared: new BigDecimal(5))
         Transaction transaction1 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Future, transactionDate: todayPlusPastThirty, amount: new BigDecimal(2.01))
         Transaction transaction2 = new Transaction(accountNameOwner: 'test2', transactionState: TransactionState.Future, transactionDate: todayPlusFifteen, amount: new BigDecimal(2.02))
         Transaction transaction3 = new Transaction(accountNameOwner: 'test1', transactionState: TransactionState.Outstanding, transactionDate: todayPlusPastThirty, amount: new BigDecimal(4.03))
@@ -422,13 +422,11 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then:
         accounts.size() == 3
-        1 * accountRepositoryMock.updateTheGrandTotalForAllClearedTransactions()
-        1 * accountRepositoryMock.updateTheGrandTotalForAllTransactions()
         1 * accountRepositoryMock.updateTotalsForClearedTransactionType()
         1 * accountRepositoryMock.updateTotalsForOutstandingTransactionType()
         1 * accountRepositoryMock.updateTotalsForFutureTransactionType()
         //1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]  //TODO: why is this not triggered?
-        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0) >> [account1, account2, account3]
+        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0, 0) >> [account1, account2, account3]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test3', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]

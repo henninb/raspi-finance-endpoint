@@ -13,40 +13,15 @@ import javax.transaction.Transactional
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
-    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(
+    fun findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrderByAccountNameOwner(
         activeStatus: Boolean = true,
         accountType: AccountType = AccountType.Credit,
-        totals: BigDecimal = BigDecimal(
-            0.0
-        )
+        cleared: BigDecimal = BigDecimal(0.0),
+        outstanding: BigDecimal = BigDecimal(0.0)
     ): List<Account>
 
     @Transactional
     fun deleteByAccountNameOwner(accountNameOwner: String)
-
-    //TODO: need to deprecate this method 6/24/2021
-    @Modifying
-    @Transactional
-    @Query(
-        value = "UPDATE t_account SET totals = x.totals FROM (SELECT account_name_owner, SUM(amount) AS totals FROM t_transaction WHERE active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
-        nativeQuery = true
-    )
-    //SpEL
-//    UPDATE Persons
-//    SET  Persons.PersonCityName=(SELECT AddressList.PostCode
-//    FROM AddressList
-//    WHERE AddressList.PersonId = Persons.PersonId)
-    //@Query(value = "UPDATE #{entityName} SET totals=(SELECT SUM(amount) AS totals FROM Transaction WHERE active_status = true and Account.account_name_owner = x.account_name_owner")
-    fun updateTheGrandTotalForAllTransactions()
-
-    //TODO: need to deprecate this method 6/24/2021
-    @Modifying
-    @Transactional
-    @Query(
-        value = "UPDATE t_account SET totals_balanced = x.totals_balanced FROM (SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction WHERE transaction_state = 'cleared' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
-        nativeQuery = true
-    )
-    fun updateTheGrandTotalForAllClearedTransactions()
 
     @Modifying
     @Transactional

@@ -31,7 +31,8 @@ open class AccountService(
 
     @Timed
     override fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
-        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrderByAccountNameOwner()
+
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
         } else {
@@ -98,22 +99,11 @@ open class AccountService(
         return true
     }
 
-    // TODO: set the update timestamp logic
     @Timed
-    override fun updateTheGrandTotalForAllClearedTransactions(): Boolean {
+    override fun updateTheGrandTotalsForAllAccounts(): Boolean {
         //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
-        //val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
-//        accounts.forEach { account ->
-//            //sum and update
-//        }
 
         try {
-            logger.info("updateAccountGrandTotals")
-            accountRepository.updateTheGrandTotalForAllClearedTransactions()
-            logger.info("updateAccountClearedTotals")
-            accountRepository.updateTheGrandTotalForAllTransactions()
-            logger.info("updateAccountTotals")
-
             accountRepository.updateTotalsForClearedTransactionType()
             accountRepository.updateTotalsForFutureTransactionType()
             accountRepository.updateTotalsForOutstandingTransactionType()
@@ -125,7 +115,7 @@ open class AccountService(
         return true
     }
 
-    //TODO: Complete the method logic
+    //TODO: 6/24/2021 - Complete the method logic
     @Timed
     override fun updateAccount(account: Account): Boolean {
         val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
