@@ -22,7 +22,7 @@ interface IAccountService {
 
     fun deleteByAccountNameOwner(accountNameOwner: String): Boolean
 
-    fun updateTheGrandTotalForAllClearedTransactions(): Boolean
+    fun updateTheGrandTotalsForAllAccounts(): Boolean
 
     fun updateAccount(account: Account): Boolean
 

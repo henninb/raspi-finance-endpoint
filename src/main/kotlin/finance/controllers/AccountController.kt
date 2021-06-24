@@ -39,7 +39,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
-        accountService.updateTheGrandTotalForAllClearedTransactions()
+        accountService.updateTheGrandTotalsForAllAccounts()
         val accounts: List<Account> = accountService.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")

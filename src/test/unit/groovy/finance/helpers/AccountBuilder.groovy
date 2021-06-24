@@ -11,8 +11,9 @@ class AccountBuilder {
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
     String moniker = '0000'
-    BigDecimal totals = new BigDecimal(0)
-    BigDecimal totalsBalanced = new BigDecimal(0)
+    BigDecimal future = new BigDecimal(0)
+    BigDecimal outstanding = new BigDecimal(0)
+    BigDecimal cleared = new BigDecimal(0)
     Timestamp dateClosed = new Timestamp(0)
 
     static AccountBuilder builder() {
@@ -25,8 +26,9 @@ class AccountBuilder {
             accountType = this.accountType
             activeStatus = this.activeStatus
             moniker = this.moniker
-            totals = this.totals
-            totalsBalanced = this.totalsBalanced
+            future = this.future
+            outstanding = this.outstanding
+            cleared = this.cleared
             dateClosed = this.dateClosed
             return it
         }
@@ -58,13 +60,18 @@ class AccountBuilder {
         return this
     }
 
-    AccountBuilder withTotals(BigDecimal totals) {
-        this.totals = totals
+    AccountBuilder withFuture(BigDecimal future) {
+        this.future = future
         return this
     }
 
-    AccountBuilder withTotalsBalanced(BigDecimal totalsBalanced) {
-        this.totalsBalanced = totalsBalanced
+    AccountBuilder withOutstanding(BigDecimal outstanding) {
+        this.outstanding = outstanding
+        return this
+    }
+
+    AccountBuilder withCleared(BigDecimal cleared) {
+        this.cleared = cleared
         return this
     }
 }

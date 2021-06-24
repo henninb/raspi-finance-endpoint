@@ -75,23 +75,13 @@ data class Account(
     var cleared: BigDecimal,
 
     @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-    @Column(name = "totals", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
-    var totals: BigDecimal,
-
-    @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
-    @Column(name = "totals_balanced", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
-    var totalsBalanced: BigDecimal,
-
-    @JsonProperty
     @Column(name = "date_closed")
     var dateClosed: Timestamp
 ) {
 
     constructor() : this(
         0L, "", AccountType.Undefined, true,
-        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0)
+        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0)
     )
 
     @JsonIgnore
