@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS public.t_account
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     payment_required   BOOLEAN                               NULL DEFAULT TRUE,
     moniker            TEXT          DEFAULT '0000'          NOT NULL,
+    future             NUMERIC(8, 2) DEFAULT 0.00            NULL,
+    outstanding        NUMERIC(8, 2) DEFAULT 0.00            NULL,
+    cleared            NUMERIC(8, 2) DEFAULT 0.00            NULL,
     totals             NUMERIC(8, 2) DEFAULT 0.00            NULL,
     totals_balanced    NUMERIC(8, 2) DEFAULT 0.00            NULL,
     date_closed        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL, -- TODO: should be null by default

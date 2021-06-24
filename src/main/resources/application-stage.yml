@@ -33,9 +33,10 @@ spring:
     driver-class-name: ${DATASOURCE_DRIVER}
     hikari:
       schema: stage
-    continue-On-Error: false
-    # always - utilize data.sql and schema.sql
-    initialization-mode: always
+  sql:
+    init:
+      continue-on-error: false
+      enabled: on
 
   # ===============================
   # = JPA / HIBERNATE

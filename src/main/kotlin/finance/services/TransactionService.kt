@@ -477,10 +477,7 @@ open class TransactionService(
                 )
             val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
 
-
-            //if(recent.isNotEmpty()) {
             accountNeedingAttention.add(account)
-            //}
         }
 
         if (accountNeedingAttention.isNotEmpty()) {

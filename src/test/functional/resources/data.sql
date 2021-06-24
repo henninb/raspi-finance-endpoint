@@ -1,4 +1,3 @@
---TRUNCATE flyway_schema_history cascade;
 TRUNCATE t_category cascade;
 TRUNCATE t_description cascade;
 TRUNCATE t_parm cascade;

@@ -114,6 +114,10 @@ open class AccountService(
             accountRepository.updateTheGrandTotalForAllTransactions()
             logger.info("updateAccountTotals")
 
+            accountRepository.updateTotalsForClearedTransactionType()
+            accountRepository.updateTotalsForFutureTransactionType()
+            accountRepository.updateTotalsForOutstandingTransactionType()
+
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
             meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
             logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")

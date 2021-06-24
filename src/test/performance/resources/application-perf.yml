@@ -32,12 +32,11 @@ spring:
     # testWhileIdle to persist the connection when idle for a long period of time
     hikari:
       schema: perf
-    platform: postgresql
-    continue-On-Error: false
-    # enable initialization-mode flag to always if you want to utilize data.sql and schema.sql
-    #initialization-mode: always
-    initialization-mode: never
-
+  sql:
+    init:
+      continue-on-error: false
+      platform: postgresql
+      enabled: off
   # ===============================
   # = JPA / HIBERNATE
   # ===============================

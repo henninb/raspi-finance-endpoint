@@ -31,14 +31,20 @@ spring:
     driver-class-name: org.h2.Driver
     hikari:
       schema: unit
-    platform: h2
-    continue-on-error: false
-    #    schema: classpath:schema-unit-h2.sql
-    #    data: classpath:data-unit-h2.sql
-    # enable flag to always if you want to utilize data.sql and schema.sql
-    initialization-mode: always
+  sql:
+    init:
+      platform: h2
+      continue-on-error: false
+      enabled: on
+
+  # ===============================
+  # = Thymeleaf
+  # ===============================
   thymeleaf:
     cache: false
+  # ===============================
+  # = H2
+  # ===============================
   h2:
     console:
       enabled: true
@@ -62,6 +68,7 @@ spring:
   #          time_zone: UTC
   flyway:
     enabled: false
+
 
 # ===============================
 # = Logging

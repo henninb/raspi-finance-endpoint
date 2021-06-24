@@ -31,13 +31,16 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       schema: func
-    platform: postgresql
-    continue-on-error: false
-    # always - utilize data.sql and schema.sql
-    # never - Do not initialize the datasource
-    # embedded - Only initialize an embedded datasource.
-    initialization-mode: always
-    data: classpath:data.sql
+  sql:
+    init:
+      enabled: true
+      data-locations: classpath:data.sql
+      platform: postgresql
+      continue-on-error: false
+
+  # ===============================
+  # = Thymeleaf
+  # ===============================
   thymeleaf:
     cache: false
 
