@@ -426,7 +426,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.updateTotalsForOutstandingTransactionType()
         1 * accountRepositoryMock.updateTotalsForFutureTransactionType()
         //1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]  //TODO: why is this not triggered?
-        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0, 0) >> [account1, account2, account3]
+        1 * accountRepositoryMock.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrClearedIsGreaterThanOrderByAccountNameOwner(true, AccountType.Credit, 0, 0, 0) >> [account1, account2, account3]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test2', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test3', true, _) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]

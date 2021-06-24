@@ -31,7 +31,7 @@ open class AccountService(
 
     @Timed
     override fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
-        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrderByAccountNameOwner()
+        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrClearedIsGreaterThanOrderByAccountNameOwner()
 
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
