@@ -45,8 +45,6 @@ CREATE TABLE t_account
     future             DECIMAL(8, 2) DEFAULT 0.00,
     outstanding        DECIMAL(8, 2) DEFAULT 0.00,
     cleared            DECIMAL(8, 2) DEFAULT 0.00,
-    totals             DECIMAL(8, 2) DEFAULT 0.00,
-    totals_balanced    DECIMAL(8, 2) DEFAULT 0.00,
     date_closed        TIMESTAMP,
     date_updated       TIMESTAMP                         NOT NULL,
     date_added         TIMESTAMP                         NOT NULL,

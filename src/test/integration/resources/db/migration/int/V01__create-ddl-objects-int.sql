@@ -16,8 +16,6 @@ CREATE TABLE IF NOT EXISTS int.t_account
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     payment_required   BOOLEAN                               NULL DEFAULT TRUE,
     moniker            TEXT          DEFAULT '0000'          NOT NULL,
-    totals             NUMERIC(8, 2) DEFAULT 0.00            NULL,
-    totals_balanced    NUMERIC(8, 2) DEFAULT 0.00            NULL,
     future             NUMERIC(8, 2) DEFAULT 0.00            NULL,
     outstanding        NUMERIC(8, 2) DEFAULT 0.00            NULL,
     cleared            NUMERIC(8, 2) DEFAULT 0.00            NULL,
