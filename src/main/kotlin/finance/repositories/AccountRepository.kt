@@ -14,13 +14,9 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
 
-    // TODO: 6/24/2021 - add OrClearedIsGreaterThan, fixed the test after
-    fun findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrClearedIsGreaterThanOrderByAccountNameOwner(
+    fun findByActiveStatusAndAccountTypeOrderByAccountNameOwner(
         activeStatus: Boolean = true,
-        accountType: AccountType = AccountType.Credit,
-        future: BigDecimal = BigDecimal(0.0),
-        outstanding: BigDecimal = BigDecimal(0.0),
-        cleared: BigDecimal = BigDecimal(0.0)
+        accountType: AccountType = AccountType.Credit
     ): List<Account>
 
     @Transactional
