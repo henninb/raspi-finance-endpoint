@@ -31,14 +31,14 @@ open class AccountService(
 
     @Timed
     override fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
-        val accounts = accountRepository.findByActiveStatusAndAccountTypeAndFutureIsGreaterThanOrOutstandingIsGreaterThanOrClearedIsGreaterThanOrderByAccountNameOwner()
-
+        val accounts = accountRepository.findByActiveStatusAndAccountTypeOrderByAccountNameOwner()
+        
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
         } else {
             logger.info("findAllActiveAccounts - found accounts.")
         }
-        return accounts
+        return accounts.filter { a -> (a.outstanding > BigDecimal(0.0) || a.future > BigDecimal(0.0) || a.cleared > BigDecimal(0.0)) }
     }
 
     @Timed

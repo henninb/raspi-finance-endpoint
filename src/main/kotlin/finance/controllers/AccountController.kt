@@ -20,6 +20,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
         val response: MutableMap<String, String> = HashMap()
         response["totals"] = accountService.computeTheGrandTotalForAllTransactions().toString()
         response["totalsCleared"] = accountService.computeTheGrandTotalForAllClearedTransactions().toString()
+        response["totalsFuture"] = "0.00"
+        response["totalsOutstanding"] = "0.00"
         return response
     }
 
