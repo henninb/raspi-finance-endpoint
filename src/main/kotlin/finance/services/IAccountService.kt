@@ -1,6 +1,7 @@
 package finance.services
 
 import finance.domain.Account
+import finance.domain.TransactionState
 import java.math.BigDecimal
 import java.util.*
 
@@ -14,9 +15,9 @@ interface IAccountService {
 
     fun findAccountsThatRequirePayment(): List<String>
 
-    fun computeTheGrandTotalForAllTransactions(): BigDecimal
+    //fun computeTheGrandTotalForAllTransactions(): BigDecimal
 
-    fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal
+    fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal
 
     fun insertAccount(account: Account): Boolean
 

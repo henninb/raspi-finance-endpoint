@@ -151,11 +151,11 @@ class AccountServiceSpec extends BaseServiceSpec {
         given:
         BigDecimal desiredResult = new BigDecimal(8.92).setScale(2, RoundingMode.HALF_UP)
         when:
-        BigDecimal result = accountService.computeTheGrandTotalForAllClearedTransactions()
+        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState()
 
         then:
         result == desiredResult
-        1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> desiredResult
+        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState() >> desiredResult
         0 * _
     }
 
@@ -163,11 +163,11 @@ class AccountServiceSpec extends BaseServiceSpec {
         given:
         BigDecimal desiredResult = new BigDecimal(8.923).setScale(3, RoundingMode.HALF_UP)
         when:
-        BigDecimal result = accountService.computeTheGrandTotalForAllClearedTransactions()
+        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState()
 
         then:
         result != desiredResult
-        1 * accountRepositoryMock.computeTheGrandTotalForAllClearedTransactions() >> desiredResult
+        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState() >> desiredResult
         0 * _
     }
 }

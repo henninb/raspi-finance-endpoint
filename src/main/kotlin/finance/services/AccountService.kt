@@ -2,6 +2,7 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
+import finance.domain.TransactionState
 import finance.repositories.AccountRepository
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
@@ -32,7 +33,7 @@ open class AccountService(
     @Timed
     override fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
         val accounts = accountRepository.findByActiveStatusAndAccountTypeOrderByAccountNameOwner()
-        
+
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
         } else {
@@ -57,15 +58,15 @@ open class AccountService(
         return accountRepository.findAccountsThatRequirePayment()
     }
 
-    @Timed
-    override fun computeTheGrandTotalForAllTransactions(): BigDecimal {
-        val totals: BigDecimal = accountRepository.computeTheGrandTotalForAllTransactions()
-        return totals.setScale(2, RoundingMode.HALF_UP)
-    }
+//    @Timed
+//    override fun computeTheGrandTotalForAllTransactions(): BigDecimal {
+//        val totals: BigDecimal = accountRepository.computeTheGrandTotalForAllTransactions()
+//        return totals.setScale(2, RoundingMode.HALF_UP)
+//    }
 
     @Timed
-    override fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal {
-        val totals: BigDecimal = accountRepository.computeTheGrandTotalForAllClearedTransactions()
+    override fun sumOfAllTransactionsByTransactionState(transactionstate : TransactionState): BigDecimal {
+        val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionState(transactionstate.toString())
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
@@ -104,9 +105,9 @@ open class AccountService(
         //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
 
         try {
-            accountRepository.updateTotalsForClearedTransactionType()
-            accountRepository.updateTotalsForFutureTransactionType()
-            accountRepository.updateTotalsForOutstandingTransactionType()
+            accountRepository.updateTotalsForClearedTransactionState()
+            accountRepository.updateTotalsForFutureTransactionState()
+            accountRepository.updateTotalsForOutstandingTransactionState()
 
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
             meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")

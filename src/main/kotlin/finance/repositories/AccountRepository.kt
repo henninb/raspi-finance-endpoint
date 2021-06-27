@@ -28,7 +28,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
         value = "UPDATE t_account SET cleared = x.summation, date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'cleared' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
-    fun updateTotalsForClearedTransactionType()
+    fun updateTotalsForClearedTransactionState()
 
     @Modifying
     @Transactional
@@ -36,7 +36,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
         value = "UPDATE t_account SET future = x.summation, date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'future' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
-    fun updateTotalsForFutureTransactionType()
+    fun updateTotalsForFutureTransactionState()
 
     @Modifying
     @Transactional
@@ -44,19 +44,13 @@ interface AccountRepository : JpaRepository<Account, Long> {
         value = "UPDATE t_account SET outstanding = x.summation, date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'outstanding' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
-    fun updateTotalsForOutstandingTransactionType()
+    fun updateTotalsForOutstandingTransactionState()
 
     @Query(
-        value = "SELECT COALESCE((A.debits - B.credits), 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' AND active_status = true) B",
+        value = "SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND transaction_state = :transactionState AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and transaction_state = :transactionState AND active_status = true) B",
         nativeQuery = true
     )
-    fun computeTheGrandTotalForAllTransactions(): BigDecimal
-
-    @Query(
-        value = "SELECT COALESCE((A.debits - B.credits), 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND transaction_state = 'cleared' AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and transaction_state = 'cleared' AND active_status = true) B",
-        nativeQuery = true
-    )
-    fun computeTheGrandTotalForAllClearedTransactions(): BigDecimal
+    fun sumOfAllTransactionsByTransactionState(@Param("transactionState") transactionState: String): BigDecimal
 
     @Query(
         value = "SELECT account_name_owner FROM t_transaction WHERE transaction_state = 'cleared' and account_name_owner in (select account_name_owner from t_account where account_type = 'credit' and active_status = true) or (transaction_state = 'outstanding' and account_type = 'credit' and description ='payment') group by account_name_owner having sum(amount) > 0 order by account_name_owner",
