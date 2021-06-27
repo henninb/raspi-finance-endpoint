@@ -17,7 +17,7 @@ class TransactionStateConverter : AttributeConverter<TransactionState, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): TransactionState {
-        return when (attribute.trim().toLowerCase()) {
+        return when (attribute.trim().lowercase()) {
             "outstanding" -> TransactionState.Outstanding
             "future" -> TransactionState.Future
             "cleared" -> TransactionState.Cleared

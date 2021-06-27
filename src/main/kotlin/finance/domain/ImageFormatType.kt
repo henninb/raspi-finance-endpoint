@@ -14,5 +14,5 @@ enum class ImageFormatType(val type: String) {
     @JsonProperty("undefined")
     Undefined("undefined");
 
-    override fun toString(): String = name.toLowerCase()
+    override fun toString(): String = name.lowercase()
 }

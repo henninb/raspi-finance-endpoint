@@ -19,6 +19,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
+        //TODO: 6/27/2021 - modify to 1 call from 3
         val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
         val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
         val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
@@ -50,7 +51,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
-        accountService.updateTheGrandTotalsForAllAccounts()
+        accountService.updateTotalsForAllAccounts()
         val accounts: List<Account> = accountService.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")

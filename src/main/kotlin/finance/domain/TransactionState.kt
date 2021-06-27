@@ -18,7 +18,7 @@ enum class TransactionState(val state: String) {
     Undefined("undefined");
 
     fun value(): String = state
-    override fun toString(): String = name.toLowerCase()
+    override fun toString(): String = name.lowercase()
 
     companion object {
         private val VALUES = values()

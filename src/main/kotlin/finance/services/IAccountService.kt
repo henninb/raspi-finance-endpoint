@@ -15,15 +15,13 @@ interface IAccountService {
 
     fun findAccountsThatRequirePayment(): List<String>
 
-    //fun computeTheGrandTotalForAllTransactions(): BigDecimal
-
     fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal
 
     fun insertAccount(account: Account): Boolean
 
     fun deleteByAccountNameOwner(accountNameOwner: String): Boolean
 
-    fun updateTheGrandTotalsForAllAccounts(): Boolean
+    fun updateTotalsForAllAccounts(): Boolean
 
     fun updateAccount(account: Account): Boolean
 

@@ -16,7 +16,7 @@ class ImageFormatTypeConverter : AttributeConverter<ImageFormatType, String> {
     }
 
     override fun convertToEntityAttribute(attribute: String): ImageFormatType {
-        return when (attribute.trim().toLowerCase()) {
+        return when (attribute.trim().lowercase()) {
             "jpeg" -> ImageFormatType.Jpeg
             "png" -> ImageFormatType.Png
             "undefined" -> ImageFormatType.Undefined

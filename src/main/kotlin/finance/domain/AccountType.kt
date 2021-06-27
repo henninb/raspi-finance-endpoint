@@ -19,7 +19,7 @@ enum class AccountType(val type: String) {
     Undefined("undefined");
 
     //fun value() : String = type
-    override fun toString(): String = name.toLowerCase()
+    override fun toString(): String = name.lowercase()
 
 //    fun parseAccountType(str: String): AccountType {
 //        return when(str) {
