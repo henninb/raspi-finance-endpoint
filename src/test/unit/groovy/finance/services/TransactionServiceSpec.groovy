@@ -218,20 +218,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    void 'test -- updateTransactionReoccurringState - not reoccurring'() {
-        given:
-        Transaction transaction = TransactionBuilder.builder().build()
-
-        when:
-        Boolean isUpdated = transactionService.updateTransactionReoccurringFlag(transaction.guid, false)
-
-        then:
-        isUpdated
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
-        1 * transactionRepositoryMock.saveAndFlush(transaction)
-        0 * _
-    }
-
     void 'test -- updateTransactionState cleared and reoccurring'() {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
