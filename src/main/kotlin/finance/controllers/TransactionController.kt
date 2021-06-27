@@ -104,23 +104,23 @@ class TransactionController @Autowired constructor(private var transactionServic
         )
     }
 
-    @PutMapping(
-        "/reoccurring/update/{guid}/{reoccurring}",
-        consumes = ["application/json"],
-        produces = ["application/json"]
-    )
-    fun updateTransactionReoccurringState(
-        @PathVariable("guid") guid: String,
-        @PathVariable("reoccurring") reoccurring: Boolean
-    ): ResponseEntity<String> {
-        val updateStatus: Boolean = transactionService.updateTransactionReoccurringFlag(guid, reoccurring)
-        if (updateStatus) {
-            return ResponseEntity.ok("transaction reoccurring updated")
-        }
-        logger.error("The transaction guid = $guid could not be updated for reoccurring state.")
-        meterService.incrementTransactionRestReoccurringStateUpdateFailureCounter("unknown")
-        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction for reoccurring state.")
-    }
+//    @PutMapping(
+//        "/reoccurring/update/{guid}/{reoccurring}",
+//        consumes = ["application/json"],
+//        produces = ["application/json"]
+//    )
+//    fun updateTransactionReoccurringState(
+//        @PathVariable("guid") guid: String,
+//        @PathVariable("reoccurring") reoccurring: Boolean
+//    ): ResponseEntity<String> {
+//        val updateStatus: Boolean = transactionService.updateTransactionReoccurringFlag(guid, reoccurring)
+//        if (updateStatus) {
+//            return ResponseEntity.ok("transaction reoccurring updated")
+//        }
+//        logger.error("The transaction guid = $guid could not be updated for reoccurring state.")
+//        meterService.incrementTransactionRestReoccurringStateUpdateFailureCounter("unknown")
+//        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction for reoccurring state.")
+//    }
 
     //TODO: should return a 201 CREATED
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''

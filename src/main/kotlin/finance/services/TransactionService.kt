@@ -227,7 +227,6 @@ open class TransactionService(
             logger.info("successfully updated ${transaction.guid}")
 
             if (transaction.transactionState == TransactionState.Cleared &&
-                transaction.reoccurring &&
                 transaction.reoccurringType != ReoccurringType.Undefined
             ) {
                 val transactionReoccurring = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
@@ -344,7 +343,6 @@ open class TransactionService(
             transactions.add(databaseResponseUpdated)
             //TODO: add metric here
             if (databaseResponseUpdated.transactionState == TransactionState.Cleared &&
-                databaseResponseUpdated.reoccurring &&
                 databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined
             ) {
                 val databaseResponseInserted = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
@@ -442,31 +440,15 @@ open class TransactionService(
         } else {
             if (transaction.accountType == AccountType.Debit) {
                 if (transaction.reoccurringType == ReoccurringType.Monthly) {
-                    calendar.add(Calendar.MONTH, 1);
+                    calendar.add(Calendar.MONTH, 1)
                 } else {
+                    logger.warn("debit transaction ReoccurringType needs to be configured.")
                     throw java.lang.RuntimeException("debit transaction ReoccurringType needs to be configured.")
                 }
             } else {
                 calendar.add(Calendar.YEAR, 1) //Assumption this method works for leap years
             }
         }
-    }
-
-    @Timed
-    override fun updateTransactionReoccurringFlag(guid: String, reoccurring: Boolean): Boolean {
-        val transactionOptional = findTransactionByGuid(guid)
-        if (transactionOptional.isPresent) {
-            val transaction = transactionOptional.get()
-            transaction.reoccurring = reoccurring
-            transaction.dateUpdated = Timestamp(nextTimestampMillis())
-            transactionRepository.saveAndFlush(transaction)
-            //TODO: add metric here
-            return true
-        }
-        //TODO: add metric here
-        logger.error("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
-        meterService.incrementExceptionThrownCounter("RuntimeException")
-        throw RuntimeException("Cannot update transaction reoccurring state - the transaction is not found with guid = '${guid}'")
     }
 
     @Timed

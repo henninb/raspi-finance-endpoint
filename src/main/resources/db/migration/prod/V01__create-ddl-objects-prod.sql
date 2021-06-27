@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
-                                          ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly',
+                                          ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime'
                                            'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
@@ -129,7 +129,7 @@ ALTER TABLE public.t_receipt_image
 
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined'));
+-- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
 -- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
 

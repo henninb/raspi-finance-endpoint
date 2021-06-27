@@ -134,7 +134,6 @@ CREATE TABLE t_transaction
     CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
 );
 
-
 -------------
 -- Payment --
 -------------
@@ -166,6 +165,7 @@ CREATE TABLE t_parm
     date_updated  TIMESTAMP           NOT NULL,
     date_added    TIMESTAMP           NOT NULL
 );
+
 -----------------
 -- description --
 -----------------
@@ -194,6 +194,5 @@ dbms_output.put_line
                 'account_name_owner: ' || :new.ACCOUNT_NAME || ' account_type: ' || :new.ACCOUNT_TYPE
         );
 END;
-
 
 --select * from USER_TRIGGERS;

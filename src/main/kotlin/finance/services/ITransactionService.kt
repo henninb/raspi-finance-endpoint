@@ -23,7 +23,7 @@ interface ITransactionService {
     fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray
     fun getImageFormatType(rawImage: ByteArray): ImageFormatType
     fun createFutureTransaction(transaction: Transaction): Transaction
-    fun updateTransactionReoccurringFlag(guid: String, reoccurring: Boolean): Boolean
+   // fun updateTransactionReoccurringFlag(guid: String, reoccurring: Boolean): Boolean
     fun findAccountsThatRequirePayment(): List<Account>
     fun nextTimestampMillis(): Long
 }
