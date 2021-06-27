@@ -20,6 +20,7 @@ import javax.imageio.ImageReader
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 import kotlin.system.measureTimeMillis
 
 @Service
@@ -158,21 +159,28 @@ open class TransactionService(
     }
 
     @Timed
+    //TODO: what if there is not a row for each of the 3 types of transactionStates
     override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
         var resultSet: List<Any>
+        var grandTotals = BigDecimal(0.0)
+        val result: MutableMap<String, BigDecimal> = HashMap()
         val queryTimeInMillis = measureTimeMillis {
             resultSet =
-                transactionRepository.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
+                transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
         }
-        val list = resultSet.first() as Array<*>
         logger.info("The query took $queryTimeInMillis ms")
-        val totals = BigDecimal(list.get(0).toString())
-        val totalsCleared = BigDecimal(list.get(1).toString())
+        resultSet.forEach {row ->
+            val rowList = row as Array<*>
+            val totals = BigDecimal(rowList[0].toString())
+            val counts = Integer.parseInt(rowList[1].toString())
+            val transactionState = rowList[2].toString()
+            val keyStringTotals = "totals${transactionState[0].uppercaseChar() + transactionState.substring(1)}"
+            result[keyStringTotals] = totals.setScale(2, RoundingMode.HALF_UP)
+            logger.info("counts of $transactionState equals $counts")
+            grandTotals += totals
+        }
 
-        val result: MutableMap<String, BigDecimal> = HashMap()
-
-        result["totals"] = totals.setScale(2, RoundingMode.HALF_UP)
-        result["totalsCleared"] = totalsCleared.setScale(2, RoundingMode.HALF_UP)
+        result["totals"] = grandTotals.setScale(2, RoundingMode.HALF_UP)
         return result
     }
 
@@ -319,6 +327,10 @@ open class TransactionService(
         if (transactionOptional.isPresent) {
             val transactions = mutableListOf<Transaction>()
             val transaction = transactionOptional.get()
+            if (transactionState == transaction.transactionState) {
+                logger.error("Cannot update transactionState to the same for guid = '${guid}'")
+                throw RuntimeException("Cannot update transactionState to the same for guid = '${guid}'")
+            }
             if (transactionState == TransactionState.Cleared &&
                 transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)
             ) {

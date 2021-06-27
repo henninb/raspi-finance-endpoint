@@ -2,6 +2,7 @@ package finance.services
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import finance.domain.Account
+import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
 
 import javax.validation.ConstraintViolation
@@ -139,11 +140,11 @@ class AccountServiceSpec extends BaseServiceSpec {
         given:
         BigDecimal desiredResult = new BigDecimal(5.75).setScale(2, RoundingMode.HALF_UP)
         when:
-        BigDecimal result = accountService.computeTheGrandTotalForAllTransactions()
+        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
 
         then:
         result == desiredResult
-        1 * accountRepositoryMock.computeTheGrandTotalForAllTransactions() >> desiredResult
+        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState(TransactionState.Cleared.toString()) >> desiredResult
         0 * _
     }
 
@@ -151,11 +152,11 @@ class AccountServiceSpec extends BaseServiceSpec {
         given:
         BigDecimal desiredResult = new BigDecimal(8.92).setScale(2, RoundingMode.HALF_UP)
         when:
-        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState()
+        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
 
         then:
         result == desiredResult
-        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState() >> desiredResult
+        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState(TransactionState.Cleared.toString()) >> desiredResult
         0 * _
     }
 
@@ -163,11 +164,11 @@ class AccountServiceSpec extends BaseServiceSpec {
         given:
         BigDecimal desiredResult = new BigDecimal(8.923).setScale(3, RoundingMode.HALF_UP)
         when:
-        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState()
+        BigDecimal result = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
 
         then:
         result != desiredResult
-        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState() >> desiredResult
+        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState(TransactionState.Cleared.toString()) >> desiredResult
         0 * _
     }
 }
