@@ -24,8 +24,13 @@ interface AccountRepository : JpaRepository<Account, Long> {
 
     @Modifying
     @Transactional
+    @Query("UPDATE t_account SET cleared = 0.0, future= 0.0, outstanding = 0.0", nativeQuery = true)
+    fun updateAccountValuesToZero()
+
+    @Modifying
+    @Transactional
     @Query(
-        value = "UPDATE t_account SET cleared = x.summation, date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'cleared' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
+        value = "UPDATE t_account SET cleared = COALESCE(x.summation, 0.0), date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'cleared' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
     fun updateTotalsForClearedTransactionState()
@@ -33,7 +38,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
     @Modifying
     @Transactional
     @Query(
-        value = "UPDATE t_account SET future = x.summation, date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'future' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
+        value = "UPDATE t_account SET future = COALESCE(x.summation, 0.0), date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'future' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
     fun updateTotalsForFutureTransactionState()
@@ -41,7 +46,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
     @Modifying
     @Transactional
     @Query(
-        value = "UPDATE t_account SET outstanding = x.summation, date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'outstanding' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
+        value = "UPDATE t_account SET outstanding = COALESCE(x.summation, 0.0), date_updated = now() FROM (SELECT account_name_owner, SUM(amount) AS summation FROM t_transaction WHERE transaction_state = 'outstanding' AND active_status = true GROUP BY account_name_owner) x WHERE t_account.account_name_owner = x.account_name_owner",
         nativeQuery = true
     )
     fun updateTotalsForOutstandingTransactionState()

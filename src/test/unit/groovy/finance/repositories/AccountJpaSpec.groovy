@@ -1,6 +1,7 @@
 package finance.repositories
 
 import finance.domain.Account
+import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -21,7 +22,7 @@ class AccountJpaSpec extends Specification {
 
     void 'test account repository - computeTheGrandTotalForAllTransactions - empty'() {
         when:
-        Double result = accountRepository.computeTheGrandTotalForAllTransactions()
+        Double result = accountRepository.sumOfAllTransactionsByTransactionState(TransactionState.Cleared.toString())
 
         then:
         result == 0.0
@@ -30,7 +31,7 @@ class AccountJpaSpec extends Specification {
 
     void 'test account repository - computeTheGrandTotalForAllClearedTransactions - empty'() {
         when:
-        Double result = accountRepository.sumOfAllTransactionsByTransactionState()
+        Double result = accountRepository.sumOfAllTransactionsByTransactionState(TransactionState.Cleared.toString())
 
         then:
         0.0 == result

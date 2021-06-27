@@ -15,15 +15,17 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Transactional
     fun deleteByGuid(guid: String)
 
-
     fun findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(
         accountNameOwner: String,
         activeStatus: Boolean = true
     ): List<Transaction>
 
-    //CREATE INDEX idx_transaction_account_name_owner ON t_transaction(account_name_owner, active_status);
-    @Query(value="SELECT COALESCE(A.everything, 0.0) AS everything,  COALESCE(B.cleared, 0.0) AS cleared FROM ( SELECT sum(amount) as everything FROM t_transaction WHERE account_name_owner = :accountNameOwner AND active_status = true) A, ( SELECT SUM(amount) AS cleared FROM t_transaction WHERE account_name_owner = :accountNameOwner AND transaction_state = 'cleared' AND active_status = true) B", nativeQuery=true)
-    fun calculateActiveTotalsByAccountNameOwner(
+    //TODO: 6/27/20201 - add a default param for activeState
+    //TODO: 6/27/20201 - what happens if the list is empty
+    //TODO: 6/27/20201 - COALESCE, is it required?
+    //TODO: 6/24/20201 - CREATE INDEX idx_transaction_account_name_owner ON t_transaction(account_name_owner, active_status);
+    @Query(value="SELECT SUM(amount), count(amount), transaction_state FROM t_transaction WHERE account_name_owner = :accountNameOwner AND active_status = true GROUP BY transaction_state", nativeQuery=true)
+    fun sumTotalsForActiveTransactionsByAccountNameOwner(
         @Param("accountNameOwner") accountNameOwner: String
     ): List<Any>
 
@@ -32,7 +34,4 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         activeStatus: Boolean = true,
         transactionStates: List<TransactionState>
     ): List<Transaction>
-
-    //SELECT account_name_owner, SUM(amount) AS totals_balanced FROM t_transaction
-    //fun sumAmountBy
 }

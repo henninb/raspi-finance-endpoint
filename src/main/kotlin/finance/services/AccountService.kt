@@ -105,6 +105,7 @@ open class AccountService(
         //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
 
         try {
+            accountRepository.updateAccountValuesToZero()
             accountRepository.updateTotalsForClearedTransactionState()
             accountRepository.updateTotalsForFutureTransactionState()
             accountRepository.updateTotalsForOutstandingTransactionState()
