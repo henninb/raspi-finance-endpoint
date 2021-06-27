@@ -12,7 +12,7 @@ class LowerCaseConverter : AttributeConverter<String, String> {
             return ""
         }
         logger.debug("convertToDatabaseColumn - converted to lowercase")
-        return attribute.toLowerCase()
+        return attribute.lowercase()
     }
 
     override fun convertToEntityAttribute(attribute: String?): String {
@@ -21,7 +21,7 @@ class LowerCaseConverter : AttributeConverter<String, String> {
         }
 
         logger.debug("convertToEntityAttribute - converted to lowercase")
-        return attribute.toLowerCase()
+        return attribute.lowercase()
     }
 
     companion object {

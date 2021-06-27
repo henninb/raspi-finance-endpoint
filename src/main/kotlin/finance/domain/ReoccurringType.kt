@@ -24,7 +24,7 @@ enum class ReoccurringType(val type: String) {
     Undefined("undefined");
 
     fun value(): String = type
-    override fun toString(): String = name.toLowerCase()
+    override fun toString(): String = name.lowercase()
 
     companion object {
         //private val VALUES = values();

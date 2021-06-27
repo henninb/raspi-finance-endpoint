@@ -20,7 +20,6 @@ import javax.imageio.ImageReader
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
 import javax.validation.Validator
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 import kotlin.system.measureTimeMillis
 
 @Service
@@ -386,11 +385,11 @@ open class TransactionService(
 
         imageReaders.forEachRemaining { imageReader ->
             format = when {
-                imageReader.formatName.toLowerCase() == "jpeg" -> {
+                imageReader.formatName.lowercase() == "jpeg" -> {
                     logger.info(imageReader.formatName)
                     ImageFormatType.Jpeg
                 }
-                imageReader.formatName.toLowerCase() == "png" -> {
+                imageReader.formatName.lowercase() == "png" -> {
                     logger.info(imageReader.formatName)
                     ImageFormatType.Png
                 }
@@ -477,7 +476,7 @@ open class TransactionService(
         val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
         val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
-        accountService.updateTheGrandTotalsForAllAccounts()
+        accountService.updateTotalsForAllAccounts()
         val accountsToInvestigate =
             accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->

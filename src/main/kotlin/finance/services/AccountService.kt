@@ -65,8 +65,8 @@ open class AccountService(
 //    }
 
     @Timed
-    override fun sumOfAllTransactionsByTransactionState(transactionstate : TransactionState): BigDecimal {
-        val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionState(transactionstate.toString())
+    override fun sumOfAllTransactionsByTransactionState(transactionState : TransactionState): BigDecimal {
+        val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionState(transactionState.toString())
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
@@ -101,15 +101,9 @@ open class AccountService(
     }
 
     @Timed
-    override fun updateTheGrandTotalsForAllAccounts(): Boolean {
-        //TODO: 1/6/2020 - add logic such that the logic is in the code and not the database
-
+    override fun updateTotalsForAllAccounts(): Boolean {
         try {
-            accountRepository.updateAccountValuesToZero()
-            accountRepository.updateTotalsForClearedTransactionState()
-            accountRepository.updateTotalsForFutureTransactionState()
-            accountRepository.updateTotalsForOutstandingTransactionState()
-
+            accountRepository.updateTotalsForAllAccounts()
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
             meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
             logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")

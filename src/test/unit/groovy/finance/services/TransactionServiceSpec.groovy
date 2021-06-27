@@ -424,7 +424,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then:
         accounts.size() == 3
-        1 * accountRepositoryMock.updateAccountValuesToZero()
+        1 * accountRepositoryMock.updateTotalsForAllAccounts()
         1 * accountRepositoryMock.updateTotalsForClearedTransactionState()
         1 * accountRepositoryMock.updateTotalsForOutstandingTransactionState()
         1 * accountRepositoryMock.updateTotalsForFutureTransactionState()

@@ -23,11 +23,11 @@ class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
 
         imageReaders.forEachRemaining { imageReader ->
             flag = when {
-                imageReader.formatName.toLowerCase() == "jpeg" -> {
+                imageReader.formatName.lowercase() == "jpeg" -> {
                     logger.debug("image format: ${imageReader.formatName}")
                     true
                 }
-                imageReader.formatName.toLowerCase() == "png" -> {
+                imageReader.formatName.lowercase() == "png" -> {
                     logger.debug("image format: ${imageReader.formatName}")
                     true
                 }
