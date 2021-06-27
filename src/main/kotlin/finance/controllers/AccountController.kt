@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.Account
+import finance.domain.TransactionState
 import finance.services.AccountService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -18,10 +19,18 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
-        response["totals"] = accountService.computeTheGrandTotalForAllTransactions().toString()
-        response["totalsCleared"] = accountService.computeTheGrandTotalForAllClearedTransactions().toString()
-        response["totalsFuture"] = "0.00"
-        response["totalsOutstanding"] = "0.00"
+        val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
+        val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
+        val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
+
+        logger.info("totalsOutstanding: $totalsOutstanding")
+        logger.info("totalsCleared: $totalsCleared")
+        logger.info("totalsFuture: $totalsFuture")
+
+        response["totalsCleared"] = totalsCleared.toString()
+        response["totalsFuture"] = totalsFuture.toString()
+        response["totalsOutstanding"] = totalsOutstanding.toString()
+        response["totals"] = (totalsCleared + totalsFuture + totalsOutstanding).toString()
         return response
     }
 

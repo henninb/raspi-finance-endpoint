@@ -24,7 +24,7 @@ class AccountServiceIntSpec extends Specification {
 
     void 'computeTheGrandTotalForAllClearedTransactions'() {
         when:
-        accountService.computeTheGrandTotalForAllClearedTransactions()
+        accountService.sumOfAllTransactionsByTransactionState()
 
         then:
         0 * _

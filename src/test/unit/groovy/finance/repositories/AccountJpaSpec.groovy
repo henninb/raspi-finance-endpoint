@@ -30,7 +30,7 @@ class AccountJpaSpec extends Specification {
 
     void 'test account repository - computeTheGrandTotalForAllClearedTransactions - empty'() {
         when:
-        Double result = accountRepository.computeTheGrandTotalForAllClearedTransactions()
+        Double result = accountRepository.sumOfAllTransactionsByTransactionState()
 
         then:
         0.0 == result
