@@ -6,7 +6,9 @@ SERVERNAME=hornsup
 [ -z "$KEYSTORE_PASSWORD" ] && { echo "please set KEYSTORE_PASSWORD"; exit 1; }
 TRUSTSTORE_PASSWORD="${KEYSTORE_PASSWORD}"
 
-mkdir -p "$HOME/ssl"
+mkdir -p "$HOME/ssl/"
+mkdir -p "$HOME/projects/raspi-finance-react/ssl/"
+mkdir -p "$HOME/projects/raspi-finance-endpoint/ssl/"
 
 echo generate private key
 openssl genrsa -out "$HOME/ssl/ca.key.pem" 4096
