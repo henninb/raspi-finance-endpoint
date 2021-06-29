@@ -104,25 +104,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         )
     }
 
-//    @PutMapping(
-//        "/reoccurring/update/{guid}/{reoccurring}",
-//        consumes = ["application/json"],
-//        produces = ["application/json"]
-//    )
-//    fun updateTransactionReoccurringState(
-//        @PathVariable("guid") guid: String,
-//        @PathVariable("reoccurring") reoccurring: Boolean
-//    ): ResponseEntity<String> {
-//        val updateStatus: Boolean = transactionService.updateTransactionReoccurringFlag(guid, reoccurring)
-//        if (updateStatus) {
-//            return ResponseEntity.ok("transaction reoccurring updated")
-//        }
-//        logger.error("The transaction guid = $guid could not be updated for reoccurring state.")
-//        meterService.incrementTransactionRestReoccurringStateUpdateFailureCounter("unknown")
-//        throw ResponseStatusException(HttpStatus.NOT_MODIFIED, "could not updated transaction for reoccurring state.")
-//    }
-
-    //TODO: should return a 201 CREATED
+    //TODO: 6/28/2021 - Should return a 201 CREATED?
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
@@ -132,6 +114,20 @@ class TransactionController @Autowired constructor(private var transactionServic
             return ResponseEntity.ok("transaction inserted")
         }
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
+    }
+
+    //TODO: 6/28/2021 - Should return a 201 CREATED?
+    //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/future/insert' -X POST -d ''
+    @PostMapping("/future/insert", consumes = ["application/json"], produces = ["application/json"])
+    fun insertFutureTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
+        val futureTransaction = transactionService.createFutureTransaction(transaction)
+        logger.info("insert future - futureTransaction.transactionDate: $futureTransaction")
+        if (transactionService.insertTransaction(futureTransaction)) {
+            logger.info(futureTransaction.toString())
+           // return ResponseEntity.ok("transaction future inserted")
+            return ResponseEntity.ok(futureTransaction.toString())
+        }
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert future transaction.")
     }
 
     // change the account name owner of a given transaction

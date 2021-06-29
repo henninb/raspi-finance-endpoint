@@ -225,13 +225,6 @@ open class TransactionService(
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             transactionRepository.saveAndFlush(transaction)
             logger.info("successfully updated ${transaction.guid}")
-
-            if (transaction.transactionState == TransactionState.Cleared &&
-                transaction.reoccurringType != ReoccurringType.Undefined
-            ) {
-                val transactionReoccurring = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
-                logger.info("successfully added reoccurring transaction ${transactionReoccurring.guid}")
-            }
             return true
         }
         logger.warn("guid did not match any database records to update ${transaction.guid}.")
@@ -341,14 +334,6 @@ open class TransactionService(
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
             val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)
             transactions.add(databaseResponseUpdated)
-            //TODO: add metric here
-            if (databaseResponseUpdated.transactionState == TransactionState.Cleared &&
-                databaseResponseUpdated.reoccurringType != ReoccurringType.Undefined
-            ) {
-                val databaseResponseInserted = transactionRepository.saveAndFlush(createFutureTransaction(transaction))
-                transactions.add(databaseResponseInserted)
-                //TODO: add metric here
-            }
             return transactions
         }
         //TODO: add metric here
