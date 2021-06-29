@@ -230,16 +230,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
         List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
 
         then:
-        transactions.size() == 2
+        transactions.size() == 1
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-        1 * transactionRepositoryMock.saveAndFlush({ Transaction futureTransaction ->
-            assert 365L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
-            assert futureTransaction.transactionState == TransactionState.Future
-            assert futureTransaction.notes == ''
-            assert futureTransaction.reoccurring
-            futureTransaction
-        }) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
@@ -257,16 +250,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
         List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
 
         then:
-        transactions.size() == 2
+        transactions.size() == 1
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-        1 * transactionRepositoryMock.saveAndFlush({ Transaction futureTransaction ->
-            assert 14L == (futureTransaction.transactionDate.toLocalDate() - transaction.transactionDate.toLocalDate())
-            assert futureTransaction.transactionState == TransactionState.Future
-            assert futureTransaction.notes == ''
-            assert futureTransaction.reoccurring
-            futureTransaction
-        }) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
