@@ -96,7 +96,6 @@ open class PaymentService(
         }
         transactionDebit.transactionState = TransactionState.Outstanding
         transactionDebit.accountType = AccountType.Debit
-        transactionDebit.reoccurring = false
         transactionDebit.accountNameOwner = paymentAccountNameOwner
         transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
@@ -124,7 +123,6 @@ open class PaymentService(
 
         transactionCredit.transactionState = TransactionState.Outstanding
         transactionCredit.accountType = AccountType.Credit
-        transactionCredit.reoccurring = false
         transactionCredit.accountNameOwner = payment.accountNameOwner
         transactionCredit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         transactionCredit.dateAdded = Timestamp(Calendar.getInstance().time.time)

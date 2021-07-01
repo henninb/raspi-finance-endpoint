@@ -114,7 +114,6 @@ CREATE TABLE t_transaction
     category           VARCHAR(30)   DEFAULT ''          NOT NULL,
     amount             DECIMAL(8, 2) DEFAULT 0.0         NOT NULL,
     transaction_state  VARCHAR(30)                       NOT NULL,
-    reoccurring        CHAR(1)       DEFAULT 1           NOT NULL,
     reoccurring_type   VARCHAR(30)   DEFAULT 'undefined' NULL,
     active_status      NUMBER(1)     DEFAULT 1           NOT NULL,
     notes              VARCHAR(100)  DEFAULT ''          NULL,

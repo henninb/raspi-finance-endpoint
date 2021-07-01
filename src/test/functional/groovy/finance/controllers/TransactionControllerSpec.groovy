@@ -31,7 +31,6 @@ class TransactionControllerSpec extends BaseControllerSpec {
 "category":"online",
 "amount":3.14,
 "transactionState":"cleared",
-"reoccurring":false,
 "reoccurringType":"undefined",
 "notes":"my note to you"
 }
@@ -51,7 +50,6 @@ class TransactionControllerSpec extends BaseControllerSpec {
 "category":"online",
 "amount":3.14,
 "transactionState":"cleared",
-"reoccurring":false,
 "reoccurringType":"undefined",
 "notes":"my note to you"
 }
@@ -72,7 +70,6 @@ class TransactionControllerSpec extends BaseControllerSpec {
 "category":"123451234512345123451234512345123451234512345123451234512345",
 "amount":3.14,
 "transactionState":"cleared",
-"reoccurring":false,
 "reoccurringType":"undefined",
 "notes":"my note to you"
 }

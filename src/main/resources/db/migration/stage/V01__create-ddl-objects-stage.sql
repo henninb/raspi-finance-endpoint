@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS stage.t_account
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
--- ALTER TABLE t_account ADD COLUMN payment_required   BOOLEAN     NULL     DEFAULT TRUE;
+-- ALTER TABLE stage.t_account ADD COLUMN payment_required   BOOLEAN     NULL     DEFAULT TRUE;
 
 --------------
 -- Category --
@@ -72,12 +72,12 @@ CREATE TABLE IF NOT EXISTS stage.t_receipt_image
     CONSTRAINT ck_image_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
 );
 
--- alter table t_receipt_image rename column jpg_image to image;
--- alter table t_receipt_image alter column thumbnail set not null;
--- alter table t_receipt_image alter column image_format_type set not null;
--- ALTER TABLE t_receipt_image DROP CONSTRAINT ck_image_type_jpg;
--- ALTER TABLE t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
--- ALTER TABLE t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(image) <= 1_048_576);
+-- alter TABLE stage.t_receipt_image rename column jpg_image to image;
+-- alter TABLE stage.t_receipt_image alter column thumbnail set not null;
+-- alter TABLE stage.t_receipt_image alter column image_format_type set not null;
+-- ALTER TABLE stage.t_receipt_image DROP CONSTRAINT ck_image_type_jpg;
+-- ALTER TABLE stage.t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
+-- ALTER TABLE stage.t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(image) <= 1_048_576);
 -- select receipt_image_id, transaction_id, length(receipt_image)/1048576.0, left(encode(receipt_image,'hex'),100) from t_receipt_image;
 
 -----------------
@@ -98,8 +98,6 @@ CREATE TABLE IF NOT EXISTS stage.t_transaction
     category           TEXT          DEFAULT ''              NOT NULL,
     amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
     transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
-    -- TODO: need to decommission reoccurring flag as it is replaced by reoccurring_type
-    reoccurring        BOOLEAN       DEFAULT FALSE           NOT NULL,
     reoccurring_type   TEXT          DEFAULT 'undefined'     NULL,
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     notes              TEXT          DEFAULT ''              NOT NULL,
@@ -127,11 +125,11 @@ ALTER TABLE stage.t_receipt_image
 ALTER TABLE stage.t_receipt_image
     ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES stage.t_transaction (transaction_id) ON DELETE CASCADE;
 
--- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
--- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined'));
--- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
--- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
+-- ALTER TABLE stage.t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
+-- ALTER TABLE stage.t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
+-- ALTER TABLE stage.t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined'));
+-- ALTER TABLE stage.t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
+-- ALTER TABLE stage.t_transaction DROP COLUMN receipt_image_id;
 
 -------------
 -- Payment --
@@ -152,8 +150,8 @@ CREATE TABLE IF NOT EXISTS stage.t_payment
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES stage.t_transaction (guid) ON DELETE CASCADE
 );
 
--- ALTER table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES stage.t_transaction (guid) ON DELETE CASCADE;
--- ALTER table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES stage.t_transaction (guid) ON DELETE CASCADE;
+-- ALTER TABLE stage.t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES stage.t_transaction (guid) ON DELETE CASCADE;
+-- ALTER TABLE stage.t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES stage.t_transaction (guid) ON DELETE CASCADE;
 
 -------------
 -- Parm    --
@@ -168,7 +166,7 @@ CREATE TABLE IF NOT EXISTS stage.t_parm
     date_added    TIMESTAMP                         NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
--- ALTER TABLE t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
+-- ALTER TABLE stage.t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
 -- INSERT into t_parm(parm_name, parm_value) VALUES('payment_account', '');
 
 -----------------
@@ -184,7 +182,7 @@ CREATE TABLE IF NOT EXISTS stage.t_description
     CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
 
--- ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
+-- ALTER TABLE stage.t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
 SELECT setval('stage.t_receipt_image_receipt_image_id_seq',
               (SELECT MAX(receipt_image_id) FROM stage.t_receipt_image) + 1);
@@ -242,5 +240,8 @@ COMMIT;
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;
 
---select * from t_transaction where transaction_state = 'cleared' and transaction_date > now();
---select * from t_transaction where transaction_state in ('future', 'outstanding') and transaction_date < now();
+-- find future transactions that are cleared (should be zero)
+-- SELECT * FROM t_transaction where transaction_state = 'cleared' AND transaction_date > now();
+
+-- find old transactions that are set to future and outstanding (should be zero)
+-- SELECT * from t_transaction where transaction_state in ('future', 'outstanding') and transaction_date < now();

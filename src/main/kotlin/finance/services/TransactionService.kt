@@ -404,7 +404,6 @@ open class TransactionService(
         transactionFuture.receiptImageId = null
         transactionFuture.dueDate = transaction.dueDate
         transactionFuture.notes = ""
-        transactionFuture.reoccurring = true
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
         transactionFuture.transactionDate = Date(calendar.timeInMillis)
@@ -453,7 +452,7 @@ open class TransactionService(
                     true,
                     transactionStates
                 )
-            val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
+            //val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
 
             accountNeedingAttention.add(account)
         }

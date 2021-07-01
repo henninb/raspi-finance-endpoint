@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS public.t_account
 (
     account_id         BIGSERIAL PRIMARY KEY,
     account_name_owner TEXT UNIQUE                           NOT NULL,
-    account_name       TEXT                                  NULL,     -- NULL for now
-    account_owner      TEXT                                  NULL,     -- NULL for now
+    account_name       TEXT                                  NULL,     -- NULL for now 6/30/2021
+    account_owner      TEXT                                  NULL,     -- NULL for now 6/30/2021
     account_type       TEXT          DEFAULT 'unknown'       NOT NULL,
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     payment_required   BOOLEAN                               NULL DEFAULT TRUE,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS public.t_account
     CONSTRAINT ck_account_type_lowercase CHECK (account_type = lower(account_type))
 );
 
--- ALTER TABLE t_account ADD COLUMN payment_required   BOOLEAN     NULL     DEFAULT TRUE;
+-- ALTER TABLE public.t_account ADD COLUMN payment_required   BOOLEAN     NULL     DEFAULT TRUE;
 
 --------------
 -- Category --
@@ -72,12 +72,12 @@ CREATE TABLE IF NOT EXISTS public.t_receipt_image
     CONSTRAINT ck_image_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
 );
 
--- alter table t_receipt_image rename column jpg_image to image;
--- alter table t_receipt_image alter column thumbnail set not null;
--- alter table t_receipt_image alter column image_format_type set not null;
--- ALTER TABLE t_receipt_image DROP CONSTRAINT ck_image_type_jpg;
--- ALTER TABLE t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
--- ALTER TABLE t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(image) <= 1_048_576);
+-- alter TABLE public.t_receipt_image rename column jpg_image to image;
+-- alter TABLE public.t_receipt_image alter column thumbnail set not null;
+-- alter TABLE public.t_receipt_image alter column image_format_type set not null;
+-- ALTER TABLE public.t_receipt_image DROP CONSTRAINT ck_image_type_jpg;
+-- ALTER TABLE public.t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
+-- ALTER TABLE public.t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(image) <= 1_048_576);
 -- select receipt_image_id, transaction_id, length(receipt_image)/1048576.0, left(encode(receipt_image,'hex'),100) from t_receipt_image;
 
 -----------------
@@ -98,8 +98,6 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     category           TEXT          DEFAULT ''              NOT NULL,
     amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
     transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
-    -- TODO: need to decommission reoccurring flag as it is replaced by reoccurring_type
-    reoccurring        BOOLEAN       DEFAULT FALSE           NOT NULL,
     reoccurring_type   TEXT          DEFAULT 'undefined'     NULL,
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     notes              TEXT          DEFAULT ''              NOT NULL,
@@ -127,11 +125,11 @@ ALTER TABLE public.t_receipt_image
 ALTER TABLE public.t_receipt_image
     ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES public.t_transaction (transaction_id) ON DELETE CASCADE;
 
--- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
--- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
--- ALTER TABLE t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
--- ALTER TABLE t_transaction DROP COLUMN receipt_image_id;
+-- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
+-- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
+-- ALTER TABLE public.t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
+-- ALTER TABLE public.t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
+-- ALTER TABLE public.t_transaction DROP COLUMN reoccurring;
 
 -------------
 -- Payment --
@@ -152,8 +150,8 @@ CREATE TABLE IF NOT EXISTS public.t_payment
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
 );
 
--- ALTER table t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
--- ALTER table t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
+-- ALTER TABLE public.t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
+-- ALTER TABLE public.t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
 
 -------------
 -- Parm    --
@@ -168,7 +166,7 @@ CREATE TABLE IF NOT EXISTS public.t_parm
     date_added    TIMESTAMP                         NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
--- ALTER TABLE t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
+-- ALTER TABLE public.t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
 -- INSERT into t_parm(parm_name, parm_value) VALUES('payment_account', '');
 
 -----------------
@@ -184,7 +182,7 @@ CREATE TABLE IF NOT EXISTS public.t_description
     CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
 );
 
--- ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
+-- ALTER TABLE public.t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
 
 SELECT setval('public.t_receipt_image_receipt_image_id_seq',
               (SELECT MAX(receipt_image_id) FROM public.t_receipt_image) + 1);
