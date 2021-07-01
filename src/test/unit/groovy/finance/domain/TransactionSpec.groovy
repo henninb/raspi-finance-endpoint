@@ -33,7 +33,6 @@ class TransactionSpec extends Specification {
 "category":"online",
 "amount":3.14,
 "transactionState":"cleared",
-"reoccurring":false,
 "reoccurringType":"undefined",
 "notes":"my note to you"
 }
@@ -160,7 +159,6 @@ class TransactionSpec extends Specification {
                 .withCategory(category)
                 .withAmount(amount)
                 .withTransactionState(transactionState)
-                .withReoccurring(reoccurring)
                 .withReoccurringType(reoccurringType)
                 .withNotes(notes)
                 .build()
@@ -174,17 +172,17 @@ class TransactionSpec extends Specification {
         violations.iterator().next().invalidValue == transaction.properties[invalidField]
 
         where:
-        invalidField       | guid                                   | accountId | accountType        | accountNameOwner   | transactionDate                          | description      | category | amount  | transactionState         | reoccurring | reoccurringType           | notes      | expectedError                              | errorCount
-        'guid'             | '11ea3be58-3993-46de-88a2-4ffc7f1d73b' | 1004      | AccountType.Credit | 'chase_brian'      | new Date(Calendar.instance.timeInMillis) | 'aliexpress.com' | 'online' | -94.74G | TransactionState.Future  | false       | ReoccurringType.Undefined | 'no notes' | 'must be uuid formatted'                   | 1
-        'accountId'        | UUID.randomUUID()                      | -1L       | AccountType.Credit | 'chase_brian'      | new Date(Calendar.instance.timeInMillis) | 'aliexpress.com' | 'online' | 43.16G  | TransactionState.Future  | false       | ReoccurringType.Undefined | 'no notes' | 'must be greater than or equal to 0'       | 1
-        'description'      | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Café Roale'     | 'online' | -3.14G  | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be ascii character set'              | 1
-        'description'      | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | ''               | 'online' | -3.11G  | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'size must be between 1 and 75'            | 1
-        'accountNameOwner' | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one.chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'target.com'     | 'online' | 13.14G  | TransactionState.Cleared | false       | ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one -chase_brian' | new Date(Calendar.instance.timeInMillis) | 'target.com'     | 'online' | 13.14G  | TransactionState.Cleared | false       | ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
-        'accountNameOwner' | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'brian'            | new Date(Calendar.instance.timeInMillis) | 'target.com'     | 'online' | 13.14G  | TransactionState.Cleared | false       | ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
-        'category'         | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Cafe Roale'     | 'onliné' | 3.14G   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be alphanumeric no space'            | 1
-        'category'         | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Cafe Roale'     | 'Online' | 3.14G   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be alphanumeric no space'            | 1
-        'amount'           | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Cafe Roale'     | 'online' | 3.1412G | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'must be dollar precision'                 | 1
-        'transactionDate'  | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(946684700)                      | 'Cafe Roale'     | 'online' | 3.14G   | TransactionState.Cleared | false       | ReoccurringType.Undefined | 'no notes' | 'date must be greater than 1/1/2000.'      | 1
+        invalidField       | guid                                   | accountId | accountType        | accountNameOwner   | transactionDate                          | description      | category | amount  | transactionState         | reoccurringType           | notes      | expectedError                              | errorCount
+        'guid'             | '11ea3be58-3993-46de-88a2-4ffc7f1d73b' | 1004      | AccountType.Credit | 'chase_brian'      | new Date(Calendar.instance.timeInMillis) | 'aliexpress.com' | 'online' | -94.74G | TransactionState.Future  |  ReoccurringType.Undefined | 'no notes' | 'must be uuid formatted'                   | 1
+        'accountId'        | UUID.randomUUID()                      | -1L       | AccountType.Credit | 'chase_brian'      | new Date(Calendar.instance.timeInMillis) | 'aliexpress.com' | 'online' | 43.16G  | TransactionState.Future  |  ReoccurringType.Undefined | 'no notes' | 'must be greater than or equal to 0'       | 1
+        'description'      | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Café Roale'     | 'online' | -3.14G  | TransactionState.Cleared |  ReoccurringType.Undefined | 'no notes' | 'must be ascii character set'              | 1
+        'description'      | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | ''               | 'online' | -3.11G  | TransactionState.Cleared |  ReoccurringType.Undefined | 'no notes' | 'size must be between 1 and 75'            | 1
+        'accountNameOwner' | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one.chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'target.com'     | 'online' | 13.14G  | TransactionState.Cleared |  ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one -chase_brian' | new Date(Calendar.instance.timeInMillis) | 'target.com'     | 'online' | 13.14G  | TransactionState.Cleared |  ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
+        'accountNameOwner' | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'brian'            | new Date(Calendar.instance.timeInMillis) | 'target.com'     | 'online' | 13.14G  | TransactionState.Cleared |  ReoccurringType.Undefined | ''         | 'must be alpha separated by an underscore' | 1
+        'category'         | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Cafe Roale'     | 'onliné' | 3.14G   | TransactionState.Cleared |  ReoccurringType.Undefined | 'no notes' | 'must be alphanumeric no space'            | 1
+        'category'         | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Cafe Roale'     | 'Online' | 3.14G   | TransactionState.Cleared |  ReoccurringType.Undefined | 'no notes' | 'must be alphanumeric no space'            | 1
+        'amount'           | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(Calendar.instance.timeInMillis) | 'Cafe Roale'     | 'online' | 3.1412G | TransactionState.Cleared |  ReoccurringType.Undefined | 'no notes' | 'must be dollar precision'                 | 1
+        'transactionDate'  | UUID.randomUUID()                      | 1003      | AccountType.Credit | 'one-chase_brian'  | new Date(946684700)                      | 'Cafe Roale'     | 'online' | 3.14G   | TransactionState.Cleared |  ReoccurringType.Undefined | 'no notes' | 'date must be greater than 1/1/2000.'      | 1
     }
 }

@@ -222,7 +222,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         transaction.reoccurringType = ReoccurringType.Monthly
-        transaction.reoccurring = true
         transaction.transactionState = TransactionState.Undefined
         transaction.notes = 'my note will be removed'
 
@@ -242,7 +241,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         transaction.reoccurringType = ReoccurringType.FortNightly
-        transaction.reoccurring = true
         transaction.transactionState = TransactionState.Undefined
         transaction.notes = 'my note will be removed'
 
@@ -262,7 +260,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         given:
         Transaction transaction = TransactionBuilder.builder().build()
         transaction.reoccurringType = ReoccurringType.Monthly
-        transaction.reoccurring = true
         transaction.transactionState = TransactionState.Cleared
 
         when:
@@ -306,7 +303,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(Date.valueOf('2020-01-01'))
                 .withReoccurringType(ReoccurringType.Monthly)
-                .withReoccurring(true)
                 .build()
 
         when:
@@ -322,7 +318,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(Date.valueOf('2020-02-29'))
                 .withReoccurringType(ReoccurringType.Monthly)
-                .withReoccurring(true)
                 .build()
 
         when:
@@ -338,7 +333,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(Date.valueOf('2019-03-01'))
                 .withReoccurringType(ReoccurringType.Monthly)
-                .withReoccurring(true)
                 .build()
 
         when:
@@ -354,7 +348,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction preLeapYearTransaction = TransactionBuilder.builder()
                 .withTransactionDate(Date.valueOf('2019-11-01'))
                 .withReoccurringType(ReoccurringType.Undefined)
-                .withReoccurring(true)
                 .build()
 
         when:

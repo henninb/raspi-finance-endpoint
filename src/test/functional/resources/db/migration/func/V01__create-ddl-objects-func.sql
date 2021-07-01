@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS func.t_account
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     payment_required   BOOLEAN                               NULL DEFAULT TRUE,
     moniker            TEXT          DEFAULT '0000'          NOT NULL,
-    totals             NUMERIC(8, 2) DEFAULT 0.00            NULL,
-    totals_balanced    NUMERIC(8, 2) DEFAULT 0.00            NULL,
     future             NUMERIC(8, 2) DEFAULT 0.00            NULL,
+    outstanding        NUMERIC(8, 2) DEFAULT 0.00            NULL,
+    cleared            NUMERIC(8, 2) DEFAULT 0.00            NULL,
     date_closed        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL, -- TODO: should be null by default
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
@@ -98,8 +98,6 @@ CREATE TABLE IF NOT EXISTS func.t_transaction
     category           TEXT          DEFAULT ''              NOT NULL,
     amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
     transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
-    -- TODO: need to decommission reoccurring flag as it is replaced by reoccurring_type
-    reoccurring        BOOLEAN       DEFAULT FALSE           NOT NULL,
     reoccurring_type   TEXT          DEFAULT 'undefined'     NULL,
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     notes              TEXT          DEFAULT ''              NOT NULL,

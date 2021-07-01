@@ -95,10 +95,6 @@ data class Transaction(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    @JsonProperty
-    @Column(name = "reoccurring", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    var reoccurring: Boolean = false,
-
     @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @JsonProperty
     @field:Convert(converter = ReoccurringTypeConverter::class)
@@ -114,7 +110,7 @@ data class Transaction(
 
     constructor() : this(
         0L, "", 0, AccountType.Undefined, "", Date(0),
-        "", "", BigDecimal(0.00), TransactionState.Undefined, true, false, ReoccurringType.Undefined, ""
+        "", "", BigDecimal(0.00), TransactionState.Undefined, true,  ReoccurringType.Undefined, ""
     )
 
     @JsonGetter("transactionDate")

@@ -17,7 +17,6 @@ class TransactionBuilder {
     String category = 'online'
     BigDecimal amount = 3.14G
     TransactionState transactionState = TransactionState.Cleared
-    Boolean reoccurring = false
     ReoccurringType reoccurringType = ReoccurringType.Undefined
     String notes = 'my note to you'
 
@@ -36,7 +35,6 @@ class TransactionBuilder {
         transaction.category = category
         transaction.amount = amount
         transaction.transactionState = transactionState
-        transaction.reoccurring = reoccurring
         transaction.reoccurringType = reoccurringType
         transaction.notes = notes
         return transaction
@@ -84,11 +82,6 @@ class TransactionBuilder {
 
     TransactionBuilder transactionState(TransactionState transactionState) {
         this.transactionState = transactionState
-        return this
-    }
-
-    TransactionBuilder reoccurring(Boolean reoccurring) {
-        this.reoccurring = reoccurring
         return this
     }
 

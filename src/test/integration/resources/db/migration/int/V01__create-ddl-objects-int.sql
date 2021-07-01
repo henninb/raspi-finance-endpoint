@@ -98,8 +98,6 @@ CREATE TABLE IF NOT EXISTS int.t_transaction
     category           TEXT          DEFAULT ''              NOT NULL,
     amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
     transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
-    -- TODO: need to decommission reoccurring flag as it is replaced by reoccurring_type
-    reoccurring        BOOLEAN       DEFAULT FALSE           NOT NULL,
     reoccurring_type   TEXT          DEFAULT 'undefined'     NULL,
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     notes              TEXT          DEFAULT ''              NOT NULL,

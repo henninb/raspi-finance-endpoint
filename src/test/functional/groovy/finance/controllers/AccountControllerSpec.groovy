@@ -21,23 +21,23 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     @Shared
     protected String jsonPayloadInvalidActiveStatus = '''
-{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":"invalid","moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":"invalid","moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadInvalidTotals = '''
-{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":true,"moniker":"1234","totals":0.0155,"totalsBalanced":0.02,"dateClosed":0}
+{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadMissingAccountType = '''
-{"accountNameOwner":"test_brian","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+{"accountNameOwner":"test_brian","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadEmptyAccountNameOwner = '''
-{"accountNameOwner":"","accountType":"credit","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+{"accountNameOwner":"","accountType":"credit","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadInvalidAccountType = '''
-{"accountNameOwner":"test_brian","accountType":"invalid","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+{"accountNameOwner":"test_brian","accountType":"invalid","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
 
     @Shared
