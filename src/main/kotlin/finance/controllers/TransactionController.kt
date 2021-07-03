@@ -81,15 +81,17 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //TODO: return the payload of the updated and the inserted
     @PutMapping(
-        "/state/update/{guid}/{state}",
+        "/state/update/{guid}/{transactionStateValue}",
         consumes = ["application/json"],
         produces = ["application/json"]
     )
     fun updateTransactionState(
         @PathVariable("guid") guid: String,
-        @PathVariable("state") state: TransactionState
+        @PathVariable("transactionStateValue") transactionStateValue: String
     ): ResponseEntity<String> {
-        val transactions = transactionService.updateTransactionState(guid, state)
+        val newTransactionStateValue = transactionStateValue.lowercase()
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        val transactions = transactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
         if (transactions.isNotEmpty()) {
             val response: MutableMap<String, String> = HashMap()
             response["message"] = "updated transactionState"
@@ -104,6 +106,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         )
     }
 
+    //TODO: 7/1/2021 - Return the transaction from the database
     //TODO: 6/28/2021 - Should return a 201 CREATED?
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
@@ -111,11 +114,12 @@ class TransactionController @Autowired constructor(private var transactionServic
         logger.info("insert - transaction.transactionDate: $transaction")
         if (transactionService.insertTransaction(transaction)) {
             logger.info(transaction.toString())
-            return ResponseEntity.ok("transaction inserted")
+            return ResponseEntity.ok(transaction.toString())
         }
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
     }
 
+    //TODO: 7/1/2021 - Return the transaction from the database
     //TODO: 6/28/2021 - Should return a 201 CREATED?
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/future/insert' -X POST -d ''
     @PostMapping("/future/insert", consumes = ["application/json"], produces = ["application/json"])
