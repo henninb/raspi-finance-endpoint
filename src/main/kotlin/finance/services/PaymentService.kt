@@ -1,10 +1,7 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.domain.AccountType
-import finance.domain.Payment
-import finance.domain.Transaction
-import finance.domain.TransactionState
+import finance.domain.*
 import finance.repositories.PaymentRepository
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
@@ -95,6 +92,7 @@ open class PaymentService(
             transactionDebit.amount = payment.amount
         }
         transactionDebit.transactionState = TransactionState.Outstanding
+        transactionDebit.reoccurringType = ReoccurringType.Onetime
         transactionDebit.accountType = AccountType.Debit
         transactionDebit.accountNameOwner = paymentAccountNameOwner
         transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
@@ -122,6 +120,7 @@ open class PaymentService(
         }
 
         transactionCredit.transactionState = TransactionState.Outstanding
+        transactionCredit.reoccurringType = ReoccurringType.Onetime
         transactionCredit.accountType = AccountType.Credit
         transactionCredit.accountNameOwner = payment.accountNameOwner
         transactionCredit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
