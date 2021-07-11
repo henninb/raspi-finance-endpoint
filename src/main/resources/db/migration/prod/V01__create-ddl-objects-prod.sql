@@ -30,6 +30,21 @@ CREATE TABLE IF NOT EXISTS public.t_account
 
 -- ALTER TABLE public.t_account ADD COLUMN payment_required   BOOLEAN     NULL     DEFAULT TRUE;
 
+----------------------------
+-- Validation Amount Date --
+----------------------------
+CREATE TABLE IF NOT EXISTS public.t_validation_amount_date(
+    validation_id BIGSERIAL PRIMARY KEY,
+    account_id         BIGINT                                NOT NULL,
+    validation_date         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
+    transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
+    --date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    --date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
+    CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES public.t_account (account_id) ON DELETE CASCADE
+);
+
 --------------
 -- Category --
 --------------
@@ -192,6 +207,7 @@ SELECT setval('public.t_account_account_id_seq', (SELECT MAX(account_id) FROM pu
 SELECT setval('public.t_category_category_id_seq', (SELECT MAX(category_id) FROM public.t_category) + 1);
 SELECT setval('public.t_description_description_id_seq', (SELECT MAX(description_id) FROM public.t_description) + 1);
 SELECT setval('public.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM public.t_parm) + 1);
+SELECT setval('public.t_validation_amount_date_validation_id_seq', (SELECT MAX(validation_id) FROM public.t_validation_amount_date) + 1);
 
 CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
     RETURNS TRIGGER
