@@ -21,11 +21,7 @@ class ValidationAmountController(private var validationAmountService: Validation
 
     @GetMapping("/select/{accountId}")
     fun selectValidationAmountByAccountId(@PathVariable("accountId") accountId: Long): ResponseEntity<String> {
-        val validationAmountOptional = validationAmountService.findByAccountId(accountId)
-
-        if (validationAmountOptional.isPresent) {
-            return ResponseEntity.ok(mapper.writeValueAsString(validationAmountOptional.get()))
-        }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "validationAmount not found for: $accountId")
+        val validationAmount = validationAmountService.findByAccountId(accountId)
+        return ResponseEntity.ok(mapper.writeValueAsString(validationAmount))
     }
 }
