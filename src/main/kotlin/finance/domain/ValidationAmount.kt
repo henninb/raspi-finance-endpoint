@@ -28,6 +28,11 @@ data class ValidationAmount(
     @Column(name = "validation_id", nullable = false)
     var validationId: Long,
 
+    @JsonProperty
+    @field:Min(value = 0L)
+    @Column(name = "account_id", nullable = false)
+    var accountId: Long,
+
     @field:ValidDate
     @Column(name = "validation_date", columnDefinition = "DATE", nullable = false)
     @JsonProperty
@@ -42,7 +47,7 @@ data class ValidationAmount(
     @Column(name = "transaction_state", nullable = false)
     var transactionState: TransactionState
 ) {
-    constructor() : this(0L, Timestamp(0L),true, TransactionState.Undefined )
+    constructor() : this(0L, 0L, Timestamp(0L),true, TransactionState.Undefined )
 
 //    @JsonIgnore
 //    @Column(name = "date_added", nullable = false)

@@ -17,9 +17,10 @@ class ValidationAmountController(private var validationAmountService: Validation
         return ResponseEntity.ok("validationAmount inserted")
     }
 
-    @GetMapping("/select/{accountId}")
-    fun selectValidationAmountByAccountId(@PathVariable("accountId") accountId: Long): ResponseEntity<String> {
-        val validationAmount = validationAmountService.findByAccountId(accountId)
+    @GetMapping("/select/{accountNameOwner}")
+    fun selectValidationAmountByAccountId(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
+        val validationAmount = validationAmountService.findValidationAmountByAccountNameOwner(accountNameOwner)
+        logger.info(mapper.writeValueAsString(validationAmount))
         return ResponseEntity.ok(mapper.writeValueAsString(validationAmount))
     }
 }
