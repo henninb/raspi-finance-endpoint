@@ -36,7 +36,9 @@ open class ValidationAmountService(
     }
 
     @Timed
-    override fun findByAccountId(accountId: Long): Optional<ValidationAmount> {
-        return validationAmountRepository.findByValidationId(accountId)
+    override fun findByAccountId(accountId: Long): ValidationAmount {
+        val sortedList = validationAmountRepository.findByValidationId(accountId).sortedByDescending { it.validationDate }
+
+        return sortedList.first()
     }
 }
