@@ -5,7 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
+import finance.utils.TransactionStateConverter
+import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
+import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
@@ -23,27 +26,31 @@ data class ValidationAmount(
     @field:Min(value = 0L)
     @JsonProperty
     @Column(name = "validation_id", nullable = false)
-    var descriptionId: Long,
+    var validationId: Long,
+
+    @field:ValidDate
+    @Column(name = "validation_date", columnDefinition = "DATE", nullable = false)
+    @JsonProperty
+    var validationDate: Timestamp,
 
     @JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    // @field:Size(min = 1, max = 50)
-    // @field:Convert(converter = LowerCaseConverter::class)
-    // @Column(name = "description", unique = true, nullable = false)
-    // @JsonProperty
-    // var description: String
+    @JsonProperty
+    @field:Convert(converter = TransactionStateConverter::class)
+    @Column(name = "transaction_state", nullable = false)
+    var transactionState: TransactionState
 ) {
-    constructor() : this(0L, true, "")
+    constructor() : this(0L, Timestamp(0L),true, TransactionState.Undefined )
 
-    @JsonIgnore
-    @Column(name = "date_added", nullable = false)
-    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
-
-    @JsonIgnore
-    @Column(name = "date_updated", nullable = false)
-    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+//    @JsonIgnore
+//    @Column(name = "date_added", nullable = false)
+//    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+//
+//    @JsonIgnore
+//    @Column(name = "date_updated", nullable = false)
+//    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)
