@@ -2,11 +2,11 @@ package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.ValidationAmount
+import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
-import java.util.*
 import javax.validation.Validator
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -15,6 +15,7 @@ import javax.validation.ValidationException
 @Service
 open class ValidationAmountService(
     private var validationAmountRepository: ValidationAmountRepository,
+    private var accountRepository: AccountRepository,
     private val validator: Validator,
     private var meterService: MeterService
 ) : IValidationAmountService {
@@ -36,9 +37,18 @@ open class ValidationAmountService(
     }
 
     @Timed
-    override fun findByAccountId(accountId: Long): ValidationAmount {
-        val sortedList = validationAmountRepository.findByValidationId(accountId).sortedByDescending { it.validationDate }
-
-        return sortedList.first()
+    override fun findValidationAmountByAccountNameOwner(accountNameOwner: String): ValidationAmount {
+        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
+        if (accountOptional.isPresent) {
+            val validationAmountList = validationAmountRepository.findByAccountId(accountOptional.get().accountId)
+            if( validationAmountList.isEmpty()) {
+                logger.info("empty list")
+                return ValidationAmount()
+            }
+            logger.info("found a row")
+            return validationAmountList.sortedByDescending { it.validationDate }.first()
+        }
+        logger.info("no account found")
+        return ValidationAmount()
     }
 }
