@@ -33,15 +33,15 @@ CREATE TABLE IF NOT EXISTS func.t_account
 ----------------------------
 -- Validation Amount Date --
 ----------------------------
-CREATE TABLE IF NOT EXISTS func.t_validation_amount_date(
+CREATE TABLE IF NOT EXISTS func.t_validation_amount(
     validation_id BIGSERIAL PRIMARY KEY,
     account_id         BIGINT                                NOT NULL,
     validation_date         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
     amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
-    --date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    --date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES func.t_account (account_id) ON DELETE CASCADE
 );
@@ -208,7 +208,7 @@ SELECT setval('func.t_account_account_id_seq', (SELECT MAX(account_id) FROM func
 SELECT setval('func.t_category_category_id_seq', (SELECT MAX(category_id) FROM func.t_category) + 1);
 SELECT setval('func.t_description_description_id_seq', (SELECT MAX(description_id) FROM func.t_description) + 1);
 SELECT setval('func.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM func.t_parm) + 1);
-SELECT setval('func.t_validation_amount_date_validation_id_seq', (SELECT MAX(validation_id) FROM func.t_validation_amount_date) + 1);
+SELECT setval('func.t_validation_amount_validation_id_seq', (SELECT MAX(validation_id) FROM func.t_validation_amount) + 1);
 
 CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
     RETURNS TRIGGER

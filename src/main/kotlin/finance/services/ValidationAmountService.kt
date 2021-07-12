@@ -7,6 +7,8 @@ import finance.repositories.ValidationAmountRepository
 import io.micrometer.core.annotation.Timed
 import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
+import java.util.*
 import javax.validation.Validator
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
@@ -33,6 +35,8 @@ open class ValidationAmountService(
             meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert validationAmount as there is a constraint violation on the data.")
         }
+        validationAmount.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        validationAmount.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         return validationAmountRepository.saveAndFlush(validationAmount)
     }
 
