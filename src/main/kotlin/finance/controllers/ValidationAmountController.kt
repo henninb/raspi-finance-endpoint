@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/validation/amount")
 class ValidationAmountController(private var validationAmountService: ValidationAmountService) : BaseController() {
 
-    @PostMapping("/insert", produces = ["application/json"])
-    fun insertValidationAmount(@RequestBody validationAmount: ValidationAmount): ResponseEntity<String> {
-        validationAmountService.insertValidationAmount(validationAmount)
+    @PostMapping("/insert/{accountNameOwner}", produces = ["application/json"])
+    fun insertValidationAmount(@RequestBody validationAmount: ValidationAmount, @PathVariable("accountNameOwner") accountNameOwner : String) : ResponseEntity<String> {
+        //val validationAmount = validationAmountService.findValidationAmountByAccountNameOwner(accountNameOwner)
+
+        validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
         logger.info("validationAmount inserted")
         return ResponseEntity.ok("validationAmount inserted")
     }
