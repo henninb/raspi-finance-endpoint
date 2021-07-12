@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS stage.t_validation_amount_date(
     validation_date         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
+    amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
     --date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     --date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
