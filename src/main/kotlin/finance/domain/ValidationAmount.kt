@@ -5,27 +5,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
-import finance.utils.LowerCaseConverter
 import finance.utils.TransactionStateConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
 import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
-import javax.validation.constraints.Size
 
 @Entity
 @Proxy(lazy = false)
-@Table(name = "t_validation_amount_date")
+@Table(name = "t_validation_amount")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ValidationAmount(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "t_validation_amount_date_validation_id_seq")
+    @SequenceGenerator(name = "t_validation_amount_validation_id_seq")
     @field:Min(value = 0L)
     @JsonProperty
     @Column(name = "validation_id", nullable = false)
@@ -57,13 +54,13 @@ data class ValidationAmount(
 ) {
     constructor() : this(0L, 0L, Timestamp(0L),true, TransactionState.Undefined, BigDecimal(0.0) )
 
-//    @JsonIgnore
-//    @Column(name = "date_added", nullable = false)
-//    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
-//
-//    @JsonIgnore
-//    @Column(name = "date_updated", nullable = false)
-//    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)
