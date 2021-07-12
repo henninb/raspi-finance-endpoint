@@ -1,6 +1,7 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.domain.TransactionState
 import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
@@ -48,10 +49,10 @@ open class ValidationAmountService(
     }
 
     @Timed
-    override fun findValidationAmountByAccountNameOwner(accountNameOwner: String): ValidationAmount {
+    override fun findValidationAmountByAccountNameOwner(accountNameOwner: String, traansactionState: TransactionState): ValidationAmount {
         val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
         if (accountOptional.isPresent) {
-            val validationAmountList = validationAmountRepository.findByAccountId(accountOptional.get().accountId)
+            val validationAmountList = validationAmountRepository.findByTransactionStateAndAccountId(traansactionState, accountOptional.get().accountId)
             if( validationAmountList.isEmpty()) {
                 logger.info("empty list")
                 return ValidationAmount()
