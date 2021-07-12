@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
 import finance.utils.TransactionStateConverter
 import finance.utils.ValidDate
+import finance.utils.ValidTimestamp
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -33,8 +34,8 @@ data class ValidationAmount(
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
-    @field:ValidDate
-    @Column(name = "validation_date", columnDefinition = "DATE", nullable = false)
+    //@field:ValidTimestamp
+    @Column(name = "validation_date", nullable = false)
     @JsonProperty
     var validationDate: Timestamp,
 

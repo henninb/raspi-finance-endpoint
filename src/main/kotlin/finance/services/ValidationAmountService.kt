@@ -27,7 +27,13 @@ open class ValidationAmountService(
         private val logger = LogManager.getLogger()
     }
 
-    override fun insertValidationAmount(validationAmount: ValidationAmount) : ValidationAmount {
+    override fun insertValidationAmount(accountNameOwner: String, validationAmount: ValidationAmount) : ValidationAmount {
+        var accountId = 0L
+        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
+        if (accountOptional.isPresent) {
+            accountId = accountOptional.get().accountId
+        }
+
         val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -35,6 +41,7 @@ open class ValidationAmountService(
             meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert validationAmount as there is a constraint violation on the data.")
         }
+        validationAmount.accountId = accountId
         validationAmount.dateAdded = Timestamp(Calendar.getInstance().time.time)
         validationAmount.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         return validationAmountRepository.saveAndFlush(validationAmount)
