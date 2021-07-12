@@ -17,6 +17,7 @@ class ValidationAmountController(private var validationAmountService: Validation
         return ResponseEntity.ok("validationAmount inserted")
     }
 
+    //curl -k https://hornsup:8080/validation/amount/select/amazon_brian
     @GetMapping("/select/{accountNameOwner}")
     fun selectValidationAmountByAccountId(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val validationAmount = validationAmountService.findValidationAmountByAccountNameOwner(accountNameOwner)

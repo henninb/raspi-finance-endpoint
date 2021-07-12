@@ -4,14 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.Constants
 import finance.utils.LowerCaseConverter
 import finance.utils.TransactionStateConverter
 import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
+import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
 import javax.persistence.*
+import javax.validation.constraints.Digits
 import javax.validation.constraints.Min
 import javax.validation.constraints.Size
 
@@ -45,9 +48,14 @@ data class ValidationAmount(
     @JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
-    var transactionState: TransactionState
+    var transactionState: TransactionState,
+
+    @JsonProperty
+    @field:Digits(integer = 8, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
+    @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    var amount: BigDecimal
 ) {
-    constructor() : this(0L, 0L, Timestamp(0L),true, TransactionState.Undefined )
+    constructor() : this(0L, 0L, Timestamp(0L),true, TransactionState.Undefined, BigDecimal(0.0) )
 
 //    @JsonIgnore
 //    @Column(name = "date_added", nullable = false)
