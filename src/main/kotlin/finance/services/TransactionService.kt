@@ -67,7 +67,7 @@ open class TransactionService(
 
     // https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction
     @Timed
-    override fun insertTransaction(transaction: Transaction): Boolean {
+    override fun insertTransaction(transaction: Transaction): Transaction {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             //TODO: add metric here
@@ -88,10 +88,10 @@ open class TransactionService(
         processCategory(transaction)
         transaction.dateUpdated = Timestamp(nextTimestampMillis())
         transaction.dateAdded = Timestamp(nextTimestampMillis())
-        transactionRepository.saveAndFlush(transaction)
+        val response : Transaction = transactionRepository.saveAndFlush(transaction)
         meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
-        return true
+        return response
     }
 
     @Timed
@@ -199,7 +199,7 @@ open class TransactionService(
     }
 
     @Timed
-    override fun updateTransaction(transaction: Transaction): Boolean {
+    override fun updateTransaction(transaction: Transaction): Transaction {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         if (constraintViolations.isNotEmpty()) {
             logger.error("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
@@ -207,28 +207,25 @@ open class TransactionService(
             throw ValidationException("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
         }
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
-        return if (optionalTransaction.isPresent) {
+        if (optionalTransaction.isPresent) {
             val transactionFromDatabase = optionalTransaction.get()
-            masterTransactionUpdater(transactionFromDatabase, transaction)
-        } else {
-            logger.warn("cannot update a transaction without a valid guid.")
-            false
+            return masterTransactionUpdater(transactionFromDatabase, transaction)
         }
+        logger.warn("cannot update a transaction without a valid guid.")
+        throw RuntimeException("cannot update a transaction without a valid guid.")
     }
 
     @Timed
-    override fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Boolean {
+    override fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Transaction {
 
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            transactionRepository.saveAndFlush(transaction)
-            logger.info("successfully updated ${transaction.guid}")
-            return true
+            return transactionRepository.saveAndFlush(transaction)
         }
         logger.warn("guid did not match any database records to update ${transaction.guid}.")
-        return true
+        throw RuntimeException("guid did not match any database records to update ${transaction.guid}.")
     }
 //
 //
@@ -257,8 +254,7 @@ open class TransactionService(
                     existingReceiptImage.thumbnail = thumbnail
                     existingReceiptImage.image = rawImage
                     existingReceiptImage.imageFormatType = imageFormatType
-                    val response = receiptImageService.insertReceiptImage(receiptImageOptional.get())
-                    return response
+                    return receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 }
                 logger.error("Failed to update receipt image for transaction ${transaction.guid}")
                 meterService.incrementExceptionThrownCounter("RuntimeException")
@@ -284,7 +280,7 @@ open class TransactionService(
     }
 
     @Timed
-    override fun changeAccountNameOwner(map: Map<String, String>): Boolean {
+    override fun changeAccountNameOwner(map: Map<String, String>): Transaction {
         val accountNameOwner = map["accountNameOwner"]
         val guid = map["guid"]
 
@@ -298,8 +294,7 @@ open class TransactionService(
                 transaction.accountNameOwner = account.accountNameOwner
                 transaction.accountId = account.accountId
                 transaction.dateUpdated = Timestamp(nextTimestampMillis())
-                transactionRepository.saveAndFlush(transaction)
-                return true
+                return transactionRepository.saveAndFlush(transaction)
             } else {
                 //TODO: add metric here
                 logger.error("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
@@ -313,10 +308,10 @@ open class TransactionService(
     }
 
     @Timed
-    override fun updateTransactionState(guid: String, transactionState: TransactionState): MutableList<Transaction> {
+    override fun updateTransactionState(guid: String, transactionState: TransactionState): Transaction {
         val transactionOptional = findTransactionByGuid(guid)
         if (transactionOptional.isPresent) {
-            val transactions = mutableListOf<Transaction>()
+            //val transactions = mutableListOf<Transaction>()
             val transaction = transactionOptional.get()
             if (transactionState == transaction.transactionState) {
                 logger.error("Cannot update transactionState to the same for guid = '${guid}'")
@@ -332,9 +327,7 @@ open class TransactionService(
             meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
             transaction.transactionState = transactionState
             transaction.dateUpdated = Timestamp(nextTimestampMillis())
-            val databaseResponseUpdated = transactionRepository.saveAndFlush(transaction)
-            transactions.add(databaseResponseUpdated)
-            return transactions
+            return transactionRepository.saveAndFlush(transaction)
         }
         //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
@@ -439,19 +432,19 @@ open class TransactionService(
     override fun findAccountsThatRequirePayment(): List<Account> {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, 30)
-        val todayPlusThirty = Date(calendar.time.time)
+        //val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
-        val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
+        //val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
         accountService.updateTotalsForAllAccounts()
         val accountsToInvestigate =
             accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->
-            val transactions =
-                transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
-                    account.accountNameOwner,
-                    true,
-                    transactionStates
-                )
+//            val transactions =
+//                transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
+//                    account.accountNameOwner,
+//                    true,
+//                    transactionStates
+//                )
             //val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
 
             accountNeedingAttention.add(account)

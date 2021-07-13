@@ -18,11 +18,12 @@ class ParameterServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Parameter>> constraintViolations = validator.validate(parameter)
 
         when:
-        parameterService.insertParameter(parameter)
+        Parameter parameterInserted = parameterService.insertParameter(parameter)
 
         then:
+        parameterInserted.parameterName == parameter.parameterName
         1 * validatorMock.validate(parameter) >> constraintViolations
-        1 * parameterRepositoryMock.saveAndFlush(parameter)
+        1 * parameterRepositoryMock.saveAndFlush(parameter) >> parameter
         0 * _
     }
 

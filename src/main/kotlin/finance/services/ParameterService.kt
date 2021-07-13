@@ -20,7 +20,7 @@ open class ParameterService(
 ) : IParameterService {
 
     @Timed
-    override fun insertParameter(parameter: Parameter): Boolean {
+    override fun insertParameter(parameter: Parameter): Parameter {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -31,13 +31,13 @@ open class ParameterService(
 
         parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
         parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        parameterRepository.saveAndFlush(parameter)
-        return true
+        return parameterRepository.saveAndFlush(parameter)
     }
 
     @Timed
-    override fun deleteByParameterName(parameterName: String) {
+    override fun deleteByParameterName(parameterName: String) : Boolean {
         parameterRepository.deleteByParameterName(parameterName)
+        return true
     }
 
     @Timed

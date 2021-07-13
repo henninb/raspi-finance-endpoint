@@ -60,10 +60,10 @@ class AccountServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
-        Boolean isInserted = accountService.insertAccount(account)
+        accountService.insertAccount(account)
 
         then:
-        !isInserted
+        thrown(RuntimeException)
         constraintViolations.size() == 0
         1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
@@ -94,13 +94,13 @@ class AccountServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Account>> constraintViolations = validator.validate(account)
 
         when:
-        Boolean isInserted = accountService.insertAccount(account)
+        Account accountInserted = accountService.insertAccount(account)
 
         then:
-        isInserted
+        accountInserted.accountNameOwner == account.accountNameOwner
         1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
-        1 * accountRepositoryMock.saveAndFlush(account)
+        1 * accountRepositoryMock.saveAndFlush(account) >> account
         0 * _
     }
 

@@ -17,13 +17,13 @@ interface IAccountService {
 
     fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal
 
-    fun insertAccount(account: Account): Boolean
+    fun insertAccount(account: Account): Account
 
     fun deleteByAccountNameOwner(accountNameOwner: String): Boolean
 
     fun updateTotalsForAllAccounts(): Boolean
 
-    fun updateAccount(account: Account): Boolean
+    fun updateAccount(account: Account): Account
 
     fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean
 }

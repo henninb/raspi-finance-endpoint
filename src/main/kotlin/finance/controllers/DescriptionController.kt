@@ -24,9 +24,8 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     //curl -k --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' 'https://hornsup:8080/description/insert'
     @PostMapping("/insert", produces = ["application/json"])
     fun insertDescription(@RequestBody description: Description): ResponseEntity<String> {
-        descriptionService.insertDescription(description)
-        logger.info("description inserted")
-        return ResponseEntity.ok("description inserted")
+        val descriptionResponse = descriptionService.insertDescription(description)
+        return ResponseEntity.ok(mapper.writeValueAsString(descriptionResponse))
     }
 
     //curl -k 'https://localhost:8080/description/select/zzz'

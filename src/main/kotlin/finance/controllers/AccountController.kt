@@ -74,8 +74,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
     //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
     @PostMapping("/insert", produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<String> {
-        accountService.insertAccount(account)
-        return ResponseEntity.ok("account inserted")
+        val accountResponse = accountService.insertAccount(account)
+        return ResponseEntity.ok(mapper.writeValueAsString(accountResponse))
     }
 
     //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8080/account/delete/test_brian'
@@ -97,15 +97,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
         @RequestBody account: Map<String, Any>
     ): ResponseEntity<String> {
         val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
-        val updateStatus: Boolean = accountService.updateAccount(accountToBeUpdated)
-        if (updateStatus) {
-            return ResponseEntity.ok("account updated")
-        }
-
-        throw ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "could not update this account: ${accountToBeUpdated.accountNameOwner}."
-        )
+        val accountResponse = accountService.updateAccount(accountToBeUpdated)
+        return ResponseEntity.ok(mapper.writeValueAsString(accountResponse))
     }
 
     //curl -k -X PUT 'https://hornsup:8080/account/rename?old=gap_kari&new=oldnavy_kari'
@@ -115,14 +108,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         @RequestParam(value = "old") oldAccountNameOwner: String,
         @RequestParam("new") newAccountNameOwner: String
     ): ResponseEntity<String> {
-        val updateStatus: Boolean = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
-        if (updateStatus) {
-            return ResponseEntity.ok("accountNameOwner renamed")
-        }
-
-        throw ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "could not rename this account: ${oldAccountNameOwner}."
-        )
+        val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
+        return ResponseEntity.ok(mapper.writeValueAsString(accountResponse))
     }
 }

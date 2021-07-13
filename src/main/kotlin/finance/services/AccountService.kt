@@ -71,7 +71,7 @@ open class AccountService(
     }
 
     @Timed
-    override fun insertAccount(account: Account): Boolean {
+    override fun insertAccount(account: Account): Account {
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         if (constraintViolations.isNotEmpty()) {
@@ -84,14 +84,10 @@ open class AccountService(
         if (!accountOptional.isPresent) {
             account.dateAdded = Timestamp(Calendar.getInstance().time.time)
             account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            accountRepository.saveAndFlush(account)
-            logger.info("inserted account successfully.")
-        } else {
-            logger.error("account not inserted as the account already exists ${account.accountNameOwner}.")
-            return false
+            return accountRepository.saveAndFlush(account)
         }
-
-        return true
+        logger.error("Account not inserted as the account already exists ${account.accountNameOwner}.")
+        throw RuntimeException("Account not inserted as the account already exists ${account.accountNameOwner}.")
     }
 
     @Timed
@@ -113,7 +109,7 @@ open class AccountService(
 
     //TODO: 6/24/2021 - Complete the method logic
     @Timed
-    override fun updateAccount(account: Account): Boolean {
+    override fun updateAccount(account: Account): Account {
         val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
         if (optionalAccount.isPresent) {
             val accountToBeUpdated = optionalAccount.get()
@@ -121,11 +117,9 @@ open class AccountService(
             logger.info("updated the account.")
             //var updateFlag = false
             //val fromDb = optionalAccount.get()
-            accountRepository.saveAndFlush(accountToBeUpdated)
-            return true
+            return accountRepository.saveAndFlush(accountToBeUpdated)
         }
-
-        return false
+        throw RuntimeException("Account not updated as the account does not exists ${account.accountNameOwner}.")
     }
 
     @Timed

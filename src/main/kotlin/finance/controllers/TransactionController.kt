@@ -72,11 +72,13 @@ class TransactionController @Autowired constructor(private var transactionServic
         @RequestBody transaction: Map<String, Any>
     ): ResponseEntity<String> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
-        val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
-        if (updateStatus) {
-            return ResponseEntity.ok("transaction updated")
-        }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
+        val transactionResponse = transactionService.updateTransaction(toBePatchedTransaction)
+        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
+//        val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
+//        if (updateStatus) {
+//            return ResponseEntity.ok("transaction updated")
+//        }
+//        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
     //TODO: return the payload of the updated and the inserted
@@ -91,19 +93,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     ): ResponseEntity<String> {
         val newTransactionStateValue = transactionStateValue.lowercase()
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-        val transactions = transactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
-        if (transactions.isNotEmpty()) {
-            val response: MutableMap<String, String> = HashMap()
-            response["message"] = "updated transactionState"
-            response["transactions"] = transactions.toString()
-            return ResponseEntity.ok(mapper.writeValueAsString(response))
-        }
-        logger.error("The transaction guid = $guid could not be updated for transaction state.")
-        meterService.incrementTransactionRestTransactionStateUpdateFailureCounter("unknown")
-        throw ResponseStatusException(
-            HttpStatus.NOT_MODIFIED,
-            "The transaction guid = $guid could not be updated for transaction state."
-        )
+        val transactionResponse = transactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
+        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
     }
 
     //TODO: 7/1/2021 - Return the transaction from the database
@@ -111,12 +102,9 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
-        logger.info("insert - transaction.transactionDate: $transaction")
-        if (transactionService.insertTransaction(transaction)) {
-            logger.info(transaction.toString())
-            return ResponseEntity.ok(transaction.toString())
-        }
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert transaction.")
+        logger.info("insert - transaction.transactionDate: ${mapper.writeValueAsString(transaction)}")
+        val transactionResponse = transactionService.insertTransaction(transaction)
+        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
     }
 
     //TODO: 7/1/2021 - Return the transaction from the database
@@ -126,12 +114,8 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun insertFutureTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
         val futureTransaction = transactionService.createFutureTransaction(transaction)
         logger.info("insert future - futureTransaction.transactionDate: $futureTransaction")
-        if (transactionService.insertTransaction(futureTransaction)) {
-            logger.info(futureTransaction.toString())
-           // return ResponseEntity.ok("transaction future inserted")
-            return ResponseEntity.ok(futureTransaction.toString())
-        }
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not insert future transaction.")
+        val transactionResponse = transactionService.insertTransaction(futureTransaction)
+        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
     }
 
     // change the account name owner of a given transaction
@@ -140,10 +124,9 @@ class TransactionController @Autowired constructor(private var transactionServic
         //TODO: need to complete action
         logger.info("value of accountNameOwner: " + payload["accountNameOwner"])
         logger.info("value of guid: " + payload["guid"])
-        transactionService.changeAccountNameOwner(payload)
+        val transactionResponse = transactionService.changeAccountNameOwner(payload)
         logger.info("transaction account updated")
-
-        return ResponseEntity.ok("transaction account updated")
+        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
     }
 
     // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
@@ -167,7 +150,6 @@ class TransactionController @Autowired constructor(private var transactionServic
                 return ResponseEntity.ok("resource deleted")
             }
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
-            //return ResponseEntity.badRequest("")
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }

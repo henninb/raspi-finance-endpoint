@@ -21,7 +21,7 @@ open class CategoryService(
 ) : ICategoryService {
 
     @Timed
-    override fun insertCategory(category: Category): Boolean {
+    override fun insertCategory(category: Category): Category {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -31,8 +31,7 @@ open class CategoryService(
         }
         category.dateAdded = Timestamp(Calendar.getInstance().time.time)
         category.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        categoryRepository.saveAndFlush(category)
-        return true
+        return categoryRepository.saveAndFlush(category)
     }
 
     @Timed

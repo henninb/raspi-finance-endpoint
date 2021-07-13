@@ -47,7 +47,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_STRING_PROCESSOR_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.of(CategoryBuilder.builder().build())
-        1 * transactionRepositoryMock.saveAndFlush(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
@@ -83,8 +83,8 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         2 * counter.increment()
         1 * categoryRepositoryMock.findByCategory(transaction1.category) >> Optional.of(CategoryBuilder.builder().build())
         1 * categoryRepositoryMock.findByCategory(transaction2.category) >> Optional.of(CategoryBuilder.builder().build())
-        1 * transactionRepositoryMock.saveAndFlush(transaction1)
-        1 * transactionRepositoryMock.saveAndFlush(transaction2)
+        1 * transactionRepositoryMock.saveAndFlush(transaction1) >> transaction1
+        1 * transactionRepositoryMock.saveAndFlush(transaction2) >> transaction2
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction1.accountNameOwner)) >> counter
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction2.accountNameOwner)) >> counter
         2 * counter.increment()

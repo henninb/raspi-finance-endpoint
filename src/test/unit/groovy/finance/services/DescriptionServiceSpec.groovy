@@ -17,11 +17,12 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Description>> constraintViolations = validator.validate(description)
 
         when:
-        descriptionService.insertDescription(description)
+        Description descriptionInserted = descriptionService.insertDescription(description)
 
         then:
+        descriptionInserted.description == description.description
         1 * validatorMock.validate(description) >> constraintViolations
-        1 * descriptionRepositoryMock.saveAndFlush(description)
+        1 * descriptionRepositoryMock.saveAndFlush(description) >> description
         0 * _
     }
 

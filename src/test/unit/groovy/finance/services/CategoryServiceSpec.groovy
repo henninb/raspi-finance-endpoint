@@ -18,11 +18,12 @@ class CategoryServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Category>> constraintViolations = validator.validate(category)
 
         when:
-        categoryService.insertCategory(category)
+        Category categoryInserted = categoryService.insertCategory(category)
 
         then:
+        categoryInserted.category == category.category
         1 * validatorMock.validate(category) >> constraintViolations
-        1 * categoryRepositoryMock.saveAndFlush(category)
+        1 * categoryRepositoryMock.saveAndFlush(category) >> category
         0 * _
     }
 

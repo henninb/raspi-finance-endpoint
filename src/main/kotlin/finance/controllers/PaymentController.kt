@@ -22,8 +22,8 @@ class PaymentController(private var paymentService: PaymentService) : BaseContro
 
     @PostMapping("/insert", produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<String> {
-        paymentService.insertPayment(payment)
-        return ResponseEntity.ok("payment inserted")
+        val paymentResponse = paymentService.insertPayment(payment)
+        return ResponseEntity.ok(mapper.writeValueAsString(paymentResponse))
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/payment/delete/1001
