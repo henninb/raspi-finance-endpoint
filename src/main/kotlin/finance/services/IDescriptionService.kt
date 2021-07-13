@@ -4,7 +4,7 @@ import finance.domain.Description
 import java.util.*
 
 interface IDescriptionService {
-    fun insertDescription(description: Description): Boolean
+    fun insertDescription(description: Description): Description
 
     fun deleteByDescriptionName(description: String): Boolean
 

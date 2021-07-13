@@ -30,7 +30,7 @@ open class PaymentService(
 
     //TODO: make this method transactional - what happens if one inserts fails?
     @Timed
-    override fun insertPayment(payment: Payment): Boolean {
+    override fun insertPayment(payment: Payment): Payment {
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
 
@@ -66,8 +66,7 @@ open class PaymentService(
             payment.guidSource = transactionDebit.guid
             payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
-            paymentRepository.saveAndFlush(payment)
-            return true
+            return paymentRepository.saveAndFlush(payment)
         }
         throw RuntimeException("failed to read the parameter 'payment_account'.")
     }
@@ -128,9 +127,10 @@ open class PaymentService(
     }
 
     @Timed
-    override fun deleteByPaymentId(paymentId: Long) {
+    override fun deleteByPaymentId(paymentId: Long) : Boolean {
         logger.info("service - deleteByPaymentId = $paymentId")
         paymentRepository.deleteByPaymentId(paymentId)
+        return true
     }
 
     @Timed

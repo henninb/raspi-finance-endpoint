@@ -49,6 +49,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 
         then:
         response.statusCode
+        response.body.contains(account.accountNameOwner)
         0 * _
     }
 
@@ -59,6 +60,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 
         then:
         response.statusCode
+        response.body.contains(account.accountNameOwner)
         0 * _
     }
 

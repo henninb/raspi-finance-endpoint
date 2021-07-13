@@ -20,7 +20,7 @@ open class DescriptionService(
 ) : IDescriptionService {
 
     @Timed
-    override fun insertDescription(description: Description): Boolean {
+    override fun insertDescription(description: Description): Description {
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
@@ -30,8 +30,7 @@ open class DescriptionService(
         }
         description.dateAdded = Timestamp(Calendar.getInstance().time.time)
         description.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        descriptionRepository.saveAndFlush(description)
-        return true
+        return descriptionRepository.saveAndFlush(description)
     }
 
     @Timed

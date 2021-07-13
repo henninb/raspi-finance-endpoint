@@ -27,9 +27,8 @@ class ParameterController(private var parameterService: ParameterService) : Base
     //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8080/parm/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertParameter(@RequestBody parameter: Parameter): ResponseEntity<String> {
-        parameterService.insertParameter(parameter)
-        logger.debug("insertParameter")
-        return ResponseEntity.ok("parameter inserted")
+        val parameterResponse = parameterService.insertParameter(parameter)
+        return ResponseEntity.ok(mapper.writeValueAsString(parameterResponse))
     }
 
     @DeleteMapping("/delete/{parameterName}", produces = ["application/json"])

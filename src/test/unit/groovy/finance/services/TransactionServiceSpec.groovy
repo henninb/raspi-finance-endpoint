@@ -87,22 +87,23 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
-        Boolean isInserted = transactionService.insertTransaction(transaction)
+        Transaction transactionInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         //1 * meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
     }
 
+    //TODO: might not be working as expected
     void 'test transactionService - attempt to insert duplicate transaction - update is called'() {
         given:
         String guid = UUID.randomUUID()
@@ -111,10 +112,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
-        Boolean isInserted = transactionService.insertTransaction(transaction)
+        Transaction transactionInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
@@ -125,7 +126,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             assert entity.accountNameOwner == transaction.accountNameOwner
             assert entity.guid == transaction.guid
             assert entity.description == transaction.description
-        })
+        }) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
@@ -142,16 +143,16 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
-        Boolean isInserted = transactionService.insertTransaction(transaction)
+        Transaction transactionInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
@@ -170,20 +171,20 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Account>> constraintViolationsAccount = validator.validate(account)
 
         when:
-        Boolean isInserted = transactionService.insertTransaction(transaction)
+        Transaction transactionInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
-        1 * accountRepositoryMock.saveAndFlush(account) >> true
+        1 * accountRepositoryMock.saveAndFlush(account) >> account
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
         1 * validatorMock.validate(account) >> constraintViolationsAccount
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> categoryOptional
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
@@ -201,18 +202,18 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 
         when:
-        Boolean isInserted = transactionService.insertTransaction(transaction)
+        Transaction transactionInserted = transactionService.insertTransaction(transaction)
 
         then:
-        isInserted
+        transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.empty()
         1 * validatorMock.validate(category) >> constraintViolations
-        1 * categoryRepositoryMock.saveAndFlush(category)
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> true
+        1 * categoryRepositoryMock.saveAndFlush(category) >> category
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
         0 * _
@@ -226,10 +227,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transaction.notes = 'my note will be removed'
 
         when:
-        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+        Transaction transactionInserted = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
 
         then:
-        transactions.size() == 1
+        transactionInserted.guid == transaction.guid
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
@@ -245,10 +246,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transaction.notes = 'my note will be removed'
 
         when:
-        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
+        Transaction transactionInserted = transactionService.updateTransactionState(transaction.guid, TransactionState.Cleared)
 
         then:
-        transactions.size() == 1
+        transactionInserted.guid == transaction.guid
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
@@ -263,10 +264,11 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transaction.transactionState = TransactionState.Cleared
 
         when:
-        List<Transaction> transactions = transactionService.updateTransactionState(transaction.guid, TransactionState.Future)
+        Transaction transactionInserted = transactionService.updateTransactionState(transaction.guid, TransactionState.Future)
 
         then:
-        transactions.size() == 1
+        transactionInserted.guid == transaction.guid
+        transactionInserted.transactionState == TransactionState.Future
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, transaction.accountNameOwner)) >> counter
@@ -286,9 +288,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         base64Jpeg = Base64.getEncoder().encodeToString(jpgFileBytes)
 
         when:
-        transactionService.updateTransactionReceiptImageByGuid(transaction.guid, base64Jpeg)
+        ReceiptImage receiptImageInserted = transactionService.updateTransactionReceiptImageByGuid(transaction.guid, base64Jpeg)
 
         then:
+        //receiptImageInserted.transactionId == transaction.transactionId
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * validatorMock.validate(_ as ReceiptImage) >> constraintViolations
         1 * receiptImageRepositoryMock.saveAndFlush(_ as ReceiptImage) >> receiptImage
