@@ -114,3 +114,6 @@ https://riamf.github.io/posts/dockerized_grafana_setup/
 
 ## logback translator
 http://logback.qos.ch/translator/asGroovy.html
+
+## graphql
+http://hornsup:8080/graphiql

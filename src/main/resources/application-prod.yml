@@ -6,7 +6,7 @@ server:
     key-store-type: pkcs12
     key-alias: hornsup-raspi-finance
     key-password: ${SSL_KEY_PASSWORD}
-    enabled: true
+    enabled: false
     enabled-protocols: TLSv1.2
 spring:
   application:
@@ -65,6 +65,17 @@ spring:
     #    schemas: prod
     locations: classpath:db/migration/prod
     validate-on-migrate: true
+
+
+
+
+graphql:
+  servlet:
+    enabled: true
+    mapping: /graphql
+    cors-enabled: true
+    exception-handlers-enabled: false
+    async-mode-enabled: true
 
 # ===============================
 # = Custom

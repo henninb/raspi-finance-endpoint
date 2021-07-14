@@ -1,23 +1,13 @@
-scalar Timestamp
+#scalar Timestamp
 
 #schema {
-#query: QueryType
+#    query: Query
 #}
 
-
-schema {
-    query: Query
-}
-
-
 type Query {
-    descriptions(activeStatus: Boolean) : [Description]
+    descriptions : [Description]
+    categories : [Category]
     #mutation: Mutation
-}
-
-type QueryType {
-#description(descriptionName: String): Description
-descriptions(activeStatus: Boolean) : [Description]
 }
 
 #enum Episode {
@@ -26,26 +16,26 @@ descriptions(activeStatus: Boolean) : [Description]
 #JEDI
 #}
 
-type Description {
-    descriptionId: ID!
+type Category {
+    categoryId: ID
     activeStatus: Boolean
-    description: String
-    dateAdded: Timestamp!
-    dateUpdated: Timestamp!
+    category: String
+#    dateAdded: Timestamp
+#    dateUpdated: Timestamp
 }
 
-#type Human implements Character {
-#id: ID!
-#name: String!
-#friends: [Character]
-#appearsIn: [Episode]!
-#homePlanet: String
-#}
-#
-#type Droid implements Character {
-#id: ID!
-#name: String!
-#friends: [Character]
-#appearsIn: [Episode]!
-#primaryFunction: String
+type Description {
+    descriptionId: ID
+    activeStatus: Boolean
+    description: String!
+#    dateAdded: Timestamp
+#    dateUpdated: Timestamp
+}
+
+#{
+#    descriptions {
+#        descriptionId
+#        description
+#        activeStatus
+#    }
 #}
