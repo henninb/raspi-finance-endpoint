@@ -99,6 +99,14 @@ dependencies {
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:${apacheCamelVersion}")
     implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
+    //graphql
+    //implementation("com.graphql-java:graphql-java:${graphqlJava}")
+    implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:${graphqlSpringVersion}")
+    implementation("com.graphql-java-kickstart:graphiql-spring-boot-starter:${graphqlSpringVersion}")
+    implementation("com.graphql-java-kickstart:altair-spring-boot-starter:${graphqlSpringVersion}")
+    implementation("com.graphql-java-kickstart:graphql-java-tools:5.5.1")
+    implementation("com.graphql-java:graphql-java-extended-validation:15.0.1")
+
     //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
 
