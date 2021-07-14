@@ -1,0 +1,51 @@
+scalar Timestamp
+
+#schema {
+#query: QueryType
+#}
+
+
+schema {
+    query: Query
+}
+
+
+type Query {
+    descriptions(activeStatus: Boolean) : [Description]
+    #mutation: Mutation
+}
+
+type QueryType {
+#description(descriptionName: String): Description
+descriptions(activeStatus: Boolean) : [Description]
+}
+
+#enum Episode {
+#NEWHOPE
+#EMPIRE
+#JEDI
+#}
+
+type Description {
+    descriptionId: ID!
+    activeStatus: Boolean
+    description: String
+    dateAdded: Timestamp!
+    dateUpdated: Timestamp!
+}
+
+#type Human implements Character {
+#id: ID!
+#name: String!
+#friends: [Character]
+#appearsIn: [Episode]!
+#homePlanet: String
+#}
+#
+#type Droid implements Character {
+#id: ID!
+#name: String!
+#friends: [Character]
+#appearsIn: [Episode]!
+#primaryFunction: String
+#}
