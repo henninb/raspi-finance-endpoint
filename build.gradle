@@ -12,6 +12,8 @@ plugins {
     id 'codenarc'
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
+    //id "org.jetbrains.kotlin.jvm" version "1.5.20"
+    //id 'org.jetbrains.kotlin.multiplatform' version '1.5.20'
     id "org.flywaydb.flyway" version "${flywayVersion}"
     id "com.github.ben-manes.versions" version "${gradleVersionsPlugin}"
 }
@@ -49,7 +51,7 @@ codenarc {
 compileKotlin {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11
+    //kotlinOptions.jvmTarget = JavaVersion.VERSION_11
 }
 
 sourceSets {
@@ -104,7 +106,7 @@ dependencies {
     implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:${graphqlSpringVersion}")
     implementation("com.graphql-java-kickstart:graphiql-spring-boot-starter:${graphqlSpringVersion}")
     implementation("com.graphql-java-kickstart:altair-spring-boot-starter:${graphqlSpringVersion}")
-    implementation("com.graphql-java-kickstart:graphql-java-tools:5.5.1")
+    implementation("com.graphql-java-kickstart:graphql-java-tools:11.0.1")
     implementation("com.graphql-java:graphql-java-extended-validation:15.0.1")
 
     //postgreSQL database
