@@ -53,16 +53,11 @@ open class AccountService(
         return accounts
     }
 
+    //TODO: Should return a list of account?
     @Timed
     override fun findAccountsThatRequirePayment(): List<String> {
         return accountRepository.findAccountsThatRequirePayment()
     }
-
-//    @Timed
-//    override fun computeTheGrandTotalForAllTransactions(): BigDecimal {
-//        val totals: BigDecimal = accountRepository.computeTheGrandTotalForAllTransactions()
-//        return totals.setScale(2, RoundingMode.HALF_UP)
-//    }
 
     @Timed
     override fun sumOfAllTransactionsByTransactionState(transactionState : TransactionState): BigDecimal {
