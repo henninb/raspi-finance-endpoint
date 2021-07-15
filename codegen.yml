@@ -1,0 +1,18 @@
+overwrite: true
+schema: src/main/resources/graphql/schema.graphqls
+generates:
+  src/main/kotlin/finance/resolvers/Types.kt:
+    plugins:
+      - kotlin
+    config:
+      strictScalars: true
+      withTypes: true
+      package: finance.resolvers
+      scalars:
+        Long: Long
+  # src/main/kotlin/finance/resolvers/Resolvers.kt:
+  #   config:
+  #     package: finance.resolvers
+  #   plugins:
+  #     - kotlin
+

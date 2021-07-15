@@ -1,7 +1,5 @@
 package finance.resolvers
 
-import finance.domain.Account
-import finance.domain.AccountType
 import finance.services.AccountService
 import graphql.kickstart.tools.GraphQLQueryResolver
 import org.springframework.stereotype.Component
@@ -11,7 +9,8 @@ class AccountQueryResolver(private val accountService: AccountService) : GraphQL
 
     @Suppress("unused")
     fun account(accountNameOwner: String) : Account {
-        return accountService.findByAccountNameOwner(accountNameOwner).get()
+        return Account(0L, true, "test")
+        //return accountService.findByAccountNameOwner(accountNameOwner).get()
     }
 
 //    //TODO: should use a parameter 7/15/2021
@@ -22,6 +21,7 @@ class AccountQueryResolver(private val accountService: AccountService) : GraphQL
 
     @Suppress("unused")
     fun accounts() : List<Account> {
-        return accountService.findByActiveStatusOrderByAccountNameOwner()
+        val account = Account(0L, true, "test")
+        return  listOf(account)
     }
 }

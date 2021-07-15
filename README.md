@@ -117,3 +117,4 @@ http://logback.qos.ch/translator/asGroovy.html
 
 ## graphql
 http://hornsup:8080/graphiql
+npx graphql-codegen

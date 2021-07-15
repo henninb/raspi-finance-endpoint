@@ -1,4 +1,5 @@
 #scalar Timestamp
+scalar Long
 
 #schema {
 #    query: Query
@@ -6,10 +7,10 @@
 
 
 
-#enum AccountType {
-#    CREDIT
-#    DEBIT
-#}
+enum AccountType {
+    CREDIT
+    DEBIT
+}
 
 type Query {
     descriptions : [Description]

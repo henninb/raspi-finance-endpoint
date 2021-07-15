@@ -18,6 +18,7 @@ json_in/
 func_json_in/
 int_json_in/
 ssl/
+node_modules/
 
 ### File types ###
 *.bak

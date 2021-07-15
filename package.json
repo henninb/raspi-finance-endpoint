@@ -1,0 +1,13 @@
+{
+  "name": "raspi-finance-endpoint",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:BitExplorer/raspi-finance-endpoint.git",
+  "author": "Brian Henning <henninb@msn.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@graphql-codegen/cli": "^1.21.7",
+    "@graphql-codegen/kotlin": "^1.18.5",
+    "graphql": "^15.5.1"
+  }
+}
