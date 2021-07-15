@@ -4,17 +4,28 @@
 #    query: Query
 #}
 
+
+
+#enum AccountType {
+#    CREDIT
+#    DEBIT
+#}
+
 type Query {
     descriptions : [Description]
     categories : [Category]
+    account(accountNameOwner: String!) : Account
+#    accounts(accountType: AccountType) : [Account]
+    accounts : [Account]
     #mutation: Mutation
 }
 
-#enum Episode {
-#NEWHOPE
-#EMPIRE
-#JEDI
-#}
+type Account {
+    accountId: ID
+    activeStatus: Boolean
+    accountNameOwner: String
+    #accountType: AccountType
+}
 
 type Category {
     categoryId: ID

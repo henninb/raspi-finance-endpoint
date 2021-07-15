@@ -1,4 +1,4 @@
-package finance.controllers.resolver
+package finance.resolvers
 
 import finance.domain.Category
 import finance.services.CategoryService

@@ -1,14 +1,10 @@
 package finance.configurations
 
-import finance.controllers.resolver.CategoryQueryResolver
-import finance.controllers.resolver.DescriptionQueryResolver
-import graphql.Scalars
+import finance.resolvers.*
 import graphql.kickstart.tools.SchemaParser
-import graphql.schema.GraphQLScalarType
 import graphql.schema.GraphQLSchema
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.sql.Timestamp
 
 
 @Configuration
@@ -22,12 +18,17 @@ open class GraphqlValidationConfig {
     @Bean
     open fun graphqlSchema(
         descriptionQueryResolver: DescriptionQueryResolver,
-        categoryQueryResolver: CategoryQueryResolver
+        categoryQueryResolver: CategoryQueryResolver,
+        accountQueryResolver: AccountQueryResolver,
+        parameterQueryResolver: ParameterQueryResolver,
+        paymentQueryResolver: PaymentQueryResolver,
+        transactionQueryResolver: TransactionQueryResolver,
+        validationAmountQueryResolver: ValidationAmountQueryResolver
 
     ): GraphQLSchema {
         return SchemaParser.newParser()
-            .file("graphql/description.graphqls")
-            .resolvers(descriptionQueryResolver, categoryQueryResolver)
+            .file("graphql/schema.graphqls")
+            .resolvers(accountQueryResolver, descriptionQueryResolver, categoryQueryResolver, parameterQueryResolver, paymentQueryResolver,validationAmountQueryResolver,transactionQueryResolver)
             .build()
             .makeExecutableSchema()
     }
