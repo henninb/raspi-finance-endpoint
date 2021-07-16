@@ -21,8 +21,8 @@ plugins {
 apply from: 'test.gradle'
 
 repositories {
-    jcenter()
-    //mavenCentral()
+    //jcenter()
+    mavenCentral()
 //    maven {
 //        url "https://www.oracle.com/content/secure/maven/content"
 //        credentials {
@@ -121,7 +121,7 @@ dependencies {
     //Flyway
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
 
-    //excel
+    //Excel Files
     implementation("org.apache.poi:poi:${poiVersion}")
     implementation("org.apache.poi:poi-ooxml:${poiVersion}")
 
@@ -139,11 +139,15 @@ dependencies {
     //Used for transactional
     // implementation("org.aspectj:aspectjweaver:1.9.6")
 
+    // added 7/16/2021
+    //Security
+    implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
+    implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
 
-    //graphics
+    //Graphics
     implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")
 
-    //hibernate
+    //Hibernate
     implementation("org.hibernate:hibernate-core:${hibernateVersion}")
     implementation("org.hibernate.javax.persistence:hibernate-jpa-2.1-api:${hibernateJpaVersion}")
 
