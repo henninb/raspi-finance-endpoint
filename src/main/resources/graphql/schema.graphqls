@@ -5,11 +5,33 @@ scalar Long
 #    query: Query
 #}
 
-
-
 enum AccountType {
-    CREDIT
-    DEBIT
+    Credit
+    Debit
+    Undefined
+}
+
+enum TransactionState {
+    Cleared
+    Outstanding
+    Future
+    Undefined
+}
+
+enum ImageFormatType {
+    Jpeg
+    Png
+    Undefined
+}
+
+enum ReoccurringType {
+    Monthly
+    Annually
+    BiAnnually
+    FortNightly
+    Quarterly
+    Onetime
+    Undefined
 }
 
 type Query {
@@ -42,6 +64,14 @@ type Description {
     description: String!
 #    dateAdded: Timestamp
 #    dateUpdated: Timestamp
+}
+
+type Transaction {
+    transactionId: ID
+    guid: String
+    accountId: Int
+    accountType: AccountType
+    activeStatus: Boolean
 }
 
 #{

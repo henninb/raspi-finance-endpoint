@@ -7,8 +7,9 @@ data class Account(
 )
 
 enum class AccountType(val label: String) {
-      Credit("CREDIT"),
-      Debit("DEBIT");
+      Credit("Credit"),
+      Debit("Debit"),
+      Undefined("Undefined");
         
   companion object {
     @JvmStatic
@@ -30,6 +31,19 @@ data class Description(
     val description: String
 )
 
+enum class ImageFormatType(val label: String) {
+      Jpeg("Jpeg"),
+      Png("Png"),
+      Undefined("Undefined");
+        
+  companion object {
+    @JvmStatic
+    fun valueOfLabel(label: String): ImageFormatType? {
+      return values().find { it.label == label }
+    }
+  }
+}
+
 data class QueryAccountArgs(
     val accountNameOwner: String
 ) {
@@ -43,3 +57,42 @@ data class Query(
     val account: Account?,
     val accounts: Iterable<Account>?
 )
+
+enum class ReoccurringType(val label: String) {
+      Monthly("Monthly"),
+      Annually("Annually"),
+      BiAnnually("BiAnnually"),
+      FortNightly("FortNightly"),
+      Quarterly("Quarterly"),
+      Onetime("Onetime"),
+      Undefined("Undefined");
+        
+  companion object {
+    @JvmStatic
+    fun valueOfLabel(label: String): ReoccurringType? {
+      return values().find { it.label == label }
+    }
+  }
+}
+
+data class Transaction(
+    val transactionId: Any?,
+    val guid: String?,
+    val accountId: Int?,
+    val accountType: AccountType?,
+    val activeStatus: Boolean?
+)
+
+enum class TransactionState(val label: String) {
+      Cleared("Cleared"),
+      Outstanding("Outstanding"),
+      Future("Future"),
+      Undefined("Undefined");
+        
+  companion object {
+    @JvmStatic
+    fun valueOfLabel(label: String): TransactionState? {
+      return values().find { it.label == label }
+    }
+  }
+}
