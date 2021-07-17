@@ -1,5 +1,8 @@
-#scalar Timestamp
+# scalar Timestamp
 scalar Long
+scalar Date
+#scalar LocalTime
+scalar BigDecimal
 
 #schema {
 #    query: Query
@@ -45,22 +48,22 @@ type Query {
 
 type Account {
     accountId: ID
-    activeStatus: Boolean
-    accountNameOwner: String
+    activeStatus: Boolean!
+    accountNameOwner: String!
     #accountType: AccountType
 }
 
 type Category {
     categoryId: ID
-    activeStatus: Boolean
-    category: String
+    activeStatus: Boolean!
+    category: String!
 #    dateAdded: Timestamp
 #    dateUpdated: Timestamp
 }
 
 type Description {
     descriptionId: ID
-    activeStatus: Boolean
+    activeStatus: Boolean!
     description: String!
 #    dateAdded: Timestamp
 #    dateUpdated: Timestamp
@@ -68,10 +71,19 @@ type Description {
 
 type Transaction {
     transactionId: ID
-    guid: String
+    guid: String!
+    #accountId: Long
     accountId: Int
-    accountType: AccountType
-    activeStatus: Boolean
+    accountType: AccountType!
+    activeStatus: Boolean!
+    transactionDate: Date!
+    accountNameOwner: String!
+    description: String!
+    category: String!
+    Amount: BigDecimal!
+    transactionState: TransactionState!
+    reoccurringType: ReoccurringType!
+    notes: String!
 }
 
 #{
