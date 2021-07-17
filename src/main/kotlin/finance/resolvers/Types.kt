@@ -1,9 +1,12 @@
 package finance.resolvers
 
+import java.math.BigDecimal
+import java.sql.Date
+
 data class Account(
     val accountId: Any?,
-    val activeStatus: Boolean?,
-    val accountNameOwner: String?
+    val activeStatus: Boolean,
+    val accountNameOwner: String
 )
 
 enum class AccountType(val label: String) {
@@ -21,13 +24,13 @@ enum class AccountType(val label: String) {
 
 data class Category(
     val categoryId: Any?,
-    val activeStatus: Boolean?,
-    val category: String?
+    val activeStatus: Boolean,
+    val category: String
 )
 
 data class Description(
     val descriptionId: Any?,
-    val activeStatus: Boolean?,
+    val activeStatus: Boolean,
     val description: String
 )
 
@@ -77,10 +80,18 @@ enum class ReoccurringType(val label: String) {
 
 data class Transaction(
     val transactionId: Any?,
-    val guid: String?,
+    val guid: String,
     val accountId: Int?,
-    val accountType: AccountType?,
-    val activeStatus: Boolean?
+    val accountType: AccountType,
+    val activeStatus: Boolean,
+    val transactionDate: Date,
+    val accountNameOwner: String,
+    val description: String,
+    val category: String,
+    val Amount: BigDecimal,
+    val transactionState: TransactionState,
+    val reoccurringType: ReoccurringType,
+    val notes: String
 )
 
 enum class TransactionState(val label: String) {

@@ -118,3 +118,8 @@ http://logback.qos.ch/translator/asGroovy.html
 ## graphql
 http://hornsup:8080/graphiql
 npx graphql-codegen
+curl -g \
+-X POST \
+-H "Content-Type: application/json" \
+-d '{"query":"query{descriptions { descriptionId description }}"}' \
+http://hornsup:8080/graphql

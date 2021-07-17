@@ -11,6 +11,7 @@ source env.bootrun
 source env.secrets
 set +a
 
+echo npx graphql-codegen
 ./gradlew clean build bootRun -x test
 
 exit 0

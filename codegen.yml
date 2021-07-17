@@ -5,11 +5,12 @@ generates:
     plugins:
       - kotlin
     config:
-      strictScalars: true
+      #strictScalars: true
       withTypes: true
       package: finance.resolvers
       scalars:
         Long: Long
+        Date: Date
   # src/main/kotlin/finance/resolvers/Resolvers.kt:
   #   config:
   #     package: finance.resolvers
