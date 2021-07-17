@@ -1,16 +1,15 @@
 package finance.configurations
 
 import finance.resolvers.*
+import graphql.Scalars
 import graphql.kickstart.tools.SchemaParser
-import graphql.language.StringValue
+import graphql.kickstart.tools.SchemaParserOptions
 import graphql.scalar.GraphqlIntCoercing
+import graphql.scalar.GraphqlLongCoercing
 import graphql.schema.*
-import org.apache.groovy.datetime.extensions.DateTimeExtensions.toLocalDateTime
+import graphql.schema.idl.RuntimeWiring
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 
 @Configuration
@@ -77,9 +76,10 @@ open class GraphqlConfig {
 //        })
 //        .build()
 
-//val GraphQLLong: GraphQLScalarType = GraphQLScalarType.newScalar()
-//    .name("Long").description("Long Scalar").coercing(GraphqlIntCoercing()).build()
-//
+
+ private val graphQLLong: GraphQLScalarType = GraphQLScalarType.newScalar()
+    .name("Long").description("Long Scalar").coercing(GraphqlLongCoercing()).build()
+
 //    val graphqlLocalDateType = GraphQLScalarType("LocalDate",
 //        " ISO date format without an offset, such as '2011-12-03' ",
 //        object : Coercing<LocalDate, String> {
@@ -154,6 +154,27 @@ open class GraphqlConfig {
 //            }).build()
 //    }
 
+//    @Bean
+//    open fun schemaParser(): SchemaParser? {
+//
+//        //Chose your SchemaParserOptions as documented here: https://www.graphql-java-kickstart.com/tools/schema-parser-options/
+//        val schemaParserOptions = SchemaParserOptions.newOptions() //
+//            .preferGraphQLResolver(true) //customize your options
+//            .build()
+//        return SchemaParser.newParser() //SchemaParserBuilder
+//            .file("schema.graphqls") //Pick your schema files
+//            .scalars(Scalars.GraphQLLong) //Set your custom scalars
+//            .options(schemaParserOptions) //Set your schema parser options
+//            .build()
+//    }
+
+
+    @Bean
+     open fun buildRuntimeWiring() : RuntimeWiring {
+        return RuntimeWiring.newRuntimeWiring()
+            .scalar(graphQLLong).build()
+    }
+
     @Bean
     open fun graphqlSchema(
         descriptionQueryResolver: DescriptionQueryResolver,
@@ -165,10 +186,15 @@ open class GraphqlConfig {
         validationAmountQueryResolver: ValidationAmountQueryResolver
 
     ): GraphQLSchema {
+        val schemaParserOptions = SchemaParserOptions.newOptions() //
+            .preferGraphQLResolver(true) //customize your options
+            .build()
         return SchemaParser.newParser()
             .file("graphql/schema.graphqls")
             .resolvers(accountQueryResolver, descriptionQueryResolver, categoryQueryResolver, parameterQueryResolver, paymentQueryResolver,validationAmountQueryResolver,transactionQueryResolver)
-            .scalars()
+            .scalars(graphQLLong)
+            //.scalars(Scalars.GraphQLLong)
+            .options(schemaParserOptions)
             .build()
             .makeExecutableSchema()
     }

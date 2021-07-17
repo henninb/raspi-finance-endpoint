@@ -1,7 +1,6 @@
-# scalar Timestamp
+scalar Timestamp
 scalar Long
 scalar Date
-#scalar LocalTime
 scalar BigDecimal
 
 #schema {
@@ -43,16 +42,24 @@ type Query {
     account(accountNameOwner: String!) : Account
 #    accounts(accountType: AccountType) : [Account]
     accounts : [Account]
+    transactions(accountNameOwner: String!) : [Transaction]
     #mutation: Mutation
 }
 
+# complete 7/17/2021
 type Account {
     accountId: ID
     activeStatus: Boolean!
     accountNameOwner: String!
-    #accountType: AccountType
+    accountType: AccountType!
+    moniker: String
+    #outstanding: BigDecimal
+    #cleared: BigDecimal
+    #future: BigDecimal
+    #dateClosed: Date
 }
 
+# complete 7/17/2021
 type Category {
     categoryId: ID
     activeStatus: Boolean!
@@ -61,6 +68,7 @@ type Category {
 #    dateUpdated: Timestamp
 }
 
+# complete 7/17/2021
 type Description {
     descriptionId: ID
     activeStatus: Boolean!
@@ -69,21 +77,51 @@ type Description {
 #    dateUpdated: Timestamp
 }
 
+# complete 7/17/2021
 type Transaction {
     transactionId: ID
     guid: String!
-    #accountId: Long
-    accountId: Int
+#    accountId: Long
     accountType: AccountType!
     activeStatus: Boolean!
-    transactionDate: Date!
+#    #transactionDate: Date!
+    transactionDate: String!
     accountNameOwner: String!
     description: String!
     category: String!
-    Amount: BigDecimal!
+    #amount: BigDecimal!
     transactionState: TransactionState!
     reoccurringType: ReoccurringType!
     notes: String!
+}
+
+# complete 7/17/2021
+type Payment {
+    paymentId: ID
+    accountNameOwner: String!
+    activeStatus: Boolean!
+    #transactionDate: Date!
+    #Amount: BigDecimal!
+    guidSource: String
+    guidDestination: String
+}
+
+# complete 7/17/2021
+type Parameter {
+    parameterId: ID
+    parameterName: String!
+    parameterValue: String!
+    activeStatus: Boolean!
+}
+
+# complete 7/17/2021
+type ValidationAmount {
+    validationAmountId: ID
+    #accountId: Long
+    #validationDate: Timestamp
+    activeStatus: Boolean!
+    transactionState: TransactionState
+    #amount: BigDecimal!
 }
 
 #{

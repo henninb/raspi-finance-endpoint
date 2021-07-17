@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class ReoccurringType(val type: String) {
+enum class ReoccurringType(val label: String) {
     @JsonProperty("monthly")
     Monthly("monthly"),
 
@@ -26,7 +26,7 @@ enum class ReoccurringType(val type: String) {
     @JsonProperty("undefined")
     Undefined("undefined");
 
-    fun value(): String = type
+    fun value(): String = label
     override fun toString(): String = name.lowercase()
 
     companion object {

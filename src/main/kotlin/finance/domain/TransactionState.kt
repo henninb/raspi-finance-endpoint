@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class TransactionState(val state: String) {
+enum class TransactionState(val label: String) {
     @JsonProperty("cleared")
     Cleared("cleared"),
 
@@ -17,11 +17,11 @@ enum class TransactionState(val state: String) {
     @JsonProperty("undefined")
     Undefined("undefined");
 
-    fun value(): String = state
+    fun value(): String = label
     override fun toString(): String = name.lowercase()
 
     companion object {
         private val VALUES = values()
-        fun getByValue(state: String) = VALUES.firstOrNull { it.state == state }
+        fun getByValue(label: String) = VALUES.firstOrNull { it.label == label }
     }
 }
