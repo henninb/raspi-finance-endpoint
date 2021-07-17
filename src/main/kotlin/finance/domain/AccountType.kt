@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 //@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 //@JsonFormat(default = AccountType.Undefined)
 //@SerializedName(defaultValue = AccountType.Undefined)
-enum class AccountType(val type: String) {
+enum class AccountType(val label: String) {
     @JsonProperty("credit")
     Credit("credit"),
 
@@ -34,12 +34,5 @@ enum class AccountType(val type: String) {
 //    }
 
     companion object {
-        //private val VALUES = values();
-        //fun getByValue(type: String) = VALUES.firstOrNull { it.type == type }
-        //fun from(type: String?): AccountType = values().find { it.name == type } ?: Undefined
-        //operator fun invoke(type: String?): AccountType = values().find { it.name == type } ?: Undefined
-        //fun valueOf(type: String): AccountType? = values().find { it.type == type }
-        //private val map = AccountType.values().associateBy(AccountType::type)
-        //fun valueOf(type: String): AccountType = values().find { it.name == type } ?: Undefined
     }
 }

@@ -118,8 +118,14 @@ http://logback.qos.ch/translator/asGroovy.html
 ## graphql
 http://hornsup:8080/graphiql
 npx graphql-codegen
-curl -g \
--X POST \
--H "Content-Type: application/json" \
+
+curl -g -X POST -H "Content-Type: application/json" \
 -d '{"query":"query{descriptions { descriptionId description }}"}' \
 http://hornsup:8080/graphql
+
+curl -k -g -X POST -H "Content-Type: application/json" \
+-d '{"query":"query{accounts { accountId accountNameOwner }}"}' \
+https://hornsup:8080/graphql | jq
+
+curl -k -g -X POST -H "Content-Type: application/json" \
+-d '{"query":"query{transactions(accountNameOwner: \"chase_kari\") { transactionId accountNameOwner transactionDate description  activeStatus}}"}'  https://hornsup:8080/graphql | jq
