@@ -36,9 +36,9 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
     @PostMapping("/insert", produces = ["application/json"])
-    fun insertCategory(@RequestBody category: Category): ResponseEntity<String> {
+    fun insertCategory(@RequestBody category: Category): ResponseEntity<Category> {
         val categoryResponse = categoryService.insertCategory(category)
-        return ResponseEntity.ok(mapper.writeValueAsString(categoryResponse))
+        return ResponseEntity.ok(categoryResponse)
     }
 
     @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])

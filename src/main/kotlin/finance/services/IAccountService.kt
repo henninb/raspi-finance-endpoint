@@ -25,5 +25,5 @@ interface IAccountService {
 
     fun updateAccount(account: Account): Account
 
-    fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean
+    fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account
 }

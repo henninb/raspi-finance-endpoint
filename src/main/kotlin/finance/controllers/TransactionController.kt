@@ -70,10 +70,10 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun updateTransaction(
         @PathVariable("guid") guid: String,
         @RequestBody transaction: Map<String, Any>
-    ): ResponseEntity<String> {
+    ): ResponseEntity<Transaction> {
         val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val transactionResponse = transactionService.updateTransaction(toBePatchedTransaction)
-        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
+        return ResponseEntity.ok(transactionResponse)
 //        val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
 //        if (updateStatus) {
 //            return ResponseEntity.ok("transaction updated")
@@ -90,43 +90,43 @@ class TransactionController @Autowired constructor(private var transactionServic
     fun updateTransactionState(
         @PathVariable("guid") guid: String,
         @PathVariable("transactionStateValue") transactionStateValue: String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<Transaction> {
         val newTransactionStateValue = transactionStateValue.lowercase()
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         val transactionResponse = transactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
-        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
+        return ResponseEntity.ok(transactionResponse)
     }
 
     //TODO: 7/1/2021 - Return the transaction from the database
     //TODO: 6/28/2021 - Should return a 201 CREATED?
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
+    fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
         logger.info("insert - transaction.transactionDate: ${mapper.writeValueAsString(transaction)}")
         val transactionResponse = transactionService.insertTransaction(transaction)
-        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
+        return ResponseEntity.ok(transactionResponse)
     }
 
     //TODO: 7/1/2021 - Return the transaction from the database
     //TODO: 6/28/2021 - Should return a 201 CREATED?
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/future/insert' -X POST -d ''
     @PostMapping("/future/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertFutureTransaction(@RequestBody transaction: Transaction): ResponseEntity<String> {
+    fun insertFutureTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
         val futureTransaction = transactionService.createFutureTransaction(transaction)
         logger.info("insert future - futureTransaction.transactionDate: $futureTransaction")
         val transactionResponse = transactionService.insertTransaction(futureTransaction)
-        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
+        return ResponseEntity.ok(transactionResponse)
     }
 
     // change the account name owner of a given transaction
     @PutMapping("/update/account", consumes = ["application/json"], produces = ["application/json"])
-    fun changeTransactionAccountNameOwner(@RequestBody payload: Map<String, String>): ResponseEntity<String> {
+    fun changeTransactionAccountNameOwner(@RequestBody payload: Map<String, String>): ResponseEntity<Transaction> {
         //TODO: need to complete action
         logger.info("value of accountNameOwner: " + payload["accountNameOwner"])
         logger.info("value of guid: " + payload["guid"])
         val transactionResponse = transactionService.changeAccountNameOwner(payload)
         logger.info("transaction account updated")
-        return ResponseEntity.ok(mapper.writeValueAsString(transactionResponse))
+        return ResponseEntity.ok(transactionResponse)
     }
 
     // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
