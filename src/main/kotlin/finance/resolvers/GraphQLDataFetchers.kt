@@ -12,11 +12,6 @@ import java.util.stream.Collectors
 
 @Component
 class GraphQLDataFetchers(private val descriptionService: DescriptionService) {
-//class GraphQLDataFetcher {
-
-//    @Autowired
-//    private val descriptionService: DescriptionService? = null
-
     val descriptions: DataFetcher<List<Description>>
         get() = DataFetcher<List<Description>> { _x ->
             val listEntities: List<Description> = descriptionService.fetchAllDescriptions()

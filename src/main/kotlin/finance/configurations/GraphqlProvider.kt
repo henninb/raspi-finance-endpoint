@@ -8,7 +8,6 @@ import graphql.schema.idl.SchemaParser
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 import com.google.common.io.Resources
-import graphql.Scalars
 import graphql.execution.AsyncExecutionStrategy
 import graphql.execution.AsyncSerialExecutionStrategy
 import graphql.scalars.ExtendedScalars
@@ -17,17 +16,10 @@ import graphql.schema.GraphQLScalarType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
 
-
 @Component
 class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
-
-////     private val graphQLLong: GraphQLScalarType = GraphQLScalarType.newScalar()
-////    .name("Long").description("Long Scalar").coercing(GraphqlLongCoercing()).build()
-
-
 //    @Value("\${classpath:schema.graphql}")
 //    private lateinit var schema: Resource
-
 
     @Bean
     fun graphql(): GraphQL {
@@ -45,8 +37,6 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
             .scalar(ExtendedScalars.GraphQLLong)
             .scalar(ExtendedScalars.GraphQLBigDecimal)
             .scalar(ExtendedScalars.Date)
-//            .scalar(Scalars.GraphQLLong)
-//            .scalar(Scalars.GraphQLBigDecimal)
             .build()
         //3. Build GraphQL instance
         val schema = SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring)

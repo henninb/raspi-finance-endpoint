@@ -105,6 +105,7 @@ dependencies {
     //graphql
 //    implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:${graphqlSpringVersion}")
 //    implementation("com.graphql-java-kickstart:graphiql-spring-boot-starter:${graphqlSpringVersion}")
+
     implementation 'com.graphql-java:graphql-java-extended-scalars:16.0.1'
     implementation 'com.graphql-java:graphql-java:16.2'
     implementation 'com.graphql-java:graphql-java-spring-boot-starter-webmvc:2.0'
