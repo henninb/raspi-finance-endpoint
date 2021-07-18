@@ -110,6 +110,8 @@ dependencies {
     implementation("com.graphql-java-kickstart:graphql-java-tools:11.0.1")
     implementation("com.graphql-java:graphql-java-extended-validation:15.0.1")
 
+    implementation 'com.graphql-java:graphql-java-extended-scalars:16.0.0'
+
     //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
 
