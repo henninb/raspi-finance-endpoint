@@ -118,7 +118,7 @@ open class AccountService(
     }
 
     @Timed
-    override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Boolean {
+    override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account {
         val newAccountOptional = accountRepository.findByAccountNameOwner(newAccountNameOwner)
         val oldAccountOptional = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
 
@@ -146,7 +146,7 @@ open class AccountService(
             transactionRepository.saveAndFlush(transaction)
         }
         accountRepository.deleteByAccountNameOwner(oldAccountNameOwner)
-        return true
+        return newlySavedAccount
     }
 
     companion object {

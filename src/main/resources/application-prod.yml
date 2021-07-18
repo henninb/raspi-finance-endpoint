@@ -6,7 +6,7 @@ server:
     key-store-type: pkcs12
     key-alias: hornsup-raspi-finance
     key-password: ${SSL_KEY_PASSWORD}
-    enabled: false
+    enabled: true
     enabled-protocols: TLSv1.2
 spring:
   application:

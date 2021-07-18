@@ -13,11 +13,11 @@ import java.util.*
 class ValidationAmountController(private var validationAmountService: ValidationAmountService) : BaseController() {
 
     @PostMapping("/insert/{accountNameOwner}", produces = ["application/json"])
-    fun insertValidationAmount(@RequestBody validationAmount: ValidationAmount, @PathVariable("accountNameOwner") accountNameOwner : String) : ResponseEntity<String> {
+    fun insertValidationAmount(@RequestBody validationAmount: ValidationAmount, @PathVariable("accountNameOwner") accountNameOwner : String) : ResponseEntity<ValidationAmount> {
         val validationAmountResponse = validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
         logger.info("validationAmount inserted")
         logger.info(mapper.writeValueAsString(validationAmountResponse))
-        return ResponseEntity.ok(mapper.writeValueAsString(validationAmountResponse))
+        return ResponseEntity.ok(validationAmountResponse)
     }
 
     //curl -k https://hornsup:8080/validation/amount/select/amazon_brian

@@ -73,9 +73,9 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
     @PostMapping("/insert", produces = ["application/json"])
-    fun insertAccount(@RequestBody account: Account): ResponseEntity<String> {
+    fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
         val accountResponse = accountService.insertAccount(account)
-        return ResponseEntity.ok(mapper.writeValueAsString(accountResponse))
+        return ResponseEntity.ok(accountResponse)
     }
 
     //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8080/account/delete/test_brian'
@@ -95,10 +95,10 @@ class AccountController @Autowired constructor(private var accountService: Accou
     fun updateAccount(
         @PathVariable("accountNameOwner") guid: String,
         @RequestBody account: Map<String, Any>
-    ): ResponseEntity<String> {
+    ): ResponseEntity<Account> {
         val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
         val accountResponse = accountService.updateAccount(accountToBeUpdated)
-        return ResponseEntity.ok(mapper.writeValueAsString(accountResponse))
+        return ResponseEntity.ok(accountResponse)
     }
 
     //curl -k -X PUT 'https://hornsup:8080/account/rename?old=gap_kari&new=oldnavy_kari'
@@ -107,8 +107,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,
         @RequestParam("new") newAccountNameOwner: String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<Account> {
         val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
-        return ResponseEntity.ok(mapper.writeValueAsString(accountResponse))
+        return ResponseEntity.ok(accountResponse)
     }
 }
