@@ -103,14 +103,12 @@ dependencies {
     implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
     //graphql
-    //implementation("com.graphql-java:graphql-java:${graphqlJava}")
-    implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:${graphqlSpringVersion}")
-    implementation("com.graphql-java-kickstart:graphiql-spring-boot-starter:${graphqlSpringVersion}")
-    implementation("com.graphql-java-kickstart:altair-spring-boot-starter:${graphqlSpringVersion}")
-    implementation("com.graphql-java-kickstart:graphql-java-tools:11.0.1")
-    implementation("com.graphql-java:graphql-java-extended-validation:15.0.1")
-
-    implementation 'com.graphql-java:graphql-java-extended-scalars:16.0.0'
+//    implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:${graphqlSpringVersion}")
+//    implementation("com.graphql-java-kickstart:graphiql-spring-boot-starter:${graphqlSpringVersion}")
+    implementation 'com.graphql-java:graphql-java-extended-scalars:16.0.1'
+    implementation 'com.graphql-java:graphql-java:16.2'
+    implementation 'com.graphql-java:graphql-java-spring-boot-starter-webmvc:2.0'
+    implementation 'com.google.guava:guava:30.1.1-jre'
 
     //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")

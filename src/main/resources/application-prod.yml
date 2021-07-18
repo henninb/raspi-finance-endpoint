@@ -65,17 +65,6 @@ spring:
     locations: classpath:db/migration/prod
     validate-on-migrate: true
 
-  # ===============================
-  # = GraphQL
-  # ===============================
-graphql:
-  servlet:
-    enabled: true
-    mapping: /graphql
-    cors-enabled: true
-    exception-handlers-enabled: false
-    async-mode-enabled: true
-
 # ===============================
 # = Custom
 # ===============================

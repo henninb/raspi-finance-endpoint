@@ -1,4 +1,4 @@
-scalar Timestamp
+#scalar Timestamp
 scalar Long
 scalar Date
 scalar BigDecimal
@@ -48,20 +48,20 @@ type Query {
 
 # complete 7/17/2021
 type Account {
-    accountId: ID
+    accountId: Long
     activeStatus: Boolean!
     accountNameOwner: String!
     accountType: AccountType!
     moniker: String
-    #outstanding: BigDecimal
-    #cleared: BigDecimal
-    #future: BigDecimal
+    outstanding: BigDecimal
+    cleared: BigDecimal
+    future: BigDecimal
     #dateClosed: Date
 }
 
 # complete 7/17/2021
 type Category {
-    categoryId: ID
+    categoryId: Long
     activeStatus: Boolean!
     category: String!
 #    dateAdded: Timestamp
@@ -70,7 +70,7 @@ type Category {
 
 # complete 7/17/2021
 type Description {
-    descriptionId: ID
+    descriptionId: Long
     activeStatus: Boolean!
     description: String!
 #    dateAdded: Timestamp
@@ -79,9 +79,9 @@ type Description {
 
 # complete 7/17/2021
 type Transaction {
-    transactionId: ID
+    transactionId: Long
     guid: String!
-#    accountId: Long
+    accountId: Long
     accountType: AccountType!
     activeStatus: Boolean!
 #    #transactionDate: Date!
@@ -89,7 +89,7 @@ type Transaction {
     accountNameOwner: String!
     description: String!
     category: String!
-    #amount: BigDecimal!
+    amount: BigDecimal!
     transactionState: TransactionState!
     reoccurringType: ReoccurringType!
     notes: String!
@@ -97,18 +97,18 @@ type Transaction {
 
 # complete 7/17/2021
 type Payment {
-    paymentId: ID
+    paymentId: Long
     accountNameOwner: String!
     activeStatus: Boolean!
     #transactionDate: Date!
-    #Amount: BigDecimal!
+    amount: BigDecimal!
     guidSource: String
     guidDestination: String
 }
 
 # complete 7/17/2021
 type Parameter {
-    parameterId: ID
+    parameterId: Long
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean!
@@ -116,12 +116,12 @@ type Parameter {
 
 # complete 7/17/2021
 type ValidationAmount {
-    validationAmountId: ID
-    #accountId: Long
+    validationAmountId: Long
+    accountId: Long
     #validationDate: Timestamp
     activeStatus: Boolean!
     transactionState: TransactionState
-    #amount: BigDecimal!
+    amount: BigDecimal!
 }
 
 #{

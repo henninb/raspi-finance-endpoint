@@ -11,7 +11,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 
 @Configuration
-@EnableWebSecurity
+//@EnableWebSecurity
 open class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     // TODO: disable security temporarily
     @Throws(java.lang.Exception::class)
