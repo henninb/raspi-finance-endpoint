@@ -6,6 +6,7 @@ import graphql.kickstart.tools.SchemaParser
 import graphql.kickstart.tools.SchemaParserOptions
 import graphql.scalar.GraphqlIntCoercing
 import graphql.scalar.GraphqlLongCoercing
+import graphql.scalars.ExtendedScalars
 import graphql.schema.*
 import graphql.schema.idl.RuntimeWiring
 import org.springframework.context.annotation.Bean
@@ -172,7 +173,7 @@ open class GraphqlConfig {
     @Bean
      open fun buildRuntimeWiring() : RuntimeWiring {
         return RuntimeWiring.newRuntimeWiring()
-            .scalar(graphQLLong).build()
+            .scalar(ExtendedScalars.GraphQLLong).build()
     }
 
     @Bean
