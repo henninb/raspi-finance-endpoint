@@ -220,6 +220,8 @@ open class TransactionService(
 
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
+            val account = accountService.findByAccountNameOwner(transaction.accountNameOwner).get()
+            transaction.accountId = account.accountId
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
             return transactionRepository.saveAndFlush(transaction)
