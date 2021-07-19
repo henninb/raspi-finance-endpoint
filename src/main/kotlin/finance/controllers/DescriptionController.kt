@@ -21,13 +21,6 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         return ResponseEntity.ok(descriptions)
     }
 
-    //curl -k --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' 'https://hornsup:8080/description/insert'
-    @PostMapping("/insert", produces = ["application/json"])
-    fun insertDescription(@RequestBody description: Description): ResponseEntity<Description> {
-        val descriptionResponse = descriptionService.insertDescription(description)
-        return ResponseEntity.ok(descriptionResponse)
-    }
-
     //curl -k 'https://localhost:8080/description/select/zzz'
     @GetMapping("/select/{description_name}")
     fun selectDescriptionName(@PathVariable("description_name") descriptionName: String): ResponseEntity<String> {
@@ -36,6 +29,13 @@ class DescriptionController(private var descriptionService: DescriptionService) 
             return ResponseEntity.ok(mapper.writeValueAsString(descriptionOptional.get()))
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "description not found for: $descriptionName")
+    }
+
+    //curl -k --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' 'https://hornsup:8080/description/insert'
+    @PostMapping("/insert", produces = ["application/json"])
+    fun insertDescription(@RequestBody description: Description): ResponseEntity<Description> {
+        val descriptionResponse = descriptionService.insertDescription(description)
+        return ResponseEntity.ok(descriptionResponse)
     }
 
     @DeleteMapping("/delete/{descriptionName}", produces = ["application/json"])

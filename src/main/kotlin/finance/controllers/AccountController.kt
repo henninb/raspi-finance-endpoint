@@ -19,7 +19,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
     @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
-        //TODO: 6/27/2021 - modify to 1 call from 3
+        //TODO: 6/27/2021 - need to modify to 1 call from 3
         val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
         val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
         val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
@@ -41,8 +41,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
         val accountNameOwners = accountService.findAccountsThatRequirePayment()
         if (accountNameOwners.isEmpty()) {
-            logger.info("no accountNameOwners found.")
-            //throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accountNameOwners.")
+            logger.info("no accountNameOwners were found.")
         }
         return ResponseEntity.ok(accountNameOwners)
     }

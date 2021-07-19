@@ -15,6 +15,7 @@ import graphql.scalars.ExtendedScalars
 import graphql.schema.GraphQLScalarType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.Resource
+import java.io.File
 
 @Component
 class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
@@ -24,6 +25,9 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
     @Bean
     fun graphql(): GraphQL {
         //1. Parse schema
+
+        //val url = File(GraphqlProvider::class.java.getResource("/graphql").toURI())
+
         //val schemaParser = SchemaParser()
         val url = Resources.getResource("graphql/schema.graphqls")
         val sdl = Resources.toString(url, Charsets.UTF_8)
@@ -33,18 +37,14 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
         val runtimeWiring = RuntimeWiring.newRuntimeWiring()
             .type("Query") {
                 it.dataFetcher("descriptions", graphQLDataFetcher.descriptions)
-            }
-            .type("Query") {
+                it.dataFetcher("description", graphQLDataFetcher.description)
                 it.dataFetcher("accounts", graphQLDataFetcher.accounts)
-            }
-            .type("Query") {
                 it.dataFetcher("categories", graphQLDataFetcher.categories)
-            }
-            .type("Query") {
                 it.dataFetcher("payment", graphQLDataFetcher.payment())
-            }
-            .type("Query") {
                 it.dataFetcher("account", graphQLDataFetcher.account())
+            }
+            .type("Mutation") {
+                it.dataFetcher("createDescription", graphQLDataFetcher.createDescription())
             }
             .scalar(ExtendedScalars.GraphQLLong)
             .scalar(ExtendedScalars.GraphQLBigDecimal)
