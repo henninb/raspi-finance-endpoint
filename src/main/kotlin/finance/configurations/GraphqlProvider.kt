@@ -34,6 +34,18 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
             .type("Query") {
                 it.dataFetcher("descriptions", graphQLDataFetcher.descriptions)
             }
+            .type("Query") {
+                it.dataFetcher("accounts", graphQLDataFetcher.accounts)
+            }
+            .type("Query") {
+                it.dataFetcher("categories", graphQLDataFetcher.categories)
+            }
+            .type("Query") {
+                it.dataFetcher("payment", graphQLDataFetcher.payment())
+            }
+            .type("Query") {
+                it.dataFetcher("account", graphQLDataFetcher.account())
+            }
             .scalar(ExtendedScalars.GraphQLLong)
             .scalar(ExtendedScalars.GraphQLBigDecimal)
             .scalar(ExtendedScalars.Date)
