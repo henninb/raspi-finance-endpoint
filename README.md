@@ -119,13 +119,18 @@ http://logback.qos.ch/translator/asGroovy.html
 http://hornsup:8080/graphiql
 npx graphql-codegen
 
-curl -g -X POST -H "Content-Type: application/json" \
--d '{"query":"query{descriptions { descriptionId description }}"}' \
-http://hornsup:8080/graphql
+curl -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions { descriptionId description }}"}' http://hornsup:8080/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" \
--d '{"query":"query{accounts { accountId accountNameOwner }}"}' \
-https://hornsup:8080/graphql | jq
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{accounts { accountId accountNameOwner }}"}' https://hornsup:8080/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" \
--d '{"query":"query{transactions(accountNameOwner: \"chase_kari\") { transactionId accountNameOwner transactionDate description  activeStatus}}"}'  https://hornsup:8080/graphql | jq
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{transactions(accountNameOwner: \"chase_kari\") { transactionId accountNameOwner transactionDate description  activeStatus}}"}' https://hornsup:8080/graphql
+
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{description(descriptionName: \"testing\") { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
+
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{createDescription(description: {description: \"testing}\"}) { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
+
+
+curl -k \
+  -X POST \
+  -H "Content-Type: application/json" \
+  --data '{ "query": "mutation Add { createDescription(description: {description: \"car\"}){descriptionId}}" }' https://hornsup:8080/graphql

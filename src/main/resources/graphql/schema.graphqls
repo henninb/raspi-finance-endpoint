@@ -3,10 +3,6 @@ scalar Long
 scalar Date
 scalar BigDecimal
 
-#schema {
-#    query: Query
-#}
-
 enum AccountType {
     Credit
     Debit
@@ -38,12 +34,17 @@ enum ReoccurringType {
 
 type Query {
     descriptions : [Description]
+    description (descriptionName: String!) : Description
     categories : [Category]
     account(accountNameOwner: String!) : Account
 #    accounts(accountType: AccountType) : [Account]
     accounts : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
     #mutation: Mutation
+}
+
+type Mutation {
+    createDescription( description: String) : Description
 }
 
 # complete 7/17/2021
