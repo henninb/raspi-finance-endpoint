@@ -1,6 +1,7 @@
 package finance.services
 
 import finance.domain.*
+import finance.helpers.AccountBuilder
 import finance.helpers.CategoryBuilder
 import finance.helpers.ReceiptImageBuilder
 import finance.helpers.TransactionBuilder
@@ -119,6 +120,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 0
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
         1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.of(new Category())
         1 * transactionRepositoryMock.saveAndFlush({ Transaction entity ->
             assert entity.transactionDate == transaction.transactionDate
@@ -393,9 +395,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
         then:
         accounts.size() == 3
         1 * accountRepositoryMock.updateTotalsForAllAccounts()
-        1 * accountRepositoryMock.updateTotalsForClearedTransactionState()
-        1 * accountRepositoryMock.updateTotalsForOutstandingTransactionState()
-        1 * accountRepositoryMock.updateTotalsForFutureTransactionState()
+//        1 * accountRepositoryMock.updateTotalsForClearedTransactionState()
+//        1 * accountRepositoryMock.updateTotalsForOutstandingTransactionState()
+//        1 * accountRepositoryMock.updateTotalsForFutureTransactionState()
         //1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> [account1, account2, account3]  //TODO: why is this not triggered?
         1 * accountRepositoryMock.findByActiveStatusAndAccountTypeOrderByAccountNameOwner(true, AccountType.Credit) >> [account1, account2, account3]
         1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc('test1', true, [TransactionState.Cleared.toString()]) >> [transaction1, transaction2, transaction3, transaction4, transaction5, transaction6]

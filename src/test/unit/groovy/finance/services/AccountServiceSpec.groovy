@@ -115,7 +115,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         then:
         constraintViolations.size() == 1
         ValidationException ex = thrown(ValidationException)
-        ex.message.contains('Cannot insert account as there is a constraint violation')
+        ex.message.contains('Cannot insert record because of constraint violation(s)')
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * validatorMock.validate(account) >> constraintViolations
         1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
