@@ -119,7 +119,7 @@ http://logback.qos.ch/translator/asGroovy.html
 http://hornsup:8080/graphiql
 npx graphql-codegen
 
-curl -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions { descriptionId description }}"}' http://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions { descriptionId description }}"}' https://hornsup:8080/graphql
 
 curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{accounts { accountId accountNameOwner }}"}' https://hornsup:8080/graphql
 
@@ -127,11 +127,9 @@ curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{trans
 
 curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{description(descriptionName: \"testing\") { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{createDescription(description: {description: \"testing}\"}) { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
-
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{createDescription(description: \"testing}\"}) { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
 
 # https://stackoverflow.com/questions/55113542/how-to-have-graphql-enum-resolve-strings
-curl -k \
-  -X POST \
-  -H "Content-Type: application/json" \
-  --data '{ "query": "mutation Add { createDescription(description: {description: \"car\"}){descriptionId}}" }' https://hornsup:8080/graphql
+
+mutation { createDescription(description: "car") {descriptionId} }
+mutation { createPayment(payment: {accountNameOwner: "test", activeStatus: true, amount: 0.0, transactionDate:"2021-07-21"}) {paymentId} }
