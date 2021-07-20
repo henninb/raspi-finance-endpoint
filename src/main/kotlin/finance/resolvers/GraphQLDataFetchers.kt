@@ -43,19 +43,14 @@ class GraphQLDataFetchers(
 //        }
 //    }
 
-//    fun createPayment(): DataFetcher<Payment> {
-//        return DataFetcher<Payment> {
-//            val raw = it.arguments["payment"]
-//            val paymentInput = mapper.convertValue(raw, PaymentInput::class.java)
-//            val paymentResponse = paymentService.insertPayment(paymentInput)
-//            return paymentResponse
-//        }
-//
-//     //   env ->
-////                    val raw = env.arguments["payment"]
-////                    val songInput = mapper.convertValue(raw, SongInput::class.java)
-////                    return@dataFetcher musicService.updateSong(songInput)
-//    }
+    fun createPayment(): DataFetcher<Payment> {
+        return DataFetcher<Payment> {
+            val raw = it.arguments["payment"]
+            val paymentInput = mapper.convertValue(raw, Payment::class.java)
+            val paymentResponse = paymentService.insertPayment(paymentInput)
+            paymentResponse
+        }
+    }
 
     fun createCategory(): DataFetcher<Category> {
         return DataFetcher<Category> {

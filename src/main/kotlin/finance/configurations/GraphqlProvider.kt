@@ -46,12 +46,7 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
             .type("Mutation") {
                 it.dataFetcher("createDescription", graphQLDataFetcher.createDescription())
                 it.dataFetcher("createCategory", graphQLDataFetcher.createCategory())
-                //it.dataFetcher("createPayment")
-//                it.dataFetcher("createPayment") {  env ->
-//                    val raw = env.arguments["payment"]
-//                    val songInput = mapper.convertValue(raw, SongInput::class.java)
-//                    return@dataFetcher musicService.updateSong(songInput)
-//                }
+                it.dataFetcher("createPayment", graphQLDataFetcher.createPayment())
             }
             .scalar(ExtendedScalars.GraphQLLong)
             .scalar(ExtendedScalars.GraphQLBigDecimal)
