@@ -44,6 +44,7 @@ class InsertTransactionProcessorSpec extends BaseProcessor {
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.of(new Category())
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
         1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         2 * counter.increment()
