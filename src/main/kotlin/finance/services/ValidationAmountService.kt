@@ -21,12 +21,7 @@ open class ValidationAmountService(
     private var accountRepository: AccountRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) : IValidationAmountService {
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
-    }
+) : IValidationAmountService, BaseService() {
 
     override fun insertValidationAmount(accountNameOwner: String, validationAmount: ValidationAmount) : ValidationAmount {
         var accountId = 0L
@@ -36,12 +31,7 @@ open class ValidationAmountService(
         }
 
         val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert validationAmount as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert validationAmount as there is a constraint violation on the data.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
         validationAmount.accountId = accountId
         validationAmount.dateAdded = Timestamp(Calendar.getInstance().time.time)
         validationAmount.dateUpdated = Timestamp(Calendar.getInstance().time.time)

@@ -21,7 +21,7 @@ open class PaymentService(
     private var parameterService: ParameterService,
     private val validator: Validator,
     private var meterService: MeterService
-) : IPaymentService {
+) : IPaymentService, BaseService() {
 
     @Timed
     override fun findAllPayments(): List<Payment> {
@@ -35,12 +35,7 @@ open class PaymentService(
         val transactionDebit = Transaction()
 
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert payment as there is a constraint violation on the data")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert payment as there is a constraint violation on the data")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
         val optionalAccount = accountService.findByAccountNameOwner(payment.accountNameOwner)
         if (!optionalAccount.isPresent) {
             logger.error("Account not found ${payment.accountNameOwner}")
@@ -141,10 +136,5 @@ open class PaymentService(
             return paymentOptional
         }
         return Optional.empty()
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }
