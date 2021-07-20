@@ -130,6 +130,7 @@ curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descr
 curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{createDescription(description: {description: \"testing}\"}) { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
 
 
+# https://stackoverflow.com/questions/55113542/how-to-have-graphql-enum-resolve-strings
 curl -k \
   -X POST \
   -H "Content-Type: application/json" \

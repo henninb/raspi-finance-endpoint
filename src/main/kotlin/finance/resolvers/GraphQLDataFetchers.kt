@@ -10,7 +10,6 @@ import finance.services.CategoryService
 import finance.services.DescriptionService
 import finance.services.PaymentService
 import graphql.schema.DataFetcher
-import graphql.schema.DataFetchingEnvironment
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.stereotype.Component
@@ -30,9 +29,6 @@ class GraphQLDataFetchers(
 
     val description: DataFetcher<Description>
         get() = DataFetcher<Description> {
-            val x : String = it.getArgument("descriptionName")
-            logger.info(x)
-            logger.info(it.arguments)
             val description = descriptionService.findByDescriptionName(it.getArgument("descriptionName")).get()
             description
         }
@@ -47,15 +43,38 @@ class GraphQLDataFetchers(
 //        }
 //    }
 
+//    fun createPayment(): DataFetcher<Payment> {
+//        return DataFetcher<Payment> {
+//            val raw = it.arguments["payment"]
+//            val paymentInput = mapper.convertValue(raw, PaymentInput::class.java)
+//            val paymentResponse = paymentService.insertPayment(paymentInput)
+//            return paymentResponse
+//        }
+//
+//     //   env ->
+////                    val raw = env.arguments["payment"]
+////                    val songInput = mapper.convertValue(raw, SongInput::class.java)
+////                    return@dataFetcher musicService.updateSong(songInput)
+//    }
+
+    fun createCategory(): DataFetcher<Category> {
+        return DataFetcher<Category> {
+            val categoryName : String = it.getArgument("category")
+            logger.info(categoryName)
+            val category = Category()
+            category.category = categoryName
+
+            categoryService.insertCategory(category)
+        }
+    }
 
     fun createDescription(): DataFetcher<Description> {
         return DataFetcher<Description> {
-            //val description = it.arguments
-            logger.info("got here")
-            val description : Description = it.getArgument("description")
+            val descriptionName : String = it.getArgument("description")
             logger.info(description)
+            val description = Description()
+            description.description = descriptionName
 
-            //val description :Description = mapper.readValue(it.arguments, Description)
             descriptionService.insertDescription(description)
         }
     }
@@ -81,7 +100,6 @@ class GraphQLDataFetchers(
         return DataFetcher { paymentService.findByPaymentId(it.getArgument("paymentId")).get()
             }
     }
-
 
     companion object {
         val mapper = ObjectMapper()

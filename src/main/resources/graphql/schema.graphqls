@@ -45,6 +45,8 @@ type Query {
 
 type Mutation {
     createDescription( description: String) : Description
+    createCategory( category: String) : Category
+    createPayment( payment: PaymentInput ) : Payment
 }
 
 # complete 7/17/2021
@@ -85,8 +87,7 @@ type Transaction {
     accountId: Long
     accountType: AccountType!
     activeStatus: Boolean!
-#    #transactionDate: Date!
-    transactionDate: String!
+    transactionDate: Date!
     accountNameOwner: String!
     description: String!
     category: String!
@@ -94,6 +95,8 @@ type Transaction {
     transactionState: TransactionState!
     reoccurringType: ReoccurringType!
     notes: String!
+    #    dateAdded: Timestamp
+    #    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -101,10 +104,20 @@ type Payment {
     paymentId: Long
     accountNameOwner: String!
     activeStatus: Boolean!
-    #transactionDate: Date!
+    transactionDate: Date!
     amount: BigDecimal!
     guidSource: String
     guidDestination: String
+    #    dateAdded: Timestamp
+    #    dateUpdated: Timestamp
+}
+
+input PaymentInput {
+    paymentId: Long
+    accountNameOwner: String!
+    activeStatus: Boolean!
+    transactionDate: Date!
+    amount: BigDecimal!
 }
 
 # complete 7/17/2021
