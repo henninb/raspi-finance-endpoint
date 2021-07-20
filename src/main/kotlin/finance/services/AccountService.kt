@@ -1,12 +1,10 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Account
 import finance.domain.TransactionState
 import finance.repositories.AccountRepository
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
-import org.apache.logging.log4j.LogManager
 import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -14,7 +12,6 @@ import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
@@ -23,7 +20,7 @@ open class AccountService(
     private var transactionRepository: TransactionRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) : IAccountService {
+) : IAccountService, BaseService() {
 
     @Timed
     override fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
@@ -69,12 +66,7 @@ open class AccountService(
     override fun insertAccount(account: Account): Account {
         val accountOptional = findByAccountNameOwner(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert account as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert account as there is a constraint violation on the data.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
 
         if (!accountOptional.isPresent) {
             account.dateAdded = Timestamp(Calendar.getInstance().time.time)
@@ -147,10 +139,5 @@ open class AccountService(
         }
         accountRepository.deleteByAccountNameOwner(oldAccountNameOwner)
         return newlySavedAccount
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

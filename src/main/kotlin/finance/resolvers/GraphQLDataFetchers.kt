@@ -13,6 +13,8 @@ import graphql.schema.DataFetcher
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.stereotype.Component
+import java.sql.Date
+import java.util.*
 
 @Component
 class GraphQLDataFetchers(
@@ -47,6 +49,10 @@ class GraphQLDataFetchers(
         return DataFetcher<Payment> {
             val raw = it.arguments["payment"]
             val paymentInput = mapper.convertValue(raw, Payment::class.java)
+            paymentInput.transactionDate = Date.valueOf("2022-01-01")
+            paymentInput.guidSource = UUID.randomUUID().toString()
+            paymentInput.guidDestination = UUID.randomUUID().toString()
+            logger.debug(paymentInput.toString())
             val paymentResponse = paymentService.insertPayment(paymentInput)
             paymentResponse
         }

@@ -116,7 +116,7 @@ input PaymentInput {
     paymentId: Long
     accountNameOwner: String!
     activeStatus: Boolean!
-    transactionDate: Date!
+#    transactionDate: Date!
     amount: BigDecimal!
 }
 

@@ -17,17 +17,12 @@ open class DescriptionService(
     private var descriptionRepository: DescriptionRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) : IDescriptionService {
+) : IDescriptionService, BaseService() {
 
     @Timed
     override fun insertDescription(description: Description): Description {
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert description as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert description as there is a constraint violation on the data.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
         description.dateAdded = Timestamp(Calendar.getInstance().time.time)
         description.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         return descriptionRepository.saveAndFlush(description)
@@ -47,10 +42,5 @@ open class DescriptionService(
     @Timed
     override fun findByDescriptionName(descriptionName: String): Optional<Description> {
         return descriptionRepository.findByDescription(descriptionName)
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

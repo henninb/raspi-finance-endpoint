@@ -18,7 +18,6 @@ import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
 import javax.validation.Validator
 import kotlin.system.measureTimeMillis
 
@@ -30,7 +29,7 @@ open class TransactionService(
     private var receiptImageService: ReceiptImageService,
     private val validator: Validator,
     private var meterService: MeterService
-) : ITransactionService {
+) : ITransactionService, BaseService() {
 
     @Timed
     override fun deleteTransactionByGuid(guid: String): Boolean {
@@ -69,13 +68,7 @@ open class TransactionService(
     @Timed
     override fun insertTransaction(transaction: Transaction): Transaction {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
-        if (constraintViolations.isNotEmpty()) {
-            //TODO: add metric here
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert transaction as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert transaction as there is a constraint violation on the data.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
         val transactionOptional = findTransactionByGuid(transaction.guid)
 
         if (transactionOptional.isPresent) {
@@ -201,11 +194,7 @@ open class TransactionService(
     @Timed
     override fun updateTransaction(transaction: Transaction): Transaction {
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
-        if (constraintViolations.isNotEmpty()) {
-            logger.error("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot update transaction as there is a constraint violation on the data for guid = ${transaction.guid}.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
         val optionalTransaction = transactionRepository.findByGuid(transaction.guid)
         if (optionalTransaction.isPresent) {
             val transactionFromDatabase = optionalTransaction.get()
@@ -466,10 +455,5 @@ open class TransactionService(
             timestamp = System.currentTimeMillis()
         }
         return timestamp
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

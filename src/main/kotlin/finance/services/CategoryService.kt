@@ -18,17 +18,12 @@ open class CategoryService(
     private var categoryRepository: CategoryRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) : ICategoryService {
+) : ICategoryService, BaseService() {
 
     @Timed
     override fun insertCategory(category: Category): Category {
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert category as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert category as there is a constraint violation on the data.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
         category.dateAdded = Timestamp(Calendar.getInstance().time.time)
         category.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         return categoryRepository.saveAndFlush(category)
@@ -57,10 +52,5 @@ open class CategoryService(
     @Timed
     override fun findByCategoryName(categoryName: String): Optional<Category> {
         return categoryRepository.findByCategory(categoryName)
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

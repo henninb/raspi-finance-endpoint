@@ -17,18 +17,12 @@ open class ParameterService(
     private var parameterRepository: ParameterRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) : IParameterService {
+) : IParameterService, BaseService() {
 
     @Timed
     override fun insertParameter(parameter: Parameter): Parameter {
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert parameter as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert parameter as there is a constraint violation on the data.")
-        }
-
+        handleConstraintViolations(constraintViolations, meterService)
         parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
         parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
         return parameterRepository.saveAndFlush(parameter)
@@ -47,10 +41,5 @@ open class ParameterService(
             return parameterOptional
         }
         return Optional.empty()
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

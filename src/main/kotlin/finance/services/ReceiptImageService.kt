@@ -17,18 +17,12 @@ open class ReceiptImageService(
     private var receiptImageRepository: ReceiptImageRepository,
     private val validator: Validator,
     private var meterService: MeterService
-) : IReceiptImageService {
+) : IReceiptImageService, BaseService() {
 
     @Timed
     override fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
-
         val constraintViolations: Set<ConstraintViolation<ReceiptImage>> = validator.validate(receiptImage)
-        if (constraintViolations.isNotEmpty()) {
-            constraintViolations.forEach { constraintViolation -> logger.error(constraintViolation.message) }
-            logger.error("Cannot insert receiptImage as there is a constraint violation on the data.")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Cannot insert receiptImage as there is a constraint violation on the data.")
-        }
+        handleConstraintViolations(constraintViolations, meterService)
 
         receiptImage.dateAdded = Timestamp(Calendar.getInstance().time.time)
         receiptImage.dateUpdated = Timestamp(Calendar.getInstance().time.time)
@@ -45,10 +39,5 @@ open class ReceiptImageService(
     override fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
         receiptImageRepository.deleteById(receiptImage.receiptImageId)
         return true
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }
