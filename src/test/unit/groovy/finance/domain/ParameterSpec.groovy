@@ -12,20 +12,7 @@ import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
 
-class ParameterSpec extends Specification {
-
-    protected ValidatorFactory validatorFactory
-    protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper()
-
-    void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
-        validator = validatorFactory.getValidator()
-    }
-
-    void cleanup() {
-        validatorFactory.close()
-    }
+class ParameterSpec extends BaseDomainSpec {
 
     void 'test -- JSON serialization to Parameter'() {
         given:

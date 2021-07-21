@@ -14,20 +14,8 @@ import javax.validation.Validator
 import javax.validation.ValidatorFactory
 import java.sql.Date
 
-class PaymentSpec extends Specification {
-    protected ValidatorFactory validatorFactory
-    protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper()
+class PaymentSpec extends BaseDomainSpec {
     protected String jsonPayload = '{"accountNameOwner":"foo_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
-
-    void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
-        validator = validatorFactory.getValidator()
-    }
-
-    void cleanup() {
-        validatorFactory.close()
-    }
 
     void 'test -- JSON deserialization to Payment'() {
         when:

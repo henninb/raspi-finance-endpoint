@@ -8,11 +8,7 @@ import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
 
-class ReceiptImageSpec extends Specification {
-    protected ValidatorFactory validatorFactory
-    protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper().setBase64Variant(Base64Variants.MIME_NO_LINEFEEDS)
-
+class ReceiptImageSpec extends BaseDomainSpec {
 //    String payload = """
 //{"transactionId":1, "image":"data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==", "activeStatus":true}
 //"""
@@ -23,15 +19,6 @@ class ReceiptImageSpec extends Specification {
     protected String payload = """
 {"transactionId":1, "image":"amFja3Nvbg==", "activeStatus":true}
 """
-
-    void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
-        validator = validatorFactory.getValidator()
-    }
-
-    void cleanup() {
-        validatorFactory.close()
-    }
 
     void 'test ReceiptImage to JSON'() {
         when:

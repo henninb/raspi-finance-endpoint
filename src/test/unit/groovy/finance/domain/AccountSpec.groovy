@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.AccountBuilder
+import groovy.transform.InheritConstructors
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -14,20 +15,21 @@ import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
 
-class AccountSpec extends Specification {
+//@InheritConstructors
+class AccountSpec extends BaseDomainSpec {
 
-    protected ValidatorFactory validatorFactory
-    protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper()
+//    protected ValidatorFactory validatorFactory
+//    protected Validator validator
+//    protected ObjectMapper mapper = new ObjectMapper()
 
-    void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
-        validator = validatorFactory.getValidator()
-    }
-
-    void cleanup() {
-        validatorFactory.close()
-    }
+//    void setup() {
+//        validatorFactory = Validation.buildDefaultValidatorFactory()
+//        validator = validatorFactory.getValidator()
+//    }
+//
+//    void cleanup() {
+//        validatorFactory.close()
+//    }
 
     @Shared
     protected String jsonPayload = '''

@@ -16,11 +16,11 @@ import javax.validation.ValidatorFactory
 import java.sql.Date
 import java.text.ParseException
 
-class TransactionSpec extends Specification {
+class TransactionSpec extends BaseDomainSpec {
 
-    protected ValidatorFactory validatorFactory
-    protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper()
+//    protected ValidatorFactory validatorFactory
+//    protected Validator validator
+//    protected ObjectMapper mapper = new ObjectMapper()
     protected String jsonPayload = '''
 {
 "accountId":1,
@@ -38,14 +38,14 @@ class TransactionSpec extends Specification {
 }
 '''
 
-    void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
-        validator = validatorFactory.getValidator()
-    }
-
-    void cleanup() {
-        validatorFactory.close()
-    }
+//    void setup() {
+//        validatorFactory = Validation.buildDefaultValidatorFactory()
+//        validator = validatorFactory.getValidator()
+//    }
+//
+//    void cleanup() {
+//        validatorFactory.close()
+//    }
 
     void 'test Transaction to JSON'() {
         given:
