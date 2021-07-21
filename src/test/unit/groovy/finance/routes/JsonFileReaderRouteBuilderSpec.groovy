@@ -73,7 +73,6 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
         mockTestOutputEndpoint.receivedExchanges.size() == 1
         mockTestOutputEndpoint.assertIsSatisfied()
         1 * exceptionProcessorMock.process(_)
-        //1 * mockJsonTransactionProcessor.process(_ as Exchange)
         0 * _
     }
 
