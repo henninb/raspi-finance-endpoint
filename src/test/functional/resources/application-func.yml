@@ -33,10 +33,10 @@ spring:
       schema: func
   sql:
     init:
-      enabled: true
       data-locations: classpath:data.sql
       platform: postgresql
       continue-on-error: false
+      mode: always
 
   # ===============================
   # = Thymeleaf

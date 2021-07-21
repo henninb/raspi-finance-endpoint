@@ -13,7 +13,7 @@ open class BaseProcessor {
     lateinit var meterService: MeterService
 
     @Autowired
-    lateinit var  validator: Validator
+    lateinit var validator: Validator
 
     companion object {
         val mapper = ObjectMapper()

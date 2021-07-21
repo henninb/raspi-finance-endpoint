@@ -12,7 +12,6 @@ import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
-import javax.validation.Validator
 
 @Service
 open class AccountService(
@@ -34,7 +33,11 @@ open class AccountService(
         } else {
             logger.info("findAllActiveAccounts - found accounts.")
         }
-        return accounts.filter { a -> (a.outstanding > BigDecimal(0.0) || a.future > BigDecimal(0.0) || a.cleared > BigDecimal(0.0)) }
+        return accounts.filter { a ->
+            (a.outstanding > BigDecimal(0.0) || a.future > BigDecimal(0.0) || a.cleared > BigDecimal(
+                0.0
+            ))
+        }
     }
 
     @Timed
@@ -55,7 +58,7 @@ open class AccountService(
     }
 
     @Timed
-    override fun sumOfAllTransactionsByTransactionState(transactionState : TransactionState): BigDecimal {
+    override fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal {
         val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionState(transactionState.toString())
         return totals.setScale(2, RoundingMode.HALF_UP)
     }

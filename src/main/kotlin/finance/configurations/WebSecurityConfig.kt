@@ -70,7 +70,12 @@ open class WebSecurityConfig : WebSecurityConfigurerAdapter() {
     @Bean
     open fun corsConfigurationSource(): CorsConfigurationSource {
         val corsConfiguration = CorsConfiguration()
-        corsConfiguration.allowedOrigins = mutableListOf("https://hornsup:3000", "https://localhost:3000", "http://localhost:3000", "http://hornsup:3000")
+        corsConfiguration.allowedOrigins = mutableListOf(
+            "https://hornsup:3000",
+            "https://localhost:3000",
+            "http://localhost:3000",
+            "http://hornsup:3000"
+        )
         corsConfiguration.allowedMethods = mutableListOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         corsConfiguration.allowedHeaders = mutableListOf("*")
         val source = UrlBasedCorsConfigurationSource()

@@ -1,16 +1,12 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.ReceiptImage
 import finance.repositories.ReceiptImageRepository
 import io.micrometer.core.annotation.Timed
-import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
 
 @Service
 open class ReceiptImageService(

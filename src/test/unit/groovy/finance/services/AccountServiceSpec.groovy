@@ -30,6 +30,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         accountService.validator = validatorMock
         accountService.meterService = meterService
     }
+
     void 'test findAllActiveAccounts empty'() {
         given:
         Account account = AccountBuilder.builder().build()

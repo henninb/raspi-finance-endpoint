@@ -10,12 +10,12 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Service
-open class BaseService() {
+open class BaseService {
     @Autowired
     lateinit var meterService: MeterService
 
     @Autowired
-    lateinit var  validator: Validator
+    lateinit var validator: Validator
 
     fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>, meterService: MeterService) {
         if (constraintViolations.isNotEmpty()) {

@@ -5,6 +5,6 @@ import java.util.*
 
 interface IParameterService {
     fun insertParameter(parameter: Parameter): Parameter
-    fun deleteByParameterName(parameterName: String) : Boolean
+    fun deleteByParameterName(parameterName: String): Boolean
     fun findByParameter(parameterName: String): Optional<Parameter>
 }

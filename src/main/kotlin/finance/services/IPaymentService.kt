@@ -21,6 +21,6 @@ interface IPaymentService {
         paymentAccountNameOwner: String
     )
 
-    fun deleteByPaymentId(paymentId: Long) : Boolean
+    fun deleteByPaymentId(paymentId: Long): Boolean
     fun findByPaymentId(paymentId: Long): Optional<Payment>
 }

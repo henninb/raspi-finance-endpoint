@@ -1,11 +1,9 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.*
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
 import net.coobird.thumbnailator.Thumbnails
-import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -18,7 +16,6 @@ import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
 import javax.validation.ConstraintViolation
-import javax.validation.Validator
 import kotlin.system.measureTimeMillis
 
 @Service
@@ -79,7 +76,7 @@ open class TransactionService(
         processCategory(transaction)
         transaction.dateUpdated = Timestamp(nextTimestampMillis())
         transaction.dateAdded = Timestamp(nextTimestampMillis())
-        val response : Transaction = transactionRepository.saveAndFlush(transaction)
+        val response: Transaction = transactionRepository.saveAndFlush(transaction)
         meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
         return response
@@ -159,7 +156,7 @@ open class TransactionService(
                 transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
         }
         logger.info("The query took $queryTimeInMillis ms")
-        resultSet.forEach {row ->
+        resultSet.forEach { row ->
             val rowList = row as Array<*>
             val totals = BigDecimal(rowList[0].toString())
             val counts = Integer.parseInt(rowList[1].toString())

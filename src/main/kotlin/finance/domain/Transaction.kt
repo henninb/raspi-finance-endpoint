@@ -110,7 +110,7 @@ data class Transaction(
 
     constructor() : this(
         0L, "", 0, AccountType.Undefined, "", Date(0),
-        "", "", BigDecimal(0.00), TransactionState.Undefined, true,  ReoccurringType.Undefined, ""
+        "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, ""
     )
 
     @JsonGetter("transactionDate")

@@ -37,7 +37,7 @@ type Query {
     description (descriptionName: String!) : Description
     categories : [Category]
     account(accountNameOwner: String!) : Account
-#    accounts(accountType: AccountType) : [Account]
+    #    accounts(accountType: AccountType) : [Account]
     accounts : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
     #mutation: Mutation
@@ -67,8 +67,8 @@ type Category {
     categoryId: Long
     activeStatus: Boolean!
     category: String!
-#    dateAdded: Timestamp
-#    dateUpdated: Timestamp
+    #    dateAdded: Timestamp
+    #    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -76,8 +76,8 @@ type Description {
     descriptionId: Long
     activeStatus: Boolean!
     description: String!
-#    dateAdded: Timestamp
-#    dateUpdated: Timestamp
+    #    dateAdded: Timestamp
+    #    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -116,7 +116,7 @@ input PaymentInput {
     paymentId: Long
     accountNameOwner: String!
     activeStatus: Boolean!
-#    transactionDate: Date!
+    #    transactionDate: Date!
     amount: BigDecimal!
 }
 
@@ -137,11 +137,3 @@ type ValidationAmount {
     transactionState: TransactionState
     amount: BigDecimal!
 }
-
-#{
-#    descriptions {
-#        descriptionId
-#        description
-#        activeStatus
-#    }
-#}

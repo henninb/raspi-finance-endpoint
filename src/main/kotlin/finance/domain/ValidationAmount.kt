@@ -51,7 +51,7 @@ data class ValidationAmount(
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal
 ) {
-    constructor() : this(0L, 0L, Timestamp(0L),true, TransactionState.Undefined, BigDecimal(0.0) )
+    constructor() : this(0L, 0L, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

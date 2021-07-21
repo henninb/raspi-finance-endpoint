@@ -24,9 +24,11 @@ interface AccountRepository : JpaRepository<Account, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
-            "(SELECT account_name_owner, SUM(case when transaction_state='cleared' THEN amount ELSE 0 END) AS cleared, sum(case when transaction_state='outstanding' THEN amount ELSE 0 END) AS outstanding, sum(CASE WHEN transaction_state='future' THEN amount ELSE 0 END) AS future FROM t_transaction WHERE active_status = true group by account_name_owner) " +
-            "AS x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true)
+    @Query(
+        "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
+                "(SELECT account_name_owner, SUM(case when transaction_state='cleared' THEN amount ELSE 0 END) AS cleared, sum(case when transaction_state='outstanding' THEN amount ELSE 0 END) AS outstanding, sum(CASE WHEN transaction_state='future' THEN amount ELSE 0 END) AS future FROM t_transaction WHERE active_status = true group by account_name_owner) " +
+                "AS x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true
+    )
     fun updateTotalsForAllAccounts()
 
     @Query(
