@@ -1,8 +1,9 @@
 package finance.services
 
-import finance.utils.Constants
 import io.micrometer.core.instrument.*
 import spock.lang.Specification
+
+import static finance.utils.Constants.*
 
 @SuppressWarnings("GroovyAccessibility")
 class MeterServiceSpec extends Specification {
@@ -12,8 +13,8 @@ class MeterServiceSpec extends Specification {
     protected Counter counter = Mock(Counter)
 
     static Meter.Id setMeterId(String counterName, String accountNameOwner) {
-        Tag serverNameTag = Tag.of(Constants.SERVER_NAME_TAG, 'server')
-        Tag accountNameOwnerTag = Tag.of(Constants.ACCOUNT_NAME_OWNER_TAG, accountNameOwner)
+        Tag serverNameTag = Tag.of(SERVER_NAME_TAG, 'server')
+        Tag accountNameOwnerTag = Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner)
         Tags tags = Tags.of(accountNameOwnerTag, serverNameTag)
         return new Meter.Id(counterName, tags, null, null, Meter.Type.COUNTER)
     }
@@ -23,7 +24,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementAccountListIsEmpty('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -33,7 +34,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionUpdateClearedCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -43,7 +44,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionUpdateClearedCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -53,7 +54,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionAlreadyExistsCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_ALREADY_EXISTS_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -63,7 +64,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionRestSelectNoneFoundCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -73,7 +74,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionRestTransactionStateUpdateFailureCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -83,7 +84,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionRestReoccurringStateUpdateFailureCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_REST_REOCCURRING_TYPE_UPDATE_FAILURE_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -93,7 +94,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementTransactionReceiptImageInserted('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -103,7 +104,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementCamelStringProcessor('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_STRING_PROCESSOR_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(CAMEL_STRING_PROCESSOR_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }
@@ -113,7 +114,7 @@ class MeterServiceSpec extends Specification {
         meterService.incrementCamelTransactionSuccessfullyInsertedCounter('test')
 
         then:
-        1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, 'test')) >> counter
+        1 * meterRegistryMock.counter(setMeterId(CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, 'test')) >> counter
         1 * counter.increment()
         0 * _
     }

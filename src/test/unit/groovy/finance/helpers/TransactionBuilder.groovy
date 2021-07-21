@@ -6,7 +6,7 @@ import java.sql.Date
 
 class TransactionBuilder {
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
-    Long accountId = 0
+    Long accountId = 0L
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
     Date transactionDate = Date.valueOf('2020-12-01')

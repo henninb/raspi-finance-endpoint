@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants
+import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import finance.utils.TransactionStateConverter
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
@@ -47,7 +48,7 @@ data class ValidationAmount(
     var transactionState: TransactionState,
 
     @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = Constants.MUST_BE_DOLLAR_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal
 ) {

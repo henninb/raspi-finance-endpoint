@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
-import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
+import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
+import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
@@ -34,7 +34,7 @@ data class Category(
     var activeStatus: Boolean = true,
 
     @field:Size(min = 1, max = 50)
-    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
+    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "category", unique = true, nullable = false)
     @JsonProperty

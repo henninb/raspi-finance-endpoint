@@ -3,17 +3,18 @@ package finance.domain
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.*
-import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE
+import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
-import finance.utils.Constants.MUST_BE_ALPHA_UNDERSCORE_MESSAGE
-import finance.utils.Constants.MUST_BE_ASCII_MESSAGE
-import finance.utils.Constants.MUST_BE_DOLLAR_MESSAGE
-import finance.utils.Constants.MUST_BE_NUMERIC_NO_SPACE
-import finance.utils.Constants.MUST_BE_UUID_MESSAGE
+import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE
+import finance.utils.Constants.FIELD_MUST_BE_ASCII_MESSAGE
+import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
+import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
+import finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.Proxy
+import org.springframework.data.annotation.Immutable
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -25,12 +26,13 @@ import javax.validation.constraints.Min
 import javax.validation.constraints.Pattern
 import javax.validation.constraints.Size
 
-
 @Entity
 @Proxy(lazy = false)
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+//does not fix the issue
+@Immutable //The [account] property of the [finance.domain.Transaction] entity was modified, but it won't be updated because the property is immutable.
 data class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,7 +44,7 @@ data class Transaction(
 
     @Column(name = "guid", unique = true, nullable = false)
     @JsonProperty
-    @field:Pattern(regexp = UUID_PATTERN, message = MUST_BE_UUID_MESSAGE)
+    @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String,
 
     @JsonProperty
@@ -57,7 +59,7 @@ data class Transaction(
 
     @JsonProperty
     @field:Size(min = 3, max = 40)
-    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = MUST_BE_ALPHA_UNDERSCORE_MESSAGE)
+    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var accountNameOwner: String,
@@ -69,20 +71,20 @@ data class Transaction(
 
     @JsonProperty
     @field:Size(min = 1, max = 75)
-    @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
+    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var description: String,
 
     @JsonProperty
     @field:Size(max = 50)
-    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE, message = MUST_BE_NUMERIC_NO_SPACE)
+    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @Column(name = "category", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var category: String,
 
     @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = MUST_BE_DOLLAR_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal,
 
@@ -102,7 +104,7 @@ data class Transaction(
 
     @JsonProperty
     @field:Size(max = 100)
-    @field:Pattern(regexp = ASCII_PATTERN, message = MUST_BE_ASCII_MESSAGE)
+    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "notes", nullable = false)
     var notes: String = ""
