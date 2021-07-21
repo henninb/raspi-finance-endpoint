@@ -10,6 +10,8 @@ import javax.validation.ValidationException
 class ParameterServiceSpec extends BaseServiceSpec {
 
     void setup() {
+        parameterService.validator = validatorMock
+        parameterService.meterService = meterService
     }
 
     void 'test - insert parameter'() {

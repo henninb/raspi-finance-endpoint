@@ -7,22 +7,10 @@ import org.apache.camel.impl.DefaultCamelContext
 
 class JsonFileWriterRouteBuilderSpec extends BaseRouteBuilderSpec {
 
-//    protected CamelProperties camelProperties = new CamelProperties(
-//            "true",
-//            "n/a",
-//            "n/a",
-//            "fileWriterRoute",
-//            "direct:routeFromLocal",
-//            "transactionToDatabaseRoute",
-//            "direct:routeFromLocal",
-//            "mock:toSavedFileEndpoint",
-//            "mock:toFailedJsonFileEndpoint",
-//            "mock:toFailedJsonParserEndpoint")
-
     void setup() {
         camelProperties.jsonFileWriterRoute = 'direct:routeFromLocal'
         camelContext = new DefaultCamelContext()
-        JsonFileWriterRouteBuilder router = new JsonFileWriterRouteBuilder(camelProperties, mockExceptionProcessor)
+        JsonFileWriterRouteBuilder router = new JsonFileWriterRouteBuilder(camelProperties, exceptionProcessorMock)
         camelContext.addRoutes(router)
         camelContext.start()
     }

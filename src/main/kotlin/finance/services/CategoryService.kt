@@ -15,9 +15,7 @@ import javax.validation.Validator
 
 @Service
 open class CategoryService(
-    private var categoryRepository: CategoryRepository,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var categoryRepository: CategoryRepository
 ) : ICategoryService, BaseService() {
 
     @Timed

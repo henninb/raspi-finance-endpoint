@@ -14,9 +14,7 @@ import javax.validation.Validator
 
 @Service
 open class DescriptionService(
-    private var descriptionRepository: DescriptionRepository,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var descriptionRepository: DescriptionRepository
 ) : IDescriptionService, BaseService() {
 
     @Timed

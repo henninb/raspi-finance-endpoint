@@ -10,6 +10,8 @@ import javax.validation.ValidationException
 class CategoryServiceSpec extends BaseServiceSpec {
 
     void setup() {
+        categoryService.validator = validatorMock
+        categoryService.meterService = meterService
     }
 
     void 'test - insert category'() {

@@ -14,9 +14,7 @@ import javax.validation.Validator
 
 @Service
 open class ParameterService(
-    private var parameterRepository: ParameterRepository,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var parameterRepository: ParameterRepository
 ) : IParameterService, BaseService() {
 
     @Timed

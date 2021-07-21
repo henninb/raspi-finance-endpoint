@@ -13,10 +13,7 @@ import javax.validation.ValidationException
 import javax.validation.Validator
 
 @Component
-open class JsonTransactionProcessor(
-    private val validator: Validator,
-    private var meterService: MeterService
-) : Processor {
+open class JsonTransactionProcessor : Processor, BaseProcessor() {
 
     @Throws(Exception::class)
     @Timed
@@ -37,10 +34,5 @@ open class JsonTransactionProcessor(
         }
         logger.info("JsonTransactionProcessor size = ${transactions.size}")
         message.body = transactions
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

@@ -22,25 +22,30 @@ import javax.validation.Validator
 class BaseRouteBuilderSpec extends Specification {
 
     protected ModelCamelContext camelContext
-    //protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected Validator validatorMock = GroovyMock(Validator)
     protected Counter counter = Mock(Counter)
     protected MeterRegistry meterRegistryMock = GroovyMock(MeterRegistry)
     protected MeterService meterService = new MeterService(meterRegistryMock)
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
-    protected ExceptionProcessor mockExceptionProcessor = new ExceptionProcessor()
+
     protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
     protected CategoryRepository categoryRepositoryMock = GroovyMock(CategoryRepository)
     protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, validatorMock, meterService)
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterService)
-    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterService)
+    protected AccountService accountService = GroovyMock(AccountService)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
+    protected CategoryService categoryService = GroovyMock(CategoryService)
+   // protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService)
+    protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
+    protected ExceptionProcessor exceptionProcessorMock = GroovyMock(ExceptionProcessor)
 
-    protected InsertTransactionProcessor insertTransactionProcessorMock = new InsertTransactionProcessor(transactionService, meterService)
-    protected JsonTransactionProcessor mockJsonTransactionProcessor = new JsonTransactionProcessor(validatorMock, meterService)
-    protected StringTransactionProcessor stringTransactionProcessorMock = new StringTransactionProcessor(meterService)
+    protected JsonTransactionProcessor jsonTransactionProcessor = new JsonTransactionProcessor()
+    protected InsertTransactionProcessor insertTransactionProcessor = new InsertTransactionProcessor(transactionServiceMock)
+    protected StringTransactionProcessor stringTransactionProcessor = new StringTransactionProcessor()
+
+//    protected InsertTransactionProcessor insertTransactionProcessorMock = GroovyMock(InsertTransactionProcessor)
+//    protected JsonTransactionProcessor JsonTransactionProcessorMock = GroovyMock(JsonTransactionProcessor)
+//    protected StringTransactionProcessor stringTransactionProcessorMock = GroovyMock(StringTransactionProcessor)
 
     protected ObjectMapper objectMapper = new ObjectMapper()
 

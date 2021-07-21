@@ -7,15 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.validation.ConstraintViolation
 import javax.validation.ValidationException
+import javax.validation.Validator
 
 @Service
 open class BaseService() {
+    @Autowired
+    lateinit var meterService: MeterService
 
-//    @Autowired
-//    lateinit var meterService: MeterService
-//
-//    @Autowired
-//    lateinit var  validator: Validator
+    @Autowired
+    lateinit var  validator: Validator
 
     fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>, meterService: MeterService) {
         if (constraintViolations.isNotEmpty()) {

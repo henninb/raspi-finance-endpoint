@@ -8,7 +8,10 @@ import javax.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class DescriptionServiceSpec extends BaseServiceSpec {
+
     void setup() {
+        descriptionService.validator = validatorMock
+        descriptionService.meterService = meterService
     }
 
     void 'test - insert description'() {

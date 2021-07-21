@@ -12,6 +12,11 @@ import javax.validation.ConstraintViolation
 @SuppressWarnings("GroovyAccessibility")
 class PaymentServiceSpec extends BaseServiceSpec {
 
+    void setup() {
+        paymentService.validator = validatorMock
+        paymentService.meterService = meterService
+    }
+
     void 'test findAll payments empty'() {
         given:
         Payment payment = PaymentBuilder.builder().build()

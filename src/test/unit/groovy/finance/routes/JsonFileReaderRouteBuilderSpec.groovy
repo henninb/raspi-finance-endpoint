@@ -13,9 +13,12 @@ import javax.validation.ConstraintViolation
 class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void setup() {
+        jsonTransactionProcessor.meterService = meterService
+        jsonTransactionProcessor.validator = validatorMock
+
         camelProperties.jsonFileReaderRoute = 'direct:routeFromLocal'
         camelContext = new DefaultCamelContext()
-        JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, mockJsonTransactionProcessor, mockExceptionProcessor)
+        JsonFileReaderRouteBuilder router = new JsonFileReaderRouteBuilder(camelProperties, jsonTransactionProcessor, exceptionProcessorMock)
         camelContext.addRoutes(router)
         camelContext.start()
     }
@@ -69,6 +72,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
         then:
         mockTestOutputEndpoint.receivedExchanges.size() == 1
         mockTestOutputEndpoint.assertIsSatisfied()
+        1 * exceptionProcessorMock.process(_)
         //1 * mockJsonTransactionProcessor.process(_ as Exchange)
         0 * _
     }

@@ -5,7 +5,12 @@ import finance.helpers.TransactionBuilder
 import finance.utils.Constants
 
 @SuppressWarnings("GroovyAccessibility")
-class StringTransactionProcessorSpec extends BaseProcessor {
+class StringTransactionProcessorSpec extends BaseProcessorSpec {
+
+    void setup() {
+        stringTransactionProcessor.validator = validatorMock
+        stringTransactionProcessor.meterService = meterService
+    }
 
     void 'test - StringTransactionProcessor valid payload'() {
         given:

@@ -11,7 +11,8 @@ import java.math.RoundingMode
 
 @SuppressWarnings("GroovyAccessibility")
 class AccountServiceSpec extends BaseServiceSpec {
-    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
+
 
     protected String validJsonPayload = '''
 {
@@ -25,6 +26,10 @@ class AccountServiceSpec extends BaseServiceSpec {
 }
 '''
 
+    void setup() {
+        accountService.validator = validatorMock
+        accountService.meterService = meterService
+    }
     void 'test findAllActiveAccounts empty'() {
         given:
         Account account = AccountBuilder.builder().build()
