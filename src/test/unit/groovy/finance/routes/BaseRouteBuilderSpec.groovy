@@ -28,24 +28,12 @@ class BaseRouteBuilderSpec extends Specification {
     protected MeterService meterService = new MeterService(meterRegistryMock)
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
 
-    protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
-    protected CategoryRepository categoryRepositoryMock = GroovyMock(CategoryRepository)
-    protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
-    protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
-    protected AccountService accountService = GroovyMock(AccountService)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
-    protected CategoryService categoryService = GroovyMock(CategoryService)
-    // protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService)
     protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
-    protected ExceptionProcessor exceptionProcessorMock = GroovyMock(ExceptionProcessor)
 
     protected JsonTransactionProcessor jsonTransactionProcessor = new JsonTransactionProcessor()
     protected InsertTransactionProcessor insertTransactionProcessor = new InsertTransactionProcessor(transactionServiceMock)
     protected StringTransactionProcessor stringTransactionProcessor = new StringTransactionProcessor()
-
-//    protected InsertTransactionProcessor insertTransactionProcessorMock = GroovyMock(InsertTransactionProcessor)
-//    protected JsonTransactionProcessor JsonTransactionProcessorMock = GroovyMock(JsonTransactionProcessor)
-//    protected StringTransactionProcessor stringTransactionProcessorMock = GroovyMock(StringTransactionProcessor)
+    protected ExceptionProcessor exceptionProcessorMock = GroovyMock(ExceptionProcessor)
 
     protected ObjectMapper objectMapper = new ObjectMapper()
 

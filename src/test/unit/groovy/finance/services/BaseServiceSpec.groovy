@@ -15,7 +15,7 @@ class BaseServiceSpec extends Specification {
     protected Validator validatorMock = GroovyMock(Validator)
     protected MeterRegistry meterRegistryMock = GroovyMock(MeterRegistry)
     protected MeterService meterService = new MeterService(meterRegistryMock)
-    protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
+    //protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
     protected CategoryRepository categoryRepositoryMock = GroovyMock(CategoryRepository)
     protected DescriptionRepository descriptionRepositoryMock = GroovyMock(DescriptionRepository)
     protected PaymentRepository paymentRepositoryMock = GroovyMock(PaymentRepository)
@@ -25,11 +25,14 @@ class BaseServiceSpec extends Specification {
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").file.absolutePath
     protected Counter counter = Mock(Counter)
-    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
+
+
     protected ReceiptImageService receiptImageServiceMock = GroovyMock(ReceiptImageService)
     protected CategoryService categoryServiceMock = GroovyMock(CategoryService)
     protected AccountService accountServiceMock = GroovyMock(AccountService)
+
+    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock)
     protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, receiptImageServiceMock)
     protected ParameterService parameterService = new ParameterService(parameterRepositoryMock)

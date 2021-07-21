@@ -33,7 +33,6 @@ class BaseProcessorSpec extends Specification {
     protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected Counter counter = GroovyMock(Counter)
-    //protected Validator mockValidator = GroovyMock(Validator)
     protected JsonTransactionProcessor jsonTransactionProcessor = new JsonTransactionProcessor()
     protected InsertTransactionProcessor insertTransactionProcessor = new InsertTransactionProcessor(transactionServiceMock)
     protected StringTransactionProcessor stringTransactionProcessor = new StringTransactionProcessor()
