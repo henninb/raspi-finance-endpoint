@@ -1,17 +1,13 @@
 package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.CategoryBuilder
-import spock.lang.Specification
 import spock.lang.Unroll
-
 import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+
+import static finance.utils.Constants.*
 
 class CategorySpec extends BaseDomainSpec {
 
@@ -69,5 +65,27 @@ class CategorySpec extends BaseDomainSpec {
 
         then:
         violations.empty
+    }
+
+    @Unroll
+    void 'test Category validation invalid #invalidField has error expectedError'() {
+        given:
+        Category category = new CategoryBuilder().builder()
+                .withCategory(categoryName)
+                .withActiveStatus(activeStatus)
+                .build()
+
+        when:
+        Set<ConstraintViolation<Category>> violations = validator.validate(category)
+
+        then:
+        violations.size() == errorCount
+        violations.message.contains(expectedError)
+        violations.iterator().next().invalidValue == category.properties[invalidField]
+
+        where:
+        invalidField | categoryName                                               | activeStatus | expectedError                   | errorCount
+        'category'   | ''                                                         | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'category'   | 'ynotynotynotynotynotynotynotynotynotynotynotynotynotynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
     }
 }

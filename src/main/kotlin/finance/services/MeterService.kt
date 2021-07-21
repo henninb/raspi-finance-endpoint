@@ -10,7 +10,7 @@ import finance.utils.Constants.SERVER_NAME_TAG
 import finance.utils.Constants.TRANSACTION_ACCOUNT_LIST_NONE_FOUND_COUNTER
 import finance.utils.Constants.TRANSACTION_ALREADY_EXISTS_COUNTER
 import finance.utils.Constants.TRANSACTION_RECEIPT_IMAGE_INSERTED_COUNTER
-import finance.utils.Constants.TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER
+import finance.utils.Constants.TRANSACTION_REST_REOCCURRING_TYPE_UPDATE_FAILURE_COUNTER
 import finance.utils.Constants.TRANSACTION_REST_SELECT_NONE_FOUND_COUNTER
 import finance.utils.Constants.TRANSACTION_REST_TRANSACTION_STATE_UPDATE_FAILURE_COUNTER
 import finance.utils.Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER
@@ -111,7 +111,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
         .increment()
 
     fun incrementTransactionRestReoccurringStateUpdateFailureCounter(accountNameOwner: String): Unit = Counter
-        .builder(TRANSACTION_REST_REOCCURRING_STATE_UPDATE_FAILURE_COUNTER)
+        .builder(TRANSACTION_REST_REOCCURRING_TYPE_UPDATE_FAILURE_COUNTER)
         .tags(
             listOfNotNull(
                 Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),

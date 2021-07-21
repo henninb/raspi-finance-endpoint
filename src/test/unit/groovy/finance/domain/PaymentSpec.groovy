@@ -1,18 +1,15 @@
 package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.PaymentBuilder
-import finance.utils.Constants
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
 import java.sql.Date
+
+import static finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
+import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 
 class PaymentSpec extends BaseDomainSpec {
     protected String jsonPayload = '{"accountNameOwner":"foo_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
@@ -78,9 +75,9 @@ class PaymentSpec extends BaseDomainSpec {
         violations.iterator().next().invalidValue == payment.properties[invalidField]
 
         where:
-        invalidField       | accountNameOwner | transactionDate            | amount | guidDestination              | guidSource                   | expectedError                   | errorCount
-        'accountNameOwner' | 'a_'             | Date.valueOf('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 'size must be between 3 and 40' | 1
-        'guidDestination'  | 'a_b'            | Date.valueOf('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | Constants.MUST_BE_UUID_MESSAGE  | 1
-        'guidSource'       | 'a_b'            | Date.valueOf('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | Constants.MUST_BE_UUID_MESSAGE  | 1
+        invalidField       | accountNameOwner | transactionDate            | amount | guidDestination              | guidSource                   | expectedError                                 | errorCount
+        'accountNameOwner' | 'a_'             | Date.valueOf('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
+        'guidDestination'  | 'a_b'            | Date.valueOf('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        'guidSource'       | 'a_b'            | Date.valueOf('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
     }
 }

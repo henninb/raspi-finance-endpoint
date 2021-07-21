@@ -1,12 +1,12 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.Base64Variants
-import com.fasterxml.jackson.databind.ObjectMapper
-import spock.lang.Specification
 
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import finance.helpers.ReceiptImageBuilder
+import spock.lang.Unroll
+
+import javax.validation.ConstraintViolation
+
+import static finance.utils.Constants.FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE
 
 class ReceiptImageSpec extends BaseDomainSpec {
 //    String payload = """
@@ -32,4 +32,27 @@ class ReceiptImageSpec extends BaseDomainSpec {
         0 * _
     }
 
+    @Unroll
+    void 'test ReceiptImage validation invalid #invalidField has error expectedError'() {
+        given:
+        ReceiptImage receiptImage = new ReceiptImageBuilder().builder()
+                .withTransactionId(transactionId)
+                .withActiveStatus(activeStatus)
+                .withImageFormatType(imageFormatType)
+                .withThumbnail(thumbnail)
+                .withImage(image)
+                .build()
+
+        when:
+        Set<ConstraintViolation<ReceiptImage>> violations = validator.validate(receiptImage)
+
+        then:
+        violations.size() == errorCount
+        violations.message.contains(expectedError)
+        violations.iterator().next().invalidValue == receiptImage.properties[invalidField]
+
+        where:
+        invalidField    | transactionId | imageFormatType     | image                                                                                              | thumbnail                                                                                          | activeStatus | expectedError                           | errorCount
+        'transactionId' | -1            | ImageFormatType.Png | 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==' | 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==' | true         | FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE | 1
+    }
 }

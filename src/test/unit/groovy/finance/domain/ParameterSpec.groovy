@@ -1,16 +1,13 @@
 package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.ParameterBuilder
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import javax.validation.ConstraintViolation
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+
+import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 
 class ParameterSpec extends BaseDomainSpec {
 
@@ -54,5 +51,30 @@ class ParameterSpec extends BaseDomainSpec {
 
         then:
         violations.empty
+    }
+
+    @Unroll
+    void 'test Parameter validation invalid #invalidField has error expectedError'() {
+        given:
+        Parameter parameter = new ParameterBuilder().builder()
+                .withParameterName(parameterName)
+                .withParameterValue(parameterValue)
+                .withActiveStatus(activeStatus)
+                .build()
+
+        when:
+        Set<ConstraintViolation<Parameter>> violations = validator.validate(parameter)
+
+        then:
+        violations.size() == errorCount
+        violations.message.contains(expectedError)
+        violations.iterator().next().invalidValue == parameter.properties[invalidField]
+
+        where:
+        invalidField     | parameterName                                            | parameterValue                                           | activeStatus | expectedError                               | errorCount
+        'parameterValue' | 'someName'                                               | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterName'  | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | 'someValue'                                              | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterName'  | ''                                                       | 'someValue'                                              | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterValue' | 'someName'                                               | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
     }
 }
