@@ -8,17 +8,12 @@ import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Component
 
 @Component
-open class ExceptionProcessor : Processor {
+open class ExceptionProcessor : Processor, BaseProcessor()  {
 
     @Timed
     override fun process(exchange: Exchange) {
         val message = exchange.`in`
         val payload = message.getBody(Exception::class.java)
         logger.warn(payload)
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

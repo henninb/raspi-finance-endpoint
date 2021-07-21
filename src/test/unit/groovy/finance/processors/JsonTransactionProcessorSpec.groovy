@@ -8,13 +8,18 @@ import finance.helpers.TransactionBuilder
 import javax.validation.ConstraintViolation
 
 @SuppressWarnings("GroovyAccessibility")
-class JsonTransactionProcessorSpec extends BaseProcessor {
+class JsonTransactionProcessorSpec extends BaseProcessorSpec {
 
     protected String payloadInvalid = '''
 
 [{"transactionId":1,"guid":"4ea3be58-3993-abcd-88a2-4ffc7f1d73ba","accountId":0,"accountType":"credit","accountNameOwner":"chase_brian","transactionDate":"2020-12-30","description":"aliexpress.com","category":"online","amount":3.14,"transactionState":"cleared","activeStatus":true,"reoccurring":false,"reoccurringType":"undefined","notes":"my note to you"},
 {"transactionId":2,"guid":"4ea3be58-3993-abcd-88a2-4ffc7f1d73bb","accountId":0,"accountType":"credit","accountNameOwner":"","transactionDate":"2020-12-31","description":"aliexpress.com","category":"online","amount":3.15,"transactionState":"cleared","activeStatus":true,"reoccurring":false,"reoccurringType":"undefined","notes":"my note to you"}]
 '''
+
+    void setup() {
+        jsonTransactionProcessor.validator = validatorMock
+        jsonTransactionProcessor.meterService = meterService
+    }
 
     void 'test JsonTransactionProcessor - process - valid records'() {
         given:
@@ -27,7 +32,7 @@ class JsonTransactionProcessorSpec extends BaseProcessor {
         jsonTransactionProcessor.process(exchange)
 
         then:
-        1 * mockValidator.validate(transactions[0]) >> constraintViolations
+        1 * validatorMock.validate(transactions[0]) >> constraintViolations
         0 * _
     }
 
@@ -45,8 +50,8 @@ class JsonTransactionProcessorSpec extends BaseProcessor {
         constraintViolations1.size() == 0
         constraintViolations2.size() == 2
         thrown(RuntimeException)
-        1 * mockValidator.validate(transactions[0]) >> constraintViolations1
-        1 * mockValidator.validate(transactions[1]) >> constraintViolations2
+        1 * validatorMock.validate(transactions[0]) >> constraintViolations1
+        1 * validatorMock.validate(transactions[1]) >> constraintViolations2
         0 * _
     }
 

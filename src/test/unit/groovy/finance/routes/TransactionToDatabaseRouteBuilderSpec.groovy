@@ -12,14 +12,19 @@ import org.apache.camel.impl.DefaultCamelContext
 
 import javax.validation.ConstraintViolation
 
+
 @SuppressWarnings("GroovyAccessibility")
 class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void setup() {
+        stringTransactionProcessor.validator = validatorMock
+        stringTransactionProcessor.meterService = meterService
+        insertTransactionProcessor.validator = validatorMock
+        insertTransactionProcessor.meterService = meterService
         camelProperties.transactionToDatabaseRoute = 'direct:routeFromLocal'
         camelProperties.jsonFileWriterRoute = 'mock:toEnd'
         camelContext = new DefaultCamelContext()
-        TransactionToDatabaseRouteBuilder router = new TransactionToDatabaseRouteBuilder(camelProperties, stringTransactionProcessorMock, insertTransactionProcessorMock, mockExceptionProcessor)
+        TransactionToDatabaseRouteBuilder router = new TransactionToDatabaseRouteBuilder(camelProperties, stringTransactionProcessor, insertTransactionProcessor, exceptionProcessorMock)
         camelContext.addRoutes(router)
         camelContext.start()
     }
@@ -30,7 +35,6 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         mockTestOutputEndpoint.expectedCount = 1
         ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri(camelProperties.transactionToDatabaseRoute)
-        //ConsumerTemplate consumer = camelContext.createConsumerTemplate()
         Transaction transaction = TransactionBuilder.builder().build()
         List<Transaction> transactions = [transaction]
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
@@ -43,15 +47,9 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         mockTestOutputEndpoint.assertIsSatisfied()
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
-        1 * validatorMock.validate(transaction) >> constraintViolations
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(transaction)
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_STRING_PROCESSOR_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
-        1 * categoryRepositoryMock.findByCategory(transaction.category) >> Optional.of(CategoryBuilder.builder().build())
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
-        1 * counter.increment()
+        1 * transactionServiceMock.insertTransaction(transaction) >> transaction
         0 * _
     }
 
@@ -61,12 +59,9 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         mockTestOutputEndpoint.expectedCount = 2
         ProducerTemplate producer = camelContext.createProducerTemplate()
         producer.setDefaultEndpointUri(camelProperties.transactionToDatabaseRoute)
-        //ConsumerTemplate consumer = camelContext.createConsumerTemplate()
         Transaction transaction1 = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
         Transaction transaction2 = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
         List<Transaction> transactions = [transaction1, transaction2]
-        Set<ConstraintViolation<Transaction>> constraintViolations1 = validator.validate(transaction1)
-        Set<ConstraintViolation<Transaction>> constraintViolations2 = validator.validate(transaction2)
         when:
         producer.sendBody(transactions)
 
@@ -76,22 +71,11 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction1.accountNameOwner)) >> counter
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction2.accountNameOwner)) >> counter
         2 * counter.increment()
-        1 * validatorMock.validate(transaction1) >> constraintViolations1
-        1 * validatorMock.validate(transaction2) >> constraintViolations2
-        1 * transactionRepositoryMock.findByGuid(transaction1.guid) >> Optional.of(transaction1)
-        1 * transactionRepositoryMock.findByGuid(transaction2.guid) >> Optional.of(transaction2)
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_STRING_PROCESSOR_COUNTER, transaction1.accountNameOwner)) >> counter
         1 * meterRegistryMock.counter(setMeterId(Constants.CAMEL_STRING_PROCESSOR_COUNTER, transaction2.accountNameOwner)) >> counter
         2 * counter.increment()
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction1.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction2.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
-        1 * categoryRepositoryMock.findByCategory(transaction1.category) >> Optional.of(CategoryBuilder.builder().build())
-        1 * categoryRepositoryMock.findByCategory(transaction2.category) >> Optional.of(CategoryBuilder.builder().build())
-        1 * transactionRepositoryMock.saveAndFlush(transaction1) >> transaction1
-        1 * transactionRepositoryMock.saveAndFlush(transaction2) >> transaction2
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction1.accountNameOwner)) >> counter
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction2.accountNameOwner)) >> counter
-        2 * counter.increment()
+        1 * transactionServiceMock.insertTransaction(transaction1) >> transaction1
+        1 * transactionServiceMock.insertTransaction(transaction2) >> transaction2
         0 * _
     }
 
@@ -110,6 +94,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         thrown(CamelExecutionException)
         mockTestOutputEndpoint.receivedExchanges.size() == 0
         mockTestOutputEndpoint.assertIsSatisfied()
+        2 * exceptionProcessorMock.process(_)
         0 * _
     }
 }

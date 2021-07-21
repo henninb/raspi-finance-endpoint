@@ -26,9 +26,7 @@ open class TransactionService(
     private var transactionRepository: TransactionRepository,
     private var accountService: AccountService,
     private var categoryService: CategoryService,
-    private var receiptImageService: ReceiptImageService,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var receiptImageService: ReceiptImageService
 ) : ITransactionService, BaseService() {
 
     @Timed

@@ -18,9 +18,7 @@ import javax.validation.ValidationException
 @Service
 open class ValidationAmountService(
     private var validationAmountRepository: ValidationAmountRepository,
-    private var accountRepository: AccountRepository,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var accountRepository: AccountRepository
 ) : IValidationAmountService, BaseService() {
 
     override fun insertValidationAmount(accountNameOwner: String, validationAmount: ValidationAmount) : ValidationAmount {

@@ -25,13 +25,15 @@ class BaseServiceSpec extends Specification {
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").file.absolutePath
     protected Counter counter = Mock(Counter)
-    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, validatorMock, meterService)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, validatorMock, meterService)
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, validatorMock, meterService)
-    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterService)
-    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, validatorMock, meterService)
-    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService, validatorMock, meterService)
+    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
+    protected ReceiptImageService receiptImageServiceMock = GroovyMock(ReceiptImageService)
+    protected CategoryService categoryServiceMock = GroovyMock(CategoryService)
+    protected AccountService accountServiceMock = GroovyMock(AccountService)
+    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock)
+    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, receiptImageServiceMock)
+    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock)
+    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService)
 
     //TODO: turn this into a method
     protected Tag validationExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'ValidationException')

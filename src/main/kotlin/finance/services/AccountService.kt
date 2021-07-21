@@ -17,9 +17,7 @@ import javax.validation.Validator
 @Service
 open class AccountService(
     private var accountRepository: AccountRepository,
-    private var transactionRepository: TransactionRepository,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var transactionRepository: TransactionRepository
 ) : IAccountService, BaseService() {
 
     @Timed

@@ -12,9 +12,8 @@ import org.springframework.stereotype.Component
 
 @Component
 open class InsertTransactionProcessor(
-    private var transactionService: TransactionService,
-    private var meterService: MeterService
-) : Processor {
+    private var transactionService: TransactionService
+) : Processor, BaseProcessor() {
     //private val logger = LoggerFactory.getLogger(this.javaClass)
     //private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -31,10 +30,5 @@ open class InsertTransactionProcessor(
         meterService.incrementCamelTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         message.body = transaction.toString()
         logger.info("InsertTransactionProcessor completed for guid=${transaction.guid}.")
-    }
-
-    companion object {
-        private val mapper = ObjectMapper()
-        private val logger = LogManager.getLogger()
     }
 }

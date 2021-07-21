@@ -14,9 +14,7 @@ import javax.validation.Validator
 
 @Service
 open class ReceiptImageService(
-    private var receiptImageRepository: ReceiptImageRepository,
-    private val validator: Validator,
-    private var meterService: MeterService
+    private var receiptImageRepository: ReceiptImageRepository
 ) : IReceiptImageService, BaseService() {
 
     @Timed

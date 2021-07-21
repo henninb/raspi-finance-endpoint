@@ -17,25 +17,26 @@ import spock.lang.Specification
 import javax.validation.Validation
 import javax.validation.Validator
 
-class BaseProcessor extends Specification {
+class BaseProcessorSpec extends Specification {
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
     protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
     protected Validator validatorMock = GroovyMock(Validator)
     protected MeterRegistry meterRegistryMock = GroovyMock(MeterRegistry)
     protected MeterService meterService = new MeterService(meterRegistryMock)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock, validatorMock, meterService)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
     protected CategoryRepository mockCategoryRepository = GroovyMock(CategoryRepository)
-    protected CategoryService categoryService = new CategoryService(mockCategoryRepository, validatorMock, meterService)
+    protected CategoryService categoryService = new CategoryService(mockCategoryRepository)
     protected ReceiptImageRepository mockReceiptImageRepository = GroovyMock(ReceiptImageRepository)
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository, validatorMock, meterService)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(mockReceiptImageRepository)
     protected ObjectMapper mapper = new ObjectMapper()
-    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService, validatorMock, meterService)
+    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService)
+    protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected Counter counter = GroovyMock(Counter)
-    protected Validator mockValidator = GroovyMock(Validator)
-    protected JsonTransactionProcessor jsonTransactionProcessor = new JsonTransactionProcessor(mockValidator, meterService)
-    protected InsertTransactionProcessor insertTransactionProcessor = new InsertTransactionProcessor(transactionService, meterService)
-    protected StringTransactionProcessor stringTransactionProcessor = new StringTransactionProcessor(meterService)
+    //protected Validator mockValidator = GroovyMock(Validator)
+    protected JsonTransactionProcessor jsonTransactionProcessor = new JsonTransactionProcessor()
+    protected InsertTransactionProcessor insertTransactionProcessor = new InsertTransactionProcessor(transactionServiceMock)
+    protected StringTransactionProcessor stringTransactionProcessor = new StringTransactionProcessor()
 
     protected Tag validationExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'ValidationException')
     protected Tag runtimeExceptionTag = Tag.of(Constants.EXCEPTION_NAME_TAG, 'RuntimeException')
