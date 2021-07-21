@@ -29,9 +29,9 @@ class ParameterServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    void 'test - insert parameter - parm not valid'() {
+    void 'test - insert parameter - parameter is not valid'() {
         given:
-        Parameter parameter = ParameterBuilder.builder().withParameterName('').build()
+        Parameter parameter = ParameterBuilder.builder().withParameterName('').withActiveStatus(true).build()
         Set<ConstraintViolation<Parameter>> constraintViolations = validator.validate(parameter)
 
         when:

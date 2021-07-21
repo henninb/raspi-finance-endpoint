@@ -13,21 +13,10 @@ import javax.validation.Validation
 import javax.validation.Validator
 import javax.validation.ValidatorFactory
 
-class CategorySpec extends Specification {
+class CategorySpec extends BaseDomainSpec {
 
-    protected ValidatorFactory validatorFactory
-    protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper()
+
     protected String jsonPayload = '{"category":"bar", "activeStatus":true}'
-
-    void setup() {
-        validatorFactory = Validation.buildDefaultValidatorFactory()
-        validator = validatorFactory.getValidator()
-    }
-
-    void cleanup() {
-        validatorFactory.close()
-    }
 
     void 'test -- JSON serialization to Category'() {
 
