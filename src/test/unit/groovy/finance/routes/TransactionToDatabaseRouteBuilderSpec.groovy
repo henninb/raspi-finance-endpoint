@@ -1,8 +1,6 @@
 package finance.routes
 
 import finance.domain.Transaction
-import finance.helpers.AccountBuilder
-import finance.helpers.CategoryBuilder
 import finance.helpers.TransactionBuilder
 import finance.utils.Constants
 import org.apache.camel.CamelExecutionException
@@ -11,7 +9,6 @@ import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 
 import javax.validation.ConstraintViolation
-
 
 @SuppressWarnings("GroovyAccessibility")
 class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {

@@ -44,7 +44,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
     protected String jsonPayloadMissingAmount = '{"accountNameOwner":"foo_test", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
-    protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.1288888, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.12, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
     protected String endpointName = 'payment'
@@ -165,9 +165,9 @@ class PaymentControllerSpec extends BaseControllerSpec {
         'badJson'                    | HttpStatus.BAD_REQUEST | 'Unrecognized token'
         '{"test":1}'                 | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountNameOwner due to missing'
         '{badJson:"test"}'           | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
-        jsonPayloadInvalidAmount     | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data'
+        jsonPayloadInvalidAmount     | HttpStatus.BAD_REQUEST | 'Cannot insert record because of constraint violation(s): 5.1288888: must be dollar precision'
         jsonPayloadMissingAmount     | HttpStatus.BAD_REQUEST | 'value failed for JSON property amount due to missing'
-        jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert payment as there is a constraint violation on the data'
+        jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert record because of constraint violation(s): invalid: must be uuid formatted'
     }
 
     void 'test insert Payment - missing payment setup'() {

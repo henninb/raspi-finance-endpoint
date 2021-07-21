@@ -44,7 +44,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Payment>> constraintViolations = validator.validate(payment)
 
         when:
-       Payment paymentInserted = paymentService.insertPayment(payment)
+        Payment paymentInserted = paymentService.insertPayment(payment)
 
         then:
         //thrown(RuntimeException)

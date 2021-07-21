@@ -1,16 +1,12 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Parameter
 import finance.repositories.ParameterRepository
 import io.micrometer.core.annotation.Timed
-import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
 
 @Service
 open class ParameterService(
@@ -27,7 +23,7 @@ open class ParameterService(
     }
 
     @Timed
-    override fun deleteByParameterName(parameterName: String) : Boolean {
+    override fun deleteByParameterName(parameterName: String): Boolean {
         parameterRepository.deleteByParameterName(parameterName)
         return true
     }

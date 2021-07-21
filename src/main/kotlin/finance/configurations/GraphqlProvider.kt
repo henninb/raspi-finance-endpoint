@@ -1,24 +1,20 @@
 package finance.configurations
 
+//import graphql.scalars.datetime.DateScalar
+import com.google.common.io.Resources
 import finance.resolvers.GraphQLDataFetchers
 import graphql.GraphQL
+import graphql.execution.AsyncExecutionStrategy
+import graphql.execution.AsyncSerialExecutionStrategy
+import graphql.scalars.ExtendedScalars
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
-import com.google.common.io.Resources
-import graphql.execution.AsyncExecutionStrategy
-import graphql.execution.AsyncSerialExecutionStrategy
-import graphql.scalars.ExtendedScalars
-//import graphql.scalars.datetime.DateScalar
-import graphql.schema.GraphQLScalarType
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.core.io.Resource
-import java.io.File
 
 @Component
-class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers)  {
+class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers) {
 //    @Value("\${classpath:schema.graphql}")
 //    private lateinit var schema: Resource
 

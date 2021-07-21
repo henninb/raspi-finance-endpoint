@@ -60,7 +60,7 @@ class GraphQLDataFetchers(
 
     fun createCategory(): DataFetcher<Category> {
         return DataFetcher<Category> {
-            val categoryName : String = it.getArgument("category")
+            val categoryName: String = it.getArgument("category")
             logger.info(categoryName)
             val category = Category()
             category.category = categoryName
@@ -71,7 +71,7 @@ class GraphQLDataFetchers(
 
     fun createDescription(): DataFetcher<Description> {
         return DataFetcher<Description> {
-            val descriptionName : String = it.getArgument("description")
+            val descriptionName: String = it.getArgument("description")
             logger.info(description)
             val description = Description()
             description.description = descriptionName
@@ -87,7 +87,8 @@ class GraphQLDataFetchers(
         }
 
     fun account(): DataFetcher<Account> {
-        return DataFetcher { accountService.findByAccountNameOwner(it.getArgument("accountNameOwner")).get()
+        return DataFetcher {
+            accountService.findByAccountNameOwner(it.getArgument("accountNameOwner")).get()
         }
     }
 
@@ -98,8 +99,9 @@ class GraphQLDataFetchers(
         }
 
     fun payment(): DataFetcher<Payment> {
-        return DataFetcher { paymentService.findByPaymentId(it.getArgument("paymentId")).get()
-            }
+        return DataFetcher {
+            paymentService.findByPaymentId(it.getArgument("paymentId")).get()
+        }
     }
 
     companion object {

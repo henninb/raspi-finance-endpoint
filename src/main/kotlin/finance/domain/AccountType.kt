@@ -33,6 +33,5 @@ enum class AccountType(val label: String) {
 //        return Undefined
 //    }
 
-    companion object {
-    }
+    companion object
 }

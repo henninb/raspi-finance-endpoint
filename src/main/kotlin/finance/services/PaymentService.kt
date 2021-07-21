@@ -1,17 +1,13 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.*
 import finance.repositories.PaymentRepository
 import io.micrometer.core.annotation.Timed
-import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
 
 @Service
 open class PaymentService(
@@ -120,7 +116,7 @@ open class PaymentService(
     }
 
     @Timed
-    override fun deleteByPaymentId(paymentId: Long) : Boolean {
+    override fun deleteByPaymentId(paymentId: Long): Boolean {
         logger.info("service - deleteByPaymentId = $paymentId")
         paymentRepository.deleteByPaymentId(paymentId)
         return true

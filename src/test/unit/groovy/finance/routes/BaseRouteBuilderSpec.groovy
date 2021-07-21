@@ -35,7 +35,7 @@ class BaseRouteBuilderSpec extends Specification {
     protected AccountService accountService = GroovyMock(AccountService)
     protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
     protected CategoryService categoryService = GroovyMock(CategoryService)
-   // protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService)
+    // protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountService, categoryService, receiptImageService)
     protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
     protected ExceptionProcessor exceptionProcessorMock = GroovyMock(ExceptionProcessor)
 

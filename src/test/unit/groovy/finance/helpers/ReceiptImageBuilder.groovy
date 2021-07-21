@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
-import org.springframework.util.Base64Utils
 
 // curl -k --header "Content-Type: application/json" 'https://localhost:8080/receipt/image/insert' -X POST -d '{"activeStatus":true,"transactionId": 23189, "image":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==" }'
 // https://cryptii.com/pipes/base64-to-hex
