@@ -80,7 +80,8 @@ open class AccountService(
 
     @Timed
     override fun deleteByAccountNameOwner(accountNameOwner: String): Boolean {
-        accountRepository.deleteByAccountNameOwner(accountNameOwner)
+        val account = accountRepository.findByAccountNameOwner(accountNameOwner).get()
+        accountRepository.delete(account)
         return true
     }
 
@@ -138,7 +139,7 @@ open class AccountService(
             transaction.activeStatus = newlySavedAccount.activeStatus
             transactionRepository.saveAndFlush(transaction)
         }
-        accountRepository.deleteByAccountNameOwner(oldAccountNameOwner)
+        accountRepository.delete(oldAccountOptional.get())
         return newlySavedAccount
     }
 }

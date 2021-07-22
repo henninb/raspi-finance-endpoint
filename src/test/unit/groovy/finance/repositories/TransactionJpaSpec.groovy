@@ -186,7 +186,7 @@ class TransactionJpaSpec extends Specification {
         entityManager.persist(transaction)
 
         when:
-        transactionRepository.deleteByGuid(transaction.guid)
+        transactionRepository.delete(transaction)
 
         then:
         transactionRepository.count() == 0L

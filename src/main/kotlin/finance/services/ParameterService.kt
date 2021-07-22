@@ -24,7 +24,8 @@ open class ParameterService(
 
     @Timed
     override fun deleteByParameterName(parameterName: String): Boolean {
-        parameterRepository.deleteByParameterName(parameterName)
+        val parameter = parameterRepository.findByParameterName(parameterName).get()
+        parameterRepository.delete(parameter)
         return true
     }
 

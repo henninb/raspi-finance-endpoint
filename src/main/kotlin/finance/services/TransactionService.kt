@@ -31,18 +31,12 @@ open class TransactionService(
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
-            if (transaction.categories.size > 0) {
-                //TODO: add metric here
-                val categoryOptional = categoryService.findByCategory(transaction.category)
-                transaction.categories.remove(categoryOptional.get())
-            }
-
             if (transaction.receiptImageId != null) {
-                deleteReceiptImage(transaction)
-                transaction.receiptImageId = null
+                transactionRepository.delete(transaction)
+            } else {
+                transactionRepository.delete(transaction)
             }
 
-            transactionRepository.deleteByGuid(guid)
             //TODO: add metric here
             return true
         }
@@ -51,12 +45,15 @@ open class TransactionService(
     }
 
     @Timed
-    override fun deleteReceiptImage(transaction: Transaction) {
+    override fun deleteReceiptImage(transaction: Transaction) : Boolean {
         val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
         if (receiptImageOptional.isPresent) {
             receiptImageService.deleteReceiptImage(receiptImageOptional.get())
             //TODO: add metric here
+            logger.info("deleted receipt image successfully.")
+            return true
         }
+        return false
     }
 
     // https://hornsup:8080/actuator/metrics/method.timed/?tag=method:insertTransaction

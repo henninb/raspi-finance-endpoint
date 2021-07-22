@@ -117,8 +117,8 @@ open class PaymentService(
 
     @Timed
     override fun deleteByPaymentId(paymentId: Long): Boolean {
-        logger.info("service - deleteByPaymentId = $paymentId")
-        paymentRepository.deleteByPaymentId(paymentId)
+        val payment = paymentRepository.findByPaymentId(paymentId).get()
+        paymentRepository.delete(payment)
         return true
     }
 

@@ -35,7 +35,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then:
         isDeleted
-        1 * transactionRepositoryMock.deleteByGuid(guid)
+        1 * transactionRepositoryMock.delete(transaction)
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         0 * _
     }

@@ -54,7 +54,8 @@ class CategoryServiceSpec extends BaseServiceSpec {
         categoryService.deleteByCategoryName(category.category)
 
         then:
-        1 * categoryRepositoryMock.deleteByCategory(category.category)
+        1 * categoryRepositoryMock.findByCategory(category.category) >> Optional.of(category)
+        1 * categoryRepositoryMock.delete(category)
         0 * _
     }
 }

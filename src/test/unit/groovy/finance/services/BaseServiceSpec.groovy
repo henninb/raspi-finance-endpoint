@@ -22,6 +22,7 @@ class BaseServiceSpec extends Specification {
     protected PaymentRepository paymentRepositoryMock = GroovyMock(PaymentRepository)
     protected ParameterRepository parameterRepositoryMock = GroovyMock(ParameterRepository)
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
+    protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
     protected ObjectMapper mapper = new ObjectMapper()
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").file.absolutePath
@@ -32,6 +33,7 @@ class BaseServiceSpec extends Specification {
     protected CategoryService categoryServiceMock = GroovyMock(CategoryService)
     protected AccountService accountServiceMock = GroovyMock(AccountService)
 
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
     protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock)
     protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock)

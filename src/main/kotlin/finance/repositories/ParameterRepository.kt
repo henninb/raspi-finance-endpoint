@@ -8,6 +8,6 @@ import javax.transaction.Transactional
 interface ParameterRepository : JpaRepository<Parameter, Long> {
     fun findByParameterName(parameterName: String): Optional<Parameter>
 
-    @Transactional
-    fun deleteByParameterName(parameterName: String)
+//    @Transactional
+//    fun deleteByParameterName(parameterName: String)
 }
