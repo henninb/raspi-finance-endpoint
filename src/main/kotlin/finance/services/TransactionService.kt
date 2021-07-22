@@ -365,12 +365,18 @@ open class TransactionService(
 
     @Timed
     override fun createFutureTransaction(transaction: Transaction): Transaction {
-        val calendar = Calendar.getInstance()
-        calendar.time = transaction.transactionDate
-
-        calculateFutureDate(transaction, calendar)
-
+        val calendarTransactionDate = Calendar.getInstance()
+        val calendarDueDate = Calendar.getInstance()
+        calendarTransactionDate.time = transaction.transactionDate
+        calculateFutureDate(transaction, calendarTransactionDate)
         val transactionFuture = Transaction()
+
+        if(  transaction.dueDate != null ) {
+            calendarDueDate.time = transaction.dueDate
+            calculateFutureDate(transaction, calendarDueDate)
+            transactionFuture.dueDate = Date(calendarDueDate.timeInMillis)
+        }
+
         transactionFuture.guid = UUID.randomUUID().toString()
         transactionFuture.account = transaction.account
         transactionFuture.accountId = transaction.accountId
@@ -381,11 +387,10 @@ open class TransactionService(
         transactionFuture.category = transaction.category
         transactionFuture.description = transaction.description
         transactionFuture.receiptImageId = null
-        transactionFuture.dueDate = transaction.dueDate
         transactionFuture.notes = ""
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
-        transactionFuture.transactionDate = Date(calendar.timeInMillis)
+        transactionFuture.transactionDate = Date(calendarTransactionDate.timeInMillis)
         transactionFuture.dateUpdated = Timestamp(nextTimestampMillis())
         transactionFuture.dateAdded = Timestamp(nextTimestampMillis())
         logger.info(transactionFuture.toString())
