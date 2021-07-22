@@ -119,7 +119,7 @@ http://logback.qos.ch/translator/asGroovy.html
 http://hornsup:8080/graphiql
 npx graphql-codegen
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions { descriptionId description }}"}' https://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions {  description }}"}' https://hornsup:8080/graphql
 
 curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{accounts { accountId accountNameOwner }}"}' https://hornsup:8080/graphql
 
