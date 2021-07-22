@@ -6,7 +6,7 @@ import java.util.*
 
 interface ITransactionService {
     fun deleteTransactionByGuid(guid: String): Boolean
-    fun deleteReceiptImage(transaction: Transaction)
+    fun deleteReceiptImage(transaction: Transaction) : Boolean
     fun insertTransaction(transaction: Transaction): Transaction
     fun processAccount(transaction: Transaction)
     fun processCategory(transaction: Transaction)

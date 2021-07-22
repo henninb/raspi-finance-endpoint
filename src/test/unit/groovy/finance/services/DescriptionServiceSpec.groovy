@@ -1,6 +1,8 @@
 package finance.services
 
+import finance.domain.Category
 import finance.domain.Description
+import finance.helpers.CategoryBuilder
 import finance.helpers.DescriptionBuilder
 
 import javax.validation.ConstraintViolation
@@ -43,6 +45,19 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(description) >> constraintViolations
         1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
+        0 * _
+    }
+
+    void 'test - delete description'() {
+        given:
+        Description description = DescriptionBuilder.builder().build()
+
+        when:
+        descriptionService.deleteByDescriptionName(description.description)
+
+        then:
+        1 * descriptionRepositoryMock.findByDescription(description.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.delete(description)
         0 * _
     }
 }

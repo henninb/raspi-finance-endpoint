@@ -11,6 +11,6 @@ interface CategoryRepository : JpaRepository<Category, Long> {
 
     fun findByActiveStatusOrderByCategory(activeStatus: Boolean): List<Category>
 
-    @Transactional
-    fun deleteByCategory(categoryName: String)
+//    @Transactional
+//    fun deleteByCategory(categoryName: String)
 }

@@ -19,8 +19,8 @@ interface AccountRepository : JpaRepository<Account, Long> {
         accountType: AccountType = AccountType.Credit
     ): List<Account>
 
-    @Transactional
-    fun deleteByAccountNameOwner(accountNameOwner: String)
+//    @Transactional
+//    fun deleteByAccountNameOwner(accountNameOwner: String)
 
     @Modifying
     @Transactional

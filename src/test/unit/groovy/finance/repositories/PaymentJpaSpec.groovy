@@ -44,7 +44,7 @@ class PaymentJpaSpec extends Specification {
         Payment result = entityManager.persist(payment)
 
         when:
-        paymentRepository.deleteByPaymentId(result.paymentId)
+        paymentRepository.delete(result)
 
         then:
         paymentRepository.count() == 0L

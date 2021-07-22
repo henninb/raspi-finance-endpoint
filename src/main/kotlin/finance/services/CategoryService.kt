@@ -33,7 +33,8 @@ open class CategoryService(
 
     @Timed
     override fun deleteByCategoryName(categoryName: String): Boolean {
-        categoryRepository.deleteByCategory(categoryName)
+        val category = categoryRepository.findByCategory(categoryName).get()
+        categoryRepository.delete(category)
         return true
     }
 

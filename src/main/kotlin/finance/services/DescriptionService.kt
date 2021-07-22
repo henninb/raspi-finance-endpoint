@@ -23,8 +23,9 @@ open class DescriptionService(
     }
 
     @Timed
-    override fun deleteByDescriptionName(description: String): Boolean {
-        descriptionRepository.deleteByDescription(description)
+    override fun deleteByDescriptionName(descriptionName: String): Boolean {
+        val description = descriptionRepository.findByDescription(descriptionName).get()
+        descriptionRepository.delete(description)
         return true
     }
 

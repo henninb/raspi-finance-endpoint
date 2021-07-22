@@ -8,6 +8,6 @@ import java.util.*
 interface PaymentRepository : JpaRepository<Payment, Long> {
     fun findByPaymentId(paymentId: Long): Optional<Payment>
 
-    @Transactional
-    fun deleteByPaymentId(paymentId: Long)
+//    @Transactional
+//    fun deleteByPaymentId(paymentId: Long)
 }
