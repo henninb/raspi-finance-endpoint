@@ -12,11 +12,22 @@ import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
+import org.springframework.web.servlet.config.annotation.CorsRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+
 
 @Component
 class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers) {
-//    @Value("\${classpath:schema.graphql}")
-//    private lateinit var schema: Resource
+
+    @Bean
+    fun corsConfigure(): WebMvcConfigurer {
+
+        return object : WebMvcConfigurer {
+            override fun addCorsMappings(registry: CorsRegistry) {
+                registry.addMapping("/**").allowedOrigins("*")
+            }
+        }
+    }
 
     @Bean
     fun graphql(): GraphQL {

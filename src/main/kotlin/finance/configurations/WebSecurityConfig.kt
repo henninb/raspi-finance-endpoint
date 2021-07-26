@@ -65,6 +65,7 @@ open class WebSecurityConfig : WebSecurityConfigurerAdapter() {
 //            .antMatchers("/resetPassword").permitAll()
 
         http.cors().and().csrf().disable()
+            //.and().authorizeRequests().antMatchers("/graphql").permitAll()
     }
 
     @Bean
