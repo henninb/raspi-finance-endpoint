@@ -33,17 +33,45 @@ CREATE TABLE IF NOT EXISTS public.t_account
 ----------------------------
 -- Validation Amount Date --
 ----------------------------
-CREATE TABLE IF NOT EXISTS public.t_validation_amount(
-    validation_id BIGSERIAL PRIMARY KEY,
-    account_id         BIGINT                                NOT NULL,
-    validation_date         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    transaction_state  TEXT          DEFAULT 'undefined'     NOT NULL,
-    amount             NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
-    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
-    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+CREATE TABLE IF NOT EXISTS public.t_validation_amount
+(
+    validation_id     BIGSERIAL PRIMARY KEY,
+    account_id        BIGINT                                NOT NULL,
+    validation_date   TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    transaction_state TEXT          DEFAULT 'undefined'     NOT NULL,
+    amount            NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
+    active_status     BOOLEAN       DEFAULT TRUE            NOT NULL,
+    date_updated      TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES public.t_account (account_id) ON DELETE CASCADE
+);
+
+--------------
+-- User     --
+--------------
+CREATE TABLE IF NOT EXISTS public.t_user
+(
+    user_id       BIGSERIAL PRIMARY KEY,
+    username      TEXT UNIQUE                       NOT NULL,
+    password      TEXT                              NOT NULL,
+    active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT ck_lowercase_username CHECK (username = lower(username))
+);
+
+--------------
+-- Role     --
+--------------
+CREATE TABLE IF NOT EXISTS public.t_role
+(
+    role_id       BIGSERIAL PRIMARY KEY,
+    role          TEXT UNIQUE                       NOT NULL,
+    active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT ck_lowercase_username CHECK (role = lower(role))
 );
 
 --------------
@@ -208,7 +236,8 @@ SELECT setval('public.t_account_account_id_seq', (SELECT MAX(account_id) FROM pu
 SELECT setval('public.t_category_category_id_seq', (SELECT MAX(category_id) FROM public.t_category) + 1);
 SELECT setval('public.t_description_description_id_seq', (SELECT MAX(description_id) FROM public.t_description) + 1);
 SELECT setval('public.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM public.t_parm) + 1);
-SELECT setval('public.t_validation_amount_validation_id_seq', (SELECT MAX(validation_id) FROM public.t_validation_amount) + 1);
+SELECT setval('public.t_validation_amount_validation_id_seq',
+              (SELECT MAX(validation_id) FROM public.t_validation_amount) + 1);
 
 CREATE OR REPLACE FUNCTION fn_update_transaction_categories()
     RETURNS TRIGGER
@@ -220,6 +249,7 @@ $$
       NEW.date_updated := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
+
 
 
 $$;
@@ -235,6 +265,7 @@ $$
       NEW.date_added := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
+
 
 
 $$;
