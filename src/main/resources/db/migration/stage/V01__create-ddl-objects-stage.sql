@@ -47,6 +47,33 @@ CREATE TABLE IF NOT EXISTS stage.t_validation_amount(
 );
 
 --------------
+-- User     --
+--------------
+CREATE TABLE IF NOT EXISTS public.t_user
+(
+    user_id       BIGSERIAL PRIMARY KEY,
+    username      TEXT UNIQUE                       NOT NULL,
+    password      TEXT                              NOT NULL,
+    active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT ck_lowercase_username CHECK (username = lower(username))
+);
+
+--------------
+-- Role     --
+--------------
+CREATE TABLE IF NOT EXISTS public.t_role
+(
+    role_id       BIGSERIAL PRIMARY KEY,
+    role          TEXT UNIQUE                       NOT NULL,
+    active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT ck_lowercase_username CHECK (role = lower(role))
+);
+
+--------------
 -- Category --
 --------------
 CREATE TABLE IF NOT EXISTS stage.t_category
