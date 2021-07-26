@@ -25,8 +25,7 @@ class GraphQLDataFetchers(
 ) {
     val descriptions: DataFetcher<List<Description>>
         get() = DataFetcher<List<Description>> {
-            val descriptions = descriptionService.fetchAllDescriptions()
-            descriptions
+            return@DataFetcher descriptionService.fetchAllDescriptions()
         }
 
     val description: DataFetcher<Description>
@@ -34,7 +33,6 @@ class GraphQLDataFetchers(
             val description = descriptionService.findByDescriptionName(it.getArgument("descriptionName")).get()
             description
         }
-
 
 //    @GqlDataFetcher(type = GqlType.MUTATION)
 //    fun postBoard(): DataFetcher<*>? {
@@ -80,10 +78,14 @@ class GraphQLDataFetchers(
         }
     }
 
+    val payments: DataFetcher<List<Payment>>
+        get() = DataFetcher<List<Payment>> {
+            return@DataFetcher paymentService.findAllPayments()
+        }
+
     val accounts: DataFetcher<List<Account>>
         get() = DataFetcher<List<Account>> {
-            val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
-            accounts
+            return@DataFetcher accountService.findByActiveStatusOrderByAccountNameOwner()
         }
 
     fun account(): DataFetcher<Account> {
@@ -94,8 +96,7 @@ class GraphQLDataFetchers(
 
     val categories: DataFetcher<List<Category>>
         get() = DataFetcher<List<Category>> {
-            val list: List<Category> = categoryService.fetchAllActiveCategories()
-            list
+            return@DataFetcher categoryService.fetchAllActiveCategories()
         }
 
     fun payment(): DataFetcher<Payment> {

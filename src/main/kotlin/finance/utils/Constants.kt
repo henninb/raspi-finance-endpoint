@@ -37,6 +37,6 @@ object Constants {
     const val FILED_MUST_BE_ALPHA_NUMERIC_NO_SPACE_MESSAGE = "must be alphanumeric no space"
     const val FILED_MUST_BE_DATE_GREATER_THAN_MESSAGE = "date must be greater than 1/1/2000."
     const val FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE = "size must be between 3 and 40"
-
+   const val FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE = "size must be between 0 and 50"
 
 }

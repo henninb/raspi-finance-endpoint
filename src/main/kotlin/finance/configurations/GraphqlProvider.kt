@@ -36,6 +36,7 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers) {
                 it.dataFetcher("description", graphQLDataFetcher.description)
                 it.dataFetcher("accounts", graphQLDataFetcher.accounts)
                 it.dataFetcher("categories", graphQLDataFetcher.categories)
+                it.dataFetcher("payments", graphQLDataFetcher.payments)
                 it.dataFetcher("payment", graphQLDataFetcher.payment())
                 it.dataFetcher("account", graphQLDataFetcher.account())
             }

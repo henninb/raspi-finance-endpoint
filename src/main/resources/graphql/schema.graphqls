@@ -40,6 +40,7 @@ type Query {
     #    accounts(accountType: AccountType) : [Account]
     accounts : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
+    payments : [Payment]
     #mutation: Mutation
 }
 
