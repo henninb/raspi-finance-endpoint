@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableJpaRepositories
 @EnableAspectJAutoProxy
 @EnableWebSecurity
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
 // TODO: This class must not be final or Spring Boot is not happy.
 open class Application {
     companion object {

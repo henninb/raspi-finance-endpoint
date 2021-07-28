@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletResponse
 import javax.websocket.Session
 import javax.websocket.server.HandshakeRequest
 
-
 @Component
 class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers) {
 
