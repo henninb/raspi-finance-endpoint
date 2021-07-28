@@ -20,7 +20,6 @@ import scala.sys.*
 import java.sql.Date
 import java.util.*
 
-
 @Component
 class GraphQLDataFetchers(
     private val descriptionService: DescriptionService,
