@@ -9,6 +9,10 @@ server:
     enabled: false
     enabled-protocols: TLSv1.2
 spring:
+  security:
+    user:
+      name: foo
+      password: bar
   application:
     name: raspi-finance-endpoint
 

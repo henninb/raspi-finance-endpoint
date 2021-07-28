@@ -5,12 +5,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
+import org.springframework.util.Base64Utils
 import spock.lang.Specification
 
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -31,10 +33,18 @@ class GraphqlSpec extends Specification {
         return "http://localhost:${port}" + uri
     }
 
+//    public void basicAuth() throws Exception {
+//        this.mockMvc
+//                .perform(get("/").header(HttpHeaders.AUTHORIZATION,
+//                        ))
+//                .andExpect(status().isOk());
+//    }
+
+
     void 'description test'() {
         when:
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
-
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("foo:bar".getBytes()))
                 .content("{\"query\":\"{ descriptions { description } }\"}")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
@@ -46,7 +56,7 @@ class GraphqlSpec extends Specification {
     void 'description test - should fail'() {
         when:
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
-
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("foo:bar".getBytes()))
                 .content("{\"query\":\"{ dne { description } }\"}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
