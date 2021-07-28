@@ -1,19 +1,26 @@
 package finance.configurations
 
 //import graphql.scalars.datetime.DateScalar
+
 import com.google.common.io.Resources
 import finance.resolvers.GraphQLDataFetchers
 import graphql.GraphQL
+import graphql.GraphQLContext
 import graphql.execution.AsyncExecutionStrategy
 import graphql.execution.AsyncSerialExecutionStrategy
 import graphql.scalars.ExtendedScalars
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
+import org.dataloader.DataLoaderRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.websocket.Session
+import javax.websocket.server.HandshakeRequest
 
 
 @Component
@@ -28,6 +35,24 @@ class GraphqlProvider(private val graphQLDataFetcher: GraphQLDataFetchers) {
             }
         }
     }
+
+//    @Bean
+//    fun contextBuilder(dataLoaderRegistry: DataLoaderRegistry): GraphQLServletContextBuilder {
+//        return object : GraphQLServletContextBuilder() {
+//            fun build(request: HttpServletRequest?, response: HttpServletResponse?): GraphQLContext? {
+//                return DefaultBCOGraphQLContext(dataLoaderRegistry, null, request)
+//            }
+//
+//            fun build(): GraphQLContext? {
+//                return DefaultGraphQLContext(dataLoaderRegistry, null)
+//            }
+//
+//            fun build(session: Session?, request: HandshakeRequest?): GraphQLContext? {
+//                return BCOGraphQLWebsocketContext(dataLoaderRegistry, null, session, request)
+//            }
+//        }
+//    }
+
 
     @Bean
     fun graphql(): GraphQL {

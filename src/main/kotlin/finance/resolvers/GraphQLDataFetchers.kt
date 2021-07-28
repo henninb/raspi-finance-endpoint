@@ -12,9 +12,14 @@ import finance.services.PaymentService
 import graphql.schema.DataFetcher
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.springframework.security.authentication.AuthenticationProvider
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
+import scala.sys.*
 import java.sql.Date
 import java.util.*
+
 
 @Component
 class GraphQLDataFetchers(
@@ -25,6 +30,14 @@ class GraphQLDataFetchers(
 ) {
     val descriptions: DataFetcher<List<Description>>
         get() = DataFetcher<List<Description>> {
+            val username = SecurityContextHolder.getContext().authentication.name
+            val authentication: Authentication = SecurityContextHolder.getContext().authentication
+            logger.info(authentication.isAuthenticated)
+            logger.info(username)
+           // val page: String = it.getArgument("page")
+           //     .orElse(AppConstants.DEFAULT_PAGE_NUMBER) as String?. toInt ()
+           // val size: Int =
+           //     Optional.ofNullable(env.getArgument("size")).orElse(AppConstants.DEFAULT_PAGE_SIZE) as String?. toInt ()
             return@DataFetcher descriptionService.fetchAllDescriptions()
         }
 

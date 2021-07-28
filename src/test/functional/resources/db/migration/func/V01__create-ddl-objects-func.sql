@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS func.t_validation_amount(
 --------------
 -- User     --
 --------------
-CREATE TABLE IF NOT EXISTS public.t_user
+CREATE TABLE IF NOT EXISTS func.t_user
 (
     user_id       BIGSERIAL PRIMARY KEY,
     username      TEXT UNIQUE                       NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS public.t_user
 --------------
 -- Role     --
 --------------
-CREATE TABLE IF NOT EXISTS public.t_role
+CREATE TABLE IF NOT EXISTS func.t_role
 (
     role_id       BIGSERIAL PRIMARY KEY,
     role          TEXT UNIQUE                       NOT NULL,
