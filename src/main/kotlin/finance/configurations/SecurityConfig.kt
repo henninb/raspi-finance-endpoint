@@ -18,8 +18,8 @@ open class SecurityConfig : WebSecurityConfigurerAdapter() {
 //            .sessionManagement()
 //            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-//            .csrf()
-//            .disable()
-            .csrf().ignoringAntMatchers("/graphql")
+            .csrf()
+            .disable()
+//            .csrf().ignoringAntMatchers("/graphql")
     }
 }
