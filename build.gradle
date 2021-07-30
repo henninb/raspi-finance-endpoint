@@ -1,3 +1,5 @@
+import nu.studer.gradle.jooq.JooqEdition
+
 buildscript {
 }
 
@@ -10,6 +12,7 @@ plugins {
     id 'java-library'
     id 'jacoco'
     id 'codenarc'
+    id 'nu.studer.jooq' version '6.0'
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
     //id "org.jetbrains.kotlin.jvm" version "1.5.20"
@@ -106,13 +109,17 @@ dependencies {
 //    implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:${graphqlSpringVersion}")
 //    implementation("com.graphql-java-kickstart:graphiql-spring-boot-starter:${graphqlSpringVersion}")
 
-    implementation 'com.graphql-java:graphql-java-extended-scalars:16.0.1'
-    implementation 'com.graphql-java:graphql-java:16.2'
-    implementation 'com.graphql-java:graphql-java-spring-boot-starter-webmvc:2.0'
-    implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlScalarsVersion}")
+    implementation("com.graphql-java:graphql-java:${graphqlVersion}")
+    implementation("com.graphql-java:graphql-java-spring-boot-starter-webmvc:${graphqlSpringWebmvcVersion}")
+    implementation "com.google.guava:guava:30.1.1-jre"
 
     //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
+
+    // jooq
+    //implementation("org.jooq:jooq:3.15.1")
+    jooqGenerator "org.postgresql:postgresql:${postgresqlVersion}"
 
     // Oracle database
     runtimeOnly fileTree(dir: 'libs', include: 'ojdbc8.jar')
@@ -166,3 +173,100 @@ tasks.withType(CodeNarc) {
     configFile = rootProject.file 'config/codenarc/codenarcMain.groovy'
     ignoreFailures = true
 }
+
+
+jooq {
+    version = '3.15.0'  // the default (can be omitted)
+    edition = JooqEdition.OSS  // the default (can be omitted)
+}
+
+//jooq {
+//    version = '3.15.0'  // the default (can be omitted)
+//    edition = JooqEdition.OSS  // the default (can be omitted)
+//
+//    configurations {
+//        main {  // name of the jOOQ configuration
+//            generateSchemaSourceOnCompilation = true  // default (can be omitted)
+//
+//            generationTool {
+//                jdbc {
+//                    driver = 'org.postgresql.Driver'
+//                    url = 'jdbc:postgresql://localhost:5432/finance_test_db'
+//                    user = 'henninb'
+//                    password = 'monday1'
+//                }
+//                generator {
+//                    name = 'org.jooq.codegen.DefaultGenerator'
+//                    database {
+//                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+//                        inputSchema = 'public'
+////                        forcedTypes {
+////                            forcedType {
+////                                name = 'varchar'
+////                                includeExpression = '.*'
+////                                includeTypes = 'JSONB?'
+////                            }
+////                            forcedType {
+////                                name = 'varchar'
+////                                includeExpression = '.*'
+////                                includeTypes = 'INET'
+////                            }
+////                        }
+//                    }
+//                    generate {
+//                        deprecated = false
+//                        records = true
+//                        immutablePojos = true
+//                        fluentSetters = true
+//                    }
+////                    target {
+////                        packageName = 'nu.studer.sample'
+////                        directory = 'build/generated-src/jooq/main'  // default (can be omitted)
+////                    }
+//                    strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+//                }
+//            }
+//        }
+//    }
+//
+//}
+
+//jooq {
+//    version.set("3.14.7")  // default (can be omitted)
+//    edition.set(nu.studer.gradle.jooq.JooqEdition.OSS)  // default (can be omitted)
+//
+//    configurations {
+//        create("main") {  // name of the jOOQ configuration
+//            generateSchemaSourceOnCompilation.set(false)  // default (can be omitted)
+//
+//            jooqConfiguration.apply {
+//                logging = org.jooq.meta.jaxb.Logging.WARN
+//                jdbc.apply {
+//                    driver = "org.postgresql.Driver"
+//                    url = "jdbc:postgresql://localhost:5432/finance_db"
+//                    user = "henninb"
+//                    password = "monday1"
+//                }
+//                generator.apply {
+//                    name = "org.jooq.codegen.DefaultGenerator"
+//
+//                    database.apply {
+//                        name = "org.jooq.meta.postgres.PostgresDatabase"
+//                        inputSchema = "public"
+//                        includes = "goods"
+//                        excludes = ""
+//                    }
+//
+//                    generate.apply {
+//                        isRelations = true
+//                        isDeprecated = false
+//                        isRecords = true
+//                        isImmutablePojos = true
+//                        isFluentSetters = true
+//                    }
+//                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+//                }
+//            }
+//        }
+//    }
+//}

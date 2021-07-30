@@ -6,7 +6,7 @@ import java.util.*
 interface IDescriptionService {
     fun insertDescription(description: Description): Description
 
-    fun deleteByDescriptionName(description: String): Boolean
+    fun deleteByDescriptionName(descriptionName: String): Boolean
 
     fun fetchAllDescriptions(): List<Description>
 
