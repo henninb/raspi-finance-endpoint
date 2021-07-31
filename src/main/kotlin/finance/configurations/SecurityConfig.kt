@@ -9,9 +9,11 @@ open class SecurityConfig : WebSecurityConfigurerAdapter() {
     @Throws(Exception::class)
     public override fun configure(http: HttpSecurity) {
         http
+            .cors()
+            .and()
             .authorizeRequests()
-            .antMatchers("/").permitAll()
-            .antMatchers("/graphql").authenticated()
+            //.antMatchers("/").permitAll()
+            //.antMatchers("/graphql").authenticated()
             .anyRequest().permitAll()
             .and().httpBasic()
 //            .and()
