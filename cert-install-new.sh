@@ -2,6 +2,7 @@
 
 APP=raspi-finance
 SERVERNAME=hornsup
+ALIAS=hornsup
 
 [ -z "$KEYSTORE_PASSWORD" ] && { echo "please set KEYSTORE_PASSWORD"; exit 1; }
 TRUSTSTORE_PASSWORD="${KEYSTORE_PASSWORD}"
@@ -18,13 +19,16 @@ openssl genrsa -out "ca.key.pem" 4096
 echo openssl req -x509 -new -nodes -key "ca.key.pem" -sha256 -days 1825 -out root.ca.pem -subj "/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=$SERVERNAME/CN=$SERVERNAME"
 openssl req -x509 -new -nodes -key "ca.key.pem" -sha256 -days 1825 -out root.ca.pem -subj "/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=$SERVERNAME/CN=$SERVERNAME"
 
-cp -v ca.key.pem "$HOME/projects/raspi-finance-react/ssl/${SERVERNAME}-${APP}-key.pem"
-cp -v root.ca.pem "$HOME/projects/raspi-finance-react/ssl/${SERVERNAME}-${APP}-cert.pem"
+
+cp -v ca.key.pem "$HOME/projects/github.com/BitExplorer/raspi-finance-react/ssl/${SERVERNAME}-${APP}-key.pem"
+cp -v root.ca.pem "$HOME/projects/github.com/BitExplorer/raspi-finance-react/ssl/${SERVERNAME}-${APP}-cert.pem"
 
 # converting root Certificate from PEM to PKCS12 Format - for browsers
 # openssl pkcs12 -export -in root.ca.pem -out root.ca.pfx
-echo openssl pkcs12 -export -out root.ca.pem.p12 -in root.ca.pem -inkey "ca.key.pem" -password "pass:${KEYSTORE_PASSWORD}"
-openssl pkcs12 -export -out root.ca.pem.p12 -in root.ca.pem -inkey "ca.key.pem" -password "pass:${KEYSTORE_PASSWORD}"
+echo openssl pkcs12 -export -out root.ca.pem.p12 -in root.ca.pem -inkey ca.key.pem -name "${ALIAS}" -password "pass:${KEYSTORE_PASSWORD}"
+openssl pkcs12 -export -out root.ca.pem.p12 -in root.ca.pem -inkey ca.key.pem -name "${ALIAS}" -password "pass:${KEYSTORE_PASSWORD}"
+
+#openssl pkcs12 -export -in mykeycertificate.pem.txt -out mykeystore.pkcs12 -name myAlias -noiter -nomaciter
 
 cp -v root.ca.pem.p12 "src/main/resources/${SERVERNAME}-${APP}-keystore.p12"
 
@@ -36,6 +40,8 @@ echo keytool -import -alias hornsup -trustcacerts -file root.ca.pem -keystore "$
 
 keytool -noprompt -import -alias hornsup -trustcacerts -file root.ca.pem -keystore "${SERVERNAME}-${APP}-keystore.jks" -keypass "${KEYSTORE_PASSWORD}" -storepass "${TRUSTSTORE_PASSWORD}"
 
+
+# keytool -import -keystore clientkeystore -file ca-certificate.pem.txt -alias theCARoot
 
 # generate a private key for raspi-finance
 #openssl genrsa -out raspi-finance.key 4096
