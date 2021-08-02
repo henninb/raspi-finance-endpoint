@@ -4,12 +4,14 @@ APP=raspi-finance
 SERVERNAME=hornsup
 ALIAS=hornsup
 
+basedir="$HOME/projects/github.com/BitExplorer"
+
 [ -z "$KEYSTORE_PASSWORD" ] && { echo "please set KEYSTORE_PASSWORD"; exit 1; }
 TRUSTSTORE_PASSWORD="${KEYSTORE_PASSWORD}"
 
 mkdir -p "$HOME/ssl/"
-mkdir -p "$HOME/projects/raspi-finance-react/ssl/"
-mkdir -p "$HOME/projects/raspi-finance-endpoint/ssl/"
+mkdir -p "$basedir/raspi-finance-react/ssl/"
+mkdir -p "$basedir/raspi-finance-endpoint/ssl/"
 
 # generate private key (change to a file extention of key)
 echo openssl genrsa -out "ca.key.pem" 4096
@@ -19,9 +21,8 @@ openssl genrsa -out "ca.key.pem" 4096
 echo openssl req -x509 -new -nodes -key "ca.key.pem" -sha256 -days 1825 -out root.ca.pem -subj "/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=$SERVERNAME/CN=$SERVERNAME"
 openssl req -x509 -new -nodes -key "ca.key.pem" -sha256 -days 1825 -out root.ca.pem -subj "/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=$SERVERNAME/CN=$SERVERNAME"
 
-
-cp -v ca.key.pem "$HOME/projects/github.com/BitExplorer/raspi-finance-react/ssl/${SERVERNAME}-${APP}-key.pem"
-cp -v root.ca.pem "$HOME/projects/github.com/BitExplorer/raspi-finance-react/ssl/${SERVERNAME}-${APP}-cert.pem"
+cp -v ca.key.pem "$basedir/raspi-finance-react/ssl/${SERVERNAME}-${APP}-key.pem"
+cp -v root.ca.pem "$basedir/raspi-finance-react/ssl/${SERVERNAME}-${APP}-cert.pem"
 
 # converting root Certificate from PEM to PKCS12 Format - for browsers
 # openssl pkcs12 -export -in root.ca.pem -out root.ca.pfx
