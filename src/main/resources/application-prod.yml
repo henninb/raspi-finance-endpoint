@@ -6,7 +6,7 @@ server:
     key-store: classpath:hornsup-raspi-finance-keystore.p12
     key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: pkcs12
-    key-alias: hornsup-raspi-finance
+    key-alias: hornsup
     key-password: ${SSL_KEY_PASSWORD}
     enabled: true
     enabled-protocols: TLSv1.2
