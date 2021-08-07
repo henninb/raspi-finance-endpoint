@@ -29,6 +29,9 @@ node_modules/
 *.ks
 *.der
 *.ts
+*.crt
+*.key
+*.csr
 test.json
 
 ### Files ###
@@ -53,3 +56,4 @@ finance_db_master.xlsm
 metrics-*.json
 tags
 env.bootrun
+v3.ext
