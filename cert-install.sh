@@ -39,5 +39,6 @@ cp hornsup.p12 "${basedir}/raspi-finance-endpoint/src/main/resources/hornsup-ras
 cp hornsup.crt "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-cert.pem"
 cp hornsup.key "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-key.pem"
 cp hornsup.jks "${basedir}/raspi-finance-ratpack/ssl/hornsup-raspi-finance.jks"
+cp hornsup.jks "${basedir}/example-ktor/hornsup-raspi-finance.jks"
 
 exit 0
