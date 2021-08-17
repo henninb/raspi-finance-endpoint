@@ -20,7 +20,7 @@ class DescriptionBuilder {
         return description
     }
 
-    DescriptionBuilder withDescription(String description) {
+    DescriptionBuilder withDescriptionName(String description) {
         this.descriptionName = description
         return this
     }

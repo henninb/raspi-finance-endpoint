@@ -45,7 +45,7 @@ class GraphqlSpec extends Specification {
         when:
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
                 .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("foo:bar".getBytes()))
-                .content("{\"query\":\"{ descriptions { description } }\"}")
+                .content("{\"query\":\"{ descriptions { descriptionName } }\"}")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
         then:
@@ -57,7 +57,7 @@ class GraphqlSpec extends Specification {
         when:
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
                 .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("foo:bar".getBytes()))
-                .content("{\"query\":\"{ dne { description } }\"}")
+                .content("{\"query\":\"{ dne { descriptionName } }\"}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
         then:

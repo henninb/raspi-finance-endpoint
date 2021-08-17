@@ -49,7 +49,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test insert Category - empty'() {
         given:
-        Category category = CategoryBuilder.builder().withCategory('').build()
+        Category category = CategoryBuilder.builder().withCategoryName('').build()
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, category.toString())
