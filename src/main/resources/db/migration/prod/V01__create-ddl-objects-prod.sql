@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS public.t_category
     active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
+    CONSTRAINT ck_lowercase_category CHECK (category_name = lower(category_name))
 );
 
 -- ALTER TABLE public.t_category RENAME COLUMN category TO category_name;
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
                                            'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category) ON DELETE CASCADE
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON DELETE CASCADE
 );
 
 -- Required to happen after the t_transaction table is created
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS public.t_description
     active_status  BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated   TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added     TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    CONSTRAINT t_description_description_lowercase_ck CHECK (description = lower(description))
+    CONSTRAINT t_description_description_lowercase_ck CHECK (description_name = lower(description_name))
 );
 
 -- ALTER TABLE public.t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
