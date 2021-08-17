@@ -128,7 +128,7 @@ CREATE TABLE t_transaction
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT check_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
-                                          ('annually', 'bi-annually', 'every_two_weeks', 'monthly', 'undefined')),
+                                          ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly','onetime', 'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES t_receipt_image (receipt_image_id) ON DELETE CASCADE,
     CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES t_category (category) ON DELETE CASCADE
@@ -155,13 +155,13 @@ CREATE TABLE t_payment
 );
 
 ----------
--- Parm --
+-- parameter --
 ----------
-CREATE TABLE t_parm
+CREATE TABLE t_parameter
 (
-    parm_id       NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    parm_name     VARCHAR(30) UNIQUE  NOT NULL,
-    parm_value    VARCHAR(30)         NOT NULL,
+    parameter_id       NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
+    parameter_name     VARCHAR(30) UNIQUE  NOT NULL,
+    parameter_value    VARCHAR(30)         NOT NULL,
     active_status NUMBER(1) DEFAULT 1 NOT NULL,
     date_updated  TIMESTAMP           NOT NULL,
     date_added    TIMESTAMP           NOT NULL

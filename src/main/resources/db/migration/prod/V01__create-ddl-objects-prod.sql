@@ -87,6 +87,8 @@ CREATE TABLE IF NOT EXISTS public.t_category
     CONSTRAINT ck_lowercase_category CHECK (category = lower(category))
 );
 
+-- ALTER TABLE public.t_category RENAME COLUMN category TO category_name;
+
 ---------------------------
 -- TransactionCategories --
 ---------------------------
@@ -116,9 +118,9 @@ CREATE TABLE IF NOT EXISTS public.t_receipt_image
     CONSTRAINT ck_image_type CHECK (image_format_type IN ('jpeg', 'png', 'undefined'))
 );
 
--- alter TABLE public.t_receipt_image rename column jpg_image to image;
--- alter TABLE public.t_receipt_image alter column thumbnail set not null;
--- alter TABLE public.t_receipt_image alter column image_format_type set not null;
+-- ALTER TABLE public.t_receipt_image rename column jpg_image to image;
+-- ALTER TABLE public.t_receipt_image alter column thumbnail set not null;
+-- ALTER TABLE public.t_receipt_image alter column image_format_type set not null;
 -- ALTER TABLE public.t_receipt_image DROP CONSTRAINT ck_image_type_jpg;
 -- ALTER TABLE public.t_receipt_image ADD COLUMN date_updated     TIMESTAMP NOT NULL DEFAULT TO_TIMESTAMP(0);
 -- ALTER TABLE public.t_receipt_image ADD CONSTRAINT ck_image_size CHECK(length(image) <= 1_048_576);
@@ -156,7 +158,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
-                                          ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
+                                          ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
                                            'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
@@ -171,7 +173,7 @@ ALTER TABLE public.t_receipt_image
 
 -- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE public.t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
+-- ALTER TABLE public.t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
 -- ALTER TABLE public.t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE public.t_transaction DROP COLUMN reoccurring;
 
@@ -197,21 +199,21 @@ CREATE TABLE IF NOT EXISTS public.t_payment
 -- ALTER TABLE public.t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
 -- ALTER TABLE public.t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
 
--------------
--- Parm    --
--------------
-CREATE TABLE IF NOT EXISTS public.t_parm
+------------------
+-- Parameter    --
+------------------
+CREATE TABLE IF NOT EXISTS public.t_parameter
 (
-    parm_id       BIGSERIAL PRIMARY KEY,
-    parm_name     TEXT UNIQUE                       NOT NULL,
-    parm_value    TEXT                              NOT NULL,
+    parameter_id       BIGSERIAL PRIMARY KEY,
+    parameter_name     TEXT UNIQUE                       NOT NULL,
+    parameter_value    TEXT                              NOT NULL,
     active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added    TIMESTAMP                         NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
--- ALTER TABLE public.t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
--- INSERT into t_parm(parm_name, parm_value) VALUES('payment_account', '');
+-- ALTER TABLE public.t_parameter ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
+-- INSERT into t_parameter(parameter_name, parameter_value) VALUES('payment_account', '');
 
 -----------------
 -- description --
@@ -227,6 +229,7 @@ CREATE TABLE IF NOT EXISTS public.t_description
 );
 
 -- ALTER TABLE public.t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
+-- ALTER TABLE public.t_description RENAME COLUMN description TO description_name;
 
 SELECT setval('public.t_receipt_image_receipt_image_id_seq',
               (SELECT MAX(receipt_image_id) FROM public.t_receipt_image) + 1);
@@ -235,7 +238,7 @@ SELECT setval('public.t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM pu
 SELECT setval('public.t_account_account_id_seq', (SELECT MAX(account_id) FROM public.t_account) + 1);
 SELECT setval('public.t_category_category_id_seq', (SELECT MAX(category_id) FROM public.t_category) + 1);
 SELECT setval('public.t_description_description_id_seq', (SELECT MAX(description_id) FROM public.t_description) + 1);
-SELECT setval('public.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM public.t_parm) + 1);
+SELECT setval('public.t_parameter_parameter_id_seq', (SELECT MAX(parameter_id) FROM public.t_parameter) + 1);
 SELECT setval('public.t_validation_amount_validation_id_seq',
               (SELECT MAX(validation_id) FROM public.t_validation_amount) + 1);
 
@@ -288,5 +291,5 @@ COMMIT;
 -- check for locks
 -- SELECT pid, usename, pg_blocking_pids(pid) as blocked_by, query as blocked_query from pg_stat_activity where cardinality(pg_blocking_pids(pid)) > 0;
 
---select * from t_transaction where transaction_state = 'cleared' and transaction_date > now();
---select * from t_transaction where transaction_state in ('future', 'outstanding') and transaction_date < now();
+--SELECT * from t_transaction where transaction_state = 'cleared' and transaction_date > now();
+--SELECT * from t_transaction where transaction_state in ('future', 'outstanding') and transaction_date < now();

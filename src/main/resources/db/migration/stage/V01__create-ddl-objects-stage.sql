@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS stage.t_transaction
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
-                                          ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
+                                          ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
                                            'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES stage.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES stage.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
@@ -197,20 +197,20 @@ CREATE TABLE IF NOT EXISTS stage.t_payment
 -- ALTER TABLE stage.t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES stage.t_transaction (guid) ON DELETE CASCADE;
 
 -------------
--- Parm    --
+-- parameter    --
 -------------
-CREATE TABLE IF NOT EXISTS stage.t_parm
+CREATE TABLE IF NOT EXISTS stage.t_parameter
 (
-    parm_id       BIGSERIAL PRIMARY KEY,
-    parm_name     TEXT UNIQUE                       NOT NULL,
-    parm_value    TEXT                              NOT NULL,
+    parameter_id       BIGSERIAL PRIMARY KEY,
+    parameter_name     TEXT UNIQUE                       NOT NULL,
+    parameter_value    TEXT                              NOT NULL,
     active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added    TIMESTAMP                         NOT NULL DEFAULT TO_TIMESTAMP(0)
 );
 
--- ALTER TABLE stage.t_parm ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
--- INSERT into t_parm(parm_name, parm_value) VALUES('payment_account', '');
+-- ALTER TABLE stage.t_parameter ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
+-- INSERT into t_parameter(parameter_name, parameter_value) VALUES('payment_account', '');
 
 -----------------
 -- description --
@@ -234,7 +234,7 @@ SELECT setval('stage.t_payment_payment_id_seq', (SELECT MAX(payment_id) FROM sta
 SELECT setval('stage.t_account_account_id_seq', (SELECT MAX(account_id) FROM stage.t_account) + 1);
 SELECT setval('stage.t_category_category_id_seq', (SELECT MAX(category_id) FROM stage.t_category) + 1);
 SELECT setval('stage.t_description_description_id_seq', (SELECT MAX(description_id) FROM stage.t_description) + 1);
-SELECT setval('stage.t_parm_parm_id_seq', (SELECT MAX(parm_id) FROM stage.t_parm) + 1);
+SELECT setval('stage.t_parameter_parameter_id_seq', (SELECT MAX(parameter_id) FROM stage.t_parameter) + 1);
 SELECT setval('stage.t_validation_amount_validation_id_seq', (SELECT MAX(validation_id) FROM stage.t_validation_amount) + 1);
 
 CREATE OR REPLACE FUNCTION fn_update_transaction_categories()

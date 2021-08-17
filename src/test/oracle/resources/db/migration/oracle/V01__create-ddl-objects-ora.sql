@@ -4,7 +4,7 @@
 -- drop table T_ACCOUNT cascade constraints;
 -- drop table T_CATEGORY cascade constraints;
 -- drop table T_RECEIPT_IMAGE cascade constraints;
--- drop table T_PARM cascade constraints;
+-- drop table T_parameter cascade constraints;
 -- drop table T_DESCRIPTION cascade constraints;
 
 alter
@@ -153,13 +153,13 @@ CREATE TABLE t_payment
 );
 
 ----------
--- Parm --
+-- parameter --
 ----------
-CREATE TABLE t_parm
+CREATE TABLE t_parameter
 (
-    parm_id       NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    parm_name     VARCHAR(30) UNIQUE  NOT NULL,
-    parm_value    VARCHAR(30)         NOT NULL,
+    parameter_id       NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
+    parameter_name     VARCHAR(30) UNIQUE  NOT NULL,
+    parameter_value    VARCHAR(30)         NOT NULL,
     active_status NUMBER(1) DEFAULT 1 NOT NULL,
     date_updated  TIMESTAMP           NOT NULL,
     date_added    TIMESTAMP           NOT NULL

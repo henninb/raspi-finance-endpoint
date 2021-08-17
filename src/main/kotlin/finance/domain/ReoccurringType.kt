@@ -11,8 +11,8 @@ enum class ReoccurringType(val label: String) {
     @JsonProperty("annually")
     Annually("annually"),
 
-    @JsonProperty("bi_annually")
-    BiAnnually("bi_annually"),
+    @JsonProperty("biannually")
+    BiAnnually("biannually"),
 
     @JsonProperty("fortnightly")
     FortNightly("fortnightly"),
@@ -30,7 +30,5 @@ enum class ReoccurringType(val label: String) {
     override fun toString(): String = name.lowercase()
 
     companion object {
-        //private val VALUES = values();
-        //fun getByValue(type: String) = VALUES.firstOrNull { it.type == type }
     }
 }

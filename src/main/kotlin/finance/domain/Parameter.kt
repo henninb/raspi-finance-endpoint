@@ -14,27 +14,27 @@ import javax.validation.constraints.Size
 
 @Entity
 @Proxy(lazy = false)
-@Table(name = "t_parm")
+@Table(name = "t_parameter")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Parameter(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "t_parm_parm_id_seq")
+    @SequenceGenerator(name = "t_parameter_parameter_id_seq")
     @field:Min(value = 0L)
     @JsonProperty
-    @Column(name = "parm_id", nullable = false)
+    @Column(name = "parameter_id", nullable = false)
     var parameterId: Long,
 
     @field:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "parm_name", unique = true, nullable = false)
+    @Column(name = "parameter_name", unique = true, nullable = false)
     @JsonProperty
     var parameterName: String,
 
 
     @field:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "parm_value", unique = true, nullable = false)
+    @Column(name = "parameter_value", unique = true, nullable = false)
     @JsonProperty
     var parameterValue: String,
 
