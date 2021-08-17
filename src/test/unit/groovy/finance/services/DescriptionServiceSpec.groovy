@@ -1,8 +1,7 @@
 package finance.services
 
-import finance.domain.Category
+
 import finance.domain.Description
-import finance.helpers.CategoryBuilder
 import finance.helpers.DescriptionBuilder
 
 import javax.validation.ConstraintViolation

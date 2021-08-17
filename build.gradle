@@ -24,7 +24,6 @@ plugins {
 apply from: 'test.gradle'
 
 repositories {
-    //jcenter()
     mavenCentral()
 //    maven {
 //        url "https://www.oracle.com/content/secure/maven/content"
