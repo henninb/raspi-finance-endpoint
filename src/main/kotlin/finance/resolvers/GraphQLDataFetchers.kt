@@ -71,7 +71,7 @@ class GraphQLDataFetchers(
             val categoryName: String = it.getArgument("category")
             logger.info(categoryName)
             val category = Category()
-            category.category = categoryName
+            category.categoryName = categoryName
 
             categoryService.insertCategory(category)
         }
@@ -82,7 +82,7 @@ class GraphQLDataFetchers(
             val descriptionName: String = it.getArgument("description")
             logger.info(description)
             val description = Description()
-            description.description = descriptionName
+            description.descriptionName = descriptionName
 
             descriptionService.insertDescription(description)
         }

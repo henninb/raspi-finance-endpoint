@@ -12,7 +12,7 @@ class CategoryBuilder {
 
     Category build() {
         Category category = new Category().with {
-            category = this.categoryName
+            categoryName = this.categoryName
             activeStatus = this.activeStatus
             return it
         }

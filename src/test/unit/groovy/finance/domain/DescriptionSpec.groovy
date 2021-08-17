@@ -18,7 +18,7 @@ class DescriptionSpec extends BaseDomainSpec {
         Description description = mapper.readValue(jsonPayload, Description)
 
         then:
-        description.description == "bar"
+        description.descriptionName == "bar"
         0 * _
     }
 
@@ -49,14 +49,14 @@ class DescriptionSpec extends BaseDomainSpec {
         Description description = mapper.readValue(jsonPayloadBad, Description)
 
         then:
-        description.description.empty
+        description.descriptionName.empty
         0 * _
     }
 
     void 'test validation valid description'() {
         given:
         Description description = DescriptionBuilder.builder().build()
-        description.description = "foobar"
+        description.descriptionName = "foobar"
 
         when:
         Set<ConstraintViolation<Description>> violations = validator.validate(description)

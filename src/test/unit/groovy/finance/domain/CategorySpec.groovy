@@ -20,7 +20,7 @@ class CategorySpec extends BaseDomainSpec {
         Category category = mapper.readValue(jsonPayload, Category)
 
         then:
-        category.category == "bar"
+        category.categoryName == "bar"
         0 * _
     }
 
@@ -51,14 +51,14 @@ class CategorySpec extends BaseDomainSpec {
         Category category = mapper.readValue(jsonPayloadBad, Category)
 
         then:
-        category.category.empty
+        category.categoryName.empty
         0 * _
     }
 
     void 'test validation valid category'() {
         given:
         Category category = CategoryBuilder.builder().build()
-        category.category = "foobar"
+        category.categoryName = "foobar"
 
         when:
         Set<ConstraintViolation<Category>> violations = validator.validate(category)

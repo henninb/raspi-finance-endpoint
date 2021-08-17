@@ -6,10 +6,7 @@ import java.util.*
 
 interface CategoryRepository : JpaRepository<Category, Long> {
 
-    fun findByCategory(categoryName: String): Optional<Category>
+    fun findByCategoryName(categoryName: String): Optional<Category>
 
-    fun findByActiveStatusOrderByCategory(activeStatus: Boolean): List<Category>
-
-//    @Transactional
-//    fun deleteByCategory(categoryName: String)
+    fun findByActiveStatusOrderByCategoryName(activeStatus: Boolean): List<Category>
 }

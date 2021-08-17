@@ -70,7 +70,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test find Category'() {
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, category.category)
+        ResponseEntity<String> response = selectEndpoint(endpointName, category.categoryName)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -92,7 +92,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test Category delete'() {
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, category.category)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, category.categoryName)
 
         then:
         response.statusCode == HttpStatus.OK

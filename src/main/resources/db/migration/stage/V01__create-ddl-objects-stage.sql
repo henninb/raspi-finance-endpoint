@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS stage.t_role
 CREATE TABLE IF NOT EXISTS stage.t_category
 (
     category_id   BIGSERIAL PRIMARY KEY,
-    category      TEXT UNIQUE                       NOT NULL,
+    category_name      TEXT UNIQUE                       NOT NULL,
     active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated  TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added    TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS stage.t_parameter
 CREATE TABLE IF NOT EXISTS stage.t_description
 (
     description_id BIGSERIAL PRIMARY KEY,
-    description    TEXT UNIQUE                       NOT NULL,
+    description_name    TEXT UNIQUE                       NOT NULL,
     active_status  BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated   TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added     TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,

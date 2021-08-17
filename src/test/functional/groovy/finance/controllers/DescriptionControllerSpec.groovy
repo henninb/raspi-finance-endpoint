@@ -50,7 +50,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
 
     void 'test find description'() {
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, description.description)
+        ResponseEntity<String> response = selectEndpoint(endpointName, description.descriptionName)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -68,7 +68,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
 
     void 'test delete description'() {
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, description.description)
+        ResponseEntity<String> response = deleteEndpoint(endpointName, description.descriptionName)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -77,7 +77,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
 
     void 'test find description - not found after removal'() {
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, description.description)
+        ResponseEntity<String> response = selectEndpoint(endpointName, description.descriptionName)
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
