@@ -6,9 +6,6 @@ import java.util.*
 import javax.transaction.Transactional
 
 interface DescriptionRepository : JpaRepository<Description, Long> {
-    fun findByActiveStatusOrderByDescription(activeStatus: Boolean): List<Description>
-    fun findByDescription(descriptionName: String): Optional<Description>
-
-//    @Transactional
-//    fun deleteByDescription(descriptionName: String)
+    fun findByActiveStatusOrderByDescriptionName(activeStatus: Boolean): List<Description>
+    fun findByDescriptionName(descriptionName: String): Optional<Description>
 }

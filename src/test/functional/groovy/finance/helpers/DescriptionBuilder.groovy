@@ -13,7 +13,7 @@ class DescriptionBuilder {
 
     Description build() {
         Description description = new Description().with {
-            description = this.descriptionName
+            descriptionName = this.descriptionName
             activeStatus = this.activeStatus
             return it
         }

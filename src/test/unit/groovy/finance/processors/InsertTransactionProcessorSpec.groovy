@@ -84,7 +84,7 @@ class InsertTransactionProcessorSpec extends BaseProcessorSpec {
         Account account = AccountBuilder.builder().build()
         Category category = CategoryBuilder.builder().build()
         account.accountNameOwner = transaction.accountNameOwner
-        category.category = transaction.category
+        category.categoryName = transaction.category
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
         Set<ConstraintViolation<Category>> constraintViolationsCategory = validator.validate(category)
         Set<ConstraintViolation<Account>> constraintViolationsAccount = validator.validate(account)
@@ -97,7 +97,7 @@ class InsertTransactionProcessorSpec extends BaseProcessorSpec {
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
         1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
         2 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
-        1 * mockCategoryRepository.findByCategory(transaction.category) >> Optional.empty()
+        1 * mockCategoryRepository.findByCategoryName(transaction.category) >> Optional.empty()
         1 * mockCategoryRepository.saveAndFlush(category) >> category
         //1 * validatorMock.validate(transaction) >> constraintViolations
         1 * validatorMock.validate(account) >> constraintViolationsAccount

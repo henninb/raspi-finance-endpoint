@@ -28,7 +28,7 @@ class CategoryJpaSpec extends Specification {
 
         then:
         categoryRepository.count() == 1L
-        categoryResult.category == category.category
+        categoryResult.categoryName == category.categoryName
         0 * _
     }
 
@@ -37,22 +37,22 @@ class CategoryJpaSpec extends Specification {
         Category category1 = CategoryBuilder.builder().build()
         Category category2 = CategoryBuilder.builder().build()
         Category categoryResult1 = entityManager.persist(category1)
-        category2.category = 'second'
+        category2.categoryName = 'second'
 
         when:
         Category categoryResult2 = entityManager.persist(category2)
 
         then:
         categoryRepository.count() == 2L
-        categoryResult2.category == category2.category
-        categoryResult1.category == category1.category
+        categoryResult2.categoryName == category2.categoryName
+        categoryResult1.categoryName == category1.categoryName
         0 * _
     }
 
     void 'test category - empty category insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
-        category.category = ''
+        category.categoryName = ''
 
         when:
         entityManager.persist(category)
@@ -66,7 +66,7 @@ class CategoryJpaSpec extends Specification {
     void 'test category - invalid category insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
-        category.category = 'add a space'
+        category.categoryName = 'add a space'
 
         when:
         entityManager.persist(category)
@@ -80,7 +80,7 @@ class CategoryJpaSpec extends Specification {
     void 'test category - capital letter category insert'() {
         given:
         Category category = CategoryBuilder.builder().build()
-        category.category = 'Space'
+        category.categoryName = 'Space'
 
         when:
         entityManager.persist(category)

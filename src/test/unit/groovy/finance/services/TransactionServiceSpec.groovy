@@ -171,7 +171,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Transaction transaction = TransactionBuilder.builder().withGuid(guid).build()
         Account account = transactionService.createDefaultAccount(transaction.accountNameOwner, AccountType.Credit)
         Category category = CategoryBuilder.builder().build()
-        category.category = transaction.category
+        category.categoryName = transaction.category
         Optional<Account> accountOptional = Optional.of(account)
         Optional<Category> categoryOptional = Optional.of(category)
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
@@ -201,7 +201,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         Account account = new Account()
         Optional<Account> accountOptional = Optional.of(account)
         transaction.guid = guid
-        category.category = transaction.category
+        category.categoryName = transaction.category
         category.categoryId = 0
         Set<ConstraintViolation<Transaction>> constraintViolations = validator.validate(transaction)
 

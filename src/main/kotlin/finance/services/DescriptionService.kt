@@ -24,18 +24,18 @@ open class DescriptionService(
 
     @Timed
     override fun deleteByDescriptionName(descriptionName: String): Boolean {
-        val description = descriptionRepository.findByDescription(descriptionName).get()
+        val description = descriptionRepository.findByDescriptionName(descriptionName).get()
         descriptionRepository.delete(description)
         return true
     }
 
     @Timed
     override fun fetchAllDescriptions(): List<Description> {
-        return descriptionRepository.findByActiveStatusOrderByDescription(true)
+        return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
     }
 
     @Timed
     override fun findByDescriptionName(descriptionName: String): Optional<Description> {
-        return descriptionRepository.findByDescription(descriptionName)
+        return descriptionRepository.findByDescriptionName(descriptionName)
     }
 }

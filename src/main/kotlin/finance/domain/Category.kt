@@ -36,9 +36,9 @@ data class Category(
     @field:Size(min = 1, max = 50)
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "category", unique = true, nullable = false)
+    @Column(name = "category_name", unique = true, nullable = false)
     @JsonProperty
-    var category: String
+    var categoryName: String
 ) {
     constructor() : this(0L, true, "")
 

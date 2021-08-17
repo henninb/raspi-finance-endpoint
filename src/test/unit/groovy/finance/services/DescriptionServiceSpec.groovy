@@ -24,7 +24,7 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         Description descriptionInserted = descriptionService.insertDescription(description)
 
         then:
-        descriptionInserted.description == description.description
+        descriptionInserted.descriptionName == description.descriptionName
         1 * validatorMock.validate(description) >> constraintViolations
         1 * descriptionRepositoryMock.saveAndFlush(description) >> description
         0 * _
@@ -52,10 +52,10 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         Description description = DescriptionBuilder.builder().build()
 
         when:
-        descriptionService.deleteByDescriptionName(description.description)
+        descriptionService.deleteByDescriptionName(description.descriptionName)
 
         then:
-        1 * descriptionRepositoryMock.findByDescription(description.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByDescriptionName(description.descriptionName) >> Optional.of(description)
         1 * descriptionRepositoryMock.delete(description)
         0 * _
     }

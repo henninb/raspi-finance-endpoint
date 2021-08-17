@@ -23,7 +23,7 @@ class CategoryServiceSpec extends BaseServiceSpec {
         Category categoryInserted = categoryService.insertCategory(category)
 
         then:
-        categoryInserted.category == category.category
+        categoryInserted.categoryName == category.categoryName
         1 * validatorMock.validate(category) >> constraintViolations
         1 * categoryRepositoryMock.saveAndFlush(category) >> category
         0 * _
@@ -51,10 +51,10 @@ class CategoryServiceSpec extends BaseServiceSpec {
         Category category = CategoryBuilder.builder().build()
 
         when:
-        categoryService.deleteByCategoryName(category.category)
+        categoryService.deleteByCategoryName(category.categoryName)
 
         then:
-        1 * categoryRepositoryMock.findByCategory(category.category) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByCategoryName(category.categoryName) >> Optional.of(category)
         1 * categoryRepositoryMock.delete(category)
         0 * _
     }

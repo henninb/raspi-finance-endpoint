@@ -118,7 +118,7 @@ open class TransactionService(
     override fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
-        category.category = categoryName
+        category.categoryName = categoryName
         return category
     }
 

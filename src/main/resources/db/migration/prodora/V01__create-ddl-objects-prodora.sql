@@ -61,7 +61,7 @@ CREATE TABLE t_account
 CREATE TABLE t_category
 (
     category_id   NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    category      VARCHAR(30) UNIQUE  NOT NULL,
+    category_name      VARCHAR(30) UNIQUE  NOT NULL,
     active_status NUMBER(1) DEFAULT 1 NOT NULL,
     date_updated  TIMESTAMP           NOT NULL,
     date_added    TIMESTAMP           NOT NULL,
@@ -172,7 +172,7 @@ CREATE TABLE t_parameter
 CREATE TABLE t_description
 (
     description_id NUMBER GENERATED always AS IDENTITY PRIMARY KEY,
-    description    VARCHAR(50) UNIQUE  NOT NULL,
+    description_name    VARCHAR(50) UNIQUE  NOT NULL,
     active_status  NUMBER(1) DEFAULT 1 NOT NULL,
     date_updated   TIMESTAMP           NOT NULL,
     date_added     TIMESTAMP           NOT NULL
