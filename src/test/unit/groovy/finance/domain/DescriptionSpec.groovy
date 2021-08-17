@@ -5,12 +5,13 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.DescriptionBuilder
 import spock.lang.Unroll
+
 import javax.validation.ConstraintViolation
 
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 
 class DescriptionSpec extends BaseDomainSpec {
-    protected String jsonPayload = '{"description":"bar", "activeStatus":true}'
+    protected String jsonPayload = '{"descriptionName":"bar", "activeStatus":true}'
 
     void 'test -- JSON serialization to Description'() {
 
@@ -33,11 +34,11 @@ class DescriptionSpec extends BaseDomainSpec {
         0 * _
 
         where:
-        payload                   | exceptionThrown          | message
-        'non-jsonPayload'         | JsonParseException       | 'Unrecognized token'
-        '[]'                      | MismatchedInputException | 'Cannot deserialize value of type'
-        '{description: "test"}'   | JsonParseException       | 'was expecting double-quote to start field name'
-        '{"activeStatus": "abc"}' | InvalidFormatException   | 'Cannot deserialize value of type'
+        payload                     | exceptionThrown          | message
+        'non-jsonPayload'           | JsonParseException       | 'Unrecognized token'
+        '[]'                        | MismatchedInputException | 'Cannot deserialize value of type'
+        '{descriptionName: "test"}' | JsonParseException       | 'was expecting double-quote to start field name'
+        '{"activeStatus": "abc"}'   | InvalidFormatException   | 'Cannot deserialize value of type'
     }
 
     void 'test JSON deserialization to Description object - description is empty'() {
@@ -82,8 +83,8 @@ class DescriptionSpec extends BaseDomainSpec {
         violations.iterator().next().invalidValue == description.properties[invalidField]
 
         where:
-        invalidField  | descriptionName                                          | activeStatus | expectedError                   | errorCount
-        'description' | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'description' | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        invalidField      | descriptionName                                          | activeStatus | expectedError                               | errorCount
+        'descriptionName' | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'descriptionName' | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
     }
 }
