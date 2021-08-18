@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 env=$1
 test_flag=$2
@@ -28,7 +28,7 @@ if [ -z "${datastore}" ]; then
   datastore=base
 fi
 
-if [ "$env" == "prodora" ]; then
+if [ "$env" = "prodora" ]; then
   datastore=oracle
 fi
 
@@ -61,6 +61,7 @@ else
   echo "$OS is not yet implemented."
   exit 1
 fi
+
 
 export APPNAME
 export HOST_IP
@@ -96,9 +97,9 @@ git update-index --assume-unchanged env.secrets
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
-if [ -x "$(command -v ctags)" ]; then
-  git ls-files | ctags --links=no --languages=groovy,kotlin -L-
-fi
+# if [ -x "$(command -v ctags)" ]; then
+#   git ls-files | ctags --links=no --languages=groovy,kotlin -L-
+# fi
 
 if [ "${test_flag}" = "true" ]; then
   if ! ./gradlew clean build test integrationTest functionalTest; then
