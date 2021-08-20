@@ -4,7 +4,7 @@ basedir="$HOME/projects/github.com/BitExplorer"
 
 stty -echo
 printf "Cert Password: "
-read password
+read -r password
 stty echo
 
 if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
