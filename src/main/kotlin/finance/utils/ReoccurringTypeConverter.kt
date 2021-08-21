@@ -10,7 +10,7 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
     override fun convertToDatabaseColumn(attribute: ReoccurringType): String {
         return when (attribute) {
             ReoccurringType.Annually -> "annually"
-            ReoccurringType.BiAnnually -> "bi-annually"
+            ReoccurringType.BiAnnually -> "biannually"
             ReoccurringType.FortNightly -> "fortnightly"
             ReoccurringType.Quarterly -> "quarterly"
             ReoccurringType.Monthly -> "monthly"
@@ -22,7 +22,7 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
     override fun convertToEntityAttribute(attribute: String): ReoccurringType {
         return when (attribute.trim().lowercase()) {
             "annually" -> ReoccurringType.Annually
-            "bi-annually" -> ReoccurringType.BiAnnually
+            "biannually" -> ReoccurringType.BiAnnually
             "fortnightly" -> ReoccurringType.FortNightly
             "quarterly" -> ReoccurringType.Quarterly
             "monthly" -> ReoccurringType.Monthly
