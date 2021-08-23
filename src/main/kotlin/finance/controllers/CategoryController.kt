@@ -15,8 +15,8 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
 
     //http://localhost:8080/category/select/active
     @GetMapping("/select/active", produces = ["application/json"])
-    fun selectAllActiveCategories(): ResponseEntity<List<Category>> {
-        val categories: List<Category> = categoryService.fetchAllActiveCategories()
+    fun categories(): ResponseEntity<List<Category>> {
+        val categories: List<Category> = categoryService.categories()
         if (categories.isEmpty()) {
             logger.error("no categories found in the datastore.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any categories in the datastore.")
@@ -26,8 +26,8 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     }
 
     @GetMapping("/select/{category_name}")
-    fun selectCategoryName(@PathVariable("category_name") categoryName: String): ResponseEntity<String> {
-        val categoryOptional = categoryService.findByCategory(categoryName)
+    fun category(@PathVariable("category_name") categoryName: String): ResponseEntity<String> {
+        val categoryOptional = categoryService.category(categoryName)
         if (categoryOptional.isPresent) {
             return ResponseEntity.ok(mapper.writeValueAsString(categoryOptional.get()))
         }
@@ -42,11 +42,11 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     }
 
     @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])
-    fun deleteByCategoryName(@PathVariable categoryName: String): ResponseEntity<String> {
+    fun deleteCategory(@PathVariable categoryName: String): ResponseEntity<String> {
         val categoryOptional: Optional<Category> = categoryService.findByCategoryName(categoryName)
 
         if (categoryOptional.isPresent) {
-            categoryService.deleteByCategoryName(categoryName)
+            categoryService.deleteCategory(categoryName)
             return ResponseEntity.ok("category deleted")
         }
 

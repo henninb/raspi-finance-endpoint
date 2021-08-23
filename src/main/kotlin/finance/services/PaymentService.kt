@@ -30,7 +30,7 @@ open class PaymentService(
 
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         handleConstraintViolations(constraintViolations, meterService)
-        val optionalAccount = accountService.findByAccountNameOwner(payment.accountNameOwner)
+        val optionalAccount = accountService.account(payment.accountNameOwner)
         if (!optionalAccount.isPresent) {
             logger.error("Account not found ${payment.accountNameOwner}")
             meterService.incrementExceptionThrownCounter("RuntimeException")

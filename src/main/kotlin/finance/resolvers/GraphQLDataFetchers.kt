@@ -95,18 +95,18 @@ class GraphQLDataFetchers(
 
     val accounts: DataFetcher<List<Account>>
         get() = DataFetcher<List<Account>> {
-            return@DataFetcher accountService.findByActiveStatusOrderByAccountNameOwner()
+            return@DataFetcher accountService.accounts()
         }
 
     fun account(): DataFetcher<Account> {
         return DataFetcher {
-            accountService.findByAccountNameOwner(it.getArgument("accountNameOwner")).get()
+            accountService.account(it.getArgument("accountNameOwner")).get()
         }
     }
 
     val categories: DataFetcher<List<Category>>
         get() = DataFetcher<List<Category>> {
-            return@DataFetcher categoryService.fetchAllActiveCategories()
+            return@DataFetcher categoryService.categories()
         }
 
     fun payment(): DataFetcher<Payment> {

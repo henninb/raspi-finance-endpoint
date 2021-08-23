@@ -20,7 +20,7 @@ open class AccountService(
 ) : IAccountService, BaseService() {
 
     @Timed
-    override fun findByAccountNameOwner(accountNameOwner: String): Optional<Account> {
+    override fun account(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
@@ -41,7 +41,7 @@ open class AccountService(
     }
 
     @Timed
-    override fun findByActiveStatusOrderByAccountNameOwner(): List<Account> {
+    override fun accounts(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
         if (accounts.isEmpty()) {
             logger.warn("findAllActiveAccounts - no accounts found.")
@@ -65,7 +65,7 @@ open class AccountService(
 
     @Timed
     override fun insertAccount(account: Account): Account {
-        val accountOptional = findByAccountNameOwner(account.accountNameOwner)
+        val accountOptional = account(account.accountNameOwner)
         val constraintViolations: Set<ConstraintViolation<Account>> = validator.validate(account)
         handleConstraintViolations(constraintViolations, meterService)
 
@@ -79,7 +79,7 @@ open class AccountService(
     }
 
     @Timed
-    override fun deleteByAccountNameOwner(accountNameOwner: String): Boolean {
+    override fun deleteAccount(accountNameOwner: String): Boolean {
         val account = accountRepository.findByAccountNameOwner(accountNameOwner).get()
         accountRepository.delete(account)
         return true

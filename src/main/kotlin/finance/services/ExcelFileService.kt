@@ -77,7 +77,7 @@ open class ExcelFileService(
 
     @Timed
     override fun filterWorkbookThenImportTransactions(workbook: Workbook) {
-        val accounts = accountService.findByActiveStatusOrderByAccountNameOwner()
+        val accounts = accountService.accounts()
         accounts.forEach { account ->
             cloneSheetTemplate(workbook, account.accountNameOwner)
         }
