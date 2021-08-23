@@ -38,7 +38,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         accounts.add(account)
 
         when:
-        List<Account> results = accountService.findByActiveStatusOrderByAccountNameOwner()
+        List<Account> results = accountService.accounts()
 
         then:
         results.size() == 1
@@ -52,7 +52,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         List<Account> accounts = [account, account, account, account]
 
         when:
-        List<Account> results = accountService.findByActiveStatusOrderByAccountNameOwner()
+        List<Account> results = accountService.accounts()
 
         then:
         results.size() == 4

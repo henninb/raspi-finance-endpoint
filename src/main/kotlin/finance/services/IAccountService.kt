@@ -7,11 +7,11 @@ import java.util.*
 
 interface IAccountService {
 
-    fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
+    fun account(accountNameOwner: String): Optional<Account>
 
     fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account>
 
-    fun findByActiveStatusOrderByAccountNameOwner(): List<Account>
+    fun accounts(): List<Account>
 
     fun findAccountsThatRequirePayment(): List<String>
 
@@ -19,7 +19,7 @@ interface IAccountService {
 
     fun insertAccount(account: Account): Account
 
-    fun deleteByAccountNameOwner(accountNameOwner: String): Boolean
+    fun deleteAccount(accountNameOwner: String): Boolean
 
     fun updateTotalsForAllAccounts(): Boolean
 

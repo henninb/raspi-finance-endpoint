@@ -48,10 +48,10 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //http://localhost:8080/account/select/active
     @GetMapping("/select/active", produces = ["application/json"])
-    fun selectAllActiveAccounts(): ResponseEntity<List<Account>> {
+    fun accounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
         accountService.updateTotalsForAllAccounts()
-        val accounts: List<Account> = accountService.findByActiveStatusOrderByAccountNameOwner()
+        val accounts: List<Account> = accountService.accounts()
         if (accounts.isEmpty()) {
             logger.info("no accounts found.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accounts.")
@@ -62,8 +62,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //http://localhost:8080/account/select/test_brian
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
-    fun selectByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
+    fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+        val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
         if (accountOptional.isPresent) {
             return ResponseEntity.ok(accountOptional.get())
         }
@@ -79,11 +79,11 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8080/account/delete/test_brian'
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
-    fun deleteByAccountNameOwner(@PathVariable accountNameOwner: String): ResponseEntity<String> {
-        val accountOptional: Optional<Account> = accountService.findByAccountNameOwner(accountNameOwner)
+    fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<String> {
+        val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
 
         if (accountOptional.isPresent) {
-            accountService.deleteByAccountNameOwner(accountNameOwner)
+            accountService.deleteAccount(accountNameOwner)
             return ResponseEntity.ok("account deleted")
         }
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this account: $accountNameOwner.")

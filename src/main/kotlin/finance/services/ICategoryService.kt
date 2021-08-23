@@ -6,11 +6,11 @@ import java.util.*
 interface ICategoryService {
     fun insertCategory(category: Category): Category
 
-    fun findByCategory(categoryName: String): Optional<Category>
+    fun category(categoryName: String): Optional<Category>
 
-    fun deleteByCategoryName(categoryName: String): Boolean
+    fun deleteCategory(categoryName: String): Boolean
 
-    fun fetchAllActiveCategories(): List<Category>
+    fun categories(): List<Category>
 
     fun findByCategoryName(categoryName: String): Optional<Category>
 }

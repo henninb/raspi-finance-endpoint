@@ -23,7 +23,7 @@ open class CategoryService(
     }
 
     @Timed
-    override fun findByCategory(categoryName: String): Optional<Category> {
+    override fun category(categoryName: String): Optional<Category> {
         val categoryOptional: Optional<Category> = categoryRepository.findByCategoryName(categoryName)
         if (categoryOptional.isPresent) {
             return categoryOptional
@@ -32,14 +32,14 @@ open class CategoryService(
     }
 
     @Timed
-    override fun deleteByCategoryName(categoryName: String): Boolean {
+    override fun deleteCategory(categoryName: String): Boolean {
         val category = categoryRepository.findByCategoryName(categoryName).get()
         categoryRepository.delete(category)
         return true
     }
 
     @Timed
-    override fun fetchAllActiveCategories(): List<Category> {
+    override fun categories(): List<Category> {
         return categoryRepository.findByActiveStatusOrderByCategoryName(true)
     }
 

@@ -101,8 +101,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * validatorMock.validate(transaction) >> constraintViolations
-        1 * accountServiceMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
-        1 * categoryServiceMock.findByCategory(transaction.category) >> categoryOptional
+        1 * accountServiceMock.account(transaction.accountNameOwner) >> accountOptional
+        1 * categoryServiceMock.category(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
@@ -125,8 +125,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 0
         1 * validatorMock.validate(transaction) >> constraintViolations
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
-        1 * accountServiceMock.findByAccountNameOwner(transaction.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
-        1 * categoryServiceMock.findByCategory(transaction.category) >> Optional.of(new Category())
+        1 * accountServiceMock.account(transaction.getAccountNameOwner()) >> Optional.of(AccountBuilder.builder().build())
+        1 * categoryServiceMock.category(transaction.category) >> Optional.of(new Category())
         1 * transactionRepositoryMock.saveAndFlush({ Transaction entity ->
             assert entity.transactionDate == transaction.transactionDate
             assert entity.category == transaction.category
@@ -156,9 +156,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-        1 * accountServiceMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * accountServiceMock.account(transaction.accountNameOwner) >> accountOptional
         1 * validatorMock.validate(transaction) >> constraintViolations
-        1 * categoryServiceMock.findByCategory(transaction.category) >> categoryOptional
+        1 * categoryServiceMock.category(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
@@ -183,11 +183,11 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactionInserted.guid == transaction.guid
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-        1 * accountServiceMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.empty()
-        1 * accountServiceMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
+        1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.empty()
+        1 * accountServiceMock.account(transaction.accountNameOwner) >> accountOptional
         1 * accountServiceMock.insertAccount(account) >> account
         1 * validatorMock.validate(transaction) >> constraintViolations
-        1 * categoryServiceMock.findByCategory(transaction.category) >> categoryOptional
+        1 * categoryServiceMock.category(transaction.category) >> categoryOptional
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
         1 * meterRegistryMock.counter(setMeterId(TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, transaction.accountNameOwner)) >> counter
         1 * counter.increment()
@@ -213,8 +213,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 0
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
         1 * validatorMock.validate(transaction) >> constraintViolations
-        1 * accountServiceMock.findByAccountNameOwner(transaction.accountNameOwner) >> accountOptional
-        1 * categoryServiceMock.findByCategory(transaction.category) >> Optional.empty()
+        1 * accountServiceMock.account(transaction.accountNameOwner) >> accountOptional
+        1 * categoryServiceMock.category(transaction.category) >> Optional.empty()
         //1 * validatorMock.validate(category) >> constraintViolations
         1 * categoryServiceMock.insertCategory(category) >> category
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction

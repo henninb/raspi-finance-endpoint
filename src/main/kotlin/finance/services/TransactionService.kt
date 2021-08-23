@@ -81,7 +81,7 @@ open class TransactionService(
 
     @Timed
     override fun processAccount(transaction: Transaction) {
-        var accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
+        var accountOptional = accountService.account(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
             transaction.accountId = accountOptional.get().accountId
             transaction.accountType = accountOptional.get().accountType
@@ -91,7 +91,7 @@ open class TransactionService(
             accountService.insertAccount(account)
             //TODO: add metric here
             logger.info("inserted account from transactionService ${transaction.accountNameOwner}")
-            accountOptional = accountService.findByAccountNameOwner(transaction.accountNameOwner)
+            accountOptional = accountService.account(transaction.accountNameOwner)
             transaction.accountId = accountOptional.get().accountId
             transaction.accountType = accountOptional.get().accountType
         }
@@ -101,7 +101,7 @@ open class TransactionService(
     override fun processCategory(transaction: Transaction) {
         when {
             transaction.category != "" -> {
-                val optionalCategory = categoryService.findByCategory(transaction.category)
+                val optionalCategory = categoryService.category(transaction.category)
                 if (optionalCategory.isPresent) {
                     transaction.categories.add(optionalCategory.get())
                 } else {
@@ -201,7 +201,7 @@ open class TransactionService(
 
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
-            val account = accountService.findByAccountNameOwner(transaction.accountNameOwner).get()
+            val account = accountService.account(transaction.accountNameOwner).get()
             transaction.accountId = account.accountId
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
@@ -268,7 +268,7 @@ open class TransactionService(
         val guid = map["guid"]
 
         if (guid != null && accountNameOwner != null) {
-            val accountOptional = accountService.findByAccountNameOwner(accountNameOwner)
+            val accountOptional = accountService.account(accountNameOwner)
             val transactionOptional = findTransactionByGuid(guid)
 
             if (transactionOptional.isPresent && accountOptional.isPresent) {

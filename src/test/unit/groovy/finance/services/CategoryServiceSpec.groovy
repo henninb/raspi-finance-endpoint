@@ -51,7 +51,7 @@ class CategoryServiceSpec extends BaseServiceSpec {
         Category category = CategoryBuilder.builder().build()
 
         when:
-        categoryService.deleteByCategoryName(category.categoryName)
+        categoryService.deleteCategory(category.categoryName)
 
         then:
         1 * categoryRepositoryMock.findByCategoryName(category.categoryName) >> Optional.of(category)
