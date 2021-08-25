@@ -10,6 +10,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
+//TODO: need to change to parameter
 @RequestMapping("/parm")
 class ParameterController(private var parameterService: ParameterService) : BaseController() {
 
