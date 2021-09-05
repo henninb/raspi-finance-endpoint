@@ -32,7 +32,7 @@ import javax.validation.constraints.Size
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 //does not fix the issue
-@Immutable //The [account] property of the [finance.domain.Transaction] entity was modified, but it won't be updated because the property is immutable.
+//@Immutable //The [account] property of the [finance.domain.Transaction] entity was modified, but it won't be updated because the property is immutable.
 data class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,8 +42,8 @@ data class Transaction(
     @Column(name = "transaction_id")
     var transactionId: Long,
 
-    @Column(name = "guid", unique = true, nullable = false)
     @JsonProperty
+    @Column(name = "guid", unique = true, nullable = false)
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String,
 
@@ -52,8 +52,8 @@ data class Transaction(
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
-    @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
     @JsonProperty
+    @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType,
 
@@ -64,9 +64,9 @@ data class Transaction(
     @field:Convert(converter = LowerCaseConverter::class)
     var accountNameOwner: String,
 
+    @JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
-    @JsonProperty
     var transactionDate: Date,
 
     @JsonProperty
@@ -97,8 +97,8 @@ data class Transaction(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @JsonProperty
+    @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @field:Convert(converter = ReoccurringTypeConverter::class)
     var reoccurringType: ReoccurringType = ReoccurringType.Undefined,
 

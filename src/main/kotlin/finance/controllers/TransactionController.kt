@@ -1,5 +1,6 @@
 package finance.controllers
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import finance.domain.Account
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
@@ -64,22 +65,13 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found, guid: $guid")
     }
 
-    //TODO: 2021-01-10, return the payload of the updated and the inserted
-    //TODO: 2021-01-10, consumes JSON should be turned back on
-    @PutMapping("/update/{guid}", produces = ["application/json"])
-    //@PutMapping("/update/{guid}"], consumes = ["application/json"], produces = ["application/json"])
+    @PutMapping("/update/{guid}", consumes = ["application/json"], produces = ["application/json"])
     fun updateTransaction(
         @PathVariable("guid") guid: String,
-        @RequestBody transaction: Map<String, Any>
+        @RequestBody toBePatchedTransaction: Transaction
     ): ResponseEntity<Transaction> {
-        val toBePatchedTransaction = mapper.convertValue(transaction, Transaction::class.java)
         val transactionResponse = transactionService.updateTransaction(toBePatchedTransaction)
         return ResponseEntity.ok(transactionResponse)
-//        val updateStatus: Boolean = transactionService.updateTransaction(toBePatchedTransaction)
-//        if (updateStatus) {
-//            return ResponseEntity.ok("transaction updated")
-//        }
-//        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found and thus not updated: $guid")
     }
 
     //TODO: return the payload of the updated and the inserted
