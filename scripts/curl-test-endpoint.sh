@@ -117,7 +117,7 @@ curl -k --header "Content-Type: application/json" 'https://localhost:8443/transa
 
 curl -k --header "Content-Type: application/json" 'https://localhost:8443/transaction/update/822de4d6-6549-4b01-a1e4-46593c590b20' -X PUT -d '{"transactionId":25099,"guid":"822de4d6-6549-4b01-a1e4-46593c590b20","accountId":1038,"accountType":"debit","accountNameOwner":"tcf-checking_brian","transactionDate":"2021-09-30","description":"interest","category":"interest","amount":1.56,"transactionState":"future","activeStatus":true,"reoccurringType":"monthly"}'
 
-{"transactionId":25099,"guid":"822de4d6-6549-4b01-a1e4-46593c590b20","accountId":1038,"accountType":"debit","accountNameOwner":"tcf-checking_brian","transactionDate":"2021-09-30","description":"interest","category":"interest","amount":1.55,"transactionState":"future","activeStatus":true,"reoccurringType":"monthly"}
+curl -k --header "Content-Type: application/json" 'https://localhost:8443/transaction/update/822de4d6-6549-4b01-a1e4-46593c590b20' -X PUT -d '{"transactionId":25099,"guid":"822de4d6-6549-4b01-a1e4-46593c590b20","accountId":1038,"accountType":"debit","accountNameOwner":"tcf-checking_brian","transactionDate":"2021-09-30","description":"interest","category":"interest","amount":1.55,"transactionState":"future","activeStatus":true,"reoccurringType":"monthly"}'
 
 
 exit 0
