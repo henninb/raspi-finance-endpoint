@@ -12,11 +12,9 @@ plugins {
     id 'java-library'
     id 'jacoco'
     id 'codenarc'
-    id 'nu.studer.jooq' version '6.0'
+    id 'nu.studer.jooq' version "${jooqPluginVersion}"
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
-    //id "org.jetbrains.kotlin.jvm" version "1.5.20"
-    //id 'org.jetbrains.kotlin.multiplatform' version '1.5.20'
     id "org.flywaydb.flyway" version "${flywayVersion}"
     id "com.github.ben-manes.versions" version "${gradleVersionsPlugin}"
 }
@@ -117,7 +115,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
 
     // jooq
-    //implementation("org.jooq:jooq:3.15.1")
+    //implementation("org.jooq:jooq:${jooqVersion}")
     jooqGenerator "org.postgresql:postgresql:${postgresqlVersion}"
 
     // Oracle database
@@ -175,7 +173,7 @@ tasks.withType(CodeNarc) {
 
 
 jooq {
-    version = '3.15.0'  // the default (can be omitted)
+    version = "${jooqVersion}"  // the default (can be omitted)
     edition = JooqEdition.OSS  // the default (can be omitted)
 }
 
