@@ -37,10 +37,10 @@ openssl pkcs12 -export -out hornsup.p12 -in hornsup.crt -inkey hornsup.key -name
 rm -rf hornsup.jks
 keytool -importkeystore -srckeystore hornsup.p12 -srcstoretype PKCS12 -destkeystore hornsup.jks -deststoretype JKS -keypass "${password}" -storepass "${password}"
 
-cp hornsup.p12 "${basedir}/raspi-finance-endpoint/src/main/resources/hornsup-raspi-finance-keystore.p12"
-cp hornsup.crt "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-cert.pem"
-cp hornsup.key "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-key.pem"
-cp hornsup.jks "${basedir}/raspi-finance-ratpack/ssl/hornsup-raspi-finance.jks"
-cp hornsup.jks "${basedir}/example-ktor/hornsup-raspi-finance.jks"
+cp -v hornsup.p12 "${basedir}/raspi-finance-endpoint/src/main/resources/hornsup-raspi-finance-keystore.p12"
+cp -v hornsup.crt "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-cert.pem"
+cp -v hornsup.key "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-key.pem"
+cp -v hornsup.jks "${basedir}/raspi-finance-ratpack/ssl/hornsup-raspi-finance.jks"
+cp -v hornsup.jks "${basedir}/example-ktor/hornsup-raspi-finance.jks"
 
 exit 0
