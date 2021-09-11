@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 if [ -f /etc/os-release ]; then
   OS="$(grep '^NAME=' /etc/os-release | tr -d '"' | cut -d = -f2)"
@@ -26,5 +26,3 @@ else
 fi
 export OS
 export OS_VER
-
-exit 0

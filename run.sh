@@ -37,7 +37,7 @@ if [ ! -x "$(command -v ./os-env)" ]; then
   exit 3
 fi
 
-./os-env
+. ./os-env
 
 if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Raspbian GNU/Linux" ]; then
   HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
@@ -80,12 +80,6 @@ mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
 rm -rf docker-compose.yml
-
-if [ ! -f "ssl/hornsup-raspi-finance-keystore.jks" ]; then
-# cp -v "$HOME/ssl/${SERVERNAME}-${APP}-keystore.jks" "$HOME/projects/${APP}-endpoint/ssl"
-  echo "need to install the certs, cert-install.sh"
-  exit 1
-fi
 
 if [ -z "${in_hosts}" ]; then
   echo "The 'hornsup' hostname needs to be added to /etc/hosts."
