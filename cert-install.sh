@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 
-basedir="$HOME/projects/github.com/BitExplorer"
+basedir="$HOME/projects/github.com/henninb"
+
+mkdir -p "$HOME/ssl"
 
 stty -echo
 printf "Cert Password: "
