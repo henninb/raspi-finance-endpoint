@@ -10,8 +10,11 @@ read -r password
 stty echo
 
 if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
+  echo "generate new rootCA"
+  read -r pause
   openssl genrsa -out "$HOME/ssl/rootCA.key" 2048
   openssl req -x509 -new -nodes -key "$HOME/ssl/rootCA.key" -sha256 -days 1024 -out "$HOME/ssl/rootCA.pem" -subj "/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=prod/CN=Brian LLC rootCA"
+  openssl x509 -in rootCA.pem -inform PEM -out rootCA.crt
 fi
 
 cat > v3.ext << EOF
