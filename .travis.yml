@@ -2,8 +2,8 @@ addons:
   postgresql: "11"
   apt:
     packages:
-      - postgresql-13
-      - postgresql-client-13
+      - postgresql-11
+      - postgresql-client-11
 
 before_script:
   - psql -c 'CREATE DATABASE finance_test_db;' -U postgres
