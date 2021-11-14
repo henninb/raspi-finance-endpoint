@@ -1,4 +1,5 @@
 addons:
+  postgresql: "13"
   apt:
     packages:
       - postgresql-13
