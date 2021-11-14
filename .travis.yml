@@ -1,5 +1,5 @@
 addons:
-  postgresql: "13"
+  postgresql: "11"
   apt:
     packages:
       - postgresql-13
@@ -11,7 +11,6 @@ before_script:
   - psql -c 'ALTER USER henninb CREATEDB;' -U postgres
   - psql -c 'ALTER USER henninb SUPERUSER;' -U postgres
   - psql -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U postgres
-
 services:
   - postgresql
 
