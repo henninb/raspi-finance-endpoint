@@ -1,9 +1,10 @@
 addons:
-  postgresql: "12.1"
+  postgresql: "12"
   apt:
+    update: true
     packages:
-      - postgresql-12.1
-      - postgresql-client-12.1
+      - postgresql-12
+      - postgresql-client-12
 
 # env:
 #   global:
@@ -11,7 +12,7 @@ addons:
 #   - PGUSER=postgres
 
 before_install:
-  - sudo /etc/init.d/postgresql start 12.1
+  - sudo /etc/init.d/postgresql start 12
 
 before_script:
   - psql --version
