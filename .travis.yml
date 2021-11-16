@@ -1,26 +1,19 @@
 addons:
-  postgresql: "12.3"
+  postgresql: "12"
   apt:
     update: true
     packages:
       - postgresql-12
       - postgresql-client-12
 
-# env:
-#   global:
-#   - PGPORT=5433
-#   - PGUSER=postgres
+env:
+  global:
+  - PGPORT=5432
 
 before_install:
  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/12/main/postgresql.conf
  - sudo cp /etc/postgresql/{9.6,12}/main/pg_hba.conf
  - sudo pg_ctlcluster 12 main restart
-  # - sudo apt-get update
-  # - sudo apt-get --yes remove postgresql\*
-  # - sudo apt-get install -y postgresql-12 postgresql-client-12
-  # - sudo cp /etc/postgresql/{9.6,12}/main/pg_hba.conf
-  # - sudo service postgresql restart 12
-#   - sudo /etc/init.d/postgresql start 12
 
 before_script:
   - psql --version
