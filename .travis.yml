@@ -19,7 +19,7 @@ before_install:
 
 before_script:
   - psql --version
-  - psql -p 5433 -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+  - psql -p 5433 -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' -U travis
   - psql -p 5433 -c 'CREATE DATABASE finance_test_db;'
   - psql -p 5433 -c "CREATE USER henninb WITH PASSWORD 'monday1';"
   - psql -p 5433 -c 'ALTER USER henninb CREATEDB;'
