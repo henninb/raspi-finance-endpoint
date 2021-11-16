@@ -9,6 +9,8 @@ addons:
 env:
   global:
   - PGPORT=5433
+  - PGPASSWORD=travis
+  - PGUSER=travis
   # - TEST_DB="dbname=finance_db user=henninb password=travis sslmode=disable port=5433"
   # - TEST_DB="dbname=travis user=travis password=travis sslmode=disable port=5433"
 
