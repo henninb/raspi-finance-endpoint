@@ -20,11 +20,11 @@ before_install:
 before_script:
   - psql --version
   - psql -p "${PGPORT}" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' -U travis
-  - psql -p 5433 -c 'CREATE DATABASE finance_test_db;'
-  - psql -p 5433 -c "CREATE USER henninb WITH PASSWORD 'monday1';"
-  - psql -p 5433 -c 'ALTER USER henninb CREATEDB;'
-  - psql -p 5433 -c 'ALTER USER henninb SUPERUSER;'
-  - psql -p 5433 -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb'
+  - psql -p "${PGPORT}" -c 'CREATE DATABASE finance_test_db;'
+  - psql -p "${PGPORT}" -c "CREATE USER henninb WITH PASSWORD 'monday1';"
+  - psql -p "${PGPORT}" -c 'ALTER USER henninb CREATEDB;'
+  - psql -p "${PGPORT}" -c 'ALTER USER henninb SUPERUSER;'
+  - psql -p "${PGPORT}" -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb'
 
 after_script:
   - psql --version
