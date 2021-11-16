@@ -1,5 +1,5 @@
 addons:
-  postgresql: "12"
+  postgresql: "12.3"
   apt:
     update: true
     packages:
@@ -12,7 +12,12 @@ addons:
 #   - PGUSER=postgres
 
 before_install:
-  - sudo /etc/init.d/postgresql start 12
+  - sudo apt-get update
+  - sudo apt-get --yes remove postgresql\*
+  - sudo apt-get install -y postgresql-12 postgresql-client-12
+  - sudo cp /etc/postgresql/{9.6,12}/main/pg_hba.conf
+  - sudo service postgresql restart 12
+#   - sudo /etc/init.d/postgresql start 12
 
 before_script:
   - psql --version
