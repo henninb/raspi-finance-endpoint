@@ -22,9 +22,9 @@ before_script:
   - psql -p 5433 -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
   - psql -p 5433 -c 'CREATE DATABASE finance_test_db;'
   - psql -p 5433 -c "CREATE USER henninb WITH PASSWORD 'monday1';"
-  - psql -p 5433 -c 'ALTER USER henninb CREATEDB;' -U postgres
-  - psql -p 5433 -c 'ALTER USER henninb SUPERUSER;' -U postgres
-  - psql -p 5433 -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U postgres
+  - psql -p 5433 -c 'ALTER USER henninb CREATEDB;'
+  - psql -p 5433 -c 'ALTER USER henninb SUPERUSER;'
+  - psql -p 5433 -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb'
 
 after_script:
   - psql --version
