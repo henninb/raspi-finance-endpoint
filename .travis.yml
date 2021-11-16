@@ -12,19 +12,19 @@ env:
   - TEST_DB="dbname=finance_db user=henninb password=travis sslmode=disable port=5433"
   # - TEST_DB="dbname=travis user=travis password=travis sslmode=disable port=5433"
 
-before_install:
-#  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/12/main/postgresql.conf
-#  - sudo cp /etc/postgresql/{9.6,12}/main/pg_hba.conf
-  - sudo pg_ctlcluster 12 main restart
+# before_install:
+# #  - sudo sed -i 's/port = 5433/port = 5432/' /etc/postgresql/12/main/postgresql.conf
+# #  - sudo cp /etc/postgresql/{9.6,12}/main/pg_hba.conf
+#   - sudo pg_ctlcluster 12 main restart
 
 before_script:
   - psql --version
   - psql -p "${PGPORT}" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' -U travis
-  - psql -p "${PGPORT}" -c 'CREATE DATABASE finance_test_db;'
-  - psql -p "${PGPORT}" -c "CREATE USER henninb WITH PASSWORD 'monday1';"
-  - psql -p "${PGPORT}" -c 'ALTER USER henninb CREATEDB;'
-  - psql -p "${PGPORT}" -c 'ALTER USER henninb SUPERUSER;'
-  - psql -p "${PGPORT}" -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb'
+  - psql -p "${PGPORT}" -c 'CREATE DATABASE finance_test_db;' -U travis
+  - psql -p "${PGPORT}" -c "CREATE USER henninb WITH PASSWORD 'monday1';" -U travis
+  - psql -p "${PGPORT}" -c 'ALTER USER henninb CREATEDB;' -U travis
+  - psql -p "${PGPORT}" -c 'ALTER USER henninb SUPERUSER;' -U travis
+  - psql -p "${PGPORT}" -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U travis
 
 after_script:
   - psql --version
