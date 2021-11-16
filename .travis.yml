@@ -1,14 +1,18 @@
 addons:
-  postgresql: "10"
+  postgresql: "12.1"
   apt:
     packages:
-      - postgresql-10
-      - postgresql-client-10
+      - postgresql-12.1
+      - postgresql-client-12.1
 
-env:
-  global:
-  - PGPORT=5433
-  - PGUSER=postgres
+# env:
+#   global:
+#   - PGPORT=5433
+#   - PGUSER=postgres
+
+before_install:
+  - sudo /etc/init.d/postgresql start 12.1
+
 before_script:
   - psql --version
   - psql -c 'CREATE DATABASE finance_test_db;' -U postgres
@@ -16,8 +20,10 @@ before_script:
   - psql -c 'ALTER USER henninb CREATEDB;' -U postgres
   - psql -c 'ALTER USER henninb SUPERUSER;' -U postgres
   - psql -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U postgres
+
 after_script:
   - psql --version
+
 services:
   - postgresql
 
