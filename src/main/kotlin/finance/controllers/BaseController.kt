@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.catalina.connector.ClientAbortException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.apache.tomcat.websocket.AuthenticationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
@@ -37,6 +38,14 @@ open class BaseController {
         val response: MutableMap<String, String> = HashMap()
         logger.error("not found: ", throwable)
         response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
+        return response
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(value = [AuthenticationException::class])
+    fun handleUnauthorized(throwable: Throwable): Map<String, String> {
+        val response: MutableMap<String, String> = HashMap()
+        logger.error("not authorized: ", throwable)
         return response
     }
 
