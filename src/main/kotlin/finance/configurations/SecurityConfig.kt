@@ -17,7 +17,7 @@ open class SecurityConfig : WebSecurityConfigurerAdapter() {
 //            .and()
 //            .csrf()
 //            .disable()
-//
+//        //in an attempt to fix the issue
 //        //http.authorizeRequests().anyRequest().permitAll()
 //        // http.authorizeRequests().anyRequest().authenticated()
 //    }

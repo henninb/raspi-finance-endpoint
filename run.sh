@@ -132,17 +132,12 @@ fi
 # echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
 if [ -x "$(command -v docker-compose)" ]; then
 
-  if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" config > docker-compose.yml; then
-    echo "docker-compose config failed."
-    exit 1
-  fi
-
-  if ! docker-compose build; then
+  if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" build; then
     echo "docker-compose build failed."
     exit 1
   fi
 
-  if ! docker-compose up; then
+  if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" up; then
     echo "docker-compose up failed."
     exit 1
   fi
@@ -150,10 +145,15 @@ else
   rm -rf env.bootrun
   sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
   set -a
-  # shellcheck disable=SC1091
-  source env.bootrun
-  # shellcheck disable=SC1091
-  source env.secrets
+  if [ -x "$(command -v source)" ]; then
+    # shellcheck disable=SC1091
+    source env.bootrun
+    # shellcheck disable=SC1091
+    source env.secrets
+  else
+    . env.bootrun
+    . env.secrets
+  fi
   set +a
 
   ./gradlew clean build bootRun -x test
