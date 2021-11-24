@@ -63,7 +63,6 @@ else
   exit 1
 fi
 
-
 export APPNAME
 export HOST_IP
 export CURRENT_UID
@@ -145,15 +144,8 @@ else
   rm -rf env.bootrun
   sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
   set -a
-  if [ -x "$(command -v source)" ]; then
-    # shellcheck disable=SC1091
-    source env.bootrun
-    # shellcheck disable=SC1091
-    source env.secrets
-  else
-    . env.bootrun
-    . env.secrets
-  fi
+  . ./env.bootrun
+  . ./env.secrets
   set +a
 
   ./gradlew clean build bootRun -x test
