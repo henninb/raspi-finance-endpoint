@@ -31,10 +31,6 @@ class GraphQLDataFetchers(
             val authentication: Authentication = SecurityContextHolder.getContext().authentication
             logger.info(authentication.isAuthenticated)
             logger.info(username)
-           // val page: String = it.getArgument("page")
-           //     .orElse(AppConstants.DEFAULT_PAGE_NUMBER) as String?. toInt ()
-           // val size: Int =
-           //     Optional.ofNullable(env.getArgument("size")).orElse(AppConstants.DEFAULT_PAGE_SIZE) as String?. toInt ()
             return@DataFetcher descriptionService.fetchAllDescriptions()
         }
 
