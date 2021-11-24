@@ -23,5 +23,7 @@ open class SecurityConfig : WebSecurityConfigurerAdapter() {
             .csrf()
             .disable()
 //            .csrf().ignoringAntMatchers("/graphql")
+        http.authorizeRequests().anyRequest().permitAll()
+        // http.authorizeRequests().anyRequest().authenticated();
     }
 }
