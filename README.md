@@ -134,9 +134,17 @@ curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{cr
 mutation { createDescription(description: "car") {descriptionId} }
 mutation { createPayment(payment: {accountNameOwner: "test", activeStatus: true, amount: 0.0}) {paymentId} }
 
-## api key
-Just add the @EnableApiKeyAuthentication annotation to you Spring Boot Application class and provide web.authentication.apikey property to enable static API key authentication. This will add an Spring HandlerInterceptor that will check the X-Api-Key request header for the configured static API key. If no or not the correct key is provided the request will fail and send 401 as return code.
+# api key
+Just add the @EnableApiKeyAuthentication annotation to you Spring Boot Application class 
+and provide web.authentication.apikey property to enable static API key authentication. 
+This will add a Spring HandlerInterceptor that will check the X-Api-Key request header for the configured static API key. 
+If no or not the correct key is provided the request will fail and send 401 as return code.
 ```
 curl -v --header "API_KEY: abcdefg"
 curl https://hornsup/tokens/$ACCESS_KEY -H "X-Auth-Token: $SECRET_KEY"
+```
+
+# log4j dependency details
+```
+./gradlew :dep | grep log4j
 ```

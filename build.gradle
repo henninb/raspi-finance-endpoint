@@ -45,6 +45,14 @@ configurations {
     }
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {
+      if ( it.requested.group == 'org.apache.logging.log4j') {
+        it.useVersion '2.15.0'
+      }
+    }
+}
+
 codenarc {
     toolVersion = "$codenarcPluginVersion"
 }
@@ -52,7 +60,6 @@ codenarc {
 compileKotlin {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
-    //kotlinOptions.jvmTarget = JavaVersion.VERSION_11
 }
 
 sourceSets {
