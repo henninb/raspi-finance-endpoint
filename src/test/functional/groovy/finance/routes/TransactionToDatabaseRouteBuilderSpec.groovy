@@ -7,6 +7,7 @@ import org.apache.camel.CamelExecutionException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import spock.lang.Ignore
 
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -48,6 +49,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         0 * _
     }
 
+    @Ignore
     void 'test valid payload - invalid payload'() {
         when:
         producer.sendBody('transaction')
