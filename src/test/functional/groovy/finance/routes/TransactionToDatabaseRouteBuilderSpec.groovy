@@ -49,7 +49,6 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
         0 * _
     }
 
-    @Ignore
     void 'test valid payload - invalid payload'() {
         when:
         producer.sendBody('transaction')
