@@ -53,16 +53,16 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore('should duplicate Accounts return 200? probably not')
-    void 'test insert Account - duplicate'() {
-        when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
-
-        then:
-        response.statusCode
-        response.body.contains(account.accountNameOwner)
-        0 * _
-    }
+//    @Ignore('should duplicate Accounts return 200? probably not')
+//    void 'test insert Account - duplicate'() {
+//        when:
+//        ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
+//
+//        then:
+//        response.statusCode
+//        response.body.contains(account.accountNameOwner)
+//        0 * _
+//    }
 
     void 'test insert Account - empty'() {
         given:

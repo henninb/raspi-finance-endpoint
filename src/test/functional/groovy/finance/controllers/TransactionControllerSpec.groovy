@@ -205,21 +205,21 @@ class TransactionControllerSpec extends BaseControllerSpec {
         //TransactionBuilder.builder().transactionDate(Date.valueOf("1999-10-15")).build() | HttpStatus.BAD_REQUEST
     }
 
-    @Ignore('error for duplicate constraint and not sure why')
-    void 'test update Transaction'() {
-        given:
-        String updateGud = 'ba665bc2-22b6-4123-a566-6f5ab3d796df'
-        Transaction transaction1 = TransactionBuilder.builder().withGuid(updateGud).build()
-
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity entity = new HttpEntity<>(transaction1, headers)
-
-        when:
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/transaction/update/${updateGud}"),
-                HttpMethod.PUT, entity, String)
-
-        then:
-        response.statusCode
-        0 * _
-    }
+//    @Ignore('error for duplicate constraint and not sure why')
+//    void 'test update Transaction'() {
+//        given:
+//        String updateGud = 'ba665bc2-22b6-4123-a566-6f5ab3d796df'
+//        Transaction transaction1 = TransactionBuilder.builder().withGuid(updateGud).build()
+//
+//        headers.setContentType(MediaType.APPLICATION_JSON)
+//        HttpEntity entity = new HttpEntity<>(transaction1, headers)
+//
+//        when:
+//        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/transaction/update/${updateGud}"),
+//                HttpMethod.PUT, entity, String)
+//
+//        then:
+//        response.statusCode
+//        0 * _
+//    }
 }

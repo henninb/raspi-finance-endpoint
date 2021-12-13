@@ -76,13 +76,13 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore('should return a 404 NOT_FOUND')
-    void 'test delete parameter - not found'() {
-        when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-        0 * _
-    }
+//    @Ignore('should return a 404 NOT_FOUND')
+//    void 'test delete parameter - not found'() {
+//        when:
+//        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+//
+//        then:
+//        response.statusCode == HttpStatus.NOT_FOUND
+//        0 * _
+//    }
 }
