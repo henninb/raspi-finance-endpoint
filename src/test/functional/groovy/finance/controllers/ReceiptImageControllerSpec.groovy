@@ -98,13 +98,13 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-//    @Ignore('This test should return a 400, but is currently returning a 200.')
-//    void 'test insert receiptImage - duplicate'() {
-//        when:
-//        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
-//
-//        then:
-//        response.statusCode == HttpStatus.BAD_REQUEST
-//        0 * _
-//    }
+    @Ignore('This test should return a 400, but is currently returning a 200.')
+    void 'test insert receiptImage - duplicate'() {
+        when:
+        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
 }
