@@ -35,7 +35,7 @@ services:
 language: java
 jdk:
   - openjdk11
-script: ./gradlew clean test functionalTest integrationTest --debug
+script: ./gradlew clean test functionalTest integrationTest --info
 
 notifications:
   email: henninb@msn.com
