@@ -40,14 +40,14 @@ class ParameterControllerSpec extends BaseControllerSpec {
 //        0 * _
 //    }
 
-    void 'test find parameter - not found'() {
-        when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-        0 * _
-    }
+//    void 'test find parameter - not found'() {
+//        when:
+//        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+//
+//        then:
+//        response.statusCode == HttpStatus.NOT_FOUND
+//        0 * _
+//    }
 
     void 'test find parameter'() {
         when:
