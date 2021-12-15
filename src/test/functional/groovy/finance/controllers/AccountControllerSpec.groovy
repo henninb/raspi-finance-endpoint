@@ -48,7 +48,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         response.body.contains(account.accountNameOwner)
         0 * _
     }
@@ -59,7 +59,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         response.body.contains(account.accountNameOwner)
         0 * _
     }

@@ -3,8 +3,6 @@ package finance.controllers
 import finance.Application
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
-import finance.services.CategoryService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -19,9 +17,6 @@ import spock.lang.Unroll
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CategoryControllerSpec extends BaseControllerSpec {
-
-    @Autowired
-    protected CategoryService categoryService
 
     @Shared
     protected Category category = CategoryBuilder.builder().build()

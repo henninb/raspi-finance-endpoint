@@ -94,7 +94,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
                 entity, String)
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
@@ -104,7 +104,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
@@ -136,7 +136,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = selectEndpoint(endpointName, transaction.guid)
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
@@ -180,7 +180,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
@@ -219,7 +219,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK //not sure
         0 * _
     }
 }

@@ -54,7 +54,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
