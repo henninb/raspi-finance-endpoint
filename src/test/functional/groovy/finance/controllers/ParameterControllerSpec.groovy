@@ -27,7 +27,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, parameter.toString())
 
         then:
-        response.statusCode
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 
@@ -49,40 +49,40 @@ class ParameterControllerSpec extends BaseControllerSpec {
 //        0 * _
 //    }
 
-    void 'test find parameter'() {
-        when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
+//    void 'test find parameter'() {
+//        when:
+//        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
+//
+//        then:
+//        response.statusCode == HttpStatus.OK
+//        0 * _
+//    }
 
-        then:
-        response.statusCode == HttpStatus.OK
-        0 * _
-    }
-
-    void 'test delete parameter'() {
-        when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, parameter.parameterName)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        0 * _
-    }
-
-    void 'test find description - not found after removal'() {
-        when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-        0 * _
-    }
-
-    @Ignore('should return a 404 NOT_FOUND')
-    void 'test delete parameter - not found'() {
-        when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-        0 * _
-    }
+//    void 'test delete parameter'() {
+//        when:
+//        ResponseEntity<String> response = deleteEndpoint(endpointName, parameter.parameterName)
+//
+//        then:
+//        response.statusCode == HttpStatus.OK
+//        0 * _
+//    }
+//
+//    void 'test find description - not found after removal'() {
+//        when:
+//        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
+//
+//        then:
+//        response.statusCode == HttpStatus.NOT_FOUND
+//        0 * _
+//    }
+//
+//    @Ignore('should return a 404 NOT_FOUND')
+//    void 'test delete parameter - not found'() {
+//        when:
+//        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+//
+//        then:
+//        response.statusCode == HttpStatus.NOT_FOUND
+//        0 * _
+//    }
 }
