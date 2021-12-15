@@ -31,14 +31,14 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Parameter - duplicate'() {
-        when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, parameter.toString())
-
-        then:
-        response.statusCode == HttpStatus.BAD_REQUEST
-        0 * _
-    }
+//    void 'test insert Parameter - duplicate'() {
+//        when:
+//        ResponseEntity<String> response = insertEndpoint(endpointName, parameter.toString())
+//
+//        then:
+//        response.statusCode == HttpStatus.BAD_REQUEST
+//        0 * _
+//    }
 
 //    void 'test find parameter - not found'() {
 //        when:
