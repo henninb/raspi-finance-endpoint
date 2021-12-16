@@ -19,10 +19,10 @@ import javax.validation.constraints.Size
 data class Parameter(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "t_parameter_parameter_id_seq", initialValue = 1001, allocationSize = 100)
+    @SequenceGenerator(name = "t_parameter_parameter_id_seq")
     @field:Min(value = 0L)
     @JsonProperty
-    @Column(name = "parameter_id", nullable = false)
+    @Column(name = "parameter_id", nullable = false, insertable = false)
     var parameterId: Long,
 
     @field:Size(min = 1, max = 50)
@@ -30,7 +30,6 @@ data class Parameter(
     @Column(name = "parameter_name", unique = true, nullable = false)
     @JsonProperty
     var parameterName: String,
-
 
     @field:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
