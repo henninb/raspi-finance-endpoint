@@ -22,7 +22,7 @@ data class Parameter(
     @SequenceGenerator(name = "t_parameter_parameter_id_seq")
     @field:Min(value = 0L)
     @JsonProperty
-    @Column(name = "parameter_id", nullable = false, insertable = false)
+    @Column(name = "parameter_id", nullable = false)
     var parameterId: Long,
 
     @field:Size(min = 1, max = 50)
