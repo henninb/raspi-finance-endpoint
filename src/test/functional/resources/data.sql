@@ -67,5 +67,5 @@ INSERT INTO func.t_payment (payment_id, account_name_owner, transaction_date, am
 VALUES (34, 'referenced_brian', '2020-12-31', 11.95, 'ba665bc2-22b6-4123-a566-6f5ab3d796dh',
         'ba665bc2-22b6-4123-a566-6f5ab3d796di', true, '2021-01-09 14:26:26.739000', '2021-01-09 14:26:26.739000');
 
---INSERT INTO func.t_parameter (parameter_id, parameter_name, parameter_value, active_status, date_updated, date_added)
---VALUES (1, 'payment_account', 'bank_brian', true, '2020-10-23 18:00:59.952200', '2020-10-23 18:00:59.952200');
+INSERT INTO func.t_parameter (parameter_id, parameter_name, parameter_value, active_status, date_updated, date_added)
+VALUES (1, 'payment_account', 'bank_brian', true, '2020-10-23 18:00:59.952200', '2020-10-23 18:00:59.952200');
