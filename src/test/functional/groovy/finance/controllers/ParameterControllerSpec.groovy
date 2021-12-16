@@ -12,7 +12,7 @@ import spock.lang.Shared
 import spock.lang.Stepwise
 
 @Log
-//@Stepwise
+@Stepwise
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ParameterControllerSpec extends BaseControllerSpec {
@@ -21,6 +21,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
     protected Parameter parameter = ParameterBuilder.builder()
             .withParameterName(UUID.randomUUID().toString())
             .withParameterValue(UUID.randomUUID().toString())
+            .withParameterId(1001)
             .build()
 
     @Shared
@@ -32,7 +33,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
         if (response.statusCode == HttpStatus.OK) {
             deleteEndpoint(endpointName, parameter.parameterName)
             log.info("delete ${parameter.toString()}")
-            sleep(1000)
         }
     }
 
@@ -41,7 +41,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response
 
         when: 'insert'
-        sleep(1000)
         response = insertEndpoint(endpointName, parameter.toString())
 
         then:
@@ -50,7 +49,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'find found'
-        sleep(1000)
         response = selectEndpoint(endpointName, parameter.parameterName)
 
         then:
@@ -58,7 +56,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'attempt duplicate insert'
-        sleep(1000)
         response = insertEndpoint(endpointName, parameter.toString())
 
         then:
@@ -66,7 +63,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'delete parameter'
-        sleep(1000)
         response = deleteEndpoint(endpointName, parameter.parameterName)
 
         then:
@@ -74,7 +70,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'find not found after removal'
-        sleep(1000)
         response = selectEndpoint(endpointName, parameter.parameterName)
 
         then:
@@ -91,12 +86,12 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'delete parameter - not found'() {
-        when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-        0 * _
-    }
+//    void 'delete parameter - not found'() {
+//        when:
+//        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+//
+//        then:
+//        response.statusCode == HttpStatus.NOT_FOUND
+//        0 * _
+//    }
 }
