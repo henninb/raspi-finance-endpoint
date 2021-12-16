@@ -3,7 +3,9 @@ package finance.services
 import finance.domain.Parameter
 import finance.repositories.ParameterRepository
 import io.micrometer.core.annotation.Timed
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
@@ -24,9 +26,12 @@ open class ParameterService(
 
     @Timed
     override fun deleteByParameterName(parameterName: String): Boolean {
-        val parameter = parameterRepository.findByParameterName(parameterName).get()
-        parameterRepository.delete(parameter)
-        return true
+        val parameter = parameterRepository.findByParameterName(parameterName)
+        if( parameter.isPresent) {
+            parameterRepository.delete(parameter.get())
+            return true
+        }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "category not found for: $parameterName")
     }
 
     @Timed

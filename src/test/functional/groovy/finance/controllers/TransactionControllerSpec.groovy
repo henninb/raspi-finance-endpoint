@@ -219,7 +219,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        response.statusCode == HttpStatus.OK //not sure
+        response.statusCode == HttpStatus.OK
         0 * _
     }
 }

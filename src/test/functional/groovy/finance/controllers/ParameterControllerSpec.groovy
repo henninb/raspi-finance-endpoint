@@ -26,15 +26,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'parm'
 
-    void setup() {
-        log.info("setup")
-        ResponseEntity<String> response = selectEndpoint(endpointName, parameter.parameterName)
-        if (response.statusCode == HttpStatus.OK) {
-            deleteEndpoint(endpointName, parameter.parameterName)
-            log.info("delete ${parameter.toString()}")
-        }
-    }
-
     void 'test insert, find, delete Parameter'() {
         given:
         ResponseEntity<String> response
@@ -85,12 +76,12 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-//    void 'delete parameter - not found'() {
-//        when:
-//        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
-//
-//        then:
-//        response.statusCode == HttpStatus.NOT_FOUND
-//        0 * _
-//    }
+    void 'delete parameter - not found'() {
+        when:
+        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
 }
