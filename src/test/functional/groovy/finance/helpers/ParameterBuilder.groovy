@@ -4,7 +4,6 @@ import finance.domain.Parameter
 
 class ParameterBuilder {
 
-    Long parameterId = 1
     String parameterName = 'payment_account'
     String parameterValue = 'bank_brian'
     Boolean activeStatus = true
@@ -15,7 +14,6 @@ class ParameterBuilder {
 
     Parameter build() {
         Parameter parameter = new Parameter().with {
-            parameterId = this.parameterId
             parameterName = this.parameterName
             parameterValue = this.parameterValue
             activeStatus = this.activeStatus
@@ -36,11 +34,6 @@ class ParameterBuilder {
 
     ParameterBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
-    }
-
-    ParameterBuilder withParameterId(Long parameterId) {
-        this.parameterId = parameterId
         return this
     }
 }

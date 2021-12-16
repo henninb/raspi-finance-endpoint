@@ -21,7 +21,6 @@ class ParameterControllerSpec extends BaseControllerSpec {
     protected Parameter parameter = ParameterBuilder.builder()
             .withParameterName(UUID.randomUUID().toString())
             .withParameterValue(UUID.randomUUID().toString())
-            .withParameterId(1001)
             .build()
 
     @Shared
