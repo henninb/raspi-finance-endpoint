@@ -40,6 +40,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response
 
         when: 'insert'
+        sleep(1000)
         response = insertEndpoint(endpointName, parameter.toString())
 
         then:
@@ -48,6 +49,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'find found'
+        sleep(1000)
         response = selectEndpoint(endpointName, parameter.parameterName)
 
         then:
@@ -55,6 +57,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'attempt duplicate insert'
+        sleep(1000)
         response = insertEndpoint(endpointName, parameter.toString())
 
         then:
@@ -62,6 +65,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'delete parameter'
+        sleep(1000)
         response = deleteEndpoint(endpointName, parameter.parameterName)
 
         then:
@@ -69,6 +73,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         0 * _
 
         when: 'find not found after removal'
+        sleep(1000)
         response = selectEndpoint(endpointName, parameter.parameterName)
 
         then:
