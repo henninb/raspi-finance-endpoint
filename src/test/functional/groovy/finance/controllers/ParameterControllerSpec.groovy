@@ -19,8 +19,8 @@ class ParameterControllerSpec extends BaseControllerSpec {
 
     @Shared
     protected Parameter parameter = ParameterBuilder.builder()
-            .withParameterName('payment_account')
-            .withParameterValue('bank_brian')
+            .withParameterName(UUID.randomUUID().toString())
+            .withParameterValue(UUID.randomUUID().toString())
             .build()
 
     @Shared
@@ -32,6 +32,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         if (response.statusCode == HttpStatus.OK) {
             deleteEndpoint(endpointName, parameter.parameterName)
             log.info("delete ${parameter.toString()}")
+            sleep(1000)
         }
     }
 
