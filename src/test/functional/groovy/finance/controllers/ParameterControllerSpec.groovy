@@ -12,7 +12,7 @@ import spock.lang.Shared
 import spock.lang.Stepwise
 
 @Log
-@Stepwise
+//@Stepwise
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ParameterControllerSpec extends BaseControllerSpec {
