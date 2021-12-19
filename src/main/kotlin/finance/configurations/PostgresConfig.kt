@@ -9,36 +9,24 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
+import java.util.*
 import javax.persistence.EntityManagerFactory
 import javax.sql.DataSource
 
 @Configuration
 open class PostgresConfig @Autowired constructor(private var dataSourceProperties: DataSourceProperties) {
-    @Autowired
-    lateinit var environment: Environment
 
     @Bean
     open fun dataSource(): DataSource {
+        val properties = Properties()
+        properties.setProperty("v\$session.program", "raspi-finance-endpoint")
         val dataSource = DriverManagerDataSource()
-        dataSource.setDriverClassName(environment.getRequiredProperty("spring.datasource.driver-class-name"))
-        dataSource.url = environment.getRequiredProperty("spring.datasource.url")
-        dataSource.username = environment.getRequiredProperty("spring.datasource.username")
-        dataSource.password = environment.getRequiredProperty("spring.datasource.password")
+        dataSource.url = dataSourceProperties.url
+        dataSource.username = dataSourceProperties.username
+        dataSource.password = dataSourceProperties.password
+        dataSource.connectionProperties = properties
         return dataSource
     }
-
-//    //@Primary
-//    @Bean
-//    open fun dataSource(): DataSource {
-//        val properties = Properties()
-//        properties.setProperty("v\$session.program", "raspi-finance-endpoint")
-//        val dataSource = DriverManagerDataSource()
-//        dataSource.url = dataSourceProperties.url
-//        dataSource.username = dataSourceProperties.username
-//        dataSource.password = dataSourceProperties.password
-//        dataSource.connectionProperties = properties
-//        return dataSource
-//    }
 
 
 //    @Bean
@@ -66,15 +54,15 @@ open class PostgresConfig @Autowired constructor(private var dataSourcePropertie
         return entityManagerFactory.getObject()
     }
 
-    @Bean
-    open fun transactionManager(entityManagerFactory: EntityManagerFactory?): JpaTransactionManager {
-        val jpaTransactionManager = JpaTransactionManager()
-        jpaTransactionManager.entityManagerFactory = entityManagerFactory
-        return jpaTransactionManager
-    }
-
-    @Bean
-    open fun exceptionTranslationPostProcessor(): PersistenceExceptionTranslationPostProcessor {
-        return PersistenceExceptionTranslationPostProcessor()
-    }
+//    @Bean
+//    open fun transactionManager(entityManagerFactory: EntityManagerFactory?): JpaTransactionManager {
+//        val jpaTransactionManager = JpaTransactionManager()
+//        jpaTransactionManager.entityManagerFactory = entityManagerFactory
+//        return jpaTransactionManager
+//    }
+//
+//    @Bean
+//    open fun exceptionTranslationPostProcessor(): PersistenceExceptionTranslationPostProcessor {
+//        return PersistenceExceptionTranslationPostProcessor()
+//    }
 }
