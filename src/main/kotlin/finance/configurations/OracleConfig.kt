@@ -18,14 +18,14 @@
 //open class OracleConfig @Autowired constructor(private var dataSourceProperties: DataSourceProperties) {
 //    @Bean
 //    open fun entityManagerFactory(): LocalContainerEntityManagerFactoryBean {
-//        val em = LocalContainerEntityManagerFactoryBean()
-//        em.dataSource = dataSource()
-//        em.setPackagesToScan(
+//        val entityManager = LocalContainerEntityManagerFactoryBean()
+//        entityManager.dataSource = dataSource()
+//        entityManager.setPackagesToScan(
 //            "finance.repositories", "finance.domain"
 //        )
 //        val vendorAdapter = HibernateJpaVendorAdapter()
-//        em.jpaVendorAdapter = vendorAdapter
-//        return em
+//        entityManager.jpaVendorAdapter = vendorAdapter
+//        return entityManager
 //    }
 //
 //    @Primary
