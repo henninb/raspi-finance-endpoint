@@ -1,4 +1,6 @@
 addons:
+  hosts:
+    - raspi
   postgresql: "12"
   apt:
     update: true
