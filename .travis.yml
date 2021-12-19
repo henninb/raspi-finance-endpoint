@@ -21,12 +21,12 @@ before_install:
 
 before_script:
   - psql --version
-  - psql -p "${PGPORT}" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' -U travis
-  - psql -p "${PGPORT}" -c 'CREATE DATABASE finance_test_db;' -U travis
-  - psql -p "${PGPORT}" -c "CREATE USER henninb WITH PASSWORD 'monday1';" -U travis
-  - psql -p "${PGPORT}" -c 'ALTER USER henninb CREATEDB;' -U travis
-  - psql -p "${PGPORT}" -c 'ALTER USER henninb SUPERUSER;' -U travis
-  - psql -p "${PGPORT}" -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U travis
+  - psql -p "${PGPORT}" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' -U "${PGUSER}"
+  - psql -p "${PGPORT}" -c 'CREATE DATABASE finance_test_db;' -U "${PGUSER}"
+  - psql -p "${PGPORT}" -c "CREATE USER henninb WITH PASSWORD 'monday1';" -U "${PGUSER}"
+  - psql -p "${PGPORT}" -c 'ALTER USER henninb CREATEDB;' -U "${PGUSER}"
+  - psql -p "${PGPORT}" -c 'ALTER USER henninb SUPERUSER;' -U "${PGUSER}"
+  - psql -p "${PGPORT}" -c 'GRANT ALL PRIVILEGES ON DATABASE finance_test_db TO henninb' -U "${PGUSER}"
 
 after_script:
   - psql --version
