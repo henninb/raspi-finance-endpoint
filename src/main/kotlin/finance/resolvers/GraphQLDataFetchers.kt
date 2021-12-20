@@ -27,10 +27,10 @@ class GraphQLDataFetchers(
 ) {
     val descriptions: DataFetcher<List<Description>>
         get() = DataFetcher<List<Description>> {
-            val username = SecurityContextHolder.getContext().authentication.name
-            val authentication: Authentication = SecurityContextHolder.getContext().authentication
-            logger.info(authentication.isAuthenticated)
-            logger.info(username)
+//            val username = SecurityContextHolder.getContext().authentication.name
+//            val authentication: Authentication = SecurityContextHolder.getContext().authentication
+//            logger.info(authentication.isAuthenticated)
+//            logger.info(username)
             return@DataFetcher descriptionService.fetchAllDescriptions()
         }
 
