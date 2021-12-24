@@ -153,7 +153,7 @@ dependencies {
     // added 7/16/2021
     //Security
     implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
-    //implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
+    implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
 
     //Graphics
     implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")
