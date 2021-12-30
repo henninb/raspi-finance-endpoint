@@ -23,6 +23,7 @@ services:
       - ./json_in:/opt/raspi-finance-endpoint/json_in
     extra_hosts:
       - "hornsup:${HOST_IP}"
+      - "raspi:192.168.10.25"
     env_file:
       - env.secrets
     depends_on:
