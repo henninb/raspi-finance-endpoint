@@ -1,0 +1,12 @@
+version: "3.7"
+services:
+  varnish-server:
+    image: varnish
+    # user: "${CURRENT_UID}:${CURRENT_GID}"
+    container_name: varnish-server
+    ports:
+      - "3002:80"
+    expose:
+      - "3002"
+    volumes:
+      - ./default.vcl:/etc/varnish/default.vcl
