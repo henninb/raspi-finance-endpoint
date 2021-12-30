@@ -12,8 +12,8 @@ services:
       - env.postgresql
     hostname: postgresql-server
     volumes:
-      # - ./postgresql-data:/var/lib/postgresql/data
-      postgresql-volume:/var/lib/postgresql/data
+      - ./postgresql-data:/var/lib/postgresql/data
+      # postgresql-volume:/var/lib/postgresql/data
   raspi-finance-endpoint:
     depends_on:
       - postgresql-server
