@@ -25,7 +25,7 @@ if [ -z "${test_flag}" ]; then
 fi
 
 if [ -z "${datastore}" ]; then
-  datastore=base
+  datastore=postgresql
 fi
 
 if [ "$env" = "prodora" ]; then
@@ -131,12 +131,15 @@ fi
 # echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
 if [ -x "$(command -v docker-compose)" ]; then
 
-  if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" build; then
-    echo "docker-compose build failed."
-    exit 1
-  fi
+  # if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" build; then
+  #   echo "docker-compose build failed."
+  #   exit 1
+  # fi
 
-  if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" up; then
+  # exit 0
+
+  echo "docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f docker-compose-${env}.yml up"
+  if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${datastore}.yml" -f "docker-compose-${env}.yml" up; then
     echo "docker-compose up failed."
     exit 1
   fi
