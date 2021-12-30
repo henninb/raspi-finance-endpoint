@@ -9,4 +9,8 @@ services:
     expose:
       - "3002"
     volumes:
-      - ./default.vcl:/etc/varnish/default.vcl
+      #- ./default.vcl:/etc/varnish/default.vcl
+      - ./varnish-data:/etc/varnish
+volumes:
+  varnish-volume:
+    driver: local
