@@ -26,23 +26,23 @@ services:
       - "raspi:192.168.10.25"
     env_file:
       - env.secrets
-    depends_on:
-      logstash-server:
-         condition: service_healthy
-  grafana-server:
-    image: grafana/grafana:8.3.3
-    user: "${CURRENT_UID}:${CURRENT_GID}"
-    container_name: grafana-server
-    ports:
-      - "3001:3000"
-    expose:
-      - "3001"
-    volumes:
-      - ./grafana-data:/var/lib/grafana
-      - ./grafana-provisioning:/etc/grafana/provisioning
-      - ./grafana-dashboards:/var/lib/grafana/dashboards
-    env_file:
-      - env.grafana
+    # depends_on:
+    #   logstash-server:
+    #      condition: service_healthy
+  # grafana-server:
+  #   image: grafana/grafana:8.3.3
+  #   user: "${CURRENT_UID}:${CURRENT_GID}"
+  #   container_name: grafana-server
+  #   ports:
+  #     - "3001:3000"
+  #   expose:
+  #     - "3001"
+  #   volumes:
+  #     - ./grafana-data:/var/lib/grafana
+  #     - ./grafana-provisioning:/etc/grafana/provisioning
+  #     - ./grafana-dashboards:/var/lib/grafana/dashboards
+  #   env_file:
+  #     - env.grafana
 networks:
   default:
     name: finance-net
