@@ -2,17 +2,19 @@ version: "3.7"
 services:
   varnish-server:
     image: varnish
+    hostname: varnish-server
     # user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: varnish-server
     ports:
-      - "3002:80"
+      - "8080:80"
     expose:
-      - "3002"
+      - "8080"
     extra_hosts:
       - "hornsup:${HOST_IP}"
-    # volumes:
-      #- ./default.vcl:/etc/varnish/default.vcl
+    volumes:
+      - ./default.vcl:/etc/varnish/default.vcl
+      - ./default.vcl:/default.vcl
       #- ./varnish-data:/etc/varnish
-volumes:
-  varnish-volume:
-    driver: local
+# volumes:
+#   varnish-volume:
+#     driver: local

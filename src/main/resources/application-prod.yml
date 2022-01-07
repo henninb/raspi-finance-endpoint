@@ -8,7 +8,7 @@ server:
     key-store-type: pkcs12
     key-alias: hornsup
     key-password: ${SSL_KEY_PASSWORD}
-    enabled: true
+    enabled: ${SSL_ENABLED}
     enabled-protocols: TLSv1.2
 spring:
   security:
