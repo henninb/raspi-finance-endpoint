@@ -1,6 +1,5 @@
-volumes:
-  elasticsearch-volume:
-    driver: local
+version: "3.7"
+services:
   elasticsearch-server:
     image: elasticsearch:7.16.2
     container_name: elasticsearch-server
@@ -43,10 +42,12 @@ volumes:
       - ./logstash-pipeline:/usr/share/logstash/pipeline
     healthcheck:
       test: ["CMD-SHELL", "/bin/true"]
-#      test: ["CMD-SHELL", "curl", "-f", "192.168.100.97:9600"]
       interval: 10s
       timeout: 5s
       retries: 5
     extra_hosts:
       - "hornsup:${HOST_IP}"
       - "elasticsearch:${HOST_IP}"
+volumes:
+  elasticsearch-volume:
+    driver: local
