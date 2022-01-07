@@ -29,58 +29,6 @@ services:
     depends_on:
       logstash-server:
          condition: service_healthy
-  elasticsearch-server:
-    image: elasticsearch:7.14.1
-    # user: "${CURRENT_UID}:${CURRENT_GID}"
-    container_name: elasticsearch-server
-    environment:
-      - discovery.type=single-node
-    volumes:
-      - elasticsearch-volume:/usr/share/elasticsearch/data:rw
-    ports:
-      - "9200:9200"
-      # - "9300:9300"
-    expose:
-      - "9200"
-    extra_hosts:
-      - "hornsup:${HOST_IP}"
-    depends_on:
-      - logstash-server
-  kibana-server:
-    image: kibana:7.14.1
-    container_name: kibana-server
-    ports:
-      - "5601:5601"
-    expose:
-      - "5601"
-    depends_on:
-      - elasticsearch-server
-    extra_hosts:
-      - "hornsup:${HOST_IP}"
-      - "elasticsearch:${HOST_IP}"
-  logstash-server:
-    image: logstash:7.14.1
-    # user: "${CURRENT_UID}:${CURRENT_GID}"
-    container_name: logstash-server
-    environment:
-      - monitoring.elasticsearch.hosts=http://hornsup:9200
-    ports:
-      - "9600:9600"
-      - "4560:4560"
-    expose:
-      - "9600"
-      - "4560"
-    volumes:
-      - ./logstash-pipeline:/usr/share/logstash/pipeline
-    healthcheck:
-      test: ["CMD-SHELL", "/bin/true"]
-#      test: ["CMD-SHELL", "curl", "-f", "192.168.100.97:9600"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    extra_hosts:
-      - "hornsup:${HOST_IP}"
-      - "elasticsearch:${HOST_IP}"
   grafana-server:
     image: grafana/grafana:8.3.3
     user: "${CURRENT_UID}:${CURRENT_GID}"
@@ -98,6 +46,3 @@ services:
 networks:
   default:
     name: finance-net
-volumes:
-  elasticsearch-volume:
-    driver: local
