@@ -79,7 +79,7 @@ mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
-rm -rf docker-compose.yml
+#rm -rf docker-compose.yml
 
 if [ -z "${in_hosts}" ]; then
   echo "The 'hornsup' hostname needs to be added to /etc/hosts."
@@ -106,6 +106,10 @@ else
     exit 1
   fi
 fi
+
+docker stop raspi-finance-endpoint varnish-server
+docker rm -f raspi-finance-endpoint varnish-server
+docker rmi -f raspi-finance-endpoint varnish-server
 
 docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
 docker volume prune -f 2> /dev/null
