@@ -10,9 +10,9 @@ services:
       - "3002"
     extra_hosts:
       - "hornsup:${HOST_IP}"
-    volumes:
+    # volumes:
       #- ./default.vcl:/etc/varnish/default.vcl
-      - ./varnish-data:/etc/varnish
+      #- ./varnish-data:/etc/varnish
 volumes:
   varnish-volume:
     driver: local
