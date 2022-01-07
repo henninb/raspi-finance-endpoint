@@ -138,8 +138,8 @@ if [ -x "$(command -v docker-compose)" ]; then
 
   # exit 0
 
-  # if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${datastore}.yml" -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml -f docker-compose-elk.yml up; then
-  if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up; then
+  # if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${datastore}.yml" -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml -f docker-compose-elk.yml up -d; then
+  if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
     echo "docker-compose up failed."
     exit 1
   fi
