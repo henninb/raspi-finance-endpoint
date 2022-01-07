@@ -3,6 +3,7 @@ services:
   elasticsearch-server:
     image: elasticsearch:7.16.2
     container_name: elasticsearch-server
+    hostname: elasticsearch-server
     environment:
       - discovery.type=single-node
     volumes:
@@ -18,6 +19,7 @@ services:
   kibana-server:
     image: kibana:7.16.2
     container_name: kibana-server
+    hostname: kibana-server
     ports:
       - "5601:5601"
     expose:
@@ -30,6 +32,7 @@ services:
   logstash-server:
     image: logstash:7.16.2
     container_name: logstash-server
+    hostname: logstash-server
     environment:
       - monitoring.elasticsearch.hosts=http://hornsup:9200
     ports:
