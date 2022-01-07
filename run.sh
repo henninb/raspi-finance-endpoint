@@ -132,6 +132,8 @@ if [ -n "${ORACLE_CONTAINER}" ]; then
   docker rm -f "${ORACLE_CONTAINER}" 2> /dev/null
 fi
 
+echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
+
 # echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
 if [ -x "$(command -v docker-compose)" ]; then
 
