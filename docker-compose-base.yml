@@ -35,6 +35,7 @@ services:
   #   image: grafana/grafana:8.3.3
   #   user: "${CURRENT_UID}:${CURRENT_GID}"
   #   container_name: grafana-server
+  #   hostname: grafana-server
   #   ports:
   #     - "3001:3000"
   #   expose:
