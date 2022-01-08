@@ -7,8 +7,10 @@ services:
     container_name: varnish-server
     ports:
       - "8080:80"
+#      - "6081:6081"
     expose:
       - "8080"
+#      - "6081"
     extra_hosts:
       - "hornsup:${HOST_IP}"
     volumes:
@@ -18,3 +20,7 @@ services:
 # volumes:
 #   varnish-volume:
 #     driver: local
+  caddy-server:
+    image: caddy
+    hostname: caddy-server
+    container_name: caddy-server
