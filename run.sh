@@ -133,6 +133,7 @@ if [ -n "${ORACLE_CONTAINER}" ]; then
 fi
 
 echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
+echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.21.5-alpinej
 # podman build --tag "$APPNAME" -f ./Dockerfile
 
 # echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
@@ -142,8 +143,6 @@ if [ -x "$(command -v docker-compose)" ]; then
   #   echo "docker-compose build failed."
   #   exit 1
   # fi
-
-  # exit 0
 
   # if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${datastore}.yml" -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml -f docker-compose-elk.yml up -d; then
   if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
