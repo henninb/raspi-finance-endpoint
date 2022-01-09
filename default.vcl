@@ -10,11 +10,11 @@ backend default {
 
 sub vcl_recv {
     # Happens before we check if we have this in cache already.
-  if ((client.ip != "127.0.0.1" && std.port(server.ip) == 80) &&
-      (req.http.host ~ "hornsup")) {
-    set req.http.x-redir = "https://" + req.http.host + req.url;
-    return (synth(750, ""));
-  }
+  # if ((client.ip != "127.0.0.1" && std.port(server.ip) == 80) &&
+  #     (req.http.host ~ "hornsup")) {
+  #   set req.http.x-redir = "https://" + req.http.host + req.url;
+  #   return (synth(750, ""));
+  # }
 }
 
 sub vcl_backend_response {
@@ -33,12 +33,12 @@ sub vcl_deliver {
 
 sub vcl_synth {
   # Listen to 750 status from vcl_recv.
-  if (resp.status == 750) {
-    // Redirect to HTTPS with 301 status.
-    set resp.status = 301;
-    set resp.http.Location = req.http.x-redir;
-    return(deliver);
-  }
+  # if (resp.status == 750) {
+  #   // Redirect to HTTPS with 301 status.
+  #   set resp.status = 301;
+  #   set resp.http.Location = req.http.x-redir;
+  #   return(deliver);
+  # }
 }
 
 # sub vcl_recv {
