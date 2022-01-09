@@ -136,3 +136,11 @@ debug: false
 #security:
 #  headers:
 #    cache: true
+
+  resources:
+    cache-period: 10
+    cache:
+      cachecontrol:
+        cache-private: true
+        must-revalidate: true
+        max-age: 31536000
