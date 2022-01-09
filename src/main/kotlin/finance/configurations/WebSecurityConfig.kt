@@ -25,8 +25,9 @@ open class WebSecurityConfig : WebSecurityConfigurerAdapter() {
         corsConfiguration.allowedHeaders = mutableListOf("authorization", "content-type", "x-auth-token", "accept");
 
         //TODO: enable csrf (cross site request forgery)
+        //TODO: enable headers (not sure what happens when they are disabled)
         http.csrf().disable().cors()
-            .configurationSource { corsConfiguration }
+            .configurationSource { corsConfiguration }.and().headers().disable()
 
 //        http.cors()
 //            .configurationSource { corsConfiguration }
