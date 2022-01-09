@@ -107,9 +107,9 @@ else
   fi
 fi
 
-docker stop raspi-finance-endpoint varnish-server
-docker rm -f raspi-finance-endpoint varnish-server
-docker rmi -f raspi-finance-endpoint varnish-server
+docker stop raspi-finance-endpoint varnish-server nginx-server
+docker rm -f raspi-finance-endpoint varnish-server nginx-server
+docker rmi -f raspi-finance-endpoint varnish-server nginx-server
 
 docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
 docker volume prune -f 2> /dev/null
