@@ -24,12 +24,22 @@ sub vcl_backend_response {
     # and other mistakes your backend does.
 }
 
-sub vcl_deliver {
+#sub vcl_deliver {
     # Happens when we have all the pieces we need, and are about to send the
     # response to the client.
     #
     # You can do accounting or modifying the final object here.
-}
+#}
+
+sub vcl_deliver { 
+    # send some handy statistics back, useful for checking cache 
+    if (obj.hits > 0) { 
+        set resp.http.X-Cache-Action = "HIT"; 
+        set resp.http.X-Cache-Hits = obj.hits; 
+    } else { 
+        set resp.http.X-Cache-Action = "MISS"; 
+    } 
+} 
 
 sub vcl_synth {
   # Listen to 750 status from vcl_recv.
