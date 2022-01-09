@@ -133,3 +133,6 @@ management:
         include: "*"
 debug: false
 
+#security:
+#  headers:
+#    cache: true
