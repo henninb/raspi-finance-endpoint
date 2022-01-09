@@ -148,3 +148,8 @@ curl https://hornsup/tokens/$ACCESS_KEY -H "X-Auth-Token: $SECRET_KEY"
 ```
 ./gradlew :dep | grep log4j
 ```
+
+# varnish log
+```
+varnishlog
+```
