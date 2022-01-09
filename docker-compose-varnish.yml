@@ -5,6 +5,7 @@ services:
     hostname: varnish-server
     # user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: varnish-server
+    # command: bash -c "apt update -y && apt install -y nginx"
     ports:
       - "8080:80"
 #      - "6081:6081"
@@ -15,8 +16,10 @@ services:
       - "hornsup:${HOST_IP}"
     volumes:
       - ./default.vcl:/etc/varnish/default.vcl
+    depends_on:
+      - nginx-server
+
   nginx-server:
-    #image: nginx:1.21.5-alpine
     image: nginx
     hostname: nginx-server
     container_name: nginx-server
@@ -27,11 +30,11 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./ssl:/etc/nginx/certs/
-
-# volumes:
-#   varnish-volume:
-#     driver: local
-  # caddy-server:
-  #   image: caddy
-  #   hostname: caddy-server
-  #   container_name: caddy-server
+# networks:
+#   localnetwork:
+#     driver: bridge
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: 162.11.1.0/24
+#           gateway: 162.11.1.1
