@@ -9,6 +9,15 @@ backend default {
 }
 
 sub vcl_recv {
+    if (req.method != "GET" && req.method != "HEAD") {
+        return (pass);
+    }
+    # purge the entire cache on every POST
+    # if ( req.request == "POST") {
+    #     ban("req.http.host == " + req.http.Host);
+    #     return(pass);
+    # }
+
     # Happens before we check if we have this in cache already.
   # if ((client.ip != "127.0.0.1" && std.port(server.ip) == 80) &&
   #     (req.http.host ~ "hornsup")) {
@@ -31,15 +40,15 @@ sub vcl_backend_response {
     # You can do accounting or modifying the final object here.
 #}
 
-sub vcl_deliver { 
-    # send some handy statistics back, useful for checking cache 
-    if (obj.hits > 0) { 
-        set resp.http.X-Cache-Action = "HIT"; 
-        set resp.http.X-Cache-Hits = obj.hits; 
-    } else { 
-        set resp.http.X-Cache-Action = "MISS"; 
-    } 
-} 
+sub vcl_deliver {
+    # send some handy statistics back, useful for checking cache
+    if (obj.hits > 0) {
+        set resp.http.X-Cache-Action = "HIT";
+        set resp.http.X-Cache-Hits = obj.hits;
+    } else {
+        set resp.http.X-Cache-Action = "MISS";
+    }
+}
 
 sub vcl_synth {
   # Listen to 750 status from vcl_recv.
