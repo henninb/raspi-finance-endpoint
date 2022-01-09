@@ -26,12 +26,12 @@ sub vcl_recv {
   # }
 }
 
-sub vcl_backend_response {
+#sub vcl_backend_response {
     # Happens after we have read the response headers from the backend.
     #
     # Here you clean the response headers, removing silly Set-Cookie headers
     # and other mistakes your backend does.
-}
+#}
 
 #sub vcl_deliver {
     # Happens when we have all the pieces we need, and are about to send the
@@ -66,3 +66,11 @@ sub vcl_synth {
 #         return(synth(301));
 #     }
 # }
+#
+
+sub vcl_backend_response {
+  # Removing Set-Cookie from static responses regardless of query string.
+  if (bereq.url ~ "(?i)\.(?:css|gif|ico|jpeg|jpg|js|json|png|swf|woff)(?:\?.*)?$") {
+    unset beresp.http.set-cookie;
+  }
+}
