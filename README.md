@@ -154,4 +154,9 @@ curl https://hornsup/tokens/$ACCESS_KEY -H "X-Auth-Token: $SECRET_KEY"
 varnishlog
 ```
 
-Another thing here, in your vcl log you can see that Varnish is doing Hit-For-Pass, that is, Varnish is caching the fact that your request is not cached. If you want to truly test, you'll need to purge the content beforehands. One last thing : your backend server (apache) responds with a Cache-Control : max-age =0 header which prevent caching, you should change that if you want to cache content.
+# vcl caching issue
+```
+  : your backend server (apache) responds with a Cache-Control : max-age =0 header which prevent caching, 
+  you should change that if you want to cache content.
+```
+
