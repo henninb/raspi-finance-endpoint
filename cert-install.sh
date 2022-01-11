@@ -45,7 +45,7 @@ cp -v hornsup.crt "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-cert
 cp -v hornsup.key "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-key.pem"
 cp -v hornsup.jks "${basedir}/raspi-finance-ratpack/ssl/hornsup-raspi-finance.jks"
 cp -v hornsup.jks "${basedir}/example-ktor/hornsup-raspi-finance.jks"
-cp -v hornsup.crt ssl/
-cp -v hornsup.key ssl/
+cp -v hornsup.crt ssl/hornsup-raspi-finance-cert.pem
+cp -v hornsup.key ssl/hornsup-raspi-finance-key.pem
 
 exit 0
