@@ -3,6 +3,7 @@
 basedir="$HOME/projects/github.com/henninb"
 
 mkdir -p "$HOME/ssl"
+mkdir -p ssl
 
 stty -echo
 printf "Cert Password: "
