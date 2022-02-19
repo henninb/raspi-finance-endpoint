@@ -154,6 +154,7 @@ dependencies {
     //Security
     implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
 
     //Graphics
     implementation("net.coobird:thumbnailator:${thumbnailatorVersion}")

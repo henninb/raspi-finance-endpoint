@@ -12,9 +12,14 @@ server:
     enabled-protocols: TLSv1.2
 spring:
   security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: http://localhost:8443/auth/realms/finance
+#          jwk-set-uri: http://localhost:8443/auth/realms/finance/protocol/openid-connect/certs
     user:
-      name: ${API_USERNAME}
-      password: ${API_PASSWORD}
+      name: ${BASIC_AUTH_USERNAME}
+      password: ${BASIC_AUTH_PASSWORD}
   application:
     name: raspi-finance-endpoint
   #  profiles:
