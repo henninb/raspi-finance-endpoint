@@ -33,7 +33,7 @@ gradle -Dflyway.configFiles=path/to/myAlternativeConfig.conf flywayMigrate
 ## Check the application health
 
 ```shell
-$ curl localhost:8080/actuator/health
+$ curl localhost:8443/actuator/health
 ```
 
 ## Check the application health - prometheus
@@ -67,7 +67,7 @@ $ ./gradlew clean performanceTest
 ## Select all active accounts
 
 ```shell
-$ curl -k 'https://localhost:8080/account/select/active'
+$ curl -k 'https://localhost:8443/account/select/active'
 ```
 
 ## gradle wrapper update
@@ -116,18 +116,18 @@ https://riamf.github.io/posts/dockerized_grafana_setup/
 http://logback.qos.ch/translator/asGroovy.html
 
 ## graphql
-http://hornsup:8080/graphiql
+http://hornsup:8443/graphiql
 npx graphql-codegen
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions {  description }}"}' https://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{descriptions {  description }}"}' https://hornsup:8443/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{accounts { accountId accountNameOwner }}"}' https://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{accounts { accountId accountNameOwner }}"}' https://hornsup:8443/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{transactions(accountNameOwner: \"chase_kari\") { transactionId accountNameOwner transactionDate description  activeStatus}}"}' https://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{transactions(accountNameOwner: \"chase_kari\") { transactionId accountNameOwner transactionDate description  activeStatus}}"}' https://hornsup:8443/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{description(descriptionName: \"testing\") { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"query{description(descriptionName: \"testing\") { descriptionId description activeStatus}}"}' https://hornsup:8443/graphql
 
-curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{createDescription(description: \"testing}\"}) { descriptionId description activeStatus}}"}' https://hornsup:8080/graphql
+curl -k -g -X POST -H "Content-Type: application/json" -d '{"query":"mutation{createDescription(description: \"testing}\"}) { descriptionId description activeStatus}}"}' https://hornsup:8443/graphql
 
 # https://stackoverflow.com/questions/55113542/how-to-have-graphql-enum-resolve-strings
 
@@ -135,9 +135,9 @@ mutation { createDescription(description: "car") {descriptionId} }
 mutation { createPayment(payment: {accountNameOwner: "test", activeStatus: true, amount: 0.0}) {paymentId} }
 
 # api key
-Just add the @EnableApiKeyAuthentication annotation to you Spring Boot Application class 
-and provide web.authentication.apikey property to enable static API key authentication. 
-This will add a Spring HandlerInterceptor that will check the X-Api-Key request header for the configured static API key. 
+Just add the @EnableApiKeyAuthentication annotation to you Spring Boot Application class
+and provide web.authentication.apikey property to enable static API key authentication.
+This will add a Spring HandlerInterceptor that will check the X-Api-Key request header for the configured static API key.
 If no or not the correct key is provided the request will fail and send 401 as return code.
 ```
 curl -v --header "API_KEY: abcdefg"
@@ -156,7 +156,7 @@ varnishlog
 
 # vcl caching issue
 ```
-  : your backend server (apache) responds with a Cache-Control : max-age =0 header which prevent caching, 
+  : your backend server (apache) responds with a Cache-Control : max-age =0 header which prevent caching,
   you should change that if you want to cache content.
 ```
 
