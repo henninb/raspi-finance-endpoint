@@ -97,8 +97,8 @@ custom:
 # ===============================
 # = Logging
 # ===============================
-logging:
-  config: classpath:logback-prod.groovy
+# logging:
+#   config: classpath:logback-prod.groovy
 #  logstash:
 #    enabled: true
 #    url: 192.168.99.100:5000
