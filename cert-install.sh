@@ -2,6 +2,8 @@
 
 basedir="$HOME/projects/github.com/henninb"
 
+server_name="hornsup"
+
 mkdir -p "$HOME/ssl"
 mkdir -p ssl
 
@@ -16,7 +18,12 @@ if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
   openssl genrsa -out "$HOME/ssl/rootCA.key" 2048
   openssl req -x509 -new -nodes -key "$HOME/ssl/rootCA.key" -sha256 -days 1024 -out "$HOME/ssl/rootCA.pem" -subj "/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=prod/CN=Brian LLC rootCA"
   openssl x509 -in rootCA.pem -inform PEM -out rootCA.crt
+
+  # archlinux
+  sudo trust anchor --store rootCA.pem
 fi
+
+rm -rf v3.ext
 
 cat > v3.ext << EOF
 authorityKeyIdentifier=keyid,issuer
@@ -25,28 +32,26 @@ keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = hornsup
+DNS.1 = ${server_name}
 DNS.2 = localhost
 EOF
 
-COMMON_NAME=hornsup
-SUBJECT="/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=None/CN=$COMMON_NAME"
-openssl req -new -newkey rsa:2048 -sha256 -nodes -keyout hornsup.key -subj "$SUBJECT" -out hornsup.csr
-openssl x509 -req -in hornsup.csr -CA "$HOME/ssl/rootCA.pem" -CAkey "$HOME/ssl/rootCA.key" -CAcreateserial -out hornsup.crt -days 365 -sha256 -extfile v3.ext
+SUBJECT="/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=None/CN=${server_name}"
+openssl req -new -newkey rsa:2048 -sha256 -nodes -keyout ${server_name}.key -subj "$SUBJECT" -out ${server_name}.csr
+openssl x509 -req -in ${server_name}.csr -CA "$HOME/ssl/rootCA.pem" -CAkey "$HOME/ssl/rootCA.key" -CAcreateserial -out ${server_name}.crt -days 365 -sha256 -extfile v3.ext
 
-openssl pkcs12 -export -out hornsup.p12 -in hornsup.crt -inkey hornsup.key -name hornsup -password "pass:${password}"
-
+openssl pkcs12 -export -out ${server_name}.p12 -in ${server_name}.crt -inkey ${server_name}.key -name ${server_name} -password "pass:${password}"
 
 # prompts for a password
-rm -rf hornsup.jks
-keytool -importkeystore -srckeystore hornsup.p12 -srcstoretype PKCS12 -destkeystore hornsup.jks -deststoretype JKS -keypass "${password}" -storepass "${password}"
+rm -rf ${server_name}.jks
+keytool -importkeystore -srckeystore ${server_name}.p12 -srcstoretype PKCS12 -destkeystore ${server_name}.jks -deststoretype JKS -keypass "${password}" -storepass "${password}"
 
-cp -v hornsup.p12 "${basedir}/raspi-finance-endpoint/src/main/resources/hornsup-raspi-finance-keystore.p12"
-cp -v hornsup.crt "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-cert.pem"
-cp -v hornsup.key "${basedir}/raspi-finance-react/ssl/hornsup-raspi-finance-key.pem"
-cp -v hornsup.jks "${basedir}/raspi-finance-ratpack/ssl/hornsup-raspi-finance.jks"
-cp -v hornsup.jks "${basedir}/example-ktor/hornsup-raspi-finance.jks"
-cp -v hornsup.crt ssl/hornsup-raspi-finance-cert.pem
-cp -v hornsup.key ssl/hornsup-raspi-finance-key.pem
+cp -v ${server_name}.p12 "${basedir}/raspi-finance-endpoint/src/main/resources/${server_name}-raspi-finance-keystore.p12"
+cp -v ${server_name}.crt "${basedir}/raspi-finance-react/ssl/${server_name}-raspi-finance-cert.pem"
+cp -v ${server_name}.key "${basedir}/raspi-finance-react/ssl/${server_name}-raspi-finance-key.pem"
+cp -v ${server_name}.jks "${basedir}/raspi-finance-ratpack/ssl/${server_name}-raspi-finance.jks"
+cp -v ${server_name}.jks "${basedir}/example-ktor/${server_name}-raspi-finance.jks"
+cp -v ${server_name}.crt ssl/${server_name}-raspi-finance-cert.pem
+cp -v ${server_name}.key ssl/${server_name}-raspi-finance-key.pem
 
 exit 0
