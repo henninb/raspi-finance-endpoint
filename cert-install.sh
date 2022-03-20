@@ -21,6 +21,10 @@ if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
 
   # archlinux
   sudo trust anchor --store rootCA.pem
+
+  # gentoo
+  echo sudo cp -v rootCA.crt /usr/local/share/ca-certificates
+  echo sudo update-ca-certificates
 fi
 
 rm -rf v3.ext
