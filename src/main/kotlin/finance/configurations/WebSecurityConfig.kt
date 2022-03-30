@@ -2,6 +2,7 @@ package finance.configurations
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
@@ -62,6 +63,12 @@ open class WebSecurityConfig( private  var jwtTokenProvider: JwtTokenProvider) :
 //            .password(passwordEncoder().encode("monday1"))
                     .password("monday1")
             .authorities("admin")
+    }
+
+    @Bean
+    @Throws(java.lang.Exception::class)
+    override fun authenticationManagerBean(): AuthenticationManager {
+        return super.authenticationManagerBean()
     }
 
 
