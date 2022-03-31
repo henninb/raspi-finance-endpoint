@@ -32,12 +32,12 @@ open class WebSecurityConfig( private  var jwtTokenProvider: JwtTokenProvider) :
         // No session will be created or used by spring security
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
-//        // Entry points
-//        http.authorizeRequests() //
-//            .antMatchers("/user/signin").permitAll()
-//            .antMatchers("/user/signup").permitAll()
-//            // Disallow everything else
-//            .anyRequest().authenticated()
+        // Entry points
+        http.authorizeRequests() //
+            .antMatchers("/user/signin").permitAll()
+            .antMatchers("/user/signup").permitAll()
+            // Disallow everything else
+            .anyRequest().authenticated()
 
         // TODO: bh enable headers (not sure what happens when they are disabled) preflight
         http.cors()
@@ -47,13 +47,12 @@ open class WebSecurityConfig( private  var jwtTokenProvider: JwtTokenProvider) :
 //            .configurationSource { corsConfiguration }
 
         // If a user try to access a resource without having enough permissions
-        http.exceptionHandling().accessDeniedPage("/login")
+        //http.exceptionHandling().accessDeniedPage("/user/login")
 
         // Apply JWT
         //http.apply(JwtTokenFilterConfigurer(jwtTokenProvider))
 
         http.httpBasic()
-
     }
 
     @Throws(Exception::class)
