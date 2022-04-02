@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.cors.CorsConfiguration
 
@@ -70,7 +71,6 @@ open class WebSecurityConfig( private  var jwtTokenProvider: JwtTokenProvider) :
         return super.authenticationManagerBean()
     }
 
-
     //NoOp
     @Bean
     open fun passwordEncoder(): PasswordEncoder {
@@ -93,6 +93,12 @@ open class WebSecurityConfig( private  var jwtTokenProvider: JwtTokenProvider) :
 //            .password(passwordEncoder().encode("monday1"))
 //            .authorities("admin")
 //    }
+
+
+    // @Bean
+    // open fun bCryptPasswordEncoder(): BCryptPasswordEncoder {
+    //     return BCryptPasswordEncoder()
+    // }
 
 //    @Bean
 //    open fun passwordEncoder(): PasswordEncoder {
