@@ -1,4 +1,4 @@
-FROM openjdk:11.0.13
+FROM openjdk:11.0.14
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
