@@ -164,5 +164,6 @@ varnishlog
 ## heroku
 ```
 heroku addons:create heroku-postgresql:hobby-dev
+heroku logs --tail
 ```
 
