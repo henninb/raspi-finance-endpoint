@@ -6,6 +6,7 @@ import io.micrometer.core.annotation.Timed
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
 import javax.validation.ConstraintViolation
@@ -14,6 +15,18 @@ import javax.validation.ConstraintViolation
 open class ParameterService(
     private var parameterRepository: ParameterRepository
 ) : IParameterService, BaseService() {
+
+    @Timed
+    override fun selectAll(): List<Parameter> {
+        val parameters = parameterRepository.findByActiveStatusIsTrue()
+
+        if (parameters.isEmpty()) {
+            logger.warn("selectAll - no parameters found.")
+        } else {
+            logger.info("selectAll - found parameters.")
+        }
+        return parameters
+    }
 
     @Timed
     override fun insertParameter(parameter: Parameter): Parameter {
