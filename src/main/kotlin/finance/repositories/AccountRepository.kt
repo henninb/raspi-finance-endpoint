@@ -13,6 +13,8 @@ import javax.transaction.Transactional
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
+    //TODO: 5/22/2022 - bh need to change the code to do this
+    //fun findByActiveStatusIsTrueOrderByAccountNameOwner() : List<Account>
 
     fun findByActiveStatusAndAccountTypeOrderByAccountNameOwner(
         activeStatus: Boolean = true,

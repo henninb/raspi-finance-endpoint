@@ -14,6 +14,18 @@ import java.util.*
 @RequestMapping("/parm")
 class ParameterController(private var parameterService: ParameterService) : BaseController() {
 
+    @GetMapping("/select/active", produces = ["application/json"])
+    fun parameters(): ResponseEntity<List<Parameter>> {
+
+        val parameters: List<Parameter> = parameterService.selectAll()
+        if (parameters.isEmpty()) {
+            logger.info("no parameters found.")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any parameters.")
+        }
+        logger.info("select active parameters: ${parameters.size}")
+        return ResponseEntity.ok(parameters)
+    }
+
     //https://hornsup:8080/parm/select/payment_account
     @GetMapping("/select/{parameterName}", produces = ["application/json"])
     fun selectParameter(@PathVariable parameterName: String): ResponseEntity<Parameter> {
