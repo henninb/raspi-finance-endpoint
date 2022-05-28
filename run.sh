@@ -132,7 +132,7 @@ if [ -n "${ORACLE_CONTAINER}" ]; then
   docker rm -f "${ORACLE_CONTAINER}" 2> /dev/null
 fi
 
-echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
+# echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
 echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.21.5-alpinej
 # podman build --tag "$APPNAME" -f ./Dockerfile
 
@@ -150,14 +150,15 @@ if [ -x "$(command -v docker-compose)" ]; then
     exit 1
   fi
 else
-  rm -rf env.bootrun
-  sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
-  set -a
-  . ./env.bootrun
-  . ./env.secrets
-  set +a
+  echo "Install docker-compose"
+  # rm -rf env.bootrun
+  # sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
+  # set -a
+  # . ./env.bootrun
+  # . ./env.secrets
+  # set +a
 
-  ./gradlew clean build bootRun -x test
+  # ./gradlew clean build bootRun -x test
 fi
 
 exit 0
