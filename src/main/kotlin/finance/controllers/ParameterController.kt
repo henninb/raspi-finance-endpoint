@@ -44,6 +44,15 @@ class ParameterController(private var parameterService: ParameterService) : Base
         return ResponseEntity.ok(parameterResponse)
     }
 
+    @PutMapping("/update/{id}", consumes = ["application/json"], produces = ["application/json"])
+    fun updateParameter(
+        @PathVariable("parameterName") parameterName: String,
+        @RequestBody toBePatchedParameter: Parameter
+    ): ResponseEntity<String> {
+        // val transactionResponse = transactionService.updateTransaction(toBePatchedTransaction)
+        return ResponseEntity.ok("update-to-be-implemnented")
+    }
+
     @DeleteMapping("/delete/{parameterName}", produces = ["application/json"])
     fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<String> {
         parameterService.deleteByParameterName(parameterName)
