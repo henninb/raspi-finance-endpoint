@@ -81,10 +81,10 @@ mkdir -p 'ssl'
 mkdir -p 'excel_in'
 #rm -rf docker-compose.yml
 
-if [ -z "${in_hosts}" ]; then
-  echo "The 'hornsup' hostname needs to be added to /etc/hosts."
-  exit 2
-fi
+#if [ -z "${in_hosts}" ]; then
+#  echo "The 'hornsup' hostname needs to be added to /etc/hosts."
+#  exit 2
+#fi
 
 # preserve local secret changes
 git update-index --assume-unchanged env.secrets
