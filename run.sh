@@ -137,7 +137,7 @@ echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.c
 # podman build --tag "$APPNAME" -f ./Dockerfile
 
 # echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
-if [ -x "$(command -v docker-compose)" ]; then
+if [ -x "$(command -v /usr/bin/docker-compose)" ] || [ -x "$(command -v docker-compose)" ]; then
 
   # if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" build; then
   #   echo "docker-compose build failed."
@@ -160,5 +160,5 @@ else
 
   # ./gradlew clean build bootRun -x test
 fi
-
+f
 exit 0
