@@ -1,6 +1,7 @@
 package finance.controllers
 
 import groovy.util.logging.Slf4j
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
@@ -11,7 +12,10 @@ import spock.lang.Specification
 class BaseControllerSpec extends Specification {
 
     @LocalServerPort
+    //@Value("${local.server.port}")
     protected int port
+    protected String username = "henninb"
+    protected String password = "monday1"
 
     protected TestRestTemplate restTemplate = new TestRestTemplate()
 
@@ -24,7 +28,7 @@ class BaseControllerSpec extends Specification {
 
     protected ResponseEntity<String> insertEndpoint(String endpointName, String payload) {
         headers.setContentType(MediaType.APPLICATION_JSON)
-        headers.setBasicAuth('foo', 'bar')
+        headers.setBasicAuth(username, password)
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         log.info(payload)
@@ -35,7 +39,7 @@ class BaseControllerSpec extends Specification {
 
     protected ResponseEntity<String> selectEndpoint(String endpointName, String parameter) {
         headers.setContentType(MediaType.APPLICATION_JSON)
-        headers.setBasicAuth('foo', 'bar')
+        headers.setBasicAuth(username, password)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         log.info("http://localhost:${port}/${endpointName}/select/${parameter}")
@@ -46,7 +50,7 @@ class BaseControllerSpec extends Specification {
 
     protected ResponseEntity<String> deleteEndpoint(String endpointName, String parameter) {
         headers.setContentType(MediaType.APPLICATION_JSON)
-        headers.setBasicAuth('foo', 'bar')
+        headers.setBasicAuth(username, password)
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         log.info("http://localhost:${port}/${endpointName}/delete/${parameter}")
