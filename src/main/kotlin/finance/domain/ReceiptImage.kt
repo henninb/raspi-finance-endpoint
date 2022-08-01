@@ -56,12 +56,12 @@ data class ReceiptImage(
         return Base64.getEncoder().encodeToString(this.image)
     }
 
-    //TODO: 2021-01-09, temporary method
-    private fun ByteArray.toHexString(): String {
-        return this.joinToString("") {
-            String.format("%02x", it)
-        }
-    }
+//    //TODO: 2021-01-09, temporary method
+//    private fun ByteArray.toHexString(): String {
+//        return this.joinToString("") {
+//            String.format("%02x", it)
+//        }
+//    }
 
     @JsonProperty
     @Column(name = "image_format_type", nullable = false)
@@ -70,7 +70,8 @@ data class ReceiptImage(
 
     @Lob
     @JsonProperty
-    @Type(type = "org.hibernate.type.BinaryType")
+    //@Type(type = "org.hibernate.type.BinaryType")
+    @Type(type="org.hibernate.type.ImageType")
     @field:ValidImage
     @Column(name = "image", nullable = false)
     lateinit var image: ByteArray
@@ -78,7 +79,8 @@ data class ReceiptImage(
     @Lob
     @JsonProperty
     @field:ValidImage
-    @Type(type = "org.hibernate.type.BinaryType")
+    @Type(type="org.hibernate.type.ImageType")
+    //@Type(type = "org.hibernate.type.BinaryType")
     @Column(name = "thumbnail", nullable = false)
     lateinit var thumbnail: ByteArray
 

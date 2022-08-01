@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class GraphqlSpec extends Specification {
+class GraphqlSpec extends BaseControllerSpec {
 
     @LocalServerPort
     protected int port
@@ -36,7 +36,7 @@ class GraphqlSpec extends Specification {
     void 'description test'() {
         when:
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
-                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("foo:bar".getBytes()))
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("${username}:${password}".getBytes()))
                 .content("{\"query\":\"{ descriptions { descriptionName } }\"}")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
@@ -48,7 +48,7 @@ class GraphqlSpec extends Specification {
     void 'description test - should fail'() {
         when:
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
-                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("foo:bar".getBytes()))
+                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("${username}:${password}".getBytes()))
                 .content("{\"query\":\"{ dne { descriptionName } }\"}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
