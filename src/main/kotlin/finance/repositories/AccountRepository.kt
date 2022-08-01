@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.math.BigDecimal
 import java.util.*
-//import javax.transaction.Transactional
+import javax.transaction.Transactional
 
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
@@ -21,11 +21,8 @@ interface AccountRepository : JpaRepository<Account, Long> {
         accountType: AccountType = AccountType.Credit
     ): List<Account>
 
-//    @Transactional
-//    fun deleteByAccountNameOwner(accountNameOwner: String)
-
     @Modifying
-    //@Transactional
+    @Transactional
     @Query(
         "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
                 "(SELECT account_name_owner, SUM(case when transaction_state='cleared' THEN amount ELSE 0 END) AS cleared, sum(case when transaction_state='outstanding' THEN amount ELSE 0 END) AS outstanding, sum(CASE WHEN transaction_state='future' THEN amount ELSE 0 END) AS future FROM t_transaction WHERE active_status = true group by account_name_owner) " +
