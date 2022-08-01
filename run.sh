@@ -160,5 +160,5 @@ else
 
   # ./gradlew clean build bootRun -x test
 fi
-f
+
 exit 0
