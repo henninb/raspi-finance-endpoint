@@ -22,6 +22,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
     ): List<Account>
 
     @Modifying
+    // required for hibernate 5.x, need to remove for hibernate 6.x
     @Transactional
     @Query(
         "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
