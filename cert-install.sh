@@ -37,8 +37,9 @@ subjectAltName = @alt_names
 
 [alt_names]
 DNS.1 = ${server_name}
-DNS.2 = ${server_name}.proxy
+DNS.2 = ${server_name}.lan
 DNS.3 = localhost
+IP.1 = 192.168.10.10
 EOF
 
 SUBJECT="/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=None/CN=${server_name}"
