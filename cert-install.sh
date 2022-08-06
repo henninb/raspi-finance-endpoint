@@ -60,4 +60,6 @@ cp -v ${server_name}.jks "${basedir}/example-ktor/${server_name}-raspi-finance.j
 cp -v ${server_name}.crt ssl/${server_name}-raspi-finance-cert.pem
 cp -v ${server_name}.key ssl/${server_name}-raspi-finance-key.pem
 
+rm *.csr
+
 exit 0

@@ -9,15 +9,5 @@ services:
     expose:
       - "hornsup:${HOST_IP}"
     volumes:
-      # - ${PWD}/nginx.conf:/etc/nginx/conf.d/default.conf
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./ssl:/etc/nginx/certs/
-      # - ${PWD}/ssl:/etc/nginx/certs/
-
-# volumes:
-#   varnish-volume:
-#     driver: local
-  # caddy-server:
-  #   image: caddy
-  #   hostname: caddy-server
-  #   container_name: caddy-server
