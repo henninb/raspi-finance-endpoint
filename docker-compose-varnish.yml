@@ -3,9 +3,7 @@ services:
   varnish-server:
     image: varnish
     hostname: varnish-server
-    # user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: varnish-server
-    # command: bash -c "apt update -y && apt install -y nginx"
     ports:
       - "8080:80"
 #      - "6081:6081"
