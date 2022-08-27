@@ -4,6 +4,7 @@ services:
     image: nginx:1.21.5-alpine
     hostname: nginx-server
     container_name: nginx-server
+    restart: always
     ports:
       - "9443:443"
     expose:
