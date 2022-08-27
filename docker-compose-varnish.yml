@@ -4,12 +4,11 @@ services:
     image: varnish
     hostname: varnish-server
     container_name: varnish-server
+    restart: always
     ports:
       - "8080:80"
-#      - "6081:6081"
     expose:
       - "8080"
-#      - "6081"
     extra_hosts:
       - "hornsup:${HOST_IP}"
     volumes:
@@ -21,6 +20,7 @@ services:
     image: nginx
     hostname: nginx-server
     container_name: nginx-server
+    restart: always
     ports:
       - "9443:443"
     expose:
@@ -36,5 +36,5 @@ services:
 #     ipam:
 #       driver: default
 #       config:
-#         - subnet: 162.11.1.0/24
-#           gateway: 162.11.1.1
+#         - subnet: 192.168.10.0/24
+#           gateway: 192.168.10.1

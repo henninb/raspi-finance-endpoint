@@ -12,6 +12,7 @@ services:
        - CURRENT_GID=${CURRENT_GID}
       dockerfile: Dockerfile
     container_name: raspi-finance-endpoint
+    restart: always
     ports:
       - "8443:8443"
     expose:
