@@ -32,6 +32,7 @@ class TransactionJpaSpec extends Specification {
     protected String jsonPayload = '''
 {"accountId":0,
 "accountType":"credit",
+"transactionType":"expense",
 "transactionDate":"2020-12-02",
 "guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
 "accountNameOwner":"chase_brian",

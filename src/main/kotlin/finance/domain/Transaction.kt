@@ -58,6 +58,11 @@ data class Transaction(
     var accountType: AccountType,
 
     @JsonProperty
+    @Column(name = "transaction_type", columnDefinition = "TEXT", nullable = false)
+    @field:Convert(converter = TransactionTypeConverter::class)
+    var transactionType: TransactionType,
+
+    @JsonProperty
     @field:Size(min = 3, max = 40)
     @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
@@ -111,7 +116,7 @@ data class Transaction(
 ) {
 
     constructor() : this(
-        0L, "", 0, AccountType.Undefined, "", Date(0),
+        0L, "", 0, AccountType.Undefined, TransactionType.Undefined,"", Date(0),
         "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, ""
     )
 
