@@ -8,6 +8,7 @@ class TransactionBuilder {
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
     Long accountId = 0L
     AccountType accountType = AccountType.Credit
+    TransactionType transactionType = TransactionType.Expense
     String accountNameOwner = 'chase_brian'
     Date transactionDate = Date.valueOf('2020-12-01')
     Date dueDate = Date.valueOf('2020-12-02')
@@ -30,6 +31,7 @@ class TransactionBuilder {
             guid = this.guid
             accountId = this.accountId
             accountType = this.accountType
+            transactionType = this.transactionType
             accountNameOwner = this.accountNameOwner
             transactionDate = this.transactionDate
             dueDate = this.dueDate
@@ -59,6 +61,11 @@ class TransactionBuilder {
 
     TransactionBuilder withAccountType(AccountType accountType) {
         this.accountType = accountType
+        return this
+    }
+
+    TransactionBuilder withTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType
         return this
     }
 
