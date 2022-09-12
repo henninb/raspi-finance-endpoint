@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     transaction_id     BIGSERIAL PRIMARY KEY,
     account_id         BIGINT                                NOT NULL,
     account_type       TEXT          DEFAULT 'undefined'     NOT NULL,
+    transaction_type   TEXT          DEFAULT 'undefined'     NOT NULL,
     account_name_owner TEXT                                  NOT NULL,
     guid               TEXT UNIQUE                           NOT NULL,
     transaction_date   DATE                                  NOT NULL,
@@ -163,6 +164,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT ck_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
+    CONSTRAINT ck_transaction_type CHECK (transaction_type IN ('expense', 'income', 'transfer', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
                                            'undefined')),
@@ -180,6 +182,7 @@ ALTER TABLE public.t_receipt_image
 -- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
 -- ALTER TABLE public.t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
+-- ALTER TABLE public.t_transaction ADD COLUMN transaction_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE public.t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
 -- ALTER TABLE public.t_transaction DROP COLUMN reoccurring;
 
