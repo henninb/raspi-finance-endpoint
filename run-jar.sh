@@ -3,7 +3,7 @@
 rm -rf env.bootrun
 sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
 
-echo sed -i "s/SSL_ENABLED=false/SSL_ENABLED=true/g" env.bootrun
+sed -i "s/SSL_ENABLED=false/SSL_ENABLED=true/g" env.bootrun
 
 set -a
 # shellcheck disable=SC1091
