@@ -35,7 +35,13 @@ if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
       -out "$HOME/ssl/testRootCA.pem"
 
   if command -v pacman; then
-    sudo trust anchor --store rootCA.pem
+    sudo trust anchor --store "$HOME/ssl/rootCA.pem"
+  fi
+
+  if command -v emerge; then
+    sudo mkdir -p /usr/local/share/ca-certificates/
+    sudo cp "$HOME/ssl/rootCA.pem" /usr/local/share/ca-certificates/
+    sudo update-ca-certificates
   fi
 
   if command -v brew; then
