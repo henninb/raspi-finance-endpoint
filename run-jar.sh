@@ -12,7 +12,7 @@ source env.bootrun
 source env.secrets
 set +a
 
-# ./gradlew clean build bootRun -x test
+./gradlew clean build -x test
 java -jar build/libs/raspi-finance-endpoint.jar
 
 exit 0
