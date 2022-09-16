@@ -91,6 +91,8 @@ openssl verify -CAfile "$HOME/ssl/rootCA.pem" -verbose "./${server_name}.crt"
 cat hornsup.crt | openssl x509 -noout -enddate
 echo "openssl pkcs12 -in hornsup.p12 -nodes | openssl x509 -noout -enddate"
 
+keytool -list -keystore /etc/ssl/certs/java/cacerts
+
 rm -rf *.csr
 
 stty -echo
