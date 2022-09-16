@@ -88,6 +88,8 @@ openssl x509 -req -sha256 -days 365 -in ${server_name}.csr -CA "$HOME/ssl/rootCA
 
 echo Verify the certificate
 openssl verify -CAfile "$HOME/ssl/rootCA.pem" -verbose "./${server_name}.crt"
+cat hornsup.crt | openssl x509 -noout -enddate
+echo "openssl pkcs12 -in hornsup.p12 -nodes | openssl x509 -noout -enddate"
 
 rm -rf *.csr
 
