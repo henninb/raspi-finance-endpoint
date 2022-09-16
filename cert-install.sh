@@ -12,7 +12,6 @@ rootca_subject="/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=None/CN=Brian LLC rootCA"
 mkdir -p "$HOME/ssl"
 mkdir -p "$HOME/tmp"
 
-
 if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
   # echo "generate rootCA key"
   # openssl genrsa -aes256 -out "$HOME/ssl/rootCA.key" 4096
@@ -21,8 +20,8 @@ if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
   # echo "confirm the rootCA cert"
   # openssl x509 -in "$HOME/ssl/rootCA.pem" -inform PEM -out "$HOME/ssl/rootCA.crt"
 
-  echo "generate testRootCA key (no password)"
-  echo "generae a public testRootCA certificate file"
+  echo "generate rootCA key (no password)"
+  echo "generate a public rootCA certificate file"
   openssl req \
       -x509 \
       -new \
@@ -31,8 +30,8 @@ if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
       -days 1024 \
       -sha256  \
       -subj "$rootca_subject" \
-      -keyout "$HOME/ssl/testRootCA.key" \
-      -out "$HOME/ssl/testRootCA.pem"
+      -keyout "$HOME/ssl/rootCA.key" \
+      -out "$HOME/ssl/rootCA.pem"
 
   if command -v pacman; then
     sudo trust anchor --store "$HOME/ssl/rootCA.pem"
@@ -47,24 +46,20 @@ if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
   if command -v brew; then
     echo "macos"
   fi
-
-  # gentoo
-  # echo sudo cp -v rootCA.crt /usr/local/share/ca-certificates
-  # echo sudo update-ca-certificates
 fi
 
-echo "generate testRootCA key (no password)"
-echo "generae a public testRootCA certificate file"
-openssl req \
-    -x509 \
-    -new \
-    -newkey rsa:4096 \
-    -nodes \
-    -days 1024 \
-    -sha256  \
-    -subj "$rootca_subject" \
-    -keyout "$HOME/ssl/testRootCA.key" \
-    -out "$HOME/ssl/testRootCA.pem"
+# echo "generate testRootCA key (no password)"
+# echo "generate a public testRootCA certificate file"
+# openssl req \
+#     -x509 \
+#     -new \
+#     -newkey rsa:4096 \
+#     -nodes \
+#     -days 1024 \
+#     -sha256  \
+#     -subj "$rootca_subject" \
+#     -keyout "$HOME/ssl/testRootCA.key" \
+#     -out "$HOME/ssl/testRootCA.pem"
 
 cat << EOF > "$HOME/tmp/$servername.ext"
 subjectAltName = @alt_names
@@ -86,13 +81,6 @@ openssl req -new -sha256 -key "./$server_name.key" -subj "$server_subject" -out 
 echo Generate the certificate using the intermediate.key
 openssl x509 -req -sha256 -days 365 -in ${server_name}.csr -CA "$HOME/ssl/rootCA.pem" -CAkey "$HOME/ssl/rootCA.key" -CAcreateserial -out "./${server_name}.crt" -extfile "$HOME/tmp/$servername.ext"
 
-echo Verify the certificate
-openssl verify -CAfile "$HOME/ssl/rootCA.pem" -verbose "./${server_name}.crt"
-cat hornsup.crt | openssl x509 -noout -enddate
-echo "openssl pkcs12 -in hornsup.p12 -nodes | openssl x509 -noout -enddate"
-
-keytool -list -keystore /etc/ssl/certs/java/cacerts
-
 rm -rf *.csr
 
 stty -echo
@@ -103,5 +91,11 @@ stty echo
 openssl pkcs12 -export -out ${server_name}.p12 -in ${server_name}.crt -inkey ${server_name}.key -name ${server_name} -password "pass:${password}"
 
 cp -vi ${server_name}.p12 "src/main/resources/${server_name}-raspi-finance-keystore.p12"
+
+echo Verify the certificate
+openssl verify -CAfile "$HOME/ssl/rootCA.pem" -verbose "./${server_name}.crt"
+cat "${server_name}.crt" | openssl x509 -noout -enddate
+echo "openssl pkcs12 -in ${server_name}.p12 -nodes | openssl x509 -noout -enddate"
+echo keytool -list -keystore /etc/ssl/certs/java/cacerts
 
 exit 0
