@@ -169,11 +169,16 @@ heroku domains:add api.brianhenning.click
 ```
 
 ## heroku postgresql database
-````
+```
 psql -h ec2-34-236-94-53.compute-1.amazonaws.com -U iongzzrcgwayct -d d4v3mk0gokd5og
 ```
 
-
+## log4j
 ```
-because you are using version 2.4.4 of spring-boot-starter-parent. spring boot use StaticLoggerBinder to get log factory. StaticLoggerBinder has been deleted in version 1.3.x of logback-classic. Here are two ways to solve this problem: 1.use versions of slf4j-api(2.x.x) and logback-classic(1.3.x) without spring boot. 2.use spring boot's default logback dependencies.
+because you are using version 2.4.4 of springboot or greater. 
+spring boot use StaticLoggerBinder to get log factory. 
+StaticLoggerBinder has been deleted in version 1.3.x of logback-classic. 
+Here are two ways to solve this problem: 
+ 1.use versions of slf4j-api(2.x.x) and logback-classic(1.3.x) without spring boot. 
+ 2.use spring boot's default logback dependencies.
 ```
