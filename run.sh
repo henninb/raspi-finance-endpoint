@@ -109,58 +109,49 @@ else
   fi
 fi
 
-docker stop raspi-finance-endpoint varnish-server nginx-server
-docker rm -f raspi-finance-endpoint varnish-server nginx-server
-docker rmi -f raspi-finance-endpoint varnish-server nginx-server
+if [ -x "$(command -v docker)" ]; then
+  # echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
+  echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.21.5-alpinej
+  # podman build --tag "$APPNAME" -f ./Dockerfile
 
-docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
-docker volume prune -f 2> /dev/null
+  docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
+  docker volume prune -f 2> /dev/null
 
-INFLUX_CONTAINER=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
-if [ -n "${INFLUX_CONTAINER}" ]; then
-  echo docker rm -f "${INFLUX_CONTAINER}"
-  docker rm -f "${INFLUX_CONTAINER}" 2> /dev/null
-fi
+  nginx_container=$(docker ps -a -f 'name=nginx-server' --format "{{.ID}}") 2> /dev/null
+  if [ -n "${nginx_container}" ]; then
+    docker stop "${nginx_container}"
+    docker rm -f "${nginx_container}" 2> /dev/null
+    # docker rmi -f nginx-server
+  fi
 
-# POSTGRESQL_CONTAINER=$(docker ps -a -f 'name=postgresql-server' --format "{{.ID}}") 2> /dev/null
-# if [ -n "${POSTGRESQL_CONTAINER}" ]; then
-#   echo docker rm -f "${POSTGRESQL_CONTAINER}"
-#   docker rm -f "${POSTGRESQL_CONTAINER}" 2> /dev/null
-# fi
+  varnish_container=$(docker ps -a -f 'name=varnish-server' --format "{{.ID}}") 2> /dev/null
+  if [ -n "${varnish_container}" ]; then
+    docker stop "${varnish_container}"
+    docker rm -f "${varnish_container}" 2> /dev/null
+    # docker rmi -f varnish-server
+  fi
 
-ORACLE_CONTAINER=$(docker ps -a -f 'name=oracle-database-server' --format "{{.ID}}") 2> /dev/null
-if [ -n "${ORACLE_CONTAINER}" ]; then
-  echo docker rm -f "${ORACLE_CONTAINER}"
-  docker rm -f "${ORACLE_CONTAINER}" 2> /dev/null
-fi
+  raspi_container=$(docker ps -a -f 'name=raspi-finance-endpoint' --format "{{.ID}}") 2> /dev/null
+  if [ -n "${raspi_container}" ]; then
+    docker stop "${raspi_container}"
+    docker rm -f "${raspi_container}" 2> /dev/null
+    docker rmi -f raspi-finance-endpoint
+  fi
 
-# echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
-echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.21.5-alpinej
-# podman build --tag "$APPNAME" -f ./Dockerfile
-
-# echo look to use the COMPOSE_FILE=docker-compose.yml:./optional/docker-compose.prod.yml
-if [ -x "$(command -v /usr/bin/docker-compose)" ] || [ -x "$(command -v docker-compose)" ]; then
-
-  # if ! docker-compose -f docker-compose-base.yml -f docker-compose-${datastore}.yml -f "docker-compose-${env}.yml" build; then
-  #   echo "docker-compose build failed."
-  #   exit 1
-  # fi
-
-  # if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${datastore}.yml" -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml -f docker-compose-elk.yml up -d; then
-  if ! docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
-    echo "docker-compose up failed."
+  if ! docker compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
+    echo "docker compose up failed."
+    if [ -x "$(command -v docker-compose)" ]; then
+      docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d
+    else
+      echo "docker-compose up failed"
+      exit 1
+    fi
+  else
+    echo "docker-compose up failed"
     exit 1
   fi
 else
-  echo "Install docker-compose"
-  # rm -rf env.bootrun
-  # sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
-  # set -a
-  # . ./env.bootrun
-  # . ./env.secrets
-  # set +a
-
-  # ./gradlew clean build bootRun -x test
+  echo "Install docker"
 fi
 
 exit 0
