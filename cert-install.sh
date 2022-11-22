@@ -90,7 +90,9 @@ stty echo
 
 openssl pkcs12 -export -out ${server_name}.p12 -in ${server_name}.crt -inkey ${server_name}.key -name ${server_name} -password "pass:${password}"
 
-cp -vi ${server_name}.p12 "src/main/resources/${server_name}-raspi-finance-keystore.p12"
+cp -vi "${server_name}.p12" "src/main/resources/${server_name}-raspi-finance-keystore.p12"
+cp -vi "${server_name}.crt" "ssl/hornsup-raspi-finance-cert.pem"
+cp -vi "${server_name}.key" "ssl/hornsup-raspi-finance-key.pem"
 
 echo Verify the certificate
 openssl verify -CAfile "$HOME/ssl/rootCA.pem" -verbose "./${server_name}.crt"
