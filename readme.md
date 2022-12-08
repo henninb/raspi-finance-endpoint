@@ -182,3 +182,8 @@ Here are two ways to solve this problem:
  1.use versions of slf4j-api(2.x.x) and logback-classic(1.3.x) without spring boot. 
  2.use spring boot's default logback dependencies.
 ```
+
+## hibernate 6.x
+```https://stackoverflow.com/questions/72761919/class-springhibernatejpapersistenceprovider-does-not-implement-the-requested-int```
+// https://mvnrepository.com/artifact/jakarta.persistence/jakarta.persistence-api
+implementation group: 'jakarta.persistence', name: 'jakarta.persistence-api', version: '3.1.0'
