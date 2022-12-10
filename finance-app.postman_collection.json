@@ -1,10 +1,55 @@
 {
 	"info": {
-		"_postman_id": "cde4d261-a7ee-4616-a41a-2035e2791b6d",
+		"_postman_id": "3d3e251b-912b-4184-b1b0-a2179a5c64d9",
 		"name": "finance-app-localhost",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "localhost-account-insert-test_brian",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "monday1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "henninb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\"accountNameOwner\":\"test_brian\", \"accountType\":\"credit\", \"moniker\":\"0000\", \"outstanding\": \"0\", \"future\": \"0\", \"cleared\":\"0\", \"dateClosed\": \"0\"} "
+				},
+				"url": {
+					"raw": "http://localhost:8443/account/insert",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"account",
+						"insert"
+					]
+				}
+			},
+			"response": []
+		},
 		{
 			"name": "localhost-account-totals",
 			"request": {
@@ -32,53 +77,15 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8443/account/totals",
+					"raw": "http://hornsup:8443/account/totals",
 					"protocol": "http",
 					"host": [
-						"localhost"
+						"hornsup"
 					],
 					"port": "8443",
 					"path": [
 						"account",
 						"totals"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-user-login",
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"username\":\"henninb\",\"password\":\"monday1\"}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8443/user/signin",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"user",
-						"signin"
 					]
 				}
 			},
@@ -169,7 +176,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost-account-select-test-brian",
+			"name": "localhost-account-select-test_brian",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -253,7 +260,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost-transaction-select-amazon_brian",
+			"name": "localhost-account-delete-test_brian",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -270,7 +277,7 @@
 						}
 					]
 				},
-				"method": "GET",
+				"method": "DELETE",
 				"header": [
 					{
 						"key": "Content-Type",
@@ -279,17 +286,16 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8443/transaction/account/select/amazon_brian",
+					"raw": "http://localhost:8443/account/delete/test_brian",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8443",
 					"path": [
-						"transaction",
 						"account",
-						"select",
-						"amazon_brian"
+						"delete",
+						"test_brian"
 					]
 				}
 			},
@@ -338,7 +344,94 @@
 			"response": []
 		},
 		{
-			"name": "localhost-description-select-test",
+			"name": "localhost-category-insert-random",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "monday1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "henninb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\"categoryName\":\"random\"} "
+				},
+				"url": {
+					"raw": "http://localhost:8443/category/insert",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"category",
+						"insert"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost-category-delete-random",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "monday1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "henninb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8443/category/delete/random",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"category",
+						"delete",
+						"random"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost-category-select-test",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -364,7 +457,49 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8443/description/select/test",
+					"raw": "http://localhost:8443/category/select/active",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"category",
+						"select",
+						"active"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost-description-select-random",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "monday1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "henninb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8443/description/select/random",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -373,14 +508,14 @@
 					"path": [
 						"description",
 						"select",
-						"test"
+						"random"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "localhost-description-select-all Copy",
+			"name": "localhost-description-select-all",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -464,49 +599,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost-category-select-test",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/category/select/active",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"category",
-						"select",
-						"active"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-category-insert-test",
+			"name": "localhost-description-insert-random",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -533,62 +626,17 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": " {\"categoryName\":\"test\"} "
+					"raw": " {\"descriptionName\":\"random\"} "
 				},
 				"url": {
-					"raw": "http://localhost:8443/category/insert",
+					"raw": "http://localhost:8443/description/insert",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8443",
 					"path": [
-						"category",
-						"insert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-payment-insert-test_brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": " {\"accountNameOwner\":\"test_brian\", \"transactionDate\":\"2022-03-31\", \"amount\":0.0} "
-				},
-				"url": {
-					"raw": "http://localhost:8443/payment/insert",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"payment",
+						"description",
 						"insert"
 					]
 				}
@@ -641,7 +689,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost-category-delete-random",
+			"name": "localhost-transaction-select-amazon_brian",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -658,7 +706,7 @@
 						}
 					]
 				},
-				"method": "DELETE",
+				"method": "GET",
 				"header": [
 					{
 						"key": "Content-Type",
@@ -667,16 +715,17 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8443/category/delete/random",
+					"raw": "http://localhost:8443/transaction/account/select/amazon_brian",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8443",
 					"path": [
-						"category",
-						"delete",
-						"random"
+						"transaction",
+						"account",
+						"select",
+						"amazon_brian"
 					]
 				}
 			},
@@ -718,6 +767,89 @@
 					"path": [
 						"payment",
 						"select"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost-payment-insert-test_brian",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "monday1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "henninb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\"accountNameOwner\":\"test_brian\", \"transactionDate\":\"2022-03-31\", \"amount\":0.0} "
+				},
+				"url": {
+					"raw": "http://localhost:8443/payment/insert",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"payment",
+						"insert"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost-user-login",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"username\":\"henninb\",\"password\":\"monday1\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8443/user/signin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"user",
+						"signin"
 					]
 				}
 			},
