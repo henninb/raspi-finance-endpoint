@@ -344,6 +344,48 @@
 			"response": []
 		},
 		{
+			"name": "localhost-category-select-all",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "monday1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "henninb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8443/category/select/active",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8443",
+					"path": [
+						"category",
+						"select",
+						"active"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "localhost-category-insert-random",
 			"request": {
 				"auth": {
@@ -515,7 +557,7 @@
 			"response": []
 		},
 		{
-			"name": "localhost-description-select-all",
+			"name": "localhost-description-select-active",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -541,16 +583,16 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8443/category/select/active",
+					"raw": "http://localhost:8443/description/select/all",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8443",
 					"path": [
-						"category",
+						"description",
 						"select",
-						"active"
+						"all"
 					]
 				}
 			},
