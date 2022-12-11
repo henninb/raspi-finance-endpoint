@@ -33,27 +33,27 @@ class GraphqlSpec extends BaseControllerSpec {
         return "http://localhost:${port}" + uri
     }
 
-    void 'description test'() {
-        when:
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
-                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("${username}:${password}".getBytes()))
-                .content("{\"query\":\"{ descriptions { descriptionName } }\"}")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
-        then:
-        resultActions.andExpect(status().isOk())
-        0 * _
-    }
-
-    void 'description test - should fail'() {
-        when:
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
-                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("${username}:${password}".getBytes()))
-                .content("{\"query\":\"{ dne { descriptionName } }\"}")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
-        then:
-        resultActions.andExpect(status().isOk())
-        0 * _
-    }
+//    void 'description test'() {
+//        when:
+//        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
+//                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("${username}:${password}".getBytes()))
+//                .content("{\"query\":\"{ descriptions { descriptionName } }\"}")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
+//        then:
+//        resultActions.andExpect(status().isOk())
+//        0 * _
+//    }
+//
+//    void 'description test - should fail'() {
+//        when:
+//        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(createURLWithPort("/graphql"))
+//                .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64Utils.encodeToString("${username}:${password}".getBytes()))
+//                .content("{\"query\":\"{ dne { descriptionName } }\"}")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .accept(MediaType.APPLICATION_JSON)).andDo(MockMvcResultHandlers.print())
+//        then:
+//        resultActions.andExpect(status().isOk())
+//        0 * _
+//    }
 }
