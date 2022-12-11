@@ -50,6 +50,9 @@ class PaymentControllerSpec extends BaseControllerSpec {
     protected String endpointName = 'payment'
 
     void 'test insert Payment'() {
+        given:
+        insertEndpoint('account', payment.accountNameOwner)
+
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
