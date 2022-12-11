@@ -9,6 +9,6 @@ set -a
 # source env.secrets
 set +a
 
-./gradlew clean build functionalTest
+./gradlew clean build functionalTest -x test
 
 exit 0
