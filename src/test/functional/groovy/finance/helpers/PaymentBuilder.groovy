@@ -8,7 +8,7 @@ class PaymentBuilder {
 
     String accountNameOwner = 'foo_brian'
     BigDecimal amount = 0.00G
-    Date transactionDate = Date.valueOf('2020-12-11')
+    Date transactionDate = Date.valueOf('2022-12-10')
     String guidSource = UUID.randomUUID()
     String guidDestination = UUID.randomUUID()
     Boolean activeStatus = true
