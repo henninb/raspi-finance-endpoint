@@ -7,8 +7,7 @@ import org.apache.camel.CamelExecutionException
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 @SuppressWarnings("GroovyAccessibility")
 class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {

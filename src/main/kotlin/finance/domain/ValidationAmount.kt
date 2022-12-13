@@ -11,9 +11,9 @@ import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Digits
-import javax.validation.constraints.Min
+import jakarta.persistence.*
+import jakarta.validation.constraints.Digits
+import jakarta.validation.constraints.Min
 
 @Entity
 @Proxy(lazy = false)

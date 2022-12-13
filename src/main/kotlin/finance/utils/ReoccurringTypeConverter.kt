@@ -1,8 +1,8 @@
 package finance.utils
 
 import finance.domain.ReoccurringType
-import javax.persistence.AttributeConverter
-import javax.persistence.Converter
+import jakarta.persistence.AttributeConverter
+import jakarta.persistence.Converter
 
 @Converter
 class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {

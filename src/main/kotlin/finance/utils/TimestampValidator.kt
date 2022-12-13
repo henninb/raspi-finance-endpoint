@@ -2,8 +2,8 @@ package finance.utils
 
 import org.apache.logging.log4j.LogManager
 import java.sql.Timestamp
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 
 class TimestampValidator : ConstraintValidator<ValidTimestamp, Timestamp> {
 

@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.ValidationAmountBuilder
 import spock.lang.Unroll
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 import static finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE

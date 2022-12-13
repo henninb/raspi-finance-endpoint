@@ -2,13 +2,14 @@ package finance.repositories
 
 import finance.domain.Account
 import finance.domain.AccountType
+import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.math.BigDecimal
 import java.util.*
-import javax.transaction.Transactional
+//import javax.transaction.Transactional
 
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
@@ -23,6 +24,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
 
     @Modifying
     // required for hibernate 5.x, need to remove for hibernate 6.x
+    //@Transactional
     @Transactional
     @Query(
         "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +

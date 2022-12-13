@@ -6,8 +6,7 @@ import finance.helpers.PaymentBuilder
 import finance.helpers.TransactionBuilder
 import finance.utils.Constants
 import spock.lang.Ignore
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 @SuppressWarnings("GroovyAccessibility")
 class PaymentServiceSpec extends BaseServiceSpec {

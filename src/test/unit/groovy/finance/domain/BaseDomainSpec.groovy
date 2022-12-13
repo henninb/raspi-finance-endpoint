@@ -3,9 +3,9 @@ package finance.domain
 import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 
-import javax.validation.Validation
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import jakarta.validation.Validation
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
 
 class BaseDomainSpec extends Specification {
     protected ValidatorFactory validatorFactory

@@ -7,8 +7,7 @@ import org.apache.camel.Exchange
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 

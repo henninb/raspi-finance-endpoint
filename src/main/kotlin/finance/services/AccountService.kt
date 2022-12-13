@@ -11,7 +11,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.*
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 @Service
 open class AccountService(

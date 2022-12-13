@@ -8,9 +8,9 @@ import finance.utils.LowerCaseConverter
 import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Min
-import javax.validation.constraints.Size
+import jakarta.persistence.*
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 
 @Entity
 @Proxy(lazy = false)

@@ -1,8 +1,8 @@
 package finance.utils
 
 import finance.domain.ImageFormatType
-import javax.persistence.AttributeConverter
-import javax.persistence.Converter
+import jakarta.persistence.AttributeConverter
+import jakarta.persistence.Converter
 
 @Converter
 class ImageFormatTypeConverter : AttributeConverter<ImageFormatType, String> {

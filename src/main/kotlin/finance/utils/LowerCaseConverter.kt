@@ -1,8 +1,8 @@
 package finance.utils
 
 import org.apache.logging.log4j.LogManager
-import javax.persistence.AttributeConverter
-import javax.persistence.Converter
+import jakarta.persistence.AttributeConverter
+import jakarta.persistence.Converter
 
 @Converter
 class LowerCaseConverter : AttributeConverter<String, String> {

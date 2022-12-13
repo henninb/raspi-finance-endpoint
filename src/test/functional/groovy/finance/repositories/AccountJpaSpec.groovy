@@ -3,16 +3,21 @@ package finance.repositories
 import finance.domain.Account
 import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
+import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.context.annotation.FilterType
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
+import jakarta.validation.ConstraintViolationException
 
-import javax.validation.ConstraintViolationException
-
-@ActiveProfiles("unit")
+@ActiveProfiles("func")
 @DataJpaTest
+//@DataJpaTest(includeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = AccountRepository.class))
+//@Import(AccountRepository.class)
 class AccountJpaSpec extends Specification {
     @Autowired
     protected AccountRepository accountRepository

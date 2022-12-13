@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-
 import java.sql.Timestamp
 
 class ValidationAmountBuilder {

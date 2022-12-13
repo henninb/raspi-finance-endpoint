@@ -6,8 +6,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.TransactionBuilder
 import spock.lang.Unroll
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 import java.sql.Date
 import java.text.ParseException
 

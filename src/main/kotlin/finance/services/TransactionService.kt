@@ -15,7 +15,7 @@ import java.util.*
 import javax.imageio.IIOException
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 import kotlin.system.measureTimeMillis
 
 @Service

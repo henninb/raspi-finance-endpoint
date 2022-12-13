@@ -6,16 +6,14 @@ import finance.repositories.CategoryRepository
 import finance.repositories.ReceiptImageRepository
 import finance.repositories.TransactionRepository
 import finance.services.*
-
 import io.micrometer.core.instrument.*
 import org.apache.camel.CamelContext
 import org.apache.camel.Exchange
 import org.apache.camel.builder.ExchangeBuilder
 import org.apache.camel.impl.DefaultCamelContext
 import spock.lang.Specification
-
-import javax.validation.Validation
-import javax.validation.Validator
+import jakarta.validation.Validation
+import jakarta.validation.Validator
 
 import static finance.utils.Constants.*
 
