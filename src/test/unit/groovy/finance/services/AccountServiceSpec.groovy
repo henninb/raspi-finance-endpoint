@@ -5,8 +5,8 @@ import finance.domain.Account
 import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
 
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 import java.math.RoundingMode
 
 @SuppressWarnings("GroovyAccessibility")

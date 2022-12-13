@@ -2,8 +2,8 @@ package finance.utils
 
 import org.apache.logging.log4j.LogManager
 import java.sql.Date
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 
 class DateValidator : ConstraintValidator<ValidDate, Date> {
     override fun initialize(constraintAnnotation: ValidDate) {

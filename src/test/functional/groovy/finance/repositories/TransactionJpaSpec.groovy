@@ -10,9 +10,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
-
-import javax.persistence.PersistenceException
-import javax.validation.ConstraintViolationException
+import jakarta.persistence.PersistenceException
+import jakarta.validation.ConstraintViolationException
 
 @ActiveProfiles("unit")
 @DataJpaTest

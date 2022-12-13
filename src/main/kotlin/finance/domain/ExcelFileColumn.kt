@@ -1,6 +1,5 @@
 package finance.domain
 
-
 enum class ExcelFileColumn(val column: Int) {
     Guid(1),
 

@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.PaymentBuilder
 import spock.lang.Unroll
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 import java.sql.Date
 
 import static finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE

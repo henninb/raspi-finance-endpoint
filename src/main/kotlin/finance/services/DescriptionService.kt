@@ -6,7 +6,7 @@ import io.micrometer.core.annotation.Timed
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 @Service
 open class DescriptionService(

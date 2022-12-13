@@ -5,9 +5,9 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
-import javax.validation.Validator
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 
 @Service
 open class BaseService {

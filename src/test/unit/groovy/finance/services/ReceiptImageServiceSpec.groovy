@@ -2,9 +2,8 @@ package finance.services
 
 import finance.domain.ReceiptImage
 import finance.helpers.ReceiptImageBuilder
+import jakarta.validation.ConstraintViolation
 
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
 
 class ReceiptImageServiceSpec extends BaseServiceSpec {
     void setup() {

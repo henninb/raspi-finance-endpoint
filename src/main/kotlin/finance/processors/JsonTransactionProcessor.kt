@@ -5,8 +5,8 @@ import io.micrometer.core.annotation.Timed
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.springframework.stereotype.Component
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 
 @Component
 open class JsonTransactionProcessor : Processor, BaseProcessor() {

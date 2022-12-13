@@ -8,8 +8,7 @@ import finance.helpers.TransactionBuilder
 import org.hibernate.NonUniqueResultException
 import org.springframework.util.ResourceUtils
 import spock.lang.Ignore
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 import java.sql.Date
 
 import static finance.utils.Constants.*

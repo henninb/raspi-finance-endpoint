@@ -16,8 +16,8 @@ import io.micrometer.core.instrument.*
 import org.apache.camel.model.ModelCamelContext
 import spock.lang.Specification
 
-import javax.validation.Validation
-import javax.validation.Validator
+import jakarta.validation.Validation
+import jakarta.validation.Validator
 
 class BaseRouteBuilderSpec extends Specification {
 

@@ -7,8 +7,8 @@ import io.micrometer.core.instrument.*
 import org.springframework.core.io.FileSystemResource
 import spock.lang.Specification
 
-import javax.validation.Validation
-import javax.validation.Validator
+import jakarta.validation.Validation
+import jakarta.validation.Validator
 
 import static finance.utils.Constants.*
 

@@ -7,7 +7,7 @@ import finance.helpers.AccountBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 import static finance.utils.Constants.*
 

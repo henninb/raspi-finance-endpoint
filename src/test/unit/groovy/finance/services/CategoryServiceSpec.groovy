@@ -2,9 +2,8 @@ package finance.services
 
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
-
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class CategoryServiceSpec extends BaseServiceSpec {

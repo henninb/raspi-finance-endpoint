@@ -4,8 +4,8 @@ import org.apache.logging.log4j.LogManager
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
 import javax.imageio.ImageReader
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 
 class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
     override fun initialize(constraintAnnotation: ValidImage) {

@@ -3,8 +3,8 @@ package finance.services
 import finance.domain.Parameter
 import finance.helpers.ParameterBuilder
 
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class ParameterServiceSpec extends BaseServiceSpec {

@@ -3,8 +3,7 @@ package finance.domain
 
 import finance.helpers.ReceiptImageBuilder
 import spock.lang.Unroll
-
-import javax.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolation
 
 import static finance.utils.Constants.FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE
 

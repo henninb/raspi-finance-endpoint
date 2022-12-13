@@ -123,17 +123,18 @@ management:
       percentiles:
         method.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
         query.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
-    export:
-      influx:
-        enabled: ${INFLUXDB_ENABLED}
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  influx:
+    metrics:
+      export:
         auto-create-db: true
+        enabled: ${INFLUXDB_ENABLED}
         db: metrics
         compressed: false
         uri: ${INFLUXDB_URL}
         user-name: ${INFLUXDB_ADMIN_USERNAME}
         password: ${INFLUXDB_ADMIN_PASSWORD}
-  endpoints:
-    web:
-      exposure:
-        include: "*"
 debug: false

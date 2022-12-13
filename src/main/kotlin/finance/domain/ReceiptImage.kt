@@ -9,11 +9,10 @@ import finance.utils.ImageFormatTypeConverter
 import finance.utils.ValidImage
 import org.apache.logging.log4j.LogManager
 import org.hibernate.annotations.Proxy
-//import org.hibernate.annotations.Type
 import java.sql.Timestamp
 import java.util.*
-import javax.persistence.*
-import javax.validation.constraints.Min
+import jakarta.persistence.*
+import jakarta.validation.constraints.Min
 
 @Entity
 @Proxy(lazy = false)

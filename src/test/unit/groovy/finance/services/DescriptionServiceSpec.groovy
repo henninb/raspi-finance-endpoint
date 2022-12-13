@@ -3,9 +3,8 @@ package finance.services
 
 import finance.domain.Description
 import finance.helpers.DescriptionBuilder
-
-import javax.validation.ConstraintViolation
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class DescriptionServiceSpec extends BaseServiceSpec {
