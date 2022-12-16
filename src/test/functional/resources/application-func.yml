@@ -120,17 +120,18 @@ management:
       percentiles:
         method.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
         query.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
-    export:
-      influx:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  influx:
+    metrics:
+      export:
         enabled: false
         auto-create-db: true
         db: metrics_func
         compressed: false
         uri: http://hornsup:8086
-        user-name: admin
         password:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
+        user-name: admin
 debug: false

@@ -81,7 +81,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
 
     //Groovy
-    implementation("org.codehaus.groovy:groovy-all:${groovyVersion}")
+    //implementation("org.codehaus.groovy:groovy-all:${groovyVersion}")
+    implementation("org.apache.groovy:groovy:${groovyVersion}")
 
     //Scala
     implementation("org.scala-lang:scala-library:${scalaVersion}")

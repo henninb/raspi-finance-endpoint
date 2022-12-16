@@ -138,6 +138,7 @@ if [ -x "$(command -v docker)" ]; then
     docker rmi -f raspi-finance-endpoint
   fi
 
+  # echo podman-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d
   if ! docker compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
     echo "docker compose up failed."
     if [ -x "$(command -v docker-compose)" ]; then
