@@ -1,18 +1,27 @@
 package finance.controllers
 
 import groovy.util.logging.Slf4j
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.boot.test.web.server.LocalServerPort
+
+//import org.springframework.boot.context.embedded.LocalServerPort
+//import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import spock.lang.Shared
 import spock.lang.Specification
 
 @Slf4j
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+//@SpringBootTest(webEnvironment = RANDOM_PORT)
 class BaseControllerSpec extends Specification {
-
     @LocalServerPort
+    //@Value("\${local.server.port}")
     //@Value("${local.server.port}")
+    //@Value('${local.server.port}')
+    //@Value("\${server.port}")
     protected int port
     protected String username = "henninb"
     protected String password = "monday1"

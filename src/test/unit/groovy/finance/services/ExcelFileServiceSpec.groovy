@@ -9,7 +9,7 @@ import org.springframework.core.io.FileSystemResource
 
 @SuppressWarnings("GroovyAccessibility")
 class ExcelFileServiceSpec extends BaseServiceSpec {
-    protected String baseName = new FileSystemResource("").file.absolutePath
+    protected String baseName = new FileSystemResource("").getFile().absolutePath
     CustomProperties customProperties = new CustomProperties(excludedAccounts: [], excelPassword: 'monday1', excelInputFilePath: baseName + '/excel_in')
     ExcelFileService excelFileService = new ExcelFileService(customProperties, transactionService, accountService, meterService)
 

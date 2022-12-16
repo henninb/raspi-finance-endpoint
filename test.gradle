@@ -55,7 +55,7 @@ compileTestKotlin {
 }
 
 dependencies {
-    testImplementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    testImplementation("org.apache.groovy:groovy:${groovyVersion}")
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
     testImplementation("org.spockframework:spock-core:${spockVersion}")
     testImplementation("org.spockframework:spock-spring:${spockVersion}")
