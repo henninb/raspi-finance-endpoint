@@ -58,6 +58,7 @@ spring:
     generate-ddl: false
     hibernate:
       ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   # ===============================
   # = Flyway
