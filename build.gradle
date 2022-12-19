@@ -162,6 +162,8 @@ dependencies {
     //implementation("org.hibernate.javax.persistence:hibernate-jpa-2.1-api:${hibernateJpaVersion}")  //spring boot 2.x
     //implementation("jakarta.persistence:jakarta.persistence-api:3.1.0") //spring boot 3.x
 
+    //Jakarta
+    compileOnly("jakarta.platform:jakarta.jakartaee-api:${jakartaVersion}")
 
     //Logging
     implementation("ch.qos.logback:logback-classic:${logbackVersion}")
