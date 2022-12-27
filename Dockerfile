@@ -1,5 +1,5 @@
-# FROM openjdk:17.0.2
-FROM openjdk:19-alpine
+FROM openjdk:17.0.2
+# FROM openjdk:19-alpine
 #FROM openjdk:11.0.16
 
 ARG TIMEZONE="set the time zone at build time"

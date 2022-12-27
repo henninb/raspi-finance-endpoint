@@ -45,7 +45,7 @@ configurations {
     }
 }
 
-configurations.all {
+configurations.configureEach {
     resolutionStrategy.eachDependency {
       if ( it.requested.group == 'org.apache.logging.log4j') {
         it.useVersion "${apacheLoggingVersion}"
@@ -183,7 +183,7 @@ dependencies {
 //    options.encoding = 'UTF-8'
 //}
 
-tasks.withType(CodeNarc) {
+tasks.withType(CodeNarc).configureEach {
     configFile = rootProject.file 'config/codenarc/codenarcMain.groovy'
     ignoreFailures = true
 }

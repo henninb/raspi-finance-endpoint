@@ -58,8 +58,8 @@ elif [ "$OS" = "FreeBSD" ]; then
   HOST_IP="192.168.10.114"
 elif [ "$OS" = "Gentoo" ]; then
   HOST_IP=$(hostname -i | awk '{print $1}')
-  export JAVA_HOME=/opt/openjdk-bin-11
-  export PATH=$JAVA_HOME/bin:$PATH
+  # export JAVA_HOME=/opt/openjdk-bin-11
+  # export PATH=$JAVA_HOME/bin:$PATH
 else
   echo "$OS is not yet implemented."
   exit 1
