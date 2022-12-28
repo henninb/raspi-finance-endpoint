@@ -11,11 +11,11 @@ import org.springframework.web.cors.CorsConfiguration
 @Configuration
 open class WebSecurityConfig()  {
     @Bean
-    @Throws(java.lang.Exception::class)
+    @Throws(Exception::class)
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
         val corsConfiguration = CorsConfiguration()
 
-        //corsConfiguration.allowedOrigins = mutableListOf("*")
+        corsConfiguration.allowedOrigins = mutableListOf("https://hornsup:3000", "https://localhost:3000", "https://localhost:3000")
         corsConfiguration.allowedOriginPatterns = mutableListOf("*")
         corsConfiguration.allowedMethods = mutableListOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         //corsConfiguration.allowedHeaders = mutableListOf("*")
@@ -46,16 +46,16 @@ open class WebSecurityConfig()  {
     }
 
 
-    @Bean
-    @Throws(Exception::class)
-    open fun filterChain(http: HttpSecurity): SecurityFilterChain {
-        http.authorizeRequests()
-            .anyRequest()
-            .authenticated()
-            .and()
-            .httpBasic()
-        return http.build()
-    }
+//    @Bean
+//    @Throws(Exception::class)
+//    open fun filterChain(http: HttpSecurity): SecurityFilterChain {
+//        http.authorizeRequests()
+//            .anyRequest()
+//            .authenticated()
+//            .and()
+//            .httpBasic()
+//        return http.build()
+//    }
 
 
 }
