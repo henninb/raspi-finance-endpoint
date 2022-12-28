@@ -156,4 +156,6 @@ else
   echo "Install docker"
 fi
 
+echo docker logs raspi-finance-endpoint --follow
+
 exit 0
