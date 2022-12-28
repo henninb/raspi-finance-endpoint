@@ -24,10 +24,10 @@ open class WebSecurityConfig()  {
         corsConfiguration.allowedHeaders = mutableListOf("authorization", "content-type", "x-auth-token", "accept");
 
         // TODO: bh enable csrf (cross site request forgery)
-        http.csrf().disable()
+        //http.csrf().disable()
 
         // No session will be created or used by spring security
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        // http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 
         // Entry points
 //        http.authorizeRequests() //
@@ -41,6 +41,21 @@ open class WebSecurityConfig()  {
             .configurationSource { corsConfiguration }.and().headers().disable()
 
         //http.httpBasic()
+            .csrf().disable()
         return http.build()
     }
+
+
+    @Bean
+    @Throws(Exception::class)
+    open fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        http.authorizeRequests()
+            .anyRequest()
+            .authenticated()
+            .and()
+            .httpBasic()
+        return http.build()
+    }
+
+
 }

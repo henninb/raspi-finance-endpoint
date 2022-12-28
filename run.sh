@@ -116,6 +116,7 @@ if [ -x "$(command -v docker)" ]; then
 
   docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
   docker volume prune -f 2> /dev/null
+  docker rmi -f raspi-finance-endpoint
 
   nginx_container=$(docker ps -a -f 'name=nginx-server' --format "{{.ID}}") 2> /dev/null
   if [ -n "${nginx_container}" ]; then
