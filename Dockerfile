@@ -1,6 +1,5 @@
-# FROM openjdk:17.0.2
-# FROM openjdk:19-jdk-alpine3.16
-FROM openjdk:19-alpine
+FROM openjdk:19
+# FROM openjdk:19-alpine
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
@@ -25,7 +24,6 @@ RUN mkdir -p -m 0755 /opt/${APP}/json_in
 COPY ./ssl /opt/${APP}/ssl
 ADD ./build/libs/${APP}.jar /opt/${APP}/bin/${APP}.jar
 RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
-# RUN apt -y update 2> /dev/null
 
 WORKDIR /opt/${APP}/bin
 USER ${USERNAME}
