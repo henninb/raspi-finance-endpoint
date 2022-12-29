@@ -76,7 +76,9 @@ spring:
     #    schemas: prod
     locations: classpath:db/migration/prod
     validate-on-migrate: true
-
+  # CORs
+#  mvc:
+#    dispatch-options-request: true
 # ===============================
 # = Custom
 # ===============================
@@ -139,3 +141,4 @@ management:
         user-name: ${INFLUXDB_ADMIN_USERNAME}
         password: ${INFLUXDB_ADMIN_PASSWORD}
 debug: false
+

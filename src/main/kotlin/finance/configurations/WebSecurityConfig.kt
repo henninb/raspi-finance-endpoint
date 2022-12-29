@@ -14,8 +14,8 @@ open class WebSecurityConfig()  {
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
         val corsConfiguration = CorsConfiguration()
 
-        //corsConfiguration.allowedOrigins = mutableListOf("http://localhost", "https://localhost:3000", "https://localhost")
-        corsConfiguration.allowedOriginPatterns = mutableListOf("*")
+        corsConfiguration.allowedOrigins = mutableListOf("http://horsnup", "https://hornsup:3000", "https://hornsup")
+        //corsConfiguration.allowedOriginPatterns = mutableListOf("*")
         corsConfiguration.allowedMethods = mutableListOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         //corsConfiguration.allowedHeaders = mutableListOf("*")
         corsConfiguration.allowCredentials = true // this line is important it sends only specified domain instead of *
