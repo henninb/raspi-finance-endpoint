@@ -34,7 +34,8 @@ open class WebSecurityConfig()  {
 
         // TODO: bh enable csrf (cross site request forgery)
         // TODO: bh enable headers (not sure what happens when they are disabled) preflight
-        http.httpBasic().and()
+        http
+            //.httpBasic().and()
             .cors()
             .configurationSource { corsConfiguration }.and()
             .headers().disable()
