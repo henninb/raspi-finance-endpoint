@@ -15,8 +15,6 @@ services:
     restart: always
     ports:
       - "8443:8443"
-    expose:
-      - "8443"
     hostname: hornsup-endpoint
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
