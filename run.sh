@@ -39,33 +39,14 @@ fi
 
 . ./os-env
 
-if [ "$OS" = "Linux Mint" ] || [ "$OS" = "Ubuntu" ] || [ "$OS" = "Debian GNU/Linux" ]; then
-  sudo apt install -y iproute2
-  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-elif [ "$OS" = "Arch Linux" ] || [ "$OS" = "ArcoLinux" ]; then
-  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-elif [ "$OS" = "openSUSE Tumbleweed" ]; then
-  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-elif [ "$OS" = "Solus" ]; then
-  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-elif [ "$OS" = "Fedora" ]; then
-  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
+if [ "$OS" = "FreeBSD" ]; then
+  HOST_IP="192.168.10.114"
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
-elif [ "$OS" = "void" ]; then
-  HOST_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-elif [ "$OS" = "FreeBSD" ]; then
-  HOST_IP="192.168.10.114"
-elif [ "$OS" = "Gentoo" ]; then
-  HOST_IP=$(hostname -i | awk '{print $1}')
-  # export JAVA_HOME=/opt/openjdk-bin-11
-  # export PATH=$JAVA_HOME/bin:$PATH
 else
-  echo "$OS is not yet implemented."
-  exit 1
+  HOST_IP=$(ip route get 1 | awk '{print $7}' | head -1)
 fi
 
-export APPNAME
 export HOST_IP
 export CURRENT_UID
 export CURRENT_GID

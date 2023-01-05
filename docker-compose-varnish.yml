@@ -14,12 +14,12 @@ services:
     volumes:
       - ./default.vcl:/etc/varnish/default.vcl
     depends_on:
-      - nginx-server
+      - nginx-proxy-finance-server
 
-  nginx-server:
+  nginx-proxy-finance-server:
     image: nginx
-    hostname: nginx-server
-    container_name: nginx-server
+    hostname: nginx-proxy-finance-server
+    container_name: nginx-proxy-finance-server
     restart: always
     ports:
       - "9443:443"
