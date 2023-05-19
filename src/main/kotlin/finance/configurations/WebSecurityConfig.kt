@@ -16,7 +16,7 @@ open class WebSecurityConfig()  {
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
         val corsConfiguration = CorsConfiguration()
 
-        corsConfiguration.allowedOrigins = mutableListOf("https://hornsup:3000", "https://localhost:3000")
+        corsConfiguration.allowedOrigins = mutableListOf("https://hornsup:3000", "https://localhost:3000", "https://finance.lan")
         //corsConfiguration.allowedOriginPatterns = mutableListOf("*")
         corsConfiguration.allowedMethods = mutableListOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         //corsConfiguration.allowedHeaders = mutableListOf("*")
