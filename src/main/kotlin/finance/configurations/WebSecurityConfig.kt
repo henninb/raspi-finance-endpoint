@@ -1,5 +1,6 @@
 package finance.configurations
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -11,6 +12,11 @@ import org.springframework.web.cors.CorsConfiguration
 
 @Configuration
 open class WebSecurityConfig()  {
+
+//    @Value("\${custom.project.allowed.origins}") // For properties file approach
+    // @Value("\${allowed.origins}") // For YAML approach
+//    lateinit var allowedOrigins: List<String>
+
     @Bean
     @Throws(Exception::class)
     open fun configure(http: HttpSecurity) : SecurityFilterChain {

@@ -2,16 +2,15 @@ vcl 4.1;
 
 import std;
 
-# Default backend definition. Set this to point to your content server.
 backend default {
     .host = "hornsup";
     .port = "8443";
 }
 
 sub vcl_recv {
-    if (req.method != "GET" && req.method != "HEAD") {
-        return (pass);
-    }
+  if (req.method != "GET" && req.method != "HEAD") {
+    return (pass);
+  }
     # purge the entire cache on every POST
     # if ( req.request == "POST") {
     #     ban("req.http.host == " + req.http.Host);
@@ -33,21 +32,19 @@ sub vcl_recv {
     # and other mistakes your backend does.
 #}
 
-#sub vcl_deliver {
-    # Happens when we have all the pieces we need, and are about to send the
-    # response to the client.
-    #
-    # You can do accounting or modifying the final object here.
-#}
-
 sub vcl_deliver {
-    # send some handy statistics back, useful for checking cache
-    if (obj.hits > 0) {
-        set resp.http.X-Cache-Action = "HIT";
-        set resp.http.X-Cache-Hits = obj.hits;
-    } else {
-        set resp.http.X-Cache-Action = "MISS";
-    }
+  if (obj.hits > 0) {
+    set resp.http.X-Cache-Action = "HIT";
+    set resp.http.X-Cache-Hits = obj.hits;
+  } else {
+    set resp.http.X-Cache-Action = "MISS";
+  }
+
+  if (req.method == "OPTIONS") {
+    set resp.http.Access-Control-Allow-Origin = req.http.origin;
+    set resp.http.Access-Control-Allow-Methods = "GET, POST, OPTIONS";
+    set resp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
+  }
 }
 
 sub vcl_synth {
@@ -73,4 +70,9 @@ sub vcl_backend_response {
   if (bereq.url ~ "(?i)\.(?:css|gif|ico|jpeg|jpg|js|json|png|swf|woff)(?:\?.*)?$") {
     unset beresp.http.set-cookie;
   }
+
+  if (bereq.method == "OPTIONS") {
+  }
 }
+
+# vim: set ft=conf:
