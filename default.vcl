@@ -41,9 +41,9 @@ sub vcl_deliver {
   }
 
   if (req.method == "OPTIONS") {
-    set resp.http.Access-Control-Allow-Origin = req.http.origin;
-    set resp.http.Access-Control-Allow-Methods = "GET, POST, OPTIONS";
-    set resp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
+#    set resp.http.Access-Control-Allow-Origin = req.http.origin;
+#    set resp.http.Access-Control-Allow-Methods = "GET, POST, OPTIONS";
+#    set resp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
   }
 }
 
