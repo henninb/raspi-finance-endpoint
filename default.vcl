@@ -40,7 +40,10 @@ sub vcl_deliver {
     set resp.http.X-Cache-Action = "MISS";
   }
 
+  set resp.http.X-Powered-By = "SpringBoot";
+
   if (req.method == "OPTIONS") {
+    set resp.http.X-Origin = req.http.origin;
 #    set resp.http.Access-Control-Allow-Origin = req.http.origin;
 #    set resp.http.Access-Control-Allow-Methods = "GET, POST, OPTIONS";
 #    set resp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
