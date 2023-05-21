@@ -84,6 +84,11 @@ spring:
 # ===============================
 custom:
   project:
+    allowed:
+      origins:
+        - https://hornsup:3000
+        - https://localhost:3000
+        - https://finance.lan
     excel-password: ${EXCEL_PASSWORD}
     excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
     excluded-accounts:
