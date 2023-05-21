@@ -7,8 +7,14 @@ backend default {
     .port = "8443";
 }
 
+sub vcl_init {
+    std.syslog(0, "Log level set to: info");
+    return (ok);
+}
+
 sub vcl_recv {
   if (req.method != "GET" && req.method != "HEAD") {
+    std.log("URL requested: " + req.url);
     return (pass);
   }
 
@@ -50,7 +56,7 @@ sub vcl_deliver {
 #    set resp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
   }
 
-  unset resp.http.Server;
+  unset resp.http.Via;
 }
 
 sub vcl_synth {
@@ -78,12 +84,11 @@ sub vcl_backend_response {
   }
 
   if (bereq.method == "OPTIONS") {
-    # set beresp.http.Access-Control-Allow-Origin = req.http.My-Origin;
-    set beresp.http.Access-Control-Allow-Origin = bereq.http.origin;
-    set beresp.http.Access-Control-Allow-Methods = "GET, POST, OPTIONS";
-    set beresp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
-    # set beresp.ttl = 1h;  // Set an appropriate cache TTL for OPTIONS requests
-    return (deliver);
+    #set beresp.http.Access-Control-Allow-Origin = bereq.http.origin;
+    #set beresp.http.Access-Control-Allow-Methods = "GET, POST, OPTIONS";
+    #set beresp.http.Access-Control-Allow-Headers = "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range";
+    #set beresp.status = 204;
+    #return (deliver);
   }
 }
 
