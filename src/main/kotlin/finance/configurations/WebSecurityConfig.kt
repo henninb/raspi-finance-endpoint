@@ -1,50 +1,48 @@
 package finance.configurations
 
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.Environment
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.web.cors.CorsConfiguration
+
 
 @Configuration
-open class WebSecurityConfig()  {
-
-//    @Value("\${custom.project.allowed.origins}") // For properties file approach
-    // @Value("\${allowed.origins}") // For YAML approach
-//    lateinit var allowedOrigins: List<String>
+open class WebSecurityConfig( private val environment: Environment)  {
 
     @Bean
-    @Throws(Exception::class)
+//    @Throws(Exception::class)
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
-//        http.authorizeRequests() //
-//            .requestMatchers("/user/signin").permitAll()
-//            .requestMatchers("/user/signup").permitAll()
-//            // Disallow everything else
-//            .anyRequest().authenticated()
+
 
         // TODO: bh enable csrf (cross site request forgery)
-        // TODO: bh enable headers (not sure what happens when they are disabled) preflight
-        //TODO: bh how to enable basic auth
+        // TODO: bh how to enable basic auth
         http
-            .csrf().disable()
-//            .authorizeHttpRequests()
-//            .anyRequest()
-//            .authenticated()
-//            .and()
-//            .httpBasic()
-//            .and()
+            //.csrf().disable()
+            .authorizeHttpRequests()
+            .anyRequest()
+            .authenticated()
+            .and()
+            .httpBasic()
+            .and()
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // the server will not send a JSESSIONID cookie
 
         return http.build()
     }
 
-//    @Bean
-//    open fun passwordEncoder(): PasswordEncoder {
-//        return BCryptPasswordEncoder()
-//    }
+        @Autowired
+    fun configureGlobal(auth: AuthenticationManagerBuilder) {
+            val username = environment.getProperty("spring.security.user.name")
+            val password = environment.getProperty("spring.security.user.password")
+//            println("U=$username")
+//            println("P=${password}")
+        auth.inMemoryAuthentication()
+                .withUser(username)
+                .password("{noop}${password}")
+                .roles("ADMIN")
+    }
 }
