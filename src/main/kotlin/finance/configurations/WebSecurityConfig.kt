@@ -14,9 +14,11 @@ import org.springframework.security.web.SecurityFilterChain
 open class WebSecurityConfig( private val environment: Environment)  {
 
     @Bean
-//    @Throws(Exception::class)
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
-
+//        val username = environment.getProperty("spring.security.user.name")
+//        val password = environment.getProperty("spring.security.user.password")
+//        println("U=$username")
+//        println("P=${password}")
 
         // TODO: bh enable csrf (cross site request forgery)
         // TODO: bh how to enable basic auth
@@ -32,17 +34,5 @@ open class WebSecurityConfig( private val environment: Environment)  {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // the server will not send a JSESSIONID cookie
 
         return http.build()
-    }
-
-        @Autowired
-    fun configureGlobal(auth: AuthenticationManagerBuilder) {
-            val username = environment.getProperty("spring.security.user.name")
-            val password = environment.getProperty("spring.security.user.password")
-//            println("U=$username")
-//            println("P=${password}")
-        auth.inMemoryAuthentication()
-                .withUser(username)
-                .password("{noop}${password}")
-                .roles("ADMIN")
     }
 }
