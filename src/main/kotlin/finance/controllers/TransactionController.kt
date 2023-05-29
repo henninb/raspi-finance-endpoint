@@ -17,14 +17,14 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/transaction")
+@RequestMapping("/transaction", "/api/transaction")
 class TransactionController @Autowired constructor(private var transactionService: TransactionService) :
     BaseController() {
 
     @Autowired
     lateinit var meterService: MeterService
 
-    //curl https://hornsup:8080/transaction/account/select/usbankcash_brian
+    //curl https://hornsup:8443/transaction/account/select/usbankcash_brian
     @GetMapping("/account/select/{accountNameOwner}", produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         val transactions: List<Transaction> =
@@ -39,7 +39,7 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //transaction-management/
     //accounts/{accountNameOwner}/transactions/totals
-    //curl -k https://hornsup:8080/transaction/account/totals/chase_brian
+    //curl -k https://hornsup:8443/transaction/account/totals/chase_brian
     @GetMapping("/account/totals/{accountNameOwner}", produces = ["application/json"])
     fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
         val results: Map<String, BigDecimal> =
@@ -50,7 +50,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(mapper.writeValueAsString(results))
     }
 
-    //curl -k https://hornsup:8080/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    //curl -k https://hornsup:8443/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @GetMapping("/select/{guid}", produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() guid = $guid")
@@ -93,7 +93,7 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //TODO: 7/1/2021 - Return the transaction from the database
     //TODO: 6/28/2021 - Should return a 201 CREATED?
-    //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/insert' -X POST -d ''
+    //curl -k --header "Content-Type: application/json" 'https://hornsup:8443/transaction/insert' -X POST -d ''
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
         logger.info("insert - transaction.transactionDate: ${mapper.writeValueAsString(transaction)}")
@@ -103,7 +103,7 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //TODO: 7/1/2021 - Return the transaction from the database
     //TODO: 6/28/2021 - Should return a 201 CREATED?
-    //curl -k --header "Content-Type: application/json" 'https://hornsup:8080/transaction/future/insert' -X POST -d ''
+    //curl -k --header "Content-Type: application/json" 'https://hornsup:8443/transaction/future/insert' -X POST -d ''
     @PostMapping("/future/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertFutureTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
         val futureTransaction = transactionService.createFutureTransaction(transaction)
@@ -123,7 +123,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(transactionResponse)
     }
 
-    // curl -k -X PUT 'https://hornsup:8080/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
+    // curl -k -X PUT 'https://hornsup:8443/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f'  --header "Content-Type: application/json" -d 'test'
     @PutMapping("/update/receipt/image/{guid}", produces = ["application/json"])
     fun updateTransactionReceiptImageByGuid(
         @PathVariable("guid") guid: String,
@@ -135,7 +135,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(receiptImage)
     }
 
-    //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8080/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'
+    //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8443/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'
     @DeleteMapping("/delete/{guid}", produces = ["application/json"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
@@ -148,7 +148,7 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
     }
 
-    //curl --header "Content-Type: application/json" https://hornsup:8080/transaction/payment/required
+    //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
     @GetMapping("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): ResponseEntity<List<Account>> {
 

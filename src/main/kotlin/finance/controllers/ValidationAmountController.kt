@@ -9,7 +9,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/validation/amount")
+@RequestMapping("/validation/amount", "/api/validation/amount")
 class ValidationAmountController(private var validationAmountService: ValidationAmountService) : BaseController() {
 
     @PostMapping("/insert/{accountNameOwner}", produces = ["application/json"])
@@ -24,7 +24,7 @@ class ValidationAmountController(private var validationAmountService: Validation
         return ResponseEntity.ok(validationAmountResponse)
     }
 
-    //curl -k https://hornsup:8080/validation/amount/select/amazon_brian
+    //curl -k https://hornsup:8443/validation/amount/select/amazon_brian
     @GetMapping("/select/{accountNameOwner}/{transactionStateValue}")
     fun selectValidationAmountByAccountId(
         @PathVariable("accountNameOwner") accountNameOwner: String,
