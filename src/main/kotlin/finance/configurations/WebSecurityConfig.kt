@@ -20,17 +20,6 @@ open class WebSecurityConfig()  {
     @Bean
     @Throws(Exception::class)
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
-        val corsConfiguration = CorsConfiguration()
-
-        corsConfiguration.allowedOrigins = mutableListOf("https://hornsup:3000", "https://localhost:3000", "https://finance.lan")
-        //corsConfiguration.allowedOriginPatterns = mutableListOf("*")
-        corsConfiguration.allowedMethods = mutableListOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-        //corsConfiguration.allowedHeaders = mutableListOf("*")
-        corsConfiguration.allowCredentials = true // this line is important it sends only specified domain instead of *
-        corsConfiguration.exposedHeaders = mutableListOf("x-auth-token")
-        corsConfiguration.allowedHeaders = mutableListOf("authorization", "content-type", "x-auth-token", "accept");
-
-        // Entry points
 //        http.authorizeRequests() //
 //            .requestMatchers("/user/signin").permitAll()
 //            .requestMatchers("/user/signup").permitAll()
@@ -54,8 +43,8 @@ open class WebSecurityConfig()  {
         return http.build()
     }
 
-    @Bean
-    open fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
+//    @Bean
+//    open fun passwordEncoder(): PasswordEncoder {
+//        return BCryptPasswordEncoder()
+//    }
 }
