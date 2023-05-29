@@ -11,7 +11,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 //TODO: need to change to parameter
-@RequestMapping("/parm")
+@RequestMapping("/parm", "/api/parameter", "/api/parm", "/parameter")
 class ParameterController(private var parameterService: ParameterService) : BaseController() {
 
     @GetMapping("/select/active", produces = ["application/json"])
@@ -26,7 +26,7 @@ class ParameterController(private var parameterService: ParameterService) : Base
         return ResponseEntity.ok(parameters)
     }
 
-    //https://hornsup:8080/parm/select/payment_account
+    //https://hornsup:8443/parm/select/payment_account
     @GetMapping("/select/{parameterName}", produces = ["application/json"])
     fun selectParameter(@PathVariable parameterName: String): ResponseEntity<Parameter> {
         val parameterOptional: Optional<Parameter> = parameterService.findByParameter(parameterName)
@@ -37,7 +37,7 @@ class ParameterController(private var parameterService: ParameterService) : Base
         return ResponseEntity.ok(parameterOptional.get())
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8080/parm/insert
+    //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8443/parm/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertParameter(@RequestBody parameter: Parameter): ResponseEntity<Parameter> {
         val parameterResponse = parameterService.insertParameter(parameter)

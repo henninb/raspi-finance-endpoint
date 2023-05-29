@@ -12,10 +12,10 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/account")
+@RequestMapping("/api/account", "/account")
 class AccountController @Autowired constructor(private var accountService: AccountService) : BaseController() {
 
-    //http://localhost:8080/account/totals
+    //http://localhost:8443/account/totals
     @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): Map<String, String> {
         val response: MutableMap<String, String> = HashMap()
@@ -35,7 +35,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return response
     }
 
-    //curl --header "Content-Type: application/json" https://hornsup:8080/account/payment/required
+    //curl --header "Content-Type: application/json" https://hornsup:8443/account/payment/required
     @GetMapping("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): ResponseEntity<List<String>> {
 
@@ -46,7 +46,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return ResponseEntity.ok(accountNameOwners)
     }
 
-    //http://localhost:8080/account/select/active
+    //http://localhost:8443/account/select/active
     @GetMapping("/select/active", produces = ["application/json"])
     fun accounts(): ResponseEntity<List<Account>> {
         //TODO: create a separate endpoint for the totals
@@ -60,7 +60,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return ResponseEntity.ok(accounts)
     }
 
-    //http://localhost:8080/account/select/test_brian
+    //http://localhost:8443/account/select/test_brian
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
     fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
@@ -77,7 +77,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return ResponseEntity.ok(accountResponse)
     }
 
-    //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8080/account/delete/test_brian'
+    //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8443/account/delete/test_brian'
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
     fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<String> {
         val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
@@ -89,7 +89,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this account: $accountNameOwner.")
     }
 
-    //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8080/account/update/test_account' --data '{}'
+    //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8443/account/update/test_account' --data '{}'
     @PutMapping("/update/{accountNameOwner}", produces = ["application/json"])
     fun updateAccount(
         @PathVariable("accountNameOwner") guid: String,
@@ -100,8 +100,8 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return ResponseEntity.ok(accountResponse)
     }
 
-    //curl -k -X PUT 'https://hornsup:8080/account/rename?old=gap_kari&new=oldnavy_kari'
-    //curl -k --header "Content-Type: application/json" --request PUT 'https://hornsup:8080/account/rename?old=test_brian&new=testnew_brian'
+    //curl -k -X PUT 'https://hornsup:8443/account/rename?old=gap_kari&new=oldnavy_kari'
+    //curl -k --header "Content-Type: application/json" --request PUT 'https://hornsup:8443/account/rename?old=test_brian&new=testnew_brian'
     @PutMapping("/rename", produces = ["application/json"])
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,

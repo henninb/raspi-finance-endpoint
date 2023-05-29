@@ -10,10 +10,10 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/description")
+@RequestMapping("/description", "/api/description")
 class DescriptionController(private var descriptionService: DescriptionService) : BaseController() {
 
-    //https://hornsup:8080/description/select/all
+    //https://hornsup:8443/description/select/all
     @GetMapping("/select/all", produces = ["application/json"])
     fun selectAllDescriptions(): ResponseEntity<List<Description>> {
         val descriptions = descriptionService.fetchAllDescriptions()
@@ -21,7 +21,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         return ResponseEntity.ok(descriptions)
     }
 
-    //curl -k 'https://localhost:8080/description/select/zzz'
+    //curl -k 'https://localhost:8443/description/select/zzz'
     @GetMapping("/select/{description_name}")
     fun selectDescriptionName(@PathVariable("description_name") descriptionName: String): ResponseEntity<String> {
         val descriptionOptional = descriptionService.findByDescriptionName(descriptionName)
@@ -31,7 +31,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "description not found for: $descriptionName")
     }
 
-    //curl -k --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' 'https://hornsup:8080/description/insert'
+    //curl -k --header "Content-Type: application/json" -X POST -d '{"description":"test", "activeStatus":true}' 'https://hornsup:8443/description/insert'
     @PostMapping("/insert", produces = ["application/json"])
     fun insertDescription(@RequestBody description: Description): ResponseEntity<Description> {
         val descriptionResponse = descriptionService.insertDescription(description)

@@ -10,10 +10,10 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/category")
+@RequestMapping("/category", "/api/category")
 class CategoryController(private var categoryService: CategoryService) : BaseController() {
 
-    //http://localhost:8080/category/select/active
+    //http://localhost:8443/category/select/active
     @GetMapping("/select/active", produces = ["application/json"])
     fun categories(): ResponseEntity<List<Category>> {
         val categories: List<Category> = categoryService.categories()
@@ -34,7 +34,7 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "category not found for: $categoryName")
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8080/category/insert
+    //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8443/category/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<Category> {
         val categoryResponse = categoryService.insertCategory(category)

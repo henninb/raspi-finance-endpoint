@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
 @RestController
-@RequestMapping("/receipt/image")
+@RequestMapping("/receipt/image", "/api/receipt/image")
 class ReceiptImageController(private var receiptImageService: ReceiptImageService) : BaseController() {
 
     @PostMapping("/insert", produces = ["application/json"])
@@ -18,7 +18,7 @@ class ReceiptImageController(private var receiptImageService: ReceiptImageServic
         return ResponseEntity.ok("receiptImage inserted $receiptImageId")
     }
 
-    // curl -k 'https://localhost:8080/receipt/image/select/1'
+    // curl -k 'https://localhost:8443/receipt/image/select/1'
     @GetMapping("/select/{receipt_image_id}")
     fun selectReceiptImage(@PathVariable("receipt_image_id") receiptImageId: Long): ResponseEntity<String> {
         val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)

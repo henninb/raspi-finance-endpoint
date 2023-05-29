@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/user", "/api/user")
 class UserController @Autowired constructor(private var userService: UserService) : BaseController() {
 
     //curl -X POST -H "Content-Type: application/json"  -d '{"username":"user","password":"pass"}' http://localhost:8443/user/signin

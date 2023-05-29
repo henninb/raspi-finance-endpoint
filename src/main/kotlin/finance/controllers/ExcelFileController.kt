@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @CrossOrigin
 @RestController
-@RequestMapping("/excel")
+@RequestMapping("/excel", "/api/excel")
 class ExcelFileController(private var excelFileService: ExcelFileService) : BaseController() {
 
     @GetMapping("/file/export", produces = ["application/json"])

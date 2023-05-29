@@ -10,7 +10,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/payment", "/api/payment")
 class PaymentController(private var paymentService: PaymentService) : BaseController() {
 
     @GetMapping("/select", produces = ["application/json"])
@@ -26,7 +26,7 @@ class PaymentController(private var paymentService: PaymentService) : BaseContro
         return ResponseEntity.ok(paymentResponse)
     }
 
-    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8080/payment/delete/1001
+    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/payment/delete/1001
     @DeleteMapping("/delete/{paymentId}", produces = ["application/json"])
     fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<String> {
         val paymentOptional: Optional<Payment> = paymentService.findByPaymentId(paymentId)
