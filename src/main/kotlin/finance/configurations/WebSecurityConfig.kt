@@ -50,11 +50,6 @@ open class WebSecurityConfig()  {
 //            .and()
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // the server will not send a JSESSIONID cookie
-            .and()
-            .cors()
-            .configurationSource { corsConfiguration }
-            //.and()
-            //.headers().disable()
 
         return http.build()
     }
