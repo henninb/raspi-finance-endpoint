@@ -28,6 +28,7 @@ open class WebSecurityConfig( private val environment: Environment)  {
             .anyRequest()
             .authenticated()
             .and()
+            //.oauth2ResourceServer().jwt()
             .httpBasic()
             .and()
             .sessionManagement()
