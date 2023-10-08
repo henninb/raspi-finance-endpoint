@@ -51,7 +51,7 @@ open class WebSecurityConfig( private val environment: Environment)  {
 
     @Bean
     @Throws(Exception::class)
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http.authorizeHttpRequests().requestMatchers("/**").hasRole("USER").and().formLogin()
         return http.build()
     }
