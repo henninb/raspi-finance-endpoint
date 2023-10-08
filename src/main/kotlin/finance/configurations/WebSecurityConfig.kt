@@ -7,6 +7,7 @@ import org.springframework.core.env.Environment
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 
@@ -24,6 +25,11 @@ open class WebSecurityConfig( private val environment: Environment)  {
             .withUser(username)
             .password(passwordEncoder.encode(password)) // Encode the password
             .roles("USER")
+    }
+
+    @Bean
+    open fun passwordEncoder(): PasswordEncoder {
+        return BCryptPasswordEncoder()
     }
     @Bean
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
