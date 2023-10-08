@@ -27,10 +27,10 @@ open class WebSecurityConfig( private val environment: Environment)  {
             .roles("USER")
     }
 
-    @Bean
-    open fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
+//    @Bean
+//    open fun passwordEncoder(): PasswordEncoder {
+//        return BCryptPasswordEncoder()
+//    }
     @Bean
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
 //        val username = environment.getProperty("spring.security.user.name")
@@ -45,9 +45,9 @@ open class WebSecurityConfig( private val environment: Environment)  {
             .authorizeHttpRequests()
             .anyRequest()
             .authenticated()
-            .and()
+            //.and()
             //.oauth2ResourceServer().jwt()
-            .httpBasic()
+            //.httpBasic()
             .and()
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // the server will not send a JSESSIONID cookie
