@@ -37,7 +37,7 @@ open class WebSecurityConfig( private val environment: Environment)  {
         // TODO: bh enable csrf (cross site request forgery)
         // TODO: bh how to enable basic auth
         http
-            //.csrf().disable()
+            .csrf().disable()
             .authorizeHttpRequests()
             .anyRequest()
             .authenticated()
