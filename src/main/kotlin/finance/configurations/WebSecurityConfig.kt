@@ -49,13 +49,25 @@ open class WebSecurityConfig( private val environment: Environment)  {
 //        return http.build()
 //    }
 
+//    @Bean
+//    @Throws(Exception::class)
+//    open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+//        http.authorizeHttpRequests().requestMatchers("/**").hasRole("USER").and().formLogin()
+//        return http.build()
+//    }
+
+
     @Bean
-    @Throws(Exception::class)
-    open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http.authorizeHttpRequests().requestMatchers("/**").hasRole("USER").and().formLogin()
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .authorizeHttpRequests()
+            .requestMatchers("/**").permitAll() // Allow all requests without authentication
+            .and()
+            .csrf().disable() // Disable CSRF protection (only do this for trusted environments)
+            .formLogin().disable() // Disable form login
+
         return http.build()
     }
-
 
 
 //    @Bean
