@@ -60,7 +60,7 @@ open class WebSecurityConfig( private val environment: Environment)  {
 
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .authorizeHttpRequests()
             .requestMatchers("/**").permitAll() // Allow all requests without authentication
@@ -72,7 +72,7 @@ open class WebSecurityConfig( private val environment: Environment)  {
     }
 
     @Bean
-    fun passwordEncoder(): PasswordEncoder {
+    open fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
     }
 
