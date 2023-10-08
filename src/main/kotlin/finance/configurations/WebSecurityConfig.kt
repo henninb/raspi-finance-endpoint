@@ -7,12 +7,24 @@ import org.springframework.core.env.Environment
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 
 
 @Configuration
 open class WebSecurityConfig( private val environment: Environment)  {
 
+
+    @Autowired
+    fun configureAuthentication(auth: AuthenticationManagerBuilder, passwordEncoder: PasswordEncoder) {
+        val username = environment.getProperty("spring.security.user.name")
+        val password = environment.getProperty("spring.security.user.password")
+
+        auth.inMemoryAuthentication()
+            .withUser(username)
+            .password(passwordEncoder.encode(password)) // Encode the password
+            .roles("USER")
+    }
     @Bean
     open fun configure(http: HttpSecurity) : SecurityFilterChain {
 //        val username = environment.getProperty("spring.security.user.name")
