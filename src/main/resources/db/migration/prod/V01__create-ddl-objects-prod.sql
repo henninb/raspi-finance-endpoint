@@ -264,9 +264,6 @@ $$
       NEW.date_updated := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
-
-
-
 $$;
 
 CREATE OR REPLACE FUNCTION fn_insert_transaction_categories()
@@ -280,10 +277,53 @@ $$
       NEW.date_added := CURRENT_TIMESTAMP;
       RETURN NEW;
     END;
-
-
-
 $$;
+
+
+CREATE OR REPLACE FUNCTION rename_account_owner(
+    p_old_name VARCHAR,
+    p_new_name VARCHAR
+)
+RETURNS VOID
+SET SCHEMA 'public'
+LANGUAGE PLPGSQL
+AS
+$$
+BEGIN
+    EXECUTE 'ALTER TABLE t_transaction DISABLE TRIGGER ALL';
+
+    EXECUTE 'UPDATE t_transaction SET account_name_owner = $1 WHERE account_name_owner = $2'
+    USING p_new_name, p_old_name;
+
+    EXECUTE 'UPDATE t_account SET account_name_owner = $1 WHERE account_name_owner = $2'
+    USING p_new_name, p_old_name;
+
+    EXECUTE 'ALTER TABLE t_transaction ENABLE TRIGGER ALL';
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION disable_account_owner(
+    p_new_name VARCHAR
+)
+RETURNS VOID
+SET SCHEMA 'public'
+LANGUAGE PLPGSQL
+AS
+$$
+BEGIN
+    EXECUTE 'ALTER TABLE t_transaction DISABLE TRIGGER ALL';
+
+    EXECUTE 'UPDATE t_transaction SET active_status = false WHERE account_name_owner = $1'
+    USING p_new_name;
+
+    EXECUTE 'UPDATE t_account SET active_status = false WHERE account_name_owner = $1'
+    USING p_new_name;
+
+    EXECUTE 'ALTER TABLE t_transaction ENABLE TRIGGER ALL';
+END;
+$$;
+
 
 DROP TRIGGER IF EXISTS tr_insert_transaction_categories ON public.t_transaction_categories;
 CREATE TRIGGER tr_insert_transaction_categories
