@@ -69,8 +69,6 @@ DNS.1 = ${server_name}
 DNS.2 = ${server_name}.lan
 DNS.3 = localhost
 IP.1 = 192.168.10.10
-IP.2 = 192.168.10.114
-IP.3 = 192.168.10.115
 EOF
 
 echo Generate an rsa key
