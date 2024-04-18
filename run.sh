@@ -136,13 +136,14 @@ docker commit nginx-proxy-finance-server nginx-proxy-finance-server
 docker commit varnish-server varnish-server
 
 docker save raspi-finance-endpoint | docker --context remote load
-docker save varnish-server | docker --context remote load
+# docker save varnish-server | docker --context remote load
 docker save nginx-proxy-finance-server | docker --context remote load
 
 export DOCKER_HOST=ssh://192.168.10.10
-exit 1
-# docker run --name=raspi-finance-endpoint -h raspi-finance-endpoint --restart unless-stopped -p 8443:8443 -d raspi-finance-endpoint
+docker rm -f raspi-finance-endpoint
+docker run --name=raspi-finance-endpoint -h raspi-finance-endpoint --restart unless-stopped -p 8443:8443 -d raspi-finance-endpoint
 # docker run --name=varnish-server -h varnish-server --restart unless-stopped -p 8080:80 -d varnish-server
+docker rm -f nginx-proxy-finance-server
 docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
 
 echo docker logs raspi-finance-endpoint --follow
