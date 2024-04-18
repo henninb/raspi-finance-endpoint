@@ -3,8 +3,8 @@ vcl 4.1;
 import std;
 
 backend default {
-    .host = "hornsup";
-    .port = "8443";
+  .host = "hornsup";
+  .port = "8443";
 }
 
 sub vcl_init {
