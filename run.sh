@@ -40,11 +40,12 @@ fi
 . ./os-env
 
 if [ "$OS" = "FreeBSD" ]; then
-  HOST_IP="192.168.10.114"
+  HOST_IP="192.168.10.10"
 elif [ "$OS" = "Darwin" ]; then
   HOST_IP=$(ipconfig getifaddr en0)
 else
   HOST_IP=$(ip route get 1 | awk '{print $7}' | head -1)
+  HOST_IP=192.168.10.10
 fi
 
 export HOST_IP
@@ -92,7 +93,7 @@ fi
 
 if [ -x "$(command -v docker)" ]; then
   # echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
-  echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.21.5-alpinej
+  echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.25.4-alpine
   # podman build --tag "$APPNAME" -f ./Dockerfile
 
   docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
@@ -123,19 +124,26 @@ if [ -x "$(command -v docker)" ]; then
   # echo podman-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d
   if ! docker compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
     echo "docker compose up failed."
-    if [ -x "$(command -v docker-compose)" ]; then
-      docker-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d
-    else
-      echo "docker-compose up failed"
-      exit 1
-    fi
   else
-    echo "docker-compose up failed"
-    exit 1
+    echo "docker-compose up base success"
   fi
-else
-  echo "Install docker"
 fi
+
+# docker context create remote --docker "host=ssh://henninb@192.168.10.10"
+
+docker commit raspi-finance-endpoint raspi-finance-endpoint
+docker commit nginx-proxy-finance-server nginx-proxy-finance-server
+docker commit varnish-server varnish-server
+
+docker save raspi-finance-endpoint | docker --context remote load
+docker save varnish-server | docker --context remote load
+docker save nginx-proxy-finance-server | docker --context remote load
+
+export DOCKER_HOST=ssh://192.168.10.10
+exit 1
+# docker run --name=raspi-finance-endpoint -h raspi-finance-endpoint --restart unless-stopped -p 8443:8443 -d raspi-finance-endpoint
+# docker run --name=varnish-server -h varnish-server --restart unless-stopped -p 8080:80 -d varnish-server
+docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
 
 echo docker logs raspi-finance-endpoint --follow
 

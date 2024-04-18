@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   elasticsearch-server:
     image: elasticsearch:7.16.2
