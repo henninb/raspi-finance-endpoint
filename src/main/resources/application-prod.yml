@@ -124,6 +124,16 @@ custom:
 # ===============================
 # = Health and Metrics
 # ===============================
+
+#management.metrics.export.influx:
+#  bucket: metrics # Specifies the destination bucket for writes
+#  org: hornsup # Specifies the destination organization for writes.
+#  token: my-super-secret-auth-token # Authenticate requests with this token.
+#  uri: http://finance-db.lan:8086/api/v2 # The URI for the Influx backend. (Default: http://localhost:8086/api/v2)
+#  compressed: true # Whether to enable GZIP compression of metrics batches published to Influx. (Default: true)
+#  enabled: true # Whether exporting of metrics to this backend is enabled. (Default: true)
+
+
 management:
   endpoint:
     health:
