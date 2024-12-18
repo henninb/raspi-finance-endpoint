@@ -3,6 +3,7 @@
 out/
 target/
 build/
+.kotlin
 
 ### IntelliJ IDEA ###
 .idea
