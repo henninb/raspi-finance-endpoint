@@ -11,7 +11,7 @@ plugins {
     // id 'maven'
     id 'java-library'
     id 'jacoco'
-    id 'codenarc'
+    // id 'codenarc'
     id 'nu.studer.jooq' version "${jooqPluginVersion}"
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
@@ -53,13 +53,13 @@ configurations.configureEach {
     }
 }
 
-codenarc {
-    toolVersion = "$codenarcPluginVersion"
-}
+// codenarc {
+    // toolVersion = "$codenarcPluginVersion"
+// }
 
 compileKotlin {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 sourceSets {
@@ -88,7 +88,7 @@ dependencies {
     implementation("org.scala-lang:scala-library:${scalaVersion}")
 
     // Codenarc
-    implementation("org.codenarc:CodeNarc:${codenarcPluginVersion}")
+    // implementation("org.codenarc:CodeNarc:${codenarcPluginVersion}")
 
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
@@ -187,10 +187,10 @@ dependencies {
 //    options.encoding = 'UTF-8'
 //}
 
-tasks.withType(CodeNarc).configureEach {
-    configFile = rootProject.file 'config/codenarc/codenarcMain.groovy'
-    ignoreFailures = true
-}
+// tasks.withType(CodeNarc).configureEach {
+    // configFile = rootProject.file 'config/codenarc/codenarcMain.groovy'
+    // ignoreFailures = true
+// }
 
 
 jooq {
