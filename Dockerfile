@@ -1,5 +1,5 @@
-# FROM openjdk:19
-FROM openjdk:19-alpine
+FROM openjdk:21
+# FROM openjdk:19-alpine
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
@@ -12,18 +12,24 @@ ENV CURRENT_GID ${CURRENT_GID}
 ARG CURRENT_UID="set the uid"
 ENV CURRENT_UID ${CURRENT_UID}
 
-# RUN groupadd -g ${CURRENT_GID} ${USERNAME}
+RUN groupadd -g ${CURRENT_GID} ${USERNAME}
 # RUN useradd -l ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID}
+# RUN useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} -s /bin/bash -c "" ${USERNAME}
+RUN useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} ${USERNAME}
 
-RUN addgroup -g ${CURRENT_GID} ${USERNAME}
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "$(pwd)" \
-    --ingroup "$USERNAME" \
-    --no-create-home \
-    --uid "${CURRENT_UID}" \
-    "${USERNAME}"
+# Use Fedora's user and group management commands
+# RUN groupadd -g ${CURRENT_GID} ${USERNAME}
+# RUN useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} -s /bin/bash -c "" ${USERNAME}
+
+# RUN addgroup -g ${CURRENT_GID} ${USERNAME}
+# RUN adduser \
+#     --disabled-password \
+#     --gecos "" \
+#     --home "$(pwd)" \
+#     --ingroup "$USERNAME" \
+#     --no-create-home \
+#     --uid "${CURRENT_UID}" \
+#     "${USERNAME}"
 
 RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 RUN mkdir -p -m 0755 /opt/${APP}/bin
