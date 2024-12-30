@@ -1,4 +1,5 @@
 package finance.controllers
+import org.owasp.encoder.Encode
 
 import finance.domain.User
 import finance.services.UserService
@@ -19,7 +20,9 @@ class UserController @Autowired constructor(private var userService: UserService
 
     @PostMapping("/signup")
     fun signUp( @RequestBody user: User): ResponseEntity<String> {
-        return ResponseEntity.ok(mapper.writeValueAsString(user))
+        val jsonString = mapper.writeValueAsString(user)
+        val encodedJsonString = org.owasp.encoder.Encode.forHtmlContent(jsonString)
+        return ResponseEntity.ok(encodedJsonString)
     }
 
 //    @GetMapping(value = "/whoami")
