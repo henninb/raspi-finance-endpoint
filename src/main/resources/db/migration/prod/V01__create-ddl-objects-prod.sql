@@ -202,12 +202,34 @@ CREATE TABLE IF NOT EXISTS public.t_payment
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
-    CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE,
-    CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
+    CONSTRAINT fk_payment_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE,
+    CONSTRAINT fk_payment_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
 );
 
 -- ALTER TABLE public.t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
 -- ALTER TABLE public.t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
+
+
+--------------
+-- Transfer --
+--------------
+CREATE TABLE IF NOT EXISTS public.t_transfer
+(
+    transfer_id         BIGSERIAL PRIMARY KEY,
+    source_account      TEXT                                  NOT NULL,
+    destination_account TEXT                                  NOT NULL,
+    transaction_date    DATE                                  NOT NULL,
+    amount              NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
+    guid_source         TEXT                                  NOT NULL,
+    guid_destination    TEXT                                  NOT NULL,
+    owner               TEXT                                  NULL,
+    active_status       BOOLEAN       DEFAULT TRUE            NOT NULL,
+    date_updated        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added          TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT transfer_constraint UNIQUE (source_account, destination_account, transaction_date, amount),
+    CONSTRAINT fk_transfer_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE,
+    CONSTRAINT fk_transfer_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
+);
 
 ------------------
 -- Parameter    --
