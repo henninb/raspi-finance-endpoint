@@ -20,6 +20,12 @@ class TransferController(private var transferService: TransferService) : BaseCon
         return ResponseEntity.ok(Transfers)
     }
 
+    @PostMapping("/insert", produces = ["application/json"])
+    fun insertTransfer(@RequestBody transfer: Transfer): ResponseEntity<Transfer> {
+        val transferResponse = transferService.insertTransfer(transfer)
+        return ResponseEntity.ok(transferResponse)
+    }
+
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/transfer/delete/1001
     @DeleteMapping("/delete/{transferId}", produces = ["application/json"])
     fun deleteByTransferId(@PathVariable transferId: Long): ResponseEntity<String> {
