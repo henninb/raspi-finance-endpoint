@@ -7,7 +7,7 @@ import java.util.*
 interface ITransferService {
     fun findAllTransfers(): List<Transfer>
 
-//    fun insertTransfer(transfer: Transfer): Transfer
+    fun insertTransfer(transfer: Transfer): Transfer
 //
 //    fun populateDebitTransaction(
 //        transactionDebit: Transaction,
