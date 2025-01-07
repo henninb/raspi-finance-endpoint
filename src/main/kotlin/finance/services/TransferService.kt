@@ -20,6 +20,11 @@ open class TransferService(
     }
 
     @Timed
+    override fun insertTransfer(transfer: Transfer): Transfer {
+        return transfer
+    }
+
+    @Timed
     override fun deleteByTransferId(transferId: Long): Boolean {
         val transfer = transferRepository.findByTransferId(transferId).get()
         transferRepository.delete(transfer)
