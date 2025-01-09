@@ -21,7 +21,11 @@ open class TransferService(
 
     @Timed
     override fun insertTransfer(transfer: Transfer): Transfer {
-        return transfer
+        transfer.activeStatus = true
+        transfer.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        transfer.dateAdded = Timestamp(Calendar.getInstance().time.time)
+
+        return transferRepository.saveAndFlush(transfer)
     }
 
     @Timed
