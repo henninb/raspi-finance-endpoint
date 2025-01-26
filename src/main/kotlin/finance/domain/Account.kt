@@ -10,6 +10,7 @@ import finance.utils.Constants.FIELD_MUST_BE_FOUR_DIGITS_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import finance.utils.LowerCaseConverter
+import finance.utils.ValidDate
 import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -19,6 +20,7 @@ import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import java.sql.Date
 
 @Entity
 @Proxy(lazy = false)
@@ -77,12 +79,16 @@ data class Account(
 
     @JsonProperty
     @Column(name = "date_closed")
-    var dateClosed: Timestamp
+    var dateClosed: Timestamp,
+
+    @JsonProperty
+    @Column(name = "validation_date", nullable = false)
+    var validationDate: Timestamp,
 ) {
 
     constructor() : this(
         0L, "", AccountType.Undefined, true,
-        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0)
+        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0), Timestamp(0)
     )
 
     @JsonIgnore
