@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.t_account
     outstanding        NUMERIC(8, 2) DEFAULT 0.00            NULL,
     cleared            NUMERIC(8, 2) DEFAULT 0.00            NULL,
     date_closed        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL, -- TODO: should be null by default
+    validation_date    TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     owner              TEXT                                  NULL,
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
