@@ -169,9 +169,9 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
                                            'undefined')),
-    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE,
-    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON DELETE CASCADE
+    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Required to happen after the t_transaction table is created
