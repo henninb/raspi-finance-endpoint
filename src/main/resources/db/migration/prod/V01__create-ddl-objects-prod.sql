@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.t_validation_amount
     date_updated      TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
-    CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES public.t_account (account_id) ON DELETE CASCADE
+    CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES public.t_account (account_id)
 );
 
 --------------
@@ -93,6 +93,23 @@ CREATE TABLE IF NOT EXISTS public.t_category
 
 -- ALTER TABLE public.t_category RENAME COLUMN category TO category_name;
 
+-----------------
+-- description --
+-----------------
+CREATE TABLE IF NOT EXISTS public.t_description
+(
+    description_id BIGSERIAL PRIMARY KEY,
+    description_name    TEXT UNIQUE                       NOT NULL,
+    owner               TEXT                              NULL,
+    active_status       BOOLEAN   DEFAULT TRUE            NOT NULL,
+    date_updated        TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added          TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    CONSTRAINT t_description_description_lowercase_ck CHECK (description_name = lower(description_name))
+);
+
+-- ALTER TABLE public.t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
+-- ALTER TABLE public.t_description RENAME COLUMN description TO description_name;
+
 ---------------------------
 -- TransactionCategories --
 ---------------------------
@@ -100,7 +117,7 @@ CREATE TABLE IF NOT EXISTS public.t_transaction_categories
 (
     category_id    BIGINT                            NOT NULL,
     transaction_id BIGINT                            NOT NULL,
-    owner             TEXT                           NULL,
+    owner          TEXT                              NULL,
     date_updated   TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added     TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
     PRIMARY KEY (category_id, transaction_id)
@@ -171,7 +188,8 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
                                            'undefined')),
     CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON UPDATE CASCADE
+    --CONSTRAINT fk_description FOREIGN KEY (description) REFERENCES public.t_description (description_name) ON UPDATE CASCADE
 );
 
 -- Required to happen after the t_transaction table is created
@@ -203,8 +221,8 @@ CREATE TABLE IF NOT EXISTS public.t_payment
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
-    CONSTRAINT fk_payment_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE,
-    CONSTRAINT fk_payment_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
+    CONSTRAINT fk_payment_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_payment_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- ALTER TABLE public.t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
@@ -228,8 +246,8 @@ CREATE TABLE IF NOT EXISTS public.t_transfer
     date_updated        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added          TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT transfer_constraint UNIQUE (source_account, destination_account, transaction_date, amount),
-    CONSTRAINT fk_transfer_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE,
-    CONSTRAINT fk_transfer_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE
+    CONSTRAINT fk_transfer_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON UPDATE CASCADE,
+    CONSTRAINT fk_transfer_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON UPDATE CASCADE
 );
 
 ------------------
@@ -248,23 +266,6 @@ CREATE TABLE IF NOT EXISTS public.t_parameter
 
 -- ALTER TABLE public.t_parameter ADD COLUMN active_status BOOLEAN NOT NULL DEFAULT TRUE;
 -- INSERT into t_parameter(parameter_name, parameter_value) VALUES('payment_account', '');
-
------------------
--- description --
------------------
-CREATE TABLE IF NOT EXISTS public.t_description
-(
-    description_id BIGSERIAL PRIMARY KEY,
-    description_name    TEXT UNIQUE                       NOT NULL,
-    owner               TEXT                              NULL,
-    active_status       BOOLEAN   DEFAULT TRUE            NOT NULL,
-    date_updated        TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    date_added          TIMESTAMP DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    CONSTRAINT t_description_description_lowercase_ck CHECK (description_name = lower(description_name))
-);
-
--- ALTER TABLE public.t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
--- ALTER TABLE public.t_description RENAME COLUMN description TO description_name;
 
 SELECT setval('public.t_receipt_image_receipt_image_id_seq',
               (SELECT MAX(receipt_image_id) FROM public.t_receipt_image) + 1);
