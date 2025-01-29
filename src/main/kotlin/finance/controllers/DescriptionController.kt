@@ -14,7 +14,7 @@ import java.util.*
 class DescriptionController(private var descriptionService: DescriptionService) : BaseController() {
 
     //https://hornsup:8443/description/select/all
-    @GetMapping("/select/all", produces = ["application/json"])
+    @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllDescriptions(): ResponseEntity<List<Description>> {
         val descriptions = descriptionService.fetchAllDescriptions()
 
