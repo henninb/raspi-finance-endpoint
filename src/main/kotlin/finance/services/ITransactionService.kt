@@ -25,4 +25,6 @@ interface ITransactionService {
     fun createFutureTransaction(transaction: Transaction): Transaction
     fun findAccountsThatRequirePayment(): List<Account>
     fun nextTimestampMillis(): Long
+    fun createDefaultDescription(descriptionName: String): Description
+    fun processDescription(transaction: Transaction)
 }

@@ -23,6 +23,7 @@ open class TransactionService(
     private var transactionRepository: TransactionRepository,
     private var accountService: AccountService,
     private var categoryService: CategoryService,
+    private var descriptionService: DescriptionService,
     private var receiptImageService: ReceiptImageService
 ) : ITransactionService, BaseService() {
 
@@ -71,6 +72,7 @@ open class TransactionService(
 
         processAccount(transaction)
         processCategory(transaction)
+        processDescription(transaction)
         transaction.dateUpdated = Timestamp(nextTimestampMillis())
         transaction.dateAdded = Timestamp(nextTimestampMillis())
         val response: Transaction = transactionRepository.saveAndFlush(transaction)
@@ -114,12 +116,33 @@ open class TransactionService(
         }
     }
 
+    override fun processDescription(transaction: Transaction) {
+        when {
+            transaction.description != "" -> {
+                val optionalDescription = descriptionService.description(transaction.description)
+                if (!optionalDescription.isPresent) {
+                    val description = createDefaultDescription(transaction.description)
+                    descriptionService.insertDescription(description)
+                    logger.info("inserted description from transactionService ${transaction.description}")
+                }
+            }
+        }
+    }
+
     @Timed
     override fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
 
         category.categoryName = categoryName
         return category
+    }
+
+    @Timed
+    override fun createDefaultDescription(descriptionName: String): Description {
+        val description = Description()
+
+        description.descriptionName = descriptionName
+        return description
     }
 
     @Timed

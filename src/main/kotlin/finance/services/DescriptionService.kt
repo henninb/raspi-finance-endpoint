@@ -29,6 +29,19 @@ open class DescriptionService(
         return true
     }
 
+    override fun description(descriptionName: String): Optional<Description> {
+        val descriptionOptional: Optional<Description> = descriptionRepository.findByDescriptionName(descriptionName)
+        if (descriptionOptional.isPresent) {
+            return descriptionOptional
+        }
+        return Optional.empty()
+    }
+
+//    @Timed
+//    override fun descriptions(): List<Description> {
+//        return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
+//    }
+
     @Timed
     override fun fetchAllDescriptions(): List<Description> {
         return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)

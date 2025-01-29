@@ -11,4 +11,8 @@ interface IDescriptionService {
     fun fetchAllDescriptions(): List<Description>
 
     fun findByDescriptionName(descriptionName: String): Optional<Description>
+
+    //fun descriptions(): List<Description>
+
+    fun description(descriptionName: String): Optional<Description>
 }
