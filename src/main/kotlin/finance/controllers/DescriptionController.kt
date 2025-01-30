@@ -13,7 +13,7 @@ import java.util.*
 @RequestMapping("/description", "/api/description")
 class DescriptionController(private var descriptionService: DescriptionService) : BaseController() {
 
-    //https://hornsup:8443/description/select/all
+    //https://hornsup:8443/description/select/active
     @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllDescriptions(): ResponseEntity<List<Description>> {
         val descriptions = descriptionService.fetchAllDescriptions()
