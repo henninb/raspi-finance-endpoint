@@ -101,7 +101,7 @@ open class AccountService(
     //TODO: 6/24/2021 - Complete the method logic
     @Timed
     override fun updateAccount(account: Account): Account {
-        val optionalAccount = accountRepository.findByAccountNameOwner(account.accountNameOwner)
+        val optionalAccount = accountRepository.findByAccountId(account.accountId)
         if (optionalAccount.isPresent) {
             val accountToBeUpdated = optionalAccount.get()
             //account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
