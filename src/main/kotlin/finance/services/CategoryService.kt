@@ -2,6 +2,7 @@ package finance.services
 
 import finance.domain.Category
 import finance.repositories.CategoryRepository
+import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
@@ -10,7 +11,8 @@ import jakarta.validation.ConstraintViolation
 
 @Service
 open class CategoryService(
-    private var categoryRepository: CategoryRepository
+    private var categoryRepository: CategoryRepository,
+    private var transactionRepository: TransactionRepository
 ) : ICategoryService, BaseService() {
 
     @Timed
@@ -40,7 +42,12 @@ open class CategoryService(
 
     @Timed
     override fun categories(): List<Category> {
-        return categoryRepository.findByActiveStatusOrderByCategoryName(true)
+        val categories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
+        return categories.map { category ->
+            val count = transactionRepository.countByCategoryName(category.categoryName)
+            category.categoryCount = count
+            category
+        }
     }
 
     @Timed
