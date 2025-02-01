@@ -47,7 +47,7 @@ data class Description(
 
     @Transient
     @JsonProperty
-    var desciptionCount: Long = 0
+    var descriptionCount: Long = 0
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)

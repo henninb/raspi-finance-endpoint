@@ -49,6 +49,10 @@ data class Category(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
+    @Transient
+    @JsonProperty
+    var categoryCount: Long = 0
+
     override fun toString(): String {
         return mapper.writeValueAsString(this)
     }
