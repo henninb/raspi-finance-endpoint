@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
+//@Proxy(lazy = false)
 @Table(name = "t_description")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Description(
@@ -44,6 +44,10 @@ data class Description(
     @JsonIgnore
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @Transient
+    @JsonProperty
+    var desciptionCount: Long = 0
 
     override fun toString(): String {
         return mapper.writeValueAsString(this)
