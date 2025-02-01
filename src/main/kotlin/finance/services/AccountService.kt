@@ -98,7 +98,6 @@ open class AccountService(
         return true
     }
 
-    //TODO: 6/24/2021 - Complete the method logic
     @Timed
     override fun updateAccount(account: Account): Account {
         val optionalAccount = accountRepository.findByAccountId(account.accountId)
