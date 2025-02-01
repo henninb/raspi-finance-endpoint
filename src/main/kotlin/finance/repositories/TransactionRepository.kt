@@ -18,6 +18,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.description = :descriptionName")
     fun countByDescriptionName(@Param("descriptionName") descriptionName: String): Long
 
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.category = :categoryName")
+    fun countByCategoryName(@Param("categoryName") categoryName: String): Long
 
     //TODO: 6/27/20201 - add a default param for activeState
     //TODO: 6/27/20201 - what happens if the list is empty
