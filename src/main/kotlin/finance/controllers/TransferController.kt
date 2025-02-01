@@ -15,9 +15,9 @@ class TransferController(private var transferService: TransferService) : BaseCon
 
     @GetMapping("/select", produces = ["application/json"])
     fun selectAllTransfers(): ResponseEntity<List<Transfer>> {
-        val Transfers = transferService.findAllTransfers()
+        val transfers = transferService.findAllTransfers()
 
-        return ResponseEntity.ok(Transfers)
+        return ResponseEntity.ok(transfers)
     }
 
     @PostMapping("/insert", produces = ["application/json"])
