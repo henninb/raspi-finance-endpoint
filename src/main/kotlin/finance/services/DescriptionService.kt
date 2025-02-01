@@ -1,7 +1,6 @@
 package finance.services
 
 import finance.domain.Description
-import finance.domain.DescriptionWithCount
 import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
@@ -47,17 +46,23 @@ open class DescriptionService(
 
     @Timed
     override fun fetchAllDescriptions(): List<Description> {
-        return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
-    }
-
-    @Timed
-    override fun fetchAllDescriptionsWithCount(): List<DescriptionWithCount> {
         val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
         return descriptions.map { description ->
             val count = transactionRepository.countByDescriptionName(description.descriptionName)
-            DescriptionWithCount(description, count)
+            description.desciptionCount = count
+            description
         }
     }
+
+//    @Timed
+//    override fun fetchAllDescriptionsWithCount(): List<Description> {
+//        val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
+//        return descriptions.map { description ->
+//            val count = transactionRepository.countByDescriptionName(description.descriptionName)
+//            description.desciptionCount = count
+//            description
+//        }
+//    }
 
     @Timed
     override fun findByDescriptionName(descriptionName: String): Optional<Description> {

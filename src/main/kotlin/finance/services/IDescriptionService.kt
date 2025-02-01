@@ -1,7 +1,6 @@
 package finance.services
 
 import finance.domain.Description
-import finance.domain.DescriptionWithCount
 import java.util.*
 
 interface IDescriptionService {
@@ -12,8 +11,6 @@ interface IDescriptionService {
     fun fetchAllDescriptions(): List<Description>
 
     fun findByDescriptionName(descriptionName: String): Optional<Description>
-
-    fun fetchAllDescriptionsWithCount(): List<DescriptionWithCount>
 
     fun description(descriptionName: String): Optional<Description>
 }
