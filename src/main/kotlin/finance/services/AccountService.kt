@@ -105,10 +105,10 @@ open class AccountService(
         if (optionalAccount.isPresent) {
             val accountToBeUpdated = optionalAccount.get()
             //account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            logger.info("updated the account.")
+            logger.info("updated the account ${accountToBeUpdated.accountId} - ${accountToBeUpdated.accountNameOwner}")
             //var updateFlag = false
             //val fromDb = optionalAccount.get()
-            return accountRepository.saveAndFlush(accountToBeUpdated)
+            return accountRepository.saveAndFlush(account)
         }
         throw RuntimeException("Account not updated as the account does not exists ${account.accountNameOwner}.")
     }
