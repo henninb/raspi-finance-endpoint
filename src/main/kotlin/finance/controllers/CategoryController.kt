@@ -26,10 +26,12 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     }
 
     @GetMapping("/select/{category_name}")
-    fun category(@PathVariable("category_name") categoryName: String): ResponseEntity<String> {
+    fun category(@PathVariable("category_name") categoryName: String): ResponseEntity<Category> {
         val categoryOptional = categoryService.category(categoryName)
         if (categoryOptional.isPresent) {
-            return ResponseEntity.ok(mapper.writeValueAsString(categoryOptional.get()))
+            val category = categoryOptional.get()
+            logger.info("cattegory deleted: ${category.categoryName}")
+            return ResponseEntity.ok(category)
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "category not found for: $categoryName")
     }

@@ -29,7 +29,7 @@ class ValidationAmountController(private var validationAmountService: Validation
     fun selectValidationAmountByAccountId(
         @PathVariable("accountNameOwner") accountNameOwner: String,
         @PathVariable("transactionStateValue") transactionStateValue: String
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ValidationAmount> {
 
         val newTransactionStateValue = transactionStateValue.lowercase()
             .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
@@ -38,6 +38,6 @@ class ValidationAmountController(private var validationAmountService: Validation
             TransactionState.valueOf(newTransactionStateValue)
         )
         logger.info(mapper.writeValueAsString(validationAmount))
-        return ResponseEntity.ok(mapper.writeValueAsString(validationAmount))
+        return ResponseEntity.ok(validationAmount)
     }
 }
