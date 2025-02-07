@@ -39,12 +39,14 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     }
 
     @DeleteMapping("/delete/{descriptionName}", produces = ["application/json"])
-    fun deleteByDescription(@PathVariable descriptionName: String): ResponseEntity<String> {
+    fun deleteByDescription(@PathVariable descriptionName: String): ResponseEntity<Description> {
         val descriptionOptional: Optional<Description> = descriptionService.findByDescriptionName(descriptionName)
 
         if (descriptionOptional.isPresent) {
             descriptionService.deleteByDescriptionName(descriptionName)
-            return ResponseEntity.ok("description deleted")
+            val description = descriptionOptional.get()
+            logger.info("description deleted: ${description.descriptionName}")
+            return ResponseEntity.ok(description)
         }
 
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete the description: $descriptionName.")

@@ -28,13 +28,14 @@ class TransferController(private var transferService: TransferService) : BaseCon
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/transfer/delete/1001
     @DeleteMapping("/delete/{transferId}", produces = ["application/json"])
-    fun deleteByTransferId(@PathVariable transferId: Long): ResponseEntity<String> {
+    fun deleteByTransferId(@PathVariable transferId: Long): ResponseEntity<Transfer> {
         val transferOptional: Optional<Transfer> = transferService.findByTransferId(transferId)
 
-        logger.info("deleteByTransferId controller - $transferId")
         if (transferOptional.isPresent) {
+            val transfer: Transfer = transferOptional.get()
+            logger.info("transfer deleted: ${transfer.transferId}")
             transferService.deleteByTransferId(transferId)
-            return ResponseEntity.ok("transfer deleted")
+            return ResponseEntity.ok(transfer)
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $transferId")
     }

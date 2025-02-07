@@ -137,11 +137,13 @@ class TransactionController @Autowired constructor(private var transactionServic
 
     //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8443/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'
     @DeleteMapping("/delete/{guid}", produces = ["application/json"])
-    fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<String> {
+    fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
         if (transactionOption.isPresent) {
             if (transactionService.deleteTransactionByGuid(guid)) {
-                return ResponseEntity.ok("resource deleted")
+                val transaction: Transaction = transactionOption.get()
+                logger.info("transaction deleted: ${transaction.guid}")
+                return ResponseEntity.ok(transaction)
             }
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
         }

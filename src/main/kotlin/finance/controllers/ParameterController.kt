@@ -54,8 +54,18 @@ class ParameterController(private var parameterService: ParameterService) : Base
     }
 
     @DeleteMapping("/delete/{parameterName}", produces = ["application/json"])
-    fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<String> {
-        parameterService.deleteByParameterName(parameterName)
-        return ResponseEntity.ok("parameter deleted")
+    fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<Parameter> {
+
+
+        val parameterOptional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+
+        if (parameterOptional.isPresent) {
+            parameterService.deleteByParameterName(parameterName)
+            val parameter = parameterOptional.get()
+            logger.info("description deleted: ${parameter.parameterName}")
+            return ResponseEntity.ok(parameter)
+        }
+
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete the description: $parameterName.")
     }
 }
