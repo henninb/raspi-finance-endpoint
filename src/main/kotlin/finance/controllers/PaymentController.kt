@@ -28,13 +28,14 @@ class PaymentController(private var paymentService: PaymentService) : BaseContro
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/payment/delete/1001
     @DeleteMapping("/delete/{paymentId}", produces = ["application/json"])
-    fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<String> {
+    fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<Payment> {
         val paymentOptional: Optional<Payment> = paymentService.findByPaymentId(paymentId)
 
-        logger.info("deleteByPaymentId controller - $paymentId")
         if (paymentOptional.isPresent) {
             paymentService.deleteByPaymentId(paymentId)
-            return ResponseEntity.ok("payment deleted")
+            val payment = paymentOptional.get()
+            logger.info("payment deleted: ${payment.paymentId}")
+            return ResponseEntity.ok(payment)
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $paymentId")
     }

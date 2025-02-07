@@ -79,12 +79,14 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8443/account/delete/test_brian'
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
-    fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<String> {
+    fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
 
         if (accountOptional.isPresent) {
             accountService.deleteAccount(accountNameOwner)
-            return ResponseEntity.ok("account deleted")
+            val account: Account = accountOptional.get()
+            logger.info("Account deleted: ${account.accountNameOwner}")
+            return ResponseEntity.ok(account)
         }
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this account: $accountNameOwner.")
     }
