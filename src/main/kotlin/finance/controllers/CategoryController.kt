@@ -57,14 +57,15 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     }
 
     @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])
-    fun deleteCategory(@PathVariable categoryName: String): ResponseEntity<String> {
+    fun deleteCategory(@PathVariable categoryName: String): ResponseEntity<Category> {
         val categoryOptional: Optional<Category> = categoryService.findByCategoryName(categoryName)
 
         if (categoryOptional.isPresent) {
+            val categoryToDelete = categoryOptional.get() // Get the category object
             categoryService.deleteCategory(categoryName)
-            return ResponseEntity.ok("category deleted")
+            return ResponseEntity.ok(categoryToDelete) // Return the deleted category
         }
 
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this category: $categoryName.")
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not delete this category: $categoryName.")
     }
 }
