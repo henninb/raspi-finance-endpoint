@@ -7,6 +7,7 @@ interface IParameterService {
     fun selectAll() : List<Parameter>
     fun insertParameter(parameter: Parameter): Parameter
     fun deleteByParameterName(parameterName: String): Boolean
-    fun findByParameter(parameterName: String): Optional<Parameter>
+    fun findByParameterName(parameterName: String): Optional<Parameter>
     fun updateParameter(parameter: Parameter): Parameter
+    //abstract fun findByParameterName(parameterName: String): Any
 }

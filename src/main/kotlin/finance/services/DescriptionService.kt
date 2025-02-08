@@ -4,6 +4,7 @@ import finance.domain.Description
 import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
@@ -40,6 +41,7 @@ open class DescriptionService(
     }
 
 
+    @Transactional
     @Timed
     override fun updateDescription(description: Description): Description {
         val optionalDescription = descriptionRepository.findByDescriptionId(description.descriptionId)
@@ -51,7 +53,7 @@ open class DescriptionService(
             descriptionToUpdate.descriptionName = description.descriptionName
             descriptionToUpdate.activeStatus = description.activeStatus
             descriptionToUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-
+            logger.info("description update")
             return descriptionRepository.saveAndFlush(descriptionToUpdate)
         }
 

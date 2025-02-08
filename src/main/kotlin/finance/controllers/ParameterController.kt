@@ -26,10 +26,10 @@ class ParameterController(private var parameterService: ParameterService) : Base
         return ResponseEntity.ok(parameters)
     }
 
-    //https://hornsup:8443/parm/select/payment_account
+    //https://hornsup:8443/paramameter/select/payment_account
     @GetMapping("/select/{parameterName}", produces = ["application/json"])
     fun selectParameter(@PathVariable parameterName: String): ResponseEntity<Parameter> {
-        val parameterOptional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+        val parameterOptional: Optional<Parameter> = parameterService.findByParameterName(parameterName)
         if (!parameterOptional.isPresent) {
             logger.error("no parameter found.")
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find the parameter.")
@@ -37,27 +37,31 @@ class ParameterController(private var parameterService: ParameterService) : Base
         return ResponseEntity.ok(parameterOptional.get())
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8443/parm/insert
+    //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8443/parameter/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertParameter(@RequestBody parameter: Parameter): ResponseEntity<Parameter> {
         val parameterResponse = parameterService.insertParameter(parameter)
         return ResponseEntity.ok(parameterResponse)
     }
 
-    @PutMapping("/update/{id}", consumes = ["application/json"], produces = ["application/json"])
+    @PutMapping("/update/{parameter_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateParameter(
-        @PathVariable("parameterName") parameterName: String,
+        @PathVariable("parameter_name") parameterName: String,
         @RequestBody toBePatchedParameter: Parameter
     ): ResponseEntity<Parameter> {
-        val parameterResponse = parameterService.updateParameter(toBePatchedParameter)
-        return ResponseEntity.ok(parameterResponse)
+        val parameterOptional = parameterService.findByParameterName(parameterName)
+        if (parameterOptional.isPresent) {
+            val parameterResponse = parameterService.updateParameter(toBePatchedParameter)
+            return ResponseEntity.ok(parameterResponse)
+        }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "Parameter not found for: $parameterName")
     }
 
     @DeleteMapping("/delete/{parameterName}", produces = ["application/json"])
     fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<Parameter> {
 
 
-        val parameterOptional: Optional<Parameter> = parameterService.findByParameter(parameterName)
+        val parameterOptional: Optional<Parameter> = parameterService.findByParameterName(parameterName)
 
         if (parameterOptional.isPresent) {
             parameterService.deleteByParameterName(parameterName)
