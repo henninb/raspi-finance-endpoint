@@ -39,10 +39,24 @@ open class DescriptionService(
         return Optional.empty()
     }
 
-//    @Timed
-//    override fun descriptions(): List<Description> {
-//        return descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
-//    }
+
+    @Timed
+    override fun updateDescription(description: Description): Description {
+        val optionalDescription = descriptionRepository.findByDescriptionId(description.descriptionId)
+
+        if (optionalDescription.isPresent) {
+            val descriptionToUpdate = optionalDescription.get()
+
+            // Updating fields
+            descriptionToUpdate.descriptionName = description.descriptionName
+            descriptionToUpdate.activeStatus = description.activeStatus
+            descriptionToUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+
+            return descriptionRepository.saveAndFlush(descriptionToUpdate)
+        }
+
+        throw RuntimeException("Description not updated as the description does not exist: ${description.descriptionId}.")
+    }
 
     @Timed
     override fun fetchAllDescriptions(): List<Description> {
