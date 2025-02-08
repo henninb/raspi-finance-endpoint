@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.Parameter
 import finance.repositories.ParameterRepository
 import io.micrometer.core.annotation.Timed
+import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -47,7 +48,7 @@ open class ParameterService(
     }
 
     @Timed
-    override fun findByParameter(parameterName: String): Optional<Parameter> {
+    override fun findByParameterName(parameterName: String): Optional<Parameter> {
         val parameterOptional: Optional<Parameter> = parameterRepository.findByParameterName(parameterName)
         if (parameterOptional.isPresent) {
             return parameterOptional
@@ -55,8 +56,23 @@ open class ParameterService(
         return Optional.empty()
     }
 
+    @Transactional
     @Timed
     override fun updateParameter(parameter: Parameter): Parameter {
-        return TODO("Provide the return value")
+        val optionalParameter = parameterRepository.findByParameterId(parameter.parameterId)
+
+        if (optionalParameter.isPresent) {
+            val parameterToUpdate = optionalParameter.get()
+
+            // Updating fields
+            parameterToUpdate.parameterName = parameter.parameterName
+            parameterToUpdate.parameterValue = parameter.parameterValue
+            parameterToUpdate.activeStatus = parameter.activeStatus
+            parameterToUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            logger.info("parameter update")
+            return parameterRepository.saveAndFlush(parameterToUpdate)
+        }
+
+        throw RuntimeException("Parameter not updated as the parameter does not exist: ${parameter.parameterId}.")
     }
 }
