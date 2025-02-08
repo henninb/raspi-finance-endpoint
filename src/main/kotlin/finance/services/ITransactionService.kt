@@ -27,4 +27,5 @@ interface ITransactionService {
     fun nextTimestampMillis(): Long
     fun createDefaultDescription(descriptionName: String): Description
     fun processDescription(transaction: Transaction)
+    fun findTransactionsByCategory(category: String): List<Transaction>
 }

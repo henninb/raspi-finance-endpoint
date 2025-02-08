@@ -15,6 +15,11 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         activeStatus: Boolean = true
     ): List<Transaction>
 
+    fun findByCategoryAndActiveStatusOrderByTransactionDateDesc(
+        category: String,
+        activeStatus: Boolean = true
+    ): List<Transaction>
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.description = :descriptionName")
     fun countByDescriptionName(@Param("descriptionName") descriptionName: String): Long
 
@@ -32,6 +37,14 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun sumTotalsForActiveTransactionsByAccountNameOwner(
         @Param("accountNameOwner") accountNameOwner: String
     ): List<Any>
+
+//    @Query(
+//        value = "SELECT * FROM t_transaction WHERE category = :category AND active_status = true",
+//        nativeQuery = true
+//    )
+//    fun findTransactionsByCategory(
+//        @Param("category") category: String
+//    ): List<Transaction>
 
     fun findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
         accountNameOwner: String,
