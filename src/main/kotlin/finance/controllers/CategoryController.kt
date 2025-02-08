@@ -36,6 +36,19 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "category not found for: $categoryName")
     }
 
+    @PutMapping("/update/{category_name}", consumes = ["application/json"], produces = ["application/json"])
+    fun updateCategory(
+        @PathVariable("category_name") categoryName: String,
+        @RequestBody toBePatchedCategory: Category
+    ): ResponseEntity<Category> {
+        val categoryOptional = categoryService.findByCategoryName(categoryName)
+        if (categoryOptional.isPresent) {
+            val categoryResponse = categoryService.updateCategory(toBePatchedCategory)
+            return ResponseEntity.ok(categoryResponse)
+        }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found for: $categoryName")
+    }
+
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8443/category/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<Category> {

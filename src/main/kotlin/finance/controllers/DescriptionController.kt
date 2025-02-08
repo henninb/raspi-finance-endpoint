@@ -28,8 +28,7 @@ class DescriptionController(private var descriptionService: DescriptionService) 
     ): ResponseEntity<Description> {
         val descriptionOptional = descriptionService.findByDescriptionName(descriptionName)
         if (descriptionOptional.isPresent) {
-            val description = descriptionOptional.get()
-            val descriptionResponse = descriptionService.updateDescription(description)
+            val descriptionResponse = descriptionService.updateDescription(toBePatchedDescription)
             return ResponseEntity.ok(descriptionResponse)
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "description not found for: $descriptionName")

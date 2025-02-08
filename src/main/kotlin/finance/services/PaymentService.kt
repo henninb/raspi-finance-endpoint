@@ -43,7 +43,7 @@ open class PaymentService(
             }
         }
 
-        val optionalParameter = parameterService.findByParameter("payment_account")
+        val optionalParameter = parameterService.findByParameterName("payment_account")
         if (optionalParameter.isPresent) {
             val paymentAccountNameOwner = optionalParameter.get().parameterValue
             populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
