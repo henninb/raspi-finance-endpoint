@@ -68,4 +68,14 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
 
         throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not delete this category: $categoryName.")
     }
+
+    //curl -X PUT "http://localhost:8080/api/category/merge?old=categoryA&new=categoryB" -H "Accept: application/json"
+    @PutMapping("/merge", produces = ["application/json"])
+    fun mergeCategories(
+        @RequestParam(value = "new") categoryName1: String,
+        @RequestParam("old") categoryName2: String
+    ): ResponseEntity<Category> {
+        val mergedCategory = categoryService.mergeCategories(categoryName1, categoryName2)
+        return ResponseEntity.ok(mergedCategory)
+    }
 }

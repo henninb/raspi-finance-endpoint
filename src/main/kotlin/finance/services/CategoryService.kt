@@ -75,4 +75,36 @@ open class CategoryService(
         throw RuntimeException("Category not updated as the category does not exist: ${category.categoryId}.")
     }
 
+    @Transactional
+    @Timed
+    override fun mergeCategories(categoryName1: String, categoryName2: String): Category {
+        // Find both categories by name
+        val category1 = categoryRepository.findByCategoryName(categoryName1).orElseThrow {
+            RuntimeException("Category $categoryName1 not found")
+        }
+        val category2 = categoryRepository.findByCategoryName(categoryName2).orElseThrow {
+            RuntimeException("Category $categoryName2 not found")
+        }
+
+        // Reassign transactions from category2 to category1
+        val transactionsToUpdate = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName2)
+        transactionsToUpdate.forEach { transaction ->
+            transaction.category = categoryName1
+            transactionRepository.saveAndFlush(transaction)
+        }
+
+        // Optionally, merge other attributes (e.g., category counts, descriptions)
+        // You can decide if you want to keep category1's name or category2's
+        category1.categoryCount += category2.categoryCount // You might want to combine counts if needed
+
+        // Mark category2 as inactive or delete it
+        category2.activeStatus = false // You could also delete it if required: categoryRepository.delete(category2)
+
+        // Save the updated category1
+        categoryRepository.saveAndFlush(category1)
+
+        // Return the merged category (category1 in this case)
+        return category1
+    }
+
 }
