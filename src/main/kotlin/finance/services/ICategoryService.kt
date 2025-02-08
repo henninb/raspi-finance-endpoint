@@ -15,4 +15,6 @@ interface ICategoryService {
     fun findByCategoryName(categoryName: String): Optional<Category>
 
     fun updateCategory(category: Category): Category
+
+    fun mergeCategories(categoryName1: String, categoryName2: String): Category
 }
