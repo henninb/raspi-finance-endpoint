@@ -21,9 +21,9 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         return ResponseEntity.ok(descriptions)
     }
 
-    @PutMapping("/update/{id}", consumes = ["application/json"], produces = ["application/json"])
+    @PutMapping("/update/{description_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateDescription(
-        @PathVariable("descriptionName") descriptionName: String,
+        @PathVariable("description_name") descriptionName: String,
         @RequestBody toBePatchedDescription: Description
     ): ResponseEntity<Description> {
         val descriptionOptional = descriptionService.findByDescriptionName(descriptionName)
