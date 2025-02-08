@@ -1,6 +1,5 @@
 package finance.controllers
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import finance.domain.Account
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
@@ -24,18 +23,21 @@ class TransactionController @Autowired constructor(private var transactionServic
     @Autowired
     lateinit var meterService: MeterService
 
-    //curl https://hornsup:8443/transaction/account/select/usbankcash_brian
     @GetMapping("/account/select/{accountNameOwner}", produces = ["application/json"])
-    fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
-        val transactions: List<Transaction> =
-            transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
-        if (transactions.isEmpty()) {
-            logger.error("transactions.size=${transactions.size}")
-            //TODO: not found, should I take this action?
-            ResponseEntity.notFound().build<List<Transaction>>()
+    fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<Any> {
+        return try {
+            val transactions: List<Transaction> =
+                transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
+
+            // If the account exists but has no transactions, return an empty list with 200 OK
+            ResponseEntity.ok(transactions)
+        } catch (e: Exception) {
+            // Handle case where the account doesn't exist
+            logger.error("Account not found: $accountNameOwner")
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found: $accountNameOwner")
         }
-        return ResponseEntity.ok(transactions)
     }
+
 
     //transaction-management/
     //accounts/{accountNameOwner}/transactions/totals
@@ -50,19 +52,22 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(mapper.writeValueAsString(results))
     }
 
+
     //curl -k https://hornsup:8443/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
     @GetMapping("/select/{guid}", produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
-        logger.debug("findTransaction() guid = $guid")
-        val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
-        if (transactionOption.isPresent) {
-            val transaction: Transaction = transactionOption.get()
-            return ResponseEntity.ok(transaction)
-        }
+        logger.debug("findTransaction() - Searching for transaction with guid = $guid")
 
-        logger.error("Transaction not found, guid = $guid")
-        meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found, guid: $guid")
+        // Use orElseThrow to avoid Optional.get() and throw a proper exception if not found
+        val transaction = transactionService.findTransactionByGuid(guid)
+            .orElseThrow {
+                logger.error("Transaction not found, guid = $guid")
+                meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
+                ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found, guid: $guid")
+            }
+
+        // Return the transaction with 200 OK status
+        return ResponseEntity.ok(transaction)
     }
 
     @PutMapping("/update/{guid}", consumes = ["application/json"], produces = ["application/json"])
@@ -138,16 +143,21 @@ class TransactionController @Autowired constructor(private var transactionServic
     //curl -k --header "Content-Type: application/json" -X DELETE 'https://hornsup:8443/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a'
     @DeleteMapping("/delete/{guid}", produces = ["application/json"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
-        val transactionOption: Optional<Transaction> = transactionService.findTransactionByGuid(guid)
-        if (transactionOption.isPresent) {
-            if (transactionService.deleteTransactionByGuid(guid)) {
-                val transaction: Transaction = transactionOption.get()
-                logger.info("transaction deleted: ${transaction.guid}")
-                return ResponseEntity.ok(transaction)
+        val transaction = transactionService.findTransactionByGuid(guid)
+            .orElseThrow {
+                logger.error("Transaction not found for deletion, guid = $guid")
+                ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
             }
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+
+        // Attempt to delete the transaction
+        if (transactionService.deleteTransactionByGuid(guid)) {
+            logger.info("Transaction deleted: ${transaction.guid}")
+            return ResponseEntity.ok(transaction)
         }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not deleted: $guid")
+
+        // In case the deletion fails
+        logger.error("Transaction not deleted, guid = $guid")
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not deleted: $guid")
     }
 
     //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
@@ -159,5 +169,16 @@ class TransactionController @Autowired constructor(private var transactionServic
             logger.error("no accountNameOwners found.")
         }
         return ResponseEntity.ok(accountNameOwners)
+    }
+
+    // curl -s -k --header "Content-Type: application/json" https://finance.lan/api/transaction/category/ach | jq
+    @GetMapping("/category/{category_name}", produces = ["application/json"])
+    fun selectTransactionsByCategory(@PathVariable("category_name") categoryName: String): ResponseEntity<List<Transaction>> {
+
+        val categories = transactionService.findTransactionsByCategory(categoryName)
+        if (categories.isEmpty()) {
+            logger.error("no category detail found.")
+        }
+        return ResponseEntity.ok(categories)
     }
 }

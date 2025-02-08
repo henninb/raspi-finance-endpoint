@@ -156,6 +156,13 @@ open class TransactionService(
         return account
     }
 
+    override fun findTransactionsByCategory(category: String): List<Transaction> {
+        val transactions = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(category)
+
+        // If the list is empty, you can return an empty list or handle it in another way if needed
+        return transactions.ifEmpty { emptyList() }
+    }
+
     @Timed
     override fun findTransactionByGuid(guid: String): Optional<Transaction> {
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
@@ -191,19 +198,38 @@ open class TransactionService(
         return result
     }
 
+//    @Timed
+//    override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
+//        val transactions: List<Transaction> =
+//            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+//        //TODO: look into this type of error handling
+//
+//        val sortedTransactions =
+//            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
+//        if (transactions.isEmpty()) {
+//            logger.error("Found an empty list of AccountNameOwner.")
+//            meterService.incrementAccountListIsEmpty("non-existent-accounts")
+//        }
+//        return sortedTransactions
+//    }
+
+
     @Timed
     override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
-        val transactions: List<Transaction> =
-            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
-        //TODO: look into this type of error handling
+        val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
 
-        val sortedTransactions =
-            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
+        // Early return if transactions list is empty
         if (transactions.isEmpty()) {
-            logger.error("Found an empty list of AccountNameOwner.")
+            logger.error("No active transactions found for account owner: $accountNameOwner")
             meterService.incrementAccountListIsEmpty("non-existent-accounts")
+            return emptyList()  // Return early to avoid unnecessary sorting
         }
-        return sortedTransactions
+
+        // Sort only if there are transactions
+        return transactions.sortedWith(
+            compareByDescending<Transaction> { it.transactionState }
+                .thenByDescending { it.transactionDate }
+        )
     }
 
     @Timed

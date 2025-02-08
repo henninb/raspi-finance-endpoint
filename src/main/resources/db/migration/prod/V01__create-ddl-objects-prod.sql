@@ -186,24 +186,17 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
                                            'undefined')),
-    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_category FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON UPDATE CASCADE,
-    CONSTRAINT fk_description FOREIGN KEY (description) REFERENCES public.t_description (description_name) ON UPDATE CASCADE
+    CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (account_id, account_name_owner, account_type) REFERENCES public.t_account (account_id, account_name_owner, account_type) ON UPDATE CASCADE,
+    CONSTRAINT fk_receipt_image FOREIGN KEY (receipt_image_id) REFERENCES public.t_receipt_image (receipt_image_id) ON UPDATE CASCADE,
+    CONSTRAINT fk_category_name FOREIGN KEY (category) REFERENCES public.t_category (category_name) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_description_name FOREIGN KEY (description) REFERENCES public.t_description (description_name) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 -- Required to happen after the t_transaction table is created
 ALTER TABLE public.t_receipt_image
     DROP CONSTRAINT IF EXISTS fk_transaction;
 ALTER TABLE public.t_receipt_image
-    ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES public.t_transaction (transaction_id) ON DELETE CASCADE;
-
--- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
--- ALTER TABLE public.t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
--- ALTER TABLE public.t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime', 'undefined'));
--- ALTER TABLE public.t_transaction ADD COLUMN transaction_type TEXT NULL DEFAULT 'undefined';
--- ALTER TABLE public.t_transaction ADD COLUMN reoccurring_type TEXT NULL DEFAULT 'undefined';
--- ALTER TABLE public.t_transaction DROP COLUMN reoccurring;
+    ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES public.t_transaction (transaction_id) ON UPDATE CASCADE;
 
 -------------
 -- Payment --
@@ -221,14 +214,10 @@ CREATE TABLE IF NOT EXISTS public.t_payment
     date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
-    CONSTRAINT fk_payment_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_payment_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_payment_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON UPDATE CASCADE,
+    CONSTRAINT fk_payment_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON UPDATE CASCADE,
     CONSTRAINT fk_account_name_owner FOREIGN KEY (account_name_owner) REFERENCES public.t_account (account_name_owner) ON UPDATE CASCADE
 );
-
--- ALTER TABLE public.t_payment drop constraint fk_guid_source, add CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
--- ALTER TABLE public.t_payment drop constraint fk_guid_destination, add CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON DELETE CASCADE;
-
 
 --------------
 -- Transfer --
