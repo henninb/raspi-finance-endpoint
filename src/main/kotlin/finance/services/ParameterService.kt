@@ -54,4 +54,9 @@ open class ParameterService(
         }
         return Optional.empty()
     }
+
+    @Timed
+    override fun updateParameter(parameter: Parameter): Parameter {
+        return TODO("Provide the return value")
+    }
 }

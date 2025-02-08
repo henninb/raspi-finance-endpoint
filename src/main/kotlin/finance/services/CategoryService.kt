@@ -54,4 +54,9 @@ open class CategoryService(
     override fun findByCategoryName(categoryName: String): Optional<Category> {
         return categoryRepository.findByCategoryName(categoryName)
     }
+
+    @Timed
+    override fun updateCategory(category: Category): Category {
+        return TODO("Provide the return value")
+    }
 }

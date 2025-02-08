@@ -48,9 +48,9 @@ class ParameterController(private var parameterService: ParameterService) : Base
     fun updateParameter(
         @PathVariable("parameterName") parameterName: String,
         @RequestBody toBePatchedParameter: Parameter
-    ): ResponseEntity<String> {
-        // val transactionResponse = transactionService.updateTransaction(toBePatchedTransaction)
-        return ResponseEntity.ok("update-to-be-implemnented")
+    ): ResponseEntity<Parameter> {
+        val parameterResponse = parameterService.updateParameter(toBePatchedParameter)
+        return ResponseEntity.ok(parameterResponse)
     }
 
     @DeleteMapping("/delete/{parameterName}", produces = ["application/json"])
@@ -62,7 +62,7 @@ class ParameterController(private var parameterService: ParameterService) : Base
         if (parameterOptional.isPresent) {
             parameterService.deleteByParameterName(parameterName)
             val parameter = parameterOptional.get()
-            logger.info("description deleted: ${parameter.parameterName}")
+            logger.info("parameter deleted: ${parameter.parameterName}")
             return ResponseEntity.ok(parameter)
         }
 

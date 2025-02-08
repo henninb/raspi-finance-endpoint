@@ -13,4 +13,6 @@ interface ICategoryService {
     fun categories(): List<Category>
 
     fun findByCategoryName(categoryName: String): Optional<Category>
+
+    fun updateCategory(category: Category): Category
 }

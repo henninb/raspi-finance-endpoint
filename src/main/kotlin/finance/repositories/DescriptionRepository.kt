@@ -8,4 +8,5 @@ import java.util.*
 interface DescriptionRepository : JpaRepository<Description, Long> {
     fun findByActiveStatusOrderByDescriptionName(activeStatus: Boolean): List<Description>
     fun findByDescriptionName(descriptionName: String): Optional<Description>
+    fun findByDescriptionId(descriptionId: Long): Optional<Description>
 }

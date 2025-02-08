@@ -8,4 +8,5 @@ interface IParameterService {
     fun insertParameter(parameter: Parameter): Parameter
     fun deleteByParameterName(parameterName: String): Boolean
     fun findByParameter(parameterName: String): Optional<Parameter>
+    fun updateParameter(parameter: Parameter): Parameter
 }

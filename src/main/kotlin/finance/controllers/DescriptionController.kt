@@ -21,6 +21,20 @@ class DescriptionController(private var descriptionService: DescriptionService) 
         return ResponseEntity.ok(descriptions)
     }
 
+    @PutMapping("/update/{id}", consumes = ["application/json"], produces = ["application/json"])
+    fun updateDescription(
+        @PathVariable("descriptionName") descriptionName: String,
+        @RequestBody toBePatchedDescription: Description
+    ): ResponseEntity<Description> {
+        val descriptionOptional = descriptionService.findByDescriptionName(descriptionName)
+        if (descriptionOptional.isPresent) {
+            val description = descriptionOptional.get()
+            val descriptionResponse = descriptionService.updateDescription(description)
+            return ResponseEntity.ok(descriptionResponse)
+        }
+        throw ResponseStatusException(HttpStatus.NOT_FOUND, "description not found for: $descriptionName")
+    }
+
     //curl -k 'https://localhost:8443/description/select/zzz'
     @GetMapping("/select/{description_name}")
     fun selectDescriptionName(@PathVariable("description_name") descriptionName: String): ResponseEntity<String> {

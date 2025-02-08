@@ -7,6 +7,6 @@ import java.util.*
 
 interface ParameterRepository : JpaRepository<Parameter, Long> {
     fun findByParameterName(parameterName: String): Optional<Parameter>
-
+    fun findByParameterId(parameterId: Long): Optional<Parameter>
     fun findByActiveStatusIsTrue() : List<Parameter>
 }

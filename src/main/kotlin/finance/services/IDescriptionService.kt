@@ -13,4 +13,6 @@ interface IDescriptionService {
     fun findByDescriptionName(descriptionName: String): Optional<Description>
 
     fun description(descriptionName: String): Optional<Description>
+
+    fun updateDescription(description: Description): Description
 }
