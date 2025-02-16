@@ -22,8 +22,14 @@ class TransferController(private var transferService: TransferService) : BaseCon
 
     @PostMapping("/insert", produces = ["application/json"])
     fun insertTransfer(@RequestBody transfer: Transfer): ResponseEntity<Transfer> {
-        val transferResponse = transferService.insertTransfer(transfer)
-        return ResponseEntity.ok(transferResponse)
+        return try {
+            val transferResponse = transferService.insertTransfer(transfer)
+            ResponseEntity.ok(transferResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to insert transfer: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/transfer/delete/1001

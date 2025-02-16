@@ -39,13 +39,15 @@ CREATE TABLE IF NOT EXISTS public.t_validation_amount
 (
     validation_id     BIGSERIAL PRIMARY KEY,
     account_id        BIGINT                                NOT NULL,
-    validation_date   TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    --validation_date   TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    validation_date   TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT '1970-01-01 00:00:00'::TIMESTAMP,
     transaction_state TEXT          DEFAULT 'undefined'     NOT NULL,
     amount            NUMERIC(12, 2) DEFAULT 0.00           NOT NULL,
     owner             TEXT                                  NULL,
     active_status     BOOLEAN       DEFAULT TRUE            NOT NULL,
-    date_updated      TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    date_added        TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_updated      TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+    date_added        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+
     CONSTRAINT ck_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
     CONSTRAINT fk_account_id FOREIGN KEY (account_id) REFERENCES public.t_account (account_id)
 );
