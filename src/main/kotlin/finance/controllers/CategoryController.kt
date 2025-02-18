@@ -50,10 +50,16 @@ class CategoryController(private var categoryService: CategoryService) : BaseCon
     }
 
     //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8443/category/insert
-    @PostMapping("/insert", produces = ["application/json"])
+    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<Category> {
-        val categoryResponse = categoryService.insertCategory(category)
-        return ResponseEntity.ok(categoryResponse)
+        return try {
+            val categoryResponse = categoryService.insertCategory(category)
+            ResponseEntity.ok(categoryResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert category: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])

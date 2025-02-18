@@ -38,10 +38,16 @@ class ParameterController(private var parameterService: ParameterService) : Base
     }
 
     //curl --header "Content-Type: application/json" -X POST -d '{"parm":"test"}' http://localhost:8443/parameter/insert
-    @PostMapping("/insert", produces = ["application/json"])
+    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertParameter(@RequestBody parameter: Parameter): ResponseEntity<Parameter> {
-        val parameterResponse = parameterService.insertParameter(parameter)
-        return ResponseEntity.ok(parameterResponse)
+        return try {
+            val parameterResponse = parameterService.insertParameter(parameter)
+            ResponseEntity.ok(parameterResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert parameter: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     @PutMapping("/update/{parameter_name}", consumes = ["application/json"], produces = ["application/json"])
