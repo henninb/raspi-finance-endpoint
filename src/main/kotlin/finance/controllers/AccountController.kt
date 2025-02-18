@@ -71,10 +71,16 @@ class AccountController @Autowired constructor(private var accountService: Accou
     }
 
     //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
-    @PostMapping("/insert", produces = ["application/json"])
+    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
-        val accountResponse = accountService.insertAccount(account)
-        return ResponseEntity.ok(accountResponse)
+        return try {
+            val accountResponse = accountService.insertAccount(account)
+            ResponseEntity.ok(accountResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert account: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8443/account/delete/test_brian'
