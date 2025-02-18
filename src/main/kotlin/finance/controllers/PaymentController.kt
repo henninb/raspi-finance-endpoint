@@ -20,10 +20,16 @@ class PaymentController(private var paymentService: PaymentService) : BaseContro
         return ResponseEntity.ok(payments)
     }
 
-    @PostMapping("/insert", produces = ["application/json"])
+    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {
-        val paymentResponse = paymentService.insertPayment(payment)
-        return ResponseEntity.ok(paymentResponse)
+        return try {
+            val paymentResponse = paymentService.insertPayment(payment)
+            ResponseEntity.ok(paymentResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert payment: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/payment/delete/1001

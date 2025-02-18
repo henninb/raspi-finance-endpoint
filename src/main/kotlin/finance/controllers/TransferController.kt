@@ -20,13 +20,13 @@ class TransferController(private var transferService: TransferService) : BaseCon
         return ResponseEntity.ok(transfers)
     }
 
-    @PostMapping("/insert", produces = ["application/json"])
+    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransfer(@RequestBody transfer: Transfer): ResponseEntity<Transfer> {
         return try {
             val transferResponse = transferService.insertTransfer(transfer)
             ResponseEntity.ok(transferResponse)
         } catch (ex: ResponseStatusException) {
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to insert transfer: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transfer: ${ex.message}", ex)
         } catch (ex: Exception) {
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }

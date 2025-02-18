@@ -96,14 +96,23 @@ class TransactionController @Autowired constructor(private var transactionServic
         return ResponseEntity.ok(transactionResponse)
     }
 
-    //TODO: 7/1/2021 - Return the transaction from the database
-    //TODO: 6/28/2021 - Should return a 201 CREATED?
     //curl -k --header "Content-Type: application/json" 'https://hornsup:8443/transaction/insert' -X POST -d ''
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
-        logger.info("insert - transaction.transactionDate: ${mapper.writeValueAsString(transaction)}")
-        val transactionResponse = transactionService.insertTransaction(transaction)
-        return ResponseEntity.ok(transactionResponse)
+        return try {
+            logger.info("Attempting to insert transaction: ${mapper.writeValueAsString(transaction)}")
+
+            val transactionResponse = transactionService.insertTransaction(transaction)
+
+            logger.info("Transaction inserted successfully: ${mapper.writeValueAsString(transactionResponse)}")
+            ResponseEntity.ok(transactionResponse)
+        } catch (ex: ResponseStatusException) {
+            logger.error("Failed to insert transaction: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transaction: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            logger.error("Unexpected error occurred while inserting transaction: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     //TODO: 7/1/2021 - Return the transaction from the database
