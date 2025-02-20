@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.catalina.connector.ClientAbortException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.apache.tomcat.websocket.AuthenticationException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -18,62 +19,44 @@ import javax.validation.ConstraintViolationException
 import javax.validation.ValidationException
 
 open class BaseController {
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+
     @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class, RuntimeException::class,
+        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
             MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
             IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
     )
-    fun handleBadHttpRequests(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.info("Bad Request: ", throwable)
-        response["response"] = "BAD_REQUEST: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info(response.toString())
-        return response
+    fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, String>> {
+        logger.info("BAD_REQUEST: ", throwable)
+        val response = mapOf("response" to "BAD_REQUEST: ${throwable.javaClass.simpleName}, message: ${throwable.message}")
+        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(value = [ResponseStatusException::class])
-    fun handleHttpNotFound(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not found: ", throwable)
-        response["response"] = "NOT_FOUND: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
+    fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, String>> {
+        logger.error("${throwable.statusCode}: ", throwable)
+        val response = mapOf("response" to "${throwable.statusCode}: ${throwable.javaClass.simpleName}, message: ${throwable.reason}")
+        return ResponseEntity(response, throwable.statusCode)
     }
 
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(value = [AuthenticationException::class])
-    fun handleUnauthorized(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not authorized: ", throwable)
-        return response
+    fun handleUnauthorized(throwable: Throwable): ResponseEntity<Map<String, String>> {
+        logger.error("UNAUTHORIZED: ", throwable)
+        val response = mapOf("response" to "UNAUTHORIZED: ${throwable.javaClass.simpleName}, message: ${throwable.message}")
+        return ResponseEntity(response, HttpStatus.UNAUTHORIZED)
     }
 
-    @ResponseStatus(HttpStatus.NOT_MODIFIED)
-    //@ExceptionHandler(value = [EmptyTransactionException::class])
-    fun handleHttpNotModified(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("not modified: ", throwable)
-        response["response"] = "NOT_MODIFIED: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        return response
-    }
-
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     @ExceptionHandler(value = [ClientAbortException::class])
-    fun handleServiceUnavailable(throwable: Throwable) {
-        logger.error("client connection aborted")
-        logger.error(throwable.message)
+    fun handleServiceUnavailable(throwable: Throwable): ResponseEntity<Map<String, String>> {
+        logger.error("SERVICE_UNAVAILABLE: ", throwable)
+        val response = mapOf("response" to "SERVICE_UNAVAILABLE: ${throwable.javaClass.simpleName}, message: ${throwable.message}")
+        return ResponseEntity(response, HttpStatus.SERVICE_UNAVAILABLE)
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        logger.error("internal server error: ", throwable)
-        response["response"] =
-            "INTERNAL_SERVER_ERROR: " + throwable.javaClass.simpleName + " , message: " + throwable.message
-        logger.info("response: $response")
-        return response
+    fun handleHttpInternalError(throwable: Throwable): ResponseEntity<Map<String, String>> {
+        logger.error("INTERNAL_SERVER_ERROR: ", throwable)
+        val response = mapOf("response" to "INTERNAL_SERVER_ERROR: ${throwable.javaClass.simpleName}, message: ${throwable.message}")
+        return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     companion object {
