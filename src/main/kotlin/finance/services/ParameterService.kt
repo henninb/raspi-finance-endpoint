@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.sql.Timestamp
 import java.util.*
 import jakarta.validation.ConstraintViolation
+import org.springframework.dao.DataIntegrityViolationException
 
 @Service
 open class ParameterService(
@@ -28,13 +29,40 @@ open class ParameterService(
         return parameters
     }
 
+//    @Timed
+//    override fun insertParameter(parameter: Parameter): Parameter {
+//        val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
+//        handleConstraintViolations(constraintViolations, meterService)
+//        parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
+//        parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+//        return parameterRepository.saveAndFlush(parameter)
+//    }
+
     @Timed
     override fun insertParameter(parameter: Parameter): Parameter {
+        logger.info("Attempting to insert parameter: ${mapper.writeValueAsString(parameter)}")
+
         val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
-        handleConstraintViolations(constraintViolations, meterService)
-        parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
-        parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        return parameterRepository.saveAndFlush(parameter)
+        if (constraintViolations.isNotEmpty()) {
+            logger.error("Validation failed for parameter: ${mapper.writeValueAsString(parameter)} - Violations: $constraintViolations")
+            handleConstraintViolations(constraintViolations, meterService)
+        }
+
+        val timestamp = Timestamp(Calendar.getInstance().time.time)
+        parameter.dateAdded = timestamp
+        parameter.dateUpdated = timestamp
+
+        return try {
+            val savedParameter = parameterRepository.saveAndFlush(parameter)
+            logger.info("Parameter inserted successfully: ${mapper.writeValueAsString(savedParameter)}")
+            savedParameter
+        } catch (ex: DataIntegrityViolationException) {
+            logger.error("Database constraint violation while inserting parameter: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Database constraint violation: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            logger.error("Unexpected error while inserting parameter: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
     }
 
     @Timed
