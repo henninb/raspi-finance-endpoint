@@ -166,16 +166,16 @@ class TransactionController @Autowired constructor(private var transactionServic
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not deleted: $guid")
     }
 
-    //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
-    @GetMapping("/payment/required", produces = ["application/json"])
-    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
-
-        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
-        if (accountNameOwners.isEmpty()) {
-            logger.error("no accountNameOwners found.")
-        }
-        return ResponseEntity.ok(accountNameOwners)
-    }
+//    //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
+//    @GetMapping("/payment/required", produces = ["application/json"])
+//    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
+//
+//        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
+//        if (accountNameOwners.isEmpty()) {
+//            logger.error("no accountNameOwners found.")
+//        }
+//        return ResponseEntity.ok(accountNameOwners)
+//    }
 
     // curl -s -k --header "Content-Type: application/json" https://finance.lan/api/transaction/category/ach | jq
     @GetMapping("/category/{category_name}", produces = ["application/json"])
