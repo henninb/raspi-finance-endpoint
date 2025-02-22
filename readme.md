@@ -160,19 +160,6 @@ varnishlog
   you should change that if you want to cache content.
 ```
 
-
-## heroku
-```
-heroku addons:create heroku-postgresql:hobby-dev
-heroku logs --tail
-heroku domains:add api.brianhenning.click
-```
-
-## heroku postgresql database
-```
-psql -h ec2-34-236-94-53.compute-1.amazonaws.com -U iongzzrcgwayct -d d4v3mk0gokd5og
-```
-
 ## log4j
 ```
 because you are using version 2.4.4 of springboot or greater. 
