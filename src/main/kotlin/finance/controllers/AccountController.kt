@@ -46,11 +46,6 @@ class AccountController @Autowired constructor(private var accountService: Accou
         return ResponseEntity.ok(accountNameOwners)
     }
 
-    @GetMapping("/debit", produces = ["application/json"])
-    fun selectDebitAccountTypes(): ResponseEntity<List<Account>> {
-        return ResponseEntity.ok(accountService.findByAccountType())
-    }
-
     //http://localhost:8443/account/select/active
     @GetMapping("/select/active", produces = ["application/json"])
     fun accounts(): ResponseEntity<List<Account>> {

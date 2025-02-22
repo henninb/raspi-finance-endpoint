@@ -26,22 +26,6 @@ open class AccountService(
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
-//    @Timed
-//    override fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account> {
-//        val accounts = accountRepository.findByActiveStatusAndAccountTypeOrderByAccountNameOwner()
-//
-//        if (accounts.isEmpty()) {
-//            logger.warn("findAllActiveAccounts - no accounts found.")
-//        } else {
-//            logger.info("findAllActiveAccounts - found accounts.")
-//        }
-//        return accounts.filter { a ->
-//            (a.outstanding > BigDecimal(0.0) || a.future > BigDecimal(0.0) || a.cleared > BigDecimal(
-//                0.0
-//            ))
-//        }
-//    }
-
     @Timed
     override fun accounts(): List<Account> {
         val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
@@ -53,15 +37,11 @@ open class AccountService(
         return accounts
     }
 
-    override fun findByAccountType(): List<Account> {
-      return accountRepository.findByActiveStatusAndAccountTypeOrderByAccountNameOwner(accountType = AccountType.Debit)
-    }
-
     override fun findAccountsThatRequirePayment(): List<Account> {
         updateTotalsForAllAccounts()
 
         val accountsToInvestigate = accountRepository
-            .findByActiveStatusAndAccountTypeAndOutstandingGreaterThanOrFutureGreaterThanOrClearedGreaterThanOrderByAccountNameOwner()
+            .findAccountsThatRequirePayment()
 
         // Log the count before filtering by Credit
         logger.info("Total accounts fetched: ${accountsToInvestigate.size}")
