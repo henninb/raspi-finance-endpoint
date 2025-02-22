@@ -190,4 +190,15 @@ class TransactionController @Autowired constructor(private var transactionServic
         }
         return ResponseEntity.ok(categories)
     }
+
+    // curl -s -k --header "Content-Type: application/json" https://finance.lan/api/transaction/category/ach | jq
+    @GetMapping("/description/{description_name}", produces = ["application/json"])
+    fun selectTransactionsByDescription(@PathVariable("description_name") descriptionName: String): ResponseEntity<List<Transaction>> {
+
+        val descriptions = transactionService.findTransactionsByDescription(descriptionName)
+        if (descriptions.isEmpty()) {
+            logger.error("no category detail found.")
+        }
+        return ResponseEntity.ok(descriptions)
+    }
 }
