@@ -46,13 +46,7 @@ open class AccountService(
         // Log the count before filtering by Credit
         logger.info("Total accounts fetched: ${accountsToInvestigate.size}")
 
-        val filteredAccounts = accountsToInvestigate.filter { it.accountType == AccountType.Credit }
-
-        if (filteredAccounts.isNotEmpty()) {
-            logger.info("accountNeedingAttention={${filteredAccounts.size}}")
-        }
-
-        return filteredAccounts
+        return accountsToInvestigate
     }
 
     @Timed
