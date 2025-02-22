@@ -156,8 +156,15 @@ open class TransactionService(
         return account
     }
 
-    override fun findTransactionsByCategory(category: String): List<Transaction> {
-        val transactions = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(category)
+    override fun findTransactionsByCategory(categoryName: String): List<Transaction> {
+        val transactions = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName)
+
+        // If the list is empty, you can return an empty list or handle it in another way if needed
+        return transactions.ifEmpty { emptyList() }
+    }
+
+    override fun findTransactionsByDescription(descriptionName: String): List<Transaction> {
+        val transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName)
 
         // If the list is empty, you can return an empty list or handle it in another way if needed
         return transactions.ifEmpty { emptyList() }

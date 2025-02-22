@@ -20,6 +20,11 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         activeStatus: Boolean = true
     ): List<Transaction>
 
+    fun findByDescriptionAndActiveStatusOrderByTransactionDateDesc(
+        description: String,
+        activeStatus: Boolean = true
+    ): List<Transaction>
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.description = :descriptionName")
     fun countByDescriptionName(@Param("descriptionName") descriptionName: String): Long
 
