@@ -24,8 +24,6 @@ interface AccountRepository : JpaRepository<Account, Long> {
     ): List<Account>
 
     @Modifying
-    // required for hibernate 5.x, need to remove for hibernate 6.x
-    //@Transactional
     @Transactional
     @Query(
         "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
@@ -40,11 +38,35 @@ interface AccountRepository : JpaRepository<Account, Long> {
     )
     fun sumOfAllTransactionsByTransactionState(@Param("transactionState") transactionState: String): BigDecimal
 
-    @Query(
-        value = "SELECT account_name_owner FROM t_transaction WHERE transaction_state = 'cleared' and account_name_owner in (select account_name_owner from t_account where account_type = 'credit' and active_status = true) or (transaction_state = 'outstanding' and account_type = :accountType and description ='payment') group by account_name_owner having sum(amount) > 0 order by account_name_owner",
-        nativeQuery = true
-    )
-    fun findAccountsThatRequirePayment(
-        @Param("accountType") accountType: String = "credit"
+//    @Query(
+//        value = """
+//        SELECT a.* FROM t_account a
+//        WHERE a.active_status = true
+//        AND a.account_type = :accountType
+//        AND (
+//            a.outstanding > 0 OR a.future > 0 OR a.cleared > 0
+//        )
+//        AND EXISTS (
+//            SELECT 1 FROM t_transaction t
+//            WHERE t.account_name_owner = a.account_name_owner
+//            AND t.active_status = true
+//            AND t.transaction_state NOT IN ('cleared')
+//            AND t.transaction_date < NOW() + INTERVAL '30 days'
+//        )
+//        ORDER BY a.account_name_owner
+//    """,
+//        nativeQuery = true
+//    )
+//    fun findAccountsThatRequirePayment(
+//        @Param("accountType") accountType: String = "credit"
+//    ): List<Account>
+
+
+    fun findByActiveStatusAndAccountTypeAndOutstandingGreaterThanOrFutureGreaterThanOrClearedGreaterThanOrderByAccountNameOwner(
+        activeStatus: Boolean = true,
+        accountType: AccountType = AccountType.Credit,
+        outstanding: BigDecimal = BigDecimal.ZERO,
+        future: BigDecimal = BigDecimal.ZERO,
+        cleared: BigDecimal = BigDecimal.ZERO
     ): List<Account>
 }

@@ -49,6 +49,7 @@ data class Account(
     var accountNameOwner: String,
 
     @JsonProperty
+    //@Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
     @Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType,
