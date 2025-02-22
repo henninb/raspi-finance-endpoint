@@ -63,11 +63,7 @@ open class DescriptionService(
     @Timed
     override fun fetchAllDescriptions(): List<Description> {
         val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
-        return descriptions.map { description ->
-            val count = transactionRepository.countByDescriptionName(description.descriptionName)
-            description.descriptionCount = count
-            description
-        }
+        return descriptions
     }
 
     @Timed

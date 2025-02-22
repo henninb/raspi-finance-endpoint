@@ -8,7 +8,7 @@ import java.util.*
 interface IAccountService {
 
     fun account(accountNameOwner: String): Optional<Account>
-    fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account>
+    //fun findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner(): List<Account>
     fun accounts(): List<Account>
     fun findAccountsThatRequirePayment(): List<Account>
     fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal
@@ -17,4 +17,5 @@ interface IAccountService {
     fun updateTotalsForAllAccounts(): Boolean
     fun updateAccount(account: Account): Account
     fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account
+    fun findByAccountType(): List<Account>
 }
