@@ -179,49 +179,6 @@ open class TransactionService(
         return Optional.empty()
     }
 
-
-//    @Timed
-//    override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
-//        var resultSet: List<Any>
-//        val result: MutableMap<String, BigDecimal> = HashMap()
-//
-//        val queryTimeInMillis = measureTimeMillis {
-//            resultSet = transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
-//        }
-//        logger.info("The query took $queryTimeInMillis ms")
-//
-//        // Initialize totals to zero.  Crucially important to handle missing data.
-//        var totalsFuture = BigDecimal.ZERO
-//        var totalsCleared = BigDecimal.ZERO
-//        var totalsOutstanding = BigDecimal.ZERO
-//        var grandTotal = BigDecimal.ZERO
-//
-//
-//        resultSet.forEach { row ->
-//            val rowList = row as Array<*>
-//            val totals = BigDecimal(rowList[0].toString())
-//            when (val transactionState = rowList[2].toString()) {
-//                "future" -> totalsFuture = totals.setScale(2, RoundingMode.HALF_UP)
-//                "cleared" -> totalsCleared = totals.setScale(2, RoundingMode.HALF_UP)
-//                "outstanding" -> totalsOutstanding = totals.setScale(2, RoundingMode.HALF_UP)
-//                else -> {
-//                    logger.warn("Unexpected transaction state: $transactionState") // Example: Log the unexpected state
-//                }
-//            }
-//            grandTotal += totals // Accumulate for the grand total
-//        }
-//
-//        grandTotal = (totalsFuture + totalsCleared + totalsOutstanding).setScale(2, RoundingMode.HALF_UP)
-//
-//        return Totals(
-//            totalsFuture = totalsFuture,
-//            totalsCleared = totalsCleared,
-//            totals = grandTotal,
-//            totalsOutstanding = totalsOutstanding
-//        )
-//    }
-
-
     @Timed
     override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
         var resultSet: List<Any>
@@ -511,24 +468,24 @@ open class TransactionService(
         }
     }
 
-    @Timed
-    override fun findAccountsThatRequirePayment(): List<Account> {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_MONTH, 30)
-        val accountNeedingAttention = mutableListOf<Account>()
-        accountService.updateTotalsForAllAccounts()
-        val accountsToInvestigate =
-            accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
-        accountsToInvestigate.forEach { account ->
-
-            accountNeedingAttention.add(account)
-        }
-
-        if (accountNeedingAttention.isNotEmpty()) {
-            logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
-        }
-        return accountNeedingAttention
-    }
+//    @Timed
+//    override fun findAccountsThatRequirePayment(): List<Account> {
+//        val calendar = Calendar.getInstance()
+//        calendar.add(Calendar.DAY_OF_MONTH, 30)
+//        val accountNeedingAttention = mutableListOf<Account>()
+//        accountService.updateTotalsForAllAccounts()
+//        val accountsToInvestigate =
+//            accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
+//        accountsToInvestigate.forEach { account ->
+//
+//            accountNeedingAttention.add(account)
+//        }
+//
+//        if (accountNeedingAttention.isNotEmpty()) {
+//            logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
+//        }
+//        return accountNeedingAttention
+//    }
 
     @Timed
     override fun nextTimestampMillis(): Long {

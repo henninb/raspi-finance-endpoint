@@ -38,35 +38,18 @@ interface AccountRepository : JpaRepository<Account, Long> {
     )
     fun sumOfAllTransactionsByTransactionState(@Param("transactionState") transactionState: String): BigDecimal
 
-//    @Query(
-//        value = """
-//        SELECT a.* FROM t_account a
-//        WHERE a.active_status = true
-//        AND a.account_type = :accountType
-//        AND (
-//            a.outstanding > 0 OR a.future > 0 OR a.cleared > 0
-//        )
-//        AND EXISTS (
-//            SELECT 1 FROM t_transaction t
-//            WHERE t.account_name_owner = a.account_name_owner
-//            AND t.active_status = true
-//            AND t.transaction_state NOT IN ('cleared')
-//            AND t.transaction_date < NOW() + INTERVAL '30 days'
-//        )
-//        ORDER BY a.account_name_owner
-//    """,
-//        nativeQuery = true
-//    )
-//    fun findAccountsThatRequirePayment(
-//        @Param("accountType") accountType: String = "credit"
-//    ): List<Account>
 
 
+    @Query(
+        """SELECT a FROM Account a 
+       WHERE a.activeStatus = :activeStatus 
+       AND a.accountType = :accountType 
+       AND (a.outstanding > 0 OR a.future > 0 OR a.cleared > 0)
+       ORDER BY a.accountNameOwner"""
+    )
     fun findByActiveStatusAndAccountTypeAndOutstandingGreaterThanOrFutureGreaterThanOrClearedGreaterThanOrderByAccountNameOwner(
-        activeStatus: Boolean = true,
-        accountType: AccountType = AccountType.Credit,
-        outstanding: BigDecimal = BigDecimal.ZERO,
-        future: BigDecimal = BigDecimal.ZERO,
-        cleared: BigDecimal = BigDecimal.ZERO
+        @Param("activeStatus") activeStatus: Boolean = true,
+        @Param("accountType") accountType: AccountType = AccountType.Credit
     ): List<Account>
+
 }
