@@ -179,47 +179,86 @@ open class TransactionService(
         return Optional.empty()
     }
 
+
+//    @Timed
+//    override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
+//        var resultSet: List<Any>
+//        val result: MutableMap<String, BigDecimal> = HashMap()
+//
+//        val queryTimeInMillis = measureTimeMillis {
+//            resultSet = transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
+//        }
+//        logger.info("The query took $queryTimeInMillis ms")
+//
+//        // Initialize totals to zero.  Crucially important to handle missing data.
+//        var totalsFuture = BigDecimal.ZERO
+//        var totalsCleared = BigDecimal.ZERO
+//        var totalsOutstanding = BigDecimal.ZERO
+//        var grandTotal = BigDecimal.ZERO
+//
+//
+//        resultSet.forEach { row ->
+//            val rowList = row as Array<*>
+//            val totals = BigDecimal(rowList[0].toString())
+//            when (val transactionState = rowList[2].toString()) {
+//                "future" -> totalsFuture = totals.setScale(2, RoundingMode.HALF_UP)
+//                "cleared" -> totalsCleared = totals.setScale(2, RoundingMode.HALF_UP)
+//                "outstanding" -> totalsOutstanding = totals.setScale(2, RoundingMode.HALF_UP)
+//                else -> {
+//                    logger.warn("Unexpected transaction state: $transactionState") // Example: Log the unexpected state
+//                }
+//            }
+//            grandTotal += totals // Accumulate for the grand total
+//        }
+//
+//        grandTotal = (totalsFuture + totalsCleared + totalsOutstanding).setScale(2, RoundingMode.HALF_UP)
+//
+//        return Totals(
+//            totalsFuture = totalsFuture,
+//            totalsCleared = totalsCleared,
+//            totals = grandTotal,
+//            totalsOutstanding = totalsOutstanding
+//        )
+//    }
+
+
     @Timed
-    //TODO: what if there is not a row for each of the 3 types of transactionStates
-    override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Map<String, BigDecimal> {
+    override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
         var resultSet: List<Any>
-        var grandTotals = BigDecimal(0.0)
-        val result: MutableMap<String, BigDecimal> = HashMap()
+
         val queryTimeInMillis = measureTimeMillis {
-            resultSet =
-                transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
+            resultSet = transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
         }
         logger.info("The query took $queryTimeInMillis ms")
+
+        var totalsFuture = BigDecimal.ZERO
+        var totalsCleared = BigDecimal.ZERO
+        var totalsOutstanding = BigDecimal.ZERO
+
+
         resultSet.forEach { row ->
             val rowList = row as Array<*>
             val totals = BigDecimal(rowList[0].toString())
-            val counts = Integer.parseInt(rowList[1].toString())
-            val transactionState = rowList[2].toString()
-            val keyStringTotals = "totals${transactionState[0].uppercaseChar() + transactionState.substring(1)}"
-            result[keyStringTotals] = totals.setScale(2, RoundingMode.HALF_UP)
-            logger.info("counts of $transactionState equals $counts")
-            grandTotals += totals
+            when (val transactionState = rowList[2].toString()) {
+                "future" -> totalsFuture = totals.setScale(2, RoundingMode.HALF_UP)
+                "cleared" -> totalsCleared = totals.setScale(2, RoundingMode.HALF_UP)
+                "outstanding" -> totalsOutstanding = totals.setScale(2, RoundingMode.HALF_UP)
+                else -> {
+                    // Handle unexpected transaction states.  Log an error, throw an exception, or ignore.
+                    logger.warn("Unexpected transaction state: $transactionState")
+                }
+            }
         }
 
-        result["totals"] = grandTotals.setScale(2, RoundingMode.HALF_UP)
-        return result
+        val grandTotal = (totalsFuture + totalsCleared + totalsOutstanding).setScale(2, RoundingMode.HALF_UP)
+
+        return Totals(
+            totalsFuture = totalsFuture,
+            totalsCleared = totalsCleared,
+            totals = grandTotal,  // Correctly set the grand total
+            totalsOutstanding = totalsOutstanding
+        )
     }
-
-//    @Timed
-//    override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
-//        val transactions: List<Transaction> =
-//            transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
-//        //TODO: look into this type of error handling
-//
-//        val sortedTransactions =
-//            transactions.sortedWith(compareByDescending<Transaction> { it.transactionState }.thenByDescending { it.transactionDate })
-//        if (transactions.isEmpty()) {
-//            logger.error("Found an empty list of AccountNameOwner.")
-//            meterService.incrementAccountListIsEmpty("non-existent-accounts")
-//        }
-//        return sortedTransactions
-//    }
-
 
     @Timed
     override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {

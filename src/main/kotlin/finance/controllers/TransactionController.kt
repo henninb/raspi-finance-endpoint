@@ -1,9 +1,6 @@
 package finance.controllers
 
-import finance.domain.Account
-import finance.domain.ReceiptImage
-import finance.domain.Transaction
-import finance.domain.TransactionState
+import finance.domain.*
 import finance.services.MeterService
 import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,13 +40,13 @@ class TransactionController @Autowired constructor(private var transactionServic
     //accounts/{accountNameOwner}/transactions/totals
     //curl -k https://hornsup:8443/transaction/account/totals/chase_brian
     @GetMapping("/account/totals/{accountNameOwner}", produces = ["application/json"])
-    fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<String> {
-        val results: Map<String, BigDecimal> =
+    fun selectTotalsCleared(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<Totals> {
+        val results: Totals =
             transactionService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
 
         logger.info("totals=${results}")
 
-        return ResponseEntity.ok(mapper.writeValueAsString(results))
+        return ResponseEntity.ok(results)
     }
 
 
