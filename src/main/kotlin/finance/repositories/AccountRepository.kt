@@ -15,13 +15,6 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByAccountId(accountId: Long): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
-    //TODO: 5/22/2022 - bh need to change the code to do this
-    //fun findByActiveStatusIsTrueOrderByAccountNameOwner() : List<Account>
-
-    fun findByActiveStatusAndAccountTypeOrderByAccountNameOwner(
-        activeStatus: Boolean = true,
-        accountType: AccountType = AccountType.Credit
-    ): List<Account>
 
     @Modifying
     @Transactional
@@ -39,6 +32,14 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun sumOfAllTransactionsByTransactionState(@Param("transactionState") transactionState: String): BigDecimal
 
 
+    @Query(
+        """SELECT COALESCE(SUM(CASE WHEN t.accountType = 'debit' THEN t.amount ELSE 0 END), 0) - 
+              COALESCE(SUM(CASE WHEN t.accountType = 'credit' THEN t.amount ELSE 0 END), 0)
+       FROM Transaction t
+       WHERE t.transactionState = :transactionState
+       AND t.activeStatus = true"""
+    )
+    fun sumOfAllTransactionsByTransactionStateJpql(@Param("transactionState") transactionState: String): BigDecimal
 
     @Query(
         """SELECT a FROM Account a 
@@ -47,7 +48,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
        AND (a.outstanding > 0 OR a.future > 0 OR a.cleared > 0)
        ORDER BY a.accountNameOwner"""
     )
-    fun findByActiveStatusAndAccountTypeAndOutstandingGreaterThanOrFutureGreaterThanOrClearedGreaterThanOrderByAccountNameOwner(
+    fun findAccountsThatRequirePayment(
         @Param("activeStatus") activeStatus: Boolean = true,
         @Param("accountType") accountType: AccountType = AccountType.Credit
     ): List<Account>
