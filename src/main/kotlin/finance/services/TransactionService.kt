@@ -515,20 +515,11 @@ open class TransactionService(
     override fun findAccountsThatRequirePayment(): List<Account> {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, 30)
-        //val todayPlusThirty = Date(calendar.time.time)
         val accountNeedingAttention = mutableListOf<Account>()
-        //val transactionStates: List<TransactionState> = ArrayList(listOf(TransactionState.Cleared))
         accountService.updateTotalsForAllAccounts()
         val accountsToInvestigate =
             accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
         accountsToInvestigate.forEach { account ->
-//            val transactions =
-//                transactionRepository.findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
-//                    account.accountNameOwner,
-//                    true,
-//                    transactionStates
-//                )
-            //val recent = transactions.filter { transaction -> (transaction.transactionDate < todayPlusThirty) }
 
             accountNeedingAttention.add(account)
         }

@@ -1,6 +1,7 @@
 package finance.services
 
 import finance.domain.Account
+import finance.domain.AccountType
 import finance.domain.TransactionState
 import finance.repositories.AccountRepository
 import finance.repositories.TransactionRepository
@@ -53,10 +54,42 @@ open class AccountService(
         return accounts
     }
 
-    //TODO: Should return a list of account?
-    @Timed
+//    //TODO: Should return a list of account?
+//    @Timed
+//    override fun findAccountsThatRequirePayment(): List<Account> {
+//        return accountRepository.findAccountsThatRequirePayment()
+//    }
+
+//    override fun findAccountsThatRequirePayment(): List<Account> {
+//        updateTotalsForAllAccounts()
+//
+//        val accountsToInvestigate = accountRepository
+//            .findByActiveStatusAndAccountTypeAndOutstandingGreaterThanOrFutureGreaterThanOrClearedGreaterThanOrderByAccountNameOwner()
+//            .filter { it.accountType == AccountType.Credit }
+//
+//        if (accountsToInvestigate.isNotEmpty()) {
+//            logger.info("accountNeedingAttention={${accountsToInvestigate.size}}")
+//        }
+//
+//        return accountsToInvestigate
+//    }
+
     override fun findAccountsThatRequirePayment(): List<Account> {
-        return accountRepository.findAccountsThatRequirePayment()
+        updateTotalsForAllAccounts()
+
+        val accountsToInvestigate = accountRepository
+            .findByActiveStatusAndAccountTypeAndOutstandingGreaterThanOrFutureGreaterThanOrClearedGreaterThanOrderByAccountNameOwner()
+
+        // Log the count before filtering by Credit
+        logger.info("Total accounts fetched: ${accountsToInvestigate.size}")
+
+        val filteredAccounts = accountsToInvestigate.filter { it.accountType == AccountType.Credit }
+
+        if (filteredAccounts.isNotEmpty()) {
+            logger.info("accountNeedingAttention={${filteredAccounts.size}}")
+        }
+
+        return filteredAccounts
     }
 
     @Timed
