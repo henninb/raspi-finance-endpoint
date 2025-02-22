@@ -55,7 +55,7 @@ open class AccountService(
 
     //TODO: Should return a list of account?
     @Timed
-    override fun findAccountsThatRequirePayment(): List<String> {
+    override fun findAccountsThatRequirePayment(): List<Account> {
         return accountRepository.findAccountsThatRequirePayment()
     }
 

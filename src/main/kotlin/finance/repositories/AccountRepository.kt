@@ -46,5 +46,5 @@ interface AccountRepository : JpaRepository<Account, Long> {
     )
     fun findAccountsThatRequirePayment(
         @Param("accountType") accountType: String = "credit"
-    ): List<String>
+    ): List<Account>
 }

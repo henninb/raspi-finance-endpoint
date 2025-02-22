@@ -37,7 +37,7 @@ class AccountController @Autowired constructor(private var accountService: Accou
 
     //curl --header "Content-Type: application/json" https://hornsup:8443/account/payment/required
     @GetMapping("/payment/required", produces = ["application/json"])
-    fun selectPaymentRequired(): ResponseEntity<List<String>> {
+    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
 
         val accountNameOwners = accountService.findAccountsThatRequirePayment()
         if (accountNameOwners.isEmpty()) {

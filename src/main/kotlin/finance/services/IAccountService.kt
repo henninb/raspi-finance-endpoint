@@ -13,7 +13,7 @@ interface IAccountService {
 
     fun accounts(): List<Account>
 
-    fun findAccountsThatRequirePayment(): List<String>
+    fun findAccountsThatRequirePayment(): List<Account>
 
     fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal
 
