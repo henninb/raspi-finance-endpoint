@@ -11,6 +11,7 @@ rootca_subject="/C=US/ST=Texas/L=Denton/O=Brian LLC/OU=None/CN=Brian LLC rootCA"
 
 mkdir -p "$HOME/ssl"
 mkdir -p "$HOME/tmp"
+mkdir -p ssl
 
 if [ ! -f "$HOME/ssl/rootCA.pem" ]; then
   # echo "generate rootCA key"
