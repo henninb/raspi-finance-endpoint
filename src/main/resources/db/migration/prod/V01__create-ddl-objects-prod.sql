@@ -194,6 +194,22 @@ CREATE TABLE IF NOT EXISTS public.t_transaction
     CONSTRAINT fk_description_name FOREIGN KEY (description) REFERENCES public.t_description (description_name) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+
+CREATE TABLE IF NOT EXISTS public.t_pending_transaction
+(
+    pending_transaction_id BIGSERIAL PRIMARY KEY,
+    account_name_owner     TEXT                              NOT NULL,
+    transaction_date       DATE                              NOT NULL,
+    description            TEXT                              NOT NULL,
+    amount                 NUMERIC(12, 2) DEFAULT 0.00       NOT NULL,
+    review_status          TEXT          DEFAULT 'pending'   NOT NULL,
+    owner                  TEXT                              NULL,
+    date_added             TIMESTAMP     DEFAULT now()       NOT NULL,
+    CONSTRAINT fk_pending_account FOREIGN KEY (account_name_owner)
+        REFERENCES public.t_account (account_name_owner) ON UPDATE CASCADE,
+    CONSTRAINT ck_review_status CHECK (review_status IN ('pending', 'approved', 'rejected'))
+);
+
 -- Required to happen after the t_transaction table is created
 ALTER TABLE public.t_receipt_image
     DROP CONSTRAINT IF EXISTS fk_transaction;
