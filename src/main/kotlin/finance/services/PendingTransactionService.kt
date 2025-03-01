@@ -3,8 +3,8 @@ package finance.services
 import finance.domain.PendingTransaction
 import finance.repositories.PendingTransactionRepository
 import org.springframework.stereotype.Service
-
-
+import java.sql.Timestamp
+import java.util.*
 
 
 @Service
@@ -14,18 +14,18 @@ open class PendingTransactionService(
 
 
     override fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
-        return pendingTransaction
-
+        pendingTransaction.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        return pendingTransactionRepository.saveAndFlush(pendingTransaction)
     }
 
     override fun deletePendingTransaction(pendingTransactionId: Long): Boolean {
+        val category = pendingTransactionRepository.findByPendingTransactionId(pendingTransactionId).get()
+        pendingTransactionRepository.delete(category)
         return true
     }
 
     override fun getAllPendingTransactions(): List<PendingTransaction> {
-        return emptyList()
-
-
+        return pendingTransactionRepository.findAll()
     }
 
 }
