@@ -1,6 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_ASCII_MESSAGE
@@ -9,14 +10,13 @@ import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSA
 import finance.utils.ValidDate
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
-import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.util.*
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_pending_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -59,12 +59,33 @@ data class PendingTransaction(
     @Column(name = "owner", nullable = true)
     var owner: String? = null,
 
-    @JsonIgnore
-    @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
-    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time),
+
 
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_name_owner", referencedColumnName = "account_name_owner", insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
-)
+) {
+
+    constructor() : this(0L, "", Date(0),"",BigDecimal(0.00), "pending", "")
+
+    @JsonSetter("transactionDate")
+    fun jsonSetterPaymentDate(stringDate: String) {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        simpleDateFormat.isLenient = false
+        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
+    }
+
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
+    var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    override fun toString(): String {
+        return mapper.writeValueAsString(this)
+    }
+
+    companion object {
+        @JsonIgnore
+        private val mapper = ObjectMapper()
+    }
+}
