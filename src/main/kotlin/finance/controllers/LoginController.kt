@@ -18,7 +18,7 @@ class LoginController(private val userService: UserService) : BaseController() {
 
     // TODO: inject this from a secure config on the database
     // fetch it once from the configuration
-    private val JWT_KEY = "your_jwt_key"
+    private val JWT_KEY = "Ei,a/_-y,5ZTn7rR*0DA@NK[rFX_L:!0hG+U@{2)k/7S2jN=6UJb%vp{.X.].N}:y*cR,R1D=!B{eY_E8CzYMNFE=q_+q!?eD4*kgwU.hnWBNSB{iEm=3DJMhzL}Lh(1Py%6Yx7&QB-ueC?%ZcLuE_8=rXpZx8%Mfi[uwz2w8bT;??X%0PBMYnxFR/U+rK}A/)PycZE[)YH)!?73?rBZUq:j;2YzrgJu(dyAWE:U:ui/1n]#EZRgMpeRiHbWW+V2}gTLw*;m,MK[PH4*Vug)6e%g(*wh(-NmneR[=h2{(*{.5QhG%wjDD[bim25miKkBN[UHnyYFvYL,-#6!;4GSkw1T6EN&;3,Q0/,J+df;vf8L{%Q(%Pr+jjtp:aWxkmGj0a-x246J}+(D6NENN_iFuHKF74FQ}[/h:]Dt/}4!h,&wSX(?1L30v=jqJz%EX#$&)Ftd.SgPNGzeMUc=aZ,ty__H(,}ddkfxZdb/]Z@jeuT{D&U0F6@{en%Ej!:u3h9uP55#"
 
     @PostMapping("/login")
     fun login(
