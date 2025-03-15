@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class JwtUserDetailService(userRepository: UserRepository) : UserDetailsService {
@@ -13,11 +14,11 @@ class JwtUserDetailService(userRepository: UserRepository) : UserDetailsService 
 
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String): UserDetails {
-        val user: finance.domain.User = userRepository.findByUsername(username)
+        val user: Optional<finance.domain.User> = userRepository.findByUsername(username)
             ?: throw UsernameNotFoundException("User '$username' not found")
         return User
             .withUsername(username)
-            .password(user.password)
+            .password(user.get().password)
             .authorities("admin")
             .accountExpired(false)
             .accountLocked(false)

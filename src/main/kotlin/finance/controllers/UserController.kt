@@ -13,8 +13,8 @@ class UserController @Autowired constructor(private var userService: UserService
 
     //curl -X POST -H "Content-Type: application/json"  -d '{"username":"user","password":"pass"}' http://localhost:8443/user/signin
     @PostMapping("/signin")
-    fun signIn( @RequestBody user: User): ResponseEntity<String> {
-        return ResponseEntity.ok(userService.signIn(user.username, user.password))
+    fun signIn( @RequestBody user: User): ResponseEntity<User> {
+        return ResponseEntity.ok(user)
     }
 
     @PostMapping("/signup")

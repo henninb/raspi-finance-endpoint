@@ -1,5 +1,6 @@
 package finance.controllers
 
+import finance.domain.LoginResponse
 import finance.domain.User
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
@@ -17,51 +18,47 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api")
+class LoginController(private val userService: UserService): BaseController() {
 
-class LoginController @Autowired constructor(private var userService: UserService) : BaseController() {
-    private val JWT_KEY = "your_jwt_key"           // Replace with your JWT key (ideally keep it in config)
+    private val JWT_KEY = "your_jwt_key" // Ideally, inject this from a secure config
 
-    @PostMapping("/login", consumes = [MediaType.APPLICATION_JSON_VALUE], produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun login(@RequestBody loginRequest: User, response: HttpServletResponse): ResponseEntity<Map<String, String>> {
-
+    @PostMapping("/login")
+    fun login(
+        @RequestBody loginRequest: User,
+        response: HttpServletResponse
+    ): ResponseEntity<LoginResponse> {
+        // Query your database for a matching user using a UserService.
         val user = userService.signIn(loginRequest.username, loginRequest.password)
+        logger.info("user:$user")
+        if (user.isEmpty) {
+            logger.info("is empty")
+            // If no matching user is found, return a 403 Forbidden response.
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(LoginResponse(error = "Failed login attempt."))
+        }
 
-        if (user.isNotEmpty()) {
-            try {
-                // Current time
-                val now = Date()
-                // Set expiration to 1 hour later
-                val expiration = Date(now.time + 60 * 60 * 1000)
+        logger.info("gnerate JWT")
+        // Generate JWT token if user exists.
+        val now = Date()
+        val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
 
-                // Build JWT token with claims
-                val token = Jwts.builder()
-                    .claim("email", loginRequest.username)
-                    .setNotBefore(now)
-                    .setExpiration(expiration)
-                    .signWith(SignatureAlgorithm.HS256, JWT_KEY.toByteArray())
-                    .compact()
+        val token = Jwts.builder()
+            .claim("username", loginRequest.username)
+            .setNotBefore(now)
+            .setExpiration(expiration)
+            .signWith(SignatureAlgorithm.HS256, JWT_KEY.toByteArray())
+            .compact()
 
-                // Configure cookie options (adjust secure flag as needed)
-                val cookie = Cookie("token", token).apply {
-                    isHttpOnly = true
-                    secure = false // change to true if running in production over HTTPS
-                    maxAge = 24 * 60 * 60  // 24 hours in seconds
-                    path = "/"
-                }
-                response.addCookie(cookie)
+        // Optionally, set the token in an HTTP-only cookie.
+        val cookie = Cookie("token", token).apply {
+            isHttpOnly = true
+            secure = false // Set to true in production (HTTPS)
+            maxAge = 24 * 60 * 60  // 24 hours
+            path = "/"
+        }
+        response.addCookie(cookie)
 
-                // Return JSON with token
-                return ResponseEntity.ok(mapOf("token" to token))
-            } catch (ex: Exception) {
-                // Log exception if necessary
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Failed to generate token"))
-            }
-
-        } else {
-        // Invalid credentials
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(mapOf("error" to "Failed login attempt."))
+        // Return the token in the JSON response.
+        return ResponseEntity.ok(LoginResponse(token = token))
     }
-}
 }
