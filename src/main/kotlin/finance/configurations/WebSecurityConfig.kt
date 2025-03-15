@@ -9,12 +9,13 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
-open class WebSecurityConfig(private val environment: Environment) {
+open class WebSecurityConfig(private val environment: Environment,private val jwtAuthenticationFilter: JwtAuthenticationFilter) {
 
     @Bean
     open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -25,13 +26,17 @@ open class WebSecurityConfig(private val environment: Environment) {
             .csrf { it.disable() } // Disable CSRF for trusted environments
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/**").permitAll() // Allow all requests without authentication
+//                auth.requestMatchers("/api/login").permitAll() // Public endpoint for login
+//                    .anyRequest().authenticated() // Secure all other endpoints
             }
             .formLogin { it.disable() } // Disable form login
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
+            //.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
+
 
     @Bean
     open fun corsConfigurationSource(): CorsConfigurationSource {
