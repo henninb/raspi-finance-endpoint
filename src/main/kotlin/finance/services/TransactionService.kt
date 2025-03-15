@@ -32,12 +32,7 @@ open class TransactionService(
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
-            if (transaction.receiptImageId != null) {
-                transactionRepository.delete(transaction)
-            } else {
-                transactionRepository.delete(transaction)
-            }
-
+            transactionRepository.delete(transaction)
             //TODO: add metric here
             return true
         }
@@ -47,7 +42,8 @@ open class TransactionService(
 
     @Timed
     override fun deleteReceiptImage(transaction: Transaction) : Boolean {
-        val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
+        val receiptImageId = transaction.receiptImageId ?: return false
+        val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)
         if (receiptImageOptional.isPresent) {
             receiptImageService.deleteReceiptImage(receiptImageOptional.get())
             //TODO: add metric here

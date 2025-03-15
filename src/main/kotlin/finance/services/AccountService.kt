@@ -72,8 +72,12 @@ open class AccountService(
 
     @Timed
     override fun deleteAccount(accountNameOwner: String): Boolean {
-        val account = accountRepository.findByAccountNameOwner(accountNameOwner).get()
-        accountRepository.delete(account)
+        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
+        if (!accountOptional.isPresent) {
+            logger.warn("Account not found: $accountNameOwner")
+            return false
+        }
+        accountRepository.delete(accountOptional.get())
         return true
     }
 

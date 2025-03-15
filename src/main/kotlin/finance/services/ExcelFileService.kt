@@ -42,15 +42,16 @@ open class ExcelFileService(
         val inputStream = decryptor.getDataStream(fileStream)
 
         val workbook: Workbook = XSSFWorkbook(inputStream)
-        filterWorkbookThenImportTransactions(workbook)
-        inputStream.close()
-
         try {
+            filterWorkbookThenImportTransactions(workbook)
             saveProtectedExcelFile(inputExcelFileName, workbook, encryptionInfo)
         } catch (outOfMemoryError: OutOfMemoryError) {
             logger.warn("Saving this excel file requires more memory to be provided to the Java JVM.")
             logger.warn("OutOfMemoryError, ${outOfMemoryError.message}")
             meterService.incrementExceptionCaughtCounter("OutOfMemoryError")
+        } finally {
+            inputStream.close()
+            workbook.close()
         }
     }
 
