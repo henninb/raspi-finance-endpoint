@@ -1,5 +1,6 @@
 package finance.configurations
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -15,7 +16,8 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
-open class WebSecurityConfig(private val environment: Environment,private val jwtAuthenticationFilter: JwtAuthenticationFilter) {
+open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthenticationFilter ) {
+
 
     @Bean
     open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -53,6 +55,7 @@ open class WebSecurityConfig(private val environment: Environment,private val jw
                 "https://amplify.brianhenning.com",
                 "https://netlify.bhenning.com",
                 "https://netlify.brianhenning.com",
+                "finance.lan",
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")

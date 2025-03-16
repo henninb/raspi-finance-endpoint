@@ -35,7 +35,7 @@ data class User(
         @JsonProperty
         var username: String,
 
-        @field:Size(min = 1, max = 50)
+        @field:Size(min = 1, max = 60)
         @Column(name = "password", unique = true, nullable = false)
         @JsonProperty
         var password: String
