@@ -86,11 +86,23 @@ spring:
 # ===============================
 custom:
   project:
+    jwt:
+      key: "Ei,a/_-y,5ZTn7rR*0DA@NK[rFX_L:!0hG+U@{2)k/7S2jN=6UJb%vp{.X.].N}:y*cR,R1D=!B{eY_E8CzYMNFE=q_+q!?eD4*kgwU.hnWBNSB{iEm=3DJMhzL}Lh(1Py%6Yx7&QB-ueC?%ZcLuE_8=rXpZx8%Mfi[uwz2w8bT;??X%0PBMYnxFR/U+rK}A/)PycZE[)YH)!?73?rBZUq:j;2YzrgJu(dyAWE:U:ui/1n]#EZRgMpeRiHbWW+V2}gTLw*;m,MK[PH4*Vug)6e%g(*wh(-NmneR[=h2{(*{.5QhG%wjDD[bim25miKkBN[UHnyYFvYL,-#6!;4GSkw1T6EN&;3,Q0/,J+df;vf8L{%Q(%Pr+jjtp:aWxkmGj0a-x246J}+(D6NENN_iFuHKF74FQ}[/h:]Dt/}4!h,&wSX(?1L30v=jqJz%EX#$&)Ftd.SgPNGzeMUc=aZ,ty__H(,}ddkfxZdb/]Z@jeuT{D&U0F6@{en%Ej!:u3h9uP55#"
     allowed:
       origins:
         - https://hornsup:3000
         - https://localhost:3000
         - https://finance.lan
+        - https://www.bhenning.com
+        - https://www.brianhenning.com
+        - https://vercel.bhenning.com
+        - https://vercel.brianhenning.com
+        - https://pages.brianhenning.com
+        - https://pages.bhenning.com
+        - https://amplify.bhenning.com
+        - https://amplify.brianhenning.com
+        - https://netlify.bhenning.com
+        - https://netlify.brianhenning.com
     excel-password: ${EXCEL_PASSWORD}
     excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
     excluded-accounts:
