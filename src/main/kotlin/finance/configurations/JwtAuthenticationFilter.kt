@@ -18,10 +18,10 @@ import java.util.Collections
 @Component
 class JwtAuthenticationFilter : OncePerRequestFilter() {
 
-    @Value("\${jwt.key}")
-    private lateinit var jwtKey: String // Inject your JWT key from secure configuration
+    @Value("\${custom.project.jwt.key}")
+    private lateinit var jwtKey: String
 
-    private val COOKIE_NAME = "token"
+    //private val COOKIE_NAME = "token"
 
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
@@ -33,7 +33,7 @@ class JwtAuthenticationFilter : OncePerRequestFilter() {
 
         // Extract token from cookies
         request.cookies?.forEach { cookie ->
-            if (COOKIE_NAME == cookie.name) {
+            if ("token" == cookie.name) {
                 token = cookie.value
                 return@forEach
             }
