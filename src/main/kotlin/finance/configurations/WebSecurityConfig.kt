@@ -19,6 +19,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthenticationFilter ) {
 
 
+
+
     @Bean
     open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
@@ -27,17 +29,40 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
             })
             .csrf { it.disable() } // Disable CSRF for trusted environments
             .authorizeHttpRequests { auth ->
+                // Permit public endpoints like /api/login and /api/register while securing others as needed
+                auth.requestMatchers("/api/login", "/api/register").permitAll()
                 auth.requestMatchers("/**").permitAll() // Allow all requests without authentication
-//                auth.requestMatchers("/api/login").permitAll() // Public endpoint for login
-//                    .anyRequest().authenticated() // Secure all other endpoints
+                    .anyRequest().authenticated()
             }
             .formLogin { it.disable() } // Disable form login
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
-            //.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
+
+
+
+//    @Bean
+//    open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+//        http
+//            .cors(Customizer { cors ->
+//                cors.configurationSource(corsConfigurationSource())
+//            })
+//            .csrf { it.disable() } // Disable CSRF for trusted environments
+//            .authorizeHttpRequests { auth ->
+//                auth.requestMatchers("/**").permitAll() // Allow all requests without authentication
+////                auth.requestMatchers("/api/login").permitAll() // Public endpoint for login
+////                    .anyRequest().authenticated() // Secure all other endpoints
+//            }
+//            .formLogin { it.disable() } // Disable form login
+//            .sessionManagement { session ->
+//                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//            }
+//            //.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+//        return http.build()
+//    }
 
 
     @Bean
