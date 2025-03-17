@@ -80,6 +80,8 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
                 "https://amplify.brianhenning.com",
                 "https://netlify.bhenning.com",
                 "https://netlify.brianhenning.com",
+                "https://fianace.bhenning.com",
+                "https://fianace.brianhenning.com",
                 "finance.lan",
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
