@@ -1,4 +1,5 @@
-FROM openjdk:21
+# FROM openjdk:21
+FROM openjdk:21-slim
 # FROM openjdk:19-alpine
 
 ARG TIMEZONE="set the time zone at build time"
@@ -42,6 +43,7 @@ ADD ./build/libs/${APP}.jar /opt/${APP}/bin/${APP}.jar
 RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
 
 WORKDIR /opt/${APP}/bin
-USER ${USERNAME}
+
+# USER ${USERNAME}
 
 CMD java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar
