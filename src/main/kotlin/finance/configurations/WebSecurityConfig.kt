@@ -22,8 +22,9 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
 
 
     @Bean
-    open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter): SecurityFilterChain {
         http
+            .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .cors(Customizer { cors ->
                 cors.configurationSource(corsConfigurationSource())
             })

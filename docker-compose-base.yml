@@ -6,7 +6,7 @@ services:
       args:
        - APP=raspi-finance-endpoint
        - TIMEZONE=America/Chicago
-       - USERNAME=${USER}
+       - USERNAME=${USERNAME}
        - CURRENT_UID=${CURRENT_UID}
        - CURRENT_GID=${CURRENT_GID}
       dockerfile: Dockerfile
@@ -24,8 +24,8 @@ services:
       - "raspi:192.168.10.25"
     env_file:
       - env.secrets
-    depends_on:
-      - varnish-server
+    # depends_on:
+      # - varnish-server
     # depends_on:
     #   logstash-server:
     #      condition: service_healthy
