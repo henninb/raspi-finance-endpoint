@@ -1,160 +1,229 @@
 #!/usr/bin/env sh
 
-env=$1
-test_flag=$2
-datastore=$3
-in_hosts="$(grep -n hornsup /etc/hosts | cut -f1 -d:)"
-APPNAME=raspi-finance-endpoint
-CURRENT_UID="$(id -u)"
-CURRENT_GID="$(id -g)"
+# Log function for timestamped messages
+log() {
+  echo "$(date +"%Y-%m-%d %H:%M:%S") - $*"
+}
 
-if [ $# -ne 1 ] && [ $# -ne 2 ] && [ $# -ne 3 ]; then
-  echo "Usage: $0 <prod|stage|prodora> [test_flag] [datastore]"
+# Ensure exactly one argument is provided: proxmox or gcp
+if [ $# -ne 1 ]; then
+  log "Usage: $0 <proxmox|gcp>"
   exit 1
 fi
 
-if [ "$env" = "prod" ] || [ "$env" = "stage" ] || [ "$env" = "prodora" ]; then
-  echo "${env}"
-else
-  echo "Usage: $0 <prod|stage|prodora>"
+env=$1
+
+if [ "$env" != "proxmox" ] && [ "$env" != "gcp" ]; then
+  log "Usage: $0 <proxmox|gcp>"
   exit 2
 fi
 
-if [ -z "${test_flag}" ]; then
-  test_flag=false
-fi
+log "Starting deployment in '$env' environment."
 
-if [ -z "${datastore}" ]; then
-  datastore=postgresql
-fi
+KEY_PATH="$HOME/.ssh/id_rsa_gcp"
+# Get the fingerprint of your key
+KEY_FINGERPRINT=$(ssh-keygen -lf "$KEY_PATH" | awk '{print $2}')
 
-if [ "$env" = "prodora" ]; then
-  datastore=oracle
-fi
-
-if [ ! -x "$(command -v ./os-env)" ]; then
-  echo "./os-env is need to set the environment variable OS."
-  exit 3
-fi
-
-. ./os-env
-
-if [ "$OS" = "FreeBSD" ]; then
+# Set HOST_IP as the database IP depending on deployment target.
+if [ "$env" = "proxmox" ]; then
   HOST_IP="192.168.10.10"
-elif [ "$OS" = "Darwin" ]; then
-  HOST_IP=$(ipconfig getifaddr en0)
+  export CURRENT_UID="$(ssh debian-dockerserver id -u)"
+  export CURRENT_GID="$(ssh debian-dockerserver id -g)"
+  export USERNAME="$(ssh debian-dockerserver whoami)"
 else
-  HOST_IP=$(ip route get 1 | awk '{print $7}' | head -1)
-  HOST_IP=192.168.10.10
+  export CURRENT_UID="$(ssh gcp-api id -u)"
+  export CURRENT_GID="$(ssh gcp-api id -g)"
+  export USERNAME="$(ssh gcp-api whoami)"
+  HOST_IP="172.19.0.2"
 fi
-
 export HOST_IP
-export CURRENT_UID
-export CURRENT_GID
+log "Database host (HOST_IP) set to: $HOST_IP"
+log "USERNAME set to: $USERNAME"
 
-mkdir -p 'src/main/kotlin'
-mkdir -p 'src/test/unit/groovy'
-mkdir -p 'src/test/integration/groovy'
-mkdir -p 'src/test/functional/groovy'
-mkdir -p 'src/test/performance/groovy'
-# mkdir -p 'postgresql-data'
+# export APPNAME=raspi-finance-endpoint
+log "Current UID: $CURRENT_UID, GID: $CURRENT_GID"
+
+# Create necessary directories
+log "Creating necessary directories..."
 mkdir -p 'influxdb-data'
 mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 mkdir -p 'excel_in'
-#rm -rf docker-compose.yml
 
-#if [ -z "${in_hosts}" ]; then
-#  echo "The 'hornsup' hostname needs to be added to /etc/hosts."
-#  exit 2
-#fi
-
-# preserve local secret changes
+# Preserve local secret changes
+log "Preserving local secret changes..."
 git update-index --assume-unchanged env.secrets
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
-# if [ -x "$(command -v ctags)" ]; then
-#   git ls-files | ctags --links=no --languages=groovy,kotlin -L-
-# fi
 
-if [ "${test_flag}" = "true" ]; then
-  if ! ./gradlew clean build test integrationTest functionalTest; then
-    echo "gradle build failed."
-    exit 1
+cat <<  'EOF' > "nginx.tmp"
+server_tokens off;
+
+server {
+  listen 443 ssl;
+  server_name finance.bhenning.com;
+
+  ssl_certificate /etc/nginx/certs/bhenning.fullchain.pem;
+  ssl_certificate_key /etc/nginx/certs/bhenning.privkey.pem;
+
+  location / {
+    proxy_pass http://raspi-finance-endpoint:8443;
+    proxy_set_header Origin $http_origin;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+
+# vim: set ft=conf:
+EOF
+
+
+cat <<  'EOF' > "docker.tmp"
+FROM nginx:1.27.3-alpine
+
+COPY nginx.tmp /etc/nginx/conf.d/default.conf
+
+COPY ssl/bhenning.fullchain.pem /etc/nginx/certs/
+COPY ssl/bhenning.privkey.pem /etc/nginx/certs/
+EOF
+
+
+# Build the project with gradle (excluding tests)
+log "Building project with gradle..."
+if ! ./gradlew clean build -x test; then
+  log "Gradle build failed."
+  exit 1
+fi
+log "Gradle build succeeded."
+
+# For gcp deployments, adjust the Docker host context.
+if [ "$env" = "gcp" ]; then
+  log "Setting DOCKER_HOST for gcp deployment to ssh://gcp-api..."
+  export DOCKER_HOST=ssh://brianhenning@34.132.189.202
+  export DOCKER_HOST=ssh://gcp-api
+  docker context ls
+  # Check if the key is already added
+  if ssh-add -l | grep -q "$KEY_FINGERPRINT"; then
+    echo "SSH key already added."
+  else
+    echo "Adding SSH key..."
+    ssh-add "$KEY_PATH"
   fi
 else
-  if ! ./gradlew clean build -x test; then
-    echo "gradle build failed."
-    exit 1
-  fi
+  log "Setting DOCKER_HOST for proxmox deployment..."
+  export DOCKER_HOST=ssh://192.168.10.10
 fi
 
+# Docker-related commands
 if [ -x "$(command -v docker)" ]; then
-  # echo podman build --tag "$APPNAME" -f ./Dockerfile-podman
-  echo docker run --rm -it --volume "$(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf" nginx:1.25.4-alpine
-  # podman build --tag "$APPNAME" -f ./Dockerfile
 
+  if ! docker network ls --filter "name=^finance-lan$" -q | grep -q .; then
+    echo "Creating network finance-lan..."
+    docker network create finance-lan
+  else
+    echo "Network finance-lan already exists."
+  fi
+
+  log "Docker detected. Cleaning up dangling images and volumes..."
   docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
   docker volume prune -f 2> /dev/null
-  docker rmi -f raspi-finance-endpoint
 
-  nginx_container=$(docker ps -a -f 'name=nginx-server' --format "{{.ID}}") 2> /dev/null
-  if [ -n "${nginx_container}" ]; then
-    docker stop "${nginx_container}"
-    docker rm -f "${nginx_container}" 2> /dev/null
-    # docker rmi -f nginx-server
-  fi
+  if [ "$env" = "proxmox" ]; then
+    log "Proxmox environment detected. Cleaning up existing nginx, varnish, and raspi containers..."
 
-  varnish_container=$(docker ps -a -f 'name=varnish-server' --format "{{.ID}}") 2> /dev/null
-  if [ -n "${varnish_container}" ]; then
-    docker stop "${varnish_container}"
-    docker rm -f "${varnish_container}" 2> /dev/null
-    # docker rmi -f varnish-server
-  fi
+    nginx_container=$(docker ps -a -f 'name=nginx-server' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${nginx_container}" ]; then
+      log "Stopping and removing existing nginx container(s)..."
+      docker stop "${nginx_container}"
+      docker rm -f "${nginx_container}" 2> /dev/null
+    fi
 
-  raspi_container=$(docker ps -a -f 'name=raspi-finance-endpoint' --format "{{.ID}}") 2> /dev/null
-  if [ -n "${raspi_container}" ]; then
-    docker stop "${raspi_container}"
-    docker rm -f "${raspi_container}" 2> /dev/null
-    docker rmi -f raspi-finance-endpoint
-  fi
+    varnish_container=$(docker ps -a -f 'name=varnish-server' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${varnish_container}" ]; then
+      log "Stopping and removing existing varnish container(s)..."
+      docker stop "${varnish_container}"
+      docker rm -f "${varnish_container}" 2> /dev/null
+    fi
 
-  echo gcloud compute firewall-rules create allow-https --direction=INGRESS --action=ALLOW --rules=tcp:443 --source-ranges=0.0.0.0/0 --priority=1000 --network=default
-  echo gcloud compute firewall-rules create allow-https \
-  --direction=INGRESS \
-  --action=ALLOW \
-  --rules=tcp:443 \
-  --source-ranges=0.0.0.0/0 \
-  --priority=1000 \
-  --network=default
+    raspi_container=$(docker ps -a -f 'name=raspi-finance-endpoint' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${raspi_container}" ]; then
+      log "Stopping and removing existing raspi-finance-endpoint container..."
+      docker stop "${raspi_container}"
+      docker rm -f "${raspi_container}" 2> /dev/null
+      docker rmi -f raspi-finance-endpoint
+    fi
 
-  # echo podman-compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d
-  if ! docker compose -f docker-compose-base.yml -f "docker-compose-${env}.yml" -f docker-compose-varnish.yml up -d; then
-    echo "docker compose up failed."
+    log "Building images/deploying images using docker-compose (including varnish)..."
+    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-varnish.yml up -d; then
+      log "docker-compose build failed for proxmox deployment."
+    else
+      log "docker-compose build succeeded for proxmox deployment."
+    fi
   else
-    echo "docker-compose up base success"
+    log "GCP environment detected. Cleaning up existing raspi-finance-endpoint container..."
+
+    raspi_container=$(docker ps -a -f 'name=raspi-finance-endpoint' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${raspi_container}" ]; then
+      log "Stopping and removing existing raspi-finance-endpoint container..."
+      docker stop "${raspi_container}"
+      docker rm -f "${raspi_container}" 2> /dev/null
+      docker rmi -f raspi-finance-endpoint
+    fi
+
+    log "GCP environment detected. Cleaning up existing nginx-gcp-proxy..."
+    nginx_container=$(docker ps -a -f 'name=nginx-gcp-proxy' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${nginx_container}" ]; then
+      log "Stopping and removing existing  nginx-gcp-proxy container..."
+      docker stop nginx-gcp-proxy
+      docker rm -f nginx-gcp-proxy 2> /dev/null
+      docker rmi -f nginx-gcp-proxy
+    fi
+
+    log "Building/deploying images using docker-compose (without nginx or varnish)..."
+    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml up -d; then
+      log "docker-compose build failed for gcp deployment."
+    else
+      log "docker-compose build succeeded for gcp deployment."
+    fi
+
+    log "build gcp proxy server..."
+    docker build -f docker.tmp -t nginx-gcp-proxy .
+    log "run gcp proxy server..."
+    docker run -dit --restart unless-stopped --network finance-lan -p 443:443 --name nginx-gcp-proxy -h nginx-gcp-proxy  nginx-gcp-proxy
   fi
+    # log "change the port to 8443"
+    # sed -i 's/^\(SERVER_PORT=\)[0-9]\+/\18443/' env.prod
+
+  log "Docker detected. Cleaning up dangling images and volumes..."
+  docker rmi -f "$(docker images -q -f dangling=true)" 2> /dev/null
+  docker volume prune -f 2> /dev/null
+else
+  log "Docker command not found. Exiting."
+  exit 1
 fi
 
-# docker context create remote --docker "host=ssh://henninb@192.168.10.10"
+# Run the raspi-finance-endpoint container.
+# For gcp, ensure any preexisting container is deleted.
+# log "Deleting any preexisting raspi-finance-endpoint container..."
+# docker rm -f raspi-finance-endpoint
 
-docker commit raspi-finance-endpoint raspi-finance-endpoint
-docker commit nginx-proxy-finance-server nginx-proxy-finance-server
-docker commit varnish-server varnish-server
+# log "Running raspi-finance-endpoint container..."
+# docker run --name=raspi-finance-endpoint -h raspi-finance-endpoint --restart unless-stopped -p 8443:8443 -d raspi-finance-endpoint
 
-docker save raspi-finance-endpoint | docker --context remote load
-# docker save varnish-server | docker --context remote load
-docker save nginx-proxy-finance-server | docker --context remote load
 
-export DOCKER_HOST=ssh://192.168.10.10
-docker rm -f raspi-finance-endpoint
-docker run --name=raspi-finance-endpoint -h raspi-finance-endpoint --restart unless-stopped -p 8443:8443 -d raspi-finance-endpoint
-# docker run --name=varnish-server -h varnish-server --restart unless-stopped -p 8080:80 -d varnish-server
-docker rm -f nginx-proxy-finance-server
-docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
+# if [ "$env" = "proxmox" ]; then
+  # log "Running nginx container for proxmox deployment..."
+  # docker rm -f nginx-proxy-finance-server
+  # docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
+# fi
 
-echo docker logs raspi-finance-endpoint --follow
+docker network connect finance-lan raspi-finance-endpoint
+log "list networks"
+docker network ls
 
+log "Deployment complete."
+log "To follow logs, run: docker logs raspi-finance-endpoint --follow"
 exit 0
