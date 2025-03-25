@@ -84,6 +84,7 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
                 "https://fianace.bhenning.com",
                 "https://fianace.brianhenning.com",
                 "finance.lan",
+                "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
