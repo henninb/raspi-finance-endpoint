@@ -47,12 +47,21 @@ class LoginController(private val userService: UserService) : BaseController() {
             .compact()
 
         val cookie = ResponseCookie.from("token", token)
-            .httpOnly(true)
-            .secure(true)
-            .maxAge(24 * 60 * 60)
-            .sameSite("None")  //needed for cross origin cookie
+            .domain(".bhenning.com")  // Make the cookie available to all subdomains of bhenning.com
             .path("/")
+            .maxAge(7 * 24 * 60 * 60) // optional: set expiry as needed
+            .httpOnly(true)
+            .secure(true)             // ensure true if you're using HTTPS
+            .sameSite("None")         // necessary for cross-site cookie sharing
             .build()
+
+//        val cookie = ResponseCookie.from("token", token)
+//            .httpOnly(true)
+//            .secure(true)
+//            .maxAge(24 * 60 * 60)
+//            .sameSite("None")  //needed for cross origin cookie
+//            .path("/")
+//            .build()
         response.addHeader("Set-Cookie", cookie.toString())
 
         // Return 204 No Content with no response body.
