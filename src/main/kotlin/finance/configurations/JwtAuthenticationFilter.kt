@@ -18,10 +18,10 @@ import java.util.Collections
 @Component
 class JwtAuthenticationFilter : OncePerRequestFilter() {
 
+    private val logger = org.slf4j.LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
+
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
-
-    //private val COOKIE_NAME = "token"
 
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
@@ -30,6 +30,8 @@ class JwtAuthenticationFilter : OncePerRequestFilter() {
         filterChain: FilterChain
     ) {
         var token: String? = null
+
+        logger.info("Cookies received: ${request.cookies?.joinToString { it.name + "=" + it.value }}")
 
         // Extract token from cookies
         request.cookies?.forEach { cookie ->
