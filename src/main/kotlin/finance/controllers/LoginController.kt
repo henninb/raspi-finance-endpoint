@@ -55,20 +55,29 @@ class LoginController(private val userService: UserService) : BaseController() {
             .sameSite("None")         // necessary for cross-site cookie sharing
             .build()
 
-//        val cookie = ResponseCookie.from("token", token)
-//            .httpOnly(true)
-//            .secure(true)
-//            .maxAge(24 * 60 * 60)
-//            .sameSite("None")  //needed for cross origin cookie
-//            .path("/")
-//            .build()
         response.addHeader("Set-Cookie", cookie.toString())
 
         // Return 204 No Content with no response body.
         return ResponseEntity.noContent().build()
     }
 
+    @PostMapping("/logout")
+    fun logout(response: HttpServletResponse): ResponseEntity<Void> {
+        // Clear the JWT cookie by creating a cookie with an empty value and an immediate expiration.
+        val cookie = ResponseCookie.from("token", "")
+            .domain(".bhenning.com")  // Ensure the domain matches the one used during login.
+            .path("/")
+            .maxAge(0)               // Expire the cookie immediately.
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .build()
 
+        response.addHeader("Set-Cookie", cookie.toString())
+
+        // Return 204 No Content to signal that the logout was successful.
+        return ResponseEntity.noContent().build()
+    }
 
     @PostMapping("/register")
     fun register(

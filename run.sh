@@ -24,6 +24,16 @@ KEY_PATH="$HOME/.ssh/id_rsa_gcp"
 # Get the fingerprint of your key
 KEY_FINGERPRINT=$(ssh-keygen -lf "$KEY_PATH" | awk '{print $2}')
 
+if [ "$env" = "gcp" ]; then
+  if ssh-add -l | grep -q "$KEY_FINGERPRINT"; then
+    echo "SSH key already added."
+  else
+    echo ssh-add "$KEY_PATH"
+    echo "Adding SSH key..."
+    ssh-add "$KEY_PATH"
+  fi
+fi
+
 # Set HOST_IP as the database IP depending on deployment target.
 if [ "$env" = "proxmox" ]; then
   HOST_IP="192.168.10.10"
@@ -132,7 +142,7 @@ if [ -x "$(command -v docker)" ]; then
   docker volume prune -f 2> /dev/null
 
   if [ "$env" = "proxmox" ]; then
-    log "Proxmox environment detected. Cleaning up existing nginx, varnish, and raspi containers..."
+    log "Proxmox environment detected. Cleaning up existing nginx, and raspi containers..."
 
     nginx_container=$(docker ps -a -f 'name=nginx-server' --format "{{.ID}}") 2> /dev/null
     if [ -n "${nginx_container}" ]; then
@@ -141,12 +151,12 @@ if [ -x "$(command -v docker)" ]; then
       docker rm -f "${nginx_container}" 2> /dev/null
     fi
 
-    varnish_container=$(docker ps -a -f 'name=varnish-server' --format "{{.ID}}") 2> /dev/null
-    if [ -n "${varnish_container}" ]; then
-      log "Stopping and removing existing varnish container(s)..."
-      docker stop "${varnish_container}"
-      docker rm -f "${varnish_container}" 2> /dev/null
-    fi
+    # varnish_container=$(docker ps -a -f 'name=varnish-server' --format "{{.ID}}") 2> /dev/null
+    # if [ -n "${varnish_container}" ]; then
+    #   log "Stopping and removing existing varnish container(s)..."
+    #   docker stop "${varnish_container}"
+    #   docker rm -f "${varnish_container}" 2> /dev/null
+    # fi
 
     raspi_container=$(docker ps -a -f 'name=raspi-finance-endpoint' --format "{{.ID}}") 2> /dev/null
     if [ -n "${raspi_container}" ]; then
@@ -156,8 +166,8 @@ if [ -x "$(command -v docker)" ]; then
       docker rmi -f raspi-finance-endpoint
     fi
 
-    log "Building images/deploying images using docker-compose (including varnish)..."
-    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-varnish.yml up -d; then
+    log "Building images/deploying images using docker-compose..."
+    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml up -d; then
       log "docker-compose build failed for proxmox deployment."
     else
       log "docker-compose build succeeded for proxmox deployment."

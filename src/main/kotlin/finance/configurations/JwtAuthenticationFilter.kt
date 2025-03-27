@@ -17,9 +17,6 @@ import java.util.Collections
 
 @Component
 class JwtAuthenticationFilter : OncePerRequestFilter() {
-
-    private val logger = org.slf4j.LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
-
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
 
