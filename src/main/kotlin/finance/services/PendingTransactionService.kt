@@ -19,7 +19,7 @@ open class PendingTransactionService(
     }
 
     override fun deletePendingTransaction(pendingTransactionId: Long): Boolean {
-        val category = pendingTransactionRepository.findByPendingTransactionId(pendingTransactionId).get()
+        val category = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId).get()
         pendingTransactionRepository.delete(category)
         return true
     }
@@ -28,4 +28,8 @@ open class PendingTransactionService(
         return pendingTransactionRepository.findAll()
     }
 
+    override fun deleteAllPendingTransactions() : Boolean {
+        pendingTransactionRepository.deleteAll()
+        return true
+    }
 }
