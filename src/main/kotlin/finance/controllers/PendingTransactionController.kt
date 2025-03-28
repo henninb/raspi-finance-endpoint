@@ -39,4 +39,18 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
         }
         return ResponseEntity.ok(transactions)
     }
+
+    @DeleteMapping("/delete/all")
+    fun deleteAllPendingTransactions(): ResponseEntity<Void> {
+        return try {
+            pendingTransactionService.deleteAllPendingTransactions()
+            ResponseEntity.noContent().build()
+        } catch (ex: Exception) {
+            throw ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Failed to delete all pending transactions: ${ex.message}",
+                ex
+            )
+        }
+    }
 }
