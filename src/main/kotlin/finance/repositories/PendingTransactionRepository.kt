@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 
 interface PendingTransactionRepository : JpaRepository<PendingTransaction, Long> {
-    fun findByPendingTransactionId(pendingTransactionId: Long): Optional<PendingTransaction>
+    fun findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId: Long): Optional<PendingTransaction>
 }

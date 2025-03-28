@@ -9,6 +9,7 @@ interface IPendingTransactionService {
     fun deletePendingTransaction(pendingTransactionId: Long): Boolean
 
     fun getAllPendingTransactions(): List<PendingTransaction>
+    fun deleteAllPendingTransactions() : Boolean
 
 
 //    fun updatePendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction
