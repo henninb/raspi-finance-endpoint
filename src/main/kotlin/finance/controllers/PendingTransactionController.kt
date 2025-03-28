@@ -22,10 +22,10 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
         }
     }
 
-    @DeleteMapping("/delete/{id}", produces = ["application/json"])
-    fun deletePendingTransaction(@PathVariable id: Long): ResponseEntity<String> {
+    @DeleteMapping("/delete/{id}")
+    fun deletePendingTransaction(@PathVariable id: Long): ResponseEntity<Void> {
         return if (pendingTransactionService.deletePendingTransaction(id)) {
-            ResponseEntity.ok("Pending transaction deleted successfully.")
+            ResponseEntity.noContent().build()
         } else {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to delete pending transaction with ID: $id")
         }
