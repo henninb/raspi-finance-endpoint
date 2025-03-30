@@ -29,7 +29,7 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
             .csrf { it.disable() } // Disable CSRF for trusted environments
             .authorizeHttpRequests { auth ->
                 // Allow public access for login and registration endpoints
-                auth.requestMatchers("/api/login", "/api/register").permitAll()
+                auth.requestMatchers("/api/login", "/api/register", "/api/pending/transaction/insert").permitAll()
                 // Protect all other API endpoints
                 auth.requestMatchers("/api/**").authenticated()
             }
