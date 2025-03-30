@@ -253,18 +253,12 @@ open class TransactionService(
             transaction.accountId = account.accountId
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            processDescription(transaction)
             return transactionRepository.saveAndFlush(transaction)
         }
         logger.warn("guid did not match any database records to update ${transaction.guid}.")
         throw RuntimeException("guid did not match any database records to update ${transaction.guid}.")
     }
-//
-//
-//    private fun ByteArray.toHexString(): String {
-//        return this.joinToString("") {
-//            String.format("%02x", it)
-//        }
-//    }
 
     @Timed
     override fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
