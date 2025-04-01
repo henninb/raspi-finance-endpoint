@@ -27,7 +27,8 @@ class LoginController(private val userService: UserService) : BaseController() {
         response: HttpServletResponse
     ): ResponseEntity<Void> {
         // Validate user credentials.
-        val user = userService.signIn(loginRequest.username, loginRequest.password)
+        logger.info("user: $loginRequest")
+        val user = userService.signIn(loginRequest)
         logger.info("user: $user")
         if (user.isEmpty) {
             logger.info("Invalid login attempt")
