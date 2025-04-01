@@ -27,18 +27,15 @@ class UserService(
         return Optional.empty()
     }
 
-    fun signUp(username: String, rawPassword: String): User {
+    fun signUp(user: User): User {
         // Check if the username is already taken
-        if (userRepository.findByUsername(username).isPresent) {
+        if (userRepository.findByUsername(user.username).isPresent) {
             throw IllegalArgumentException("Username already exists")
         }
 
         // Hash the raw password securely using BCrypt
-        val hashedPassword = passwordEncoder.encode(rawPassword)
-        val newUser = User()
-        newUser.username = username
-        newUser.password = hashedPassword
-
-        return userRepository.saveAndFlush(newUser)
+        val hashedPassword = passwordEncoder.encode(user.password)
+        user.password = hashedPassword
+        return userRepository.saveAndFlush(user)
     }
 }

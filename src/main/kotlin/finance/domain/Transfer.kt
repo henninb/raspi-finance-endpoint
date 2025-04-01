@@ -20,7 +20,6 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(
     name = "t_transfer",
     uniqueConstraints = [UniqueConstraint(columnNames = ["source_account", "destination_account", "transaction_date", "amount"])]

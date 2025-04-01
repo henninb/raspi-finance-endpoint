@@ -1,11 +1,8 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
@@ -13,8 +10,8 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_user")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class User(
         @Id
@@ -29,7 +26,19 @@ data class User(
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
         var activeStatus: Boolean = true,
 
-        @field:Size(min = 1, max = 50)
+        @field:Size(min = 1, max = 40)
+        @field:Convert(converter = LowerCaseConverter::class)
+        @Column(name = "first_name",  nullable = false)
+        @get:JsonProperty
+        var firstName: String,
+
+        @field:Size(min = 1, max = 40)
+        @field:Convert(converter = LowerCaseConverter::class)
+        @Column(name = "last_name", nullable = false)
+        @get:JsonProperty
+        var lastName: String,
+
+        @field:Size(min = 1, max = 60)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "username", unique = true, nullable = false)
         @JsonProperty
@@ -39,9 +48,8 @@ data class User(
         @Column(name = "password", unique = true, nullable = false)
         @JsonProperty
         var password: String
-        //BCryptPasswordEncoder
 ) {
-    constructor() : this(0L, true, "", "")
+    constructor() : this(0L, true, "","", "","")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
@@ -51,8 +59,8 @@ data class User(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    override fun toString(): String {
 
+    override fun toString(): String {
         return mapper.writeValueAsString(this)
     }
 
@@ -60,4 +68,4 @@ data class User(
         @JsonIgnore
         private val mapper = ObjectMapper()
     }
-}
+ }

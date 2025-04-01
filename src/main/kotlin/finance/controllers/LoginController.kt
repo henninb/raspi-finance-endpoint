@@ -4,7 +4,6 @@ import finance.domain.User
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -79,14 +78,15 @@ class LoginController(private val userService: UserService) : BaseController() {
         return ResponseEntity.noContent().build()
     }
 
-    @PostMapping("/register")
+    @PostMapping("/register", consumes = ["application/json"])
     fun register(
         @RequestBody newUser: User,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
+        logger.info("Register request received: $newUser")
         try {
             // Attempt to register the new user
-            userService.signUp(newUser.username, newUser.password)
+            userService.signUp(newUser)
         } catch (e: IllegalArgumentException) {
             // If the username already exists, return a 409 Conflict response
             logger.info("Username ${newUser.username} already exists.")
