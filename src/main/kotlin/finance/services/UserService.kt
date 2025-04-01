@@ -12,15 +12,16 @@ import java.util.*
 class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder
-) {
+) : BaseService() {
 
-    fun signIn(username: String, rawPassword: String): Optional<User> {
+    fun signIn(user: User): Optional<User> {
         // Retrieve the user by username
-        val userOptional = userRepository.findByUsername(username)
+        val userOptional = userRepository.findByUsername(user.username)
         if (userOptional.isPresent) {
-            val user = userOptional.get()
+            val dbUser = userOptional.get()
             // Validate the raw password against the stored hash
-            if (passwordEncoder.matches(rawPassword, user.password)) {
+            logger.info("user-pass: ${user.password}")
+            if (passwordEncoder.matches(user.password, dbUser.password)) {
                 return Optional.of(user)
             }
         }
