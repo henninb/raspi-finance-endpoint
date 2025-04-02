@@ -29,15 +29,6 @@ open class ParameterService(
         return parameters
     }
 
-//    @Timed
-//    override fun insertParameter(parameter: Parameter): Parameter {
-//        val constraintViolations: Set<ConstraintViolation<Parameter>> = validator.validate(parameter)
-//        handleConstraintViolations(constraintViolations, meterService)
-//        parameter.dateAdded = Timestamp(Calendar.getInstance().time.time)
-//        parameter.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-//        return parameterRepository.saveAndFlush(parameter)
-//    }
-
     @Timed
     override fun insertParameter(parameter: Parameter): Parameter {
         logger.info("Attempting to insert parameter: ${mapper.writeValueAsString(parameter)}")
