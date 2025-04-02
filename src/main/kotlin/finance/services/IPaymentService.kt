@@ -23,4 +23,5 @@ interface IPaymentService {
 
     fun deleteByPaymentId(paymentId: Long): Boolean
     fun findByPaymentId(paymentId: Long): Optional<Payment>
+    fun insertPaymentNew(payment: Payment): Payment
 }
