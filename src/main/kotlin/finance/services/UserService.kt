@@ -39,4 +39,12 @@ class UserService(
         user.password = hashedPassword
         return userRepository.saveAndFlush(user)
     }
+
+//    fun findUserByUsername(username: String): User? =
+//        userRepository.findByUsername(username).orElse(null)
+
+    fun findUserByUsername(username: String): User? =
+        userRepository.findByUsername(username)
+            .orElse(null)
+            ?.apply { password = "" }
 }
