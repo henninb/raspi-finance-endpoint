@@ -221,18 +221,21 @@ CREATE TABLE IF NOT EXISTS public.t_pending_transaction
 -------------
 -- Payment --
 -------------
+-- TODO: update constraints
 CREATE TABLE IF NOT EXISTS public.t_payment
 (
-    payment_id         BIGSERIAL PRIMARY KEY,
-    account_name_owner TEXT                                  NOT NULL,
-    transaction_date   DATE                                  NOT NULL,
-    amount             NUMERIC(12, 2) DEFAULT 0.00           NOT NULL,
-    guid_source        TEXT                                  NOT NULL,
-    guid_destination   TEXT                                  NOT NULL,
-    owner              TEXT                                  NULL,
-    active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
-    date_updated       TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
-    date_added         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    payment_id           BIGSERIAL PRIMARY KEY,
+    account_name_owner   TEXT                                  NOT NULL,
+    source_account       TEXT                                  NOT NULL,
+    destination_account  TEXT                                  NOT NULL,
+    transaction_date     DATE                                  NOT NULL,
+    amount               NUMERIC(12, 2) DEFAULT 0.00           NOT NULL,
+    guid_source          TEXT                                  NOT NULL,
+    guid_destination     TEXT                                  NOT NULL,
+    owner                TEXT                                  NULL,
+    active_status        BOOLEAN       DEFAULT TRUE            NOT NULL,
+    date_updated         TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
+    date_added           TIMESTAMP     DEFAULT TO_TIMESTAMP(0) NOT NULL,
     CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
     CONSTRAINT fk_payment_guid_source FOREIGN KEY (guid_source) REFERENCES public.t_transaction (guid) ON UPDATE CASCADE,
     CONSTRAINT fk_payment_guid_destination FOREIGN KEY (guid_destination) REFERENCES public.t_transaction (guid) ON UPDATE CASCADE,

@@ -43,20 +43,20 @@ data class Payment(
     var accountNameOwner: String,
 
     @JsonProperty
-    @Transient
+    //@Transient
     @Column(name = "source_account", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     @field:Size(min = 3, max = 40)
     @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
-    var sourceAccount: String?,
+    var sourceAccount: String,
 
     @JsonProperty
-    @Transient
+    //@Transient
     @Column(name = "destination_account", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     @field:Size(min = 3, max = 40)
     @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
-    var destinationAccount: String?,
+    var destinationAccount: String,
 
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
@@ -83,7 +83,7 @@ data class Payment(
     var activeStatus: Boolean = true
 ) {
 
-    constructor() : this(0L, "", null, null, Date(0), BigDecimal(0.00), "", "")
+    constructor() : this(0L, "", "", "", Date(0), BigDecimal(0.00), "", "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterPaymentDate(): String {
