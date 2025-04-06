@@ -23,7 +23,7 @@ class PaymentController(private var paymentService: PaymentService) : BaseContro
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {
         return try {
-            val paymentResponse = paymentService.insertPayment(payment)
+            val paymentResponse = paymentService.insertPaymentNew(payment)
             ResponseEntity.ok(paymentResponse)
         } catch (ex: ResponseStatusException) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert payment: ${ex.message}", ex)

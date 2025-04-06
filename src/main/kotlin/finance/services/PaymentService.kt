@@ -22,43 +22,43 @@ open class PaymentService(
         return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
     }
 
-    //TODO: make this method transactional - what happens if one inserts fails?
-    @Timed
-    override fun insertPayment(payment: Payment): Payment {
-        val transactionCredit = Transaction()
-        val transactionDebit = Transaction()
-
-        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
-        handleConstraintViolations(constraintViolations, meterService)
-        val optionalAccount = accountService.account(payment.accountNameOwner)
-        if (!optionalAccount.isPresent) {
-            logger.error("Account not found ${payment.accountNameOwner}")
-            meterService.incrementExceptionThrownCounter("RuntimeException")
-            throw RuntimeException("Account not found ${payment.accountNameOwner}")
-        } else {
-            if (optionalAccount.get().accountType == AccountType.Debit) {
-                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-                meterService.incrementExceptionThrownCounter("RuntimeException")
-                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-            }
-        }
-
-        val optionalParameter = parameterService.findByParameterName("payment_account")
-        if (optionalParameter.isPresent) {
-            val paymentAccountNameOwner = optionalParameter.get().parameterValue
-            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
-            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
-
-            transactionService.insertTransaction(transactionCredit)
-            transactionService.insertTransaction(transactionDebit)
-            payment.guidDestination = transactionCredit.guid
-            payment.guidSource = transactionDebit.guid
-            payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
-            return paymentRepository.saveAndFlush(payment)
-        }
-        throw RuntimeException("failed to read the parameter 'payment_account'.")
-    }
+//    //TODO: make this method transactional - what happens if one inserts fails?
+//    @Timed
+//    override fun insertPayment(payment: Payment): Payment {
+//        val transactionCredit = Transaction()
+//        val transactionDebit = Transaction()
+//
+//        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
+//        handleConstraintViolations(constraintViolations, meterService)
+//        val optionalAccount = accountService.account(payment.accountNameOwner)
+//        if (!optionalAccount.isPresent) {
+//            logger.error("Account not found ${payment.accountNameOwner}")
+//            meterService.incrementExceptionThrownCounter("RuntimeException")
+//            throw RuntimeException("Account not found ${payment.accountNameOwner}")
+//        } else {
+//            if (optionalAccount.get().accountType == AccountType.Debit) {
+//                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+//                meterService.incrementExceptionThrownCounter("RuntimeException")
+//                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+//            }
+//        }
+//
+//        val optionalParameter = parameterService.findByParameterName("payment_account")
+//        if (optionalParameter.isPresent) {
+//            val paymentAccountNameOwner = optionalParameter.get().parameterValue
+//            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
+//            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
+//
+//            transactionService.insertTransaction(transactionCredit)
+//            transactionService.insertTransaction(transactionDebit)
+//            payment.guidDestination = transactionCredit.guid
+//            payment.guidSource = transactionDebit.guid
+//            payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+//            payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
+//            return paymentRepository.saveAndFlush(payment)
+//        }
+//        throw RuntimeException("failed to read the parameter 'payment_account'.")
+//    }
 
     @Timed
     override fun insertPaymentNew(payment: Payment): Payment {

@@ -7,7 +7,7 @@ import java.util.*
 interface IPaymentService {
     fun findAllPayments(): List<Payment>
 
-    fun insertPayment(payment: Payment): Payment
+    //fun insertPayment(payment: Payment): Payment
 
     fun populateDebitTransaction(
         transactionDebit: Transaction,
