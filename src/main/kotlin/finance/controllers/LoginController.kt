@@ -20,6 +20,7 @@ class LoginController(private val userService: UserService) : BaseController() {
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
 
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
     @PostMapping("/login")
     fun login(
         @RequestBody loginRequest: User,
@@ -55,6 +56,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         return ResponseEntity.noContent().build()
     }
 
+    // curl -k --header "Content-Type: application/json" --request POST https://localhost:8443/api/logout
     @PostMapping("/logout")
     fun logout(response: HttpServletResponse): ResponseEntity<Void> {
         val cookie = ResponseCookie.from("token", "")
@@ -70,6 +72,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         return ResponseEntity.noContent().build()
     }
 
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "newuser", "password": "password123", "email": "user@example.com"}' https://localhost:8443/api/register
     @PostMapping("/register", consumes = ["application/json"])
     fun register(
         @RequestBody newUser: User,
@@ -108,6 +111,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
+    // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
     @GetMapping("/me")
     fun getCurrentUser(@CookieValue(name = "token", required = false) token: String?): ResponseEntity<Any> {
         // Check if the token cookie is present.

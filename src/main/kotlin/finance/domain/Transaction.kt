@@ -13,7 +13,6 @@ import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import org.apache.logging.log4j.LogManager
-import org.hibernate.annotations.Proxy
 import org.springframework.data.annotation.Immutable
 import java.math.BigDecimal
 import java.sql.Date
@@ -27,7 +26,6 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -37,79 +35,79 @@ data class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_transaction_transaction_id_seq")
-    @field:Min(value = 0L)
-    @JsonProperty
+    @param:Min(value = 0L)
+    @param:JsonProperty
     @Column(name = "transaction_id")
     var transactionId: Long,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "guid", unique = true, nullable = false)
-    @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
+    @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String,
 
-    @JsonProperty
-    @field:Min(value = 0L)
+    @param:JsonProperty
+    @param:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "transaction_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = TransactionTypeConverter::class)
     var transactionType: TransactionType,
 
-    @JsonProperty
-    @field:Size(min = 3, max = 40)
-    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @param:JsonProperty
+    @param:Size(min = 3, max = 40)
+    @param:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var accountNameOwner: String,
 
-    @JsonProperty
+    @param:JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     var transactionDate: Date,
 
-    @JsonProperty
-    @field:Size(min = 1, max = 75)
-    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
+    @param:JsonProperty
+    @param:Size(min = 1, max = 75)
+    @param:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var description: String,
 
-    @JsonProperty
-    @field:Size(max = 50)
-    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
+    @param:JsonProperty
+    @param:Size(max = 50)
+    @param:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @Column(name = "category", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var category: String,
 
-    @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @param:JsonProperty
+    @param:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal,
 
-    @JsonProperty
+    @param:JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
     var transactionState: TransactionState,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @field:Convert(converter = ReoccurringTypeConverter::class)
     var reoccurringType: ReoccurringType = ReoccurringType.Undefined,
 
-    @JsonProperty
-    @field:Size(max = 100)
-    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
+    @param:JsonProperty
+    @param:Size(max = 100)
+    @param:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "notes", nullable = false)
     var notes: String = ""

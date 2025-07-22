@@ -13,7 +13,7 @@ open class LoggingCorsFilter(
     private val corsConfigurationSource: CorsConfigurationSource
 ) : CorsFilter(corsConfigurationSource) {
 
-    private val logger = LoggerFactory.getLogger(LoggingCorsFilter::class.java)
+    private val log = LoggerFactory.getLogger(LoggingCorsFilter::class.java)
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -23,11 +23,11 @@ open class LoggingCorsFilter(
         val origin = request.getHeader("Origin")
         if (origin != null) {
             val config = corsConfigurationSource.getCorsConfiguration(request)
-            if (config != null && !config.allowedOrigins.contains(origin)) {
+            if (config != null && config.allowedOrigins?.contains(origin) == false) {
                 val message = "CORS error: Origin '$origin' is not allowed for request '${request.requestURI}'. " +
                         "Allowed origins: ${config.allowedOrigins}. Request Method: '${request.method}', " +
                         "Remote Address: '${request.remoteAddr}'. Headers: ${getHeadersInfo(request)}"
-                logger.error(message)
+                log.error(message)
             }
         }
         // Continue with the filter chain

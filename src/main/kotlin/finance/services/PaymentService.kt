@@ -80,14 +80,9 @@ open class PaymentService(
             }
         }
 
-        //TODO: once code is updated you can remove the conditionals for null below
         val paymentAccountNameOwner = payment.sourceAccount
-        if (paymentAccountNameOwner != null) {
-            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
-        }
-        if (paymentAccountNameOwner != null) {
-            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
-        }
+        populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
+        populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
 
         transactionService.insertTransaction(transactionCredit)
         transactionService.insertTransaction(transactionDebit)
