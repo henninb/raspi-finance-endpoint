@@ -6,16 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.math.BigDecimal
 
 data class Summary(
-    @JsonProperty
+    @param:JsonProperty
     var totals: BigDecimal,
 
-    @JsonProperty
+    @param:JsonProperty
     var totalsCleared: BigDecimal,
 
-    @JsonProperty
+    @param:JsonProperty
     var totalsOutstanding: BigDecimal,
 
-    @JsonProperty
+    @param:JsonProperty
     var totalsFuture: BigDecimal
     ) {
 

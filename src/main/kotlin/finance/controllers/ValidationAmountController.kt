@@ -14,6 +14,7 @@ import java.util.*
 @RequestMapping("/validation/amount", "/api/validation/amount")
 class ValidationAmountController(private var validationAmountService: ValidationAmountService) : BaseController() {
 
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionDate": "2024-01-01", "amount": 100.00}' https://localhost:8443/validation/amount/insert/test_brian
     @PostMapping("/insert/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
     fun insertValidationAmount(
         @RequestBody validationAmount: ValidationAmount,
@@ -36,7 +37,7 @@ class ValidationAmountController(private var validationAmountService: Validation
         }
     }
 
-    //curl -k https://hornsup:8443/validation/amount/select/amazon_brian
+    // curl -k https://localhost:8443/validation/amount/select/test_brian/cleared
     @GetMapping("/select/{accountNameOwner}/{transactionStateValue}")
     fun selectValidationAmountByAccountId(
         @PathVariable("accountNameOwner") accountNameOwner: String,

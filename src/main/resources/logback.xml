@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="clr" class="org.springframework.boot.logging.logback.ColorConverter"/>
 <!--    <springProperty scope="context" name="APPNAME" source="spring.application.name"/>-->
 
     <appender name="TEXT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -37,5 +37,6 @@
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ASYNC_TEXT"/>
     </root>
 </configuration>

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.LowerCaseConverter
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
@@ -16,27 +15,26 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_category")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Category(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_category_category_id_seq")
-    @field:Min(value = 0L)
-    @JsonProperty
+    @param:Min(value = 0L)
+    @param:JsonProperty
     @Column(name = "category_id", nullable = false)
     var categoryId: Long,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    @field:Size(min = 1, max = 50)
-    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
+    @param:Size(min = 1, max = 50)
+    @param:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "category_name", unique = true, nullable = false)
-    @JsonProperty
+    @param:JsonProperty
     var categoryName: String
 ) {
     constructor() : this(0L, true, "")

@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/pending/transaction", "/api/pending/transaction")
 class PendingTransactionController(private val pendingTransactionService: PendingTransactionService) : BaseController() {
 
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner": "test_brian", "description": "pending transaction", "amount": 50.00}' https://localhost:8443/pending/transaction/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPendingTransaction(@RequestBody pendingTransaction: PendingTransaction): ResponseEntity<PendingTransaction> {
         return try {
@@ -22,6 +23,7 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
         }
     }
 
+    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/pending/transaction/delete/1
     @DeleteMapping("/delete/{id}")
     fun deletePendingTransaction(@PathVariable id: Long): ResponseEntity<Void> {
         return if (pendingTransactionService.deletePendingTransaction(id)) {
@@ -31,6 +33,7 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
         }
     }
 
+    // curl -k https://localhost:8443/pending/transaction/all
     @GetMapping("/all", produces = ["application/json"])
     fun getAllPendingTransactions(): ResponseEntity<List<PendingTransaction>> {
         val transactions = pendingTransactionService.getAllPendingTransactions()
@@ -40,6 +43,7 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
         return ResponseEntity.ok(transactions)
     }
 
+    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/pending/transaction/delete/all
     @DeleteMapping("/delete/all")
     fun deleteAllPendingTransactions(): ResponseEntity<Void> {
         return try {
