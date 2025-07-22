@@ -7,7 +7,6 @@ import finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
-import org.hibernate.annotations.Proxy
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -20,7 +19,6 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(
     name = "t_payment",
     uniqueConstraints = [UniqueConstraint(columnNames = ["account_name_owner", "transaction_date", "amount"])]
@@ -30,55 +28,55 @@ data class Payment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_payment_payment_id_seq")
-    @field:Min(value = 0L)
-    @JsonProperty
+    @param:Min(value = 0L)
+    @param:JsonProperty
     @Column(name = "payment_id", nullable = false)
     var paymentId: Long,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
-    @field:Size(min = 3, max = 40)
-    @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @param:Size(min = 3, max = 40)
+    @param:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     var accountNameOwner: String,
 
-    @JsonProperty
+    @param:JsonProperty
     //@Transient
     @Column(name = "source_account", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
-    @field:Size(min = 3, max = 40)
-    @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @param:Size(min = 3, max = 40)
+    @param:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     var sourceAccount: String,
 
-    @JsonProperty
+    @param:JsonProperty
     //@Transient
     @Column(name = "destination_account", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
-    @field:Size(min = 3, max = 40)
-    @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @param:Size(min = 3, max = 40)
+    @param:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     var destinationAccount: String,
 
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
-    @JsonProperty
+    @param:JsonProperty
     var transactionDate: Date,
 
-    @JsonProperty
-    @field:Digits(integer = 8, fraction = 2, message = Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @param:JsonProperty
+    @param:Digits(integer = 8, fraction = 2, message = Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal,
 
-    @JsonProperty
-    @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
+    @param:JsonProperty
+    @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     @Column(name = "guid_source", nullable = false)
     var guidSource: String?,
 
-    @JsonProperty
-    @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
+    @param:JsonProperty
+    @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     @Column(name = "guid_destination", nullable = false)
     var guidDestination: String?,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true
 ) {

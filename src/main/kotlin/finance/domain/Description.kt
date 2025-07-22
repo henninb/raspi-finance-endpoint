@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
@@ -20,19 +19,19 @@ data class Description(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_description_description_id_seq")
-    @field:Min(value = 0L)
-    @JsonProperty
+    @param:Min(value = 0L)
+    @param:JsonProperty
     @Column(name = "description_id", nullable = false)
     var descriptionId: Long,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    @field:Size(min = 1, max = 50)
+    @param:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "description_name", unique = true, nullable = false)
-    @JsonProperty
+    @param:JsonProperty
     var descriptionName: String
 ) {
     constructor() : this(0L, true, "")

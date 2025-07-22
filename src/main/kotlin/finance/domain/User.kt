@@ -17,12 +17,12 @@ data class User(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @SequenceGenerator(name = "t_user_user_id_seq")
-        @field:Min(value = 0L)
-        @JsonProperty
+        @param:Min(value = 0L)
+        @param:JsonProperty
         @Column(name = "user_id", nullable = false)
         var userId: Long,
 
-        @JsonProperty
+        @param:JsonProperty
         @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
         var activeStatus: Boolean = true,
 
@@ -41,12 +41,12 @@ data class User(
         @field:Size(min = 1, max = 60)
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "username", unique = true, nullable = false)
-        @JsonProperty
+        @param:JsonProperty
         var username: String,
 
         @field:Size(min = 1, max = 60)
         @Column(name = "password", unique = true, nullable = false)
-        @JsonProperty
+        @param:JsonProperty
         var password: String
 ) {
     constructor() : this(0L, true, "","", "","")

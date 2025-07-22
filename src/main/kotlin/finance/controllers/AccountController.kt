@@ -13,109 +13,163 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/account", "/account")
-class AccountController @Autowired constructor(private var accountService: AccountService) : BaseController() {
+class AccountController(private val accountService: AccountService) : BaseController() {
 
-    //http://localhost:8443/account/totals
+    // curl -k https://localhost:8443/account/totals
     @GetMapping("totals", produces = ["application/json"])
-    fun computeAccountTotals(): Map<String, String> {
-        val response: MutableMap<String, String> = HashMap()
-        //TODO: 6/27/2021 - need to modify to 1 call from 3
-        val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
-        val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
-        val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
+    fun computeAccountTotals(): ResponseEntity<Map<String, String>> {
+        return try {
+            logger.debug("Computing account totals")
+            val response: MutableMap<String, String> = HashMap()
+            //TODO: 6/27/2021 - need to modify to 1 call from 3
+            val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
+            val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
+            val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
 
-        logger.info("totalsOutstanding: $totalsOutstanding")
-        logger.info("totalsCleared: $totalsCleared")
-        logger.info("totalsFuture: $totalsFuture")
+            logger.debug("Account totals computed - Outstanding: $totalsOutstanding, Cleared: $totalsCleared, Future: $totalsFuture")
 
-        response["totalsCleared"] = totalsCleared.toString()
-        response["totalsFuture"] = totalsFuture.toString()
-        response["totalsOutstanding"] = totalsOutstanding.toString()
-        response["totals"] = (totalsCleared + totalsFuture + totalsOutstanding).toString()
-        return response
+            response["totalsCleared"] = totalsCleared.toString()
+            response["totalsFuture"] = totalsFuture.toString()
+            response["totalsOutstanding"] = totalsOutstanding.toString()
+            response["totals"] = (totalsCleared + totalsFuture + totalsOutstanding).toString()
+            ResponseEntity.ok(response)
+        } catch (ex: Exception) {
+            logger.error("Failed to compute account totals: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to compute account totals: ${ex.message}", ex)
+        }
     }
 
-    //curl --header "Content-Type: application/json" https://hornsup:8443/account/payment/required
+    // curl -k https://localhost:8443/account/payment/required
     @GetMapping("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): ResponseEntity<List<Account>> {
-
-        val accountNameOwners = accountService.findAccountsThatRequirePayment()
-        if (accountNameOwners.isEmpty()) {
-            logger.info("no accountNameOwners were found.")
+        return try {
+            logger.debug("Finding accounts that require payment")
+            val accountNameOwners = accountService.findAccountsThatRequirePayment()
+            if (accountNameOwners.isEmpty()) {
+                logger.info("No accounts requiring payment found")
+            } else {
+                logger.info("Found ${accountNameOwners.size} accounts requiring payment")
+            }
+            ResponseEntity.ok(accountNameOwners)
+        } catch (ex: Exception) {
+            logger.error("Failed to find accounts requiring payment: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve payment required accounts: ${ex.message}", ex)
         }
-        return ResponseEntity.ok(accountNameOwners)
     }
 
-    //http://localhost:8443/account/select/active
+    // curl -k https://localhost:8443/account/select/active
     @GetMapping("/select/active", produces = ["application/json"])
     fun accounts(): ResponseEntity<List<Account>> {
-        //TODO: create a separate endpoint for the totals
-        accountService.updateTotalsForAllAccounts()
-        val accounts: List<Account> = accountService.accounts()
-        if (accounts.isEmpty()) {
-            logger.info("no accounts found.")
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any accounts.")
+        return try {
+            logger.debug("Retrieving active accounts")
+            //TODO: create a separate endpoint for the totals
+            accountService.updateTotalsForAllAccounts()
+            val accounts: List<Account> = accountService.accounts()
+            if (accounts.isEmpty()) {
+                logger.warn("No active accounts found")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No active accounts found")
+            }
+            logger.info("Retrieved ${accounts.size} active accounts")
+            ResponseEntity.ok(accounts)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to retrieve active accounts: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve active accounts: ${ex.message}", ex)
         }
-        logger.info("select active accounts: ${accounts.size}")
-        return ResponseEntity.ok(accounts)
     }
 
-    //http://localhost:8443/account/select/test_brian
+    // curl -k https://localhost:8443/account/select/test_brian
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
     fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
-        if (accountOptional.isPresent) {
-            return ResponseEntity.ok(accountOptional.get())
+        return try {
+            logger.debug("Retrieving account: $accountNameOwner")
+            val account = accountService.account(accountNameOwner)
+                .orElseThrow { 
+                    logger.warn("Account not found: $accountNameOwner")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+                }
+            logger.info("Retrieved account: $accountNameOwner")
+            ResponseEntity.ok(account)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to retrieve account $accountNameOwner: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve account: ${ex.message}", ex)
         }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find this account.")
     }
 
-    //curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": "true","moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00, "dateClosed": 0, "dateUpdated": 0, "dateAdded": 0}' 'https://localhost:8080/account/insert'
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": true, "moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00}' https://localhost:8443/account/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
         return try {
+            logger.info("Inserting account: ${account.accountNameOwner}")
             val accountResponse = accountService.insertAccount(account)
+            logger.info("Account inserted successfully: ${accountResponse.accountNameOwner}")
             ResponseEntity.ok(accountResponse)
         } catch (ex: ResponseStatusException) {
+            logger.error("Failed to insert account ${account.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert account: ${ex.message}", ex)
         } catch (ex: Exception) {
+            logger.error("Unexpected error inserting account ${account.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }
     }
 
-    //curl -k --header "Content-Type: application/json" --request DELETE 'https://localhost:8443/account/delete/test_brian'
+    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/account/delete/test_brian
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
     fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        val accountOptional: Optional<Account> = accountService.account(accountNameOwner)
-
-        if (accountOptional.isPresent) {
+        return try {
+            logger.info("Attempting to delete account: $accountNameOwner")
+            val account = accountService.account(accountNameOwner)
+                .orElseThrow { 
+                    logger.warn("Account not found for deletion: $accountNameOwner")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+                }
+            
             accountService.deleteAccount(accountNameOwner)
-            val account: Account = accountOptional.get()
-            logger.info("Account deleted: ${account.accountNameOwner}")
-            return ResponseEntity.ok(account)
+            logger.info("Account deleted successfully: $accountNameOwner")
+            ResponseEntity.ok(account)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to delete account $accountNameOwner: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete account: ${ex.message}", ex)
         }
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "could not delete this account: $accountNameOwner.")
     }
 
-    //curl -k --header "Content-Type: application/json" --request PUT 'https://localhost:8443/account/update/test_account' --data '{}'
+    // curl -k --header "Content-Type: application/json" --request PUT --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": true}' https://localhost:8443/account/update/test_brian
     @PutMapping("/update/{accountNameOwner}", produces = ["application/json"])
     fun updateAccount(
-        @PathVariable("accountNameOwner") guid: String,
+        @PathVariable("accountNameOwner") accountNameOwner: String,
         @RequestBody account: Map<String, Any>
     ): ResponseEntity<Account> {
-        val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
-        val accountResponse = accountService.updateAccount(accountToBeUpdated)
-        return ResponseEntity.ok(accountResponse)
+        return try {
+            logger.info("Updating account: $accountNameOwner")
+            val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
+            val accountResponse = accountService.updateAccount(accountToBeUpdated)
+            logger.info("Account updated successfully: $accountNameOwner")
+            ResponseEntity.ok(accountResponse)
+        } catch (ex: Exception) {
+            logger.error("Failed to update account $accountNameOwner: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account: ${ex.message}", ex)
+        }
     }
 
-    //curl -k -X PUT 'https://hornsup:8443/account/rename?old=gap_kari&new=oldnavy_kari'
-    //curl -k --header "Content-Type: application/json" --request PUT 'https://hornsup:8443/account/rename?old=test_brian&new=testnew_brian'
+    // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/rename?old=test_brian&new=testnew_brian
     @PutMapping("/rename", produces = ["application/json"])
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,
         @RequestParam("new") newAccountNameOwner: String
     ): ResponseEntity<Account> {
-        val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
-        return ResponseEntity.ok(accountResponse)
+        return try {
+            logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
+            val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
+            logger.info("Account renamed successfully from $oldAccountNameOwner to $newAccountNameOwner")
+            ResponseEntity.ok(accountResponse)
+        } catch (ex: Exception) {
+            logger.error("Failed to rename account from $oldAccountNameOwner to $newAccountNameOwner: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to rename account: ${ex.message}", ex)
+        }
     }
 }

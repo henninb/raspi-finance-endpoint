@@ -13,6 +13,7 @@ import java.util.*
 @RequestMapping("/transfer", "/api/transfer")
 class TransferController(private var transferService: TransferService) : BaseController() {
 
+    // curl -k https://localhost:8443/transfer/select
     @GetMapping("/select", produces = ["application/json"])
     fun selectAllTransfers(): ResponseEntity<List<Transfer>> {
         val transfers = transferService.findAllTransfers()
@@ -20,6 +21,7 @@ class TransferController(private var transferService: TransferService) : BaseCon
         return ResponseEntity.ok(transfers)
     }
 
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner": "test_brian", "transferAmount": 100.00, "description": "test transfer"}' https://localhost:8443/transfer/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransfer(@RequestBody transfer: Transfer): ResponseEntity<Transfer> {
         return try {
@@ -32,7 +34,7 @@ class TransferController(private var transferService: TransferService) : BaseCon
         }
     }
 
-    //curl --header "Content-Type: application/json" -X DELETE http://localhost:8443/transfer/delete/1001
+    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/transfer/delete/1001
     @DeleteMapping("/delete/{transferId}", produces = ["application/json"])
     fun deleteByTransferId(@PathVariable transferId: Long): ResponseEntity<Transfer> {
         val transferOptional: Optional<Transfer> = transferService.findByTransferId(transferId)

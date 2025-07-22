@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
@@ -13,31 +12,30 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_parameter")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Parameter(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_parameter_parameter_id_seq")
-    @field:Min(value = 0L)
-    @JsonProperty
+    @param:Min(value = 0L)
+    @param:JsonProperty
     @Column(name = "parameter_id", nullable = false)
     var parameterId: Long,
 
-    @field:Size(min = 1, max = 50)
+    @param:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", unique = true, nullable = false)
-    @JsonProperty
+    @param:JsonProperty
     var parameterName: String,
 
-    @field:Size(min = 1, max = 50)
+    @param:Size(min = 1, max = 50)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_value", unique = true, nullable = false)
-    @JsonProperty
+    @param:JsonProperty
     var parameterValue: String,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true
 ) {

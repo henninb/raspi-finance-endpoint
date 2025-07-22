@@ -8,31 +8,29 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.ImageFormatTypeConverter
 import finance.utils.ValidImage
 import org.apache.logging.log4j.LogManager
-import org.hibernate.annotations.Proxy
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
 import jakarta.validation.constraints.Min
 
 @Entity
-@Proxy(lazy = false)
 @Table(name = "t_receipt_image")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReceiptImage(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_receipt_image_receipt_image_id_seq")
-    @JsonProperty
-    @field:Min(value = 0L)
+    @param:JsonProperty
+    @param:Min(value = 0L)
     @Column(name = "receipt_image_id", nullable = false)
     var receiptImageId: Long,
 
-    @JsonProperty
-    @field:Min(value = 0L)
+    @param:JsonProperty
+    @param:Min(value = 0L)
     @Column(name = "transaction_id", nullable = false)
     var transactionId: Long,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true
 ) {

@@ -24,38 +24,38 @@ data class PendingTransaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_pending_transaction_pending_transaction_id_seq")
-    @field:Min(value = 0L)
-    @JsonProperty
+    @param:Min(value = 0L)
+    @param:JsonProperty
     @Column(name = "pending_transaction_id")
     var pendingTransactionId: Long = 0L,
 
-    @JsonProperty
-    @field:Size(min = 3, max = 40)
-    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @param:JsonProperty
+    @param:Size(min = 3, max = 40)
+    @param:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     var accountNameOwner: String,
 
-    @JsonProperty
+    @param:JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     var transactionDate: Date,
 
-    @JsonProperty
-    @field:Size(min = 1, max = 75)
-    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
+    @param:JsonProperty
+    @param:Size(min = 1, max = 75)
+    @param:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     var description: String,
 
-    @JsonProperty
-    @field:Digits(integer = 12, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @param:JsonProperty
+    @param:Digits(integer = 12, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 12, scale = 2, columnDefinition = "NUMERIC(12,2) DEFAULT 0.00")
     var amount: BigDecimal,
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "review_status", nullable = false, columnDefinition = "TEXT DEFAULT 'pending'")
     var reviewStatus: String = "pending",
 
-    @JsonProperty
+    @param:JsonProperty
     @Column(name = "owner", nullable = true)
     var owner: String? = null,
 

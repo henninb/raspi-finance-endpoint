@@ -11,77 +11,125 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/category", "/api/category")
-class CategoryController(private var categoryService: CategoryService) : BaseController() {
+class CategoryController(private val categoryService: CategoryService) : BaseController() {
 
-    //http://localhost:8443/category/select/active
+    // curl -k https://localhost:8443/category/select/active
     @GetMapping("/select/active", produces = ["application/json"])
     fun categories(): ResponseEntity<List<Category>> {
-        val categories: List<Category> = categoryService.categories()
-        if (categories.isEmpty()) {
-            logger.error("no categories found in the datastore.")
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "could not find any categories in the datastore.")
+        return try {
+            logger.debug("Retrieving active categories")
+            val categories: List<Category> = categoryService.categories()
+            if (categories.isEmpty()) {
+                logger.warn("No categories found in the datastore")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No categories found")
+            }
+            logger.info("Retrieved ${categories.size} active categories")
+            ResponseEntity.ok(categories)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to retrieve categories: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve categories: ${ex.message}", ex)
         }
-        logger.info("select active categories: ${categories.size}")
-        return ResponseEntity.ok(categories)
     }
 
+    // curl -k https://localhost:8443/category/select/groceries
     @GetMapping("/select/{category_name}")
     fun category(@PathVariable("category_name") categoryName: String): ResponseEntity<Category> {
-        val categoryOptional = categoryService.category(categoryName)
-        if (categoryOptional.isPresent) {
-            val category = categoryOptional.get()
-            logger.info("cattegory deleted: ${category.categoryName}")
-            return ResponseEntity.ok(category)
+        return try {
+            logger.debug("Retrieving category: $categoryName")
+            val category = categoryService.category(categoryName)
+                .orElseThrow {
+                    logger.warn("Category not found: $categoryName")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: $categoryName")
+                }
+            logger.info("Retrieved category: ${category.categoryName}")
+            ResponseEntity.ok(category)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to retrieve category $categoryName: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve category: ${ex.message}", ex)
         }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "category not found for: $categoryName")
     }
 
+    // curl -k --header "Content-Type: application/json" --request PUT --data '{"categoryName":"groceries", "activeStatus": true}' https://localhost:8443/category/update/groceries
     @PutMapping("/update/{category_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateCategory(
         @PathVariable("category_name") categoryName: String,
         @RequestBody toBePatchedCategory: Category
     ): ResponseEntity<Category> {
-        val categoryOptional = categoryService.findByCategoryName(categoryName)
-        if (categoryOptional.isPresent) {
+        return try {
+            logger.info("Updating category: $categoryName")
+            categoryService.findByCategoryName(categoryName)
+                .orElseThrow {
+                    logger.warn("Category not found for update: $categoryName")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: $categoryName")
+                }
             val categoryResponse = categoryService.updateCategory(toBePatchedCategory)
-            return ResponseEntity.ok(categoryResponse)
+            logger.info("Category updated successfully: $categoryName")
+            ResponseEntity.ok(categoryResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to update category $categoryName: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update category: ${ex.message}", ex)
         }
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found for: $categoryName")
     }
 
-    //curl --header "Content-Type: application/json" -X POST -d '{"category":"test"}' http://localhost:8443/category/insert
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"categoryName":"test", "activeStatus": true}' https://localhost:8443/category/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertCategory(@RequestBody category: Category): ResponseEntity<Category> {
         return try {
+            logger.info("Inserting category: ${category.categoryName}")
             val categoryResponse = categoryService.insertCategory(category)
+            logger.info("Category inserted successfully: ${categoryResponse.categoryName}")
             ResponseEntity.ok(categoryResponse)
         } catch (ex: ResponseStatusException) {
+            logger.error("Failed to insert category ${category.categoryName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert category: ${ex.message}", ex)
         } catch (ex: Exception) {
+            logger.error("Unexpected error inserting category ${category.categoryName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }
     }
 
+    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/category/delete/test
     @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])
     fun deleteCategory(@PathVariable categoryName: String): ResponseEntity<Category> {
-        val categoryOptional: Optional<Category> = categoryService.findByCategoryName(categoryName)
-
-        if (categoryOptional.isPresent) {
-            val categoryToDelete = categoryOptional.get() // Get the category object
+        return try {
+            logger.info("Attempting to delete category: $categoryName")
+            val categoryToDelete = categoryService.findByCategoryName(categoryName)
+                .orElseThrow {
+                    logger.warn("Category not found for deletion: $categoryName")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: $categoryName")
+                }
+            
             categoryService.deleteCategory(categoryName)
-            return ResponseEntity.ok(categoryToDelete) // Return the deleted category
+            logger.info("Category deleted successfully: $categoryName")
+            ResponseEntity.ok(categoryToDelete)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to delete category $categoryName: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete category: ${ex.message}", ex)
         }
-
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not delete this category: $categoryName.")
     }
 
-    //curl -X PUT "http://localhost:8080/api/category/merge?old=categoryA&new=categoryB" -H "Accept: application/json"
+    // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/category/merge?old=categoryA&new=categoryB
     @PutMapping("/merge", produces = ["application/json"])
     fun mergeCategories(
         @RequestParam(value = "new") categoryName1: String,
         @RequestParam("old") categoryName2: String
     ): ResponseEntity<Category> {
-        val mergedCategory = categoryService.mergeCategories(categoryName1, categoryName2)
-        return ResponseEntity.ok(mergedCategory)
+        return try {
+            logger.info("Merging categories: $categoryName2 into $categoryName1")
+            val mergedCategory = categoryService.mergeCategories(categoryName1, categoryName2)
+            logger.info("Categories merged successfully: $categoryName2 into $categoryName1")
+            ResponseEntity.ok(mergedCategory)
+        } catch (ex: Exception) {
+            logger.error("Failed to merge categories $categoryName2 into $categoryName1: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge categories: ${ex.message}", ex)
+        }
     }
 }
