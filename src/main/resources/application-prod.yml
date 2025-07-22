@@ -59,7 +59,6 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: ${HIBERNATE_DDL}
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
   #    properties:
   #      hibernate:
   #        jdbc:
