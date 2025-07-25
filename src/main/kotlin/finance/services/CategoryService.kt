@@ -18,11 +18,15 @@ open class CategoryService(
 
     @Timed
     override fun insertCategory(category: Category): Category {
+        logger.info("Inserting category: ${category.categoryName}")
         val constraintViolations: Set<ConstraintViolation<Category>> = validator.validate(category)
         handleConstraintViolations(constraintViolations, meterService)
-        category.dateAdded = Timestamp(Calendar.getInstance().time.time)
-        category.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        return categoryRepository.saveAndFlush(category)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        category.dateAdded = timestamp
+        category.dateUpdated = timestamp
+        val savedCategory = categoryRepository.saveAndFlush(category)
+        logger.info("Successfully inserted category: ${savedCategory.categoryName} with ID: ${savedCategory.categoryId}")
+        return savedCategory
     }
 
     @Timed
@@ -36,14 +40,22 @@ open class CategoryService(
 
     @Timed
     override fun deleteCategory(categoryName: String): Boolean {
-        val category = categoryRepository.findByCategoryName(categoryName).get()
-        categoryRepository.delete(category)
-        return true
+        logger.info("Deleting category: $categoryName")
+        val categoryOptional = categoryRepository.findByCategoryName(categoryName)
+        if (categoryOptional.isPresent) {
+            categoryRepository.delete(categoryOptional.get())
+            logger.info("Successfully deleted category: $categoryName")
+            return true
+        }
+        logger.warn("Category not found for deletion: $categoryName")
+        return false
     }
 
     @Timed
     override fun categories(): List<Category> {
+        logger.info("Fetching all active categories")
         val categories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
+        logger.info("Found ${categories.size} active categories")
         return categories.map { category ->
             val count = transactionRepository.countByCategoryName(category.categoryName)
             category.categoryCount = count
@@ -67,8 +79,8 @@ open class CategoryService(
             // Updating fields
             categoryToUpdate.categoryName = category.categoryName
             categoryToUpdate.activeStatus = category.activeStatus
-            categoryToUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            logger.info("category update")
+            categoryToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
+            logger.info("Updating category: ${categoryToUpdate.categoryName}")
             return categoryRepository.saveAndFlush(categoryToUpdate)
         }
 
@@ -86,8 +98,10 @@ open class CategoryService(
             RuntimeException("Category $categoryName2 not found")
         }
 
+        logger.info("Merging categories: $categoryName2 into $categoryName1")
         // Reassign transactions from category2 to category1
         val transactionsToUpdate = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName2)
+        logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $categoryName2 to $categoryName1")
         transactionsToUpdate.forEach { transaction ->
             transaction.category = categoryName1
             transactionRepository.saveAndFlush(transaction)
@@ -101,10 +115,11 @@ open class CategoryService(
         category2.activeStatus = false // You could also delete it if required: categoryRepository.delete(category2)
 
         // Save the updated category1
-        categoryRepository.saveAndFlush(category1)
+        val mergedCategory = categoryRepository.saveAndFlush(category1)
+        logger.info("Successfully merged category $categoryName2 into $categoryName1")
 
         // Return the merged category (category1 in this case)
-        return category1
+        return mergedCategory
     }
 
 }

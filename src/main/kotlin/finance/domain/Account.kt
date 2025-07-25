@@ -9,6 +9,7 @@ import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_FOUR_DIGITS_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import java.math.BigDecimal
@@ -35,15 +36,15 @@ data class Account(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_account_account_id_seq")
     @param:JsonProperty
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
     @param:JsonProperty
     @Column(name = "account_name_owner", unique = true, nullable = false)
-    @param:Size(min = 3, max = 40)
+    @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
-    @param:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     var accountNameOwner: String,
 
     @param:JsonProperty
@@ -57,22 +58,22 @@ data class Account(
     var activeStatus: Boolean = true,
 
     @param:JsonProperty
-    @param:Pattern(regexp = "^[0-9]{4}$", message = FIELD_MUST_BE_FOUR_DIGITS_MESSAGE)
+    @field:Pattern(regexp = "^[0-9]{4}$", message = FIELD_MUST_BE_FOUR_DIGITS_MESSAGE)
     @Column(name = "moniker", columnDefinition = "TEXT DEFAULT '0000'")
     var moniker: String,
 
     @param:JsonProperty
-    @param:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "outstanding", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var outstanding: BigDecimal,
 
     @param:JsonProperty
-    @param:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "future", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var future: BigDecimal,
 
     @param:JsonProperty
-    @param:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "cleared", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var cleared: BigDecimal,
 

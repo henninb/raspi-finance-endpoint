@@ -15,7 +15,8 @@ import static finance.utils.Constants.*
 class BaseServiceSpec extends Specification {
     protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
     protected Validator validatorMock = GroovyMock(Validator)
-    protected MeterRegistry meterRegistryMock = GroovyMock(MeterRegistry)
+    protected MeterRegistry meterRegistryMock = Mock(MeterRegistry)
+    protected Counter counterMock = Mock(Counter)
     protected MeterService meterService = new MeterService(meterRegistryMock)
     protected CategoryRepository categoryRepositoryMock = GroovyMock(CategoryRepository)
     protected DescriptionRepository descriptionRepositoryMock = GroovyMock(DescriptionRepository)
@@ -34,10 +35,10 @@ class BaseServiceSpec extends Specification {
     protected AccountService accountServiceMock = GroovyMock(AccountService)
 
     protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
-    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, transactionRepositoryMock)
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock)
-    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, receiptImageServiceMock)
+    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
+    protected AccountService accountService = new AccountService(accountRepositoryMock)
+    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock)
+    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, descriptionService, receiptImageServiceMock)
     protected ParameterService parameterService = new ParameterService(parameterRepositoryMock)
     protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService)
 

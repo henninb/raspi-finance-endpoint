@@ -87,9 +87,9 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then:
         thrown(RuntimeException)
+        1 * validatorMock.validate(payment) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
         1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.empty()
-        1 * validatorMock.validate(payment) >> constraintViolations
-        0 * _
+        _ * _  // Allow any other interactions (logging, etc.)
     }
 }

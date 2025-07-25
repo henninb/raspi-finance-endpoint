@@ -19,49 +19,16 @@ open class PaymentService(
 
     @Timed
     override fun findAllPayments(): List<Payment> {
-        return paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
+        logger.info("Fetching all payments")
+        val payments = paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
+        logger.info("Found ${payments.size} payments")
+        return payments
     }
 
-//    //TODO: make this method transactional - what happens if one inserts fails?
-//    @Timed
-//    override fun insertPayment(payment: Payment): Payment {
-//        val transactionCredit = Transaction()
-//        val transactionDebit = Transaction()
-//
-//        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
-//        handleConstraintViolations(constraintViolations, meterService)
-//        val optionalAccount = accountService.account(payment.accountNameOwner)
-//        if (!optionalAccount.isPresent) {
-//            logger.error("Account not found ${payment.accountNameOwner}")
-//            meterService.incrementExceptionThrownCounter("RuntimeException")
-//            throw RuntimeException("Account not found ${payment.accountNameOwner}")
-//        } else {
-//            if (optionalAccount.get().accountType == AccountType.Debit) {
-//                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-//                meterService.incrementExceptionThrownCounter("RuntimeException")
-//                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-//            }
-//        }
-//
-//        val optionalParameter = parameterService.findByParameterName("payment_account")
-//        if (optionalParameter.isPresent) {
-//            val paymentAccountNameOwner = optionalParameter.get().parameterValue
-//            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
-//            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
-//
-//            transactionService.insertTransaction(transactionCredit)
-//            transactionService.insertTransaction(transactionDebit)
-//            payment.guidDestination = transactionCredit.guid
-//            payment.guidSource = transactionDebit.guid
-//            payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-//            payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
-//            return paymentRepository.saveAndFlush(payment)
-//        }
-//        throw RuntimeException("failed to read the parameter 'payment_account'.")
-//    }
 
     @Timed
     override fun insertPaymentNew(payment: Payment): Payment {
+        logger.info("Inserting new payment for account: ${payment.accountNameOwner}")
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
 
@@ -84,13 +51,17 @@ open class PaymentService(
         populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
         populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
 
+        logger.info("Creating debit and credit transactions for payment")
         transactionService.insertTransaction(transactionCredit)
         transactionService.insertTransaction(transactionDebit)
         payment.guidDestination = transactionCredit.guid
         payment.guidSource = transactionDebit.guid
-        payment.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        payment.dateAdded = Timestamp(Calendar.getInstance().time.time)
-        return paymentRepository.saveAndFlush(payment)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        payment.dateUpdated = timestamp
+        payment.dateAdded = timestamp
+        val savedPayment = paymentRepository.saveAndFlush(payment)
+        logger.info("Successfully created payment with ID: ${savedPayment.paymentId}")
+        return savedPayment
     }
 
     //TODO: 10/24/2020 - not sure if Throws annotation helps here?
@@ -116,8 +87,9 @@ open class PaymentService(
         transactionDebit.reoccurringType = ReoccurringType.Onetime
         transactionDebit.accountType = AccountType.Debit
         transactionDebit.accountNameOwner = paymentAccountNameOwner
-        transactionDebit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transactionDebit.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transactionDebit.dateUpdated = timestamp
+        transactionDebit.dateAdded = timestamp
     }
 
     @Timed
@@ -144,15 +116,22 @@ open class PaymentService(
         transactionCredit.reoccurringType = ReoccurringType.Onetime
         transactionCredit.accountType = AccountType.Credit
         transactionCredit.accountNameOwner = payment.accountNameOwner
-        transactionCredit.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transactionCredit.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transactionCredit.dateUpdated = timestamp
+        transactionCredit.dateAdded = timestamp
     }
 
     @Timed
     override fun deleteByPaymentId(paymentId: Long): Boolean {
-        val payment = paymentRepository.findByPaymentId(paymentId).get()
-        paymentRepository.delete(payment)
-        return true
+        logger.info("Deleting payment with ID: $paymentId")
+        val paymentOptional = paymentRepository.findByPaymentId(paymentId)
+        if (paymentOptional.isPresent) {
+            paymentRepository.delete(paymentOptional.get())
+            logger.info("Successfully deleted payment with ID: $paymentId")
+            return true
+        }
+        logger.warn("Payment not found with ID: $paymentId")
+        return false
     }
 
     @Timed
@@ -163,5 +142,47 @@ open class PaymentService(
             return paymentOptional
         }
         return Optional.empty()
+    }
+
+    @Deprecated("Use insertPaymentNew instead")
+    @Timed
+    fun insertPayment(payment: Payment): Payment {
+        val transactionCredit = Transaction()
+        val transactionDebit = Transaction()
+
+        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
+        handleConstraintViolations(constraintViolations, meterService)
+        val optionalAccount = accountService.account(payment.accountNameOwner)
+        if (!optionalAccount.isPresent) {
+            logger.error("Account not found ${payment.accountNameOwner}")
+            meterService.incrementExceptionThrownCounter("RuntimeException")
+            throw RuntimeException("Account not found ${payment.accountNameOwner}")
+        } else {
+            if (optionalAccount.get().accountType == AccountType.Debit) {
+                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                meterService.incrementExceptionThrownCounter("RuntimeException")
+                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+            }
+        }
+
+        val optionalParameter = parameterService.findByParameterName("payment_account")
+        if (optionalParameter.isPresent) {
+            val paymentAccountNameOwner = optionalParameter.get().parameterValue
+            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
+            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
+
+            transactionService.insertTransaction(transactionCredit)
+            transactionService.insertTransaction(transactionDebit)
+            payment.guidDestination = transactionCredit.guid
+            payment.guidSource = transactionDebit.guid
+            val timestamp = Timestamp(System.currentTimeMillis())
+            payment.dateUpdated = timestamp
+            payment.dateAdded = timestamp
+            return paymentRepository.saveAndFlush(payment)
+        } else {
+            logger.error("Parameter not found: payment_account")
+            meterService.incrementExceptionThrownCounter("RuntimeException")
+            throw RuntimeException("Parameter not found: payment_account")
+        }
     }
 }

@@ -21,12 +21,12 @@ data class ReceiptImage(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_receipt_image_receipt_image_id_seq")
     @param:JsonProperty
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @Column(name = "receipt_image_id", nullable = false)
     var receiptImageId: Long,
 
     @param:JsonProperty
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @Column(name = "transaction_id", nullable = false)
     var transactionId: Long,
 

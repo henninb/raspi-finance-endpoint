@@ -12,6 +12,10 @@ import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import finance.utils.Constants.UUID_PATTERN
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 import org.apache.logging.log4j.LogManager
 import org.springframework.data.annotation.Immutable
 import java.math.BigDecimal
@@ -35,18 +39,18 @@ data class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_transaction_transaction_id_seq")
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @param:JsonProperty
     @Column(name = "transaction_id")
     var transactionId: Long,
 
     @param:JsonProperty
     @Column(name = "guid", unique = true, nullable = false)
-    @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
+    @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String,
 
     @param:JsonProperty
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
@@ -61,8 +65,8 @@ data class Transaction(
     var transactionType: TransactionType,
 
     @param:JsonProperty
-    @param:Size(min = 3, max = 40)
-    @param:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+    @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
+    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var accountNameOwner: String,
@@ -73,21 +77,21 @@ data class Transaction(
     var transactionDate: Date,
 
     @param:JsonProperty
-    @param:Size(min = 1, max = 75)
-    @param:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
+    @field:Size(min = 1, max = 75, message = FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE)
+    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var description: String,
 
     @param:JsonProperty
-    @param:Size(max = 50)
-    @param:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
+    @field:Size(max = 50, message = FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE)
+    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @Column(name = "category", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var category: String,
 
     @param:JsonProperty
-    @param:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal,
 
@@ -106,8 +110,8 @@ data class Transaction(
     var reoccurringType: ReoccurringType = ReoccurringType.Undefined,
 
     @param:JsonProperty
-    @param:Size(max = 100)
-    @param:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
+    @field:Size(max = 100)
+    @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "notes", nullable = false)
     var notes: String = ""

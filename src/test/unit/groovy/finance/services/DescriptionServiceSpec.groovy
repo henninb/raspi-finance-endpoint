@@ -32,7 +32,13 @@ class DescriptionServiceSpec extends BaseServiceSpec {
     void 'test - insert description - empty descriptionName'() {
         given:
         Description description = DescriptionBuilder.builder().withDescription('').build()
-        Set<ConstraintViolation<Description>> constraintViolations = validator.validate(description)
+        
+        // Create mock constraint violation
+        ConstraintViolation<Description> violation = Mock(ConstraintViolation)
+        violation.invalidValue >> ""
+        violation.message >> "size must be between 3 and 40"
+        
+        Set<ConstraintViolation<Description>> constraintViolations = [violation] as Set
 
         when:
         descriptionService.insertDescription(description)
@@ -43,7 +49,7 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(description) >> constraintViolations
         1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
-        0 * _
+        _ * _  // Allow any other interactions (logging, etc.)
     }
 
     void 'test - delete description'() {

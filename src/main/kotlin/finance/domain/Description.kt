@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
@@ -19,7 +20,7 @@ data class Description(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_description_description_id_seq")
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @param:JsonProperty
     @Column(name = "description_id", nullable = false)
     var descriptionId: Long,
@@ -28,7 +29,7 @@ data class Description(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 
-    @param:Size(min = 1, max = 50)
+    @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "description_name", unique = true, nullable = false)
     @param:JsonProperty

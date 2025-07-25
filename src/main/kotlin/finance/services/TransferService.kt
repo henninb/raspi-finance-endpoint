@@ -18,17 +18,12 @@ open class TransferService(
 
     @Timed
     override fun findAllTransfers(): List<Transfer> {
-        return transferRepository.findAll().sortedByDescending { transfer -> transfer.transactionDate }
+        logger.info("Fetching all transfers")
+        val transfers = transferRepository.findAll().sortedByDescending { transfer -> transfer.transactionDate }
+        logger.info("Found ${transfers.size} transfers")
+        return transfers
     }
 
-//    @Timed
-//    override fun insertTransfer(transfer: Transfer): Transfer {
-//        transfer.activeStatus = true
-//        transfer.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-//        transfer.dateAdded = Timestamp(Calendar.getInstance().time.time)
-//
-//        return transferRepository.saveAndFlush(transfer)
-//    }
 
     @Timed
     override fun insertTransfer(transfer: Transfer): Transfer {
@@ -65,10 +60,14 @@ open class TransferService(
 
         transfer.guidSource = transactionSource.guid
         transfer.guidDestination = transactionDestination.guid
-        transfer.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transfer.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        logger.info("Creating transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transfer.dateUpdated = timestamp
+        transfer.dateAdded = timestamp
 
-        return transferRepository.saveAndFlush(transfer)
+        val savedTransfer = transferRepository.saveAndFlush(transfer)
+        logger.info("Successfully created transfer with ID: ${savedTransfer.transferId}")
+        return savedTransfer
     }
 
     @Timed
@@ -87,8 +86,9 @@ open class TransferService(
         transaction.reoccurringType = ReoccurringType.Onetime
         transaction.accountType = AccountType.Debit
         transaction.accountNameOwner = accountName
-        transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transaction.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transaction.dateUpdated = timestamp
+        transaction.dateAdded = timestamp
     }
 
     @Timed
@@ -107,15 +107,22 @@ open class TransferService(
         transaction.reoccurringType = ReoccurringType.Onetime
         transaction.accountType = AccountType.Debit
         transaction.accountNameOwner = accountName
-        transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        transaction.dateAdded = Timestamp(Calendar.getInstance().time.time)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transaction.dateUpdated = timestamp
+        transaction.dateAdded = timestamp
     }
 
     @Timed
     override fun deleteByTransferId(transferId: Long): Boolean {
-        val transfer = transferRepository.findByTransferId(transferId).get()
-        transferRepository.delete(transfer)
-        return true
+        logger.info("Deleting transfer with ID: $transferId")
+        val transferOptional = transferRepository.findByTransferId(transferId)
+        if (transferOptional.isPresent) {
+            transferRepository.delete(transferOptional.get())
+            logger.info("Successfully deleted transfer with ID: $transferId")
+            return true
+        }
+        logger.warn("Transfer not found with ID: $transferId")
+        return false
     }
 
     @Timed

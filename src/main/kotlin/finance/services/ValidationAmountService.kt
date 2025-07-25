@@ -16,23 +16,6 @@ open class ValidationAmountService(
     private var accountRepository: AccountRepository
 ) : IValidationAmountService, BaseService() {
 
-//    override fun insertValidationAmount(
-//        accountNameOwner: String,
-//        validationAmount: ValidationAmount
-//    ): ValidationAmount {
-//        var accountId = 0L
-//        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
-//        if (accountOptional.isPresent) {
-//            accountId = accountOptional.get().accountId
-//        }
-//
-//        val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
-//        handleConstraintViolations(constraintViolations, meterService)
-//        validationAmount.accountId = accountId
-//        validationAmount.dateAdded = Timestamp(Calendar.getInstance().time.time)
-//        validationAmount.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-//        return validationAmountRepository.saveAndFlush(validationAmount)
-//    }
 
 
 
@@ -40,18 +23,22 @@ open class ValidationAmountService(
         accountNameOwner: String,
         validationAmount: ValidationAmount
     ): ValidationAmount {
+        logger.info("Inserting validation amount for account: $accountNameOwner")
         var accountId = 0L
         val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
         if (accountOptional.isPresent) {
             accountId = accountOptional.get().accountId
+        } else {
+            logger.warn("Account not found: $accountNameOwner")
         }
 
         val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
         handleConstraintViolations(constraintViolations, meterService)
 
         validationAmount.accountId = accountId
-        validationAmount.dateAdded = Timestamp(Calendar.getInstance().time.time)
-        validationAmount.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        validationAmount.dateAdded = timestamp
+        validationAmount.dateUpdated = timestamp
 
         // Save the ValidationAmount
         val savedValidationAmount = validationAmountRepository.saveAndFlush(validationAmount)
@@ -62,8 +49,10 @@ open class ValidationAmountService(
             account.validationDate = validationAmount.dateUpdated
             account.dateUpdated = validationAmount.dateUpdated
             accountRepository.saveAndFlush(account)
+            logger.info("Updated validation date for account: $accountNameOwner")
         }
 
+        logger.info("Successfully inserted validation amount with ID: ${savedValidationAmount.validationId}")
         return savedValidationAmount
     }
 
@@ -72,6 +61,7 @@ open class ValidationAmountService(
         accountNameOwner: String,
         traansactionState: TransactionState
     ): ValidationAmount {
+        logger.info("Finding validation amount for account: $accountNameOwner, state: $traansactionState")
         val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
         if (accountOptional.isPresent) {
             val validationAmountList = validationAmountRepository.findByTransactionStateAndAccountId(
@@ -79,13 +69,14 @@ open class ValidationAmountService(
                 accountOptional.get().accountId
             )
             if (validationAmountList.isEmpty()) {
-                logger.info("empty list")
+                logger.info("No validation amounts found for account: $accountNameOwner")
                 return ValidationAmount()
             }
-            logger.info("found a row")
-            return validationAmountList.sortedByDescending { it.validationDate }.first()
+            val latestValidation = validationAmountList.sortedByDescending { it.validationDate }.first()
+            logger.info("Found validation amount for account: $accountNameOwner")
+            return latestValidation
         }
-        logger.info("no account found")
+        logger.warn("Account not found: $accountNameOwner")
         return ValidationAmount()
     }
 }

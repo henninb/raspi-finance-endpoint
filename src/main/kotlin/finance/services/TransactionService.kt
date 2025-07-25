@@ -29,27 +29,36 @@ open class TransactionService(
 
     @Timed
     override fun deleteTransactionByGuid(guid: String): Boolean {
+        logger.info("Attempting to delete transaction with GUID: $guid")
         val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
         if (transactionOptional.isPresent) {
             val transaction = transactionOptional.get()
             transactionRepository.delete(transaction)
-            //TODO: add metric here
+            meterService.incrementExceptionThrownCounter("TransactionDeleted")
+            logger.info("Successfully deleted transaction with GUID: $guid")
             return true
         }
-        //TODO: add metric here
+        logger.warn("Transaction not found for deletion with GUID: $guid")
+        meterService.incrementExceptionThrownCounter("TransactionNotFound")
         return false
     }
 
     @Timed
     override fun deleteReceiptImage(transaction: Transaction) : Boolean {
-        val receiptImageId = transaction.receiptImageId ?: return false
+        val receiptImageId = transaction.receiptImageId
+        if (receiptImageId == null) {
+            logger.warn("No receipt image ID found for transaction GUID: ${transaction.guid}")
+            return false
+        }
+        logger.info("Deleting receipt image with ID: $receiptImageId for transaction GUID: ${transaction.guid}")
         val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)
         if (receiptImageOptional.isPresent) {
             receiptImageService.deleteReceiptImage(receiptImageOptional.get())
-            //TODO: add metric here
-            logger.info("deleted receipt image successfully.")
+            meterService.incrementExceptionThrownCounter("ReceiptImageDeleted")
+            logger.info("Successfully deleted receipt image for transaction GUID: ${transaction.guid}")
             return true
         }
+        logger.warn("Receipt image not found with ID: $receiptImageId")
         return false
     }
 
@@ -69,8 +78,9 @@ open class TransactionService(
         processAccount(transaction)
         processCategory(transaction)
         processDescription(transaction)
-        transaction.dateUpdated = Timestamp(nextTimestampMillis())
-        transaction.dateAdded = Timestamp(nextTimestampMillis())
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transaction.dateUpdated = timestamp
+        transaction.dateAdded = timestamp
         val response: Transaction = transactionRepository.saveAndFlush(transaction)
         meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
         logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
@@ -81,17 +91,19 @@ open class TransactionService(
     override fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.account(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
-            transaction.accountId = accountOptional.get().accountId
-            transaction.accountType = accountOptional.get().accountType
-            logger.info("METRIC_ACCOUNT_ALREADY_EXISTS_COUNTER")
+            val existingAccount = accountOptional.get()
+            transaction.accountId = existingAccount.accountId
+            transaction.accountType = existingAccount.accountType
+            meterService.incrementTransactionAlreadyExistsCounter(transaction.accountNameOwner)
+            logger.info("Using existing account: ${transaction.accountNameOwner}")
         } else {
+            logger.info("Creating new account: ${transaction.accountNameOwner}")
             val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
-            accountService.insertAccount(account)
-            //TODO: add metric here
-            logger.info("inserted account from transactionService ${transaction.accountNameOwner}")
-            accountOptional = accountService.account(transaction.accountNameOwner)
-            transaction.accountId = accountOptional.get().accountId
-            transaction.accountType = accountOptional.get().accountType
+            val savedAccount = accountService.insertAccount(account)
+            meterService.incrementExceptionThrownCounter("AccountCreated")
+            logger.info("Created new account: ${transaction.accountNameOwner} with ID: ${savedAccount.accountId}")
+            transaction.accountId = savedAccount.accountId
+            transaction.accountType = savedAccount.accountType
         }
     }
 
@@ -102,11 +114,13 @@ open class TransactionService(
                 val optionalCategory = categoryService.category(transaction.category)
                 if (optionalCategory.isPresent) {
                     transaction.categories.add(optionalCategory.get())
+                    logger.info("Using existing category: ${transaction.category}")
                 } else {
+                    logger.info("Creating new category: ${transaction.category}")
                     val category = createDefaultCategory(transaction.category)
-                    categoryService.insertCategory(category)
-                    logger.info("inserted category from transactionService ${transaction.category}")
-                    transaction.categories.add(category)
+                    val savedCategory = categoryService.insertCategory(category)
+                    logger.info("Created new category: ${transaction.category}")
+                    transaction.categories.add(savedCategory)
                 }
             }
         }
@@ -117,9 +131,10 @@ open class TransactionService(
             transaction.description != "" -> {
                 val optionalDescription = descriptionService.description(transaction.description)
                 if (!optionalDescription.isPresent) {
+                    logger.info("Creating new description: ${transaction.description}")
                     val description = createDefaultDescription(transaction.description)
                     descriptionService.insertDescription(description)
-                    logger.info("inserted description from transactionService ${transaction.description}")
+                    logger.info("Created new description: ${transaction.description}")
                 }
             }
         }
@@ -252,7 +267,7 @@ open class TransactionService(
             val account = accountService.account(transaction.accountNameOwner).get()
             transaction.accountId = account.accountId
             transaction.dateAdded = transactionFromDatabase.dateAdded
-            transaction.dateUpdated = Timestamp(Calendar.getInstance().time.time)
+            transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             processDescription(transaction)
             return transactionRepository.saveAndFlush(transaction)
         }
@@ -293,7 +308,7 @@ open class TransactionService(
             receiptImage.imageFormatType = imageFormatType
             val response = receiptImageService.insertReceiptImage(receiptImage)
             transaction.receiptImageId = response.receiptImageId
-            transaction.dateUpdated = Timestamp(nextTimestampMillis())
+            transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             transactionRepository.saveAndFlush(transaction)
             meterService.incrementTransactionReceiptImageInserted(transaction.accountNameOwner)
             return response
@@ -318,7 +333,7 @@ open class TransactionService(
                 val transaction = transactionOptional.get()
                 transaction.accountNameOwner = account.accountNameOwner
                 transaction.accountId = account.accountId
-                transaction.dateUpdated = Timestamp(nextTimestampMillis())
+                transaction.dateUpdated = Timestamp(System.currentTimeMillis())
                 return transactionRepository.saveAndFlush(transaction)
             } else {
                 //TODO: add metric here
@@ -351,7 +366,7 @@ open class TransactionService(
             }
             meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
             transaction.transactionState = transactionState
-            transaction.dateUpdated = Timestamp(nextTimestampMillis())
+            transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             return transactionRepository.saveAndFlush(transaction)
         }
         //TODO: add metric here
@@ -430,8 +445,9 @@ open class TransactionService(
         transactionFuture.reoccurringType = transaction.reoccurringType
         transactionFuture.transactionState = TransactionState.Future
         transactionFuture.transactionDate = Date(calendarTransactionDate.timeInMillis)
-        transactionFuture.dateUpdated = Timestamp(nextTimestampMillis())
-        transactionFuture.dateAdded = Timestamp(nextTimestampMillis())
+        val futureTimestamp = Timestamp(System.currentTimeMillis())
+        transactionFuture.dateUpdated = futureTimestamp
+        transactionFuture.dateAdded = futureTimestamp
         logger.info(transactionFuture.toString())
         if (transactionFuture.reoccurringType == ReoccurringType.Undefined) {
             logger.error("TransactionState cannot be undefined for reoccurring transactions.")
@@ -458,32 +474,5 @@ open class TransactionService(
         }
     }
 
-//    @Timed
-//    override fun findAccountsThatRequirePayment(): List<Account> {
-//        val calendar = Calendar.getInstance()
-//        calendar.add(Calendar.DAY_OF_MONTH, 30)
-//        val accountNeedingAttention = mutableListOf<Account>()
-//        accountService.updateTotalsForAllAccounts()
-//        val accountsToInvestigate =
-//            accountService.findByActiveStatusAndAccountTypeAndTotalsIsGreaterThanOrderByAccountNameOwner()
-//        accountsToInvestigate.forEach { account ->
-//
-//            accountNeedingAttention.add(account)
-//        }
-//
-//        if (accountNeedingAttention.isNotEmpty()) {
-//            logger.info("accountNeedingAttention={${accountNeedingAttention.size}}")
-//        }
-//        return accountNeedingAttention
-//    }
 
-    @Timed
-    override fun nextTimestampMillis(): Long {
-        val lastTimestamp = System.currentTimeMillis()
-        var timestamp = System.currentTimeMillis()
-        while (timestamp < lastTimestamp) {
-            timestamp = System.currentTimeMillis()
-        }
-        return timestamp
-    }
 }
