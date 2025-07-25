@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.LowerCaseConverter
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 import java.sql.Timestamp
 import java.util.*
 import jakarta.persistence.*
@@ -18,18 +19,18 @@ data class Parameter(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_parameter_parameter_id_seq")
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @param:JsonProperty
     @Column(name = "parameter_id", nullable = false)
     var parameterId: Long,
 
-    @param:Size(min = 1, max = 50)
+    @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", unique = true, nullable = false)
     @param:JsonProperty
     var parameterName: String,
 
-    @param:Size(min = 1, max = 50)
+    @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_value", unique = true, nullable = false)
     @param:JsonProperty

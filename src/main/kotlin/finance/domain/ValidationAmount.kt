@@ -21,13 +21,13 @@ data class ValidationAmount(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_validation_amount_validation_id_seq")
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @param:JsonProperty
     @Column(name = "validation_id", nullable = false)
     var validationId: Long,
 
     @param:JsonProperty
-    @param:Min(value = 0L)
+    @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
@@ -46,7 +46,7 @@ data class ValidationAmount(
     var transactionState: TransactionState,
 
     @param:JsonProperty
-    @param:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal
 ) {

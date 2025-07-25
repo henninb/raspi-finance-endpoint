@@ -8,14 +8,14 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
 @ActiveProfiles("int")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.main.web-application-type=servlet"])
 class RandomPortSpec extends Specification {
 
     @Autowired
     protected ApplicationContext applicationContext
 
     @LocalServerPort
-    protected int localPort
+    protected int port
 
     void 'test spring wiring'() {
         given:
@@ -34,6 +34,6 @@ class RandomPortSpec extends Specification {
 
         then:
         x
-        localPort > 0
+        port > 0
     }
 }

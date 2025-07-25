@@ -36,7 +36,8 @@ open class ExcelFileService(
         val decryptor = Decryptor.getInstance(encryptionInfo)
         val validPassword = decryptor.verifyPassword(customProperties.excelPassword)
         if (!validPassword) {
-            //TODO: add metric
+            logger.error("Invalid password for Excel file: $inputExcelFileName")
+            meterService.incrementExceptionThrownCounter("InvalidPasswordException")
             throw RuntimeException("Password is not valid for file: $inputExcelFileName")
         }
         val inputStream = decryptor.getDataStream(fileStream)

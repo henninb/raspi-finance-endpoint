@@ -7,6 +7,8 @@ import java.sql.Date
 class PaymentBuilder {
 
     String accountNameOwner = 'foo_brian'
+    String sourceAccount = 'source_brian'
+    String destinationAccount = 'dest_brian'
     BigDecimal amount = 0.00G
     Date transactionDate = Date.valueOf('2020-12-11')
     String guidSource = UUID.randomUUID()
@@ -21,6 +23,8 @@ class PaymentBuilder {
     Payment build() {
         Payment payment = new Payment().with {
             accountNameOwner = this.accountNameOwner
+            sourceAccount = this.sourceAccount
+            destinationAccount = this.destinationAccount
             amount = this.amount
             transactionDate = this.transactionDate
             guidSource = this.guidSource
@@ -52,6 +56,16 @@ class PaymentBuilder {
 
     PaymentBuilder withGuidDestination(String guidDestination) {
         this.guidDestination = guidDestination
+        return this
+    }
+
+    PaymentBuilder withSourceAccount(String sourceAccount) {
+        this.sourceAccount = sourceAccount
+        return this
+    }
+
+    PaymentBuilder withDestinationAccount(String destinationAccount) {
+        this.destinationAccount = destinationAccount
         return this
     }
 

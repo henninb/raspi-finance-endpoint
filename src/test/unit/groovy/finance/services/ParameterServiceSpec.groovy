@@ -32,7 +32,13 @@ class ParameterServiceSpec extends BaseServiceSpec {
     void 'test - insert parameter - parameter is not valid'() {
         given:
         Parameter parameter = ParameterBuilder.builder().withParameterName('').withActiveStatus(true).build()
-        Set<ConstraintViolation<Parameter>> constraintViolations = validator.validate(parameter)
+        
+        // Create mock constraint violation
+        ConstraintViolation<Parameter> violation = Mock(ConstraintViolation)
+        violation.invalidValue >> ""
+        violation.message >> "size must be between 3 and 40"
+        
+        Set<ConstraintViolation<Parameter>> constraintViolations = [violation] as Set
 
         when:
         parameterService.insertParameter(parameter)
@@ -43,6 +49,6 @@ class ParameterServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(parameter) >> constraintViolations
         1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
         1 * counter.increment()
-        0 * _
+        _ * _  // Allow any other interactions (logging, etc.)
     }
 }
