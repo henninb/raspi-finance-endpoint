@@ -15,7 +15,7 @@ import java.nio.file.Files
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CamelSpec extends Specification {
 
-    protected String baseName = new FileSystemResource("").file.absolutePath
+    protected String baseName = new File(".").absolutePath
 
     protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
 

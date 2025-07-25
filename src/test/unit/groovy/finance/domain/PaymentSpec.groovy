@@ -11,7 +11,7 @@ import static finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 
 class PaymentSpec extends BaseDomainSpec {
-    protected String jsonPayload = '{"accountNameOwner":"foo_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayload = '{"accountNameOwner":"foo_test","sourceAccount":"source_test","destinationAccount":"dest_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     void 'test -- JSON deserialization to Payment'() {
         when:

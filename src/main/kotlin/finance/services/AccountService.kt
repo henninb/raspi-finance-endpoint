@@ -23,7 +23,14 @@ open class AccountService(
 
     @Timed
     override fun account(accountNameOwner: String): Optional<Account> {
-        return accountRepository.findByAccountNameOwner(accountNameOwner)
+        logger.info("Finding account: $accountNameOwner")
+        val account = accountRepository.findByAccountNameOwner(accountNameOwner)
+        if (account.isPresent) {
+            logger.info("Found account: $accountNameOwner")
+        } else {
+            logger.warn("Account not found: $accountNameOwner")
+        }
+        return account
     }
 
     @Timed
@@ -62,9 +69,13 @@ open class AccountService(
         handleConstraintViolations(constraintViolations, meterService)
 
         if (!accountOptional.isPresent) {
-            account.dateAdded = Timestamp(Calendar.getInstance().time.time)
-            account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            return accountRepository.saveAndFlush(account)
+            logger.info("Inserting new account: ${account.accountNameOwner}")
+            val timestamp = Timestamp(System.currentTimeMillis())
+            account.dateAdded = timestamp
+            account.dateUpdated = timestamp
+            val savedAccount = accountRepository.saveAndFlush(account)
+            logger.info("Successfully inserted account: ${savedAccount.accountNameOwner} with ID: ${savedAccount.accountId}")
+            return savedAccount
         }
         logger.error("Account not inserted as the account already exists ${account.accountNameOwner}.")
         throw RuntimeException("Account not inserted as the account already exists ${account.accountNameOwner}.")
@@ -97,11 +108,11 @@ open class AccountService(
         val optionalAccount = accountRepository.findByAccountId(account.accountId)
         if (optionalAccount.isPresent) {
             val accountToBeUpdated = optionalAccount.get()
-            //account.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            logger.info("updated the account ${accountToBeUpdated.accountId} - ${accountToBeUpdated.accountNameOwner}")
-            //var updateFlag = false
-            //val fromDb = optionalAccount.get()
-            return accountRepository.saveAndFlush(account)
+            account.dateUpdated = Timestamp(System.currentTimeMillis())
+            logger.info("Updating account: ${accountToBeUpdated.accountId} - ${accountToBeUpdated.accountNameOwner}")
+            val updatedAccount = accountRepository.saveAndFlush(account)
+            logger.info("Successfully updated account: ${updatedAccount.accountNameOwner}")
+            return updatedAccount
         }
         throw RuntimeException("Account not updated as the account does not exists ${account.accountNameOwner}.")
     }
@@ -112,9 +123,11 @@ open class AccountService(
         val oldAccount = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
             .orElseThrow { EntityNotFoundException("Account not found") }
 
+        logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
         oldAccount.accountNameOwner = newAccountNameOwner
-        accountRepository.saveAndFlush(oldAccount)
-
-        return oldAccount
+        oldAccount.dateUpdated = Timestamp(System.currentTimeMillis())
+        val renamedAccount = accountRepository.saveAndFlush(oldAccount)
+        logger.info("Successfully renamed account to: $newAccountNameOwner")
+        return renamedAccount
     }
 }

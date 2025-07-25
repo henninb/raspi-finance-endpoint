@@ -35,9 +35,7 @@ import org.springframework.stereotype.Component
 
 @Component
 open class InsertTransactionProcessor(
-    private var transactionService: TransactionService,
-    private val mapper: ObjectMapper, // Assuming you are using Jackson's ObjectMapper
-    // val meterService: MeterService // Add this as an injected dependency
+    private var transactionService: TransactionService
 ) : Processor, BaseProcessor() {
 
     private val logger = LoggerFactory.getLogger(this.javaClass)

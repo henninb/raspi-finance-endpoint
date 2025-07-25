@@ -23,8 +23,6 @@ interface ITransactionService {
     fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray
     fun getImageFormatType(rawImage: ByteArray): ImageFormatType
     fun createFutureTransaction(transaction: Transaction): Transaction
-    //fun findAccountsThatRequirePayment(): List<Account>
-    fun nextTimestampMillis(): Long
     fun createDefaultDescription(descriptionName: String): Description
     fun processDescription(transaction: Transaction)
     fun findTransactionsByCategory(categoryName: String): List<Transaction>

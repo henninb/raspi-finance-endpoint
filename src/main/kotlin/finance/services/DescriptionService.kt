@@ -18,25 +18,38 @@ open class DescriptionService(
 
     @Timed
     override fun insertDescription(description: Description): Description {
+        logger.info("Inserting description: ${description.descriptionName}")
         val constraintViolations: Set<ConstraintViolation<Description>> = validator.validate(description)
         handleConstraintViolations(constraintViolations, meterService)
-        description.dateAdded = Timestamp(Calendar.getInstance().time.time)
-        description.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-        return descriptionRepository.saveAndFlush(description)
+        val timestamp = Timestamp(System.currentTimeMillis())
+        description.dateAdded = timestamp
+        description.dateUpdated = timestamp
+        val savedDescription = descriptionRepository.saveAndFlush(description)
+        logger.info("Successfully inserted description: ${savedDescription.descriptionName} with ID: ${savedDescription.descriptionId}")
+        return savedDescription
     }
 
     @Timed
     override fun deleteByDescriptionName(descriptionName: String): Boolean {
-        val description = descriptionRepository.findByDescriptionName(descriptionName).get()
-        descriptionRepository.delete(description)
-        return true
+        logger.info("Deleting description: $descriptionName")
+        val descriptionOptional = descriptionRepository.findByDescriptionName(descriptionName)
+        if (descriptionOptional.isPresent) {
+            descriptionRepository.delete(descriptionOptional.get())
+            logger.info("Successfully deleted description: $descriptionName")
+            return true
+        }
+        logger.warn("Description not found for deletion: $descriptionName")
+        return false
     }
 
     override fun description(descriptionName: String): Optional<Description> {
+        logger.info("Finding description: $descriptionName")
         val descriptionOptional: Optional<Description> = descriptionRepository.findByDescriptionName(descriptionName)
         if (descriptionOptional.isPresent) {
+            logger.info("Found description: $descriptionName")
             return descriptionOptional
         }
+        logger.warn("Description not found: $descriptionName")
         return Optional.empty()
     }
 
@@ -52,8 +65,8 @@ open class DescriptionService(
             // Updating fields
             descriptionToUpdate.descriptionName = description.descriptionName
             descriptionToUpdate.activeStatus = description.activeStatus
-            descriptionToUpdate.dateUpdated = Timestamp(Calendar.getInstance().time.time)
-            logger.info("description update")
+            descriptionToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
+            logger.info("Updating description: ${descriptionToUpdate.descriptionName}")
             return descriptionRepository.saveAndFlush(descriptionToUpdate)
         }
 
@@ -62,12 +75,21 @@ open class DescriptionService(
 
     @Timed
     override fun fetchAllDescriptions(): List<Description> {
+        logger.info("Fetching all active descriptions")
         val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
+        logger.info("Found ${descriptions.size} active descriptions")
         return descriptions
     }
 
     @Timed
     override fun findByDescriptionName(descriptionName: String): Optional<Description> {
-        return descriptionRepository.findByDescriptionName(descriptionName)
+        logger.info("Finding description by name: $descriptionName")
+        val description = descriptionRepository.findByDescriptionName(descriptionName)
+        if (description.isPresent) {
+            logger.info("Found description: $descriptionName")
+        } else {
+            logger.warn("Description not found: $descriptionName")
+        }
+        return description
     }
 }
