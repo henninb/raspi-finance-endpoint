@@ -56,8 +56,8 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
                 "https://amplify.brianhenning.com",
                 "https://netlify.bhenning.com",
                 "https://netlify.brianhenning.com",
-                "https://fianace.bhenning.com",
-                "https://fianace.brianhenning.com",
+                "https://finance.bhenning.com",
+                "https://finance.brianhenning.com",
                 "finance.lan",
                 "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc"
             )
