@@ -58,7 +58,7 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
                 "https://netlify.brianhenning.com",
                 "https://finance.bhenning.com",
                 "https://finance.brianhenning.com",
-                "finance.lan",
+                "http://dev.finance.bhenning.com:3000",
                 "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
