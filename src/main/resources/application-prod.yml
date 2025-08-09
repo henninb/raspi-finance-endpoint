@@ -1,4 +1,5 @@
 server:
+  address: 0.0.0.0
   http2:
     enable: true
   tomcat:
