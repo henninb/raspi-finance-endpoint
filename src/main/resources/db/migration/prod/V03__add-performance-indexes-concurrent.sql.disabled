@@ -1,0 +1,126 @@
+-- Concurrent performance indexes for production database
+-- Migration: V03__add-performance-indexes-concurrent.sql
+-- Purpose: Add critical indexes with CONCURRENTLY to prevent table locks
+-- Note: This migration contains only non-transactional statements
+
+-- ================================
+-- HIGH PRIORITY INDEXES
+-- ================================
+
+-- Core transaction query performance
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_date 
+    ON public.t_transaction(transaction_date);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_account_name_owner 
+    ON public.t_transaction(account_name_owner);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_transaction_state 
+    ON public.t_transaction(transaction_state);
+
+-- Active status filtering (soft delete pattern)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_active_status 
+    ON public.t_transaction(active_status) WHERE active_status = true;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_account_active_status 
+    ON public.t_account(active_status) WHERE active_status = true;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_category_active_status 
+    ON public.t_category(active_status) WHERE active_status = true;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_description_active_status 
+    ON public.t_description(active_status) WHERE active_status = true;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_receipt_image_active_status 
+    ON public.t_receipt_image(active_status) WHERE active_status = true;
+
+-- Foreign key performance optimization
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_validation_amount_account_id 
+    ON public.t_validation_amount(account_id);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_receipt_image_transaction_id 
+    ON public.t_receipt_image(transaction_id);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_receipt_image_id 
+    ON public.t_transaction(receipt_image_id) WHERE receipt_image_id IS NOT NULL;
+
+-- Payment and transfer performance
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_transaction_date 
+    ON public.t_payment(transaction_date);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transfer_transaction_date 
+    ON public.t_transfer(transaction_date);
+
+-- ================================
+-- COMPOSITE INDEXES FOR COMMON QUERY PATTERNS
+-- ================================
+
+-- Date range queries with status filtering (most common financial reports)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_date_state_active 
+    ON public.t_transaction(transaction_date, transaction_state, active_status);
+
+-- Account-specific date queries (account statements)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_account_date_active 
+    ON public.t_transaction(account_name_owner, transaction_date, active_status);
+
+-- Category and description lookups with active filtering
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_category_active 
+    ON public.t_transaction(category, active_status) WHERE active_status = true;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_description_active 
+    ON public.t_transaction(description, active_status) WHERE active_status = true;
+
+-- Validation queries by date
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_validation_amount_date 
+    ON public.t_validation_amount(validation_date);
+
+-- GUID lookups for payments and transfers (foreign key performance)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_guid 
+    ON public.t_transaction(guid);
+
+-- Transaction categories junction table performance
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_categories_transaction_id 
+    ON public.t_transaction_categories(transaction_id);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_categories_category_id 
+    ON public.t_transaction_categories(category_id);
+
+-- ================================
+-- SPECIALIZED INDEXES
+-- ================================
+
+-- Amount-based queries (financial reporting)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_amount 
+    ON public.t_transaction(amount) WHERE active_status = true;
+
+-- Due date tracking for future transactions
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_due_date 
+    ON public.t_transaction(due_date) WHERE due_date IS NOT NULL AND active_status = true;
+
+-- Pending transaction processing
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pending_transaction_status_date 
+    ON public.t_pending_transaction(review_status, transaction_date);
+
+-- Account type filtering
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_account_type 
+    ON public.t_transaction(account_type);
+
+-- User and role lookups
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_username_active 
+    ON public.t_user(username, active_status);
+
+-- Parameter lookups
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_parameter_name_active 
+    ON public.t_parameter(parameter_name, active_status);
+
+-- Performance Notes:
+-- 1. CONCURRENTLY prevents table locks during index creation
+-- 2. Partial indexes on active_status = true reduce index size and improve performance
+-- 3. Composite indexes are ordered by selectivity (most selective first)
+-- 4. WHERE clauses on indexes improve performance for filtered queries
+-- 5. These indexes support the most common financial query patterns:
+--    - Date range reports
+--    - Account-specific queries
+--    - Active record filtering
+--    - Foreign key joins
+--    - Category/description searches
+-- 6. This migration runs outside of transactions to allow CONCURRENTLY
