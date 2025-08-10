@@ -212,16 +212,14 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
     void 'test update Transaction'() {
         given:
-        String updateGud = 'ba665bc2-22b6-4123-a566-6f5ab3d796df'
-        Transaction transaction1 = TransactionBuilder.builder().withGuid(updateGud).build()
-
+        // Use the shared transaction that exists
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        HttpEntity entity = new HttpEntity<>(transaction1, headers)
+        HttpEntity entity = new HttpEntity<>(transaction, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/api/transaction/update/${updateGud}"),
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/api/transaction/update/${transaction.guid}"),
                 HttpMethod.PUT, entity, String)
 
         then:
