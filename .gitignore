@@ -62,3 +62,4 @@ env.bootrun
 v3.ext
 *.tmp
 kls_database.db
+*.log

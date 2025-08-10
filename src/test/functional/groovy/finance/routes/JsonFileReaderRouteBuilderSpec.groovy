@@ -1,17 +1,14 @@
 package finance.routes
 
-import finance.Application
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import finance.repositories.TransactionRepository
 import org.apache.camel.Exchange
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.util.ResourceUtils
 
-@ActiveProfiles("func")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("int")
 class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     @Autowired
@@ -45,7 +42,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
         conditions.eventually {
             Transaction databaseTransaction = transactionRepository.findByGuid(transaction.guid).get()
             databaseTransaction.guid == transaction.guid
-            ResourceUtils.getFile("${baseName}/func_json_in/.processed-successfully/${transaction.guid}").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.processed-successfully/${transaction.guid}").exists()
         }
     }
 
@@ -77,8 +74,8 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
             Transaction databaseTransaction2 = transactionRepository.findByGuid(transaction2.guid).get()
             databaseTransaction2.guid == transaction2.guid
 
-            ResourceUtils.getFile("${baseName}/func_json_in/.processed-successfully/${transaction2.guid}").exists()
-            ResourceUtils.getFile("${baseName}/func_json_in/.processed-successfully/${transaction1.guid}").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.processed-successfully/${transaction2.guid}").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.processed-successfully/${transaction1.guid}").exists()
         }
     }
 
@@ -105,7 +102,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
             transactionRepository.findByGuid(transaction1.guid).isEmpty()
             transactionRepository.findByGuid(transaction2.guid).isEmpty()
 
-            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-failed-with-errors/$fileName").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.not-processed-failed-with-errors/$fileName").exists()
         }
     }
 
@@ -120,7 +117,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
         then:
         conditions.eventually {
-            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-failed-with-errors/${fileName}").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.not-processed-failed-with-errors/${fileName}").exists()
         }
     }
 
@@ -135,7 +132,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
         then:
         conditions.eventually {
-            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-non-json-file/${fileName}").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.not-processed-non-json-file/${fileName}").exists()
         }
     }
 
@@ -148,7 +145,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
         then:
         conditions.eventually {
-            ResourceUtils.getFile("${baseName}/func_json_in/.not-processed-json-parsing-errors/${fileName}").exists()
+            ResourceUtils.getFile("${baseName}/int_json_in/.not-processed-json-parsing-errors/${fileName}").exists()
         }
     }
 }

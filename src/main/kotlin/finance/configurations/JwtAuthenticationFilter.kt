@@ -8,15 +8,17 @@ import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.env.Environment
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 import java.util.Collections
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 @Component
-class JwtAuthenticationFilter : OncePerRequestFilter() {
+class JwtAuthenticationFilter(private val environment: Environment) : OncePerRequestFilter() {
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
 
@@ -48,7 +50,8 @@ class JwtAuthenticationFilter : OncePerRequestFilter() {
 
                 // Create an authentication token using the token claims (e.g., subject and roles)
                 val username = claims.get("username", String::class.java)
-                val auth = UsernamePasswordAuthenticationToken(username, null, Collections.emptyList())
+                val authorities = listOf(SimpleGrantedAuthority("ROLE_USER"))
+                val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
                 // Set the authenticated user in the security context
                 SecurityContextHolder.getContext().authentication = auth
 

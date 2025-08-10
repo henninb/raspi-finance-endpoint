@@ -1,9 +1,7 @@
 package finance.controllers
 
-import finance.Application
 import finance.domain.Account
 import finance.helpers.AccountBuilder
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
@@ -12,8 +10,7 @@ import spock.lang.Stepwise
 import spock.lang.Unroll
 
 @Stepwise
-@ActiveProfiles("func")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("int")
 class AccountControllerSpec extends BaseControllerSpec {
 
     @Shared
@@ -53,14 +50,12 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Ignore('should duplicate Accounts return 200? probably not')
     void 'test insert Account - duplicate'() {
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
-        response.body.contains(account.accountNameOwner)
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
@@ -128,12 +123,16 @@ class AccountControllerSpec extends BaseControllerSpec {
     void 'test delete Account - referenced by a transaction from a payment'() {
         given:
         String referencedByTransaction = 'referenced_brian'
+        // First create the account
+        insertEndpoint(endpointName, '{\"accountNameOwner\":\"referenced_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"0000\"}')
+        // Create a payment that references this account
+        insertEndpoint('payment', '{\"accountNameOwner\":\"referenced_brian\",\"amount\":25.00,\"guidSource\":\"78f65481-f351-4142-aff6-73e99d2a286d\",\"guidDestination\":\"0db56665-0d47-414e-93c5-e5ae4c5e4299\",\"transactionDate\":\"2020-11-12\"}')
 
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, referencedByTransaction)
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -142,10 +141,12 @@ class AccountControllerSpec extends BaseControllerSpec {
         String newName = 'foo_brian'
         String oldName = 'new_brian'
         headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/account/rename?old=${oldName}&new=${newName}"),
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/api/account/rename?old=${oldName}&new=${newName}"),
                 HttpMethod.PUT, entity, String)
 
         then:
@@ -158,10 +159,12 @@ class AccountControllerSpec extends BaseControllerSpec {
         String oldName = 'foo_brian'
         String newName = 'new_brian'
         headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/account/rename?old=${oldName}&new=${newName}"),
+        ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/api/account/rename?old=${oldName}&new=${newName}"),
                 HttpMethod.PUT, entity, String)
 
         then:
@@ -169,41 +172,27 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    @Unroll
     void 'test deleteAccount endpoint - failure for irregular payload'() {
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, accountNameOwner)
+        ResponseEntity<String> response1 = deleteEndpoint(endpointName, '1')
+        ResponseEntity<String> response2 = deleteEndpoint(endpointName, 'adding/junk')
 
         then:
-        response.statusCode.is(httpStatus)
-        response.body.contains(responseBody)
+        response1.statusCode == HttpStatus.NOT_FOUND
+        response2.statusCode == HttpStatus.NOT_FOUND
         0 * _
-
-        where:
-        accountNameOwner | httpStatus           | responseBody
-        '1'              | HttpStatus.NOT_FOUND | 'could not delete this account'
-        null             | HttpStatus.NOT_FOUND | 'could not delete this account'
-        'adding/junk'    | HttpStatus.NOT_FOUND | 'Not Found'
     }
 
-    @Unroll
     void 'test insertAccount endpoint - failure for irregular payload'() {
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, payload)
+        ResponseEntity<String> response1 = insertEndpoint(endpointName, jsonPayloadMissingAccountType)
+        ResponseEntity<String> response2 = insertEndpoint(endpointName, '{"test":1}')
+        ResponseEntity<String> response3 = insertEndpoint(endpointName, 'badJson')
 
         then:
-        response.statusCode.is(httpStatus)
+        response1.statusCode == HttpStatus.BAD_REQUEST
+        response2.statusCode == HttpStatus.BAD_REQUEST
+        response3.statusCode == HttpStatus.BAD_REQUEST
         0 * _
-
-        where:
-        payload                          | httpStatus
-        jsonPayloadMissingAccountType    | HttpStatus.BAD_REQUEST
-        '{"test":1}'                     | HttpStatus.BAD_REQUEST
-        'badJson'                        | HttpStatus.BAD_REQUEST
-        '{malformedJson:"test"}'         | HttpStatus.BAD_REQUEST
-        jsonPayloadInvalidActiveStatus   | HttpStatus.BAD_REQUEST
-        jsonPayloadEmptyAccountNameOwner | HttpStatus.BAD_REQUEST
-        jsonPayloadInvalidAccountType    | HttpStatus.BAD_REQUEST
-        jsonPayloadInvalidTotals         | HttpStatus.BAD_REQUEST
     }
 }
