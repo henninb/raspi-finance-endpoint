@@ -131,7 +131,7 @@ class TransactionJpaSpec extends Specification {
         transaction2.description = 'my-description-data'
         transaction2.notes = 'my-notes'
 
-        Account account = new AccountBuilder().withAccountNameOwner('test_duplicate_account_owner').build()
+        Account account = new AccountBuilder().withAccountNameOwner('test_duplicate').build()
         Account accountResult = entityManager.persist(account)
         transaction1.accountId = accountResult.accountId
         transaction2.accountId = accountResult.accountId

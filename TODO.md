@@ -186,3 +186,10 @@ The fixes must:
 - Role: Act as an expert SpringBoot Programmer who knows all about Kotlin and writting APIs
 - Action:
 - When a user calls any api for example /api/me and there is a 401 returned to the application -- log it in the spring boot logs use best practices and security measures when building any changes
+
+## 11. Tests
+  AccountControllerSpec
+  PaymentControllerSpec: "test insert Payment - pay a debit account"
+  ReceiptImageControllerSpec: "test insert receiptImage - png" (different test now failing)
+  TransactionControllerSpec: "test update Transaction"
+  TransactionJpaSpec: "test transaction repository - insert 2 records with duplicate guid - throws an exception"

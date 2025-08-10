@@ -52,6 +52,6 @@ class PaymentJpaSpec extends Specification {
         paymentRepository.delete(result)
 
         then:
-        paymentRepository.count() == 1L
+        paymentRepository.count() == 0L
     }
 }
