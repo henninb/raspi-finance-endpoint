@@ -5,17 +5,19 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.ApplicationContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
 @ActiveProfiles("int")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.main.web-application-type=servlet"])
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = Application)
 class RandomPortSpec extends Specification {
 
     @Autowired
-    protected ApplicationContext applicationContext
+    ApplicationContext applicationContext
 
     @LocalServerPort
-    protected int port
+    int port
 
     void 'test spring wiring'() {
         given:
@@ -29,11 +31,8 @@ class RandomPortSpec extends Specification {
     }
 
     void 'random port test'() {
-        when:
-        Boolean x = true
-
-        then:
-        x
+        expect:
+        applicationContext != null
         port > 0
     }
 }
