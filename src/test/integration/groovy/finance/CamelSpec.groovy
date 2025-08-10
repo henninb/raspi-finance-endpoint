@@ -3,8 +3,8 @@ package finance
 import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.core.io.FileSystemResource
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.util.ResourceUtils
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
@@ -12,7 +12,8 @@ import spock.util.concurrent.PollingConditions
 import java.nio.file.Files
 
 @ActiveProfiles("int")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = Application)
 class CamelSpec extends Specification {
 
     protected String baseName = new File(".").absolutePath
@@ -20,7 +21,7 @@ class CamelSpec extends Specification {
     protected PollingConditions conditions = new PollingConditions(timeout: 20, initialDelay: 1.5, factor: 1.25)
 
     @Autowired
-    protected TransactionRepository transactionRepository
+    TransactionRepository transactionRepository
 
     void 'test camel send data'() {
         given:
@@ -32,7 +33,10 @@ class CamelSpec extends Specification {
 
         then:
         conditions.eventually {
-            transactionRepository.findByGuid('3ea3be58-3993-46de-88a2-4ffc7f1d73bd').get().guid == '3ea3be58-3993-46de-88a2-4ffc7f1d73bd'
+            transactionRepository != null
+            def transaction = transactionRepository.findByGuid('3ea3be58-3993-46de-88a2-4ffc7f1d73bd')
+            transaction.isPresent()
+            transaction.get().guid == '3ea3be58-3993-46de-88a2-4ffc7f1d73bd'
         }
         noExceptionThrown()
     }
