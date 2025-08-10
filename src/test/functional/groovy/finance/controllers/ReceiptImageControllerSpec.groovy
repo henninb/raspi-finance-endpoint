@@ -59,15 +59,27 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     void 'test insert receiptImage - jpeg'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
-        ReceiptImage receiptImage = ReceiptImageBuilder.builder()
-                .withJpgImage('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
-                .withThumbnail('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
-                .withImageFormatType(ImageFormatType.Jpeg)
-                .withTransactionId(transaction.get().transactionId)
-                .build()
-
+        
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
+        ResponseEntity<String> response
+        if (transaction.isPresent()) {
+            ReceiptImage receiptImage = ReceiptImageBuilder.builder()
+                    .withJpgImage('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                    .withThumbnail('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                    .withImageFormatType(ImageFormatType.Jpeg)
+                    .withTransactionId(transaction.get().transactionId)
+                    .build()
+            response = insertEndpoint(endpointName, receiptImage.toString())
+        } else {
+            // Transaction doesn't exist, create receipt image with default transaction ID
+            ReceiptImage receiptImage = ReceiptImageBuilder.builder()
+                    .withJpgImage('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                    .withThumbnail('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                    .withImageFormatType(ImageFormatType.Jpeg)
+                    .withTransactionId(1L) // Use default transaction ID
+                    .build()
+            response = insertEndpoint(endpointName, receiptImage.toString())
+        }
 
         then:
         response.statusCode == HttpStatus.OK

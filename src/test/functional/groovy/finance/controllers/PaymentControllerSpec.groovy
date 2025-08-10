@@ -149,6 +149,8 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void 'test insert Payment - pay a debit account'() {
         given:
+        // Create a debit account first
+        insertEndpoint('account', '{\"accountNameOwner\":\"bank_brian\",\"accountType\":\"debit\",\"activeStatus\":true,\"moniker\":\"0000\"}')
         payment.accountNameOwner = 'bank_brian'
 
         when:
