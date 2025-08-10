@@ -1,17 +1,20 @@
 package finance.repositories
 
+import finance.Application
 import finance.domain.Category
 import finance.helpers.CategoryBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
 import jakarta.validation.ConstraintViolationException
 
-@ActiveProfiles("unit")
+@ActiveProfiles("int")
 @DataJpaTest
+@ContextConfiguration(classes = [Application])
 class CategoryJpaSpec extends Specification {
     @Autowired
     protected CategoryRepository categoryRepository

@@ -12,7 +12,6 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
-import org.springframework.util.Base64Utils
 import spock.lang.Specification
 
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get

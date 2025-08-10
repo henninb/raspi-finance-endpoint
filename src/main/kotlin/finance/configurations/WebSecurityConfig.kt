@@ -3,6 +3,7 @@ package finance.configurations
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.core.env.Environment
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -16,10 +17,11 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
-open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthenticationFilter ) {
+open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthenticationFilter, private val environment: Environment ) {
 
 
     @Bean
+    @Profile("!int") // Exclude when integration test profile is active
     open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter): SecurityFilterChain {
         http
             .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
@@ -74,5 +76,21 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
     @Bean
     open fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
+    }
+
+    @Bean("intSecurityFilterChain")
+    @Profile("int")
+    open fun intSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .csrf { it.disable() }
+            .authorizeHttpRequests { auth ->
+                auth.anyRequest().permitAll() // Allow all requests without authentication for integration tests
+            }
+            .formLogin { it.disable() }
+            .httpBasic { it.disable() }
+            .sessionManagement { session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+        return http.build()
     }
 }

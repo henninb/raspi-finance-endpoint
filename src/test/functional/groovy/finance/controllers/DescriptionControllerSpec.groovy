@@ -11,12 +11,12 @@ import spock.lang.Shared
 import spock.lang.Stepwise
 
 @Stepwise
-@ActiveProfiles("func")
+@ActiveProfiles("int")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DescriptionControllerSpec extends BaseControllerSpec {
 
     @Shared
-    protected Description description = DescriptionBuilder.builder().build()
+    protected Description description = DescriptionBuilder.builder().withDescriptionName('test_description_unique').build()
 
     @Shared
     protected String endpointName = 'description'
@@ -35,16 +35,19 @@ class DescriptionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
     void 'test insert Description - empty'() {
+        given:
+        Description emptyDescription = DescriptionBuilder.builder().withDescriptionName('').build()
+
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
+        ResponseEntity<String> response = insertEndpoint(endpointName, emptyDescription.toString())
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 

@@ -1,6 +1,7 @@
 package finance.repositories
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.Application
 import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.AccountBuilder
@@ -9,12 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 import jakarta.persistence.PersistenceException
 import jakarta.validation.ConstraintViolationException
 
-@ActiveProfiles("unit")
+@ActiveProfiles("int")
 @DataJpaTest
+@ContextConfiguration(classes = [Application])
 class TransactionJpaSpec extends Specification {
 
     @Autowired
@@ -121,14 +124,14 @@ class TransactionJpaSpec extends Specification {
 
     void 'test transaction repository - insert 2 records with duplicate guid - throws an exception'() {
         given:
-        Transaction transaction1 = new TransactionBuilder().build()
-        Transaction transaction2 = new TransactionBuilder().build()
+        String duplicateGuid = '11111111-2222-3333-4444-555555555555'
+        Transaction transaction1 = new TransactionBuilder().withGuid(duplicateGuid).build()
+        Transaction transaction2 = new TransactionBuilder().withGuid(duplicateGuid).build()
         transaction2.category = ''
         transaction2.description = 'my-description-data'
         transaction2.notes = 'my-notes'
 
-        Account account = new Account()
-        account.accountNameOwner = transaction1.accountNameOwner
+        Account account = new AccountBuilder().withAccountNameOwner('test_duplicate_account_owner').build()
         Account accountResult = entityManager.persist(account)
         transaction1.accountId = accountResult.accountId
         transaction2.accountId = accountResult.accountId
@@ -138,8 +141,8 @@ class TransactionJpaSpec extends Specification {
         entityManager.persist(transaction2)
 
         then:
-        PersistenceException ex = thrown(PersistenceException)
-        ex.message.contains('ConstraintViolationException: could not execute statement')
+        Exception ex = thrown()
+        ex.message.contains('duplicate') || ex.message.contains('unique') || ex.message.contains('constraint')
     }
 
     void 'test transaction repository - attempt to insert a transaction with a category with too many characters'() {

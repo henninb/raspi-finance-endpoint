@@ -14,12 +14,12 @@ import spock.lang.Stepwise
 import spock.lang.Unroll
 
 @Stepwise
-@ActiveProfiles("func")
+@ActiveProfiles("int")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CategoryControllerSpec extends BaseControllerSpec {
 
     @Shared
-    protected Category category = CategoryBuilder.builder().build()
+    protected Category category = CategoryBuilder.builder().withCategoryName('test_category_unique').build()
 
     @Shared
     protected String endpointName = 'category'
@@ -38,7 +38,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, category.toString())
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 

@@ -65,6 +65,9 @@ class ParameterController(private val parameterService: ParameterService) : Base
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert parameter ${parameter.parameterName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert parameter: ${ex.message}", ex)
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error inserting parameter ${parameter.parameterName}: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error inserting parameter ${parameter.parameterName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
