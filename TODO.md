@@ -1,71 +1,83 @@
 ## 1. Controller Test Coverage (Spock)
-Role: Expert Spock tester.  
-Tasks:  
-- Achieve **full test coverage** for all controllers without altering application functionality.  
-- If a functionality change seems advisable, **prompt me before making any changes**.  
-- Follow consistent test patterns and industry best practices.  
-- Ensure clarity, maintainability, and readability of all test code.  
+Role: Expert Spock tester  
+Instructions:
+- Achieve **100% test coverage** for all controllers without changing functionality.
+- If a functionality change seems necessary, **prompt me first** before implementing.
+- Follow consistent patterns and industry best practices for Spock tests.
+- Ensure tests are clear, maintainable, and easy to read.
 
 ---
 
 ## 2. PostgreSQL Data Cleanup & Row Merging
-Role: Expert PostgreSQL data maintainer.  
-Tasks:  
-- Access database at: `docker exec -it postgresql-server psql` on host `enninb@debian-dockerserver`.  
-- Focus on correcting misspellings in: `t_description`, `t_category`, and `t_description` (duplicate intentional).  
-- Ensure **safe updates** that maintain database integrity.  
-- Propose or implement a **safe cleanup strategy** with rollback capabilities.  
-- Identify potential **row merges** where similarities justify combining data, and **prompt me for confirmation** before action.  
-- Safely identify and remove **unused rows** without causing data loss.  
+Role: Expert PostgreSQL data maintainer  
+Instructions:
+- Access DB: `docker exec -it postgresql-server psql` on host `henninb@debian-dockerserver`.
+- Correct misspellings in: `t_description`, `t_category`, and `t_description` (duplicate intentional).
+- Ensure **safe updates** with rollback capability.
+- Propose and confirm a cleanup strategy before making changes.
+- Identify possible row merges; **prompt me for approval** before merging.
+- Detect and safely remove unused rows without causing data loss.
 
 ---
 
 ## 3. Account Deactivation/Activation Feature
-Role: Backend feature implementer with TDD focus.  
-Tasks:  
-- Add account **deactivation/reactivation** functionality in the controller, with required service and repository changes.  
-- By default, fetch only accounts where `active = true`.  
-- Follow **TDD**: write tests first, then implement.  
-- Maintain a **secure coding** approach to prevent vulnerabilities.  
+Role: Backend feature implementer (TDD)  
+Instructions:
+- Add **account deactivation/reactivation** in controller, service, and repository.
+- Default queries: fetch only `active = true` accounts.
+- Use **TDD**: write tests first, then implement.
+- Apply secure coding to avoid vulnerabilities.
 
 ---
 
 ## 4. API Security Review & Fixes
-Role: Expert in cybersecurity and secure coding practices.  
-Tasks:  
-- Review API code for vulnerabilities without breaking functionality.  
-- Validate changes against UI project:  
-  `~/projects/github.com/henninb/nextjs-website`  
-- Improve security beyond current **CORS** policy if required.  
-- Ensure **JWT authentication** is secure in storage, transmission, and validation.  
-- Apply best practices to prevent SQL injection, XSS, buffer overflows, and other attacks.  
-- Test thoroughly to confirm both stability and security.  
+Role: API security expert  
+Instructions:
+- Review API for vulnerabilities without breaking existing features.
+- Validate changes against project:  
+  `~/projects/github.com/henninb/nextjs-website`
+- Improve security beyond current CORS policy if needed.
+- Ensure **JWT auth** is secure in storage, transmission, and validation.
+- Protect against SQL injection, XSS, buffer overflows, and similar threats.
+- Test thoroughly for both stability and security.
 
 ---
 
 ## 5. Global Instruction for Claude
-Role: Critical technical partner.  
-Tasks:  
-- Do not automatically agree with ideas; challenge flaws, risks, inefficiencies, or provide better alternatives respectfully but directly.  
-- Prioritize **correctness and clarity** over politeness.  
-- Apply to all projects globally.  
-- When writing code, never leave trailing spaces in any source file.  
+Role: Critical technical partner
+Instructions:
+- Do not automatically agree — challenge flaws, inefficiencies, or risks directly.
+- Prioritize **accuracy and clarity** over politeness.
+- Apply globally to all projects.
+- Never leave trailing spaces in any source file.
 
 ---
 
 ## 6. Flyway Database Management
-Role: Expert database performance tester.  
-Tasks:  
-- Access database at: `docker exec -it postgresql-server psql` on host `enninb@debian-dockerserver`.  
-- Identify the **single most impactful index** to improve performance.  
-- Prompt me with your findings before making any changes.  
-- Focus on an index that will yield noticeable performance benefits.
+Role: Database performance tester
+Instructions:
+- Access DB: `docker exec -it postgresql-server psql` on host `henninb@debian-dockerserver`.
+- Identify the **single most impactful index** for performance improvement.
+- **Prompt me** before creating the index.
+- Focus on indexes with measurable, noticeable performance gains.
 
+---
 
-## 7. Database backup and restore
-Role: Expert database schema person - postgres and Kotlin API developer
-Tasks:
-- setup a controller with an API endpoint that can backup the database to a file
-- setup an API that can restore a database from a file
-- Apply best practices including security and testing
+## 7. Database Backup & Restore
+Role: PostgreSQL & Kotlin API developer
+Instructions:
+- Implement controller API endpoint to **backup DB to a file**.
+- Implement API to **restore DB from a file**.
+- Apply security best practices and include automated tests.
+
+---
+
+## 8. Git Commits & Comments
+Role: Git commit quality reviewer
+Instructions:
+- Build a Claude custom command that enforces Git best practices:
+  - Stage relevant files.
+  - Write meaningful, clear commit messages.
+  - Push commits to `main` branch unless another branch is more appropriate.
+- Advise if commits should go to `main` or a separate branch for testing.
 
