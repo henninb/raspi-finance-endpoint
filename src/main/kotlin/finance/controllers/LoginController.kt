@@ -19,6 +19,9 @@ class LoginController(private val userService: UserService) : BaseController() {
 
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
+    
+    @Value("\${spring.profiles.active:dev}")
+    private lateinit var activeProfile: String
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
     @PostMapping("/login")
@@ -43,14 +46,24 @@ class LoginController(private val userService: UserService) : BaseController() {
             .signWith(SignatureAlgorithm.HS256, jwtKey.toByteArray())
             .compact()
 
-        val cookie = ResponseCookie.from("token", token)
-            .domain(".bhenning.com")
+        // Check if we're in a local development context (even if profile is prod)
+        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true || 
+                        System.getenv("HOST_IP")?.contains("192.168") == true ||
+                        activeProfile == "dev" || activeProfile == "development"
+        
+        val cookieBuilder = ResponseCookie.from("token", token)
             .path("/")
             .maxAge(7 * 24 * 60 * 60)
-            .httpOnly(true)
-            .secure(true)
-            .sameSite("None")
-            .build()
+            .httpOnly(false) // Allow JavaScript access in development for debugging
+            .secure(false) // Never require HTTPS for local development
+            .sameSite("Lax") // Use Lax for local development
+        
+        // Configure domain based on environment
+        val cookie = if (isLocalDev) {
+            cookieBuilder.build() // No domain restriction for local development
+        } else {
+            cookieBuilder.domain(".bhenning.com").build() // Domain for production
+        }
 
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.noContent().build()
@@ -59,14 +72,24 @@ class LoginController(private val userService: UserService) : BaseController() {
     // curl -k --header "Content-Type: application/json" --request POST https://localhost:8443/api/logout
     @PostMapping("/logout")
     fun logout(response: HttpServletResponse): ResponseEntity<Void> {
-        val cookie = ResponseCookie.from("token", "")
-            .domain(".bhenning.com")
+        // Check if we're in a local development context (even if profile is prod)
+        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true || 
+                        System.getenv("HOST_IP")?.contains("192.168") == true ||
+                        activeProfile == "dev" || activeProfile == "development"
+        
+        val cookieBuilder = ResponseCookie.from("token", "")
             .path("/")
             .maxAge(0)
-            .httpOnly(true)
-            .secure(true)
-            .sameSite("None")
-            .build()
+            .httpOnly(false) // Allow JavaScript access in development for debugging
+            .secure(false) // Never require HTTPS for local development  
+            .sameSite("Lax") // Use Lax for local development
+        
+        // Configure domain based on environment
+        val cookie = if (isLocalDev) {
+            cookieBuilder.build() // No domain restriction for local development
+        } else {
+            cookieBuilder.domain(".bhenning.com").build() // Domain for production
+        }
 
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.noContent().build()
@@ -99,13 +122,24 @@ class LoginController(private val userService: UserService) : BaseController() {
             .signWith(SignatureAlgorithm.HS256, jwtKey.toByteArray())
             .compact()
 
-        val cookie = ResponseCookie.from("token", token)
-            .httpOnly(true)
-            .secure(true)
+        // Check if we're in a local development context (even if profile is prod)
+        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true || 
+                        System.getenv("HOST_IP")?.contains("192.168") == true ||
+                        activeProfile == "dev" || activeProfile == "development"
+        
+        val cookieBuilder = ResponseCookie.from("token", token)
+            .httpOnly(false) // Allow JavaScript access in development for debugging
+            .secure(false) // Never require HTTPS for local development
             .maxAge(24 * 60 * 60)
-            .sameSite("None") // needed for cross-origin cookie sharing
+            .sameSite("Lax") // Use Lax for local development
             .path("/")
-            .build()
+        
+        // Configure domain based on environment
+        val cookie = if (isLocalDev) {
+            cookieBuilder.build() // No domain restriction for local development
+        } else {
+            cookieBuilder.domain(".bhenning.com").build() // Domain for production
+        }
 
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.status(HttpStatus.CREATED).build()
