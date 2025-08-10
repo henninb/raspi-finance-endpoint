@@ -15,18 +15,25 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
-import javax.validation.ConstraintViolationException
-import javax.validation.ValidationException
+import jakarta.validation.ConstraintViolationException
+import jakarta.validation.ValidationException
 
 open class BaseController {
 
     @ExceptionHandler(
         value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
             MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-            IllegalArgumentException::class, DataIntegrityViolationException::class, ValidationException::class]
+            IllegalArgumentException::class, DataIntegrityViolationException::class]
     )
     fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, String>> {
         logger.info("BAD_REQUEST: ", throwable)
+        val response = mapOf("response" to "BAD_REQUEST: ${throwable.javaClass.simpleName}, message: ${throwable.message}")
+        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
+    }
+    
+    @ExceptionHandler(value = [ValidationException::class])
+    fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, String>> {
+        logger.info("VALIDATION_EXCEPTION caught in BaseController: ", throwable)
         val response = mapOf("response" to "BAD_REQUEST: ${throwable.javaClass.simpleName}, message: ${throwable.message}")
         return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }

@@ -38,6 +38,9 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert payment: ${ex.message}", ex)
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)

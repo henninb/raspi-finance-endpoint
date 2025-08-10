@@ -1,5 +1,6 @@
 package finance.repositories
 
+import finance.Application
 import finance.domain.Account
 import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
@@ -11,11 +12,13 @@ import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.FilterType
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 import jakarta.validation.ConstraintViolationException
 
-@ActiveProfiles("func")
+@ActiveProfiles("int")
 @DataJpaTest
+@ContextConfiguration(classes = [Application])
 //@DataJpaTest(includeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = AccountRepository.class))
 //@Import(AccountRepository.class)
 class AccountJpaSpec extends Specification {

@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Ignore
 
-@ActiveProfiles("func")
+@ActiveProfiles("int")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ExcelFileControllerSpec extends BaseControllerSpec {
 
