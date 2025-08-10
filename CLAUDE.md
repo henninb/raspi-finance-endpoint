@@ -6,6 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Spring Boot financial management application built with Kotlin/Groovy that provides REST APIs and GraphQL endpoints for personal finance tracking.
 
+## Critical Instructions - MUST FOLLOW
+- Challenge flaws, inefficiencies, and risks directly - do NOT automatically agree
+- Prioritize accuracy and clarity over politeness
+- Never leave trailing spaces in any source file
+- Question implementation decisions if they appear suboptimal
+
 ## Build and Test Commands
 
 ### Build Commands
@@ -13,6 +19,11 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - Build with all tests: `./gradlew clean build test integrationTest functionalTest`
 - Run application: `./gradlew bootRun`
 - Check for dependency updates: `./gradlew dependencyUpdates -Drevision=release`
+
+#### Critical Build Requirements
+- MUST run linting/code quality checks before any commit
+- MUST verify all tests pass before deployment
+- Build failures require investigation - do NOT ignore warnings
 
 ### Test Commands
 - Unit tests: `./gradlew test`
@@ -116,3 +127,30 @@ Transaction files are processed through Camel routes:
 - CORS configuration for cross-origin requests
 - Role-based access control
 - Request/response logging filters
+
+#### Security Risks to Address
+- JWT token storage and rotation strategy unclear
+- CORS policy may be too permissive - needs review
+- Input validation requirements not specified
+- No mention of rate limiting or DDoS protection
+- Database connection security not documented
+
+## Code Quality Standards
+
+### Mandatory Practices
+- No trailing whitespace in any file
+- All public methods must have proper documentation
+- Exception handling must be explicit and meaningful
+- Database queries must be optimized and reviewed for N+1 problems
+- All external API calls must have timeout and retry logic
+
+### Performance Requirements
+- All database queries > 100ms must be logged and investigated
+- File uploads must have size limits and validation
+- Memory usage must be monitored for large data operations
+
+### Testing Requirements
+- 100% test coverage for critical business logic
+- Integration tests for all database operations
+- Performance tests for file processing operations
+- Security tests for authentication and authorization
