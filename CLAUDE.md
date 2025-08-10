@@ -154,3 +154,59 @@ Transaction files are processed through Camel routes:
 - Integration tests for all database operations
 - Performance tests for file processing operations
 - Security tests for authentication and authorization
+
+## Git Commit Quality Reviewer
+
+### Usage
+Execute the Git commit quality reviewer with:
+```bash
+./git-commit-review.sh
+```
+
+### Features
+- **Branch Strategy Analysis**: Recommends main vs feature branch usage
+- **Auto-fix Trailing Whitespace**: Automatically detects and fixes trailing whitespace (CLAUDE.md requirement)
+- **Build Verification**: Runs `./gradlew clean build -x test` before commit
+- **Test Integration**: Optional full test suite execution
+- **Commit Message Guidance**: Suggests appropriate commit types and formats
+- **Push Strategy**: Handles main branch vs feature branch push logic
+
+### Commit Message Standards
+Format: `<type>: <description>`
+
+**Types:**
+- `feat`: New features or functionality
+- `fix`: Bug fixes and corrections
+- `docs`: Documentation changes
+- `style`: Code style/formatting changes
+- `refactor`: Code restructuring without behavior changes
+- `test`: Test additions or modifications
+- `chore`: Build process, dependency updates
+- `migration`: Database schema changes
+
+**Examples:**
+- `feat: add GraphQL mutation for transaction categorization`
+- `fix: resolve null pointer exception in AccountController:142`
+- `test: add integration tests for Camel route processing`
+- `migration: create indexes for transaction query optimization`
+
+### Branch Strategy Guidelines
+**Use main branch for:**
+- Hotfixes and critical bug fixes
+- Minor documentation updates
+- Small configuration changes
+- Single-file quick fixes
+
+**Use feature branches for:**
+- New features or major functionality
+- Breaking changes or API modifications
+- Experimental code requiring testing
+- Multi-file refactoring efforts
+
+### Pre-commit Checklist
+1. ✅ All files staged appropriately
+2. ✅ No trailing whitespace
+3. ✅ Build passes (`./gradlew clean build -x test`)
+4. ✅ Tests pass (optional but recommended)
+5. ✅ Meaningful commit message
+6. ✅ Appropriate branch strategy
