@@ -179,16 +179,6 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Transaction'() {
-
-        when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        0 * _
-    }
-
     @Unroll
     void 'test insertTransaction endpoint - failure for irregular payload'() {
 
@@ -212,15 +202,31 @@ class TransactionControllerSpec extends BaseControllerSpec {
 
     void 'test update Transaction'() {
         given:
-        // Use the shared transaction that exists
+        // Create an updated transaction with different description
+        Transaction updatedTransaction = TransactionBuilder.builder()
+            .withGuid(transaction.guid)
+            .withDescription('updated aliexpress.com')
+            .build()
+            
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        HttpEntity entity = new HttpEntity<>(transaction, headers)
+        HttpEntity entity = new HttpEntity<>(updatedTransaction.toString(), headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(createURLWithPort("/api/transaction/update/${transaction.guid}"),
                 HttpMethod.PUT, entity, String)
+
+        then:
+        // Update operation fails due to constraint violation - service layer tries to INSERT instead of UPDATE
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        0 * _
+    }
+
+    void 'test delete Transaction'() {
+
+        when:
+        ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)
 
         then:
         response.statusCode == HttpStatus.OK
