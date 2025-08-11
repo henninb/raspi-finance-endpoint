@@ -8,6 +8,7 @@ import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
 import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
 
 @Service
 open class PaymentService(
@@ -37,13 +38,13 @@ open class PaymentService(
         val optionalAccount = accountService.account(payment.accountNameOwner)
         if (!optionalAccount.isPresent) {
             logger.error("Account not found ${payment.accountNameOwner}")
-            meterService.incrementExceptionThrownCounter("RuntimeException")
-            throw RuntimeException("Account not found ${payment.accountNameOwner}")
+            meterService.incrementExceptionThrownCounter("ValidationException")
+            throw ValidationException("Account not found ${payment.accountNameOwner}")
         } else {
             if (optionalAccount.get().accountType == AccountType.Debit) {
                 logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-                meterService.incrementExceptionThrownCounter("RuntimeException")
-                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                meterService.incrementExceptionThrownCounter("ValidationException")
+                throw ValidationException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
             }
         }
 
@@ -155,13 +156,13 @@ open class PaymentService(
         val optionalAccount = accountService.account(payment.accountNameOwner)
         if (!optionalAccount.isPresent) {
             logger.error("Account not found ${payment.accountNameOwner}")
-            meterService.incrementExceptionThrownCounter("RuntimeException")
-            throw RuntimeException("Account not found ${payment.accountNameOwner}")
+            meterService.incrementExceptionThrownCounter("ValidationException")
+            throw ValidationException("Account not found ${payment.accountNameOwner}")
         } else {
             if (optionalAccount.get().accountType == AccountType.Debit) {
                 logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-                meterService.incrementExceptionThrownCounter("RuntimeException")
-                throw RuntimeException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                meterService.incrementExceptionThrownCounter("ValidationException")
+                throw ValidationException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
             }
         }
 
@@ -181,8 +182,8 @@ open class PaymentService(
             return paymentRepository.saveAndFlush(payment)
         } else {
             logger.error("Parameter not found: payment_account")
-            meterService.incrementExceptionThrownCounter("RuntimeException")
-            throw RuntimeException("Parameter not found: payment_account")
+            meterService.incrementExceptionThrownCounter("ValidationException")
+            throw ValidationException("Parameter not found: payment_account")
         }
     }
 }

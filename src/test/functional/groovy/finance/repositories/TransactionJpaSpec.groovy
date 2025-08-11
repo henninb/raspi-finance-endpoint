@@ -142,7 +142,7 @@ class TransactionJpaSpec extends Specification {
 
         then:
         Exception ex = thrown()
-        ex.message.contains('duplicate') || ex.message.contains('unique') || ex.message.contains('constraint')
+        ex.message.contains('duplicate') || ex.message.contains('unique') || ex.message.contains('constraint') || ex.message.contains('Unique index')
     }
 
     void 'test transaction repository - attempt to insert a transaction with a category with too many characters'() {
