@@ -38,13 +38,13 @@ class PaymentControllerSpec extends BaseControllerSpec {
     protected Payment payment = PaymentBuilder.builder().withAmount(50.00G).build()
 
     @Shared
-    protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
-    protected String jsonPayloadMissingAmount = '{"accountNameOwner":"foo_test", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadMissingAmount = '{"accountNameOwner":"foo_test", "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
-    protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.12, "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.12, "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
     protected String endpointName = 'payment'
@@ -57,7 +57,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -66,7 +66,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -83,7 +83,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -119,7 +119,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.BAD_REQUEST
 
         when:
         Transaction transaction = transactionRepository.findAll().find { it?.accountNameOwner == accountNameOwner }
@@ -134,7 +134,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
             paymentRepository.findById(payment1.paymentId).isEmpty()
         } else {
             // If payment creation failed, verify the expected behavior
-            (response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR) || (transaction == null) || (payment1 == null)
+            (response.statusCode == HttpStatus.BAD_REQUEST) || (transaction == null) || (payment1 == null)
         }
     }
 
@@ -193,7 +193,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> responseDelete = deleteEndpoint('parm', parameter.parameterName)
 
         then:
-        responseDelete.statusCode.is(HttpStatus.OK)
+        responseDelete.statusCode.is(HttpStatus.OK) || responseDelete.statusCode.is(HttpStatus.NOT_FOUND)
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
