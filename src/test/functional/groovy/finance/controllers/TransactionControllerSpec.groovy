@@ -81,7 +81,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'transaction'
 
-    void 'test update Transaction receiptImage'() {
+    void 'should fail to update transaction receipt image with invalid data'() {
         given:
         String jpegImage = 'data:image/jpeg;base64,/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA=MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='
         String guid = 'aaaaaaaa-bbbb-cccc-dddd-1234567890de'
@@ -100,7 +100,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Transaction'() {
+    void 'should successfully insert new transaction'() {
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
@@ -110,7 +110,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Transaction duplicate'() {
+    void 'should reject duplicate transaction insertion'() {
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, transaction.toString())
@@ -120,7 +120,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Transaction empty'() {
+    void 'should reject transaction insertion with empty description'() {
         given:
         Transaction transaction = TransactionBuilder.builder().withDescription('').build()
 
@@ -132,7 +132,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test find Transaction'() {
+    void 'should successfully find transaction by guid'() {
 
         when:
         ResponseEntity<String> response = selectEndpoint(endpointName, transaction.guid)
@@ -142,7 +142,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test find Transaction guid is not found'() {
+    void 'should return not found for non-existent transaction guid'() {
 
         when:
         ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
@@ -152,7 +152,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Transaction - guid not found'() {
+    void 'should return not found when deleting non-existent transaction'() {
 
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
@@ -162,7 +162,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test update Transaction - not found'() {
+    void 'should fail to update transaction with existing guid constraint'() {
         given:
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
@@ -180,7 +180,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
     }
 
     @Unroll
-    void 'test insertTransaction endpoint - failure for irregular payload'() {
+    void 'should reject transaction insertion with invalid payload'() {
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payload)
@@ -200,7 +200,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         //TransactionBuilder.builder().transactionDate(Date.valueOf("1999-10-15")).build() | HttpStatus.BAD_REQUEST
     }
 
-    void 'test update Transaction'() {
+    void 'should fail to update existing transaction due to service layer constraint'() {
         given:
         // Create an updated transaction with different description
         Transaction updatedTransaction = TransactionBuilder.builder()
@@ -223,7 +223,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Transaction'() {
+    void 'should successfully delete transaction by guid'() {
 
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)

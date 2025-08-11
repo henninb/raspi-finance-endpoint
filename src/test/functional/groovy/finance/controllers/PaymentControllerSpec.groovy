@@ -49,7 +49,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'payment'
 
-    void 'test insert Payment'() {
+    void 'should reject payment insertion when source account does not exist'() {
         given:
         insertEndpoint('account', '{"accountNameOwner":"foo_brian","accountType":"credit","activeStatus":true,"moniker":"0000"}')
 
@@ -61,7 +61,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Payment - duplicate'() {
+    void 'should reject duplicate payment insertion'() {
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
@@ -70,7 +70,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Payment - prepare for delete'() {
+    void 'should successfully insert payment for deletion test setup'() {
         given:
         String accountNameOwner = 'delete-test_brian'
         Payment payment = PaymentBuilder.builder()
@@ -87,7 +87,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Payment'() {
+    void 'should successfully delete existing payment'() {
         given:
         Payment payment1 = paymentRepository.findAll().find { it.accountNameOwner == 'delete-test_brian' }
 
@@ -105,7 +105,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete transaction of a payment'() {
+    void 'should cascade delete payment when associated transaction is deleted'() {
         given:
         String accountNameOwner = 'delete-me_brian'
         insertEndpoint('account', '{"accountNameOwner":"delete-me_brian","accountType":"credit","activeStatus":true,"moniker":"0000"}')
@@ -138,7 +138,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         }
     }
 
-    void 'test Payment endpoint existing payment inserted and then attempt to delete a non existent payment'() {
+    void 'should return not found when attempting to delete non-existent payment'() {
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, '1234567890')
 
@@ -147,7 +147,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Payment - pay a debit account'() {
+    void 'should reject payment to debit account'() {
         given:
         // Create a debit account first
         insertEndpoint('account', '{\"accountNameOwner\":\"bank_brian\",\"accountType\":\"debit\",\"activeStatus\":true,\"moniker\":\"0000\"}')
@@ -162,7 +162,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
     }
 
     @Unroll
-    void 'test insertPayment endpoint - failure for irregular payload'() {
+    void 'should reject payment insertion with invalid payload'() {
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payload)
 
@@ -181,7 +181,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert record because of constraint violation(s): invalid: must be uuid formatted'
     }
 
-    void 'test insert Payment - missing payment setup'() {
+    void 'should require payment account parameter for payment insertion'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         Parameter parameter = ParameterBuilder.builder()
