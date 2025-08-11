@@ -40,7 +40,7 @@ class AccountControllerSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'account'
 
-    void 'test insert Account'() {
+    void 'should successfully insert new account'() {
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
@@ -50,7 +50,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Account - duplicate'() {
+    void 'should reject duplicate account insertion'() {
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
@@ -59,7 +59,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Account - empty'() {
+    void 'should reject account insertion with empty account name owner'() {
         given:
         Account account = AccountBuilder.builder().withAccountNameOwner('').build()
 
@@ -71,7 +71,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert Account - not active'() {
+    void 'should successfully insert and retrieve inactive account'() {
         given:
         Account account = AccountBuilder.builder()
                 .withAccountNameOwner('nonactive_b')
@@ -93,7 +93,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test find Account found'() {
+    void 'should successfully find account by account name owner'() {
         when:
         ResponseEntity<String> response = selectEndpoint(endpointName, account.accountNameOwner)
 
@@ -102,7 +102,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test find Account - not found'() {
+    void 'should return not found for non-existent account'() {
         when:
         ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
 
@@ -111,7 +111,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Account'() {
+    void 'should successfully delete account by account name owner'() {
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, account.accountNameOwner)
 
@@ -120,7 +120,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test delete Account - referenced by a transaction from a payment'() {
+    void 'should fail to delete account when referenced by payment transaction'() {
         given:
         String referencedByTransaction = 'referenced_b'
         String destinationAccountName = 'destination_b'
@@ -146,7 +146,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test rename AccountNameOwner - existing new account'() {
+    void 'should fail to rename account when target name already exists'() {
         given:
         String newName = 'existing_b'
         String oldName = 'source_b'
@@ -172,7 +172,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test rename AccountNameOwner'() {
+    void 'should successfully rename account name owner'() {
         given:
         String oldName = 'foo_b'
         String newName = 'new_b'
@@ -193,7 +193,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test deleteAccount endpoint - failure for irregular payload'() {
+    void 'should return not found when deleting account with invalid identifiers'() {
         when:
         ResponseEntity<String> response1 = deleteEndpoint(endpointName, '1')
         ResponseEntity<String> response2 = deleteEndpoint(endpointName, 'adding/junk')
@@ -204,7 +204,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insertAccount endpoint - failure for irregular payload'() {
+    void 'should reject account insertion with invalid payload'() {
         when:
         ResponseEntity<String> response1 = insertEndpoint(endpointName, jsonPayloadMissingAccountType)
         ResponseEntity<String> response2 = insertEndpoint(endpointName, '{"test":1}')

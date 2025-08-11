@@ -31,7 +31,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'receipt/image'
 
-    void 'test insert receiptImage - bad image'() {
+    void 'should reject receipt image insertion with invalid base64 image'() {
         given:
         String payload = '{"transactionId":1, "image":"test", "activeStatus":true}'
 
@@ -43,7 +43,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert receiptImage - transaction does not exist'() {
+    void 'should accept receipt image insertion even with non-existent transaction id'() {
         given:
         ReceiptImage receiptImage = ReceiptImageBuilder.builder().withTransactionId(99999).build()
 
@@ -56,7 +56,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert receiptImage - jpeg'() {
+    void 'should successfully insert jpeg receipt image'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
         
@@ -86,7 +86,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert receiptImage - png'() {
+    void 'should successfully insert png receipt image'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890ef')
         
@@ -116,7 +116,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'test insert receiptImage - find'() {
+    void 'should retrieve receipt image by id when it exists'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
         
