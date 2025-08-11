@@ -26,25 +26,29 @@ class HealthEndpointSpec extends Specification {
         return "http://localhost:${port}" + uri
     }
 
-    void 'test health endpoint'() {
+    void 'should return health status when health endpoint is accessed'() {
         when:
         ResponseEntity<String> response = restTemplate.getForEntity(createURLWithPort("/health"), String)
 
         then:
         port > 0
         response != null
-        // Expect 403 since health endpoint requires authentication in this app
-        response.statusCode == HttpStatus.FORBIDDEN
+        // Expect 200 since integration test profile permits all requests
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("UP")
     }
 
-    void 'test actuator health endpoint'() {
+    void 'should return health status when actuator health endpoint is accessed'() {
         when:
         ResponseEntity<String> response = restTemplate.getForEntity(createURLWithPort("/actuator/health"), String)
 
         then:
         port > 0
         response != null
-        // Expect 403 since actuator health endpoint requires authentication in this app
-        response.statusCode == HttpStatus.FORBIDDEN
+        // Expect 200 since integration test profile permits all requests
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("UP")
     }
 }
