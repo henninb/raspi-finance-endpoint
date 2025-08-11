@@ -87,7 +87,7 @@ Instructions:
 # Spring Boot / Spock Test Failure Analysis and Fixing Instructions
 
 ## Role
-You are an **expert Spock tester**. Your task is to analyze failing and ignored tests from a Spring Boot application and provide fixes.  
+You are an **expert Spock tester**. Your task is to analyze failing and ignored tests from a Spring Boot application and provide fixes.
 The fixes must:
 - Address root causes in both **test code** only.
 - Follow **Spock and Groovy testing best practices**
@@ -113,83 +113,12 @@ The fixes must:
 ---
 
 ## Failing Tests
-
-1. `AccountControllerSpec` — test delete Account (referenced by a transaction from a payment)  
-2. `CategoryControllerSpec` — test insert Category (duplicate)  
-3. `DescriptionControllerSpec` — test insert Description (duplicate)  
-4. `PaymentControllerSpec` — test insert Payment  
-5. `ReceiptImageControllerSpec` — test insert receiptImage (transaction does not exist)  
-6. `TransactionControllerSpec` — test update Transaction receiptImage  
-7. `PaymentJpaSpec` — test payment to JSON (valid insert)  
-8. `PaymentJpaSpec` — test payment to JSON (valid insert and delete)  
-9. `TransactionJpaSpec` — test transaction repository (insert 2 records with duplicate guid — throws an exception)
-
----
-
-## Ignored Tests
-
-- **AccountControllerSpec**
-  - test deleteAccount endpoint (failure for irregular payload)
-  - test insert Account (duplicate)
-  - test insertAccount endpoint (failure for irregular payload)
-  - test rename AccountNameOwner
-  - test rename AccountNameOwner (existing new account)
-
-- **CategoryControllerSpec**
-  - test Category delete
-  - test Category delete (not found)
-  - test find Category
-  - test find active Category
-  - test find category (not found)
-  - test insert Category (empty)
-  - test insert Category (failure for irregular payload)
-
-- **DescriptionControllerSpec**
-  - test delete Description (not found)
-  - test delete description
-  - test find description
-  - test find description (not found)
-  - test find description (not found after removal)
-  - test insert Description (empty)
-
-- **ExcelFileControllerSpec**
-  - test Excel File controller
-
-- **PaymentControllerSpec**
-  - test Payment endpoint (existing payment inserted, then attempt to delete a non-existent payment)
-  - test delete Payment
-  - test delete transaction of a payment
-  - test insert Payment (duplicate)
-  - test insert Payment (missing payment setup)
-  - test insert Payment (pay a debit account)
-  - test insert Payment (prepare for delete)
-  - test insertPayment endpoint (failure for irregular payload)
-
-- **ReceiptImageControllerSpec**
-  - test insert receiptImage (find)
-  - test insert receiptImage (jpeg)
-  - test insert receiptImage (png)
-
-- **TransactionControllerSpec**
-  - test delete Transaction
-  - test delete Transaction (guid not found)
-  - test find Transaction
-  - test find Transaction (guid is not found)
-  - test insert Transaction
-  - test insert Transaction (duplicate)
-  - test insert Transaction (empty)
-  - test insertTransaction endpoint (failure for irregular payload)
-  - test update Transaction
-  - test update Transaction (not found)
+  - ./gradlew functionalTest --tests "finance.controllers.PaymentControllerSpec"  PaymentControllerSpec: "test insert Payment - pay a debit account"
+  - ReceiptImageControllerSpec: "test insert receiptImage - png" (different test now failing)
+  - TransactionControllerSpec: "test update Transaction"
+  - TransactionJpaSpec: "test transaction repository - insert 2 records with duplicate guid - throws an exception"
 
 ## 10. When I return a 401 to my application log it
 - Role: Act as an expert SpringBoot Programmer who knows all about Kotlin and writting APIs
 - Action:
 - When a user calls any api for example /api/me and there is a 401 returned to the application -- log it in the spring boot logs use best practices and security measures when building any changes
-
-## 11. Tests
-  AccountControllerSpec
-  PaymentControllerSpec: "test insert Payment - pay a debit account"
-  ReceiptImageControllerSpec: "test insert receiptImage - png" (different test now failing)
-  TransactionControllerSpec: "test update Transaction"
-  TransactionJpaSpec: "test transaction repository - insert 2 records with duplicate guid - throws an exception"
