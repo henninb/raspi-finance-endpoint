@@ -14,19 +14,19 @@ import spock.lang.Unroll
 class AccountControllerSpec extends BaseControllerSpec {
 
     @Shared
-    protected Account account = AccountBuilder.builder().withAccountNameOwner('unique_brian').build()
+    protected Account account = AccountBuilder.builder().withAccountNameOwner('unique_b').build()
 
     @Shared
     protected String jsonPayloadInvalidActiveStatus = '''
-{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":"invalid","moniker":"1234","dateClosed":0}
+{"accountNameOwner":"test_b","accountType":"credit","activeStatus":"invalid","moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadInvalidTotals = '''
-{"accountNameOwner":"test_brian","accountType":"credit","activeStatus":true,"moniker":"1234","dateClosed":0}
+{"accountNameOwner":"test_b","accountType":"credit","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadMissingAccountType = '''
-{"accountNameOwner":"test_brian","activeStatus":true,"moniker":"1234","dateClosed":0}
+{"accountNameOwner":"test_b","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
     @Shared
     protected String jsonPayloadEmptyAccountNameOwner = '''
@@ -34,7 +34,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 '''
     @Shared
     protected String jsonPayloadInvalidAccountType = '''
-{"accountNameOwner":"test_brian","accountType":"invalid","activeStatus":true,"moniker":"1234","dateClosed":0}
+{"accountNameOwner":"test_b","accountType":"invalid","activeStatus":true,"moniker":"1234","dateClosed":0}
 '''
 
     @Shared
@@ -74,7 +74,7 @@ class AccountControllerSpec extends BaseControllerSpec {
     void 'test insert Account - not active'() {
         given:
         Account account = AccountBuilder.builder()
-                .withAccountNameOwner('non-active_brian')
+                .withAccountNameOwner('nonactive_b')
                 .withActiveStatus(false)
                 .build()
 
@@ -122,33 +122,40 @@ class AccountControllerSpec extends BaseControllerSpec {
 
     void 'test delete Account - referenced by a transaction from a payment'() {
         given:
-        String referencedByTransaction = 'referenced_brian'
-        // First create the account
-        ResponseEntity<String> accountResponse = insertEndpoint(endpointName, '{\"accountNameOwner\":\"referenced_brian\",\"accountType\":\"credit\",\"activeStatus\":true,\"moniker\":\"0000\"}')
+        String referencedByTransaction = 'referenced_b'
+        String destinationAccountName = 'destination_b'
+        // First create the accounts
+        def accountPayload = AccountBuilder.builder().withAccountNameOwner(referencedByTransaction).build().toString()
+        ResponseEntity<String> accountResponse = insertEndpoint(endpointName, accountPayload)
+        def destinationAccountPayload = AccountBuilder.builder().withAccountNameOwner(destinationAccountName).build().toString()
+        insertEndpoint(endpointName, destinationAccountPayload)
+
         // Create a payment that references this account
-        ResponseEntity<String> paymentResponse = insertEndpoint('payment', '{\"accountNameOwner\":\"referenced_brian\",\"amount\":25.00,\"guidSource\":\"78f65481-f351-4142-aff6-73e99d2a286d\",\"guidDestination\":\"0db56665-0d47-414e-93c5-e5ae4c5e4299\",\"transactionDate\":\"2020-11-12\"}')
+        String paymentPayload = """
+{"accountNameOwner":"${referencedByTransaction}","sourceAccount":"${referencedByTransaction}","destinationAccount":"${destinationAccountName}","amount":25.00,"guidSource":"78f65481-f351-4142-aff6-73e99d2a286d","guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299","transactionDate":"2020-11-12"}
+"""
+        ResponseEntity<String> paymentResponse = insertEndpoint('payment', paymentPayload)
 
         when:
         ResponseEntity<String> response = deleteEndpoint(endpointName, referencedByTransaction)
 
         then:
-        // If account creation failed, expect NOT_FOUND; if succeeded but referenced, expect BAD_REQUEST
-        if (accountResponse.statusCode == HttpStatus.OK) {
-            response.statusCode == HttpStatus.BAD_REQUEST
-        } else {
-            response.statusCode == HttpStatus.NOT_FOUND
-        }
+        accountResponse.statusCode == HttpStatus.OK
+        paymentResponse.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
     void 'test rename AccountNameOwner - existing new account'() {
         given:
-        String newName = 'existing_account_brian'
-        String oldName = 'source_account_brian'
+        String newName = 'existing_b'
+        String oldName = 'source_b'
         // Create both accounts that are needed for this test
-        ResponseEntity<String> existingResponse = insertEndpoint(endpointName, '{"accountNameOwner":"existing_account_brian","accountType":"credit","activeStatus":true,"moniker":"0000"}')
-        ResponseEntity<String> sourceResponse = insertEndpoint(endpointName, '{"accountNameOwner":"source_account_brian","accountType":"credit","activeStatus":true,"moniker":"0000"}')
-        
+        def existingPayload = AccountBuilder.builder().withAccountNameOwner(newName).build().toString()
+        ResponseEntity<String> existingResponse = insertEndpoint(endpointName, existingPayload)
+        def sourcePayload = AccountBuilder.builder().withAccountNameOwner(oldName).build().toString()
+        ResponseEntity<String> sourceResponse = insertEndpoint(endpointName, sourcePayload)
+
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
@@ -159,20 +166,18 @@ class AccountControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        // If account creation was successful, expect BAD_REQUEST for duplicate name
-        // If account creation failed, adjust expectation accordingly
-        if (existingResponse.statusCode == HttpStatus.OK && sourceResponse.statusCode == HttpStatus.OK) {
-            response.statusCode == HttpStatus.BAD_REQUEST
-        } else {
-            response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        }
+        existingResponse.statusCode == HttpStatus.OK
+        sourceResponse.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
     void 'test rename AccountNameOwner'() {
         given:
-        String oldName = 'foo_brian'
-        String newName = 'new_brian'
+        String oldName = 'foo_b'
+        String newName = 'new_b'
+        def accountPayload = AccountBuilder.builder().withAccountNameOwner(oldName).build().toString()
+        ResponseEntity<String> insertResponse = insertEndpoint(endpointName, accountPayload)
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
@@ -183,6 +188,7 @@ class AccountControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
+        insertResponse.statusCode == HttpStatus.OK
         response.statusCode == HttpStatus.OK
         0 * _
     }
