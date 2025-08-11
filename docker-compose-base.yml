@@ -17,7 +17,6 @@ services:
     hostname: hornsup-endpoint
     volumes:
       - ./logs:/opt/raspi-finance-endpoint/logs
-      - ./excel_in:/opt/raspi-finance-endpoint/excel_in
       - ./json_in:/opt/raspi-finance-endpoint/json_in
     extra_hosts:
       - "hornsup:${HOST_IP}"

@@ -55,9 +55,6 @@ Current functional test coverage is **~40%** of total endpoints. While basic CRU
 
 ### ⚠️ Controllers with Minimal/Incomplete Coverage
 
-#### **ExcelFileControllerSpec** - Coverage: ~10%
-- **Status:** Only placeholder tests (one ignored, one empty)
-- **Critical Gap:** No actual file export testing
 
 #### **GraphqlSpec** - Coverage: 0%
 - **Status:** All tests commented out
@@ -264,18 +261,8 @@ void 'should update account details successfully'()
 void 'should validate account update constraints'()
 ```
 
-#### 8. **Complete ExcelFileControllerSpec.groovy**
-```groovy
-class ExcelFileControllerSpec extends BaseControllerSpec {
-    void 'should export transactions to Excel file'()
-    void 'should handle empty transaction export'()
-    void 'should validate Excel file format'()
-    void 'should require authentication for export'()
-    void 'should handle export request errors gracefully'()
-}
-```
 
-#### 9. **Activate GraphqlSpec.groovy**
+#### 8. **Activate GraphqlSpec.groovy**
 ```groovy
 class GraphqlSpec extends BaseControllerSpec {
     void 'should execute GraphQL queries successfully'()
@@ -288,7 +275,7 @@ class GraphqlSpec extends BaseControllerSpec {
 
 ### **Phase 4: Advanced Testing (Weeks 7-8)**
 
-#### 10. **WorkflowIntegrationSpec.groovy**
+#### 9. **WorkflowIntegrationSpec.groovy**
 ```groovy
 class WorkflowIntegrationSpec extends BaseControllerSpec {
     void 'should complete full transaction creation workflow'()
@@ -299,7 +286,7 @@ class WorkflowIntegrationSpec extends BaseControllerSpec {
 }
 ```
 
-#### 11. **ErrorHandlingIntegrationSpec.groovy**
+#### 10. **ErrorHandlingIntegrationSpec.groovy**
 ```groovy
 class ErrorHandlingIntegrationSpec extends BaseControllerSpec {
     void 'should handle database connection failures gracefully'()
@@ -310,7 +297,7 @@ class ErrorHandlingIntegrationSpec extends BaseControllerSpec {
 }
 ```
 
-#### 12. **PerformanceTestingSpec.groovy**
+#### 11. **PerformanceTestingSpec.groovy**
 ```groovy
 class PerformanceTestingSpec extends BaseControllerSpec {
     void 'should handle high volume transaction creation'()

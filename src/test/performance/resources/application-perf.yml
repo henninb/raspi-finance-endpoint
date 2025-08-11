@@ -72,8 +72,6 @@ spring:
 # ===============================
 custom:
   project:
-    excel-password: n/a
-    excel-input-file-path: excel_in
     excluded-accounts:
       - test_brian
 

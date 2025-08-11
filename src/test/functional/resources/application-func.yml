@@ -81,8 +81,6 @@ spring:
 # ===============================
 custom:
   project:
-    excel-password: n/a
-    excel-input-file-path: n/a
     jwt:
       key: test-jwt-key-for-functional-tests
     excluded-accounts:
