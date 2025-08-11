@@ -47,7 +47,6 @@ mkdir -p 'influxdb-data'
 mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
-mkdir -p 'excel_in'
 
 # Preserve local secret changes
 log "Preserving local secret changes..."

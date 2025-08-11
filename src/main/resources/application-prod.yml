@@ -103,8 +103,6 @@ custom:
         - https://amplify.brianhenning.com
         - https://netlify.bhenning.com
         - https://netlify.brianhenning.com
-    excel-password: ${EXCEL_PASSWORD}
-    excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
     excluded-accounts:
       - test_brian
     camel-route:
