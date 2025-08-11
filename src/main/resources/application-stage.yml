@@ -76,8 +76,6 @@ spring:
 # ===============================
 custom:
   project:
-    excel-password: ${EXCEL_PASSWORD}
-    excel-input-file-path: ${EXCEL_FILES_INPUT_PATH}
     excluded-accounts:
       - test_brian
     camel-route:

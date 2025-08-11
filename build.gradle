@@ -133,9 +133,6 @@ dependencies {
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
     implementation("org.flywaydb:flyway-database-postgresql:${flywayVersion}")
 
-    //Excel Files
-    implementation("org.apache.poi:poi:${poiVersion}")
-    implementation("org.apache.poi:poi-ooxml:${poiVersion}")
 
     //influx
     implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxVersion}")
