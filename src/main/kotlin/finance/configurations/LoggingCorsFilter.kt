@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
 
 @Configuration
 open class LoggingCorsFilter(
@@ -26,13 +27,14 @@ open class LoggingCorsFilter(
             if (config != null && config.allowedOrigins?.contains(origin) == false) {
                 val message = "CORS error: Origin '$origin' is not allowed for request '${request.requestURI}'. " +
                         "Allowed origins: ${config.allowedOrigins}. Request Method: '${request.method}', " +
-                        "Remote Address: '${request.remoteAddr}'. Headers: ${getHeadersInfo(request)}"
+                        "Remote Address: '${request.remoteAddr}'"
                 log.error(message)
             }
         }
         // Continue with the filter chain
         super.doFilterInternal(request, response, filterChain)
     }
+    
 
     private fun getHeadersInfo(request: HttpServletRequest): Map<String, String> {
         val headers = mutableMapOf<String, String>()

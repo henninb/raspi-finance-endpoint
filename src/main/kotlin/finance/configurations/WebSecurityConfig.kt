@@ -65,7 +65,13 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
                 "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("*")
+            // Fixed: Explicit headers only - removed dangerous wildcard
+            allowedHeaders = listOf(
+                "Content-Type",
+                "Accept",
+                "Cookie",
+                "X-Requested-With"
+            )
             allowCredentials = true
         }
         val source = UrlBasedCorsConfigurationSource()
