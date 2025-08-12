@@ -2,6 +2,7 @@ DELETE FROM func.t_category;
 DELETE FROM func.t_description;
 DELETE FROM func.t_parameter;
 DELETE FROM func.t_payment;
+DELETE FROM func.t_transfer;
 DELETE FROM func.t_transaction;
 DELETE FROM func.t_transaction_categories;
 DELETE FROM func.t_receipt_image;

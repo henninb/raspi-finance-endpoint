@@ -54,6 +54,8 @@ CREATE TABLE IF NOT EXISTS func.t_user
     user_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
     username      TEXT UNIQUE                       NOT NULL,
     password      TEXT                              NOT NULL,
+    first_name    TEXT                              NOT NULL,
+    last_name     TEXT                              NOT NULL,
     active_status BOOLEAN   DEFAULT TRUE            NOT NULL,
     date_updated  TIMESTAMP DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
     date_added    TIMESTAMP DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
@@ -170,6 +172,25 @@ ALTER TABLE func.t_receipt_image
 ALTER TABLE func.t_receipt_image
     ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES func.t_transaction (transaction_id) ON DELETE CASCADE;
 
+----------------------
+-- PendingTransaction --
+----------------------
+CREATE TABLE IF NOT EXISTS func.t_pending_transaction
+(
+    pending_transaction_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    account_name_owner     TEXT                              NOT NULL,
+    transaction_date       DATE                              NOT NULL,
+    description            TEXT                              NOT NULL,
+    amount                 NUMERIC(12, 2) DEFAULT 0.00       NOT NULL,
+    review_status          TEXT          DEFAULT 'pending'   NOT NULL,
+    owner                  TEXT                              NULL,
+    date_added             TIMESTAMP     DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
+    CONSTRAINT fk_pending_account FOREIGN KEY (account_name_owner)
+        REFERENCES func.t_account (account_name_owner) ON UPDATE CASCADE,
+    CONSTRAINT ck_review_status CHECK (review_status IN ('pending', 'approved', 'rejected')),
+    CONSTRAINT unique_pending_transaction_fields UNIQUE (account_name_owner, transaction_date, description, amount)
+);
+
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS ck_reoccurring_type;
 -- ALTER TABLE t_transaction DROP CONSTRAINT IF EXISTS fk_receipt_image;
 -- ALTER TABLE t_transaction ADD CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN ('annually', 'bi-annually', 'fortnightly', 'monthly', 'quarterly', 'undefined'));
@@ -230,6 +251,24 @@ CREATE TABLE IF NOT EXISTS func.t_description
 );
 
 -- ALTER TABLE t_description ADD COLUMN active_status      BOOLEAN        NOT NULL DEFAULT TRUE;
+
+-------------
+-- Transfer --
+-------------
+CREATE TABLE IF NOT EXISTS func.t_transfer
+(
+    transfer_id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    source_account      TEXT                                  NOT NULL,
+    destination_account TEXT                                  NOT NULL,
+    transaction_date    DATE                                  NOT NULL,
+    amount              NUMERIC(8, 2) DEFAULT 0.00            NOT NULL,
+    guid_source         TEXT                                  NULL,
+    guid_destination    TEXT                                  NULL,
+    active_status       BOOLEAN       DEFAULT TRUE            NOT NULL,
+    date_updated        TIMESTAMP     DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
+    date_added          TIMESTAMP     DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
+    CONSTRAINT transfer_constraint UNIQUE (source_account, destination_account, transaction_date, amount)
+);
 
 -- H2 manages sequences automatically for AUTO_INCREMENT columns
 -- PostgreSQL functions and triggers removed - not needed for H2 functional tests
