@@ -29,7 +29,7 @@ logging:
 custom:
     project:
         jwt:
-            key: "dummy"
+            key: "dummy-functional-test-key-that-is-at-least-256-bits-long-for-hmac-sha256-security"
         camel-route:
             auto-start-route: true
             json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"

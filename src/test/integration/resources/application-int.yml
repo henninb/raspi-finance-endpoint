@@ -76,7 +76,7 @@ spring:
 custom:
   project:
     jwt:
-      key: test-jwt-key-for-integration-tests
+      key: test-jwt-key-for-integration-tests-that-is-at-least-256-bits-long-for-hmac-sha256-security
     excluded-accounts:
       - test_brian
     camel-route:

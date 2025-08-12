@@ -3,6 +3,8 @@ package finance.configurations
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.JwtException
+import io.jsonwebtoken.security.Keys
+import javax.crypto.SecretKey
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -43,10 +45,12 @@ class JwtAuthenticationFilter(private val environment: Environment) : OncePerReq
         if (token != null) {
             try {
                 // Validate token using your signing key
+                val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
                 val claims: Claims = Jwts.parser()
-                    .setSigningKey(jwtKey.toByteArray())
-                    .parseClaimsJws(token)
-                    .body
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .payload
 
                 // Create an authentication token using the token claims (e.g., subject and roles)
                 val username = claims.get("username", String::class.java)

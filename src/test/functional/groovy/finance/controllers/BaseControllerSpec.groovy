@@ -3,7 +3,8 @@ package finance.controllers
 import finance.Application
 import groovy.util.logging.Slf4j
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.security.Keys
+import javax.crypto.SecretKey
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -40,9 +41,10 @@ class BaseControllerSpec extends Specification {
     protected HttpHeaders headers = new HttpHeaders()
     
     protected String generateJwtToken(String username) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtKey.bytes)
         return Jwts.builder()
                 .claim("username", username)
-                .signWith(SignatureAlgorithm.HS256, jwtKey.bytes)
+                .signWith(key)
                 .compact()
     }
 
