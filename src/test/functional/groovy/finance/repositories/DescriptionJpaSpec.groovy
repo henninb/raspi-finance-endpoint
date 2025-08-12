@@ -9,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @DataJpaTest
 @ContextConfiguration(classes = [Application])
 class DescriptionJpaSpec extends Specification {

@@ -11,7 +11,7 @@ import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @SpringBootTest(classes = [Application], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = [Application])
 class BaseRouteBuilderSpec extends Specification {
