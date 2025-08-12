@@ -3,7 +3,8 @@ package finance.controllers
 import finance.domain.User
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
+import io.jsonwebtoken.security.Keys
+import javax.crypto.SecretKey
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -39,11 +40,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         // Generate JWT after validating credentials.
         val now = Date()
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
+        val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token = Jwts.builder()
             .claim("username", loginRequest.username)
-            .setNotBefore(now)
-            .setExpiration(expiration)
-            .signWith(SignatureAlgorithm.HS256, jwtKey.toByteArray())
+            .notBefore(now)
+            .expiration(expiration)
+            .signWith(key)
             .compact()
 
         // Check if we're in a local development context (even if profile is prod)
@@ -115,11 +117,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         val now = Date()
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
 
+        val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token = Jwts.builder()
             .claim("username", newUser.username)
-            .setNotBefore(now)
-            .setExpiration(expiration)
-            .signWith(SignatureAlgorithm.HS256, jwtKey.toByteArray())
+            .notBefore(now)
+            .expiration(expiration)
+            .signWith(key)
             .compact()
 
         // Check if we're in a local development context (even if profile is prod)
@@ -156,10 +159,12 @@ class LoginController(private val userService: UserService) : BaseController() {
 
         try {
             // Parse and validate the JWT.
+            val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
             val claims = Jwts.parser()
-                .setSigningKey(jwtKey.toByteArray())
-                .parseClaimsJws(token)
-                .body
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .payload
 
             val username = claims["username"] as? String
             if (username.isNullOrBlank()) {
