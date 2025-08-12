@@ -19,7 +19,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 @Slf4j
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = Application)
 class BaseControllerSpec extends Specification {

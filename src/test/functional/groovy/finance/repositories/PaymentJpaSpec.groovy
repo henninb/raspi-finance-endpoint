@@ -10,7 +10,9 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
-@ActiveProfiles("int")
+import java.sql.Date
+
+@ActiveProfiles("func")
 @DataJpaTest
 @ContextConfiguration(classes = [Application])
 class PaymentJpaSpec extends Specification {
@@ -24,7 +26,7 @@ class PaymentJpaSpec extends Specification {
     protected ObjectMapper mapper = new ObjectMapper()
 
     protected String json = """
-{"accountNameOwner": "test_brian", "amount":1.54, "transactionDate":"2020-12-02", "guidSource":"c8e5cd3c-3f70-473b-92bf-1c2e4fb338ab", "guidDestination":"e074436e-ed64-455d-be56-7421e04d467b", "sourceAccount":"source_test", "destinationAccount":"dest_test" }
+{"accountNameOwner": "referenced_brian", "amount":12.99, "transactionDate":"2020-12-30", "guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh", "guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di", "sourceAccount":"referenced_brian", "destinationAccount":"bank_brian" }
 """
 
     void 'test payment to JSON - valid insert'() {
@@ -36,7 +38,7 @@ class PaymentJpaSpec extends Specification {
         Payment result = entityManager.persist(payment)
 
         then:
-        paymentRepository.count() == 1L
+        paymentRepository.count() == 2L  // 1 existing payment in data.sql + 1 new payment
         result == payment
     }
 
@@ -44,14 +46,19 @@ class PaymentJpaSpec extends Specification {
 
         given:
         Payment payment = mapper.readValue(json, Payment)
-        payment.guidSource = '11111111-1111-1111-1111-111111111111'
-        payment.guidDestination = '22222222-2222-2222-2222-222222222222'
+        // Use the same existing GUIDs that are already in the test data
+        payment.guidSource = 'ba665bc2-22b6-4123-a566-6f5ab3d796dh'
+        payment.guidDestination = 'ba665bc2-22b6-4123-a566-6f5ab3d796di'
+        // Create unique values to avoid constraint violations
+        payment.accountNameOwner = 'different_brian'
+        payment.amount = 15.50
+        payment.transactionDate = Date.valueOf('2020-12-30')
         Payment result = entityManager.persist(payment)
 
         when:
         paymentRepository.delete(result)
 
         then:
-        paymentRepository.count() == 0L
+        paymentRepository.count() == 1L  // Should be back to 1 existing payment after delete
     }
 }

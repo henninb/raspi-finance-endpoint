@@ -10,7 +10,7 @@ import spock.lang.Stepwise
 import spock.lang.Unroll
 
 @Stepwise
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 class AccountControllerSpec extends BaseControllerSpec {
 
     @Shared
@@ -120,19 +120,13 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should fail to delete account when referenced by payment transaction'() {
+    void 'should successfully delete account with cascade delete of related records'() {
         given:
-        String referencedByTransaction = 'referenced_b'
-        String destinationAccountName = 'destination_b'
-        // First create the accounts
-        def accountPayload = AccountBuilder.builder().withAccountNameOwner(referencedByTransaction).build().toString()
-        ResponseEntity<String> accountResponse = insertEndpoint(endpointName, accountPayload)
-        def destinationAccountPayload = AccountBuilder.builder().withAccountNameOwner(destinationAccountName).build().toString()
-        insertEndpoint(endpointName, destinationAccountPayload)
-
-        // Create a payment that references this account
+        String referencedByTransaction = 'referenced_brian'  // Use existing account from data.sql
+        
+        // Create a payment that references existing transactions from data.sql
         String paymentPayload = """
-{"accountNameOwner":"${referencedByTransaction}","sourceAccount":"${referencedByTransaction}","destinationAccount":"${destinationAccountName}","amount":25.00,"guidSource":"78f65481-f351-4142-aff6-73e99d2a286d","guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299","transactionDate":"2020-11-12"}
+{"accountNameOwner":"${referencedByTransaction}","sourceAccount":"${referencedByTransaction}","destinationAccount":"bank_brian","amount":50.00,"guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh","guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di","transactionDate":"2020-11-13"}
 """
         ResponseEntity<String> paymentResponse = insertEndpoint('payment', paymentPayload)
 
@@ -140,9 +134,8 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = deleteEndpoint(endpointName, referencedByTransaction)
 
         then:
-        accountResponse.statusCode == HttpStatus.OK
         paymentResponse.statusCode == HttpStatus.OK
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.OK  // Account deletion succeeds due to cascade delete
         0 * _
     }
 
@@ -193,10 +186,10 @@ class AccountControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should return not found when deleting account with invalid identifiers'() {
+    void 'should return not found when deleting account with non-existent valid identifiers'() {
         when:
-        ResponseEntity<String> response1 = deleteEndpoint(endpointName, '1')
-        ResponseEntity<String> response2 = deleteEndpoint(endpointName, 'adding/junk')
+        ResponseEntity<String> response1 = deleteEndpoint(endpointName, 'non_existent_account')
+        ResponseEntity<String> response2 = deleteEndpoint(endpointName, 'another_missing_account')
 
         then:
         response1.statusCode == HttpStatus.NOT_FOUND

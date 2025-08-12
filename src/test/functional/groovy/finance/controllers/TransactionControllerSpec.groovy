@@ -12,7 +12,7 @@ import spock.lang.Stepwise
 import spock.lang.Unroll
 
 @Stepwise
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TransactionControllerSpec extends BaseControllerSpec {
 

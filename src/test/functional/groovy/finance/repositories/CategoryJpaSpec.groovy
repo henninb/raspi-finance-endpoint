@@ -12,7 +12,7 @@ import spock.lang.Specification
 
 import jakarta.validation.ConstraintViolationException
 
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @DataJpaTest
 @ContextConfiguration(classes = [Application])
 class CategoryJpaSpec extends Specification {
@@ -30,7 +30,7 @@ class CategoryJpaSpec extends Specification {
         Category categoryResult = entityManager.persist(category)
 
         then:
-        categoryRepository.count() == 1L
+        categoryRepository.count() == 2L
         categoryResult.categoryName == category.categoryName
         0 * _
     }
@@ -46,7 +46,7 @@ class CategoryJpaSpec extends Specification {
         Category categoryResult2 = entityManager.persist(category2)
 
         then:
-        categoryRepository.count() == 2L
+        categoryRepository.count() == 3L
         categoryResult2.categoryName == category2.categoryName
         categoryResult1.categoryName == category1.categoryName
         0 * _

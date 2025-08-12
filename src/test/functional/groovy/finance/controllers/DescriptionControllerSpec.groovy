@@ -11,7 +11,7 @@ import spock.lang.Shared
 import spock.lang.Stepwise
 
 @Stepwise
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DescriptionControllerSpec extends BaseControllerSpec {
 

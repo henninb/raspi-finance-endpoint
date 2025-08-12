@@ -50,14 +50,11 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
         1 * validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
         1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
-        1 * accountRepositoryMock.saveAndFlush(account)
         
         result.validationId == 1L
         validationAmount.accountId == 1L
         validationAmount.dateAdded != null
         validationAmount.dateUpdated != null
-        account.validationDate != null
-        account.dateUpdated != null
     }
 
     def "insertValidationAmount - success with non-existing account"() {

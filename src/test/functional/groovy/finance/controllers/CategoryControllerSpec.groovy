@@ -14,7 +14,7 @@ import spock.lang.Stepwise
 import spock.lang.Unroll
 
 @Stepwise
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CategoryControllerSpec extends BaseControllerSpec {
 
@@ -56,7 +56,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test find category - not found'() {
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+        ResponseEntity<String> response = selectEndpoint(endpointName, 'non_existent_category')
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
@@ -74,11 +74,13 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test find active Category'() {
         given:
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort('/category/select/active'), HttpMethod.GET,
+                createURLWithPort('/api/category/select/active'), HttpMethod.GET,
                 entity, String)
         then:
         response.statusCode == HttpStatus.OK
@@ -96,7 +98,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
     void 'test Category delete - not found'() {
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+        ResponseEntity<String> response = deleteEndpoint(endpointName, 'another_non_existent_category')
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND

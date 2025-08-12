@@ -122,3 +122,4 @@ The fixes must:
 - Role: Act as an expert SpringBoot Programmer who knows all about Kotlin and writting APIs
 - Action:
 - When a user calls any api for example /api/me and there is a 401 returned to the application -- log it in the spring boot logs use best practices and security measures when building any changes
+
