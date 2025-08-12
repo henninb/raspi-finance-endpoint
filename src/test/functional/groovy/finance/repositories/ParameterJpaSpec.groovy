@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @DataJpaTest
 @ContextConfiguration(classes = [Application])
 class ParameterJpaSpec extends Specification {
@@ -32,12 +32,13 @@ class ParameterJpaSpec extends Specification {
     void 'test parameter - valid insert'() {
         given:
         Parameter parameter = ParameterBuilder.builder().build()
+        Long initialCount = parameterRepository.count()
 
         when:
         Parameter parameterResult = entityManager.persist(parameter)
 
         then:
-        parameterRepository.count() == 1L
+        parameterRepository.count() == initialCount + 1L
         parameterResult.parameterName == parameter.parameterName
         parameterResult.parameterValue == parameter.parameterValue
         0 * _
@@ -46,13 +47,14 @@ class ParameterJpaSpec extends Specification {
     void 'test parameter - valid insert and find it'() {
         given:
         Parameter parameter = ParameterBuilder.builder().build()
+        Long initialCount = parameterRepository.count()
         entityManager.persist(parameter)
 
         when:
         Optional<Parameter> result = parameterRepository.findByParameterName(parameter.parameterName)
 
         then:
-        parameterRepository.count() == 1L
+        parameterRepository.count() == initialCount + 1L
         result.get().parameterName == parameter.parameterName
         result.get().parameterValue == parameter.parameterValue
         0 * _

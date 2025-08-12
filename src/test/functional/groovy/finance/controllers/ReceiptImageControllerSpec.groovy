@@ -16,7 +16,7 @@ import spock.lang.Shared
 import spock.lang.Stepwise
 
 @Stepwise
-@ActiveProfiles("int")
+@ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ReceiptImageControllerSpec extends BaseControllerSpec {
     @Shared
@@ -43,7 +43,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should accept receipt image insertion even with non-existent transaction id'() {
+    void 'should reject receipt image insertion with non-existent transaction id'() {
         given:
         ReceiptImage receiptImage = ReceiptImageBuilder.builder().withTransactionId(99999).build()
 
@@ -51,8 +51,8 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
 
         then:
-        // The system currently allows receipt images with non-existent transaction IDs
-        response.statusCode == HttpStatus.OK
+        // The system enforces referential integrity and rejects receipt images with non-existent transaction IDs
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -71,14 +71,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
                     .build()
             response = insertEndpoint(endpointName, receiptImage.toString())
         } else {
-            // Transaction doesn't exist, create receipt image with default transaction ID
-            ReceiptImage receiptImage = ReceiptImageBuilder.builder()
-                    .withJpgImage('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
-                    .withThumbnail('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
-                    .withImageFormatType(ImageFormatType.Jpeg)
-                    .withTransactionId(1L) // Use default transaction ID
-                    .build()
-            response = insertEndpoint(endpointName, receiptImage.toString())
+            throw new RuntimeException("Required transaction not found for test")
         }
 
         then:
@@ -101,14 +94,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
                     .build()
             response = insertEndpoint(endpointName, receiptImage.toString())
         } else {
-            // Transaction doesn't exist, create receipt image with default transaction ID
-            ReceiptImage receiptImage = ReceiptImageBuilder.builder()
-                    .withJpgImage('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
-                    .withThumbnail('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
-                    .withImageFormatType(ImageFormatType.Png)
-                    .withTransactionId(1L) // Use default transaction ID
-                    .build()
-            response = insertEndpoint(endpointName, receiptImage.toString())
+            throw new RuntimeException("Required transaction not found for test")
         }
 
         then:
@@ -128,16 +114,15 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
                 Long receiptImageId = receiptImageOptional.get().receiptImageId
                 response = selectEndpoint(endpointName, receiptImageId.toString())
             } else {
-                // No receipt image found for this transaction, use a default ID that should return 404
-                response = selectEndpoint(endpointName, "999999")
+                // No receipt image found for this transaction, create test data
+                response = selectEndpoint(endpointName, "999999") // This will return 404
             }
         } else {
-            // Transaction doesn't exist, use a default ID that should return 404
-            response = selectEndpoint(endpointName, "999999")
+            throw new RuntimeException("Required transaction not found for test")
         }
 
         then:
-        // Accept either OK (if receipt image exists) or NOT_FOUND (if it doesn't)
+        // Accept either OK (if receipt image exists) or NOT_FOUND (if it doesn't exist)
         response.statusCode in [HttpStatus.OK, HttpStatus.NOT_FOUND]
         0 * _
     }

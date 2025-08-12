@@ -109,6 +109,12 @@ task functionalTest(type: Test) {
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "func"
     environment "APPNAME", "raspi-finance-endpoint"
+    
+    doFirst {
+        project.flyway {
+            locations = ["classpath:db/migration/func"]
+        }
+    }
 }
 
 task performanceTest(type: Test) {

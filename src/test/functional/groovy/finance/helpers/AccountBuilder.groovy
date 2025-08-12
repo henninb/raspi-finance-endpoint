@@ -15,7 +15,6 @@ class AccountBuilder {
     BigDecimal outstanding = new BigDecimal(0)
     BigDecimal cleared = new BigDecimal(0)
     Timestamp dateClosed = new Timestamp(0)
-    Timestamp validationDate = new Timestamp(0)
 
     static AccountBuilder builder() {
         return new AccountBuilder()
@@ -31,7 +30,6 @@ class AccountBuilder {
             outstanding = this.outstanding
             cleared = this.cleared
             dateClosed = this.dateClosed
-            validationDate = this.validationDate
             return it
         }
         return account
@@ -77,8 +75,4 @@ class AccountBuilder {
         return this
     }
 
-    AccountBuilder withValidationDate(Timestamp validationDate) {
-        this.validationDate = validationDate
-        return this
-    }
 }
