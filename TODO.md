@@ -123,3 +123,52 @@ The fixes must:
 - Action:
 - When a user calls any api for example /api/me and there is a 401 returned to the application -- log it in the spring boot logs use best practices and security measures when building any changes
 
+
+
+
+
+Instructions
+Review the provided Kotlin code for security flaws.
+
+Document all findings in a file called SECURITY.md.
+
+Order findings by importance/severity (highest risk first).
+
+Identify and reference known CVEs if relevant.
+
+Highlight coding flaws that could lead to vulnerabilities (e.g., injection risks, insecure API usage, unsafe deserialization, improper authentication/authorization checks).
+
+Explicitly note where data validation is performed and whether it occurs before trusting or using the data.
+
+Include both logical vulnerabilities and misconfigurations.
+
+Additional Security Checks to Consider
+A good security engineer should also check for:
+
+Input validation gaps — missing or incomplete sanitization of user input.
+
+Injection risks — SQL injection, command injection, expression language injection.
+
+Authentication flaws — weak password policies, missing multi-factor auth enforcement.
+
+Authorization issues — improper access control, privilege escalation potential.
+
+Data exposure — sensitive information logged, returned in responses, or stored without encryption.
+
+Cryptography misuse — hardcoded keys, weak encryption algorithms, improper random number generation.
+
+Insecure deserialization — untrusted data being deserialized without safeguards.
+
+Error handling leaks — stack traces or internal details exposed to users.
+
+Dependency vulnerabilities — outdated libraries with known CVEs.
+
+Race conditions — concurrency issues that could cause inconsistent or exploitable states.
+
+API security — missing authentication, weak tokens, or insufficient rate limiting.
+
+Session management issues — insecure cookies, missing HttpOnly or Secure flags, long-lived sessions.
+
+Logging & monitoring gaps — inability to detect or audit malicious behavior.
+
+
