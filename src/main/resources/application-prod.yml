@@ -45,6 +45,7 @@ spring:
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: ${DATASOURCE_DRIVER}
     hikari:
+      auto-commit: false
       schema: public
       # Connection pool settings for resilience
       maximum-pool-size: 20
