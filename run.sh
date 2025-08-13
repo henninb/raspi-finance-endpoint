@@ -5,6 +5,78 @@ log() {
   echo "$(date +"%Y-%m-%d %H:%M:%S") - $*"
 }
 
+# Function to validate environment secrets
+validate_env_secrets() {
+  local env_file="env.secrets"
+  local missing_keys=""
+  local required_keys="DATASOURCE_PASSWORD INFLUXDB_ADMIN_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD SYS_PASSWORD BASIC_AUTH_PASSWORD JWT_KEY"
+
+  log "Validating environment secrets..."
+
+  # Check if env.secrets file exists
+  if [ ! -f "$env_file" ]; then
+    log "ERROR: $env_file file not found!"
+    log "Please create $env_file with the required environment variables."
+    exit 1
+  fi
+
+  # Source the env.secrets file to check values
+  # shellcheck disable=SC1090
+  if [ -f "$env_file" ]; then
+    . "./$env_file"
+  fi
+
+  # Check each required key (using sh-compatible approach)
+  for key in $required_keys; do
+    case $key in
+      "DATASOURCE_PASSWORD")
+        value="$DATASOURCE_PASSWORD" ;;
+      "INFLUXDB_ADMIN_PASSWORD")
+        value="$INFLUXDB_ADMIN_PASSWORD" ;;
+      "SSL_KEY_PASSWORD")
+        value="$SSL_KEY_PASSWORD" ;;
+      "SSL_KEY_STORE_PASSWORD")
+        value="$SSL_KEY_STORE_PASSWORD" ;;
+      "SYS_PASSWORD")
+        value="$SYS_PASSWORD" ;;
+      "BASIC_AUTH_PASSWORD")
+        value="$BASIC_AUTH_PASSWORD" ;;
+      "JWT_KEY")
+        value="$JWT_KEY" ;;
+      *)
+        value="" ;;
+    esac
+
+    if [ -z "$value" ] || [ "$value" = "" ]; then
+      if [ -z "$missing_keys" ]; then
+        missing_keys="$key"
+      else
+        missing_keys="$missing_keys $key"
+      fi
+    fi
+  done
+
+  # If any keys are missing, prompt user and exit
+  if [ -n "$missing_keys" ]; then
+    log "ERROR: The following required environment variables are missing or empty in $env_file:"
+    for key in $missing_keys; do
+      log "  - $key"
+    done
+    log ""
+    log "Please set values for these variables in $env_file before running the application."
+    log "Example format:"
+    log "  DATASOURCE_PASSWORD=your_database_password"
+    log "  JWT_KEY=your_jwt_secret_key"
+    log ""
+    exit 1
+  fi
+
+  log "✓ All required environment secrets are properly configured."
+}
+
+# Validate environment secrets before proceeding
+validate_env_secrets
+
 # Ensure exactly one argument is provided: proxmox or gcp
 if [ $# -ne 1 ]; then
   log "Usage: $0 <proxmox|gcp>"
