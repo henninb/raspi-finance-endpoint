@@ -24,36 +24,47 @@ open class AccountService(
     @Timed
     override fun account(accountNameOwner: String): Optional<Account> {
         logger.info("Finding account: $accountNameOwner")
-        val account = accountRepository.findByAccountNameOwner(accountNameOwner)
-        if (account.isPresent) {
-            logger.info("Found account: $accountNameOwner")
-        } else {
-            logger.warn("Account not found: $accountNameOwner")
+        return executeWithResilienceSync(
+            operation = { 
+                accountRepository.findByAccountNameOwner(accountNameOwner)
+            },
+            operationName = "findAccountByName-$accountNameOwner"
+        ).also { account ->
+            if (account.isPresent) {
+                logger.info("Found account: $accountNameOwner")
+            } else {
+                logger.warn("Account not found: $accountNameOwner")
+            }
         }
-        return account
     }
 
     @Timed
     override fun accounts(): List<Account> {
-        val accounts = accountRepository.findByActiveStatusOrderByAccountNameOwner()
-        if (accounts.isEmpty()) {
-            logger.warn("findAllActiveAccounts - no accounts found.")
-        } else {
-            logger.info("findAllActiveAccounts - found accounts.")
+        return executeWithResilienceSync(
+            operation = { 
+                accountRepository.findByActiveStatusOrderByAccountNameOwner()
+            },
+            operationName = "findAllActiveAccounts"
+        ).also { accounts ->
+            if (accounts.isEmpty()) {
+                logger.warn("findAllActiveAccounts - no accounts found.")
+            } else {
+                logger.info("findAllActiveAccounts - found accounts.")
+            }
         }
-        return accounts
     }
 
     override fun findAccountsThatRequirePayment(): List<Account> {
         updateTotalsForAllAccounts()
 
-        val accountsToInvestigate = accountRepository
-            .findAccountsThatRequirePayment()
-
-        // Log the count before filtering by Credit
-        logger.info("Total accounts fetched: ${accountsToInvestigate.size}")
-
-        return accountsToInvestigate
+        return executeWithResilienceSync(
+            operation = {
+                accountRepository.findAccountsThatRequirePayment()
+            },
+            operationName = "findAccountsThatRequirePayment"
+        ).also { accountsToInvestigate ->
+            logger.info("Total accounts fetched: ${accountsToInvestigate.size}")
+        }
     }
 
     @Timed

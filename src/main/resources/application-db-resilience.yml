@@ -1,0 +1,107 @@
+spring:
+  datasource:
+    hikari:
+      # Connection pool settings for resilience
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      # Query timeout in milliseconds (30 seconds)
+      query-timeout: 30000
+      # Connection validation
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      # Pool monitoring
+      register-mbeans: true
+      # Connection leak detection (in milliseconds)
+      leak-detection-threshold: 60000
+      # Driver-level properties
+      data-source-properties:
+        # PostgreSQL specific
+        socketTimeout: 30
+        loginTimeout: 10
+        connectTimeout: 10
+        # Statement timeout (in seconds)
+        statementTimeout: 30
+        # Enable prepared statement caching
+        preparedStatementCacheQueries: 256
+        preparedStatementCacheSizeMiB: 5
+
+  jpa:
+    properties:
+      hibernate:
+        # Query timeout for Hibernate queries (in milliseconds)
+        query.timeout: 30000
+        # Connection provider settings
+        connection.provider_disables_autocommit: true
+        # JDBC batch settings
+        jdbc:
+          batch_size: 20
+          batch_versioned_data: true
+          time_zone: UTC
+        # Query plan cache
+        query.plan_cache_max_size: 2048
+        query.plan_parameter_metadata_max_size: 128
+
+# Circuit breaker and resilience patterns
+management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        hikari: true
+      percentiles:
+        hikari: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  health:
+    db:
+      enabled: true
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+
+# Custom resilience configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      database:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 60000ms
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 30000ms
+  retry:
+    instances:
+      database:
+        max-attempts: 3
+        wait-duration: 1000ms
+        retry-exceptions:
+          - java.sql.SQLException
+          - org.springframework.dao.DataAccessResourceFailureException
+          - org.springframework.jdbc.CannotGetJdbcConnectionException
+        ignore-exceptions:
+          - jakarta.validation.ValidationException
+          - java.lang.IllegalArgumentException
+  timelimiter:
+    instances:
+      database:
+        timeout-duration: 30000ms
+        cancel-running-future: true
+
+logging:
+  level:
+    com.zaxxer.hikari: DEBUG
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: ERROR
+    org.springframework.jdbc: WARN
+    # Log slow queries
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN

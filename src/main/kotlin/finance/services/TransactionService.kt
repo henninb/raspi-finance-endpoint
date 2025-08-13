@@ -183,21 +183,23 @@ open class TransactionService(
 
     @Timed
     override fun findTransactionByGuid(guid: String): Optional<Transaction> {
-        val transactionOptional: Optional<Transaction> = transactionRepository.findByGuid(guid)
-        if (transactionOptional.isPresent) {
-            return transactionOptional
-        }
-        return Optional.empty()
+        return executeWithResilienceSync(
+            operation = {
+                transactionRepository.findByGuid(guid)
+            },
+            operationName = "findTransactionByGuid-$guid"
+        )
     }
 
     @Timed
     override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
-        var resultSet: List<Any>
-
-        val queryTimeInMillis = measureTimeMillis {
-            resultSet = transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
-        }
-        logger.info("The query took $queryTimeInMillis ms")
+        val resultSet = executeWithResilienceSync(
+            operation = {
+                transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
+            },
+            operationName = "calculateActiveTotalsByAccountNameOwner-$accountNameOwner",
+            timeoutSeconds = 45
+        )
 
         var totalsFuture = BigDecimal.ZERO
         var totalsCleared = BigDecimal.ZERO
@@ -230,7 +232,13 @@ open class TransactionService(
 
     @Timed
     override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
-        val transactions = transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+        val transactions = executeWithResilienceSync(
+            operation = {
+                transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+            },
+            operationName = "findByAccountNameOwnerOrderByTransactionDate-$accountNameOwner",
+            timeoutSeconds = 60
+        )
 
         // Early return if transactions list is empty
         if (transactions.isEmpty()) {
