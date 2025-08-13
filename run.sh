@@ -112,14 +112,20 @@ if [ "$env" = "proxmox" ]; then
   export CURRENT_UID="$(ssh debian-dockerserver id -u)"
   export CURRENT_GID="$(ssh debian-dockerserver id -g)"
   export USERNAME="$(ssh debian-dockerserver whoami)"
+  # Use env.prod for Proxmox (InfluxDB enabled)
+  ENV_FILE="env.prod"
 else
   export CURRENT_UID="$(ssh gcp-api id -u)"
   export CURRENT_GID="$(ssh gcp-api id -g)"
   export USERNAME="$(ssh gcp-api whoami)"
   HOST_IP="172.19.0.2"
+  # Use env.gcp for GCP (InfluxDB disabled)
+  ENV_FILE="env.gcp"
 fi
 export HOST_IP
+export ENV_FILE
 log "Database host (HOST_IP) set to: $HOST_IP"
+log "Environment file (ENV_FILE) set to: $ENV_FILE"
 log "USERNAME set to: $USERNAME"
 
 # export APPNAME=raspi-finance-endpoint
