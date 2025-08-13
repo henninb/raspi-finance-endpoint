@@ -256,7 +256,7 @@ open class TransactionService(
             return masterTransactionUpdater(transactionFromDatabase, transaction)
         }
         logger.warn("cannot update a transaction without a valid guid.")
-        throw RuntimeException("cannot update a transaction without a valid guid.")
+        throw TransactionValidationException("cannot update a transaction without a valid guid.")
     }
 
     @Timed
@@ -272,7 +272,7 @@ open class TransactionService(
             return transactionRepository.saveAndFlush(transaction)
         }
         logger.warn("guid did not match any database records to update ${transaction.guid}.")
-        throw RuntimeException("guid did not match any database records to update ${transaction.guid}.")
+        throw TransactionValidationException("guid did not match any database records to update ${transaction.guid}.")
     }
 
     @Timed
@@ -297,8 +297,8 @@ open class TransactionService(
                     return receiptImageService.insertReceiptImage(receiptImageOptional.get())
                 }
                 logger.error("Failed to update receipt image for transaction ${transaction.guid}")
-                meterService.incrementExceptionThrownCounter("RuntimeException")
-                throw RuntimeException("Failed to update receipt image for transaction ${transaction.guid}")
+                meterService.incrementExceptionThrownCounter("ReceiptImageException")
+                throw ReceiptImageException("Failed to update receipt image for transaction ${transaction.guid}")
             }
             logger.info("added new receipt image: ${transaction.transactionId}")
             val receiptImage = ReceiptImage()
@@ -315,8 +315,8 @@ open class TransactionService(
         }
         //TODO: add metric here
         logger.error("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
-        meterService.incrementExceptionThrownCounter("RuntimeException")
-        throw RuntimeException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
+        meterService.incrementExceptionThrownCounter("TransactionNotFoundException")
+        throw TransactionNotFoundException("Cannot save a image for a transaction that does not exist with guid = '${guid}'.")
     }
 
     @Timed
@@ -338,13 +338,13 @@ open class TransactionService(
             } else {
                 //TODO: add metric here
                 logger.error("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
-                throw RuntimeException("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
+                throw AccountValidationException("Cannot change accountNameOwner for a transaction that does not exist, guid='${guid}'.")
             }
         }
         //TODO: add metric here
         logger.error("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
-        meterService.incrementExceptionThrownCounter("RuntimeException")
-        throw RuntimeException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
+        meterService.incrementExceptionThrownCounter("AccountValidationException")
+        throw AccountValidationException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
     }
 
     @Timed
@@ -355,14 +355,14 @@ open class TransactionService(
             val transaction = transactionOptional.get()
             if (transactionState == transaction.transactionState) {
                 logger.error("Cannot update transactionState to the same for guid = '${guid}'")
-                throw RuntimeException("Cannot update transactionState to the same for guid = '${guid}'")
+                throw InvalidTransactionStateException("Cannot update transactionState to the same for guid = '${guid}'")
             }
             if (transactionState == TransactionState.Cleared &&
                 transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)
             ) {
                 logger.error("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
-                meterService.incrementExceptionThrownCounter("RuntimeException")
-                throw RuntimeException("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
+                meterService.incrementExceptionThrownCounter("InvalidTransactionStateException")
+                throw InvalidTransactionStateException("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
             }
             meterService.incrementTransactionUpdateClearedCounter(transaction.accountNameOwner)
             transaction.transactionState = transactionState
@@ -371,8 +371,8 @@ open class TransactionService(
         }
         //TODO: add metric here
         logger.error("Cannot update transaction - the transaction is not found with guid = '${guid}'")
-        meterService.incrementExceptionThrownCounter("RuntimeException")
-        throw RuntimeException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
+        meterService.incrementExceptionThrownCounter("TransactionNotFoundException")
+        throw TransactionNotFoundException("Cannot update transaction - the transaction is not found with guid = '${guid}'")
     }
 
     @Timed
@@ -451,8 +451,8 @@ open class TransactionService(
         logger.info(transactionFuture.toString())
         if (transactionFuture.reoccurringType == ReoccurringType.Undefined) {
             logger.error("TransactionState cannot be undefined for reoccurring transactions.")
-            meterService.incrementExceptionThrownCounter("RuntimeException")
-            throw RuntimeException("TransactionState cannot be undefined for reoccurring transactions.")
+            meterService.incrementExceptionThrownCounter("InvalidReoccurringTypeException")
+            throw InvalidReoccurringTypeException("TransactionState cannot be undefined for reoccurring transactions.")
         }
         return transactionFuture
     }
@@ -466,7 +466,7 @@ open class TransactionService(
                     calendar.add(Calendar.MONTH, 1)
                 } else {
                     logger.warn("debit transaction ReoccurringType needs to be configured.")
-                    throw java.lang.RuntimeException("debit transaction ReoccurringType needs to be configured.")
+                    throw InvalidReoccurringTypeException("debit transaction ReoccurringType needs to be configured.")
                 }
             } else {
                 calendar.add(Calendar.YEAR, 1) //Assumption this method works for leap years
