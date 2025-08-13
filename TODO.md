@@ -171,4 +171,109 @@ Session management issues — insecure cookies, missing HttpOnly or Secure flags
 
 Logging & monitoring gaps — inability to detect or audit malicious behavior.
 
+---
+
+## 11. Error Handling Improvements
+
+### Critical Error Handling Issues Found:
+
+#### **High Priority**
+
+1. **Service Layer Runtime Exceptions**
+   - **Location**: `TransactionService.kt:259, 275, 319, 341, 347, 358, 365, 375, 455, 469`
+   - **Issue**: Multiple RuntimeException throws without proper exception types
+   - **Risk**: Generic exceptions make error diagnosis difficult and violate Spring Boot best practices
+   - **Solution**: Create specific custom exceptions (e.g., `TransactionNotFoundException`, `InvalidTransactionStateException`, `AccountValidationException`)
+
+2. **Security Filter Error Handling**
+   - **Location**: `JwtAuthenticationFilter.kt:62-65`
+   - **Issue**: JWT exceptions only logged but not tracked for security monitoring
+   - **Risk**: No audit trail for authentication failures, potential security blind spot
+   - **Solution**: Add security event logging and metrics for failed authentication attempts
+
+3. **Database Query Error Handling**
+   - **Location**: Service layer database operations
+   - **Issue**: No timeout handling, connection pool exhaustion not handled
+   - **Risk**: Application hanging on slow queries, resource exhaustion
+   - **Solution**: Add query timeouts, circuit breakers, and connection pool monitoring
+
+#### **Medium Priority**
+
+4. **Input Validation Error Messages**
+   - **Location**: `BaseController.kt:28-31, 35-38`
+   - **Issue**: Generic error messages expose internal exception details
+   - **Risk**: Information disclosure, poor user experience
+   - **Solution**: Implement structured error responses with sanitized messages
+
+5. **Image Processing Error Handling**
+   - **Location**: `TransactionService.kt:388-394`
+   - **Issue**: IIOException caught but empty byte array returned silently
+   - **Risk**: Silent failures in image processing
+   - **Solution**: Log errors appropriately and return meaningful error responses
+
+6. **Camel Route Error Handling**
+   - **Location**: `TransactionToDatabaseRouteBuilder.kt:28-31`
+   - **Issue**: Only logs InvalidPayloadException, no dead letter queue
+   - **Risk**: Lost messages on processing failures
+   - **Solution**: Implement dead letter queue and retry mechanisms
+
+#### **Low Priority**
+
+7. **Optional.get() Usage**
+   - **Location**: `TransactionService.kt:267`
+   - **Issue**: Direct Optional.get() calls without presence check
+   - **Risk**: NoSuchElementException if Optional is empty
+   - **Solution**: Use orElseThrow() with meaningful exceptions
+
+8. **Incomplete Error Metrics**
+   - **Location**: Various service methods
+   - **Issue**: Some error paths missing metrics (TODO comments present)
+   - **Risk**: Incomplete monitoring and alerting
+   - **Solution**: Add metrics for all error scenarios
+
+### **Recommended Implementation Order:**
+
+1. **Create Custom Exception Hierarchy**
+   ```kotlin
+   // Create custom exceptions in finance.exceptions package
+   class TransactionNotFoundException(message: String) : RuntimeException(message)
+   class InvalidTransactionStateException(message: String) : IllegalArgumentException(message)
+   class AccountValidationException(message: String) : ValidationException(message)
+   ```
+
+2. **Implement Global Exception Handler**
+   ```kotlin
+   @ControllerAdvice
+   class GlobalExceptionHandler {
+       @ExceptionHandler(TransactionNotFoundException::class)
+       fun handleTransactionNotFound(ex: TransactionNotFoundException): ResponseEntity<ErrorResponse>
+       
+       @ExceptionHandler(JwtException::class)
+       fun handleJwtException(ex: JwtException): ResponseEntity<ErrorResponse>
+   }
+   ```
+
+3. **Add Circuit Breakers for Database Operations**
+   - Use Spring Cloud Circuit Breaker for database resilience
+   - Implement fallback mechanisms for critical operations
+
+4. **Enhanced Security Error Logging**
+   - Add structured logging for authentication failures
+   - Implement security event monitoring with Micrometer
+
+5. **Dead Letter Queue for Camel Routes**
+   - Configure error handling and retry policies
+   - Implement message recovery mechanisms
+
+### **Testing Requirements:**
+- Unit tests for all custom exceptions
+- Integration tests for error scenarios
+- Security tests for authentication failure handling
+- Performance tests under error conditions
+
+### **Monitoring Requirements:**
+- Add custom metrics for each exception type
+- Create alerts for unusual error patterns
+- Dashboard for error trends and patterns
+
 
