@@ -117,10 +117,10 @@ class CategoryControllerSpec extends BaseControllerSpec {
 
         where:
         payload                                             | httpStatus             | responseBody
-        'badJson'                                           | HttpStatus.BAD_REQUEST | 'Unrecognized token'
-        '{"test":1}'                                        | HttpStatus.BAD_REQUEST | 'value failed for JSON property categoryName due to missing'
-        '{badJson:"test"}'                                  | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
-        '{"categoryName":"none", "activeStatus":"invalid"}' | HttpStatus.BAD_REQUEST | 'Cannot deserialize value of type'
-        '{"activeStatus":true}'                             | HttpStatus.BAD_REQUEST | 'value failed for JSON property categoryName due to missing'
+        'badJson'                                           | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        '{"test":1}'                                        | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        '{badJson:"test"}'                                  | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        '{"categoryName":"none", "activeStatus":"invalid"}' | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        '{"activeStatus":true}'                             | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
     }
 }

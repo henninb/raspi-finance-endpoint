@@ -22,8 +22,9 @@ open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthentica
 
     @Bean
     @Profile("!int") // Exclude when integration test profile is active
-    open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter): SecurityFilterChain {
+    open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter, httpErrorLoggingFilter: HttpErrorLoggingFilter): SecurityFilterChain {
         http
+            .addFilterBefore(httpErrorLoggingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .cors { cors ->
                 cors.configurationSource(corsConfigurationSource())

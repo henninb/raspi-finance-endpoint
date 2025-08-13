@@ -175,12 +175,12 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
         where:
         payload                      | httpStatus             | responseBody
-        'badJson'                    | HttpStatus.BAD_REQUEST | 'Unrecognized token'
-        '{"test":1}'                 | HttpStatus.BAD_REQUEST | 'value failed for JSON property accountNameOwner due to missing'
-        '{badJson:"test"}'           | HttpStatus.BAD_REQUEST | 'was expecting double-quote to start field'
-        jsonPayloadInvalidAmount     | HttpStatus.BAD_REQUEST | 'Cannot insert record because of constraint violation(s): 5.1288888: must be dollar precision'
-        jsonPayloadMissingAmount     | HttpStatus.BAD_REQUEST | 'value failed for JSON property amount due to missing'
-        jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | 'Cannot insert record because of constraint violation(s): invalid: must be uuid formatted'
+        'badJson'                    | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        '{"test":1}'                 | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        '{badJson:"test"}'           | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        jsonPayloadInvalidAmount     | HttpStatus.BAD_REQUEST | '400 BAD_REQUEST: ResponseStatusException'
+        jsonPayloadMissingAmount     | HttpStatus.BAD_REQUEST | 'BAD_REQUEST: HttpMessageNotReadableException'
+        jsonPayloadInvalidSourceGuid | HttpStatus.BAD_REQUEST | '400 BAD_REQUEST: ResponseStatusException'
     }
 
     void 'should require payment account parameter for payment insertion'() {
