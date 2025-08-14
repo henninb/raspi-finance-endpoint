@@ -40,3 +40,6 @@ custom:
             saved-file-endpoint: "file:func_json_in/.processed-successfully"
             failed-Json-file-endpoint: "file:func_json_in/.not-processed-non-json-file"
             failed-json-parser-endpoint: "file:func_json_in/.not-processed-json-parsing-errors"
+    security:
+        rate-limit:
+            enabled: false
