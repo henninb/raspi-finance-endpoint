@@ -458,7 +458,7 @@ class AccountNotFoundException(message: String) : RuntimeException(message)
 
 #### **400 BAD_REQUEST - Client Error**
 - Invalid request format/syntax
-- Missing required parameters  
+- Missing required parameters
 - Validation failures
 - Invalid enum values
 - Malformed JSON
@@ -504,3 +504,356 @@ TransferControllerSpec. test select all transfers
 UserControllerSpec. test sign up
 UuidControllerSpec. test generate single UUID successfully
 ValidationAmountControllerSpec. test insert validation amount successfully
+
+---
+
+## 16. Security Hardening: CSRF Protection Implementation
+
+### Executive Summary
+
+This document outlines the implementation plan for enabling Cross-Site Request Forgery (CSRF) protection across the finance ecosystem consisting of:
+- **Backend**: Spring Boot API (`raspi-finance-endpoint`)
+- **Frontend**: NextJS web application (`nextjs-website`)
+
+### Current Security Assessment
+
+#### Backend (Spring Boot) Security State
+- **Authentication**: JWT-based stateless authentication
+- **CSRF Status**: ❌ **DISABLED** (`.csrf { it.disable() }` in WebSecurityConfig.kt:37)
+- **CORS**: ✅ Configured with explicit origin allowlist
+- **Sessions**: Stateless (SessionCreationPolicy.STATELESS)
+- **Cookies**: JWT tokens delivered via HTTP-only cookies
+
+#### Frontend (NextJS) Security State
+- **Authentication**: Cookie-based with proxy middleware
+- **Request Handling**: Middleware proxy to backend API
+- **CORS**: Handled at middleware level
+- **Cookie Management**: Secure attributes configured for production
+
+#### Current Natural CSRF Protections
+✅ HTTP-only cookies (prevents XSS access to tokens)
+✅ SameSite cookie attributes configured
+✅ CORS origin allowlist restricts cross-origin requests
+✅ Middleware validates request origins
+
+### CSRF Protection Strategy
+
+#### Approach: Double Submit Cookie Pattern with Custom Headers
+
+**Rationale**:
+- Maintains stateless architecture
+- Compatible with JWT authentication
+- Provides strong CSRF protection
+- Minimal performance impact
+
+### Implementation Plan
+
+#### Phase 1: Backend CSRF Infrastructure (Week 1-2)
+
+##### 1.1 Enable Spring Security CSRF Protection
+**File**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt`
+
+**Changes Required**:
+```kotlin
+// Replace line 37
+.csrf { it.disable() }
+
+// With
+.csrf { csrf ->
+    csrf
+        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+        .csrfTokenRequestHandler(SpaCsrfTokenRequestHandler())
+        .ignoringRequestMatchers("/api/login", "/api/register", "/api/pending/transaction/insert")
+}
+```
+
+##### 1.2 Create Custom CSRF Handler
+**File**: `src/main/kotlin/finance/configurations/SpaCsrfTokenRequestHandler.kt` (NEW)
+
+**Purpose**: Custom handler for SPA CSRF token delivery
+
+##### 1.3 Update CORS Headers for CSRF
+**File**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt`
+
+**Changes**: Add CSRF token header to allowedHeaders list:
+```kotlin
+allowedHeaders = listOf(
+    "Content-Type",
+    "Accept", 
+    "Cookie",
+    "X-Requested-With",
+    "X-CSRF-TOKEN"  // ADD THIS
+)
+```
+
+##### 1.4 Add CSRF Exception Handling
+**File**: `src/main/kotlin/finance/configurations/SecurityExceptionHandler.kt` (NEW)
+
+**Purpose**: Provide clear error responses for CSRF failures
+
+#### Phase 2: Frontend CSRF Integration (Week 2-3)
+
+##### 2.1 Update Authentication Context
+**File**: `nextjs-website/components/AuthProvider.tsx`
+
+**Changes**: Add CSRF token state management and automatic token refresh
+
+##### 2.2 Create CSRF Token Hook
+**File**: `nextjs-website/hooks/useCsrfToken.ts` (NEW)
+
+**Purpose**: Centralized CSRF token management with automatic refresh
+
+##### 2.3 Update Middleware Proxy
+**File**: `nextjs-website/middleware.js`
+
+**Changes**:
+- Forward CSRF tokens in proxied requests
+- Handle CSRF token extraction from cookies
+- Add token to request headers
+
+##### 2.4 Update All API Hooks
+**Files**: `nextjs-website/hooks/use*.ts` (All mutation hooks)
+
+**Changes**: Automatic CSRF token inclusion in requests
+
+#### Phase 3: Security Hardening (Week 3-4)
+
+##### 3.1 Enhanced CORS Security
+**File**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt`
+
+**Changes**:
+- Remove development localhost from production CORS
+- Implement environment-specific CORS configuration
+- Add request origin validation middleware
+
+##### 3.2 Implement Additional Security Headers
+**File**: `src/main/kotlin/finance/configurations/SecurityHeadersFilter.kt` (NEW)
+
+**Headers to Add**:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+##### 3.3 Rate Limiting Enhancement
+**File**: `src/main/kotlin/finance/configurations/RateLimitingFilter.kt`
+
+**Changes**: Stricter limits on state-changing operations
+
+#### Phase 4: Testing & Validation (Week 4-5)
+
+##### 4.1 Security Testing
+- CSRF attack simulation tests
+- Cross-origin request validation
+- Token rotation testing
+- Browser compatibility testing
+
+##### 4.2 Performance Testing
+- CSRF token generation overhead
+- Request latency impact
+- Memory usage validation
+
+### Deployment Schedule
+
+#### Development Environment (Week 1)
+- **Target**: Local development setup
+- **Scope**: Backend CSRF implementation
+- **Testing**: Unit and integration tests
+- **Rollback**: Immediate if breaking changes
+
+#### Staging Environment (Week 2)
+- **Target**: Staging deployment
+- **Scope**: Full CSRF implementation
+- **Testing**: End-to-end functional testing
+- **Validation**: Security penetration testing
+- **Rollback**: 1-hour RTO
+
+#### Production Deployment (Week 3)
+
+##### Pre-Production Checklist
+- [ ] All tests passing (unit, integration, functional, security)
+- [ ] Performance benchmarks validated
+- [ ] Security audit completed
+- [ ] Rollback procedures tested
+- [ ] Monitoring alerts configured
+
+##### Production Deployment Strategy
+**Blue-Green Deployment**:
+1. **Green Environment**: Deploy with CSRF enabled
+2. **Traffic Split**: 10% traffic to green environment
+3. **Monitoring**: 24-hour observation period
+4. **Full Cutover**: If metrics stable
+5. **Blue Retirement**: After 48-hour stability
+
+##### Production Timeline
+- **Day 1**: Deploy to green environment (10% traffic)
+- **Day 2**: Monitor metrics and security logs
+- **Day 3**: Increase to 50% traffic if stable
+- **Day 4**: Full cutover if all metrics green
+- **Day 5-6**: Monitor and document
+
+### Risk Assessment & Mitigation
+
+#### High Risk: Application Breakage
+**Risk**: CSRF implementation breaks existing functionality
+**Mitigation**: 
+- Comprehensive testing in staging
+- Gradual rollout strategy
+- Immediate rollback capability
+- Feature flags for CSRF enforcement
+
+#### Medium Risk: Performance Impact
+**Risk**: CSRF token generation affects API performance
+**Mitigation**:
+- Performance testing before deployment
+- Token caching strategy
+- Monitoring dashboards
+- Automatic scaling triggers
+
+#### Medium Risk: Browser Compatibility
+**Risk**: CSRF implementation fails in certain browsers
+**Mitigation**:
+- Cross-browser testing
+- Progressive enhancement approach
+- Fallback mechanisms
+- User agent detection
+
+#### Low Risk: User Experience Degradation
+**Risk**: CSRF errors confuse users
+**Mitigation**:
+- Clear error messages
+- Automatic token refresh
+- Graceful failure handling
+- User education
+
+### Success Metrics
+
+#### Security Metrics
+- Zero successful CSRF attacks in production
+- 100% request coverage with CSRF protection
+- Reduced security audit findings
+
+#### Performance Metrics
+- < 5ms additional latency per request
+- < 1% increase in server resource usage
+- > 99.9% uptime during deployment
+
+#### Functional Metrics
+- Zero breaking changes to existing workflows
+- < 0.1% increase in support tickets
+- 100% feature parity maintained
+
+### Configuration Management
+
+#### Environment Variables
+```bash
+# Backend
+CSRF_ENABLED=true                    # Production: true, Dev: false
+CSRF_TOKEN_VALIDITY_HOURS=24         # Token lifetime
+CSRF_SECURE_COOKIE=true              # Production: true, Dev: false
+
+# Frontend  
+NEXT_PUBLIC_CSRF_ENABLED=true        # Enable CSRF handling
+CSRF_TOKEN_REFRESH_INTERVAL=3600000  # 1 hour in milliseconds
+```
+
+#### Profile-Specific Configuration
+- **Development**: CSRF disabled for easier testing
+- **Integration**: CSRF enabled with relaxed validation
+- **Staging/Production**: Full CSRF enforcement
+
+### Monitoring & Alerting
+
+#### Security Monitoring
+- CSRF token validation failures
+- Suspicious cross-origin requests
+- Token generation/validation latency
+- Failed authentication attempts
+
+#### Performance Monitoring
+- API response times (pre/post CSRF)
+- Memory usage patterns
+- Token generation rate
+- Cache hit/miss ratios
+
+#### Alert Thresholds
+- **Critical**: > 10 CSRF failures/minute
+- **Warning**: > 100ms token validation latency
+- **Info**: CSRF token refresh events
+
+### Training & Documentation
+
+#### Development Team Training (Week 1)
+- CSRF attack vectors and prevention
+- Spring Security CSRF implementation
+- Testing strategies for CSRF protection
+- Debugging CSRF issues
+
+#### Operations Team Training (Week 2)
+- CSRF-related monitoring
+- Incident response procedures
+- Performance impact assessment
+- Rollback procedures
+
+#### Updated Documentation
+- API documentation with CSRF requirements
+- Frontend integration guide
+- Security best practices
+- Troubleshooting guide
+
+### Compliance Considerations
+
+#### Security Standards Alignment
+- **OWASP Top 10**: Addresses A01:2021 - Broken Access Control
+- **NIST Cybersecurity Framework**: Implements protection controls
+- **PCI DSS**: Enhances payment data protection (if applicable)
+
+#### Audit Trail
+- All CSRF-related changes logged
+- Security testing results documented
+- Deployment approvals recorded
+- Post-deployment validation completed
+
+### Emergency Procedures
+
+#### Immediate Rollback Triggers
+- Application completely inaccessible
+- > 50% increase in error rates
+- Critical security vulnerability discovered
+- Performance degradation > 20%
+
+#### Rollback Procedure
+1. **Immediate**: Revert to previous deployment
+2. **Communication**: Notify stakeholders within 15 minutes
+3. **Investigation**: Root cause analysis within 2 hours
+4. **Documentation**: Incident report within 24 hours
+
+#### Contact Information
+- **Security Team Lead**: [Contact Info]
+- **DevOps On-Call**: [Contact Info]
+- **Product Owner**: [Contact Info]
+
+### Approval Sign-offs
+
+#### Technical Review
+- [ ] Security Engineering Team
+- [ ] Backend Development Team  
+- [ ] Frontend Development Team
+- [ ] DevOps/Infrastructure Team
+
+#### Business Approval
+- [ ] Product Owner
+- [ ] Security Officer
+- [ ] Operations Manager
+
+#### Final Deployment Approval
+- [ ] Technical Lead
+- [ ] Security Lead
+- [ ] Business Stakeholder
+
+---
+
+**Document Version**: 1.0  
+**Last Updated**: 2025-08-14  
+**Next Review**: 2025-09-14  
+**Owner**: Security Engineering Team
