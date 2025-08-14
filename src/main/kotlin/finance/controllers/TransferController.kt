@@ -27,9 +27,19 @@ class TransferController(private var transferService: TransferService) : BaseCon
         return try {
             val transferResponse = transferService.insertTransfer(transfer)
             ResponseEntity.ok(transferResponse)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert transfer due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate transfer found.")
         } catch (ex: ResponseStatusException) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transfer: ${ex.message}", ex)
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error inserting transfer: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input inserting transfer: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: Exception) {
+            logger.error("Unexpected error inserting transfer: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }
     }

@@ -78,6 +78,24 @@ class TransferControllerSpec extends BaseControllerSpec {
         createdTransferId = extractedTransferId
     }
 
+    void "test insert duplicate transfer should return conflict"() {
+        given: "the same transfer payload as previous test"
+        String payload = '{"sourceAccount": "foo_brian", "destinationAccount": "bank_brian", "transactionDate": "2023-12-01", "amount": 150.75, "guidSource": "ba665bc2-22b6-4123-a566-6f5ab3d796d1", "guidDestination": "ba665bc2-22b6-4123-a566-6f5ab3d796d2"}'
+
+        when: "posting the same transfer again"
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(payload, headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/transfer/insert",
+            HttpMethod.POST, entity, String)
+
+        then: "response should be HTTP 409 Conflict"
+        response.statusCode == HttpStatus.CONFLICT
+    }
+
     void "test insert transfer with invalid payload"() {
         given: "an invalid transfer payload"
         String payload = '{"invalidField": "invalid"}'
