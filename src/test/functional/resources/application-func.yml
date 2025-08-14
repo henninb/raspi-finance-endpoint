@@ -1,4 +1,19 @@
 spring:
+  application:
+    name: raspi-finance-endpoint
+
+  # ===============================
+  # = Jackson Settings
+  # ===============================
+  jackson:
+    property-naming-strategy: LOWER_CAMEL_CASE
+    default-property-inclusion: non_null
+    mapper.accept-case-insensitive-enums: true
+    time-zone: America/Chicago
+
+  # ===============================
+  # = DATA SOURCE
+  # ===============================
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
@@ -32,6 +47,8 @@ custom:
     project:
         jwt:
             key: "dummy-functional-test-key-that-is-at-least-256-bits-long-for-hmac-sha256-security"
+        excluded-accounts:
+            - test_brian
         camel-route:
             auto-start-route: true
             json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
