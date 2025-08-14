@@ -463,7 +463,7 @@ class AccountNotFoundException(message: String) : RuntimeException(message)
 - Invalid enum values
 - Malformed JSON
 
-#### **404 NOT_FOUND - Resource Not Found**  
+#### **404 NOT_FOUND - Resource Not Found**
 - Entity doesn't exist by ID/name
 - Valid request format but resource missing
 
@@ -492,7 +492,7 @@ class AccountNotFoundException(message: String) : RuntimeException(message)
 
 ### **📈 Monitoring Recommendations:**
 - Add metrics for each HTTP status code
-- Alert on unusual 500 error rates  
+- Alert on unusual 500 error rates
 - Track 400 error patterns for validation improvements
 - Monitor 409 conflicts for business insights
 
@@ -504,5 +504,3 @@ TransferControllerSpec. test select all transfers
 UserControllerSpec. test sign up
 UuidControllerSpec. test generate single UUID successfully
 ValidationAmountControllerSpec. test insert validation amount successfully
-
-
