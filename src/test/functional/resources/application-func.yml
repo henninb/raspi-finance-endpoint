@@ -43,3 +43,56 @@ custom:
     security:
         rate-limit:
             enabled: false
+
+# ===============================
+# = Health and Metrics
+# ===============================
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    distribution:
+      percentiles:
+        method.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
+        query.timed: 0.5,0.75,0.9,0.95,0.98,0.99,0.999
+    export:
+      influx:
+        enabled: false
+
+# Circuit breaker and resilience patterns
+resilience4j:
+  circuitbreaker:
+    instances:
+      database:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 60000ms
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 30000ms
+  retry:
+    instances:
+      database:
+        max-attempts: 3
+        wait-duration: 1000ms
+        retry-exceptions:
+          - java.sql.SQLException
+          - org.springframework.dao.DataAccessResourceFailureException
+          - org.springframework.jdbc.CannotGetJdbcConnectionException
+        ignore-exceptions:
+          - jakarta.validation.ValidationException
+          - java.lang.IllegalArgumentException
+  timelimiter:
+    instances:
+      database:
+        timeout-duration: 30000ms
+        cancel-running-future: true

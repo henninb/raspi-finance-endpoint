@@ -21,12 +21,12 @@ class RateLimitingFilter : OncePerRequestFilter() {
 
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${RateLimitingFilter::class.java.simpleName}")
-        private const val DEFAULT_RATE_LIMIT = 100
+        private const val DEFAULT_RATE_LIMIT = 500
         private const val DEFAULT_WINDOW_SIZE_MINUTES = 1L
         private const val CLEANUP_INTERVAL_MINUTES = 5L
     }
 
-    @Value("\${custom.security.rate-limit.requests-per-minute:100}")
+    @Value("\${custom.security.rate-limit.requests-per-minute:500}")
     private var rateLimitPerMinute: Int = DEFAULT_RATE_LIMIT
 
     @Value("\${custom.security.rate-limit.window-size-minutes:1}")

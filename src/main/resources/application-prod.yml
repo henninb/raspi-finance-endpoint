@@ -154,6 +154,11 @@ custom:
       saved-file-endpoint: "file:${JSON_FILES_INPUT_PATH}/.processed-successfully"
       failed-Json-file-endpoint: "file:${JSON_FILES_INPUT_PATH}/.not-processed-non-json-file"
       failed-json-parser-endpoint: "file:${JSON_FILES_INPUT_PATH}/.not-processed-json-parsing-errors"
+  security:
+    rate-limit:
+      enabled: true
+      requests-per-minute: 500
+      window-size-minutes: 1
 
 # ===============================
 # = Logging
@@ -198,16 +203,19 @@ management:
     web:
       exposure:
         include: "*"
-  influx:
-    metrics:
-      export:
+  metrics:
+    export:
+      influx:
         auto-create-db: true
         enabled: ${INFLUXDB_ENABLED}
         db: metrics
-        compressed: false
+        compressed: true
         uri: ${INFLUXDB_URL}
         user-name: ${INFLUXDB_ADMIN_USERNAME}
         password: ${INFLUXDB_ADMIN_PASSWORD}
+        step: 1m
+        connect-timeout: 1s
+        read-timeout: 10s
 debug: false
 
 # Circuit breaker and resilience patterns
@@ -242,4 +250,3 @@ resilience4j:
       database:
         timeout-duration: 30000ms
         cancel-running-future: true
-

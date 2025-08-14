@@ -115,3 +115,8 @@ management:
       exposure:
         include: "*"
 debug: false
+
+custom:
+  security:
+    rate-limit:
+      enabled: false
