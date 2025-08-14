@@ -181,4 +181,58 @@ class AccountController(private val accountService: AccountService) : BaseContro
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to rename account: ${ex.message}", ex)
         }
     }
+
+    // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/deactivate/test_brian
+    @PutMapping("/deactivate/{accountNameOwner}", produces = ["application/json"])
+    fun deactivateAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+        return try {
+            logger.info("Deactivating account: $accountNameOwner")
+            val accountResponse = accountService.deactivateAccount(accountNameOwner)
+            logger.info("Account deactivated successfully: $accountNameOwner")
+            ResponseEntity.ok(accountResponse)
+        } catch (ex: jakarta.persistence.EntityNotFoundException) {
+            logger.warn("Account not found for deactivation: $accountNameOwner")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+        } catch (ex: java.util.concurrent.ExecutionException) {
+            // Handle wrapped exceptions from resilience4j
+            val cause = ex.cause
+            if (cause is jakarta.persistence.EntityNotFoundException) {
+                logger.warn("Account not found for deactivation: $accountNameOwner")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+            } else {
+                logger.error("Failed to deactivate account $accountNameOwner: ${ex.message}", ex)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to deactivate account: ${ex.message}", ex)
+            }
+        } catch (ex: Exception) {
+            logger.error("Failed to deactivate account $accountNameOwner: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to deactivate account: ${ex.message}", ex)
+        }
+    }
+
+    // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/activate/test_brian
+    @PutMapping("/activate/{accountNameOwner}", produces = ["application/json"])
+    fun activateAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+        return try {
+            logger.info("Activating account: $accountNameOwner")
+            val accountResponse = accountService.activateAccount(accountNameOwner)
+            logger.info("Account activated successfully: $accountNameOwner")
+            ResponseEntity.ok(accountResponse)
+        } catch (ex: jakarta.persistence.EntityNotFoundException) {
+            logger.warn("Account not found for activation: $accountNameOwner")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+        } catch (ex: java.util.concurrent.ExecutionException) {
+            // Handle wrapped exceptions from resilience4j
+            val cause = ex.cause
+            if (cause is jakarta.persistence.EntityNotFoundException) {
+                logger.warn("Account not found for activation: $accountNameOwner")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+            } else {
+                logger.error("Failed to activate account $accountNameOwner: ${ex.message}", ex)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to activate account: ${ex.message}", ex)
+            }
+        } catch (ex: Exception) {
+            logger.error("Failed to activate account $accountNameOwner: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to activate account: ${ex.message}", ex)
+        }
+    }
 }

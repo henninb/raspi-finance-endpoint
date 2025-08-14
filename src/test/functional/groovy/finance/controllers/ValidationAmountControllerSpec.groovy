@@ -24,7 +24,13 @@ class ValidationAmountControllerSpec extends BaseControllerSpec {
 
     void "test insert validation amount successfully"() {
         given: "a valid validation amount payload"
-        String payload = '{"validationId": 0, "accountId": 0, "validationDate": "2024-01-01T00:00:00.000+00:00", "amount": 100.50, "activeStatus": true, "transactionState": "cleared"}'
+        def payloadMap = [
+            validationDate  : "2024-01-01T00:00:00.000+00:00",
+            amount          : 100.50,
+            activeStatus    : true,
+            transactionState: "cleared"
+        ]
+        String payload = new groovy.json.JsonOutput().toJson(payloadMap)
         String accountNameOwner = "foo_brian"
 
         when: "posting to insert validation amount endpoint"
@@ -44,7 +50,13 @@ class ValidationAmountControllerSpec extends BaseControllerSpec {
         and: "response should contain validation amount data"
         JsonSlurper jsonSlurper = new JsonSlurper()
         def jsonResponse = jsonSlurper.parseText(response.body)
+        jsonResponse.validationId != 0
+        // The account 'foo_brian' is created by src/test/functional/resources/data.sql
+        // and is expected to have account_id = 1
+        jsonResponse.accountId == 1
         jsonResponse.amount == 100.50
+        jsonResponse.transactionState == "cleared"
+        jsonResponse.activeStatus == true
     }
 
     void "test insert validation amount with invalid payload"() {
