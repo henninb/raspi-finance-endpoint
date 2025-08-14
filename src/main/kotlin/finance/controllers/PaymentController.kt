@@ -35,12 +35,18 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
             val paymentResponse = paymentService.insertPaymentNew(payment)
             logger.info("Payment inserted successfully: ${paymentResponse.paymentId}")
             ResponseEntity.ok(paymentResponse)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert payment due to data integrity violation for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate payment found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert payment: ${ex.message}", ex)
         } catch (ex: jakarta.validation.ValidationException) {
             logger.error("Validation error inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
