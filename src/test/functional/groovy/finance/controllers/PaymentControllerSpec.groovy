@@ -67,8 +67,8 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        // The duplicate payment should fail due to database constraint violation
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        // The duplicate payment should fail with HTTP 409 Conflict
+        response.statusCode == HttpStatus.CONFLICT
         0 * _
     }
 
