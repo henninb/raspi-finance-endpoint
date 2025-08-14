@@ -210,3 +210,66 @@ Format: `<type>: <description>`
 4. ✅ Tests pass (optional but recommended)
 5. ✅ Meaningful commit message
 6. ✅ Appropriate branch strategy
+
+## Configuration Management
+
+### Profile Configuration Drift Management
+
+Configuration drift between production and test profiles can lead to environment-specific bugs and inconsistencies. Regular comparison and synchronization of configuration settings ensures reliable deployment and testing.
+
+#### Profile Alignment Status
+
+**Production (prod) → Functional Test (func) Configuration Sync:**
+
+**✅ Successfully Synchronized Configurations:**
+- **Spring Application Name**: `raspi-finance-endpoint` - ensures consistent application naming across environments
+- **Jackson Configuration**: Property naming strategy (`LOWER_CAMEL_CASE`), null handling (`non_null`), enum case handling, and timezone settings (`America/Chicago`) - ensures consistent JSON serialization
+- **JPA Configuration**: `open-in-view: false` - prevents lazy loading issues and follows best practices
+- **Excluded Accounts**: `test_brian` - maintains consistency with production data filtering
+- **Flyway Validation**: `baseline-on-migrate`, `baseline-version: 0`, `validate-on-migrate: true` - ensures database migration consistency
+
+**❌ Configurations Not Compatible with Test Environment:**
+- **Advanced Hibernate Settings**: Query timeouts, batch processing, and connection provider settings - these conflict with H2 in-memory database behavior
+- **Production Database Pooling**: HikariCP production settings - not applicable to H2 test database
+- **Server Configuration**: SSL, ports, and production server settings - tests use random ports and HTTP
+- **Security Configuration**: Production authentication settings - tests use auto-generated credentials
+- **SQL Init Configuration**: Production-specific SQL initialization - conflicts with test data setup
+
+#### Configuration Drift Prevention
+
+**Best Practices:**
+1. **Regular Comparison**: Compare prod and test profiles quarterly or after major configuration changes
+2. **Incremental Testing**: Add configurations one at a time and verify test compatibility
+3. **Documentation**: Document why certain configurations cannot be shared between environments
+4. **Automated Validation**: Use functional tests to verify configuration changes don't break test environments
+
+**Safe Configuration Categories for Cross-Environment Sync:**
+- Application metadata (name, version info)
+- Serialization/deserialization settings
+- Business logic configuration
+- Feature flags and toggles
+- Logging configuration (with environment-appropriate levels)
+
+**Environment-Specific Configuration Categories:**
+- Database connection settings
+- Security and authentication
+- Server and networking configuration
+- Performance tuning parameters
+- External service integrations
+
+#### Testing Configuration Changes
+
+When synchronizing configurations between environments:
+
+1. **Baseline Test**: Run functional tests before changes to establish working state
+2. **Incremental Addition**: Add one configuration section at a time
+3. **Immediate Verification**: Run tests after each addition to identify breaking changes
+4. **Rollback Strategy**: Keep previous working configuration for quick rollback
+5. **Documentation**: Record which configurations were successfully added and which failed
+
+**Example Test Command:**
+```bash
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.AccountControllerSpec"
+```
+
+This approach ensures configuration consistency without compromising test reliability or introducing environment-specific bugs.
