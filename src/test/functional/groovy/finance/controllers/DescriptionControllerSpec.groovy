@@ -26,7 +26,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.CREATED
         0 * _
     }
 
@@ -35,7 +35,7 @@ class DescriptionControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, description.toString())
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
         0 * _
     }
 
