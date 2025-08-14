@@ -276,4 +276,72 @@ Logging & monitoring gaps — inability to detect or audit malicious behavior.
 - Create alerts for unusual error patterns
 - Dashboard for error trends and patterns
 
+## 12. Return 409 Conflict on Duplicate Record Insertion
+Role: Expert Spring Boot Kotlin Developer
+Instructions:
+- Modify the exception handling in the specified controller methods to catch database constraint violation exceptions (e.g., `DataIntegrityViolationException`).
+- When such an exception is caught, the API should return an HTTP status code of `409 Conflict`.
+- The response body should contain a clear error message indicating that a duplicate record was found.
 
+### Controllers and Methods to Update:
+
+- **`AccountController.insertAccount`**: Currently returns a generic 500 error on duplicate account insertion.
+- **`CategoryController.insertCategory`**: Currently returns a generic 500 error on duplicate category insertion.
+- **`DescriptionController.insertDescription`**: Currently returns a generic 500 error on duplicate description insertion.
+- **`TransactionController.insertTransaction`**: Currently returns a generic 500 error on duplicate transaction insertion.
+- **`TransactionController.insertFutureTransaction`**: Currently returns a generic 500 error on duplicate transaction insertion.
+- **`UserController.signUp`**: Currently returns a generic 400 bad request on duplicate user insertion.
+- **`ParameterController.insertParameter`**: Currently returns a generic 500 error on duplicate parameter insertion.
+
+---
+
+## 13. Dependency Updates Required
+
+### Dependencies with Later Release Versions:
+
+#### **High Priority Updates (Stable Releases):**
+- **Jakarta EE Platform API**: `jakarta.platform:jakarta.jakartaee-api` [10.0.0 → 11.0.0]
+- **jOOQ Plugin**: `nu.studer.jooq:nu.studer.jooq.gradle.plugin` [10.0 → 10.1.1]
+- **Flyway**: `org.flywaydb.flyway:org.flywaydb.flyway.gradle.plugin` [11.9.1 → 11.11.0]
+- **jOOQ Code Generation**: `org.jooq:jooq-codegen` [3.19.22 → 3.20.6]
+- **jOOQ Core**: `org.jooq:jooq` [3.19.22 → 3.20.6]
+
+#### **Medium Priority Updates (May require testing):**
+- **Logback Classic**: `ch.qos.logback:logback-classic` [1.5.15 → 1.5.18]
+- **Jackson Core**: `com.fasterxml.jackson.core:jackson-core` [2.19.1 → 2.20.0-rc1]
+- **Jackson Databind**: `com.fasterxml.jackson.core:jackson-databind` [2.19.1 → 2.20.0-rc1]
+- **Jackson Annotations**: `com.fasterxml.jackson.core:jackson-annotations` [2.19.1 → 3.0-rc5]
+- **Jackson Kotlin Module**: `com.fasterxml.jackson.module:jackson-module-kotlin` [2.19.1 → 2.20.0-rc1]
+- **Resilience4j**: All modules [2.2.0 → 2.3.0]
+- **Micrometer InfluxDB**: `io.micrometer:micrometer-registry-influx` [1.14.8 → 1.16.0-M2]
+- **Thumbnailator**: `net.coobird:thumbnailator` [0.4.19 → 0.4.20]
+- **Tomcat JDBC**: `org.apache.tomcat:tomcat-jdbc` [10.1.31 → 11.0.10]
+- **Flyway Core**: `org.flywaydb:flyway-core` [11.9.1 → 11.11.0]
+- **Flyway PostgreSQL**: `org.flywaydb:flyway-database-postgresql` [11.9.1 → 11.11.0]
+- **JAXB Runtime**: `org.glassfish.jaxb:jaxb-runtime` [2.3.1 → 4.0.5]
+- **JAXB API**: `javax.xml.bind:jaxb-api` [2.3.1 → 2.4.0-b180830.0359]
+- **Hibernate Core**: `org.hibernate:hibernate-core` [6.6.18.Final → 7.1.0.Final]
+- **Scala Library**: `org.scala-lang:scala-library` [2.13.16 → 2.13.17-M1]
+- **Spock Framework**: `org.spockframework:spock-core` [2.3-groovy-4.0 → 2.4-M6-groovy-4.0]
+- **Testcontainers**: `org.testcontainers:spock` [1.20.4 → 1.21.3]
+
+#### **Low Priority Updates (Beta/RC versions):**
+- **Kotlin**: All Kotlin dependencies [2.2.0 → 2.2.20-Beta2]
+- **Spring Boot**: All Spring Boot dependencies [3.5.3 → 4.0.0-M1] *(Major version - requires extensive testing)*
+- **Spring Security**: All Spring Security dependencies [6.5.1 → 7.0.0-M1] *(Major version - requires extensive testing)*
+- **Apache Groovy**: `org.apache.groovy:groovy` [4.0.25 → 5.0.0-rc-1]
+
+#### **Gradle Update:**
+- **Gradle**: [8.14.3 → 9.1.0-rc-1] *(Major version - requires compatibility testing)*
+
+### **Update Strategy:**
+1. Start with high priority stable releases
+2. Test medium priority updates in development environment
+3. Delay major version updates (Spring Boot 4.x, Spring Security 7.x) until stable
+4. Update Gradle after ensuring all plugins are compatible
+
+### **Notes:**
+- Spring Boot 4.0.0-M1 and Spring Security 7.0.0-M1 are milestone releases - not recommended for production
+- Jackson 3.x represents a major version change - requires API compatibility review
+- Hibernate 7.x is a major version - requires database compatibility testing
+- Some dependencies are at latest stable versions and don't require updates

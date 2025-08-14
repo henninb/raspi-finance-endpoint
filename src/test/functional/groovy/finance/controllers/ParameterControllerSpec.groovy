@@ -34,7 +34,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         response = insertEndpoint(endpointName, parameter.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.CREATED
         response.body.contains(parameter.parameterValue)
         0 * _
 
@@ -49,7 +49,7 @@ class ParameterControllerSpec extends BaseControllerSpec {
         response = insertEndpoint(endpointName, parameter.toString())
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.CONFLICT
         0 * _
 
         when: 'delete parameter'

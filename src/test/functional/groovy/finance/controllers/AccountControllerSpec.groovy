@@ -45,7 +45,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.CREATED
         response.body.contains(account.accountNameOwner)
         0 * _
     }
@@ -55,7 +55,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, account.toString())
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
         0 * _
     }
 
@@ -82,7 +82,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, account.toString())
 
         then:
-        insertResponse.statusCode == HttpStatus.OK
+        insertResponse.statusCode == HttpStatus.CREATED
         0 * _
 
         when:
@@ -159,9 +159,9 @@ class AccountControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        existingResponse.statusCode == HttpStatus.OK
-        sourceResponse.statusCode == HttpStatus.OK
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        existingResponse.statusCode == HttpStatus.CREATED
+        sourceResponse.statusCode == HttpStatus.CREATED
+        response.statusCode == HttpStatus.CONFLICT
         0 * _
     }
 
@@ -181,7 +181,7 @@ class AccountControllerSpec extends BaseControllerSpec {
                 HttpMethod.PUT, entity, String)
 
         then:
-        insertResponse.statusCode == HttpStatus.OK
+        insertResponse.statusCode == HttpStatus.CREATED
         response.statusCode == HttpStatus.OK
         0 * _
     }

@@ -61,10 +61,12 @@ class ParameterController(private val parameterService: ParameterService) : Base
             logger.info("Inserting parameter: ${parameter.parameterName}")
             val parameterResponse = parameterService.insertParameter(parameter)
             logger.info("Parameter inserted successfully: ${parameterResponse.parameterName}")
-            ResponseEntity.ok(parameterResponse)
+            ResponseEntity(parameterResponse, HttpStatus.CREATED)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert parameter due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate parameter found.")
         } catch (ex: ResponseStatusException) {
-            logger.error("Failed to insert parameter ${parameter.parameterName}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert parameter: ${ex.message}", ex)
+            throw ex
         } catch (ex: jakarta.validation.ValidationException) {
             logger.error("Validation error inserting parameter ${parameter.parameterName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)

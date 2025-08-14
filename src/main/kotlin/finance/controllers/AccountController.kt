@@ -106,7 +106,10 @@ class AccountController(private val accountService: AccountService) : BaseContro
             logger.info("Inserting account: ${account.accountNameOwner}")
             val accountResponse = accountService.insertAccount(account)
             logger.info("Account inserted successfully: ${accountResponse.accountNameOwner}")
-            ResponseEntity.ok(accountResponse)
+            ResponseEntity(accountResponse, HttpStatus.CREATED)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert account due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate account found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert account ${account.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert account: ${ex.message}", ex)
@@ -170,6 +173,9 @@ class AccountController(private val accountService: AccountService) : BaseContro
             val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
             logger.info("Account renamed successfully from $oldAccountNameOwner to $newAccountNameOwner")
             ResponseEntity.ok(accountResponse)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to rename account due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Target account name already exists.")
         } catch (ex: Exception) {
             logger.error("Failed to rename account from $oldAccountNameOwner to $newAccountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to rename account: ${ex.message}", ex)

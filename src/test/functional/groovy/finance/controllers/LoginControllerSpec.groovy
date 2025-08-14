@@ -52,6 +52,7 @@ class LoginControllerSpec extends BaseControllerSpec {
 
         then: "response should be created and contain authentication cookie"
         response.statusCode == HttpStatus.CREATED
+        response.body == null
         
         and: "response should contain Set-Cookie header"
         def cookieHeaders = response.headers.get("Set-Cookie")
@@ -240,10 +241,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/register",
             HttpMethod.POST, entity, String)
 
-        then: "response should be bad request or internal server error"
-        response.statusCode == HttpStatus.BAD_REQUEST || 
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR ||
-        response.statusCode == HttpStatus.CONFLICT
+        then: "response should be bad request"
+        response.statusCode == HttpStatus.BAD_REQUEST
     }
 
     void "test login with malformed JSON"() {
@@ -274,8 +273,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/register",
             HttpMethod.POST, entity, String)
 
-        then: "response should be bad request or internal server error"
-        response.statusCode == HttpStatus.BAD_REQUEST || response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        then: "response should be bad request"
+        response.statusCode == HttpStatus.BAD_REQUEST
     }
 
     void "test login with missing required fields"() {
@@ -290,9 +289,7 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/login",
             HttpMethod.POST, entity, String)
 
-        then: "response should be bad request, forbidden, or internal server error"
-        response.statusCode == HttpStatus.BAD_REQUEST || 
-        response.statusCode == HttpStatus.FORBIDDEN ||
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        then: "response should be bad request"
+        response.statusCode == HttpStatus.BAD_REQUEST
     }
 }

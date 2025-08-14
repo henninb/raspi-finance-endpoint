@@ -89,7 +89,7 @@ open class AccountService(
             return savedAccount
         }
         logger.error("Account not inserted as the account already exists ${account.accountNameOwner}.")
-        throw RuntimeException("Account not inserted as the account already exists ${account.accountNameOwner}.")
+        throw org.springframework.dao.DataIntegrityViolationException("Account not inserted as the account already exists ${account.accountNameOwner}.")
     }
 
     @Timed

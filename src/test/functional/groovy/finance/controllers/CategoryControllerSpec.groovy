@@ -29,7 +29,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, category.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.CREATED
         0 * _
     }
 
@@ -38,7 +38,7 @@ class CategoryControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, category.toString())
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
         0 * _
     }
 

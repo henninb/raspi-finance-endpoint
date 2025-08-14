@@ -125,7 +125,10 @@ class TransactionController(private val transactionService: TransactionService, 
             val transactionResponse = transactionService.insertTransaction(transaction)
 
             logger.info("Transaction inserted successfully: ${mapper.writeValueAsString(transactionResponse)}")
-            ResponseEntity.ok(transactionResponse)
+            ResponseEntity(transactionResponse, HttpStatus.CREATED)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert transaction due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate transaction found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert transaction: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transaction: ${ex.message}", ex)
@@ -144,7 +147,10 @@ class TransactionController(private val transactionService: TransactionService, 
             logger.debug("Created future transaction with date: ${futureTransaction.transactionDate}")
             val transactionResponse = transactionService.insertTransaction(futureTransaction)
             logger.info("Future transaction inserted successfully: ${transactionResponse.guid}")
-            ResponseEntity.ok(transactionResponse)
+            ResponseEntity(transactionResponse, HttpStatus.CREATED)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert future transaction due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate future transaction found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert future transaction: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert future transaction: ${ex.message}", ex)

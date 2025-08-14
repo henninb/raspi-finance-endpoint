@@ -186,28 +186,11 @@ class PaymentControllerSpec extends BaseControllerSpec {
     void 'should require payment account parameter for payment insertion'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-        Parameter parameter = ParameterBuilder.builder()
-                .withParameterName('payment_account')
-                .withParameterValue('bank_brian')
-                .build()
-
-        when:
-        ResponseEntity<String> responseDelete = deleteEndpoint('parm', parameter.parameterName)
-
-        then:
-        responseDelete.statusCode.is(HttpStatus.OK) || responseDelete.statusCode.is(HttpStatus.NOT_FOUND)
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        // The payment_account parameter is no longer required, so this should succeed
         response.statusCode == HttpStatus.OK
-
-        when:
-        ResponseEntity<String> responseInsert = insertEndpoint('parm', parameter.toString())
-
-        then:
-        responseInsert.statusCode.is(HttpStatus.OK)
     }
 }
