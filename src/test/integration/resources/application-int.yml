@@ -40,6 +40,7 @@ spring:
       continue-on-error: false
       enabled: off
       data-locations: classpath:data.sql
+      mode: never
   h2:
     console:
       enabled: false
@@ -63,6 +64,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        # Query timeout for Hibernate queries (in milliseconds)
+        query.timeout: 30000
+        # Connection provider settings
+        connection.provider_disables_autocommit: true
+        # JDBC batch settings
+        jdbc:
+          batch_size: 20
+          batch_versioned_data: true
+          time_zone: UTC
+        # Query plan cache
+        query.plan_cache_max_size: 2048
+        query.plan_parameter_metadata_max_size: 128
 
 
   # ===============================
@@ -134,3 +147,36 @@ management:
       exposure:
         include: "*"
 debug: false
+
+# Circuit breaker and resilience patterns
+resilience4j:
+  circuitbreaker:
+    instances:
+      database:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 60000ms
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 30000ms
+  retry:
+    instances:
+      database:
+        max-attempts: 3
+        wait-duration: 1000ms
+        retry-exceptions:
+          - java.sql.SQLException
+          - org.springframework.dao.DataAccessResourceFailureException
+          - org.springframework.jdbc.CannotGetJdbcConnectionException
+        ignore-exceptions:
+          - jakarta.validation.ValidationException
+          - java.lang.IllegalArgumentException
+  timelimiter:
+    instances:
+      database:
+        timeout-duration: 30000ms
+        cancel-running-future: true
