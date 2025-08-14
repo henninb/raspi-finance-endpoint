@@ -80,7 +80,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        HttpEntity entity = new HttpEntity<>("count=${count}", headers)
+        HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
             "http://localhost:${port}/api/uuid/generate/batch?count=${count}",

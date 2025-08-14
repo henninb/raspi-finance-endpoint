@@ -141,4 +141,80 @@ open class AccountService(
         logger.info("Successfully renamed account to: $newAccountNameOwner")
         return renamedAccount
     }
+
+    @Timed
+    override fun deactivateAccount(accountNameOwner: String): Account {
+        try {
+            return executeWithResilienceSync(
+                operation = {
+                    val account = accountRepository.findByAccountNameOwner(accountNameOwner)
+                        .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
+
+                    logger.info("Deactivating account: $accountNameOwner")
+                    account.activeStatus = false
+                    account.dateUpdated = Timestamp(System.currentTimeMillis())
+                    val updatedAccount = accountRepository.saveAndFlush(account)
+                    logger.info("Successfully deactivated account: $accountNameOwner")
+                    updatedAccount
+                },
+                operationName = "deactivateAccount-$accountNameOwner"
+            )
+        } catch (ex: java.util.concurrent.ExecutionException) {
+            // Unwrap the actual exception from ExecutionException
+            val cause = ex.cause
+            if (cause is EntityNotFoundException) {
+                throw cause
+            } else {
+                throw ex
+            }
+        } catch (ex: org.springframework.dao.DataAccessResourceFailureException) {
+            // Check if the wrapped exception is EntityNotFoundException
+            var currentCause = ex.cause
+            while (currentCause != null) {
+                if (currentCause is EntityNotFoundException) {
+                    throw currentCause
+                }
+                currentCause = currentCause.cause
+            }
+            throw ex
+        }
+    }
+
+    @Timed
+    override fun activateAccount(accountNameOwner: String): Account {
+        try {
+            return executeWithResilienceSync(
+                operation = {
+                    val account = accountRepository.findByAccountNameOwner(accountNameOwner)
+                        .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
+
+                    logger.info("Activating account: $accountNameOwner")
+                    account.activeStatus = true
+                    account.dateUpdated = Timestamp(System.currentTimeMillis())
+                    val updatedAccount = accountRepository.saveAndFlush(account)
+                    logger.info("Successfully activated account: $accountNameOwner")
+                    updatedAccount
+                },
+                operationName = "activateAccount-$accountNameOwner"
+            )
+        } catch (ex: java.util.concurrent.ExecutionException) {
+            // Unwrap the actual exception from ExecutionException
+            val cause = ex.cause
+            if (cause is EntityNotFoundException) {
+                throw cause
+            } else {
+                throw ex
+            }
+        } catch (ex: org.springframework.dao.DataAccessResourceFailureException) {
+            // Check if the wrapped exception is EntityNotFoundException
+            var currentCause = ex.cause
+            while (currentCause != null) {
+                if (currentCause is EntityNotFoundException) {
+                    throw currentCause
+                }
+                currentCause = currentCause.cause
+            }
+            throw ex
+        }
+    }
 }
