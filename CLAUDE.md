@@ -273,3 +273,30 @@ SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controller
 ```
 
 This approach ensures configuration consistency without compromising test reliability or introducing environment-specific bugs.
+
+**Production (prod) → Integration Test (int) Configuration Sync:**
+
+**✅ Successfully Synchronized Configurations:**
+- **SQL Init Mode**: Added `mode: never` setting for consistency with production SQL initialization behavior
+- **Advanced JPA/Hibernate Configuration**: Successfully added query timeouts (`query.timeout: 30000`), connection provider settings (`connection.provider_disables_autocommit: true`), JDBC batch processing (`batch_size: 20`, `batch_versioned_data: true`, `time_zone: UTC`), and query plan cache settings (`query.plan_cache_max_size: 2048`, `query.plan_parameter_metadata_max_size: 128`)
+- **Resilience4j Configuration**: Added complete circuit breaker, retry, and time limiter configurations for database operations - critical for integration testing of production-like resilience patterns
+
+**❌ Configurations Not Compatible with Integration Test Environment:**
+- **Server Configuration**: SSL, address, and port settings - integration tests use random ports and HTTP
+- **Security Configuration**: Production authentication settings - integration tests use hardcoded test credentials
+- **Production Database Pooling**: Full HikariCP production settings - not all applicable to H2 test database
+- **Allowed Origins**: CORS configuration - not relevant for integration test environment
+- **External Service Configuration**: InfluxDB and monitoring settings - kept disabled for integration tests
+
+**Integration Test Results:**
+- ✅ All integration tests pass (CamelSpec and others)
+- ✅ Database operations work correctly with new Hibernate settings
+- ✅ Circuit breaker and resilience patterns function properly
+- ✅ Transaction processing through Camel routes operates as expected
+- ✅ No performance degradation observed
+
+**Key Benefits of Int Profile Sync:**
+- **Resilience Testing**: Integration tests now include the same circuit breaker and retry logic as production
+- **Performance Consistency**: Query timeouts and batch processing behavior matches production
+- **Database Behavior**: Connection management and transaction handling aligns with production settings
+- **Early Issue Detection**: Integration tests can catch resilience-related issues before deployment
