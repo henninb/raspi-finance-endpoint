@@ -110,12 +110,12 @@ class AccountController(private val accountService: AccountService) : BaseContro
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
             logger.error("Failed to insert account due to data integrity violation: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate account found.")
-        } catch (ex: ResponseStatusException) {
-            logger.error("Failed to insert account ${account.accountNameOwner}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert account: ${ex.message}", ex)
         } catch (ex: jakarta.validation.ValidationException) {
             logger.error("Validation error inserting account ${account.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input inserting account ${account.accountNameOwner}: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error inserting account ${account.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)

@@ -345,3 +345,153 @@ Instructions:
 - Jackson 3.x represents a major version change - requires API compatibility review
 - Hibernate 7.x is a major version - requires database compatibility testing
 - Some dependencies are at latest stable versions and don't require updates
+
+---
+
+## 14. HTTP Response Code Analysis & Recommendations
+
+### **Analysis Summary**
+Professional review of Spring Boot controllers revealed both **correct** and **problematic** HTTP status code usage patterns. The 404 and 409 handling is implemented correctly, but several issues exist with 400 vs 500 response codes.
+
+### **✅ Correctly Implemented Patterns:**
+
+#### **404 NOT_FOUND Usage (Excellent)**
+- **AccountController.kt:88-91, 131-134**: Proper 404 for missing accounts
+- **CategoryController.kt:42-45, 109-112**: Correct 404 for missing categories  
+- **TransactionController.kt:65-69, 207-210**: Appropriate 404 for missing transactions
+- **ParameterController.kt:43-46, 109-112**: Good 404 for missing parameters
+- **DescriptionController.kt:60-63, 100-103**: Proper 404 for missing descriptions
+
+#### **409 CONFLICT Usage (Excellent)**
+- **AccountController.kt:110-113**: DataIntegrityViolationException → 409 CONFLICT
+- **CategoryController.kt:88-91**: Duplicate category handling
+- **TransactionController.kt:129-132**: Duplicate transaction handling
+- **ParameterController.kt:65-68**: Duplicate parameter handling  
+- **DescriptionController.kt:82-85**: Duplicate description handling
+- **UserController.kt:30-33**: Duplicate user handling
+
+### **❌ Critical Issues Found:**
+
+#### **1. Inappropriate BAD_REQUEST (400) Usage**
+**Location**: Multiple controllers  
+**Issue**: Catching `ResponseStatusException` and re-throwing as BAD_REQUEST
+```kotlin
+// INCORRECT PATTERN - AccountController.kt:113-116
+} catch (ex: ResponseStatusException) {
+    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert account: ${ex.message}", ex)
+}
+```
+**Problem**: This converts legitimate 500 errors to 400, misleading clients about error nature  
+**Severity**: **HIGH** - Violates HTTP semantics
+
+#### **2. Missing Input Validation Error Handling**
+**Location**: `TransactionController.kt:171-173`  
+**Issue**: Manual null/blank checks throw BAD_REQUEST, but missing comprehensive validation
+```kotlin
+if (accountNameOwner.isNullOrBlank() || guid.isNullOrBlank()) {
+    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Both accountNameOwner and guid are required")
+}
+```
+**Problem**: Inconsistent validation approach across endpoints  
+**Severity**: **MEDIUM**
+
+#### **3. Generic Exception Handling Issues**
+**Location**: Multiple controllers (UpdateAccount, UpdateCategory, etc.)  
+**Issue**: All exceptions → 500 INTERNAL_SERVER_ERROR without differentiation
+```kotlin
+} catch (ex: Exception) {
+    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account: ${ex.message}", ex)
+}
+```
+**Problem**: Doesn't distinguish between client errors (400) and server errors (500)  
+**Severity**: **MEDIUM**
+
+#### **4. TransactionController Specific Issues**
+**Location**: `TransactionController.kt:110-117`  
+**Issue**: IllegalArgumentException correctly mapped to 400, but inconsistent with other controllers
+```kotlin
+} catch (ex: IllegalArgumentException) {
+    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid transaction state: $transactionStateValue", ex)
+}
+```
+**Problem**: This is correct, but other controllers don't handle IllegalArgumentException  
+**Severity**: **LOW** - Inconsistency issue
+
+### **🔧 Recommended Fixes:**
+
+#### **Priority 1: Fix ResponseStatusException Re-throwing**
+**Controllers**: AccountController, CategoryController, DescriptionController, ParameterController  
+**Action**: Remove catch blocks that re-throw ResponseStatusException as BAD_REQUEST
+```kotlin
+// REMOVE THIS PATTERN:
+} catch (ex: ResponseStatusException) {
+    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert: ${ex.message}", ex)
+}
+```
+
+#### **Priority 2: Implement Proper Validation Exception Handling**
+**Action**: Add consistent validation error handling across all controllers
+```kotlin
+} catch (ex: jakarta.validation.ValidationException) {
+    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+} catch (ex: IllegalArgumentException) {
+    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
+}
+```
+
+#### **Priority 3: Add Bean Validation**
+**Action**: Use `@Valid` annotation on request bodies and implement proper ConstraintViolationException handling
+```kotlin
+@PostMapping("/insert")
+fun insertAccount(@Valid @RequestBody account: Account): ResponseEntity<Account>
+```
+
+#### **Priority 4: Create Custom Exception Types**
+**Action**: Create domain-specific exceptions to improve error handling granularity
+```kotlin
+// finance.exceptions package
+class InvalidAccountStateException(message: String) : IllegalArgumentException(message)
+class AccountNotFoundException(message: String) : RuntimeException(message)
+```
+
+### **📊 HTTP Status Code Guidelines:**
+
+#### **400 BAD_REQUEST - Client Error**
+- Invalid request format/syntax
+- Missing required parameters  
+- Validation failures
+- Invalid enum values
+- Malformed JSON
+
+#### **404 NOT_FOUND - Resource Not Found**  
+- Entity doesn't exist by ID/name
+- Valid request format but resource missing
+
+#### **409 CONFLICT - Resource Conflict**
+- Duplicate key violations
+- Concurrent modification conflicts
+- Business rule violations preventing operation
+
+#### **500 INTERNAL_SERVER_ERROR - Server Error**
+- Database connectivity issues
+- Unexpected runtime exceptions
+- System configuration problems
+- Third-party service failures
+
+### **⚠️ Security Considerations:**
+- Never expose internal exception details in error messages
+- Log sensitive error details server-side only
+- Use generic error messages for client responses
+- Implement rate limiting for error-prone endpoints
+
+### **🧪 Testing Requirements:**
+- Unit tests for each error scenario
+- Integration tests verifying correct HTTP status codes
+- Security tests ensuring no information leakage
+- Load tests for error handling under stress
+
+### **📈 Monitoring Recommendations:**
+- Add metrics for each HTTP status code
+- Alert on unusual 500 error rates  
+- Track 400 error patterns for validation improvements
+- Monitor 409 conflicts for business insights

@@ -129,9 +129,12 @@ class TransactionController(private val transactionService: TransactionService, 
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
             logger.error("Failed to insert transaction due to data integrity violation: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate transaction found.")
-        } catch (ex: ResponseStatusException) {
-            logger.error("Failed to insert transaction: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert transaction: ${ex.message}", ex)
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error inserting transaction: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input inserting transaction: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error occurred while inserting transaction: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
@@ -151,9 +154,12 @@ class TransactionController(private val transactionService: TransactionService, 
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
             logger.error("Failed to insert future transaction due to data integrity violation: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate future transaction found.")
-        } catch (ex: ResponseStatusException) {
-            logger.error("Failed to insert future transaction: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert future transaction: ${ex.message}", ex)
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error inserting future transaction: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input inserting future transaction: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error inserting future transaction: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
