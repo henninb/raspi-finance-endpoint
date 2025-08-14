@@ -78,7 +78,10 @@ class DescriptionController(private val descriptionService: DescriptionService) 
             logger.info("Inserting description: ${description.descriptionName}")
             val descriptionResponse = descriptionService.insertDescription(description)
             logger.info("Description inserted successfully: ${descriptionResponse.descriptionName}")
-            ResponseEntity.ok(descriptionResponse)
+            ResponseEntity(descriptionResponse, HttpStatus.CREATED)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert description due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate description found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert description ${description.descriptionName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert description: ${ex.message}", ex)

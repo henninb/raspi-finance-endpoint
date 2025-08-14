@@ -84,7 +84,10 @@ class CategoryController(private val categoryService: CategoryService) : BaseCon
             logger.info("Inserting category: ${category.categoryName}")
             val categoryResponse = categoryService.insertCategory(category)
             logger.info("Category inserted successfully: ${categoryResponse.categoryName}")
-            ResponseEntity.ok(categoryResponse)
+            ResponseEntity(categoryResponse, HttpStatus.CREATED)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to insert category due to data integrity violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate category found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert category ${category.categoryName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert category: ${ex.message}", ex)
