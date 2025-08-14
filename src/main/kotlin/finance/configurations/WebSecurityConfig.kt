@@ -17,13 +17,18 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
-open class WebSecurityConfig( private val jwtAuthenticationFilter: JwtAuthenticationFilter, private val environment: Environment ) {
+open class WebSecurityConfig( 
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter, 
+    private val environment: Environment,
+    private val rateLimitingFilter: RateLimitingFilter
+) {
 
 
     @Bean
     @Profile("!int") // Exclude when integration test profile is active
     open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter, httpErrorLoggingFilter: HttpErrorLoggingFilter): SecurityFilterChain {
         http
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(httpErrorLoggingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .cors { cors ->

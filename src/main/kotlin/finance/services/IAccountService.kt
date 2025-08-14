@@ -17,4 +17,6 @@ interface IAccountService {
     fun updateTotalsForAllAccounts(): Boolean
     fun updateAccount(account: Account): Account
     fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account
+    fun deactivateAccount(accountNameOwner: String): Account
+    fun activateAccount(accountNameOwner: String): Account
 }

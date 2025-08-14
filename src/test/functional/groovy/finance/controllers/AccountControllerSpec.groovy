@@ -209,4 +209,90 @@ class AccountControllerSpec extends BaseControllerSpec {
         response3.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
+
+    void 'should successfully deactivate an active account'() {
+        given:
+        Account testAccount = AccountBuilder.builder()
+                .withAccountNameOwner('test_deactivate')
+                .withActiveStatus(true)
+                .build()
+        
+        ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testAccount.toString())
+        
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> deactivateResponse = restTemplate.exchange(
+                createURLWithPort("/api/account/deactivate/${testAccount.accountNameOwner}"),
+                HttpMethod.PUT, entity, String)
+
+        then:
+        insertResponse.statusCode == HttpStatus.CREATED
+        deactivateResponse.statusCode == HttpStatus.OK
+        deactivateResponse.body.contains('"activeStatus":false')
+        0 * _
+    }
+
+    void 'should successfully activate an inactive account'() {
+        given:
+        Account testAccount = AccountBuilder.builder()
+                .withAccountNameOwner('test_activate')
+                .withActiveStatus(false)
+                .build()
+        
+        ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testAccount.toString())
+        
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> activateResponse = restTemplate.exchange(
+                createURLWithPort("/api/account/activate/${testAccount.accountNameOwner}"),
+                HttpMethod.PUT, entity, String)
+
+        then:
+        insertResponse.statusCode == HttpStatus.CREATED
+        activateResponse.statusCode == HttpStatus.OK
+        activateResponse.body.contains('"activeStatus":true')
+        0 * _
+    }
+
+    void 'should return not found when trying to deactivate non-existent account'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/account/deactivate/non_existent_account"),
+                HttpMethod.PUT, entity, String)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
+    void 'should return not found when trying to activate non-existent account'() {
+        given:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/account/activate/non_existent_account"),
+                HttpMethod.PUT, entity, String)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
 }

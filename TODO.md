@@ -495,3 +495,14 @@ class AccountNotFoundException(message: String) : RuntimeException(message)
 - Alert on unusual 500 error rates  
 - Track 400 error patterns for validation improvements
 - Monitor 409 conflicts for business insights
+
+
+## 15. broken tests
+ReceiptImageControllerSpec. should retrieve receipt image by id when it exists
+TransactionControllerSpec. should fail to update transaction receipt image with invalid data
+TransferControllerSpec. test select all transfers
+UserControllerSpec. test sign up
+UuidControllerSpec. test generate single UUID successfully
+ValidationAmountControllerSpec. test insert validation amount successfully
+
+
