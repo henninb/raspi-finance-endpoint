@@ -185,4 +185,19 @@ open class DatabaseResilienceConfiguration {
         
         return timeLimiter.executeCompletionStage(executor) { futureOperation }.toCompletableFuture()
     }
+
+    /**
+     * Overloaded method for Groovy/Java Supplier compatibility
+     */
+    open fun <T> executeWithResilience(
+        operation: java.util.function.Supplier<T>
+    ): CompletableFuture<T> {
+        val decoratedOperation = CircuitBreaker.decorateSupplier(databaseCircuitBreaker()) {
+            Retry.decorateSupplier(databaseRetry(), operation).get()
+        }
+
+        val futureOperation = CompletableFuture.supplyAsync(decoratedOperation, scheduledExecutorService())
+        
+        return databaseTimeLimiter().executeCompletionStage(scheduledExecutorService()) { futureOperation }.toCompletableFuture()
+    }
 }

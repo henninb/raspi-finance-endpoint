@@ -162,11 +162,11 @@ varnishlog
 
 ## log4j
 ```
-because you are using version 2.4.4 of springboot or greater. 
-spring boot use StaticLoggerBinder to get log factory. 
-StaticLoggerBinder has been deleted in version 1.3.x of logback-classic. 
-Here are two ways to solve this problem: 
- 1.use versions of slf4j-api(2.x.x) and logback-classic(1.3.x) without spring boot. 
+because you are using version 2.4.4 of springboot or greater.
+spring boot use StaticLoggerBinder to get log factory.
+StaticLoggerBinder has been deleted in version 1.3.x of logback-classic.
+Here are two ways to solve this problem:
+ 1.use versions of slf4j-api(2.x.x) and logback-classic(1.3.x) without spring boot.
  2.use spring boot's default logback dependencies.
 ```
 
@@ -174,3 +174,9 @@ Here are two ways to solve this problem:
 ```https://stackoverflow.com/questions/72761919/class-springhibernatejpapersistenceprovider-does-not-implement-the-requested-int```
 // https://mvnrepository.com/artifact/jakarta.persistence/jakarta.persistence-api
 implementation group: 'jakarta.persistence', name: 'jakarta.persistence-api', version: '3.1.0'
+
+## testing
+```
+./gradlew integrationTest --tests "*.DatabaseResilienceIntSpec" -Dspring.profiles.active=int
+./gradlew integrationTest --tests "finance.processors.ProcessorIntegrationSpec"
+```
