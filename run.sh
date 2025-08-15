@@ -313,4 +313,5 @@ docker network ls
 
 log "Deployment complete."
 log "To follow logs, run: docker logs raspi-finance-endpoint --follow"
+log "ssh gcp-api 'docker logs raspi-finance-endpoint -f'"
 exit 0
