@@ -32,7 +32,7 @@ class TransactionRepositoryIntSpec extends Specification {
         // Create test account for transaction testing
         Account testAccount = new Account(
             accountNameOwner: "test_checking_brian",
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 0L,
             totals: 0.0,
@@ -48,13 +48,13 @@ class TransactionRepositoryIntSpec extends Specification {
         Transaction transaction = new Transaction(
             guid: UUID.randomUUID().toString(),
             accountNameOwner: "test_checking_brian",
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             description: "Test Transaction",
             category: "Test Category",
             amount: 100.50,
             transactionDate: Date.valueOf("2023-01-01"),
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             reoccurringType: null,
             notes: "Integration test transaction",
             activeStatus: true,
@@ -86,13 +86,13 @@ class TransactionRepositoryIntSpec extends Specification {
             Transaction transaction = new Transaction(
                 guid: UUID.randomUUID().toString(),
                 accountNameOwner: "test_checking_brian",
-                accountType: AccountType.Checking,
+                accountType: AccountType.Debit,
                 description: "Test Transaction ${i}",
                 category: "Test Category",
                 amount: 100.00 + i,
                 transactionDate: Date.valueOf("2023-01-0${i + 1}"),
                 transactionState: TransactionState.Cleared,
-                transactionType: TransactionType.Debit,
+                transactionType: TransactionType.Expense,
                 activeStatus: true,
                 dateUpdated: new Date(System.currentTimeMillis()),
                 dateAdded: new Date(System.currentTimeMillis())
@@ -116,13 +116,13 @@ class TransactionRepositoryIntSpec extends Specification {
         Transaction categoryTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
             accountNameOwner: "test_checking_brian",
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             description: "Grocery Shopping",
             category: "Groceries",
             amount: 85.50,
             transactionDate: Date.valueOf("2023-01-01"),
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             activeStatus: true,
             dateUpdated: new Date(System.currentTimeMillis()),
             dateAdded: new Date(System.currentTimeMillis())
@@ -149,13 +149,13 @@ class TransactionRepositoryIntSpec extends Specification {
             Transaction transaction = new Transaction(
                 guid: UUID.randomUUID().toString(),
                 accountNameOwner: "test_checking_brian",
-                accountType: AccountType.Checking,
+                accountType: AccountType.Debit,
                 description: "Count Test Description",
                 category: "Count Test Category",
                 amount: 10.00,
                 transactionDate: Date.valueOf("2023-01-01"),
                 transactionState: TransactionState.Cleared,
-                transactionType: TransactionType.Debit,
+                transactionType: TransactionType.Expense,
                 activeStatus: true,
                 dateUpdated: new Date(System.currentTimeMillis()),
                 dateAdded: new Date(System.currentTimeMillis())
@@ -179,13 +179,13 @@ class TransactionRepositoryIntSpec extends Specification {
             Transaction transaction = new Transaction(
                 guid: UUID.randomUUID().toString(),
                 accountNameOwner: "test_checking_brian",
-                accountType: AccountType.Checking,
+                accountType: AccountType.Debit,
                 description: "Sum Test ${state}",
                 category: "Test Category",
                 amount: 100.00,
                 transactionDate: Date.valueOf("2023-01-01"),
                 transactionState: state,
-                transactionType: TransactionType.Debit,
+                transactionType: TransactionType.Expense,
                 activeStatus: true,
                 dateUpdated: new Date(System.currentTimeMillis()),
                 dateAdded: new Date(System.currentTimeMillis())
@@ -213,13 +213,13 @@ class TransactionRepositoryIntSpec extends Specification {
         Transaction clearedTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
             accountNameOwner: "test_checking_brian",
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             description: "Cleared Transaction",
             category: "Test Category",
             amount: 100.00,
             transactionDate: Date.valueOf("2023-01-01"),
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             activeStatus: true,
             dateUpdated: new Date(System.currentTimeMillis()),
             dateAdded: new Date(System.currentTimeMillis())
@@ -228,13 +228,13 @@ class TransactionRepositoryIntSpec extends Specification {
         Transaction futureTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
             accountNameOwner: "test_checking_brian",
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             description: "Future Transaction",
             category: "Test Category",
             amount: 200.00,
             transactionDate: Date.valueOf("2023-12-31"),
             transactionState: TransactionState.Future,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             activeStatus: true,
             dateUpdated: new Date(System.currentTimeMillis()),
             dateAdded: new Date(System.currentTimeMillis())
@@ -259,13 +259,13 @@ class TransactionRepositoryIntSpec extends Specification {
         Transaction transactionWithoutAccount = new Transaction(
             guid: UUID.randomUUID().toString(),
             accountNameOwner: null,  // This should cause constraint violation
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             description: "Invalid Transaction",
             category: "Test Category",
             amount: 100.00,
             transactionDate: Date.valueOf("2023-01-01"),
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             activeStatus: true,
             dateUpdated: new Date(System.currentTimeMillis()),
             dateAdded: new Date(System.currentTimeMillis())
@@ -287,13 +287,13 @@ class TransactionRepositoryIntSpec extends Specification {
             Transaction transaction = new Transaction(
                 guid: UUID.randomUUID().toString(),
                 accountNameOwner: "test_checking_brian",
-                accountType: AccountType.Checking,
+                accountType: AccountType.Debit,
                 description: "Performance Test Transaction ${i}",
                 category: i % 5 == 0 ? "Category A" : "Category B",
                 amount: Math.random() * 1000,
                 transactionDate: Date.valueOf("2023-01-01"),
                 transactionState: i % 3 == 0 ? TransactionState.Cleared : TransactionState.Outstanding,
-                transactionType: TransactionType.Debit,
+                transactionType: TransactionType.Expense,
                 activeStatus: true,
                 dateUpdated: new Date(System.currentTimeMillis()),
                 dateAdded: new Date(System.currentTimeMillis())

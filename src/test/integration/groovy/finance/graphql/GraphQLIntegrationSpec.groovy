@@ -76,8 +76,8 @@ class GraphQLIntegrationSpec extends Specification {
     void setupTestData() {
         // Create test account using no-arg constructor and property setting
         Account testAccount = new Account()
-        testAccount.accountNameOwner = "graphql_test_checking_brian"
-        testAccount.accountType = AccountType.Checking
+        testAccount.accountNameOwner = "graphqltestchecking_brian"
+        testAccount.accountType = AccountType.Debit
         testAccount.activeStatus = true
         testAccount.moniker = "2000"
         testAccount.outstanding = new BigDecimal("0.00")
@@ -101,7 +101,7 @@ class GraphQLIntegrationSpec extends Specification {
 
         // Create test payment using no-arg constructor and property setting
         Payment testPayment = new Payment()
-        testPayment.accountNameOwner = "graphql_test_checking_brian"
+        testPayment.accountNameOwner = "graphqltestchecking_brian"
         testPayment.sourceAccount = "source_account_test"
         testPayment.destinationAccount = "destination_account_test"
         testPayment.transactionDate = Date.valueOf("2023-05-20")
@@ -172,7 +172,7 @@ class GraphQLIntegrationSpec extends Specification {
         response.body.data.accounts != null
         response.body.data.accounts.size() >= 1
         response.body.data.accounts.any { 
-            it.accountNameOwner == "graphql_test_checking_brian" 
+            it.accountNameOwner == "graphqltestchecking_brian" 
         }
     }
 
@@ -181,7 +181,7 @@ class GraphQLIntegrationSpec extends Specification {
         given:
         def accountQuery = """
             query {
-                account(accountNameOwner: "graphql_test_checking_brian") {
+                account(accountNameOwner: "graphqltestchecking_brian") {
                     accountNameOwner
                     accountType
                     totals
@@ -207,8 +207,8 @@ class GraphQLIntegrationSpec extends Specification {
         response.statusCode == HttpStatus.OK
         response.body.data != null
         response.body.data.account != null
-        response.body.data.account.accountNameOwner == "graphql_test_checking_brian"
-        response.body.data.account.accountType == "Checking"
+        response.body.data.account.accountNameOwner == "graphqltestchecking_brian"
+        response.body.data.account.accountType == "Debit"
     }
 
     @Ignore("GraphQL is currently disabled")

@@ -120,8 +120,8 @@ class ServiceLayerIntegrationSpec extends Specification {
         totalAmount >= 0
         accounts != null
         accounts.size() >= 2
-        accounts.any { it.accountNameOwner == "service_test_checking_brian" }
-        accounts.any { it.accountNameOwner == "service_test_savings_brian" }
+        accounts.any { it.accountNameOwner == "checking_brian" }
+        accounts.any { it.accountNameOwner == "savings_brian" }
     }
 
     void 'test category service integration with transaction relationships'() {

@@ -27,8 +27,8 @@ class AccountRepositoryIntSpec extends Specification {
         given:
         Account account = new Account(
             accountId: 0L,
-            accountNameOwner: "test-savings_brian",
-            accountType: AccountType.Savings,
+            accountNameOwner: "testsavings_brian",
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: "1000",
             outstanding: new BigDecimal("0.00"),
@@ -43,16 +43,16 @@ class AccountRepositoryIntSpec extends Specification {
 
         then:
         savedAccount.accountId != null
-        savedAccount.accountNameOwner == "test-savings_brian"
-        savedAccount.accountType == AccountType.Savings
+        savedAccount.accountNameOwner == "testsavings_brian"
+        savedAccount.accountType == AccountType.Debit
         savedAccount.cleared == new BigDecimal("1500.50")
 
         when:
-        Optional<Account> foundAccount = accountRepository.findByAccountNameOwner("test-savings_brian")
+        Optional<Account> foundAccount = accountRepository.findByAccountNameOwner("testsavings_brian")
 
         then:
         foundAccount.isPresent()
-        foundAccount.get().accountType == AccountType.Savings
+        foundAccount.get().accountType == AccountType.Debit
         foundAccount.get().cleared == new BigDecimal("1500.50")
     }
 
@@ -60,8 +60,8 @@ class AccountRepositoryIntSpec extends Specification {
         given:
         // Create active account
         Account activeAccount = new Account(
-            accountNameOwner: "active_account_brian",
-            accountType: AccountType.Checking,
+            accountNameOwner: "activeaccount_brian",
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 2000L,
             totals: 2000.00,
@@ -72,7 +72,7 @@ class AccountRepositoryIntSpec extends Specification {
 
         // Create inactive account
         Account inactiveAccount = new Account(
-            accountNameOwner: "inactive_account_brian",
+            accountNameOwner: "inactiveaccount_brian",
             accountType: AccountType.Credit,
             activeStatus: false,
             moniker: 3000L,
@@ -99,8 +99,8 @@ class AccountRepositoryIntSpec extends Specification {
     void 'test find accounts by account type'() {
         given:
         Account checkingAccount = new Account(
-            accountNameOwner: "checking_type_test_brian",
-            accountType: AccountType.Checking,
+            accountNameOwner: "checkingtypetest_brian",
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 4000L,
             totals: 1000.00,
@@ -110,8 +110,8 @@ class AccountRepositoryIntSpec extends Specification {
         )
 
         Account savingsAccount = new Account(
-            accountNameOwner: "savings-type-test_brian",
-            accountType: AccountType.Savings,
+            accountNameOwner: "savingstypetest_brian",
+            accountType: AccountType.Credit,
             activeStatus: true,
             moniker: 5000L,
             totals: 5000.00,
@@ -124,21 +124,21 @@ class AccountRepositoryIntSpec extends Specification {
         accountRepository.save(savingsAccount)
 
         when:
-        List<Account> checkingAccounts = accountRepository.findByAccountType(AccountType.Checking)
-        List<Account> savingsAccounts = accountRepository.findByAccountType(AccountType.Savings)
+        List<Account> debitAccounts = accountRepository.findByAccountType(AccountType.Debit)
+        List<Account> creditAccounts = accountRepository.findByAccountType(AccountType.Credit)
 
         then:
-        checkingAccounts.size() >= 1
-        checkingAccounts.every { it.accountType == AccountType.Checking }
-        savingsAccounts.size() >= 1
-        savingsAccounts.every { it.accountType == AccountType.Savings }
+        debitAccounts.size() >= 1
+        debitAccounts.every { it.accountType == AccountType.Debit }
+        creditAccounts.size() >= 1
+        creditAccounts.every { it.accountType == AccountType.Credit }
     }
 
     void 'test find accounts by active status and account type'() {
         given:
         Account activeCheckingAccount = new Account(
-            accountNameOwner: "active-checking-combo_brian",
-            accountType: AccountType.Checking,
+            accountNameOwner: "activecheckingcombo_brian",
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 6000L,
             totals: 1200.00,
@@ -148,8 +148,8 @@ class AccountRepositoryIntSpec extends Specification {
         )
 
         Account inactiveCheckingAccount = new Account(
-            accountNameOwner: "inactive-checking-combo_brian",
-            accountType: AccountType.Checking,
+            accountNameOwner: "inactivecheckingcombo_brian",
+            accountType: AccountType.Debit,
             activeStatus: false,
             moniker: 7000L,
             totals: 800.00,
@@ -163,22 +163,22 @@ class AccountRepositoryIntSpec extends Specification {
 
         when:
         List<Account> activeCheckingAccounts = accountRepository
-            .findByActiveStatusAndAccountType(true, AccountType.Checking)
+            .findByActiveStatusAndAccountType(true, AccountType.Debit)
 
         then:
         activeCheckingAccounts.size() >= 1
         activeCheckingAccounts.every {
-            it.activeStatus == true && it.accountType == AccountType.Checking
+            it.activeStatus == true && it.accountType == AccountType.Debit
         }
-        activeCheckingAccounts.any { it.accountNameOwner == "active-checking-combo_brian" }
-        !activeCheckingAccounts.any { it.accountNameOwner == "inactive-checking-combo_brian" }
+        activeCheckingAccounts.any { it.accountNameOwner == "activecheckingcombo_brian" }
+        !activeCheckingAccounts.any { it.accountNameOwner == "inactivecheckingcombo_brian" }
     }
 
     void 'test account constraint violations'() {
         given:
         Account duplicateAccount = new Account(
-            accountNameOwner: "duplicate-test_brian",
-            accountType: AccountType.Checking,
+            accountNameOwner: "duplicatetest_brian",
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 8000L,
             totals: 100.00,
@@ -188,8 +188,8 @@ class AccountRepositoryIntSpec extends Specification {
         )
 
         Account duplicateAccount2 = new Account(
-            accountNameOwner: "duplicate-test_brian",  // Same account name
-            accountType: AccountType.Savings,
+            accountNameOwner: "duplicatetest_brian",  // Same account name
+            accountType: AccountType.Credit,
             activeStatus: true,
             moniker: 9000L,
             totals: 200.00,
@@ -211,7 +211,7 @@ class AccountRepositoryIntSpec extends Specification {
         given:
         Account invalidAccount = new Account(
             accountNameOwner: null,  // This should cause constraint violation
-            accountType: AccountType.Checking,
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 10000L,
             totals: 100.00,
@@ -231,8 +231,8 @@ class AccountRepositoryIntSpec extends Specification {
     void 'test account update operations'() {
         given:
         Account account = new Account(
-            accountNameOwner: "update-test_brian",
-            accountType: AccountType.Checking,
+            accountNameOwner: "updatetest_brian",
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: 11000L,
             totals: 1000.00,
@@ -251,10 +251,10 @@ class AccountRepositoryIntSpec extends Specification {
         then:
         updatedAccount.totals == 1500.00
         updatedAccount.totalsBalanced == 1450.00
-        updatedAccount.accountNameOwner == "update-test_brian"
+        updatedAccount.accountNameOwner == "updatetest_brian"
 
         when:
-        Optional<Account> refetchedAccount = accountRepository.findByAccountNameOwner("update-test_brian")
+        Optional<Account> refetchedAccount = accountRepository.findByAccountNameOwner("updatetest_brian")
 
         then:
         refetchedAccount.isPresent()
@@ -265,7 +265,7 @@ class AccountRepositoryIntSpec extends Specification {
     void 'test account deletion'() {
         given:
         Account accountToDelete = new Account(
-            accountNameOwner: "delete-test_brian",
+            accountNameOwner: "deletetest_brian",
             accountType: AccountType.Credit,
             activeStatus: true,
             moniker: 12000L,
@@ -278,7 +278,7 @@ class AccountRepositoryIntSpec extends Specification {
 
         when:
         accountRepository.delete(savedAccount)
-        Optional<Account> deletedAccount = accountRepository.findByAccountNameOwner("delete-test_brian")
+        Optional<Account> deletedAccount = accountRepository.findByAccountNameOwner("deletetest_brian")
 
         then:
         !deletedAccount.isPresent()
@@ -290,8 +290,8 @@ class AccountRepositoryIntSpec extends Specification {
         List<Account> accounts = []
         for (int i = 0; i < 50; i++) {
             Account account = new Account(
-                accountNameOwner: "performance-test_${i}_brian",
-                accountType: i % 2 == 0 ? AccountType.Checking : AccountType.Savings,
+                accountNameOwner: "performancetest${i}_brian",
+                accountType: i % 2 == 0 ? AccountType.Debit : AccountType.Credit,
                 activeStatus: i % 3 != 0,
                 moniker: 13000L + i,
                 totals: Math.random() * 10000,
@@ -306,12 +306,12 @@ class AccountRepositoryIntSpec extends Specification {
         when:
         long startTime = System.currentTimeMillis()
         List<Account> activeAccounts = accountRepository.findByActiveStatus(true)
-        List<Account> checkingAccounts = accountRepository.findByAccountType(AccountType.Checking)
+        List<Account> debitAccounts = accountRepository.findByAccountType(AccountType.Debit)
         long endTime = System.currentTimeMillis()
 
         then:
         activeAccounts.size() >= 33  // Approximately 2/3 of 50 accounts
-        checkingAccounts.size() >= 25  // Approximately half of 50 accounts
+        debitAccounts.size() >= 25  // Approximately half of 50 accounts
         (endTime - startTime) < 3000  // Queries should complete within 3 seconds
     }
 }
