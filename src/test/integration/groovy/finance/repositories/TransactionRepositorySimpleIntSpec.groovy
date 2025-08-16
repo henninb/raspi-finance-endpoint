@@ -32,8 +32,8 @@ class TransactionRepositorySimpleIntSpec extends Specification {
     void setup() {
         // Create test account for transaction testing
         Account testAccount = new Account()
-        testAccount.accountNameOwner = "test_checking_brian"
-        testAccount.accountType = AccountType.Checking
+        testAccount.accountNameOwner = "testchecking_brian"
+        testAccount.accountType = AccountType.Debit
         testAccount.activeStatus = true
         testAccount.moniker = "0000"
         testAccount.outstanding = new BigDecimal("0.00")
@@ -48,15 +48,15 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         given:
         Transaction transaction = new Transaction()
         transaction.guid = UUID.randomUUID().toString()
-        transaction.accountNameOwner = "test_checking_brian"
-        transaction.accountType = AccountType.Checking
-        transaction.description = "Test Transaction"
-        transaction.category = "Test Category"
+        transaction.accountNameOwner = "testchecking_brian"
+        transaction.accountType = AccountType.Debit
+        transaction.description = "test transaction"
+        transaction.category = "testcategory"
         transaction.amount = new BigDecimal("100.50")
         transaction.transactionDate = Date.valueOf("2023-01-01")
         transaction.transactionState = TransactionState.Cleared
-        transaction.transactionType = TransactionType.Debit
-        transaction.notes = "Integration test transaction"
+        transaction.transactionType = TransactionType.Expense
+        transaction.notes = "integration test transaction"
         transaction.activeStatus = true
         transaction.accountId = 1L
 
@@ -73,8 +73,8 @@ class TransactionRepositorySimpleIntSpec extends Specification {
 
         then:
         foundTransaction.isPresent()
-        foundTransaction.get().description == "Test Transaction"
-        foundTransaction.get().category == "Test Category"
+        foundTransaction.get().description == "test transaction"
+        foundTransaction.get().category == "testcategory"
     }
 
     void 'test find transactions by account name owner and active status'() {
@@ -83,27 +83,27 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         for (int i = 0; i < 3; i++) {
             Transaction transaction = new Transaction()
             transaction.guid = UUID.randomUUID().toString()
-            transaction.accountNameOwner = "test_checking_brian"
-            transaction.accountType = AccountType.Checking
-            transaction.description = "Test Transaction ${i}"
-            transaction.category = "Test Category"
+            transaction.accountNameOwner = "testchecking_brian"
+            transaction.accountType = AccountType.Debit
+            transaction.description = "test-transaction-${i}"
+            transaction.category = "testcategory"
             transaction.amount = new BigDecimal("100.00").add(new BigDecimal(i))
             transaction.transactionDate = Date.valueOf("2023-01-0${i + 1}")
             transaction.transactionState = TransactionState.Cleared
-            transaction.transactionType = TransactionType.Debit
+            transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
-            transaction.notes = "Test note"
+            transaction.notes = "test-note"
             transaction.accountId = 1L
             testTransactions.add(transactionRepository.save(transaction))
         }
 
         when:
         List<Transaction> foundTransactions = transactionRepository
-            .findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc("test_checking_brian", true)
+            .findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc("testchecking_brian", true)
 
         then:
         foundTransactions.size() >= 3
-        foundTransactions.every { it.accountNameOwner == "test_checking_brian" }
+        foundTransactions.every { it.accountNameOwner == "testchecking_brian" }
         foundTransactions.every { it.activeStatus == true }
     }
 
@@ -111,30 +111,30 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         given:
         Transaction categoryTransaction = new Transaction()
         categoryTransaction.guid = UUID.randomUUID().toString()
-        categoryTransaction.accountNameOwner = "test_checking_brian"
-        categoryTransaction.accountType = AccountType.Checking
-        categoryTransaction.description = "Grocery Shopping"
-        categoryTransaction.category = "Groceries"
+        categoryTransaction.accountNameOwner = "testchecking_brian"
+        categoryTransaction.accountType = AccountType.Debit
+        categoryTransaction.description = "grocery-shopping"
+        categoryTransaction.category = "groceries"
         categoryTransaction.amount = new BigDecimal("85.50")
         categoryTransaction.transactionDate = Date.valueOf("2023-01-01")
         categoryTransaction.transactionState = TransactionState.Cleared
-        categoryTransaction.transactionType = TransactionType.Debit
+        categoryTransaction.transactionType = TransactionType.Expense
         categoryTransaction.activeStatus = true
-        categoryTransaction.notes = "Test grocery transaction"
+        categoryTransaction.notes = "test-grocery-transaction"
         categoryTransaction.accountId = 1L
         transactionRepository.save(categoryTransaction)
 
         when:
         List<Transaction> categoryTransactions = transactionRepository
-            .findByCategoryAndActiveStatusOrderByTransactionDateDesc("Groceries", true)
+            .findByCategoryAndActiveStatusOrderByTransactionDateDesc("groceries", true)
         List<Transaction> descriptionTransactions = transactionRepository
-            .findByDescriptionAndActiveStatusOrderByTransactionDateDesc("Grocery Shopping", true)
+            .findByDescriptionAndActiveStatusOrderByTransactionDateDesc("grocery-shopping", true)
 
         then:
         categoryTransactions.size() >= 1
-        categoryTransactions.any { it.category == "Groceries" }
+        categoryTransactions.any { it.category == "groceries" }
         descriptionTransactions.size() >= 1
-        descriptionTransactions.any { it.description == "Grocery Shopping" }
+        descriptionTransactions.any { it.description == "grocery-shopping" }
     }
 
     void 'test count operations for category and description'() {
@@ -143,23 +143,23 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         for (int i = 0; i < 3; i++) {
             Transaction transaction = new Transaction()
             transaction.guid = UUID.randomUUID().toString()
-            transaction.accountNameOwner = "test_checking_brian"
-            transaction.accountType = AccountType.Checking
-            transaction.description = "Count Test Description"
-            transaction.category = "Count Test Category"
+            transaction.accountNameOwner = "testchecking_brian"
+            transaction.accountType = AccountType.Debit
+            transaction.description = "count-test-description"
+            transaction.category = "count-test-category"
             transaction.amount = new BigDecimal("10.00")
             transaction.transactionDate = Date.valueOf("2023-01-01")
             transaction.transactionState = TransactionState.Cleared
-            transaction.transactionType = TransactionType.Debit
+            transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
-            transaction.notes = "Count test"
+            transaction.notes = "count-test"
             transaction.accountId = 1L
             transactionRepository.save(transaction)
         }
 
         when:
-        Long categoryCount = transactionRepository.countByCategoryName("Count Test Category")
-        Long descriptionCount = transactionRepository.countByDescriptionName("Count Test Description")
+        Long categoryCount = transactionRepository.countByCategoryName("count-test-category")
+        Long descriptionCount = transactionRepository.countByDescriptionName("count-test-description")
 
         then:
         categoryCount >= 3
@@ -172,23 +172,23 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         [TransactionState.Cleared, TransactionState.Outstanding, TransactionState.Future].each { state ->
             Transaction transaction = new Transaction()
             transaction.guid = UUID.randomUUID().toString()
-            transaction.accountNameOwner = "test_checking_brian"
-            transaction.accountType = AccountType.Checking
-            transaction.description = "Sum Test ${state}"
-            transaction.category = "Test Category"
+            transaction.accountNameOwner = "testchecking_brian"
+            transaction.accountType = AccountType.Debit
+            transaction.description = "sum-test-${state}"
+            transaction.category = "testcategory"
             transaction.amount = new BigDecimal("100.00")
             transaction.transactionDate = Date.valueOf("2023-01-01")
             transaction.transactionState = state
-            transaction.transactionType = TransactionType.Debit
+            transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
-            transaction.notes = "Sum test"
+            transaction.notes = "sum-test"
             transaction.accountId = 1L
             transactionRepository.save(transaction)
         }
 
         when:
         List<Object[]> results = transactionRepository
-            .sumTotalsForActiveTransactionsByAccountNameOwner("test_checking_brian")
+            .sumTotalsForActiveTransactionsByAccountNameOwner("testchecking_brian")
 
         then:
         results.size() >= 1  // At least one result for the account
@@ -205,30 +205,30 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         // Create transactions with different states
         Transaction clearedTransaction = new Transaction()
         clearedTransaction.guid = UUID.randomUUID().toString()
-        clearedTransaction.accountNameOwner = "test_checking_brian"
-        clearedTransaction.accountType = AccountType.Checking
-        clearedTransaction.description = "Cleared Transaction"
-        clearedTransaction.category = "Test Category"
+        clearedTransaction.accountNameOwner = "testchecking_brian"
+        clearedTransaction.accountType = AccountType.Debit
+        clearedTransaction.description = "cleared-transaction"
+        clearedTransaction.category = "testcategory"
         clearedTransaction.amount = new BigDecimal("100.00")
         clearedTransaction.transactionDate = Date.valueOf("2023-01-01")
         clearedTransaction.transactionState = TransactionState.Cleared
-        clearedTransaction.transactionType = TransactionType.Debit
+        clearedTransaction.transactionType = TransactionType.Expense
         clearedTransaction.activeStatus = true
-        clearedTransaction.notes = "Cleared test"
+        clearedTransaction.notes = "cleared-test"
         clearedTransaction.accountId = 1L
 
         Transaction futureTransaction = new Transaction()
         futureTransaction.guid = UUID.randomUUID().toString()
-        futureTransaction.accountNameOwner = "test_checking_brian"
-        futureTransaction.accountType = AccountType.Checking
-        futureTransaction.description = "Future Transaction"
-        futureTransaction.category = "Test Category"
+        futureTransaction.accountNameOwner = "testchecking_brian"
+        futureTransaction.accountType = AccountType.Debit
+        futureTransaction.description = "future-transaction"
+        futureTransaction.category = "testcategory"
         futureTransaction.amount = new BigDecimal("200.00")
         futureTransaction.transactionDate = Date.valueOf("2023-12-31")
         futureTransaction.transactionState = TransactionState.Future
-        futureTransaction.transactionType = TransactionType.Debit
+        futureTransaction.transactionType = TransactionType.Expense
         futureTransaction.activeStatus = true
-        futureTransaction.notes = "Future test"
+        futureTransaction.notes = "future-test"
         futureTransaction.accountId = 1L
 
         transactionRepository.save(clearedTransaction)
@@ -237,12 +237,12 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         when:
         List<Transaction> nonFutureTransactions = transactionRepository
             .findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
-                "test_checking_brian", true, [TransactionState.Future])
+                "testchecking_brian", true, [TransactionState.Future])
 
         then:
         nonFutureTransactions.size() >= 1
         nonFutureTransactions.every { it.transactionState != TransactionState.Future }
-        nonFutureTransactions.any { it.description == "Cleared Transaction" }
+        nonFutureTransactions.any { it.description == "cleared-transaction" }
     }
 
     void 'test transaction query performance with multiple transactions'() {
@@ -252,16 +252,16 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         for (int i = 0; i < 50; i++) {
             Transaction transaction = new Transaction()
             transaction.guid = UUID.randomUUID().toString()
-            transaction.accountNameOwner = "test_checking_brian"
-            transaction.accountType = AccountType.Checking
-            transaction.description = "Performance Test Transaction ${i}"
-            transaction.category = i % 5 == 0 ? "Category A" : "Category B"
+            transaction.accountNameOwner = "testchecking_brian"
+            transaction.accountType = AccountType.Debit
+            transaction.description = "performance-test-transaction-${i}"
+            transaction.category = i % 5 == 0 ? "category-a" : "category-b"
             transaction.amount = new BigDecimal(Math.random() * 1000)
             transaction.transactionDate = Date.valueOf("2023-01-01")
             transaction.transactionState = i % 3 == 0 ? TransactionState.Cleared : TransactionState.Outstanding
-            transaction.transactionType = TransactionType.Debit
+            transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
-            transaction.notes = "Performance test"
+            transaction.notes = "performance-test"
             transaction.accountId = 1L
             transactions.add(transaction)
         }
@@ -270,7 +270,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         when:
         long startTime = System.currentTimeMillis()
         List<Transaction> foundTransactions = transactionRepository
-            .findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc("test_checking_brian", true)
+            .findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc("testchecking_brian", true)
         long endTime = System.currentTimeMillis()
 
         then:
