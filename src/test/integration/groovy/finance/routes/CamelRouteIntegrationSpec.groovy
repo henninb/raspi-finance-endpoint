@@ -50,7 +50,7 @@ class CamelRouteIntegrationSpec extends Specification {
 
         then:
         jsonFileReaderRoute != null
-        jsonFileReaderRoute.getRouteContext().getCamelContext().getRouteController().getRouteStatus("JsonFileReaderRoute").isStarted()
+        camelContext.getRouteController().getRouteStatus("JsonFileReaderRoute").isStarted()
     }
 
     void 'test transaction to database route exists and is active'() {
@@ -59,7 +59,7 @@ class CamelRouteIntegrationSpec extends Specification {
 
         then:
         transactionToDatabaseRoute != null
-        transactionToDatabaseRoute.getRouteContext().getCamelContext().getRouteController().getRouteStatus("TransactionToDatabaseRoute").isStarted()
+        camelContext.getRouteController().getRouteStatus("TransactionToDatabaseRoute").isStarted()
     }
 
     void 'test json file writer route exists and is active'() {
@@ -68,7 +68,7 @@ class CamelRouteIntegrationSpec extends Specification {
 
         then:
         jsonFileWriterRoute != null
-        jsonFileWriterRoute.getRouteContext().getCamelContext().getRouteController().getRouteStatus("JsonFileWriterRoute").isStarted()
+        camelContext.getRouteController().getRouteStatus("JsonFileWriterRoute").isStarted()
     }
 
     void 'test complete file processing workflow'() {
@@ -105,7 +105,7 @@ class CamelRouteIntegrationSpec extends Specification {
             transactions[0].amount == 123.45
             transactions[0].accountNameOwner == "test_checking_brian"
             transactions[0].transactionState == TransactionState.Cleared
-            transactions[0].transactionType == TransactionType.Debit
+            transactions[0].transactionType == TransactionType.Expense
         }
 
         cleanup:
@@ -128,7 +128,7 @@ class CamelRouteIntegrationSpec extends Specification {
             },
             {
                 "guid": "${UUID.randomUUID()}",
-                "accountNameOwner": "test_savings_brian",
+                "accountNameOwner": "testsavings_brian",
                 "accountType": "Savings",
                 "description": "Multi Test Transaction 2",
                 "category": "Test Category B",
@@ -171,12 +171,12 @@ class CamelRouteIntegrationSpec extends Specification {
             transactions3.size() == 1
             
             transactions1[0].amount == 50.00
-            transactions1[0].transactionType == TransactionType.Credit
+            transactions1[0].transactionType == TransactionType.Income
             transactions1[0].accountNameOwner == "test_checking_brian"
             
             transactions2[0].amount == 75.25
             transactions2[0].transactionState == TransactionState.Outstanding
-            transactions2[0].accountNameOwner == "test_savings_brian"
+            transactions2[0].accountNameOwner == "testsavings_brian"
             
             transactions3[0].amount == 100.00
             transactions3[0].transactionState == TransactionState.Future
@@ -242,7 +242,7 @@ class CamelRouteIntegrationSpec extends Specification {
             amount: 99.99,
             transactionDate: "2023-05-20",
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             notes: "Direct route processing test"
         ]
 
@@ -359,9 +359,9 @@ class CamelRouteIntegrationSpec extends Specification {
         jsonWriterRoute != null
 
         // Verify route statistics are available
-        jsonReaderRoute.getRouteContext() != null
-        transactionDbRoute.getRouteContext() != null
-        jsonWriterRoute.getRouteContext() != null
+        jsonReaderRoute.getCamelContext() != null
+        transactionDbRoute.getCamelContext() != null
+        jsonWriterRoute.getCamelContext() != null
     }
 
     void 'test concurrent file processing'() {

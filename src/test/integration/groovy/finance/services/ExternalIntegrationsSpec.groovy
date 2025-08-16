@@ -56,7 +56,7 @@ class ExternalIntegrationsSpec extends Specification {
 
     void setupTestData() {
         Account testAccount = new Account(
-            accountNameOwner: "metrics_test_checking_brian",
+            accountNameOwner: "metricstestchecking_brian",
             accountType: AccountType.Checking,
             activeStatus: true,
             moniker: 25000L,
@@ -148,14 +148,14 @@ class ExternalIntegrationsSpec extends Specification {
         given:
         Transaction testTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "metrics_test_checking_brian",
+            accountNameOwner: "metricstestchecking_brian",
             accountType: AccountType.Checking,
             description: "Metrics Test Transaction",
             category: "Metrics Category",
             amount: 100.00,
             transactionDate: Date.valueOf("2023-05-20"),
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Debit,
+            transactionType: TransactionType.Expense,
             activeStatus: true,
             dateUpdated: new Date(System.currentTimeMillis()),
             dateAdded: new Date(System.currentTimeMillis())
@@ -233,14 +233,14 @@ class ExternalIntegrationsSpec extends Specification {
         
         Transaction transaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "metrics_test_checking_brian",
+            accountNameOwner: "metricstestchecking_brian",
             accountType: AccountType.Checking,
             description: "DB Metrics Test",
             category: "DB Category",
             amount: 75.50,
             transactionDate: Date.valueOf("2023-05-21"),
             transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Credit,
+            transactionType: TransactionType.Income,
             activeStatus: true,
             dateUpdated: new Date(System.currentTimeMillis()),
             dateAdded: new Date(System.currentTimeMillis())
@@ -311,7 +311,7 @@ class ExternalIntegrationsSpec extends Specification {
     void 'test custom business metrics with MeterService'() {
         given:
         def transactionAmount = 250.75
-        def accountName = "metrics_test_checking_brian"
+        def accountName = "metricstestchecking_brian"
 
         when:
         // Simulate business metrics using MeterService if available
