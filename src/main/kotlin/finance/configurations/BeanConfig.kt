@@ -12,7 +12,18 @@ open class BeanConfig {
     @Bean
     open fun migrationStrategy(): FlywayMigrationStrategy {
         return FlywayMigrationStrategy { flyway ->
-            flyway.migrate()
+            try {
+                flyway.migrate()
+            } catch (e: Exception) {
+                if (e.message?.contains("Migrations have failed validation") == true) {
+                    println("Flyway validation failed, attempting repair...")
+                    flyway.repair()
+                    println("Flyway repair completed, retrying migration...")
+                    flyway.migrate()
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
