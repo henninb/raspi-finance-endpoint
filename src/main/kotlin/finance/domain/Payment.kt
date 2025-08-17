@@ -22,7 +22,7 @@ import jakarta.validation.constraints.Size
 @Entity
 @Table(
     name = "t_payment",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["account_name_owner", "transaction_date", "amount"])]
+    uniqueConstraints = [UniqueConstraint(columnNames = ["destination_account", "transaction_date", "amount"])]
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Payment(
@@ -33,13 +33,6 @@ data class Payment(
     @param:JsonProperty
     @Column(name = "payment_id", nullable = false)
     var paymentId: Long,
-
-    @param:JsonProperty
-    @Column(name = "account_name_owner", nullable = false)
-    @field:Convert(converter = LowerCaseConverter::class)
-    @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
-    @field:Pattern(regexp = Constants.ALPHA_UNDERSCORE_PATTERN, message = Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
-    var accountNameOwner: String,
 
     @param:JsonProperty
     //@Transient
@@ -82,7 +75,7 @@ data class Payment(
     var activeStatus: Boolean = true
 ) {
 
-    constructor() : this(0L, "", "", "", Date(0), BigDecimal(0.00), "", "")
+    constructor() : this(0L, "", "", Date(0), BigDecimal(0.00), "", "")
 
     @JsonGetter("transactionDate")
     fun jsonGetterPaymentDate(): String {
