@@ -205,8 +205,8 @@ class AccountRepositoryIntSpec extends Specification {
 
         Account duplicateAccount2 = new Account(
             accountId: 0L,
-            accountNameOwner: "duplicatetest_brian",  // Same account name
-            accountType: AccountType.Credit,
+            accountNameOwner: "duplicatetest_brian",  // Same account name - will cause unique constraint violation
+            accountType: AccountType.Credit,  // Different account type but same name - violates unique constraint
             activeStatus: true,
             moniker: "9000",
             outstanding: new BigDecimal("0.00"),
@@ -218,8 +218,14 @@ class AccountRepositoryIntSpec extends Specification {
 
         when:
         accountRepository.save(duplicateAccount)
+        accountRepository.flush() // Force the first save to complete
+
+        then:
+        notThrown(Exception) // First save should succeed
+
+        when:
         accountRepository.save(duplicateAccount2)
-        accountRepository.flush()
+        accountRepository.flush() // This should fail due to unique constraint
 
         then:
         thrown(DataIntegrityViolationException)
