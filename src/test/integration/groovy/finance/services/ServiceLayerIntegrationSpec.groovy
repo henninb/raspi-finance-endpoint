@@ -50,7 +50,48 @@ class ServiceLayerIntegrationSpec extends Specification {
     TransactionRepository transactionRepository
 
     void setup() {
-        // Let the services handle account creation automatically
+        // Create commonly used test accounts
+        Account checkingAccount = new Account(
+            accountId: 0L,
+            accountNameOwner: "checking_brian",
+            accountType: AccountType.Credit,
+            activeStatus: true,
+            moniker: "1234",  // Must be 4 digits
+            outstanding: BigDecimal.ZERO,
+            future: BigDecimal.ZERO,
+            cleared: BigDecimal.ZERO,
+            dateClosed: new Timestamp(System.currentTimeMillis()),
+            validationDate: new Timestamp(System.currentTimeMillis())
+        )
+        checkingAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
+        checkingAccount.dateAdded = new Timestamp(System.currentTimeMillis())
+        
+        Account savingsAccount = new Account(
+            accountId: 0L,
+            accountNameOwner: "savings_brian",
+            accountType: AccountType.Credit,
+            activeStatus: true,
+            moniker: "5678",  // Must be 4 digits
+            outstanding: BigDecimal.ZERO,
+            future: BigDecimal.ZERO,
+            cleared: BigDecimal.ZERO,
+            dateClosed: new Timestamp(System.currentTimeMillis()),
+            validationDate: new Timestamp(System.currentTimeMillis())
+        )
+        savingsAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
+        savingsAccount.dateAdded = new Timestamp(System.currentTimeMillis())
+        
+        try {
+            accountService.insertAccount(checkingAccount)
+        } catch (Exception e) {
+            // Account might already exist, ignore
+        }
+        
+        try {
+            accountService.insertAccount(savingsAccount)
+        } catch (Exception e) {
+            // Account might already exist, ignore
+        }
     }
 
     void 'test transaction service integration with database operations'() {
@@ -226,7 +267,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
 
         when:
-        Payment savedPayment = paymentService.insertPayment(testPayment)
+        Payment savedPayment = paymentService.insertPaymentNew(testPayment)
 
         then:
         savedPayment != null
@@ -309,9 +350,26 @@ class ServiceLayerIntegrationSpec extends Specification {
 
     void 'test receipt image service integration'() {
         given:
+        // First create a transaction to get a valid transactionId
+        Transaction testTransaction = new Transaction(
+            guid: UUID.randomUUID().toString(),
+            accountNameOwner: "checking_brian",
+            accountType: AccountType.Credit,
+            description: "receipt_image_test_transaction",
+            category: "receipt_test_category",
+            amount: 100.00,
+            transactionDate: Date.valueOf("2023-06-01"),
+            transactionState: TransactionState.Cleared,
+            transactionType: TransactionType.Expense,
+            activeStatus: true,
+            dateUpdated: new Timestamp(System.currentTimeMillis()),
+            dateAdded: new Timestamp(System.currentTimeMillis())
+        )
+        Transaction savedTransaction = transactionService.insertTransaction(testTransaction)
+        
         ReceiptImage testReceiptImage = new ReceiptImage(
             receiptImageId: 0L,
-            transactionId: 1L,
+            transactionId: savedTransaction.transactionId,
             activeStatus: true,
             imageFormatType: ImageFormatType.Jpeg,
             image: "test-image-data".bytes,
@@ -324,7 +382,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         then:
         savedReceiptImage != null
         savedReceiptImage.receiptImageId != null
-        savedReceiptImage.transactionId == 1L
+        savedReceiptImage.transactionId == savedTransaction.transactionId
         savedReceiptImage.imageFormatType == ImageFormatType.Jpeg
 
         when:
@@ -388,7 +446,10 @@ class ServiceLayerIntegrationSpec extends Specification {
         transactionService.insertTransaction(invalidTransaction)
 
         then:
-        thrown(Exception)  // Should throw validation or constraint violation exception
+        def e = thrown(Exception)
+        e instanceof DataIntegrityViolationException || 
+        e instanceof RuntimeException || 
+        e instanceof jakarta.validation.ValidationException
     }
 
     void 'test service layer transaction rollback on failure'() {
