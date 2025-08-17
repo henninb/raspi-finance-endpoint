@@ -27,6 +27,34 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
         }
     }
 
+    // curl -k --header "Content-Type: application/json" --request PUT --data '{"transactionDate":"2025-08-15","amount": 123.45}' https://localhost:8443/payment/update/1001
+    @PutMapping("/update/{paymentId}", consumes = ["application/json"], produces = ["application/json"])
+    fun updatePayment(
+        @PathVariable paymentId: Long,
+        @RequestBody patch: Payment
+    ): ResponseEntity<Payment> {
+        return try {
+            logger.info("Updating payment: $paymentId")
+            val response = paymentService.updatePayment(paymentId, patch)
+            logger.info("Payment updated successfully: $paymentId")
+            ResponseEntity.ok(response)
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Failed to update payment due to data integrity violation for paymentId $paymentId: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate payment found.")
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error updating payment $paymentId: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input updating payment $paymentId: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
+        } catch (ex: Exception) {
+            logger.error("Unexpected error updating payment $paymentId: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        }
+    }
+
     // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "amount": 100.00, "activeStatus": true}' https://localhost:8443/payment/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {

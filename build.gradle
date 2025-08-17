@@ -57,9 +57,16 @@ configurations.configureEach {
     // toolVersion = "$codenarcPluginVersion"
 // }
 
-compileKotlin {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+// Use toolchains for Gradle 9 compatibility
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// Configure Kotlin toolchain instead of per-task compatibility
+kotlin {
+    jvmToolchain(21)
 }
 
 sourceSets {
