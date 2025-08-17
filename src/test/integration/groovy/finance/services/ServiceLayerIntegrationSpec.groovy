@@ -138,7 +138,7 @@ class ServiceLayerIntegrationSpec extends Specification {
             Transaction transaction = new Transaction(
                 guid: UUID.randomUUID().toString(),
                 accountNameOwner: i < 2 ? "checking_brian" : "savings_brian",
-                accountType: AccountType.Credit,
+                accountType: AccountType.Credit,  // Use the same account type as the accounts created in setup
                 description: "total_test_transaction_${i}",
                 category: "total_category",
                 amount: 100.00 + (i * 25),
@@ -158,7 +158,9 @@ class ServiceLayerIntegrationSpec extends Specification {
 
         then:
         totalAmount != null
-        totalAmount >= 0
+        // With all Credit transactions (100 + 125 + 150 = 375), and no Debit transactions,
+        // the calculation "debits - credits" should be 0 - 375 = -375
+        totalAmount == new BigDecimal("-375.00")
         accounts != null
         accounts.size() >= 2
         accounts.any { it.accountNameOwner == "checking_brian" }
