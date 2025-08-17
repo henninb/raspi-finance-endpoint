@@ -55,28 +55,28 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "amount": 100.00, "activeStatus": true}' https://localhost:8443/payment/insert
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"sourceAccount":"checking_brian", "destinationAccount":"visa_brian", "amount": 100.00, "activeStatus": true}' https://localhost:8443/payment/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {
         return try {
-            logger.info("Inserting payment for account: ${payment.accountNameOwner}")
+            logger.info("Inserting payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
             val paymentResponse = paymentService.insertPaymentNew(payment)
             logger.info("Payment inserted successfully: ${paymentResponse.paymentId}")
             ResponseEntity.ok(paymentResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
-            logger.error("Failed to insert payment due to data integrity violation for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            logger.error("Failed to insert payment due to data integrity violation for ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.CONFLICT, ex.message ?: "Duplicate payment found.")
         } catch (ex: ResponseStatusException) {
-            logger.error("Failed to insert payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            logger.error("Failed to insert payment ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert payment: ${ex.message}", ex)
         } catch (ex: jakarta.validation.ValidationException) {
-            logger.error("Validation error inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            logger.error("Validation error inserting payment ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
         } catch (ex: IllegalArgumentException) {
-            logger.error("Invalid input inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            logger.error("Invalid input inserting payment ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: Exception) {
-            logger.error("Unexpected error inserting payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
+            logger.error("Unexpected error inserting payment ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }
     }

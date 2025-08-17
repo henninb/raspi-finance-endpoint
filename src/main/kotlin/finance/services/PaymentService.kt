@@ -36,7 +36,6 @@ open class PaymentService(
         // Determine what values are being updated (flexible approach for any field changes)
         val newDate = if (patch.transactionDate.time != 0L) patch.transactionDate else existing.transactionDate
         val newAmount = if (patch.amount != BigDecimal(0.00)) patch.amount else existing.amount
-        val newAccountNameOwner = if (patch.accountNameOwner.isNotBlank()) patch.accountNameOwner else existing.accountNameOwner
         val newSourceAccount = if (patch.sourceAccount.isNotBlank()) patch.sourceAccount else existing.sourceAccount
         val newDestinationAccount = if (patch.destinationAccount.isNotBlank()) patch.destinationAccount else existing.destinationAccount
         val newActiveStatus = patch.activeStatus ?: existing.activeStatus
@@ -44,26 +43,26 @@ open class PaymentService(
         // Check if any meaningful changes are being made
         val dateChanged = newDate != existing.transactionDate
         val amountChanged = newAmount != existing.amount
-        val accountChanged = newAccountNameOwner != existing.accountNameOwner
+        val destinationChanged = newDestinationAccount != existing.destinationAccount
         val sourceAccountChanged = newSourceAccount != existing.sourceAccount
         val destinationAccountChanged = newDestinationAccount != existing.destinationAccount
         val statusChanged = newActiveStatus != existing.activeStatus
 
-        if (!dateChanged && !amountChanged && !accountChanged && !sourceAccountChanged && !destinationAccountChanged && !statusChanged) {
+        if (!dateChanged && !amountChanged && !sourceAccountChanged && !destinationAccountChanged && !statusChanged) {
             logger.info("No changes detected for payment $paymentId, returning existing record")
             return existing
         }
 
         // Check for duplicate payments BEFORE making changes (excluding current payment)
-        // Only check for duplicates if the unique constraint fields (accountNameOwner, date, amount) are changing
-        if (dateChanged || amountChanged || accountChanged) {
-            val duplicatePayment = paymentRepository.findByAccountNameOwnerAndTransactionDateAndAmountAndPaymentIdNot(
-                newAccountNameOwner, newDate, newAmount, paymentId
+        // Only check for duplicates if the unique constraint fields (destinationAccount, date, amount) are changing
+        if (dateChanged || amountChanged || destinationChanged) {
+            val duplicatePayment = paymentRepository.findByDestinationAccountAndTransactionDateAndAmountAndPaymentIdNot(
+                newDestinationAccount, newDate, newAmount, paymentId
             )
 
             if (duplicatePayment.isPresent) {
                 val existingId = duplicatePayment.get().paymentId
-                val msg = "Duplicate payment conflict: account_name_owner='${newAccountNameOwner}', transaction_date='${newDate}', amount=${newAmount} already exists as payment_id=${existingId}. Unique key = (account_name_owner, transaction_date, amount)."
+                val msg = "Duplicate payment conflict: destination_account='${newDestinationAccount}', transaction_date='${newDate}', amount=${newAmount} already exists as payment_id=${existingId}. Unique key = (destination_account, transaction_date, amount)."
                 logger.error(msg + " (excluding current payment $paymentId)")
                 meterService.incrementExceptionThrownCounter("DuplicatePaymentException")
                 throw org.springframework.dao.DataIntegrityViolationException(msg)
@@ -107,36 +106,35 @@ open class PaymentService(
         // Update and persist payment with all changed fields
         existing.transactionDate = newDate
         existing.amount = newAmount
-        existing.accountNameOwner = newAccountNameOwner
         existing.sourceAccount = newSourceAccount
         existing.destinationAccount = newDestinationAccount
         existing.activeStatus = newActiveStatus
         existing.dateUpdated = Timestamp(System.currentTimeMillis())
 
         val saved = paymentRepository.saveAndFlush(existing)
-        logger.info("Successfully updated payment with ID: ${saved.paymentId} - Changes: dateChanged=$dateChanged, amountChanged=$amountChanged, accountChanged=$accountChanged, sourceAccountChanged=$sourceAccountChanged, destinationAccountChanged=$destinationAccountChanged, statusChanged=$statusChanged")
+        logger.info("Successfully updated payment with ID: ${saved.paymentId} - Changes: dateChanged=$dateChanged, amountChanged=$amountChanged, sourceAccountChanged=$sourceAccountChanged, destinationAccountChanged=$destinationAccountChanged, statusChanged=$statusChanged")
         return saved
     }
 
 
     @Timed
     override fun insertPaymentNew(payment: Payment): Payment {
-        logger.info("Inserting new payment for account: ${payment.accountNameOwner}")
+        logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
 
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         handleConstraintViolations(constraintViolations, meterService)
-        val optionalAccount = accountService.account(payment.accountNameOwner)
+        val optionalAccount = accountService.account(payment.destinationAccount)
         if (!optionalAccount.isPresent) {
-            logger.error("Account not found ${payment.accountNameOwner}")
+            logger.error("Account not found ${payment.destinationAccount}")
             meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Account not found ${payment.accountNameOwner}")
+            throw ValidationException("Account not found ${payment.destinationAccount}")
         } else {
             if (optionalAccount.get().accountType == AccountType.Debit) {
-                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                logger.error("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
                 meterService.incrementExceptionThrownCounter("ValidationException")
-                throw ValidationException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
+                throw ValidationException("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
             }
         }
 
@@ -170,7 +168,7 @@ open class PaymentService(
         transactionDebit.transactionDate = payment.transactionDate
         transactionDebit.description = "payment"
         transactionDebit.category = "bill_pay"
-        transactionDebit.notes = "to ${payment.accountNameOwner}"
+        transactionDebit.notes = "to ${payment.destinationAccount}"
         if (payment.amount > BigDecimal(0.0)) {
             transactionDebit.amount = payment.amount * BigDecimal(-1.0)
         } else {
@@ -208,7 +206,7 @@ open class PaymentService(
         transactionCredit.transactionState = TransactionState.Outstanding
         transactionCredit.reoccurringType = ReoccurringType.Onetime
         transactionCredit.accountType = AccountType.Credit
-        transactionCredit.accountNameOwner = payment.accountNameOwner
+        transactionCredit.accountNameOwner = payment.destinationAccount
         val timestamp = Timestamp(System.currentTimeMillis())
         transactionCredit.dateUpdated = timestamp
         transactionCredit.dateAdded = timestamp
@@ -237,6 +235,7 @@ open class PaymentService(
         return Optional.empty()
     }
 
+    /*
     @Deprecated("Use insertPaymentNew instead")
     @Timed
     fun insertPayment(payment: Payment): Payment {
@@ -278,4 +277,5 @@ open class PaymentService(
             throw ValidationException("Parameter not found: payment_account")
         }
     }
+    */
 }

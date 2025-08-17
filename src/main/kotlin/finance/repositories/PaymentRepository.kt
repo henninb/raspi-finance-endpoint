@@ -9,8 +9,8 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
     fun findByPaymentId(paymentId: Long): Optional<Payment>
 
     // Check for duplicate payments excluding the current payment being updated
-    fun findByAccountNameOwnerAndTransactionDateAndAmountAndPaymentIdNot(
-        accountNameOwner: String,
+    fun findByDestinationAccountAndTransactionDateAndAmountAndPaymentIdNot(
+        destinationAccount: String,
         transactionDate: java.sql.Date,
         amount: java.math.BigDecimal,
         paymentId: Long
