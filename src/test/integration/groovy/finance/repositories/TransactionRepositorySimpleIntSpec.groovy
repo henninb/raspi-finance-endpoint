@@ -29,6 +29,8 @@ class TransactionRepositorySimpleIntSpec extends Specification {
     @Autowired
     AccountRepository accountRepository
 
+    private Long testAccountId
+
     void setup() {
         // Create test account for transaction testing
         Account testAccount = new Account()
@@ -41,7 +43,8 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         testAccount.cleared = new BigDecimal("0.00")
         testAccount.dateClosed = new Timestamp(System.currentTimeMillis())
         testAccount.validationDate = new Timestamp(System.currentTimeMillis())
-        accountRepository.save(testAccount)
+        Account savedAccount = accountRepository.save(testAccount)
+        testAccountId = savedAccount.accountId
     }
 
     void 'test transaction repository basic CRUD operations'() {
@@ -58,7 +61,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         transaction.transactionType = TransactionType.Expense
         transaction.notes = "integration test transaction"
         transaction.activeStatus = true
-        transaction.accountId = 1L
+        transaction.accountId = testAccountId
 
         when:
         Transaction savedTransaction = transactionRepository.save(transaction)
@@ -93,7 +96,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
             transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
             transaction.notes = "test-note"
-            transaction.accountId = 1L
+            transaction.accountId = testAccountId
             testTransactions.add(transactionRepository.save(transaction))
         }
 
@@ -121,7 +124,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         categoryTransaction.transactionType = TransactionType.Expense
         categoryTransaction.activeStatus = true
         categoryTransaction.notes = "test-grocery-transaction"
-        categoryTransaction.accountId = 1L
+        categoryTransaction.accountId = testAccountId
         transactionRepository.save(categoryTransaction)
 
         when:
@@ -153,7 +156,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
             transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
             transaction.notes = "count-test"
-            transaction.accountId = 1L
+            transaction.accountId = testAccountId
             transactionRepository.save(transaction)
         }
 
@@ -182,7 +185,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
             transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
             transaction.notes = "sum-test"
-            transaction.accountId = 1L
+            transaction.accountId = testAccountId
             transactionRepository.save(transaction)
         }
 
@@ -215,7 +218,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         clearedTransaction.transactionType = TransactionType.Expense
         clearedTransaction.activeStatus = true
         clearedTransaction.notes = "cleared-test"
-        clearedTransaction.accountId = 1L
+        clearedTransaction.accountId = testAccountId
 
         Transaction futureTransaction = new Transaction()
         futureTransaction.guid = UUID.randomUUID().toString()
@@ -229,7 +232,7 @@ class TransactionRepositorySimpleIntSpec extends Specification {
         futureTransaction.transactionType = TransactionType.Expense
         futureTransaction.activeStatus = true
         futureTransaction.notes = "future-test"
-        futureTransaction.accountId = 1L
+        futureTransaction.accountId = testAccountId
 
         transactionRepository.save(clearedTransaction)
         transactionRepository.save(futureTransaction)
@@ -256,13 +259,13 @@ class TransactionRepositorySimpleIntSpec extends Specification {
             transaction.accountType = AccountType.Debit
             transaction.description = "performance-test-transaction-${i}"
             transaction.category = i % 5 == 0 ? "category-a" : "category-b"
-            transaction.amount = new BigDecimal(Math.random() * 1000)
+            transaction.amount = new BigDecimal(String.format("%.2f", Math.random() * 1000))
             transaction.transactionDate = Date.valueOf("2023-01-01")
             transaction.transactionState = i % 3 == 0 ? TransactionState.Cleared : TransactionState.Outstanding
             transaction.transactionType = TransactionType.Expense
             transaction.activeStatus = true
             transaction.notes = "performance-test"
-            transaction.accountId = 1L
+            transaction.accountId = testAccountId
             transactions.add(transaction)
         }
         transactionRepository.saveAll(transactions)
