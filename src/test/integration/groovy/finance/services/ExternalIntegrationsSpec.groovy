@@ -8,6 +8,7 @@ import finance.domain.TransactionState
 import finance.domain.TransactionType
 import finance.repositories.TransactionRepository
 import finance.repositories.AccountRepository
+import finance.services.MeterService
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import io.micrometer.core.instrument.Counter
@@ -22,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
 
 import java.sql.Date
+import java.sql.Timestamp
+import java.math.BigDecimal
 
 @ActiveProfiles("int")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -55,16 +58,16 @@ class ExternalIntegrationsSpec extends Specification {
     }
 
     void setupTestData() {
-        Account testAccount = new Account(
-            accountNameOwner: "metricstestchecking_brian",
-            accountType: AccountType.Checking,
-            activeStatus: true,
-            moniker: 25000L,
-            totals: 2000.00,
-            totalsBalanced: 2000.00,
-            dateUpdated: new Date(System.currentTimeMillis()),
-            dateAdded: new Date(System.currentTimeMillis())
-        )
+        Account testAccount = new Account()
+        testAccount.accountNameOwner = "metricstestchecking_brian"
+        testAccount.accountType = AccountType.Credit
+        testAccount.activeStatus = true
+        testAccount.moniker = "2500"
+        testAccount.outstanding = new BigDecimal("2000.00")
+        testAccount.future = new BigDecimal("0.00")
+        testAccount.cleared = new BigDecimal("2000.00")
+        testAccount.dateClosed = new Timestamp(System.currentTimeMillis())
+        testAccount.validationDate = new Timestamp(System.currentTimeMillis())
         accountRepository.save(testAccount)
     }
 
@@ -141,25 +144,26 @@ class ExternalIntegrationsSpec extends Specification {
         then:
         customCounter.count() == 6.0
         customTimer.count() >= 1
-        customTimer.totalTime() > 0
+        customTimer.totalTime(java.util.concurrent.TimeUnit.MILLISECONDS) > 0
     }
 
     void 'test transaction metrics integration'() {
         given:
-        Transaction testTransaction = new Transaction(
-            guid: UUID.randomUUID().toString(),
-            accountNameOwner: "metricstestchecking_brian",
-            accountType: AccountType.Checking,
-            description: "Metrics Test Transaction",
-            category: "Metrics Category",
-            amount: 100.00,
-            transactionDate: Date.valueOf("2023-05-20"),
-            transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Expense,
-            activeStatus: true,
-            dateUpdated: new Date(System.currentTimeMillis()),
-            dateAdded: new Date(System.currentTimeMillis())
-        )
+        def savedAccount = accountRepository.findByAccountNameOwner("metricstestchecking_brian").get()
+        
+        Transaction testTransaction = new Transaction()
+        testTransaction.guid = UUID.randomUUID().toString()
+        testTransaction.accountNameOwner = "metricstestchecking_brian"
+        testTransaction.accountId = savedAccount.accountId
+        testTransaction.accountType = AccountType.Credit
+        testTransaction.description = "metricstest"
+        testTransaction.category = "metricstest"
+        testTransaction.amount = new BigDecimal("100.00")
+        testTransaction.transactionDate = Date.valueOf("2023-05-20")
+        testTransaction.transactionState = TransactionState.Cleared
+        testTransaction.transactionType = TransactionType.Expense
+        testTransaction.activeStatus = true
+        testTransaction.notes = ""
 
         when:
         transactionRepository.save(testTransaction)
@@ -231,20 +235,21 @@ class ExternalIntegrationsSpec extends Specification {
         when:
         Timer.Sample sample = Timer.start(meterRegistry)
         
-        Transaction transaction = new Transaction(
-            guid: UUID.randomUUID().toString(),
-            accountNameOwner: "metricstestchecking_brian",
-            accountType: AccountType.Checking,
-            description: "DB Metrics Test",
-            category: "DB Category",
-            amount: 75.50,
-            transactionDate: Date.valueOf("2023-05-21"),
-            transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Income,
-            activeStatus: true,
-            dateUpdated: new Date(System.currentTimeMillis()),
-            dateAdded: new Date(System.currentTimeMillis())
-        )
+        def savedAccount = accountRepository.findByAccountNameOwner("metricstestchecking_brian").get()
+        
+        Transaction transaction = new Transaction()
+        transaction.guid = UUID.randomUUID().toString()
+        transaction.accountNameOwner = "metricstestchecking_brian"
+        transaction.accountId = savedAccount.accountId
+        transaction.accountType = AccountType.Credit
+        transaction.description = "dbtest"
+        transaction.category = "dbtest"
+        transaction.amount = new BigDecimal("75.50")
+        transaction.transactionDate = Date.valueOf("2023-05-21")
+        transaction.transactionState = TransactionState.Cleared
+        transaction.transactionType = TransactionType.Income
+        transaction.activeStatus = true
+        transaction.notes = ""
         
         transactionRepository.save(transaction)
         sample.stop(dbTimer)
@@ -252,7 +257,7 @@ class ExternalIntegrationsSpec extends Specification {
 
         then:
         dbTimer.count() >= 1
-        dbTimer.totalTime() > 0
+        dbTimer.totalTime(java.util.concurrent.TimeUnit.MILLISECONDS) > 0
         dbCounter.count() >= 1
     }
 
