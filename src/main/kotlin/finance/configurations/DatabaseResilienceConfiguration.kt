@@ -50,7 +50,7 @@ open class DatabaseResilienceConfiguration {
 
         circuitBreaker.eventPublisher
             .onStateTransition { event ->
-                logger.warn("Circuit breaker state transition: {} -> {}", 
+                logger.warn("Circuit breaker state transition: {} -> {}",
                     event.stateTransition.fromState, event.stateTransition.toState)
             }
             .onFailureRateExceeded { event ->
@@ -83,7 +83,7 @@ open class DatabaseResilienceConfiguration {
 
         retry.eventPublisher
             .onRetry { event ->
-                logger.warn("Database operation retry attempt: {}, exception: {}", 
+                logger.warn("Database operation retry attempt: {}, exception: {}",
                     event.numberOfRetryAttempts, event.lastThrowable?.message)
             }
 
@@ -147,19 +147,19 @@ open class DatabaseResilienceConfiguration {
         // Register custom metrics for connection pool monitoring
         if (dataSource is com.zaxxer.hikari.HikariDataSource) {
             val hikariDataSource = dataSource
-            
+
             meterRegistry.gauge("hikari.connections.active", hikariDataSource) { ds ->
                 ds.hikariPoolMXBean?.activeConnections?.toDouble() ?: 0.0
             }
-            
+
             meterRegistry.gauge("hikari.connections.idle", hikariDataSource) { ds ->
                 ds.hikariPoolMXBean?.idleConnections?.toDouble() ?: 0.0
             }
-            
+
             meterRegistry.gauge("hikari.connections.pending", hikariDataSource) { ds ->
                 ds.hikariPoolMXBean?.threadsAwaitingConnection?.toDouble() ?: 0.0
             }
-            
+
             meterRegistry.gauge("hikari.connections.total", hikariDataSource) { ds ->
                 ds.hikariPoolMXBean?.totalConnections?.toDouble() ?: 0.0
             }
@@ -182,7 +182,7 @@ open class DatabaseResilienceConfiguration {
         }
 
         val futureOperation = CompletableFuture.supplyAsync(decoratedOperation, executor)
-        
+
         return timeLimiter.executeCompletionStage(executor) { futureOperation }.toCompletableFuture()
     }
 
@@ -197,7 +197,7 @@ open class DatabaseResilienceConfiguration {
         }
 
         val futureOperation = CompletableFuture.supplyAsync(decoratedOperation, scheduledExecutorService())
-        
+
         return databaseTimeLimiter().executeCompletionStage(scheduledExecutorService()) { futureOperation }.toCompletableFuture()
     }
 }

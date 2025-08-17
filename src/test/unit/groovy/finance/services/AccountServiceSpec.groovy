@@ -79,16 +79,16 @@ class AccountServiceSpec extends BaseServiceSpec {
     void 'test insertAccount - attempt to insert a empty accountNameOwner'() {
         given:
         Account account = AccountBuilder.builder().withAccountNameOwner('').build()
-        
+
         // Create mock constraint violations
         ConstraintViolation<Account> violation1 = Mock(ConstraintViolation)
         violation1.invalidValue >> ""
         violation1.message >> "size must be between 3 and 40"
-        
+
         ConstraintViolation<Account> violation2 = Mock(ConstraintViolation)
         violation2.invalidValue >> ""
         violation2.message >> "must be alpha separated by an underscore"
-        
+
         Set<ConstraintViolation<Account>> constraintViolations = [violation1, violation2] as Set
 
         when:
@@ -123,12 +123,12 @@ class AccountServiceSpec extends BaseServiceSpec {
     void 'test insertAccount - invalid moniker'() {
         given:
         Account account = AccountBuilder.builder().withMoniker('12345').build()
-        
+
         // Create mock constraint violation
         ConstraintViolation<Account> violation = Mock(ConstraintViolation)
         violation.invalidValue >> "12345"
         violation.message >> "Must be 4 digits."
-        
+
         Set<ConstraintViolation<Account>> constraintViolations = [violation] as Set
 
         when:

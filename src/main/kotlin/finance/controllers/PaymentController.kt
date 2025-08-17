@@ -40,7 +40,7 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
             ResponseEntity.ok(response)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
             logger.error("Failed to update payment due to data integrity violation for paymentId $paymentId: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate payment found.")
+            throw ResponseStatusException(HttpStatus.CONFLICT, ex.message ?: "Duplicate payment found.")
         } catch (ex: ResponseStatusException) {
             throw ex
         } catch (ex: jakarta.validation.ValidationException) {
@@ -65,7 +65,7 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
             ResponseEntity.ok(paymentResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
             logger.error("Failed to insert payment due to data integrity violation for account ${payment.accountNameOwner}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate payment found.")
+            throw ResponseStatusException(HttpStatus.CONFLICT, ex.message ?: "Duplicate payment found.")
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert payment for account ${payment.accountNameOwner}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert payment: ${ex.message}", ex)
@@ -91,7 +91,7 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
                     logger.warn("Payment not found for deletion: $paymentId")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
                 }
-            
+
             paymentService.deleteByPaymentId(paymentId)
             logger.info("Payment deleted successfully: $paymentId")
             ResponseEntity.ok(payment)

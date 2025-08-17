@@ -324,7 +324,7 @@ class AccountRepositoryIntSpec extends Specification {
             'perfa_brian', 'perfb_brian', 'perfc_brian', 'perfd_brian', 'perfe_brian',
             'perfg_brian', 'perfh_brian', 'perfi_brian', 'perfj_brian', 'perfk_brian'
         ]
-        
+
         for (int i = 0; i < 10; i++) {
             Account account = new Account(
                 accountId: 0L,

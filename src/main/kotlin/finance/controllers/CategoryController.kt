@@ -110,7 +110,7 @@ class CategoryController(private val categoryService: CategoryService) : BaseCon
                     logger.warn("Category not found for deletion: $categoryName")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: $categoryName")
                 }
-            
+
             categoryService.deleteCategory(categoryName)
             logger.info("Category deleted successfully: $categoryName")
             ResponseEntity.ok(categoryToDelete)

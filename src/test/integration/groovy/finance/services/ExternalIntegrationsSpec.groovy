@@ -121,7 +121,7 @@ class ExternalIntegrationsSpec extends Specification {
         then:
         // HikariCP metrics may not be available in test environment with H2
         response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.NOT_FOUND
-        
+
         if (response.statusCode == HttpStatus.OK) {
             assert response.body.name == "hikari.connections.active"
             assert response.body.measurements != null
@@ -136,7 +136,7 @@ class ExternalIntegrationsSpec extends Specification {
         when:
         customCounter.increment()
         customCounter.increment(5)
-        
+
         Timer.Sample sample = Timer.start(meterRegistry)
         Thread.sleep(100)  // Simulate some work
         sample.stop(customTimer)
@@ -150,7 +150,7 @@ class ExternalIntegrationsSpec extends Specification {
     void 'test transaction metrics integration'() {
         given:
         def savedAccount = accountRepository.findByAccountNameOwner("metricstestchecking_brian").get()
-        
+
         Transaction testTransaction = new Transaction()
         testTransaction.guid = UUID.randomUUID().toString()
         testTransaction.accountNameOwner = "metricstestchecking_brian"
@@ -167,7 +167,7 @@ class ExternalIntegrationsSpec extends Specification {
 
         when:
         transactionRepository.save(testTransaction)
-        
+
         // Create metrics for transaction operations
         Counter transactionCounter = meterRegistry.counter("transactions.created", "type", "debit")
         transactionCounter.increment()
@@ -234,9 +234,9 @@ class ExternalIntegrationsSpec extends Specification {
 
         when:
         Timer.Sample sample = Timer.start(meterRegistry)
-        
+
         def savedAccount = accountRepository.findByAccountNameOwner("metricstestchecking_brian").get()
-        
+
         Transaction transaction = new Transaction()
         transaction.guid = UUID.randomUUID().toString()
         transaction.accountNameOwner = "metricstestchecking_brian"
@@ -250,7 +250,7 @@ class ExternalIntegrationsSpec extends Specification {
         transaction.transactionType = TransactionType.Income
         transaction.activeStatus = true
         transaction.notes = ""
-        
+
         transactionRepository.save(transaction)
         sample.stop(dbTimer)
         dbCounter.increment()
@@ -283,7 +283,7 @@ class ExternalIntegrationsSpec extends Specification {
         then:
         memoryResponse.statusCode == HttpStatus.OK
         memoryResponse.body.name == "jvm.memory.max"
-        
+
         gcResponse.statusCode == HttpStatus.OK
         gcResponse.body.name == "jvm.gc.pause"
     }
@@ -306,7 +306,7 @@ class ExternalIntegrationsSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.NOT_FOUND
-        
+
         if (response.statusCode == HttpStatus.OK) {
             assert response.body.name == "application.started.time"
             assert response.body.measurements != null
@@ -345,7 +345,7 @@ class ExternalIntegrationsSpec extends Specification {
         response.statusCode == HttpStatus.OK
         response.body != null
         response.body.names != null
-        
+
         // Verify key application metrics are present
         List<String> metricNames = response.body.names as List<String>
         metricNames.contains("jvm.memory.used")
@@ -369,13 +369,13 @@ class ExternalIntegrationsSpec extends Specification {
         then:
         responseTimes.size() == 5
         responseTimes.every { it > 0 && it < 5000 }  // Response times should be reasonable
-        
+
         // Create performance metrics
         Timer performanceTimer = meterRegistry.timer("performance.health.endpoint")
         responseTimes.each { responseTime ->
             performanceTimer.record(responseTime, java.util.concurrent.TimeUnit.MILLISECONDS)
         }
-        
+
         performanceTimer.count() == 5
     }
 
@@ -387,7 +387,7 @@ class ExternalIntegrationsSpec extends Specification {
         response.statusCode == HttpStatus.OK
         response.body != null
         response.body.status != null
-        
+
         if (response.body.components != null) {
             Map components = response.body.components as Map
             // Common health indicators that should be present

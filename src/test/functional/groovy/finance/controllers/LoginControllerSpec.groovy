@@ -53,7 +53,7 @@ class LoginControllerSpec extends BaseControllerSpec {
         then: "response should be created and contain authentication cookie"
         response.statusCode == HttpStatus.CREATED
         response.body == null
-        
+
         and: "response should contain Set-Cookie header"
         def cookieHeaders = response.headers.get("Set-Cookie")
         cookieHeaders != null
@@ -108,14 +108,14 @@ class LoginControllerSpec extends BaseControllerSpec {
 
         then: "response should be no content with authentication cookie"
         response.statusCode == HttpStatus.NO_CONTENT
-        
+
         and: "response should contain Set-Cookie header with token"
         def cookieHeaders = response.headers.get("Set-Cookie")
         cookieHeaders != null
         def tokenCookie = cookieHeaders.find { it.contains("token=") }
         tokenCookie != null
-        
-        
+
+
         cleanup:
         def extractedToken = tokenCookie.split("token=")[1].split(";")[0]
         authToken = extractedToken

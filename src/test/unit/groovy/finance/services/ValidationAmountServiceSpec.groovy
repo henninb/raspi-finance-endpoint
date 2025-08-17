@@ -28,7 +28,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         given:
         def accountNameOwner = "test_account"
         def validationAmount = new ValidationAmount(
-            0L, 0L, 
+            0L, 0L,
             Timestamp.valueOf("2023-01-01 00:00:00"),
             true,
             TransactionState.Outstanding,
@@ -36,7 +36,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         )
         def account = new Account(accountId: 1L, accountNameOwner: accountNameOwner)
         def savedValidationAmount = new ValidationAmount(
-            1L, 1L, 
+            1L, 1L,
             Timestamp.valueOf("2023-01-01 00:00:00"),
             true,
             TransactionState.Outstanding,
@@ -50,7 +50,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
         1 * validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
         1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
-        
+
         result.validationId == 1L
         validationAmount.accountId == 1L
         validationAmount.dateAdded != null
@@ -61,14 +61,14 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         given:
         def accountNameOwner = "nonexistent_account"
         def validationAmount = new ValidationAmount(
-            0L, 0L, 
+            0L, 0L,
             Timestamp.valueOf("2023-01-01 00:00:00"),
             true,
             TransactionState.Outstanding,
             new BigDecimal("1000.00")
         )
         def savedValidationAmount = new ValidationAmount(
-            1L, 0L, 
+            1L, 0L,
             Timestamp.valueOf("2023-01-01 00:00:00"),
             true,
             TransactionState.Outstanding,
@@ -83,7 +83,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
         1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
         0 * accountRepositoryMock.saveAndFlush(*_)
-        
+
         result.validationId == 1L
         validationAmount.accountId == 0L
         validationAmount.dateAdded != null
@@ -96,14 +96,14 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         def transactionState = TransactionState.Outstanding
         def account = new Account(accountId: 1L, accountNameOwner: accountNameOwner)
         def validationAmount1 = new ValidationAmount(
-            1L, 1L, 
+            1L, 1L,
             Timestamp.valueOf("2023-01-01 00:00:00"),
             true,
             TransactionState.Outstanding,
             new BigDecimal("1000.00")
         )
         def validationAmount2 = new ValidationAmount(
-            2L, 1L, 
+            2L, 1L,
             Timestamp.valueOf("2023-01-02 00:00:00"),
             true,
             TransactionState.Outstanding,
@@ -117,7 +117,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         then:
         1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
         1 * validationAmountRepositoryMock.findByTransactionStateAndAccountId(transactionState, 1L) >> validationAmounts
-        
+
         result.validationId == 2L // should return the latest one
         result.amount == new BigDecimal("1100.00")
     }
@@ -134,7 +134,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         then:
         1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
         1 * validationAmountRepositoryMock.findByTransactionStateAndAccountId(transactionState, 1L) >> []
-        
+
         result != null
         result.validationId == 0L // should return empty ValidationAmount
     }
@@ -150,7 +150,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         then:
         1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.empty()
         0 * validationAmountRepositoryMock.findByTransactionStateAndAccountId(*_)
-        
+
         result != null
         result.validationId == 0L // should return empty ValidationAmount
     }

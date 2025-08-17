@@ -163,12 +163,12 @@ class CamelRouteIntegrationSpec extends Specification {
         println("Copying file from ${sourceFile.absolutePath} to ${destinationFile.absolutePath}")
         println("File exists: ${sourceFile.exists()}, size: ${sourceFile.length()} bytes")
         println("Directory exists: ${destinationFile.parentFile.exists()}")
-        
+
         if (!destinationFile.parentFile.exists()) {
             destinationFile.parentFile.mkdirs()
             println("Created directory: ${destinationFile.parentFile.absolutePath}")
         }
-        
+
         Files.copy(sourceFile.toPath(), destinationFile.toPath())
         println("File copied successfully. Destination exists: ${destinationFile.exists()}, size: ${destinationFile.length()} bytes")
 

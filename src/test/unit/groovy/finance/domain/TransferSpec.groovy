@@ -39,7 +39,7 @@ class TransferSpec extends Specification {
         def guidDestination = "dest-guid"
 
         when:
-        def transfer = new Transfer(transferId, sourceAccount, destinationAccount, 
+        def transfer = new Transfer(transferId, sourceAccount, destinationAccount,
                                   transactionDate, amount, guidSource, guidDestination, true)
 
         then:
@@ -57,8 +57,8 @@ class TransferSpec extends Specification {
 
     def "Transfer - toString returns valid JSON"() {
         given:
-        def transfer = new Transfer(1L, "test_source", "test_dest", 
-                                  Date.valueOf("2023-01-01"), new BigDecimal("100.00"), 
+        def transfer = new Transfer(1L, "test_source", "test_dest",
+                                  Date.valueOf("2023-01-01"), new BigDecimal("100.00"),
                                   "source-guid", "dest-guid", true)
 
         when:

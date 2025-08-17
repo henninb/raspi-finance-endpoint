@@ -28,7 +28,7 @@ class AccountJpaSpec extends Specification {
     @Autowired
     protected TestEntityManager entityManager
 
-    // NOTE: These tests are disabled because they use native SQL queries that reference 
+    // NOTE: These tests are disabled because they use native SQL queries that reference
     // table names directly (t_transaction) which don't work with the func schema prefix.
     // The JPQL version has parameter binding issues in the test environment.
     // The core account functionality is tested in the other tests below.

@@ -63,18 +63,18 @@ open class BaseService {
      * @return CompletableFuture with the result
      */
     protected fun <T> executeWithResilience(
-        operation: () -> T, 
+        operation: () -> T,
         operationName: String = "database-operation"
     ): CompletableFuture<T> {
         // If resilience components are not available (e.g., in test environment), execute directly
-        if (databaseResilienceConfig == null || circuitBreaker == null || retry == null || 
+        if (databaseResilienceConfig == null || circuitBreaker == null || retry == null ||
             timeLimiter == null || scheduledExecutorService == null) {
             logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
             return CompletableFuture.completedFuture(executeDirectly(operation, operationName))
         }
 
         val startTime = System.currentTimeMillis()
-        
+
         return try {
             databaseResilienceConfig!!.executeWithResilience(
                 operation = {
@@ -94,7 +94,7 @@ open class BaseService {
             ).whenComplete { result, throwable ->
                 val totalDuration = System.currentTimeMillis() - startTime
                 if (throwable != null) {
-                    logger.error("Database operation {} failed after {} ms: {}", 
+                    logger.error("Database operation {} failed after {} ms: {}",
                         operationName, totalDuration, throwable.message)
                     when (throwable.cause) {
                         is SQLException -> meterService.incrementExceptionThrownCounter("SQLException")
@@ -107,7 +107,7 @@ open class BaseService {
                 }
             }
         } catch (ex: Exception) {
-            logger.error("Failed to execute database operation {} with resilience patterns: {}", 
+            logger.error("Failed to execute database operation {} with resilience patterns: {}",
                 operationName, ex.message, ex)
             meterService.incrementExceptionThrownCounter("ResiliencePatternException")
             CompletableFuture.failedFuture(ex)
@@ -127,7 +127,7 @@ open class BaseService {
         timeoutSeconds: Long = 30
     ): T {
         // If resilience components are not available, execute directly
-        if (databaseResilienceConfig == null || circuitBreaker == null || retry == null || 
+        if (databaseResilienceConfig == null || circuitBreaker == null || retry == null ||
             timeLimiter == null || scheduledExecutorService == null) {
             logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
             return executeDirectly(operation, operationName)

@@ -103,8 +103,8 @@ class SecurityIntegrationSimpleSpec extends Specification {
         then:
         // In integration test profile, metrics endpoint may be accessible
         // The test verifies that the endpoint responds (either accessible or protected)
-        response.statusCode == HttpStatus.OK || 
-        response.statusCode == HttpStatus.UNAUTHORIZED || 
+        response.statusCode == HttpStatus.OK ||
+        response.statusCode == HttpStatus.UNAUTHORIZED ||
         response.statusCode == HttpStatus.FORBIDDEN
     }
 
@@ -126,14 +126,14 @@ class SecurityIntegrationSimpleSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/actuator/health", 
-            HttpMethod.OPTIONS, 
-            entity, 
+            "${baseUrl}/actuator/health",
+            HttpMethod.OPTIONS,
+            entity,
             String.class
         )
 
         then:
-        response.statusCode == HttpStatus.OK || 
+        response.statusCode == HttpStatus.OK ||
         response.statusCode == HttpStatus.NO_CONTENT ||
         response.statusCode == HttpStatus.FORBIDDEN
     }
@@ -146,9 +146,9 @@ class SecurityIntegrationSimpleSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/actuator/health", 
-            HttpMethod.GET, 
-            entity, 
+            "${baseUrl}/actuator/health",
+            HttpMethod.GET,
+            entity,
             String.class
         )
 
@@ -177,7 +177,7 @@ class SecurityIntegrationSimpleSpec extends Specification {
 
         // Protected endpoints should require authentication
         protectedResponses.every { response ->
-            response.statusCode == HttpStatus.UNAUTHORIZED || 
+            response.statusCode == HttpStatus.UNAUTHORIZED ||
             response.statusCode == HttpStatus.FORBIDDEN ||
             response.statusCode == HttpStatus.NOT_FOUND
         }

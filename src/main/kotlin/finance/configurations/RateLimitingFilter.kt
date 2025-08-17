@@ -74,11 +74,11 @@ class RateLimitingFilter : OncePerRequestFilter() {
                 "Rate limit exceeded for IP: {} - {} requests in {} minutes (limit: {})",
                 clientIp, counter.getRequestCount(windowStart), windowSizeMinutes, rateLimitPerMinute
             )
-            
+
             response.status = HttpStatus.TOO_MANY_REQUESTS.value()
             response.setHeader("X-RateLimit-Limit", rateLimitPerMinute.toString())
             response.setHeader("X-RateLimit-Remaining", "0")
-            response.setHeader("X-RateLimit-Reset", 
+            response.setHeader("X-RateLimit-Reset",
                 ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString())
             response.contentType = "application/json"
             response.writer.write("""{"error":"Rate limit exceeded","message":"Too many requests"}""")
@@ -92,7 +92,7 @@ class RateLimitingFilter : OncePerRequestFilter() {
         val remainingRequests = maxOf(0, rateLimitPerMinute - counter.getRequestCount(windowStart))
         response.setHeader("X-RateLimit-Limit", rateLimitPerMinute.toString())
         response.setHeader("X-RateLimit-Remaining", remainingRequests.toString())
-        response.setHeader("X-RateLimit-Reset", 
+        response.setHeader("X-RateLimit-Reset",
             ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString())
 
         filterChain.doFilter(request, response)
@@ -101,7 +101,7 @@ class RateLimitingFilter : OncePerRequestFilter() {
     private fun getClientIpAddress(request: HttpServletRequest): String {
         val xForwardedFor = request.getHeader("X-Forwarded-For")
         val xRealIp = request.getHeader("X-Real-IP")
-        
+
         return when {
             !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
             !xRealIp.isNullOrBlank() -> xRealIp
@@ -113,21 +113,21 @@ class RateLimitingFilter : OncePerRequestFilter() {
         val cutoffTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(windowSizeMinutes * 2)
         val iterator = requestCounts.iterator()
         var cleanedCount = 0
-        
+
         while (iterator.hasNext()) {
             val entry = iterator.next()
             val counter = entry.value
-            
+
             // Clean old requests from counter
             counter.cleanup(cutoffTime)
-            
+
             // Remove empty counters
             if (counter.isEmpty(cutoffTime)) {
                 iterator.remove()
                 cleanedCount++
             }
         }
-        
+
         if (cleanedCount > 0) {
             securityLogger.debug("Cleaned up {} old rate limiting entries", cleanedCount)
         }

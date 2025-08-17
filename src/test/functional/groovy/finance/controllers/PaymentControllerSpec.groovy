@@ -94,7 +94,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         Payment payment1 = paymentRepository.findAll().find { it.accountNameOwner == 'delete-test_brian' }
 
         when:
-        ResponseEntity<String> response = payment1 ? 
+        ResponseEntity<String> response = payment1 ?
             deleteEndpoint(endpointName, payment1.paymentId.toString()) :
             deleteEndpoint(endpointName, '99999')  // Use non-existent ID if payment not found
 

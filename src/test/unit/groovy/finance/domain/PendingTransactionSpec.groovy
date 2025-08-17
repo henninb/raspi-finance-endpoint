@@ -38,8 +38,8 @@ class PendingTransactionSpec extends Specification {
         def owner = "test_owner"
 
         when:
-        def pendingTransaction = new PendingTransaction(pendingTransactionId, accountNameOwner, 
-                                                      transactionDate, description, amount, 
+        def pendingTransaction = new PendingTransaction(pendingTransactionId, accountNameOwner,
+                                                      transactionDate, description, amount,
                                                       reviewStatus, owner, null)
 
         then:
@@ -56,10 +56,10 @@ class PendingTransactionSpec extends Specification {
 
     def "PendingTransaction - toString returns valid JSON"() {
         given:
-        def pendingTransaction = new PendingTransaction(1L, "test_account", 
-                                                      Date.valueOf("2023-01-01"), 
-                                                      "test description", 
-                                                      new BigDecimal("100.00"), 
+        def pendingTransaction = new PendingTransaction(1L, "test_account",
+                                                      Date.valueOf("2023-01-01"),
+                                                      "test description",
+                                                      new BigDecimal("100.00"),
                                                       "approved", "test_owner", null)
 
         when:
