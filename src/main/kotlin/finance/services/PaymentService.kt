@@ -33,9 +33,40 @@ open class PaymentService(
         val existing = paymentRepository.findByPaymentId(paymentId)
             .orElseThrow { ValidationException("Payment not found: $paymentId") }
 
-        // Determine new values; require at least one meaningful change
+        // Determine what values are being updated (flexible approach for any field changes)
         val newDate = if (patch.transactionDate.time != 0L) patch.transactionDate else existing.transactionDate
         val newAmount = if (patch.amount != BigDecimal(0.00)) patch.amount else existing.amount
+        val newAccountNameOwner = if (patch.accountNameOwner.isNotBlank()) patch.accountNameOwner else existing.accountNameOwner
+        val newSourceAccount = if (patch.sourceAccount.isNotBlank()) patch.sourceAccount else existing.sourceAccount
+        val newDestinationAccount = if (patch.destinationAccount.isNotBlank()) patch.destinationAccount else existing.destinationAccount
+        val newActiveStatus = patch.activeStatus ?: existing.activeStatus
+
+        // Check if any meaningful changes are being made
+        val dateChanged = newDate != existing.transactionDate
+        val amountChanged = newAmount != existing.amount
+        val accountChanged = newAccountNameOwner != existing.accountNameOwner
+        val sourceAccountChanged = newSourceAccount != existing.sourceAccount
+        val destinationAccountChanged = newDestinationAccount != existing.destinationAccount
+        val statusChanged = newActiveStatus != existing.activeStatus
+
+        if (!dateChanged && !amountChanged && !accountChanged && !sourceAccountChanged && !destinationAccountChanged && !statusChanged) {
+            logger.info("No changes detected for payment $paymentId, returning existing record")
+            return existing
+        }
+
+        // Check for duplicate payments BEFORE making changes (excluding current payment)
+        // Only check for duplicates if the unique constraint fields (accountNameOwner, date, amount) are changing
+        if (dateChanged || amountChanged || accountChanged) {
+            val duplicatePayment = paymentRepository.findByAccountNameOwnerAndTransactionDateAndAmountAndPaymentIdNot(
+                newAccountNameOwner, newDate, newAmount, paymentId
+            )
+
+            if (duplicatePayment.isPresent) {
+                logger.error("Duplicate payment found: account=$newAccountNameOwner, date=$newDate, amount=$newAmount (excluding current payment $paymentId)")
+                meterService.incrementExceptionThrownCounter("DuplicatePaymentException")
+                throw org.springframework.dao.DataIntegrityViolationException("Payment with same account, date, and amount already exists")
+            }
+        }
 
         // Load linked transactions by GUIDs and update to keep in sync
         val sourceGuid = existing.guidSource
@@ -51,25 +82,37 @@ open class PaymentService(
         val creditTx = transactionService.findTransactionByGuid(destGuid)
             .orElseThrow { ValidationException("Destination transaction not found for payment $paymentId: $destGuid") }
 
-        // Update dates
-        debitTx.transactionDate = newDate
-        creditTx.transactionDate = newDate
+        // Update linked transactions if date or amount changed
+        if (dateChanged) {
+            logger.info("Updating transaction dates for payment $paymentId: $newDate")
+            debitTx.transactionDate = newDate
+            creditTx.transactionDate = newDate
+        }
 
-        // Apply same amount logic used on insert
-        debitTx.amount = if (newAmount > BigDecimal(0.0)) newAmount * BigDecimal(-1.0) else newAmount
-        creditTx.amount = if (newAmount > BigDecimal(0.0)) newAmount * BigDecimal(-1.0) else newAmount
+        if (amountChanged) {
+            logger.info("Updating transaction amounts for payment $paymentId: $newAmount")
+            // Apply same amount logic used on insert
+            debitTx.amount = if (newAmount > BigDecimal(0.0)) newAmount * BigDecimal(-1.0) else newAmount
+            creditTx.amount = if (newAmount > BigDecimal(0.0)) newAmount * BigDecimal(-1.0) else newAmount
+        }
 
-        // Persist transactions first to ensure FK consistency
-        transactionService.updateTransaction(debitTx)
-        transactionService.updateTransaction(creditTx)
+        // Persist transactions first to ensure FK consistency (only if they changed)
+        if (dateChanged || amountChanged) {
+            transactionService.updateTransaction(debitTx)
+            transactionService.updateTransaction(creditTx)
+        }
 
-        // Update and persist payment
+        // Update and persist payment with all changed fields
         existing.transactionDate = newDate
         existing.amount = newAmount
+        existing.accountNameOwner = newAccountNameOwner
+        existing.sourceAccount = newSourceAccount
+        existing.destinationAccount = newDestinationAccount
+        existing.activeStatus = newActiveStatus
         existing.dateUpdated = Timestamp(System.currentTimeMillis())
 
         val saved = paymentRepository.saveAndFlush(existing)
-        logger.info("Successfully updated payment with ID: ${saved.paymentId}")
+        logger.info("Successfully updated payment with ID: ${saved.paymentId} - Changes: dateChanged=$dateChanged, amountChanged=$amountChanged, accountChanged=$accountChanged, sourceAccountChanged=$sourceAccountChanged, destinationAccountChanged=$destinationAccountChanged, statusChanged=$statusChanged")
         return saved
     }
 
