@@ -26,6 +26,53 @@ open class PaymentService(
         return payments
     }
 
+    @Timed
+    override fun updatePayment(paymentId: Long, patch: Payment): Payment {
+        logger.info("Updating payment with ID: $paymentId")
+
+        val existing = paymentRepository.findByPaymentId(paymentId)
+            .orElseThrow { ValidationException("Payment not found: $paymentId") }
+
+        // Determine new values; require at least one meaningful change
+        val newDate = if (patch.transactionDate.time != 0L) patch.transactionDate else existing.transactionDate
+        val newAmount = if (patch.amount != BigDecimal(0.00)) patch.amount else existing.amount
+
+        // Load linked transactions by GUIDs and update to keep in sync
+        val sourceGuid = existing.guidSource
+        val destGuid = existing.guidDestination
+
+        if (sourceGuid.isNullOrBlank() || destGuid.isNullOrBlank()) {
+            logger.error("Payment $paymentId missing transaction GUIDs: source=$sourceGuid, dest=$destGuid")
+            throw ValidationException("Payment $paymentId is missing linked transaction GUIDs.")
+        }
+
+        val debitTx = transactionService.findTransactionByGuid(sourceGuid)
+            .orElseThrow { ValidationException("Source transaction not found for payment $paymentId: $sourceGuid") }
+        val creditTx = transactionService.findTransactionByGuid(destGuid)
+            .orElseThrow { ValidationException("Destination transaction not found for payment $paymentId: $destGuid") }
+
+        // Update dates
+        debitTx.transactionDate = newDate
+        creditTx.transactionDate = newDate
+
+        // Apply same amount logic used on insert
+        debitTx.amount = if (newAmount > BigDecimal(0.0)) newAmount * BigDecimal(-1.0) else newAmount
+        creditTx.amount = if (newAmount > BigDecimal(0.0)) newAmount * BigDecimal(-1.0) else newAmount
+
+        // Persist transactions first to ensure FK consistency
+        transactionService.updateTransaction(debitTx)
+        transactionService.updateTransaction(creditTx)
+
+        // Update and persist payment
+        existing.transactionDate = newDate
+        existing.amount = newAmount
+        existing.dateUpdated = Timestamp(System.currentTimeMillis())
+
+        val saved = paymentRepository.saveAndFlush(existing)
+        logger.info("Successfully updated payment with ID: ${saved.paymentId}")
+        return saved
+    }
+
 
     @Timed
     override fun insertPaymentNew(payment: Payment): Payment {

@@ -39,20 +39,21 @@ sourceSets {
 
 //provide dependency scopes
 configurations {
+    // Align custom source sets with modern configurations (Gradle 7+)
     integrationTestImplementation.extendsFrom testImplementation
-    integrationTestRuntime.extendsFrom testRuntime
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+
     functionalTestImplementation.extendsFrom testImplementation
-    functionalTestRuntime.extendsFrom testRuntime
+    functionalTestRuntimeOnly.extendsFrom testRuntimeOnly
+
     performanceTestImplementation.extendsFrom testImplementation
-    performanceRuntime.extendsFrom testRuntime
+    performanceTestRuntimeOnly.extendsFrom testRuntimeOnly
+
     oracleTestImplementation.extendsFrom testImplementation
-    oracleRuntime.extendsFrom testRuntime
+    oracleTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
-compileTestKotlin {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
+// Kotlin toolchain is configured in build.gradle for all Kotlin compile tasks.
 
 dependencies {
     testImplementation("org.apache.groovy:groovy:${groovyVersion}")
@@ -138,8 +139,9 @@ task oracleTest(type: Test) {
     environment "APPNAME", "raspi-finance-endpoint"
 }
 
-integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
-functionalTest.reports.html.destination = file("$buildDir/reports/test/functional")
-performanceTest.reports.html.destination = file("$buildDir/reports/test/performance")
+// Use outputLocation instead of deprecated destination for Gradle 9 readiness
+integrationTest.reports.html.outputLocation.set(file("$buildDir/reports/test/integration"))
+functionalTest.reports.html.outputLocation.set(file("$buildDir/reports/test/functional"))
+performanceTest.reports.html.outputLocation.set(file("$buildDir/reports/test/performance"))
 //test.dependsOn functionalTest
 //test.dependsOn integrationTest
