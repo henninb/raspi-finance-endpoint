@@ -76,7 +76,7 @@ class RateLimitingFilterSpec extends Specification {
         then:
         // First 2 requests should pass through
         2 * filterChainMock.doFilter(requestMock, responseMock)
-        
+
         // Third request should be blocked
         1 * responseMock.setStatus(HttpStatus.TOO_MANY_REQUESTS.value())
         (1.._) * responseMock.setHeader("X-RateLimit-Remaining", _)
@@ -91,7 +91,7 @@ class RateLimitingFilterSpec extends Specification {
         rateLimitingFilter.rateLimitingEnabled = true
         rateLimitingFilter.rateLimitPerMinute = 2
         rateLimitingFilter.windowSizeMinutes = 1L
-        
+
         HttpServletRequest request1Mock = Mock(HttpServletRequest)
         HttpServletRequest request2Mock = Mock(HttpServletRequest)
 

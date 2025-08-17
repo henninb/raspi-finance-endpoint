@@ -85,7 +85,7 @@ class AccountController(private val accountService: AccountService) : BaseContro
         return try {
             logger.debug("Retrieving account: $accountNameOwner")
             val account = accountService.account(accountNameOwner)
-                .orElseThrow { 
+                .orElseThrow {
                     logger.warn("Account not found: $accountNameOwner")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
                 }
@@ -128,11 +128,11 @@ class AccountController(private val accountService: AccountService) : BaseContro
         return try {
             logger.info("Attempting to delete account: $accountNameOwner")
             val account = accountService.account(accountNameOwner)
-                .orElseThrow { 
+                .orElseThrow {
                     logger.warn("Account not found for deletion: $accountNameOwner")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
                 }
-            
+
             accountService.deleteAccount(accountNameOwner)
             logger.info("Account deleted successfully: $accountNameOwner")
             ResponseEntity.ok(account)

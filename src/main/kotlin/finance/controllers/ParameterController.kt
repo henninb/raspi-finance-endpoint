@@ -110,7 +110,7 @@ class ParameterController(private val parameterService: ParameterService) : Base
                     logger.warn("Parameter not found for deletion: $parameterName")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Parameter not found: $parameterName")
                 }
-            
+
             parameterService.deleteByParameterName(parameterName)
             logger.info("Parameter deleted successfully: $parameterName")
             ResponseEntity.ok(parameter)

@@ -205,7 +205,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         JsonSlurper jsonSlurper = new JsonSlurper()
         def jsonResponse = jsonSlurper.parseText(response.body)
         def uuids = jsonResponse.uuids as List<String>
-        
+
         and: "verify uniqueness"
         Set<String> uniqueUuids = new HashSet<>(uuids)
         uniqueUuids.size() == count // All UUIDs should be unique
@@ -227,7 +227,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         JsonSlurper jsonSlurper = new JsonSlurper()
         def jsonResponse = jsonSlurper.parseText(response.body)
         String uuid = jsonResponse.uuid
-        
+
         and: "verify UUID format (8-4-4-4-12 characters separated by hyphens)"
         uuid.matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
     }

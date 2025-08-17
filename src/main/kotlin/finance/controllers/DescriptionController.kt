@@ -104,7 +104,7 @@ class DescriptionController(private val descriptionService: DescriptionService) 
                     logger.warn("Description not found for deletion: $descriptionName")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Description not found: $descriptionName")
                 }
-            
+
             descriptionService.deleteByDescriptionName(descriptionName)
             logger.info("Description deleted successfully: $descriptionName")
             ResponseEntity.ok(description)

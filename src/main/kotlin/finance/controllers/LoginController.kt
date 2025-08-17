@@ -20,7 +20,7 @@ class LoginController(private val userService: UserService) : BaseController() {
 
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
-    
+
     @Value("\${spring.profiles.active:dev}")
     private lateinit var activeProfile: String
 
@@ -49,17 +49,17 @@ class LoginController(private val userService: UserService) : BaseController() {
             .compact()
 
         // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true || 
+        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true ||
                         System.getenv("HOST_IP")?.contains("192.168") == true ||
                         activeProfile == "dev" || activeProfile == "development"
-        
+
         val cookieBuilder = ResponseCookie.from("token", token)
             .path("/")
             .maxAge(7 * 24 * 60 * 60)
             .httpOnly(false) // Allow JavaScript access in development for debugging
             .secure(false) // Never require HTTPS for local development
             .sameSite("Lax") // Use Lax for local development
-        
+
         // Configure domain based on environment
         val cookie = if (isLocalDev) {
             cookieBuilder.build() // No domain restriction for local development
@@ -75,17 +75,17 @@ class LoginController(private val userService: UserService) : BaseController() {
     @PostMapping("/logout")
     fun logout(response: HttpServletResponse): ResponseEntity<Void> {
         // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true || 
+        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true ||
                         System.getenv("HOST_IP")?.contains("192.168") == true ||
                         activeProfile == "dev" || activeProfile == "development"
-        
+
         val cookieBuilder = ResponseCookie.from("token", "")
             .path("/")
             .maxAge(0)
             .httpOnly(false) // Allow JavaScript access in development for debugging
-            .secure(false) // Never require HTTPS for local development  
+            .secure(false) // Never require HTTPS for local development
             .sameSite("Lax") // Use Lax for local development
-        
+
         // Configure domain based on environment
         val cookie = if (isLocalDev) {
             cookieBuilder.build() // No domain restriction for local development
@@ -126,17 +126,17 @@ class LoginController(private val userService: UserService) : BaseController() {
             .compact()
 
         // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true || 
+        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true ||
                         System.getenv("HOST_IP")?.contains("192.168") == true ||
                         activeProfile == "dev" || activeProfile == "development"
-        
+
         val cookieBuilder = ResponseCookie.from("token", token)
             .httpOnly(false) // Allow JavaScript access in development for debugging
             .secure(false) // Never require HTTPS for local development
             .maxAge(24 * 60 * 60)
             .sameSite("Lax") // Use Lax for local development
             .path("/")
-        
+
         // Configure domain based on environment
         val cookie = if (isLocalDev) {
             cookieBuilder.build() // No domain restriction for local development

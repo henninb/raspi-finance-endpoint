@@ -42,7 +42,7 @@ class PendingTransactionServiceSpec extends BaseServiceSpec {
 
         then:
         1 * pendingTransactionRepositoryMock.saveAndFlush(pendingTransaction) >> savedPendingTransaction
-        
+
         result.pendingTransactionId == 1L
         pendingTransaction.dateAdded != null
     }
@@ -62,7 +62,7 @@ class PendingTransactionServiceSpec extends BaseServiceSpec {
         then:
         1 * pendingTransactionRepositoryMock.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.of(pendingTransaction)
         1 * pendingTransactionRepositoryMock.delete(pendingTransaction)
-        
+
         result == true
     }
 
@@ -85,7 +85,7 @@ class PendingTransactionServiceSpec extends BaseServiceSpec {
 
         then:
         1 * pendingTransactionRepositoryMock.findAll() >> pendingTransactions
-        
+
         result.size() == 2
         result[0].pendingTransactionId == 1L
         result[1].pendingTransactionId == 2L
@@ -100,7 +100,7 @@ class PendingTransactionServiceSpec extends BaseServiceSpec {
 
         then:
         1 * pendingTransactionRepositoryMock.findAll() >> pendingTransactions
-        
+
         result.size() == 0
     }
 
@@ -110,7 +110,7 @@ class PendingTransactionServiceSpec extends BaseServiceSpec {
 
         then:
         1 * pendingTransactionRepositoryMock.deleteAll()
-        
+
         result == true
     }
 }

@@ -25,7 +25,7 @@ open class AccountService(
     override fun account(accountNameOwner: String): Optional<Account> {
         logger.info("Finding account: $accountNameOwner")
         return executeWithResilienceSync(
-            operation = { 
+            operation = {
                 accountRepository.findByAccountNameOwner(accountNameOwner)
             },
             operationName = "findAccountByName-$accountNameOwner"
@@ -41,7 +41,7 @@ open class AccountService(
     @Timed
     override fun accounts(): List<Account> {
         return executeWithResilienceSync(
-            operation = { 
+            operation = {
                 accountRepository.findByActiveStatusOrderByAccountNameOwner()
             },
             operationName = "findAllActiveAccounts"

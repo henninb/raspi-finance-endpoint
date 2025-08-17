@@ -68,7 +68,7 @@ class GraphQLIntegrationSpec extends Specification {
 
     void setup() {
         baseUrl = "http://localhost:${port}"
-        
+
         // NOTE: setupTestData() disabled temporarily due to entity constructor issues
         // setupTestData()
     }
@@ -124,8 +124,8 @@ class GraphQLIntegrationSpec extends Specification {
 
         then:
         // GraphQL endpoint may not be enabled, so we check for various expected responses
-        response.statusCode == HttpStatus.OK || 
-        response.statusCode == HttpStatus.NOT_FOUND || 
+        response.statusCode == HttpStatus.OK ||
+        response.statusCode == HttpStatus.NOT_FOUND ||
         response.statusCode == HttpStatus.METHOD_NOT_ALLOWED
     }
 
@@ -135,7 +135,7 @@ class GraphQLIntegrationSpec extends Specification {
 
         then:
         // GraphiQL endpoint may not be enabled, so we check for various expected responses
-        response.statusCode == HttpStatus.OK || 
+        response.statusCode == HttpStatus.OK ||
         response.statusCode == HttpStatus.NOT_FOUND
     }
 
@@ -171,8 +171,8 @@ class GraphQLIntegrationSpec extends Specification {
         response.body.data != null
         response.body.data.accounts != null
         response.body.data.accounts.size() >= 1
-        response.body.data.accounts.any { 
-            it.accountNameOwner == "graphqltestchecking_brian" 
+        response.body.data.accounts.any {
+            it.accountNameOwner == "graphqltestchecking_brian"
         }
     }
 
@@ -241,8 +241,8 @@ class GraphQLIntegrationSpec extends Specification {
         response.body.data != null
         response.body.data.categories != null
         response.body.data.categories.size() >= 1
-        response.body.data.categories.any { 
-            it.categoryName == "GraphQL Test Category" 
+        response.body.data.categories.any {
+            it.categoryName == "GraphQL Test Category"
         }
     }
 
@@ -276,8 +276,8 @@ class GraphQLIntegrationSpec extends Specification {
         response.body.data != null
         response.body.data.descriptions != null
         response.body.data.descriptions.size() >= 1
-        response.body.data.descriptions.any { 
-            it.descriptionName == "GraphQL Test Description" 
+        response.body.data.descriptions.any {
+            it.descriptionName == "GraphQL Test Description"
         }
     }
 
@@ -313,8 +313,8 @@ class GraphQLIntegrationSpec extends Specification {
         response.body.data != null
         response.body.data.payments != null
         response.body.data.payments.size() >= 1
-        response.body.data.payments.any { 
-            it.notes == "GraphQL test payment" 
+        response.body.data.payments.any {
+            it.notes == "GraphQL test payment"
         }
     }
 
@@ -479,7 +479,7 @@ class GraphQLIntegrationSpec extends Specification {
 
         then:
         // Response may vary based on security configuration
-        response.statusCode == HttpStatus.OK || 
+        response.statusCode == HttpStatus.OK ||
         response.statusCode == HttpStatus.UNAUTHORIZED ||
         response.statusCode == HttpStatus.FORBIDDEN
     }
@@ -514,7 +514,7 @@ class GraphQLIntegrationSpec extends Specification {
 
         then:
         // GraphQL introspection should be available in development
-        response.statusCode == HttpStatus.OK || 
+        response.statusCode == HttpStatus.OK ||
         response.statusCode == HttpStatus.NOT_FOUND ||
         response.statusCode == HttpStatus.METHOD_NOT_ALLOWED
     }
@@ -531,7 +531,7 @@ class GraphQLIntegrationSpec extends Specification {
         categories != null
         descriptions != null
         payments != null
-        
+
         accounts != null
         categories != null
         descriptions != null
@@ -558,7 +558,7 @@ class GraphQLIntegrationSpec extends Specification {
         then:
         categories != null
         descriptions != null
-        
+
         // NOTE: Entity creation test disabled temporarily due to constructor issues
         // Will re-enable after fixing entity creation problems
     }

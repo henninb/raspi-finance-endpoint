@@ -31,7 +31,7 @@ class BaseControllerSpec extends Specification {
     //@Value("\${server.port}")
     protected int port
     protected String username = "foo"
-    
+
     @Value('${custom.project.jwt.key}')
     protected String jwtKey
 
@@ -39,7 +39,7 @@ class BaseControllerSpec extends Specification {
 
     @Shared
     protected HttpHeaders headers = new HttpHeaders()
-    
+
     protected String generateJwtToken(String username) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.bytes)
         return Jwts.builder()

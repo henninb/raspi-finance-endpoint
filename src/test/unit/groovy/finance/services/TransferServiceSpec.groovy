@@ -26,9 +26,9 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "findAllTransfers - success"() {
         given:
-        def transfer1 = new Transfer(transferId: 1L, sourceAccount: "test_source", destinationAccount: "test_dest", 
+        def transfer1 = new Transfer(transferId: 1L, sourceAccount: "test_source", destinationAccount: "test_dest",
                                    amount: new BigDecimal("100.00"), transactionDate: Date.valueOf("2023-01-01"))
-        def transfer2 = new Transfer(transferId: 2L, sourceAccount: "test_source2", destinationAccount: "test_dest2", 
+        def transfer2 = new Transfer(transferId: 2L, sourceAccount: "test_source2", destinationAccount: "test_dest2",
                                    amount: new BigDecimal("200.00"), transactionDate: Date.valueOf("2023-01-02"))
         def transfers = [transfer1, transfer2]
 
@@ -44,11 +44,11 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "insertTransfer - success"() {
         given:
-        def transfer = new Transfer(sourceAccount: "test_source", destinationAccount: "test_dest", 
+        def transfer = new Transfer(sourceAccount: "test_source", destinationAccount: "test_dest",
                                   amount: new BigDecimal("100.00"), transactionDate: Date.valueOf("2023-01-01"))
         def sourceAccount = new Account(accountNameOwner: "test_source")
         def destAccount = new Account(accountNameOwner: "test_dest")
-        def savedTransfer = new Transfer(transferId: 1L, sourceAccount: "test_source", destinationAccount: "test_dest", 
+        def savedTransfer = new Transfer(transferId: 1L, sourceAccount: "test_source", destinationAccount: "test_dest",
                                        amount: new BigDecimal("100.00"), transactionDate: Date.valueOf("2023-01-01"))
 
         when:
@@ -69,9 +69,9 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "insertTransfer - source account not found"() {
         given:
-        def transfer = new Transfer(sourceAccount: "nonexistent", destinationAccount: "test_dest", 
+        def transfer = new Transfer(sourceAccount: "nonexistent", destinationAccount: "test_dest",
                                   amount: new BigDecimal("100.00"), transactionDate: Date.valueOf("2023-01-01"))
-        
+
         when:
         transferService.insertTransfer(transfer)
 
@@ -85,10 +85,10 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "insertTransfer - destination account not found"() {
         given:
-        def transfer = new Transfer(sourceAccount: "test_source", destinationAccount: "nonexistent", 
+        def transfer = new Transfer(sourceAccount: "test_source", destinationAccount: "nonexistent",
                                   amount: new BigDecimal("100.00"), transactionDate: Date.valueOf("2023-01-01"))
         def sourceAccount = new Account(accountNameOwner: "test_source")
-        
+
         when:
         transferService.insertTransfer(transfer)
 
@@ -128,7 +128,7 @@ class TransferServiceSpec extends BaseServiceSpec {
         result == false
     }
 
-    def "findByTransferId - success"() {    
+    def "findByTransferId - success"() {
         given:
         def transferId = 1L
         def transfer = new Transfer(transferId: transferId)

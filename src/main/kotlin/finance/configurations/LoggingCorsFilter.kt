@@ -34,7 +34,7 @@ open class LoggingCorsFilter(
         // Continue with the filter chain
         super.doFilterInternal(request, response, filterChain)
     }
-    
+
 
     private fun getHeadersInfo(request: HttpServletRequest): Map<String, String> {
         val headers = mutableMapOf<String, String>()

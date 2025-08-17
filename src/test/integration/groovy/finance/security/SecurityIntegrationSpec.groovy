@@ -50,8 +50,8 @@ class SecurityIntegrationSpec extends Specification {
     private String createJwtToken(String username, List<String> authorities = ["ROLE_USER"], boolean expired = false) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
         java.util.Date issuedAt = new java.util.Date()
-        java.util.Date expiration = expired ? 
-            java.util.Date.from(Instant.now().minus(1, ChronoUnit.HOURS)) : 
+        java.util.Date expiration = expired ?
+            java.util.Date.from(Instant.now().minus(1, ChronoUnit.HOURS)) :
             java.util.Date.from(Instant.now().plus(1, ChronoUnit.HOURS))
 
         return Jwts.builder()
@@ -126,13 +126,13 @@ class SecurityIntegrationSpec extends Specification {
 
         // Verify token contents
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
-        
+
         def adminClaims = Jwts.parser()
             .verifyWith(key)
             .build()
             .parseSignedClaims(adminToken)
             .payload
-        
+
         def userClaims = Jwts.parser()
             .verifyWith(key)
             .build()
@@ -183,9 +183,9 @@ class SecurityIntegrationSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/api/accounts", 
-            HttpMethod.GET, 
-            entity, 
+            "${baseUrl}/api/accounts",
+            HttpMethod.GET,
+            entity,
             String.class
         )
 
@@ -201,9 +201,9 @@ class SecurityIntegrationSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/api/accounts", 
-            HttpMethod.GET, 
-            entity, 
+            "${baseUrl}/api/accounts",
+            HttpMethod.GET,
+            entity,
             String.class
         )
 
@@ -219,9 +219,9 @@ class SecurityIntegrationSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/api/accounts", 
-            HttpMethod.GET, 
-            entity, 
+            "${baseUrl}/api/accounts",
+            HttpMethod.GET,
+            entity,
             String.class
         )
 
@@ -240,16 +240,16 @@ class SecurityIntegrationSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/api/accounts", 
-            HttpMethod.OPTIONS, 
-            entity, 
+            "${baseUrl}/api/accounts",
+            HttpMethod.OPTIONS,
+            entity,
             String.class
         )
 
         then:
         // For integration tests, CORS should be handled gracefully
         response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.NO_CONTENT || response.statusCode == HttpStatus.NOT_FOUND
-        
+
         // Check if CORS headers are present (when applicable)
         if (response.statusCode == HttpStatus.OK) {
             def corsHeaders = response.headers
@@ -280,17 +280,17 @@ class SecurityIntegrationSpec extends Specification {
 
         when:
         ResponseEntity<Map> response = restTemplate.exchange(
-            "${baseUrl}/api/login", 
-            HttpMethod.POST, 
-            entity, 
+            "${baseUrl}/api/login",
+            HttpMethod.POST,
+            entity,
             Map.class
         )
 
         then:
         // Login endpoint behavior varies based on implementation
         response.statusCode != null
-        response.statusCode == HttpStatus.OK || 
-        response.statusCode == HttpStatus.UNAUTHORIZED || 
+        response.statusCode == HttpStatus.OK ||
+        response.statusCode == HttpStatus.UNAUTHORIZED ||
         response.statusCode == HttpStatus.NOT_FOUND ||
         response.statusCode == HttpStatus.FORBIDDEN ||
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -302,7 +302,7 @@ class SecurityIntegrationSpec extends Specification {
 
         then:
         token.split('\\.').length == 3  // JWT should have 3 parts (header.payload.signature)
-        
+
         // Parse token to verify claims
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
         def claims = Jwts.parser()
@@ -310,7 +310,7 @@ class SecurityIntegrationSpec extends Specification {
             .build()
             .parseSignedClaims(token)
             .payload
-        
+
         claims.get("username") == "financeuser"
         claims.get("authorities") == ["ROLE_USER", "ROLE_FINANCE"]
         claims.getIssuedAt() != null
@@ -336,14 +336,14 @@ class SecurityIntegrationSpec extends Specification {
                 }
             }
         }
-        
+
         latch.await() // Wait for all threads to complete
         executor.shutdown()
 
         then:
         generatedTokens.size() == threadCount
         generatedTokens.unique().size() == threadCount  // All tokens should be unique
-        
+
         // Verify all tokens are valid
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
         generatedTokens.every { token ->
@@ -381,7 +381,7 @@ class SecurityIntegrationSpec extends Specification {
 
         // For integration tests, all endpoints are accessible due to permitAll() configuration
         protectedResponses.every { response ->
-            response.statusCode == HttpStatus.OK || 
+            response.statusCode == HttpStatus.OK ||
             response.statusCode == HttpStatus.NOT_FOUND ||
             response.statusCode == HttpStatus.FORBIDDEN
         }
@@ -404,22 +404,22 @@ class SecurityIntegrationSpec extends Specification {
 
         then:
         originalToken != newToken  // Tokens should be different due to different timestamps
-        
+
         // Verify both tokens are valid
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
-        
+
         def originalClaims = Jwts.parser()
             .verifyWith(key)
             .build()
             .parseSignedClaims(originalToken)
             .payload
-            
+
         def newClaims = Jwts.parser()
             .verifyWith(key)
             .build()
             .parseSignedClaims(newToken)
             .payload
-        
+
         originalClaims.get("username") == newClaims.get("username")
         originalClaims.get("username") == "refreshuser"
         originalClaims.getIssuedAt().before(newClaims.getIssuedAt())  // New token should have later timestamp

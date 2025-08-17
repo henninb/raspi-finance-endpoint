@@ -62,9 +62,11 @@ open class PaymentService(
             )
 
             if (duplicatePayment.isPresent) {
-                logger.error("Duplicate payment found: account=$newAccountNameOwner, date=$newDate, amount=$newAmount (excluding current payment $paymentId)")
+                val existingId = duplicatePayment.get().paymentId
+                val msg = "Duplicate payment conflict: account_name_owner='${newAccountNameOwner}', transaction_date='${newDate}', amount=${newAmount} already exists as payment_id=${existingId}. Unique key = (account_name_owner, transaction_date, amount)."
+                logger.error(msg + " (excluding current payment $paymentId)")
                 meterService.incrementExceptionThrownCounter("DuplicatePaymentException")
-                throw org.springframework.dao.DataIntegrityViolationException("Payment with same account, date, and amount already exists")
+                throw org.springframework.dao.DataIntegrityViolationException(msg)
             }
         }
 

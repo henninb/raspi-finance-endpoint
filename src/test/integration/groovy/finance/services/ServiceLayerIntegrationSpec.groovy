@@ -65,7 +65,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
         checkingAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
         checkingAccount.dateAdded = new Timestamp(System.currentTimeMillis())
-        
+
         Account savingsAccount = new Account(
             accountId: 0L,
             accountNameOwner: "savings_brian",
@@ -80,13 +80,13 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
         savingsAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
         savingsAccount.dateAdded = new Timestamp(System.currentTimeMillis())
-        
+
         try {
             accountService.insertAccount(checkingAccount)
         } catch (Exception e) {
             // Account might already exist, ignore
         }
-        
+
         try {
             accountService.insertAccount(savingsAccount)
         } catch (Exception e) {
@@ -368,7 +368,7 @@ class ServiceLayerIntegrationSpec extends Specification {
             dateAdded: new Timestamp(System.currentTimeMillis())
         )
         Transaction savedTransaction = transactionService.insertTransaction(testTransaction)
-        
+
         ReceiptImage testReceiptImage = new ReceiptImage(
             receiptImageId: 0L,
             transactionId: savedTransaction.transactionId,
@@ -449,8 +449,8 @@ class ServiceLayerIntegrationSpec extends Specification {
 
         then:
         def e = thrown(Exception)
-        e instanceof DataIntegrityViolationException || 
-        e instanceof RuntimeException || 
+        e instanceof DataIntegrityViolationException ||
+        e instanceof RuntimeException ||
         e instanceof jakarta.validation.ValidationException
     }
 

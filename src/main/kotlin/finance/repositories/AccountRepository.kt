@@ -36,7 +36,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
 
 
     @Query(
-        """SELECT COALESCE(SUM(CASE WHEN t.accountType = 'debit' THEN t.amount ELSE 0 END), 0) - 
+        """SELECT COALESCE(SUM(CASE WHEN t.accountType = 'debit' THEN t.amount ELSE 0 END), 0) -
               COALESCE(SUM(CASE WHEN t.accountType = 'credit' THEN t.amount ELSE 0 END), 0)
        FROM Transaction t
        WHERE t.transactionState = :transactionState
@@ -45,9 +45,9 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun sumOfAllTransactionsByTransactionStateJpql(@Param("transactionState") transactionState: String): BigDecimal
 
     @Query(
-        """SELECT a FROM Account a 
-       WHERE a.activeStatus = :activeStatus 
-       AND a.accountType = :accountType 
+        """SELECT a FROM Account a
+       WHERE a.activeStatus = :activeStatus
+       AND a.accountType = :accountType
        AND (a.outstanding > 0 OR a.future > 0 OR a.cleared > 0)
        ORDER BY a.accountNameOwner"""
     )

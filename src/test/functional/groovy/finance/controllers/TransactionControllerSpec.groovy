@@ -207,7 +207,7 @@ class TransactionControllerSpec extends BaseControllerSpec {
             .withGuid(transaction.guid)
             .withDescription('updated aliexpress.com')
             .build()
-            
+
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")

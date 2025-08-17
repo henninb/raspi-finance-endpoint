@@ -24,7 +24,7 @@ class TransactionController(private val transactionService: TransactionService, 
             logger.debug("Retrieving transactions for account: $accountNameOwner")
             val transactions: List<Transaction> =
                 transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
-            
+
             if (transactions.isEmpty()) {
                 logger.info("No transactions found for account: $accountNameOwner")
             } else {
@@ -45,7 +45,7 @@ class TransactionController(private val transactionService: TransactionService, 
             logger.debug("Calculating totals for account: $accountNameOwner")
             val results: Totals =
                 transactionService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
-            
+
             logger.info("Calculated totals for account $accountNameOwner: $results")
             ResponseEntity.ok(results)
         } catch (ex: Exception) {
@@ -173,11 +173,11 @@ class TransactionController(private val transactionService: TransactionService, 
             val accountNameOwner = payload["accountNameOwner"]
             val guid = payload["guid"]
             logger.info("Changing transaction account for guid $guid to accountNameOwner $accountNameOwner")
-            
+
             if (accountNameOwner.isNullOrBlank() || guid.isNullOrBlank()) {
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Both accountNameOwner and guid are required")
             }
-            
+
             val transactionResponse = transactionService.changeAccountNameOwner(payload)
             logger.info("Transaction account updated successfully for guid $guid")
             ResponseEntity.ok(transactionResponse)

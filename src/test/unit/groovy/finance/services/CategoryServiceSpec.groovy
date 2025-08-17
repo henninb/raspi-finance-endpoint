@@ -31,12 +31,12 @@ class CategoryServiceSpec extends BaseServiceSpec {
     void 'test - insert category empty categoryName'() {
         given:
         Category category = CategoryBuilder.builder().withCategory('').build()
-        
+
         // Create mock constraint violation
         ConstraintViolation<Category> violation = Mock(ConstraintViolation)
         violation.invalidValue >> ""
         violation.message >> "size must be between 3 and 40"
-        
+
         Set<ConstraintViolation<Category>> constraintViolations = [violation] as Set
 
         when:

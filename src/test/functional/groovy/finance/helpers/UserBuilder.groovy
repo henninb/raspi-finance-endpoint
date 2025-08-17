@@ -41,12 +41,12 @@ class UserBuilder {
         this.activeStatus = activeStatus
         return this
     }
-    
+
     UserBuilder withFirstName(String firstName) {
         this.firstName = firstName
         return this
     }
-    
+
     UserBuilder withLastName(String lastName) {
         this.lastName = lastName
         return this

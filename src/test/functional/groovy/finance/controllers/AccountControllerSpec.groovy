@@ -123,7 +123,7 @@ class AccountControllerSpec extends BaseControllerSpec {
     void 'should successfully delete account with cascade delete of related records'() {
         given:
         String referencedByTransaction = 'referenced_brian'  // Use existing account from data.sql
-        
+
         // Create a payment that references existing transactions from data.sql
         String paymentPayload = """
 {"accountNameOwner":"${referencedByTransaction}","sourceAccount":"${referencedByTransaction}","destinationAccount":"bank_brian","amount":50.00,"guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh","guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di","transactionDate":"2020-11-13"}
@@ -216,9 +216,9 @@ class AccountControllerSpec extends BaseControllerSpec {
                 .withAccountNameOwner('test_deactivate')
                 .withActiveStatus(true)
                 .build()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testAccount.toString())
-        
+
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
@@ -242,9 +242,9 @@ class AccountControllerSpec extends BaseControllerSpec {
                 .withAccountNameOwner('test_activate')
                 .withActiveStatus(false)
                 .build()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testAccount.toString())
-        
+
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")

@@ -144,7 +144,6 @@ git update-index --assume-unchanged env.secrets
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
-
 cat <<  'EOF' > "nginx.tmp"
 server_tokens off;
 
@@ -167,7 +166,6 @@ server {
 # vim: set ft=conf:
 EOF
 
-
 cat <<  'EOF' > "docker.tmp"
 FROM nginx:1.27.3-alpine
 
@@ -176,7 +174,6 @@ COPY nginx.tmp /etc/nginx/conf.d/default.conf
 COPY ssl/bhenning.fullchain.pem /etc/nginx/certs/
 COPY ssl/bhenning.privkey.pem /etc/nginx/certs/
 EOF
-
 
 # Build the project with gradle (excluding tests)
 log "Building project with gradle..."

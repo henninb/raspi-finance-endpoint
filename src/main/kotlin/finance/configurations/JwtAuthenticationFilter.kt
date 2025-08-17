@@ -71,7 +71,7 @@ class JwtAuthenticationFilter(
                 SecurityContextHolder.getContext().authentication = auth
 
                 // Log successful authentication and increment success counter
-                securityLogger.info("Authentication successful for user: {} from IP: {}", 
+                securityLogger.info("Authentication successful for user: {} from IP: {}",
                     username, getClientIpAddress(request))
                 Counter
                     .builder("authentication.success")
@@ -89,10 +89,10 @@ class JwtAuthenticationFilter(
                 // Log security event for failed authentication
                 val clientIp = getClientIpAddress(request)
                 val userAgent = request.getHeader("User-Agent") ?: "unknown"
-                
-                securityLogger.warn("JWT authentication failed from IP: {} with User-Agent: {}. Reason: {}", 
+
+                securityLogger.warn("JWT authentication failed from IP: {} with User-Agent: {}. Reason: {}",
                     clientIp, userAgent, ex.message)
-                
+
                 // Increment failure counter with detailed tags
                 Counter
                     .builder("authentication.failure")
@@ -106,7 +106,7 @@ class JwtAuthenticationFilter(
                     )
                     .register(meterRegistry)
                     .increment()
-                
+
                 // If token is invalid or expired, clear the context
                 SecurityContextHolder.clearContext()
             }
@@ -123,7 +123,7 @@ class JwtAuthenticationFilter(
         val xForwardedFor = request.getHeader("X-Forwarded-For")
         val xRealIp = request.getHeader("X-Real-IP")
         val xForwardedProto = request.getHeader("X-Forwarded-Proto")
-        
+
         return when {
             !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
             !xRealIp.isNullOrBlank() -> xRealIp

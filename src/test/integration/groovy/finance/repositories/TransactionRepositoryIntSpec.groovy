@@ -49,7 +49,7 @@ class TransactionRepositoryIntSpec extends Specification {
         testAccount.validationDate = new Timestamp(System.currentTimeMillis())
         testAccount.dateAdded = new Timestamp(System.currentTimeMillis())
         testAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
-        
+
         Account savedAccount = accountRepository.save(testAccount)
         testAccountId = savedAccount.accountId
     }

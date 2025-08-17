@@ -34,7 +34,7 @@ open class BaseController {
         val response = mapOf("response" to "BAD_REQUEST: ${throwable.javaClass.simpleName}")
         return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }
-    
+
     @ExceptionHandler(value = [ValidationException::class])
     fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, String>> {
         logSecureError("VALIDATION_EXCEPTION", throwable, HttpStatus.BAD_REQUEST)
@@ -77,22 +77,22 @@ open class BaseController {
         val method = request?.method ?: "unknown"
         val uri = request?.requestURI ?: "unknown"
         val userAgent = sanitizeHeader(request?.getHeader("User-Agent"))
-        
+
         val logMessage = buildString {
             append("CONTROLLER_ERROR type=$errorType status=${statusCode.value()} ")
             append("method=$method uri=$uri ip=$clientIp ")
             append("exception=${throwable.javaClass.simpleName}")
             if (!userAgent.isNullOrBlank()) append(" userAgent='$userAgent'")
         }
-        
+
         when {
             statusCode.is5xxServerError -> securityLogger.error(logMessage, throwable)
-            statusCode == HttpStatus.UNAUTHORIZED || statusCode == HttpStatus.FORBIDDEN -> 
+            statusCode == HttpStatus.UNAUTHORIZED || statusCode == HttpStatus.FORBIDDEN ->
                 securityLogger.warn(logMessage)
             else -> logger.info(logMessage)
         }
     }
-    
+
     private fun getCurrentHttpRequest(): HttpServletRequest? {
         return try {
             val requestAttributes = RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes
@@ -101,20 +101,20 @@ open class BaseController {
             null
         }
     }
-    
+
     private fun getClientIpAddress(request: HttpServletRequest?): String {
         if (request == null) return "unknown"
-        
+
         val xForwardedFor = request.getHeader("X-Forwarded-For")
         val xRealIp = request.getHeader("X-Real-IP")
-        
+
         return when {
             !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
             !xRealIp.isNullOrBlank() -> xRealIp
             else -> request.remoteAddr ?: "unknown"
         }
     }
-    
+
     private fun sanitizeHeader(header: String?): String? {
         return header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
     }

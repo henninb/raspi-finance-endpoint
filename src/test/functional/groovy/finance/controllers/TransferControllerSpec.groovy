@@ -71,8 +71,8 @@ class TransferControllerSpec extends BaseControllerSpec {
         jsonResponse.destinationAccount == "bank_brian"
         jsonResponse.amount == 150.75
         jsonResponse.transferId != null
-        
-        
+
+
         cleanup:
         def extractedTransferId = jsonResponse.transferId
         createdTransferId = extractedTransferId
