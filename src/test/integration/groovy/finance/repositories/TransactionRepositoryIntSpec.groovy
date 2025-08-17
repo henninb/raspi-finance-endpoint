@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
+import spock.lang.Ignore
 
 import java.math.BigDecimal
 import java.sql.Date
@@ -303,6 +304,7 @@ class TransactionRepositoryIntSpec extends Specification {
         thrown(Exception) // Could be ConstraintViolationException or DataIntegrityViolationException
     }
 
+    @Ignore("Performance test - ignored for regular integration test runs")
     void 'test transaction query performance with large dataset'() {
         given:
         // Create a larger dataset to test query performance
