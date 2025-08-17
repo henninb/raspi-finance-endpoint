@@ -50,8 +50,8 @@ class PendingTransactionControllerSpec extends BaseControllerSpec {
         jsonResponse.description == "functional test pending transaction"
         jsonResponse.amount == 75.25
         jsonResponse.pendingTransactionId != null
-        
-        
+
+
         cleanup:
         def extractedId = jsonResponse.pendingTransactionId
         createdPendingTransactionId = extractedId

@@ -120,15 +120,15 @@ class SecurityIntegrationWorkingSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/accounts", 
-            HttpMethod.OPTIONS, 
-            entity, 
+            "${baseUrl}/accounts",
+            HttpMethod.OPTIONS,
+            entity,
             String.class
         )
 
         then:
         // CORS preflight requests can return various status codes depending on configuration
-        response.statusCode == HttpStatus.OK || 
+        response.statusCode == HttpStatus.OK ||
         response.statusCode == HttpStatus.NO_CONTENT ||
         response.statusCode == HttpStatus.UNAUTHORIZED ||
         response.statusCode == HttpStatus.FORBIDDEN ||
@@ -143,9 +143,9 @@ class SecurityIntegrationWorkingSpec extends Specification {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-            "${baseUrl}/actuator/health", 
-            HttpMethod.GET, 
-            entity, 
+            "${baseUrl}/actuator/health",
+            HttpMethod.GET,
+            entity,
             String.class
         )
 
@@ -174,7 +174,7 @@ class SecurityIntegrationWorkingSpec extends Specification {
 
         // Protected endpoints should require authentication
         protectedResponses.every { response ->
-            response.statusCode == HttpStatus.UNAUTHORIZED || 
+            response.statusCode == HttpStatus.UNAUTHORIZED ||
             response.statusCode == HttpStatus.FORBIDDEN ||
             response.statusCode == HttpStatus.NOT_FOUND
         }
@@ -245,7 +245,7 @@ class SecurityIntegrationWorkingSpec extends Specification {
                     user.firstName = "Concurrent"
                     user.lastName = "User${threadIndex}"
                     user.activeStatus = true
-                    
+
                     User savedUser = userService.signUp(user)
                     createdUsernames.add(savedUser.username)
                 } catch (Exception e) {

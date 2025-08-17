@@ -112,11 +112,11 @@ class ProcessorIntegrationSpec extends Specification {
         exchange.getIn().getBody() instanceof Transaction[]
         List<Transaction> transactions = (exchange.getIn().getBody() as Transaction[]).toList()
         transactions.size() == 2
-        
+
         transactions[0].description == "Multi JSON Test 1"
         transactions[0].amount == 25.50
         transactions[0].transactionType == TransactionType.Income
-        
+
         transactions[1].description == "Multi JSON Test 2"
         transactions[1].amount == 75.25
         transactions[1].transactionState == TransactionState.Outstanding
@@ -146,7 +146,7 @@ class ProcessorIntegrationSpec extends Specification {
 
         then:
         noExceptionThrown()
-        
+
         // Verify transaction was saved to database
         Optional<Transaction> savedTransaction = transactionRepository.findByGuid(guid)
         savedTransaction.isPresent()
@@ -185,7 +185,7 @@ class ProcessorIntegrationSpec extends Specification {
 
         then:
         noExceptionThrown()
-        
+
         // Verify all transactions were saved
         testTransactions.each { transaction ->
             Optional<Transaction> savedTransaction = transactionRepository.findByGuid(transaction.guid as String)
@@ -224,7 +224,7 @@ class ProcessorIntegrationSpec extends Specification {
     void 'test exception processor with error handling'() {
         given:
         Exception testException = new RuntimeException("Test exception for processor")
-        
+
         Exchange exchange = new DefaultExchange(camelContext)
         exchange.setException(testException)
         exchange.getIn().setBody("Some test data that caused an error")
@@ -268,7 +268,7 @@ class ProcessorIntegrationSpec extends Specification {
     void 'test processor error handling and recovery'() {
         given:
         def malformedJson = """{ "invalid": "json", "missing": "bracket" """
-        
+
         Exchange exchange = new DefaultExchange(camelContext)
         exchange.getIn().setBody(malformedJson)
 
@@ -367,7 +367,7 @@ class ProcessorIntegrationSpec extends Specification {
         exchange.getIn().getBody() instanceof Transaction[]
         List<Transaction> transactions = (exchange.getIn().getBody() as Transaction[]).toList()
         transactions.size() == 3
-        
+
         // Verify different transaction types and states are processed correctly
         transactions.find { it.transactionType == TransactionType.Income } != null
         transactions.find { it.transactionType == TransactionType.Expense } != null
@@ -397,7 +397,7 @@ class ProcessorIntegrationSpec extends Specification {
 
                 Exchange exchange = new DefaultExchange(camelContext)
                 exchange.getIn().setBody(transactionJson)
-                
+
                 try {
                     jsonTransactionProcessor.process(exchange)
                 } catch (Exception e) {

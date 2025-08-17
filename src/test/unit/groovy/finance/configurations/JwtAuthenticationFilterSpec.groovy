@@ -26,7 +26,7 @@ class JwtAuthenticationFilterSpec extends Specification {
     def setup() {
         jwtAuthenticationFilter = new JwtAuthenticationFilter(environmentMock, meterRegistry)
         jwtAuthenticationFilter.jwtKey = "mySecretKeyForJwtTokensThisKeyMustBe256BitsOrMore"
-        
+
         // Clear security context before each test
         SecurityContextHolder.clearContext()
     }
@@ -79,7 +79,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String invalidToken = "invalid.jwt.token"
         Cookie tokenCookie = new Cookie("token", invalidToken)
         Cookie[] cookies = [tokenCookie]
-        
+
         requestMock.cookies >> cookies
         requestMock.remoteAddr >> "192.168.1.100"
         requestMock.getHeader("User-Agent") >> "Mozilla/5.0 (Test Browser)"
@@ -100,7 +100,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String expiredToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.invalid"
         Cookie tokenCookie = new Cookie("token", expiredToken)
         Cookie[] cookies = [tokenCookie]
-        
+
         requestMock.cookies >> cookies
         requestMock.remoteAddr >> "10.0.0.50"
         requestMock.getHeader("User-Agent") >> "Mozilla/5.0 (Malicious Browser)"
@@ -121,7 +121,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String validToken = generateValidJwtToken("testuser")
         Cookie tokenCookie = new Cookie("token", validToken)
         Cookie[] cookies = [tokenCookie]
-        
+
         requestMock.cookies >> cookies
         requestMock.remoteAddr >> "192.168.1.200"
         requestMock.getHeader("User-Agent") >> "Mozilla/5.0 (Valid Browser)"
@@ -196,7 +196,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String invalidToken = "malicious.token.attempt"
         Cookie tokenCookie = new Cookie("token", invalidToken)
         Cookie[] cookies = [tokenCookie]
-        
+
         requestMock.cookies >> cookies
         requestMock.remoteAddr >> "192.168.1.100"
         requestMock.getHeader("User-Agent") >> "Mozilla/5.0 (Suspicious Browser with very long user agent string that should be truncated in metrics for security reasons and to prevent metric explosion)"
@@ -218,7 +218,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String invalidToken = "invalid.jwt.token"
         Cookie tokenCookie = new Cookie("token", invalidToken)
         Cookie[] cookies = [tokenCookie]
-        
+
         requestMock.cookies >> cookies
         requestMock.remoteAddr >> "192.168.1.100"
         requestMock.getHeader("User-Agent") >> "Test Browser"
@@ -231,7 +231,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         then:
         1 * filterChainMock.doFilter(requestMock, responseMock)
         SecurityContextHolder.context.authentication == null
-        
+
         // Verify that failure metrics were recorded
         def failureCounter = meterRegistry.find("authentication.failure").counter()
         failureCounter != null
@@ -243,7 +243,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String validToken = generateValidJwtToken("testuser")
         Cookie tokenCookie = new Cookie("token", validToken)
         Cookie[] cookies = [tokenCookie]
-        
+
         requestMock.cookies >> cookies
         requestMock.remoteAddr >> "192.168.1.200"
         requestMock.getHeader("User-Agent") >> "Valid Browser"
@@ -257,7 +257,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         1 * filterChainMock.doFilter(requestMock, responseMock)
         SecurityContextHolder.context.authentication != null
         SecurityContextHolder.context.authentication.name == "testuser"
-        
+
         // Verify that success metrics were recorded
         def successCounter = meterRegistry.find("authentication.success").counter()
         successCounter != null
@@ -265,11 +265,11 @@ class JwtAuthenticationFilterSpec extends Specification {
     }
 
     private String generateValidJwtToken(String username) {
-        // Generate a simple valid JWT token for testing purposes  
+        // Generate a simple valid JWT token for testing purposes
         def key = io.jsonwebtoken.security.Keys.hmacShaKeyFor("mySecretKeyForJwtTokensThisKeyMustBe256BitsOrMore".getBytes())
         def now = new Date()
         def expiration = new Date(now.time + 3600000) // 1 hour from now
-        
+
         return io.jsonwebtoken.Jwts.builder()
             .claim("username", username)
             .subject(username)

@@ -33,7 +33,7 @@ class UserServiceSpec extends BaseServiceSpec {
         then:
         1 * userRepositoryMock.findByUsername(username) >> Optional.of(dbUser)
         1 * passwordEncoderMock.matches(rawPassword, hashedPassword) >> true
-        
+
         result.isPresent()
         result.get().username == username
     }
@@ -52,7 +52,7 @@ class UserServiceSpec extends BaseServiceSpec {
         then:
         1 * userRepositoryMock.findByUsername(username) >> Optional.of(dbUser)
         1 * passwordEncoderMock.matches(rawPassword, hashedPassword) >> false
-        
+
         !result.isPresent()
     }
 
@@ -68,7 +68,7 @@ class UserServiceSpec extends BaseServiceSpec {
         then:
         1 * userRepositoryMock.findByUsername(username) >> Optional.empty()
         0 * passwordEncoderMock.matches(*_)
-        
+
         !result.isPresent()
     }
 
@@ -87,7 +87,7 @@ class UserServiceSpec extends BaseServiceSpec {
         1 * userRepositoryMock.findByUsername(username) >> Optional.empty()
         1 * passwordEncoderMock.encode(rawPassword) >> hashedPassword
         1 * userRepositoryMock.saveAndFlush(inputUser) >> savedUser
-        
+
         result.userId == 1L
         result.username == username
         inputUser.password == hashedPassword // password should be hashed
@@ -107,7 +107,7 @@ class UserServiceSpec extends BaseServiceSpec {
         1 * userRepositoryMock.findByUsername(username) >> Optional.of(existingUser)
         0 * passwordEncoderMock.encode(*_)
         0 * userRepositoryMock.saveAndFlush(*_)
-        
+
         thrown(IllegalArgumentException)
     }
 
@@ -122,7 +122,7 @@ class UserServiceSpec extends BaseServiceSpec {
 
         then:
         1 * userRepositoryMock.findByUsername(username) >> Optional.of(dbUser)
-        
+
         result != null
         result.username == username
         result.password == "" // password should be cleared for security
@@ -137,7 +137,7 @@ class UserServiceSpec extends BaseServiceSpec {
 
         then:
         1 * userRepositoryMock.findByUsername(username) >> Optional.empty()
-        
+
         result == null
     }
 }

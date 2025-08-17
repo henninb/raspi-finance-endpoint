@@ -5,11 +5,11 @@ This document contains a comprehensive security assessment of the raspi-finance-
 ## CRITICAL SEVERITY VULNERABILITIES
 
 ### 1. Hardcoded JWT Secret Key in Configuration (CVE Risk)
-**Location**: `src/main/resources/application-prod.yml:90`  
-**Risk Level**: CRITICAL  
+**Location**: `src/main/resources/application-prod.yml:90`
+**Risk Level**: CRITICAL
 **Impact**: Complete authentication bypass, session hijacking, privilege escalation
 
-**Details**: 
+**Details**:
 The JWT signing key is hardcoded directly in the configuration file:
 ```yaml
 custom:
@@ -27,8 +27,8 @@ custom:
 - Never commit secrets to version control
 
 ### 2. Overly Permissive CORS Configuration
-**Location**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt:47-74`  
-**Risk Level**: CRITICAL  
+**Location**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt:47-74`
+**Risk Level**: CRITICAL
 **Impact**: Cross-Site Request Forgery (CSRF), session hijacking, data exfiltration
 
 **Details**:
@@ -54,8 +54,8 @@ allowCredentials = true
 - Consider implementing Origin validation middleware
 
 ### 3. Deprecated JWT Library with Known Vulnerabilities
-**Location**: `build.gradle:155`  
-**Risk Level**: CRITICAL  
+**Location**: `build.gradle:155`
+**Risk Level**: CRITICAL
 **Impact**: JWT verification bypass, authentication compromise
 
 **Details**:
@@ -74,8 +74,8 @@ implementation 'io.jsonwebtoken:jjwt:0.9.1'
 ## HIGH SEVERITY VULNERABILITIES
 
 ### 4. Weak JWT Implementation - Algorithm Confusion Risk
-**Location**: `src/main/kotlin/finance/controllers/LoginController.kt:42-47`  
-**Risk Level**: HIGH  
+**Location**: `src/main/kotlin/finance/controllers/LoginController.kt:42-47`
+**Risk Level**: HIGH
 **Impact**: Authentication bypass via algorithm substitution attacks
 
 **Details**:
@@ -99,8 +99,8 @@ val token = Jwts.builder()
 - Implement algorithm whitelist
 
 ### 5. Password Logging in Plain Text
-**Location**: `src/main/kotlin/finance/services/UserService.kt:23`  
-**Risk Level**: HIGH  
+**Location**: `src/main/kotlin/finance/services/UserService.kt:23`
+**Risk Level**: HIGH
 **Impact**: Credential disclosure, audit trail compromise
 
 **Details**:
@@ -116,8 +116,8 @@ logger.info("user-pass: ${user.password}")
 - Implement log sanitization to prevent credential leakage
 
 ### 6. Information Disclosure Through Detailed Error Messages
-**Location**: Multiple controller classes  
-**Risk Level**: HIGH  
+**Location**: Multiple controller classes
+**Risk Level**: HIGH
 **Impact**: Information leakage, system reconnaissance
 
 **Details**:
@@ -139,8 +139,8 @@ throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retri
 ## MEDIUM SEVERITY VULNERABILITIES
 
 ### 7. Insecure Cookie Configuration in Development Mode
-**Location**: `src/main/kotlin/finance/controllers/LoginController.kt:54-66`  
-**Risk Level**: MEDIUM  
+**Location**: `src/main/kotlin/finance/controllers/LoginController.kt:54-66`
+**Risk Level**: MEDIUM
 **Impact**: Session hijacking, CSRF attacks in development environments
 
 **Details**:
@@ -164,8 +164,8 @@ val cookieBuilder = ResponseCookie.from("token", token)
 - Consider separate cookie policies for different environments
 
 ### 8. Missing Rate Limiting
-**Location**: All API endpoints  
-**Risk Level**: MEDIUM  
+**Location**: All API endpoints
+**Risk Level**: MEDIUM
 **Impact**: Brute force attacks, DoS, resource exhaustion
 
 **Details**: No rate limiting implemented on any endpoints, including authentication endpoints.
@@ -176,8 +176,8 @@ val cookieBuilder = ResponseCookie.from("token", token)
 - Consider implementing CAPTCHA for repeated failures
 
 ### 9. Overly Permissive Integration Test Security
-**Location**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt:82-95`  
-**Risk Level**: MEDIUM  
+**Location**: `src/main/kotlin/finance/configurations/WebSecurityConfig.kt:82-95`
+**Risk Level**: MEDIUM
 **Impact**: Accidental exposure if integration profile used in production
 
 **Details**:
@@ -196,8 +196,8 @@ open fun intSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
 - Consider using separate security configurations
 
 ### 10. Weak Input Validation on File Uploads
-**Location**: `src/main/kotlin/finance/controllers/TransactionController.kt:181-195`  
-**Risk Level**: MEDIUM  
+**Location**: `src/main/kotlin/finance/controllers/TransactionController.kt:181-195`
+**Risk Level**: MEDIUM
 **Impact**: Malicious file upload, storage exhaustion
 
 **Details**:
@@ -223,8 +223,8 @@ fun updateTransactionReceiptImageByGuid(
 ## LOW SEVERITY VULNERABILITIES
 
 ### 11. Potential SQL Injection via Native Queries
-**Location**: `src/main/kotlin/finance/repositories/TransactionRepository.kt:38-44`  
-**Risk Level**: LOW  
+**Location**: `src/main/kotlin/finance/repositories/TransactionRepository.kt:38-44`
+**Risk Level**: LOW
 **Impact**: Data manipulation if parameters are not properly sanitized
 
 **Details**:
@@ -243,8 +243,8 @@ fun updateTransactionReceiptImageByGuid(
 - Regular security testing of query parameters
 
 ### 12. Verbose Logging May Expose Sensitive Data
-**Location**: `src/main/kotlin/finance/configurations/RequestLoggingFilter.kt:32`  
-**Risk Level**: LOW  
+**Location**: `src/main/kotlin/finance/configurations/RequestLoggingFilter.kt:32`
+**Risk Level**: LOW
 **Impact**: Information disclosure through logs
 
 **Details**:
@@ -262,8 +262,8 @@ logger.info("Request URI: ${request.requestURI}, Raw Payload: $payload")
 - Exclude sensitive endpoints from request logging
 
 ### 13. Missing Security Headers
-**Location**: Security configuration  
-**Risk Level**: LOW  
+**Location**: Security configuration
+**Risk Level**: LOW
 **Impact**: Various client-side attacks
 
 **Details**: Missing implementation of security headers:
@@ -278,8 +278,8 @@ logger.info("Request URI: ${request.requestURI}, Raw Payload: $payload")
 - Configure CSP policies appropriate for the application
 
 ### 14. Dependency Vulnerabilities
-**Location**: `build.gradle`  
-**Risk Level**: LOW  
+**Location**: `build.gradle`
+**Risk Level**: LOW
 **Impact**: Various depending on specific vulnerabilities
 
 **Details**: Multiple outdated dependencies detected:
@@ -295,8 +295,8 @@ logger.info("Request URI: ${request.requestURI}, Raw Payload: $payload")
 ## CONFIGURATION ISSUES
 
 ### 15. SSL/TLS Configuration Issues
-**Location**: `src/main/resources/application-prod.yml:8-15`  
-**Risk Level**: MEDIUM  
+**Location**: `src/main/resources/application-prod.yml:8-15`
+**Risk Level**: MEDIUM
 **Impact**: Weak encryption, protocol downgrade attacks
 
 **Details**:
@@ -316,8 +316,8 @@ ssl:
 - Implement HSTS headers
 
 ### 16. Database Connection Security
-**Location**: Configuration files  
-**Risk Level**: LOW  
+**Location**: Configuration files
+**Risk Level**: LOW
 **Impact**: Database connection interception
 
 **Details**: Database credentials passed via environment variables but no mention of connection encryption.
@@ -364,6 +364,6 @@ ssl:
 
 ---
 
-**Report Generated**: 2025-08-12  
-**Assessment Scope**: Complete Kotlin codebase analysis  
+**Report Generated**: 2025-08-12
+**Assessment Scope**: Complete Kotlin codebase analysis
 **Risk Assessment**: Based on OWASP Top 10 and industry security standards

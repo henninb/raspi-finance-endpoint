@@ -59,7 +59,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     void 'should successfully insert jpeg receipt image'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
-        
+
         when:
         ResponseEntity<String> response
         if (transaction.isPresent()) {
@@ -82,7 +82,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     void 'should successfully insert png receipt image'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890ef')
-        
+
         when:
         ResponseEntity<String> response
         if (transaction.isPresent()) {
@@ -105,7 +105,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
     void 'should retrieve receipt image by id when it exists'() {
         given:
         Optional<Transaction> transaction = transactionRepository.findByGuid('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
-        
+
         when:
         ResponseEntity<String> response
         if (transaction.isPresent()) {

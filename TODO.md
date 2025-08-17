@@ -1,5 +1,5 @@
 ## 1. Controller Test Coverage (Spock)
-Role: Expert Spock tester  
+Role: Expert Spock tester
 Instructions:
 - Achieve **100% test coverage** for all controllers without changing functionality.
 - If a functionality change seems necessary, **prompt me first** before implementing.
@@ -9,7 +9,7 @@ Instructions:
 ---
 
 ## 2. PostgreSQL Data Cleanup & Row Merging
-Role: Expert PostgreSQL data maintainer  
+Role: Expert PostgreSQL data maintainer
 Instructions:
 - Access DB: `docker exec -it postgresql-server psql` on host `henninb@debian-dockerserver`.
 - Correct misspellings in: `t_description`, `t_category`, and `t_description` (duplicate intentional).
@@ -21,7 +21,7 @@ Instructions:
 ---
 
 ## 3. Account Deactivation/Activation Feature
-Role: Backend feature implementer (TDD)  
+Role: Backend feature implementer (TDD)
 Instructions:
 - Add **account deactivation/reactivation** in controller, service, and repository.
 - Default queries: fetch only `active = true` accounts.
@@ -31,10 +31,10 @@ Instructions:
 ---
 
 ## 4. API Security Review & Fixes
-Role: API security expert  
+Role: API security expert
 Instructions:
 - Review API for vulnerabilities without breaking existing features.
-- Validate changes against project:  
+- Validate changes against project:
   `~/projects/github.com/henninb/nextjs-website`
 - Improve security beyond current CORS policy if needed.
 - Ensure **JWT auth** is secure in storage, transmission, and validation.
@@ -247,7 +247,7 @@ Logging & monitoring gaps — inability to detect or audit malicious behavior.
    class GlobalExceptionHandler {
        @ExceptionHandler(TransactionNotFoundException::class)
        fun handleTransactionNotFound(ex: TransactionNotFoundException): ResponseEntity<ErrorResponse>
-       
+
        @ExceptionHandler(JwtException::class)
        fun handleJwtException(ex: JwtException): ResponseEntity<ErrorResponse>
    }
@@ -357,7 +357,7 @@ Professional review of Spring Boot controllers revealed both **correct** and **p
 
 #### **404 NOT_FOUND Usage (Excellent)**
 - **AccountController.kt:88-91, 131-134**: Proper 404 for missing accounts
-- **CategoryController.kt:42-45, 109-112**: Correct 404 for missing categories  
+- **CategoryController.kt:42-45, 109-112**: Correct 404 for missing categories
 - **TransactionController.kt:65-69, 207-210**: Appropriate 404 for missing transactions
 - **ParameterController.kt:43-46, 109-112**: Good 404 for missing parameters
 - **DescriptionController.kt:60-63, 100-103**: Proper 404 for missing descriptions
@@ -366,14 +366,14 @@ Professional review of Spring Boot controllers revealed both **correct** and **p
 - **AccountController.kt:110-113**: DataIntegrityViolationException → 409 CONFLICT
 - **CategoryController.kt:88-91**: Duplicate category handling
 - **TransactionController.kt:129-132**: Duplicate transaction handling
-- **ParameterController.kt:65-68**: Duplicate parameter handling  
+- **ParameterController.kt:65-68**: Duplicate parameter handling
 - **DescriptionController.kt:82-85**: Duplicate description handling
 - **UserController.kt:30-33**: Duplicate user handling
 
 ### **❌ Critical Issues Found:**
 
 #### **1. Inappropriate BAD_REQUEST (400) Usage**
-**Location**: Multiple controllers  
+**Location**: Multiple controllers
 **Issue**: Catching `ResponseStatusException` and re-throwing as BAD_REQUEST
 ```kotlin
 // INCORRECT PATTERN - AccountController.kt:113-116
@@ -381,46 +381,46 @@ Professional review of Spring Boot controllers revealed both **correct** and **p
     throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert account: ${ex.message}", ex)
 }
 ```
-**Problem**: This converts legitimate 500 errors to 400, misleading clients about error nature  
+**Problem**: This converts legitimate 500 errors to 400, misleading clients about error nature
 **Severity**: **HIGH** - Violates HTTP semantics
 
 #### **2. Missing Input Validation Error Handling**
-**Location**: `TransactionController.kt:171-173`  
+**Location**: `TransactionController.kt:171-173`
 **Issue**: Manual null/blank checks throw BAD_REQUEST, but missing comprehensive validation
 ```kotlin
 if (accountNameOwner.isNullOrBlank() || guid.isNullOrBlank()) {
     throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Both accountNameOwner and guid are required")
 }
 ```
-**Problem**: Inconsistent validation approach across endpoints  
+**Problem**: Inconsistent validation approach across endpoints
 **Severity**: **MEDIUM**
 
 #### **3. Generic Exception Handling Issues**
-**Location**: Multiple controllers (UpdateAccount, UpdateCategory, etc.)  
+**Location**: Multiple controllers (UpdateAccount, UpdateCategory, etc.)
 **Issue**: All exceptions → 500 INTERNAL_SERVER_ERROR without differentiation
 ```kotlin
 } catch (ex: Exception) {
     throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account: ${ex.message}", ex)
 }
 ```
-**Problem**: Doesn't distinguish between client errors (400) and server errors (500)  
+**Problem**: Doesn't distinguish between client errors (400) and server errors (500)
 **Severity**: **MEDIUM**
 
 #### **4. TransactionController Specific Issues**
-**Location**: `TransactionController.kt:110-117`  
+**Location**: `TransactionController.kt:110-117`
 **Issue**: IllegalArgumentException correctly mapped to 400, but inconsistent with other controllers
 ```kotlin
 } catch (ex: IllegalArgumentException) {
     throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid transaction state: $transactionStateValue", ex)
 }
 ```
-**Problem**: This is correct, but other controllers don't handle IllegalArgumentException  
+**Problem**: This is correct, but other controllers don't handle IllegalArgumentException
 **Severity**: **LOW** - Inconsistency issue
 
 ### **🔧 Recommended Fixes:**
 
 #### **Priority 1: Fix ResponseStatusException Re-throwing**
-**Controllers**: AccountController, CategoryController, DescriptionController, ParameterController  
+**Controllers**: AccountController, CategoryController, DescriptionController, ParameterController
 **Action**: Remove catch blocks that re-throw ResponseStatusException as BAD_REQUEST
 ```kotlin
 // REMOVE THIS PATTERN:
@@ -570,7 +570,7 @@ This document outlines the implementation plan for enabling Cross-Site Request F
 ```kotlin
 allowedHeaders = listOf(
     "Content-Type",
-    "Accept", 
+    "Accept",
     "Cookie",
     "X-Requested-With",
     "X-CSRF-TOKEN"  // ADD THIS
@@ -687,7 +687,7 @@ allowedHeaders = listOf(
 
 #### High Risk: Application Breakage
 **Risk**: CSRF implementation breaks existing functionality
-**Mitigation**: 
+**Mitigation**:
 - Comprehensive testing in staging
 - Gradual rollout strategy
 - Immediate rollback capability
@@ -743,7 +743,7 @@ CSRF_ENABLED=true                    # Production: true, Dev: false
 CSRF_TOKEN_VALIDITY_HOURS=24         # Token lifetime
 CSRF_SECURE_COOKIE=true              # Production: true, Dev: false
 
-# Frontend  
+# Frontend
 NEXT_PUBLIC_CSRF_ENABLED=true        # Enable CSRF handling
 CSRF_TOKEN_REFRESH_INTERVAL=3600000  # 1 hour in milliseconds
 ```
@@ -828,7 +828,7 @@ CSRF_TOKEN_REFRESH_INTERVAL=3600000  # 1 hour in milliseconds
 
 #### Technical Review
 - [ ] Security Engineering Team
-- [ ] Backend Development Team  
+- [ ] Backend Development Team
 - [ ] Frontend Development Team
 - [ ] DevOps/Infrastructure Team
 
@@ -844,9 +844,9 @@ CSRF_TOKEN_REFRESH_INTERVAL=3600000  # 1 hour in milliseconds
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-08-14  
-**Next Review**: 2025-09-14  
+**Document Version**: 1.0
+**Last Updated**: 2025-08-14
+**Next Review**: 2025-09-14
 **Owner**: Security Engineering Team
 
 

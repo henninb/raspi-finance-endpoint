@@ -74,7 +74,7 @@ class DatabaseResilienceIntSpec extends Specification {
         retry.name == "database"
         retry.retryConfig.maxAttempts == 3
         retry.retryConfig.intervalBiFunction != null
-        // The wait duration is 1 second (1000ms) 
+        // The wait duration is 1 second (1000ms)
         retry.retryConfig.intervalBiFunction.apply(1, null) >= 1000L
     }
 
@@ -121,7 +121,7 @@ class DatabaseResilienceIntSpec extends Specification {
         given:
         Retry retry = databaseRetry
         int attemptCounter = 0
-        
+
         when:
         String result = retry.executeSupplier {
             attemptCounter++
@@ -147,7 +147,7 @@ class DatabaseResilienceIntSpec extends Specification {
 
         when:
         CompletableFuture<String> timedOperation = timeLimiter.executeCompletionStage(
-            scheduledExecutorService, 
+            scheduledExecutorService,
             { futureOperation }
         ).toCompletableFuture()
         String result = timedOperation.get(5, TimeUnit.SECONDS)
@@ -234,10 +234,10 @@ class DatabaseResilienceIntSpec extends Specification {
     void 'test concurrent database operations with resilience'() {
         given:
         List<CompletableFuture<Account>> futures = []
-        
+
         when:
         // Execute multiple concurrent database operations
-        def concurrentNames = ["concurrenta_test", "concurrentb_test", "concurrentc_test", "concurrentd_test", "concurrente_test", 
+        def concurrentNames = ["concurrenta_test", "concurrentb_test", "concurrentc_test", "concurrentd_test", "concurrente_test",
                                "concurrentf_test", "concurrentg_test", "concurrenth_test", "concurrenti_test", "concurrentj_test"]
         for (int i = 0; i < 10; i++) {
             final int index = i

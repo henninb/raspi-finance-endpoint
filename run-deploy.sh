@@ -5,6 +5,6 @@ if command -v rsync; then
 else
   echo "rsync is not installed."
 fi
-# scp -p build/libs/raspi-finance-endpoint.jar 
+# scp -p build/libs/raspi-finance-endpoint.jar
 
 exit 0

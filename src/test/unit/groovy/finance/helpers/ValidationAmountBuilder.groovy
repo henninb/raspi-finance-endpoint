@@ -14,7 +14,7 @@ class ValidationAmountBuilder {
     static ValidationAmountBuilder builder() {
         return new ValidationAmountBuilder()
     }
-    
+
     ValidationAmount build() {
         return new ValidationAmount().with {
             accountId = this.accountId

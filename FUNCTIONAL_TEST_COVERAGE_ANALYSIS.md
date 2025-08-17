@@ -72,7 +72,7 @@ Current functional test coverage is **~40%** of total endpoints. While basic CRU
 **Impact:** 🔴 **CRITICAL** - Authentication is foundational for all secured endpoints
 - **Missing Endpoints:**
   - `POST /api/login` - User authentication
-  - `POST /api/logout` - Session termination  
+  - `POST /api/logout` - Session termination
   - `POST /api/register` - New user registration
   - `GET /api/me` - Current user information
 
@@ -124,7 +124,7 @@ Current functional test coverage is **~40%** of total endpoints. While basic CRU
 - `PUT /transaction/state/update/{guid}/{transactionStateValue}` - Update transaction state
 - `POST /transaction/future/insert` - Insert future transaction
 - `PUT /transaction/update/account` - Change transaction account
-- `GET /transaction/category/{category_name}` - Transactions by category  
+- `GET /transaction/category/{category_name}` - Transactions by category
 - `GET /transaction/description/{description_name}` - Transactions by description
 - And 5+ more specialized endpoints
 
@@ -134,14 +134,14 @@ Current functional test coverage is **~40%** of total endpoints. While basic CRU
 
 ### **Other Controllers**
 - **DescriptionController:** `/select/active`, update endpoint
-- **ParameterController:** `/select/active`, update endpoint  
+- **ParameterController:** `/select/active`, update endpoint
 - **PaymentController:** `/select` endpoint
 
 ## Missing Test Scenarios
 
 ### **Security & Authentication Testing**
 - JWT token validation across all endpoints
-- Invalid/expired token handling scenarios  
+- Invalid/expired token handling scenarios
 - Authorization role checking
 - CORS policy validation
 - Authentication bypass attempts
@@ -163,7 +163,7 @@ Current functional test coverage is **~40%** of total endpoints. While basic CRU
 
 ### **Integration & Workflow Testing**
 - Multi-step business workflows
-- Account → Transaction → Payment workflows  
+- Account → Transaction → Payment workflows
 - Cascade deletion impact testing
 - Foreign key constraint validation
 - Transaction rollback scenarios
@@ -177,7 +177,7 @@ Current functional test coverage is **~40%** of total endpoints. While basic CRU
 ```groovy
 class LoginControllerSpec extends BaseControllerSpec {
     void 'should successfully authenticate valid user credentials'()
-    void 'should reject authentication with invalid credentials'() 
+    void 'should reject authentication with invalid credentials'()
     void 'should generate valid JWT token on successful login'()
     void 'should invalidate token on logout request'()
     void 'should register new user with valid data'()
@@ -321,10 +321,10 @@ class PerformanceTestingSpec extends BaseControllerSpec {
 void 'should [expected behavior]'() {
     given: // Test setup
     String payload = buildTestPayload()
-    
+
     when: // Action under test
     ResponseEntity<String> response = callEndpoint(payload)
-    
+
     then: // Assertions
     response.statusCode == HttpStatus.OK
     response.body.contains(expectedData)
@@ -354,7 +354,7 @@ void 'should [expected behavior]'() {
 
 ### **Medium Term (Phase 3-4)**
 - ✅ >80% endpoint coverage achieved
-- ✅ All controller classes have functional tests  
+- ✅ All controller classes have functional tests
 - ✅ Integration scenarios comprehensively tested
 - ✅ Error handling validated across all endpoints
 
