@@ -44,7 +44,7 @@ class CamelRouteIntegrationSpec extends Specification {
     AccountRepository accountRepository
 
     protected String baseName = new File(".").absolutePath
-    protected PollingConditions conditions = new PollingConditions(timeout: 10, initialDelay: 1, factor: 1.25)
+    protected PollingConditions conditions = new PollingConditions(timeout: 30, initialDelay: 1, factor: 1.25)
 
     def setup() {
         cleanupTestDirectories()
@@ -52,10 +52,10 @@ class CamelRouteIntegrationSpec extends Specification {
     }
 
     private void createTestAccount() {
-        // Create test account for Camel route testing - must match JSON accountNameOwner
+        // Create test accounts for Camel route testing - must match JSON accountNameOwner
         Account testAccount = new Account()
         testAccount.accountNameOwner = "test-checking_brian"  // Matches JSON files
-        testAccount.accountType = AccountType.Checking  // Use Checking type as specified in JSON
+        testAccount.accountType = AccountType.Debit  // Use Debit type as specified in JSON
         testAccount.activeStatus = true
         testAccount.moniker = "0000"
         testAccount.outstanding = new BigDecimal("0.00")
@@ -63,7 +63,22 @@ class CamelRouteIntegrationSpec extends Specification {
         testAccount.cleared = new BigDecimal("0.00")
         testAccount.dateClosed = new Timestamp(System.currentTimeMillis())
         testAccount.validationDate = new Timestamp(System.currentTimeMillis())
-        accountRepository.save(testAccount)
+        Account savedTestAccount = accountRepository.save(testAccount)
+        println("Created test account: ${savedTestAccount.accountNameOwner} with ID: ${savedTestAccount.accountId}")
+
+        // Create second test account for multiple transactions test
+        Account testSavingsAccount = new Account()
+        testSavingsAccount.accountNameOwner = "testsavings_brian"
+        testSavingsAccount.accountType = AccountType.Credit
+        testSavingsAccount.activeStatus = true
+        testSavingsAccount.moniker = "0001"
+        testSavingsAccount.outstanding = new BigDecimal("0.00")
+        testSavingsAccount.future = new BigDecimal("0.00")
+        testSavingsAccount.cleared = new BigDecimal("0.00")
+        testSavingsAccount.dateClosed = new Timestamp(System.currentTimeMillis())
+        testSavingsAccount.validationDate = new Timestamp(System.currentTimeMillis())
+        Account savedSavingsAccount = accountRepository.save(testSavingsAccount)
+        println("Created savings account: ${savedSavingsAccount.accountNameOwner} with ID: ${savedSavingsAccount.accountId}")
     }
 
     def cleanup() {
@@ -126,13 +141,13 @@ class CamelRouteIntegrationSpec extends Specification {
             {
                 "guid": "${UUID.randomUUID()}",
                 "accountNameOwner": "test-checking_brian",
-                "accountType": "Checking",
+                "accountType": "Debit",
                 "description": "Integration Test Transaction",
                 "category": "Test Category",
                 "amount": 123.45,
                 "transactionDate": "2023-05-15",
                 "transactionState": "Cleared",
-                "transactionType": "Debit",
+                "transactionType": "expense",
                 "notes": "Camel integration test"
             }
         ]"""
@@ -142,7 +157,17 @@ class CamelRouteIntegrationSpec extends Specification {
         File destinationFile = new File("$baseName/int_json_in/${UUID.randomUUID()}.json")
 
         when:
+        println("Copying file from ${sourceFile.absolutePath} to ${destinationFile.absolutePath}")
+        println("File exists: ${sourceFile.exists()}, size: ${sourceFile.length()} bytes")
+        println("Directory exists: ${destinationFile.parentFile.exists()}")
+        
+        if (!destinationFile.parentFile.exists()) {
+            destinationFile.parentFile.mkdirs()
+            println("Created directory: ${destinationFile.parentFile.absolutePath}")
+        }
+        
         Files.copy(sourceFile.toPath(), destinationFile.toPath())
+        println("File copied successfully. Destination exists: ${destinationFile.exists()}, size: ${destinationFile.length()} bytes")
 
         then:
         conditions.eventually {
@@ -173,18 +198,18 @@ class CamelRouteIntegrationSpec extends Specification {
                 "amount": 50.00,
                 "transactionDate": "2023-05-15",
                 "transactionState": "Cleared",
-                "transactionType": "Expense"
+                "transactionType": "income"
             },
             {
                 "guid": "${UUID.randomUUID()}",
                 "accountNameOwner": "testsavings_brian",
-                "accountType": "Debit",
+                "accountType": "Credit",
                 "description": "Multi Test Transaction 2",
                 "category": "Test Category B",
                 "amount": 75.25,
                 "transactionDate": "2023-05-16",
                 "transactionState": "Outstanding",
-                "transactionType": "Expense"
+                "transactionType": "expense"
             },
             {
                 "guid": "${UUID.randomUUID()}",
@@ -195,7 +220,7 @@ class CamelRouteIntegrationSpec extends Specification {
                 "amount": 100.00,
                 "transactionDate": "2023-05-17",
                 "transactionState": "Future",
-                "transactionType": "Expense"
+                "transactionType": "expense"
             }
         ]"""
 
@@ -225,10 +250,12 @@ class CamelRouteIntegrationSpec extends Specification {
 
             transactions2[0].amount == 75.25
             transactions2[0].transactionState == TransactionState.Outstanding
+            transactions2[0].transactionType == TransactionType.Expense
             transactions2[0].accountNameOwner == "testsavings_brian"
 
             transactions3[0].amount == 100.00
             transactions3[0].transactionState == TransactionState.Future
+            transactions3[0].transactionType == TransactionType.Expense
             transactions3[0].accountNameOwner == "test-checking_brian"
         }
 
@@ -285,13 +312,13 @@ class CamelRouteIntegrationSpec extends Specification {
         def transactionData = [
             guid: UUID.randomUUID().toString(),
             accountNameOwner: "test-checking_brian",
-            accountType: AccountType.Debit,
+            accountType: "Debit",
             description: "Direct Route Test Transaction",
             category: "Direct Test Category",
             amount: 99.99,
             transactionDate: "2023-05-20",
-            transactionState: TransactionState.Cleared,
-            transactionType: TransactionType.Expense,
+            transactionState: "Cleared",
+            transactionType: "expense",
             notes: "Direct route processing test"
         ]
 
@@ -320,7 +347,7 @@ class CamelRouteIntegrationSpec extends Specification {
                 "amount": "invalid_amount",
                 "transactionDate": "invalid-date",
                 "transactionState": "Cleared",
-                "transactionType": "Expense"
+                "transactionType": "expense"
             }
         ]"""
 
@@ -365,7 +392,7 @@ class CamelRouteIntegrationSpec extends Specification {
                     "amount": ${10.00 + i},
                     "transactionDate": "2023-05-${15 + i}",
                     "transactionState": "Cleared",
-                    "transactionType": "Expense"
+                    "transactionType": "expense"
                 }
             ]"""
 
@@ -439,7 +466,7 @@ class CamelRouteIntegrationSpec extends Specification {
                     "amount": ${20.00 + i},
                     "transactionDate": "2023-06-${10 + i}",
                     "transactionState": "Cleared",
-                    "transactionType": "Expense"
+                    "transactionType": "expense"
                 }
             ]"""
 

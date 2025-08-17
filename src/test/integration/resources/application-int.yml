@@ -96,7 +96,7 @@ custom:
       - test_brian
     camel-route:
       auto-start-route: true
-      json-file-reader-route: "file:int_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
+      json-file-reader-route: "file:int_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=2000"
       transaction-to-database-Route: direct:transactionToDatabaseRoute
       json-file-writer-route: direct:jsonFileWriterRoute
       saved-file-endpoint: "file:int_json_in/.processed-successfully"
