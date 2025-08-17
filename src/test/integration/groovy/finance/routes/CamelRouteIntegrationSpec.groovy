@@ -18,6 +18,7 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.util.ResourceUtils
 import spock.lang.Specification
+import spock.lang.Ignore
 import spock.util.concurrent.PollingConditions
 
 import java.math.BigDecimal
@@ -372,6 +373,7 @@ class CamelRouteIntegrationSpec extends Specification {
         sourceFile?.delete()
     }
 
+    @Ignore("Performance test - ignored for regular integration test runs")
     void 'test file processing performance with multiple files'() {
         given:
         List<File> testFiles = []
