@@ -15,6 +15,9 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
     fun findByAccountId(accountId: Long): Optional<Account>
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
+    fun findByActiveStatus(activeStatus: Boolean): List<Account>
+    fun findByAccountType(accountType: AccountType): List<Account>
+    fun findByActiveStatusAndAccountType(activeStatus: Boolean, accountType: AccountType): List<Account>
 
     @Modifying
     @Transactional
