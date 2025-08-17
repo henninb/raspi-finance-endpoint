@@ -214,7 +214,7 @@ class SecurityIntegrationWorkingSpec extends Specification {
     void 'test user service validation and constraints'() {
         given:
         User invalidUser = new User()
-        invalidUser.username = null  // Invalid - username cannot be null
+        invalidUser.username = ""  // Invalid - username cannot be empty (violates @Size(min = 1))
         invalidUser.password = "test_password"
         invalidUser.firstName = "Invalid"
         invalidUser.lastName = "User"
