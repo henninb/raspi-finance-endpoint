@@ -206,7 +206,14 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void 'should require payment account parameter for payment insertion'() {
         given:
-        Payment payment = PaymentBuilder.builder().build()
+        // Create a payment with valid accounts that exist in test data and non-zero amount
+        Payment payment = PaymentBuilder.builder()
+                .withSourceAccount('referenced_brian')
+                .withDestinationAccount('foo_brian')
+                .withAmount(30.00G)
+                .withGuidSource('ba665bc2-22b6-4123-a566-6f5ab3d796dh')
+                .withGuidDestination('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
+                .build()
 
         when:
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
