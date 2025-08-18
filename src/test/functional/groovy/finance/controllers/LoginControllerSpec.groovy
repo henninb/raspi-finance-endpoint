@@ -25,7 +25,7 @@ class LoginControllerSpec extends BaseControllerSpec {
     @Shared
     String testUsername = "functional_test_user"
     @Shared
-    String testPassword = "functional_test_password123"
+    String testPassword = "FunctionalTestPass123!"
     @Shared
     String authToken
 
@@ -52,7 +52,8 @@ class LoginControllerSpec extends BaseControllerSpec {
 
         then: "response should be created and contain authentication cookie"
         response.statusCode == HttpStatus.CREATED
-        response.body == null
+        response.body != null
+        response.body.contains("Registration successful")
 
         and: "response should contain Set-Cookie header"
         def cookieHeaders = response.headers.get("Set-Cookie")
@@ -106,8 +107,10 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/login",
             HttpMethod.POST, entity, String)
 
-        then: "response should be no content with authentication cookie"
-        response.statusCode == HttpStatus.NO_CONTENT
+        then: "response should be successful with authentication cookie"
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("Login successful")
 
         and: "response should contain Set-Cookie header with token"
         def cookieHeaders = response.headers.get("Set-Cookie")
@@ -142,8 +145,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/login",
             HttpMethod.POST, entity, String)
 
-        then: "response should be forbidden"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be unauthorized"
+        response.statusCode == HttpStatus.UNAUTHORIZED
     }
 
     void "test login with non-existent user"() {
@@ -167,8 +170,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/login",
             HttpMethod.POST, entity, String)
 
-        then: "response should be forbidden"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be unauthorized"
+        response.statusCode == HttpStatus.UNAUTHORIZED
     }
 
     void "test get current user with valid token"() {
@@ -199,8 +202,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/me",
             HttpMethod.GET, entity, String)
 
-        then: "response should be forbidden"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be unauthorized"
+        response.statusCode == HttpStatus.UNAUTHORIZED
     }
 
     void "test get current user with invalid token"() {
@@ -213,8 +216,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/me",
             HttpMethod.GET, entity, String)
 
-        then: "response should be forbidden"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be unauthorized"
+        response.statusCode == HttpStatus.UNAUTHORIZED
     }
 
     void "test logout functionality"() {

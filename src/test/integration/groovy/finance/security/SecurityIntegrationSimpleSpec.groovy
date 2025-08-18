@@ -45,7 +45,7 @@ class SecurityIntegrationSimpleSpec extends Specification {
         long timestamp = System.currentTimeMillis()
         User testUser = new User()
         testUser.username = "security_test_user_${timestamp}"
-        testUser.password = "encoded_test_password_${timestamp}"
+        testUser.password = "TestPassword123!${timestamp}"
         testUser.firstName = "Security"
         testUser.lastName = "Test"
         testUser.activeStatus = true
@@ -77,7 +77,7 @@ class SecurityIntegrationSimpleSpec extends Specification {
             "UserService",
             "Test",
             "user_service_test_${timestamp}",
-            "service_test_password_${timestamp}"
+            "ServiceTestPass123!${timestamp}"
         )
 
         when:
@@ -192,7 +192,7 @@ class SecurityIntegrationSimpleSpec extends Specification {
             "User",
             "One",
             "integrity_test_user1_${timestamp}",
-            "password1_${timestamp}"
+            "Password1!${timestamp}"
         )
 
         User user2 = new User(
@@ -201,7 +201,7 @@ class SecurityIntegrationSimpleSpec extends Specification {
             "User",
             "Two",
             "integrity_test_user2_${timestamp}",
-            "password2_${timestamp}"
+            "Password2!${timestamp}"
         )
 
         when:
@@ -214,8 +214,8 @@ class SecurityIntegrationSimpleSpec extends Specification {
         then:
         foundUser1.isPresent()
         foundUser2.isPresent()
-        foundUser1.get().password == "password1_${timestamp}"
-        foundUser2.get().password == "password2_${timestamp}"
+        foundUser1.get().password == "Password1!${timestamp}"
+        foundUser2.get().password == "Password2!${timestamp}"
         foundUser1.get().username != foundUser2.get().username
     }
 
@@ -251,9 +251,9 @@ class SecurityIntegrationSimpleSpec extends Specification {
                 0L,
                 true,
                 "Concurrent",
-                "User${i}",
+                "UserTest",
                 "concurrent_user_${timestamp}_${i}",
-                "concurrent_password_${timestamp}_${i}"
+                "ConcurrentPass123!${timestamp}_${i}"
             )
             User savedUser = userRepository.save(user)
             createdUsernames.add(savedUser.username)

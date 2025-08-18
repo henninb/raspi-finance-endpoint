@@ -42,7 +42,7 @@ class SecurityIntegrationWorkingSpec extends Specification {
         given:
         User testUser = new User()
         testUser.username = "security_test_user"
-        testUser.password = "encoded_test_password"
+        testUser.password = "EncodedTestPass123!"
         testUser.firstName = "Security"
         testUser.lastName = "Test"
         testUser.activeStatus = true
@@ -69,7 +69,7 @@ class SecurityIntegrationWorkingSpec extends Specification {
         given:
         User testUser = new User()
         testUser.username = "user_service_test"
-        testUser.password = "service_test_password"
+        testUser.password = "ServiceTestPass123!"
         testUser.firstName = "UserService"
         testUser.lastName = "Test"
         testUser.activeStatus = true
@@ -184,14 +184,14 @@ class SecurityIntegrationWorkingSpec extends Specification {
         given:
         User user1 = new User()
         user1.username = "integrity_test_user1"
-        user1.password = "password1"
+        user1.password = "Password1!"
         user1.firstName = "User"
         user1.lastName = "One"
         user1.activeStatus = true
 
         User user2 = new User()
         user2.username = "integrity_test_user2"
-        user2.password = "password2"
+        user2.password = "Password2!"
         user2.firstName = "User"
         user2.lastName = "Two"
         user2.activeStatus = true
@@ -206,16 +206,16 @@ class SecurityIntegrationWorkingSpec extends Specification {
         then:
         foundUser1.isPresent()
         foundUser2.isPresent()
-        foundUser1.get().password == "password1"
-        foundUser2.get().password == "password2"
+        foundUser1.get().password == "Password1!"
+        foundUser2.get().password == "Password2!"
         foundUser1.get().firstName != foundUser2.get().firstName || foundUser1.get().lastName != foundUser2.get().lastName
     }
 
     void 'test user service validation and constraints'() {
         given:
         User invalidUser = new User()
-        invalidUser.username = ""  // Invalid - username cannot be empty (violates @Size(min = 1))
-        invalidUser.password = "test_password"
+        invalidUser.username = "ab"  // Invalid - username too short (violates @Size(min = 3))
+        invalidUser.password = "TestPassword123!"
         invalidUser.firstName = "Invalid"
         invalidUser.lastName = "User"
         invalidUser.activeStatus = true
@@ -241,9 +241,9 @@ class SecurityIntegrationWorkingSpec extends Specification {
                 try {
                     User user = new User()
                     user.username = "${baseUsername}_${threadIndex}"
-                    user.password = "concurrent_password_${threadIndex}"
+                    user.password = "ConcurrentPass123!${threadIndex}"
                     user.firstName = "Concurrent"
-                    user.lastName = "User${threadIndex}"
+                    user.lastName = "UserTest"
                     user.activeStatus = true
 
                     User savedUser = userService.signUp(user)
