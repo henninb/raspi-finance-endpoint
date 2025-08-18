@@ -112,7 +112,7 @@ class GraphQLIntegrationSpec extends Specification {
         paymentRepository.save(testPayment)
     }
 
-    
+
 
     void 'test GraphQL endpoint accessibility'() {
         when:
@@ -135,25 +135,25 @@ class GraphQLIntegrationSpec extends Specification {
         response.statusCode == HttpStatus.NOT_FOUND
     }
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
+
+
+
+
+
+
+
+
+
+
 
     void 'test GraphQL schema introspection capability'() {
         given:
