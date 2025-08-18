@@ -126,7 +126,7 @@ class AccountControllerSpec extends BaseControllerSpec {
 
         // Create a payment that references existing transactions from data.sql
         String paymentPayload = """
-{"accountNameOwner":"${referencedByTransaction}","sourceAccount":"${referencedByTransaction}","destinationAccount":"bank_brian","amount":50.00,"guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh","guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di","transactionDate":"2020-11-13"}
+{"sourceAccount":"${referencedByTransaction}","destinationAccount":"foo_brian","amount":50.00,"guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh","guidDestination":"aaaaaaaa-bbbb-cccc-dddd-1234567890de","transactionDate":"2020-11-13"}
 """
         ResponseEntity<String> paymentResponse = insertEndpoint('payment', paymentPayload)
 
