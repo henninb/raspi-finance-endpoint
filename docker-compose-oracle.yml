@@ -15,3 +15,8 @@ services:
       oracle-database-server:
         condition: service_healthy
     restart: on-failure:10
+
+networks:
+  default:
+    name: finance-lan
+    external: true

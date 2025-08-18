@@ -1,0 +1,31 @@
+services:
+  influxdb-server:
+    image: influxdb:1.11.8
+    container_name: influxdb-server
+    hostname: influxdb-server
+    # user: "${CURRENT_UID}:${CURRENT_GID}"
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=metrics
+      - INFLUXDB_ADMIN_USER=henninb
+      - INFLUXDB_ADMIN_PASSWORD=monday1
+      - INFLUXDB_USER=henninb
+      - INFLUXDB_USER_PASSWORD=monday1
+      - INFLUXDB_URL=http://influxdb-server:8086
+    restart: unless-stopped
+
+  raspi-finance-endpoint:
+    depends_on:
+      - influxdb-server
+
+volumes:
+  influxdb-data:
+    driver: local
+
+networks:
+  default:
+    name: finance-lan
+    external: true

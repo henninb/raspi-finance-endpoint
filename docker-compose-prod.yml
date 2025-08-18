@@ -2,3 +2,8 @@ services:
   raspi-finance-endpoint:
     env_file:
       - ${ENV_FILE:-env.prod}
+
+networks:
+  default:
+    name: finance-lan
+    external: true
