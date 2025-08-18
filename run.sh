@@ -216,7 +216,7 @@ if [ -x "$(command -v docker)" ]; then
   docker volume prune -f 2> /dev/null
 
   if [ "$env" = "proxmox" ]; then
-    log "Proxmox environment detected. Cleaning up existing nginx, and raspi containers..."
+    log "Proxmox environment detected. Cleaning up existing nginx, raspi, and influxdb containers..."
 
     nginx_container=$(docker ps -a -f 'name=nginx-server' --format "{{.ID}}") 2> /dev/null
     if [ -n "${nginx_container}" ]; then
@@ -240,14 +240,22 @@ if [ -x "$(command -v docker)" ]; then
       docker rmi -f raspi-finance-endpoint
     fi
 
+    influxdb_container=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${influxdb_container}" ]; then
+      log "Stopping and removing existing influxdb-server container..."
+      docker stop "${influxdb_container}"
+      docker rm -f "${influxdb_container}" 2> /dev/null
+      docker rmi -f influxdb:1.11.8
+    fi
+
     log "Building images/deploying images using docker-compose..."
-    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml up -d; then
+    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-influxdb.yml up -d; then
       log "docker-compose build failed for proxmox deployment."
     else
       log "docker-compose build succeeded for proxmox deployment."
     fi
   else
-    log "GCP environment detected. Cleaning up existing raspi-finance-endpoint container..."
+    log "GCP environment detected. Cleaning up existing raspi-finance-endpoint and influxdb containers..."
 
     raspi_container=$(docker ps -a -f 'name=raspi-finance-endpoint' --format "{{.ID}}") 2> /dev/null
     if [ -n "${raspi_container}" ]; then
@@ -255,6 +263,14 @@ if [ -x "$(command -v docker)" ]; then
       docker stop "${raspi_container}"
       docker rm -f "${raspi_container}" 2> /dev/null
       docker rmi -f raspi-finance-endpoint
+    fi
+
+    influxdb_container=$(docker ps -a -f 'name=influxdb-server' --format "{{.ID}}") 2> /dev/null
+    if [ -n "${influxdb_container}" ]; then
+      log "Stopping and removing existing influxdb-server container..."
+      docker stop "${influxdb_container}"
+      docker rm -f "${influxdb_container}" 2> /dev/null
+      docker rmi -f influxdb:1.11.8
     fi
 
     log "GCP environment detected. Cleaning up existing nginx-gcp-proxy..."
@@ -267,7 +283,7 @@ if [ -x "$(command -v docker)" ]; then
     fi
 
     log "Building/deploying images using docker-compose (without nginx or varnish)..."
-    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml up -d; then
+    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-postgresql.yml -f docker-compose-influxdb.yml up -d; then
       log "docker-compose build failed for gcp deployment."
     else
       log "docker-compose build succeeded for gcp deployment."
@@ -307,6 +323,9 @@ fi
 docker network connect finance-lan raspi-finance-endpoint
 log "list networks"
 docker network ls
+
+log "Running docker system prune to clean up unused resources..."
+docker system prune -f
 
 log "Deployment complete."
 log "To follow logs, run: docker logs raspi-finance-endpoint --follow"

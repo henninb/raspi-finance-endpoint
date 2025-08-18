@@ -190,6 +190,9 @@ custom:
 #  enabled: true # Whether exporting of metrics to this backend is enabled. (Default: true)
 
 
+# ===============================
+# = Management and Metrics
+# ===============================
 management:
   endpoint:
     health:
@@ -200,17 +203,23 @@ management:
         include: "*"
   metrics:
     export:
+      # InfluxDB 1.x configuration (for InfluxDB 1.11.8)
+      # Note: This is different from InfluxDB 2.x which uses bucket/org/token
       influx:
-        auto-create-db: true
-        enabled: ${INFLUXDB_ENABLED}
-        db: metrics
-        compressed: true
-        uri: ${INFLUXDB_URL}
-        user-name: ${INFLUXDB_ADMIN_USERNAME}
-        password: ${INFLUXDB_ADMIN_PASSWORD}
-        step: 1m
-        connect-timeout: 1s
-        read-timeout: 10s
+        enabled: ${INFLUXDB_ENABLED}              # Enable/disable InfluxDB metrics export
+        uri: ${INFLUXDB_URL}                      # InfluxDB 1.x endpoint (http://influxdb-server:8086)
+        db: metrics                               # Database name (InfluxDB 1.x uses 'db', not 'bucket')
+        user-name: ${INFLUXDB_ADMIN_USERNAME}     # InfluxDB 1.x username authentication
+        password: ${INFLUXDB_ADMIN_PASSWORD}      # InfluxDB 1.x password authentication
+        auto-create-db: true                      # Automatically create database if it doesn't exist
+        compressed: true                          # Enable GZIP compression for metrics batches
+        step: 1m                                  # How often to publish metrics (1 minute)
+        connect-timeout: 10s                      # Connection timeout
+        read-timeout: 30s                         # Read timeout
+        # InfluxDB 2.x properties (DO NOT USE with InfluxDB 1.x):
+        # bucket: metrics                         # InfluxDB 2.x only
+        # org: organization                       # InfluxDB 2.x only
+        # token: auth-token                       # InfluxDB 2.x only
 debug: false
 
 # Circuit breaker and resilience patterns

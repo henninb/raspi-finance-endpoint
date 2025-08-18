@@ -21,6 +21,7 @@ services:
     extra_hosts:
       - "hornsup:${HOST_IP}"
       - "raspi:192.168.10.25"
+      - "finance-db.lan:${HOST_IP}"
     env_file:
       - env.secrets
     # depends_on:
@@ -45,4 +46,5 @@ services:
   #     - env.grafana
 networks:
   default:
-    name: finance-net
+    name: finance-lan
+    external: true

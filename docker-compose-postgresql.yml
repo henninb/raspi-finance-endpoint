@@ -1,6 +1,6 @@
 services:
   postgresql-server:
-    image: postgres:17.1
+    image: postgres:17.6
     # user: "${CURRENT_UID}:${CURRENT_GID}"
     container_name: postgresql-server
     ports:
@@ -18,6 +18,12 @@ services:
   raspi-finance-endpoint:
     depends_on:
       - postgresql-server
+
 volumes:
   postgresql-volume:
     driver: local
+
+networks:
+  default:
+    name: finance-lan
+    external: true
