@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import jakarta.validation.Valid
+import org.springframework.validation.BindingResult
 import java.util.*
 
 @CrossOrigin
@@ -27,14 +29,34 @@ class LoginController(private val userService: UserService) : BaseController() {
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
     @PostMapping("/login")
     fun login(
-        @RequestBody loginRequest: User,
+        @Valid @RequestBody loginRequest: User,
+        bindingResult: BindingResult,
         response: HttpServletResponse
-    ): ResponseEntity<Void> {
-        // Validate user credentials.
-        val user = userService.signIn(loginRequest)
+    ): ResponseEntity<Map<String, String>> {
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
+            logger.warn("Login validation failed for username: ${loginRequest.username}")
+            return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
+        }
+
+        // Additional password validation for raw passwords (before encoding)
+        if (!isValidRawPassword(loginRequest.password)) {
+            logger.warn("Login failed - invalid password format for username: ${loginRequest.username}")
+            return ResponseEntity.badRequest().body(mapOf("error" to "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"))
+        }
+
+        // Validate user credentials
+        val user = try {
+            userService.signIn(loginRequest)
+        } catch (e: Exception) {
+            logger.error("Authentication error for username: ${loginRequest.username}")
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
+        }
+        
         logger.info("Login request received: ${loginRequest.username}")
         if (user.isEmpty) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
         }
 
         // Generate JWT after validating credentials.
@@ -68,7 +90,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         }
 
         response.addHeader("Set-Cookie", cookie.toString())
-        return ResponseEntity.noContent().build()
+        return ResponseEntity.ok(mapOf("message" to "Login successful"))
     }
 
     // curl -k --header "Content-Type: application/json" --request POST https://localhost:8443/api/logout
@@ -100,16 +122,33 @@ class LoginController(private val userService: UserService) : BaseController() {
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "newuser", "password": "password123", "email": "user@example.com"}' https://localhost:8443/api/register
     @PostMapping("/register", consumes = ["application/json"])
     fun register(
-        @RequestBody newUser: User,
+        @Valid @RequestBody newUser: User,
+        bindingResult: BindingResult,
         response: HttpServletResponse
-    ): ResponseEntity<Void> {
-        logger.info("Register request received: $newUser")
+    ): ResponseEntity<Map<String, String>> {
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
+            logger.warn("Registration validation failed for username: ${newUser.username}")
+            return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
+        }
+
+        // Additional password validation for raw passwords (before encoding)
+        if (!isValidRawPassword(newUser.password)) {
+            logger.warn("Registration failed - invalid password format for username: ${newUser.username}")
+            return ResponseEntity.badRequest().body(mapOf("error" to "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"))
+        }
+
+        logger.info("Register request received: ${newUser.username}")
         try {
-            // Register the new user.
+            // Register the new user
             userService.signUp(newUser)
         } catch (e: IllegalArgumentException) {
-            logger.info("Username ${newUser.username} already exists.")
-            return ResponseEntity.status(HttpStatus.CONFLICT).build()
+            logger.warn("Registration failed - username already exists: ${newUser.username}")
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to "Username already exists"))
+        } catch (e: Exception) {
+            logger.error("Registration error for username: ${newUser.username}")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Registration failed"))
         }
 
         // Auto-login: generate a JWT token for the new user.
@@ -145,7 +184,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         }
 
         response.addHeader("Set-Cookie", cookie.toString())
-        return ResponseEntity.status(HttpStatus.CREATED).build()
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Registration successful"))
     }
 
     // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
@@ -182,8 +221,21 @@ class LoginController(private val userService: UserService) : BaseController() {
             // Return user information (excluding sensitive data).
             return ResponseEntity.ok(user)
         } catch (e: Exception) {
-            logger.error("JWT validation failed: ${e.message}")
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+            logger.warn("JWT validation failed for token validation")
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid or expired token"))
         }
+    }
+
+    /**
+     * Validates raw password format before encoding
+     */
+    private fun isValidRawPassword(password: String): Boolean {
+        // Skip validation for already encoded passwords (BCrypt hashes start with $2a$ or $2b$)
+        if (password.startsWith("$2a$") || password.startsWith("$2b$")) {
+            return true
+        }
+        
+        val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$"
+        return password.length >= 8 && password.matches(passwordRegex.toRegex())
     }
 }

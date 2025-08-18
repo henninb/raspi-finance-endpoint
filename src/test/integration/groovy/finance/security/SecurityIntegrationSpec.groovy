@@ -150,7 +150,7 @@ class SecurityIntegrationSpec extends Specification {
         User testUser = new User(
             userId: 0L,
             username: "integration_test_user",
-            password: "encoded_password",
+            password: "EncodedPassword123!",
             firstName: "Integration",
             lastName: "Test",
             activeStatus: true
@@ -163,7 +163,7 @@ class SecurityIntegrationSpec extends Specification {
         then:
         savedUser.isPresent()
         savedUser.get().username == "integration_test_user"
-        savedUser.get().password == "encoded_password"
+        savedUser.get().password == "EncodedPassword123!"
         savedUser.get().activeStatus == true
     }
 
