@@ -6,7 +6,6 @@ import java.sql.Date
 
 class PaymentBuilder {
 
-    String accountNameOwner = 'foo_brian'
     String sourceAccount = 'chase_brian'
     String destinationAccount = 'checking_brian'
     BigDecimal amount = 0.00G
@@ -22,7 +21,6 @@ class PaymentBuilder {
     //TODO: setting the guids below does not set them as they are set automatically
     Payment build() {
         Payment payment = new Payment().with {
-            accountNameOwner = this.accountNameOwner
             sourceAccount = this.sourceAccount
             destinationAccount = this.destinationAccount
             amount = this.amount
@@ -34,10 +32,6 @@ class PaymentBuilder {
         return payment
     }
 
-    PaymentBuilder withAccountNameOwner(String accountNameOwner) {
-        this.accountNameOwner = accountNameOwner
-        return this
-    }
 
     PaymentBuilder withAmount(BigDecimal amount) {
         this.amount = amount
@@ -56,6 +50,16 @@ class PaymentBuilder {
 
     PaymentBuilder withGuidDestination(String guidDestination) {
         this.guidDestination = guidDestination
+        return this
+    }
+
+    PaymentBuilder withSourceAccount(String sourceAccount) {
+        this.sourceAccount = sourceAccount
+        return this
+    }
+
+    PaymentBuilder withDestinationAccount(String destinationAccount) {
+        this.destinationAccount = destinationAccount
         return this
     }
 

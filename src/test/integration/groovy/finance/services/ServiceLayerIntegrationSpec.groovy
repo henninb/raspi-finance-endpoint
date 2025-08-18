@@ -256,7 +256,6 @@ class ServiceLayerIntegrationSpec extends Specification {
         given:
         Payment testPayment = new Payment(
             paymentId: 0L,
-            accountNameOwner: "checking_brian",
             sourceAccount: "checking_brian",
             destinationAccount: "savings_brian",
             guidSource: UUID.randomUUID().toString(),
@@ -374,8 +373,8 @@ class ServiceLayerIntegrationSpec extends Specification {
             transactionId: savedTransaction.transactionId,
             activeStatus: true,
             imageFormatType: ImageFormatType.Jpeg,
-            image: "test-image-data".bytes,
-            thumbnail: "test-thumbnail-data".bytes
+            image: Base64.getDecoder().decode('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='),
+            thumbnail: Base64.getDecoder().decode('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
         )
 
         when:

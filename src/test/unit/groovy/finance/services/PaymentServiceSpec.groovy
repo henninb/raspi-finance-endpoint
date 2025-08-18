@@ -43,25 +43,24 @@ class PaymentServiceSpec extends BaseServiceSpec {
         Set<ConstraintViolation<Payment>> constraintViolations = validator.validate(payment)
 
         when:
-        Payment paymentInserted = paymentService.insertPayment(payment)
+        Payment paymentInserted = paymentService.insertPaymentNew(payment)
 
         then:
         //thrown(RuntimeException)
-        paymentInserted.accountNameOwner == payment.accountNameOwner
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.of(parameter)
+        paymentInserted.destinationAccount == payment.destinationAccount
+        1 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(account)
         1 * validatorMock.validate(_ as Payment) >> constraintViolations
         1 * validatorMock.validate({ Transaction transactionDebit ->
             assert transactionDebit.category == 'bill_pay'
             assert transactionDebit.description == 'payment'
-            assert transactionDebit.notes == 'to ' + payment.accountNameOwner
+            assert transactionDebit.notes == 'to ' + payment.destinationAccount
             assert transactionDebit.amount == (payment.amount * -1.0)
             assert transactionDebit.accountType == AccountType.Debit
         }) >> [].toSet()
         1 * validatorMock.validate({ Transaction transactionCredit ->
             assert transactionCredit.category == 'bill_pay'
             assert transactionCredit.description == 'payment'
-            assert transactionCredit.notes == 'from ' + parameter.parameterValue
+            assert transactionCredit.notes == 'from ' + payment.sourceAccount
             assert transactionCredit.amount == (payment.amount * -1.0)
             assert transactionCredit.accountType == AccountType.Credit
         }) >> [].toSet()
@@ -76,20 +75,15 @@ class PaymentServiceSpec extends BaseServiceSpec {
     void 'test insertPayment - findByParameterName throws an exception'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-        Account account = AccountBuilder.builder().build()
-        Parameter parameter = new Parameter()
-        parameter.parameterValue = 'val'
-        parameter.parameterName = 'payment_account'
-        Set<ConstraintViolation<Payment>> constraintViolations = validator.validate(payment)
+        Set<ConstraintViolation<Payment>> constraintViolations = [].toSet()
 
         when:
-        paymentService.insertPayment(payment)
+        paymentService.insertPaymentNew(payment)
 
         then:
         thrown(RuntimeException)
         1 * validatorMock.validate(payment) >> constraintViolations
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(account)
-        1 * parameterRepositoryMock.findByParameterName(parameter.parameterName) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.empty()
         _ * _  // Allow any other interactions (logging, etc.)
     }
 }
