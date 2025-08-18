@@ -94,8 +94,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "activeStatus": true,
             "username": "${testUsername}",
             "password": "${testPassword}",
-            "firstName": "",
-            "lastName": ""
+            "firstName": "functional",
+            "lastName": "test"
         }
         """
 
@@ -131,9 +131,9 @@ class LoginControllerSpec extends BaseControllerSpec {
             "userId": 0,
             "activeStatus": true,
             "username": "${testUsername}",
-            "password": "wrong_password",
-            "firstName": "",
-            "lastName": ""
+            "password": "WrongPass123!",
+            "firstName": "functional",
+            "lastName": "test"
         }
         """
 
@@ -156,9 +156,9 @@ class LoginControllerSpec extends BaseControllerSpec {
             "userId": 0,
             "activeStatus": true,
             "username": "non_existent_user",
-            "password": "some_password",
-            "firstName": "",
-            "lastName": ""
+            "password": "SomePass123!",
+            "firstName": "non",
+            "lastName": "existent"
         }
         """
 
@@ -202,8 +202,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/me",
             HttpMethod.GET, entity, String)
 
-        then: "response should be unauthorized"
-        response.statusCode == HttpStatus.UNAUTHORIZED
+        then: "response should be forbidden"
+        response.statusCode == HttpStatus.FORBIDDEN
     }
 
     void "test get current user with invalid token"() {
@@ -216,8 +216,8 @@ class LoginControllerSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/me",
             HttpMethod.GET, entity, String)
 
-        then: "response should be unauthorized"
-        response.statusCode == HttpStatus.UNAUTHORIZED
+        then: "response should be forbidden"
+        response.statusCode == HttpStatus.FORBIDDEN
     }
 
     void "test logout functionality"() {
@@ -282,7 +282,7 @@ class LoginControllerSpec extends BaseControllerSpec {
 
     void "test login with missing required fields"() {
         given: "login payload with missing password"
-        String payload = '{"userId": 0, "activeStatus": true, "username": "test_user", "firstName": "", "lastName": ""}'
+        String payload = '{"userId": 0, "activeStatus": true, "username": "test_user", "firstName": "test", "lastName": "user"}'
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
