@@ -11,14 +11,15 @@ import static finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 
 class PaymentSpec extends BaseDomainSpec {
-    protected String jsonPayload = '{"accountNameOwner":"foo_test","sourceAccount":"source_test","destinationAccount":"dest_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayload = '{"sourceAccount":"source_test","destinationAccount":"dest_test","amount":5.12, "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     void 'test -- JSON deserialization to Payment'() {
         when:
         Payment payment = mapper.readValue(jsonPayload, Payment)
 
         then:
-        payment.accountNameOwner == 'foo_test'
+        payment.sourceAccount == 'source_test'
+        payment.destinationAccount == 'dest_test'
         payment.amount == 5.12
         payment.guidSource == '78f65481-f351-4142-aff6-73e99d2a286d'
         payment.guidDestination == '0db56665-0d47-414e-93c5-e5ae4c5e4299'
@@ -58,7 +59,8 @@ class PaymentSpec extends BaseDomainSpec {
     void 'test validation invalid #invalidField has error expectedError'() {
         given:
         Payment payment = new PaymentBuilder().builder()
-                .withAccountNameOwner(accountNameOwner)
+                .withSourceAccount(sourceAccount)
+                .withDestinationAccount(destinationAccount)
                 .withTransactionDate(transactionDate)
                 .withAmount(amount)
                 .withGuidDestination(guidDestination)
@@ -74,9 +76,9 @@ class PaymentSpec extends BaseDomainSpec {
         violations.iterator().next().invalidValue == payment.properties[invalidField]
 
         where:
-        invalidField       | accountNameOwner | transactionDate            | amount | guidDestination              | guidSource                   | expectedError                                 | errorCount
-        'accountNameOwner' | 'a_'             | Date.valueOf('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
-        'guidDestination'  | 'a_b'            | Date.valueOf('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
-        'guidSource'       | 'a_b'            | Date.valueOf('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        invalidField      | sourceAccount | destinationAccount | transactionDate            | amount | guidDestination              | guidSource                   | expectedError                                 | errorCount
+        'sourceAccount'   | 'a_'          | 'dest_test'        | Date.valueOf('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
+        'guidDestination' | 'src_test'    | 'dest_test'        | Date.valueOf('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        'guidSource'      | 'src_test'    | 'dest_test'        | Date.valueOf('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
     }
 }
