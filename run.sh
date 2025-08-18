@@ -305,7 +305,6 @@ else
   exit 1
 fi
 
-echo docker network connect finance-lan postgresql-server
 # Run the raspi-finance-endpoint container.
 # For gcp, ensure any preexisting container is deleted.
 # log "Deleting any preexisting raspi-finance-endpoint container..."
@@ -321,8 +320,9 @@ echo docker network connect finance-lan postgresql-server
   # docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
 # fi
 
+docker network connect finance-lan postgresql-server
 docker network connect finance-lan raspi-finance-endpoint
-log "list networks"
+log "docker network ls"
 docker network ls
 
 log "Running docker system prune to clean up unused resources..."
