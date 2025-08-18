@@ -2,3 +2,8 @@ services:
   raspi-finance-endpoint:
     env_file:
       - env.prodora
+
+networks:
+  default:
+    name: finance-lan
+    external: true
