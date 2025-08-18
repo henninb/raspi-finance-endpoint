@@ -20,11 +20,11 @@ class UuidControllerSpec extends Specification {
         response.body.containsKey("timestamp")
         response.body.containsKey("source")
         response.body["source"] == "server"
-        
+
         and: "UUID should be valid format"
         String uuid = response.body["uuid"] as String
         uuid ==~ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-        
+
         and: "timestamp should be reasonable"
         Long timestamp = response.body["timestamp"] as Long
         timestamp > 0
@@ -46,16 +46,16 @@ class UuidControllerSpec extends Specification {
         response.body.containsKey("source")
         response.body["source"] == "server"
         response.body["count"] == count
-        
+
         and: "should have correct number of UUIDs"
         List<String> uuids = response.body["uuids"] as List<String>
         uuids.size() == count
-        
+
         and: "all UUIDs should be valid format"
         uuids.every { uuid ->
             uuid ==~ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
         }
-        
+
         and: "all UUIDs should be unique"
         uuids.unique().size() == count
     }
@@ -67,7 +67,7 @@ class UuidControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.OK
         response.body["count"] == 1
-        
+
         and: "should have one UUID"
         List<String> uuids = response.body["uuids"] as List<String>
         uuids.size() == 1
@@ -96,11 +96,11 @@ class UuidControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.OK
         response.body["count"] == maxCount
-        
+
         and: "should have correct number of UUIDs"
         List<String> uuids = response.body["uuids"] as List<String>
         uuids.size() == maxCount
-        
+
         and: "all UUIDs should be unique"
         uuids.unique().size() == maxCount
     }
@@ -116,7 +116,7 @@ class UuidControllerSpec extends Specification {
         response.body.containsKey("timestamp")
         response.body["status"] == "healthy"
         response.body["service"] == "uuid-generation"
-        
+
         and: "timestamp should be reasonable"
         Long timestamp = response.body["timestamp"] as Long
         timestamp > 0

@@ -65,7 +65,7 @@ class ImageFormatTypeConverterSpec extends Specification {
 
         where:
         invalidInput << [
-            "invalid", "gif", "bmp", "tiff", "webp", "svg", 
+            "invalid", "gif", "bmp", "tiff", "webp", "svg",
             "", " ", "null", "jpg", "image"
         ]
     }

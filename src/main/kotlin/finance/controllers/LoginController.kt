@@ -53,7 +53,7 @@ class LoginController(private val userService: UserService) : BaseController() {
             logger.error("Authentication error for username: ${loginRequest.username}")
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
         }
-        
+
         logger.info("Login request received: ${loginRequest.username}")
         if (user.isEmpty) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
@@ -234,7 +234,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         if (password.startsWith("$2a$") || password.startsWith("$2b$")) {
             return true
         }
-        
+
         val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$"
         return password.length >= 8 && password.matches(passwordRegex.toRegex())
     }

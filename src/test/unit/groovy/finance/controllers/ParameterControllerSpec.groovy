@@ -62,8 +62,8 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = "test_param"
         Parameter expectedParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "test_value", 
+            parameterName: paramName,
+            parameterValue: "test_value",
             activeStatus: true
         )
 
@@ -108,13 +108,13 @@ class ParameterControllerSpec extends Specification {
     def "insertParameter should create parameter successfully"() {
         given:
         Parameter inputParameter = new Parameter(
-            parameterName: "new_param", 
-            parameterValue: "new_value", 
+            parameterName: "new_param",
+            parameterValue: "new_value",
             activeStatus: true
         )
         Parameter createdParameter = new Parameter(
-            parameterName: "new_param", 
-            parameterValue: "new_value", 
+            parameterName: "new_param",
+            parameterValue: "new_value",
             activeStatus: true
         )
 
@@ -130,8 +130,8 @@ class ParameterControllerSpec extends Specification {
     def "insertParameter should throw CONFLICT on duplicate parameter"() {
         given:
         Parameter parameter = new Parameter(
-            parameterName: "duplicate_param", 
-            parameterValue: "value", 
+            parameterName: "duplicate_param",
+            parameterValue: "value",
             activeStatus: true
         )
 
@@ -139,8 +139,8 @@ class ParameterControllerSpec extends Specification {
         parameterController.insertParameter(parameter)
 
         then:
-        1 * parameterServiceMock.insertParameter(parameter) >> { 
-            throw new DataIntegrityViolationException("Duplicate entry") 
+        1 * parameterServiceMock.insertParameter(parameter) >> {
+            throw new DataIntegrityViolationException("Duplicate entry")
         }
         ResponseStatusException ex = thrown(ResponseStatusException)
         ex.statusCode == HttpStatus.CONFLICT
@@ -150,8 +150,8 @@ class ParameterControllerSpec extends Specification {
     def "insertParameter should throw BAD_REQUEST on validation error"() {
         given:
         Parameter parameter = new Parameter(
-            parameterName: "invalid_param", 
-            parameterValue: "", 
+            parameterName: "invalid_param",
+            parameterValue: "",
             activeStatus: true
         )
 
@@ -159,8 +159,8 @@ class ParameterControllerSpec extends Specification {
         parameterController.insertParameter(parameter)
 
         then:
-        1 * parameterServiceMock.insertParameter(parameter) >> { 
-            throw new ValidationException("Validation failed") 
+        1 * parameterServiceMock.insertParameter(parameter) >> {
+            throw new ValidationException("Validation failed")
         }
         ResponseStatusException ex = thrown(ResponseStatusException)
         ex.statusCode == HttpStatus.BAD_REQUEST
@@ -170,8 +170,8 @@ class ParameterControllerSpec extends Specification {
     def "insertParameter should throw INTERNAL_SERVER_ERROR on unexpected error"() {
         given:
         Parameter parameter = new Parameter(
-            parameterName: "test_param", 
-            parameterValue: "value", 
+            parameterName: "test_param",
+            parameterValue: "value",
             activeStatus: true
         )
 
@@ -179,8 +179,8 @@ class ParameterControllerSpec extends Specification {
         parameterController.insertParameter(parameter)
 
         then:
-        1 * parameterServiceMock.insertParameter(parameter) >> { 
-            throw new RuntimeException("Unexpected error") 
+        1 * parameterServiceMock.insertParameter(parameter) >> {
+            throw new RuntimeException("Unexpected error")
         }
         ResponseStatusException ex = thrown(ResponseStatusException)
         ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
@@ -191,18 +191,18 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = "existing_param"
         Parameter existingParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "old_value", 
+            parameterName: paramName,
+            parameterValue: "old_value",
             activeStatus: true
         )
         Parameter updateParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "new_value", 
+            parameterName: paramName,
+            parameterValue: "new_value",
             activeStatus: true
         )
         Parameter updatedParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "new_value", 
+            parameterName: paramName,
+            parameterValue: "new_value",
             activeStatus: true
         )
 
@@ -220,8 +220,8 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = "nonexistent_param"
         Parameter updateParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "value", 
+            parameterName: paramName,
+            parameterValue: "value",
             activeStatus: true
         )
 
@@ -240,13 +240,13 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = "test_param"
         Parameter existingParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "old_value", 
+            parameterName: paramName,
+            parameterValue: "old_value",
             activeStatus: true
         )
         Parameter updateParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "new_value", 
+            parameterName: paramName,
+            parameterValue: "new_value",
             activeStatus: true
         )
 
@@ -265,8 +265,8 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = "param_to_delete"
         Parameter existingParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "value", 
+            parameterName: paramName,
+            parameterValue: "value",
             activeStatus: true
         )
 
@@ -299,8 +299,8 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = "test_param"
         Parameter existingParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "value", 
+            parameterName: paramName,
+            parameterValue: "value",
             activeStatus: true
         )
 
@@ -319,8 +319,8 @@ class ParameterControllerSpec extends Specification {
         given:
         String paramName = parameterName
         Parameter expectedParameter = new Parameter(
-            parameterName: paramName, 
-            parameterValue: "value", 
+            parameterName: paramName,
+            parameterValue: "value",
             activeStatus: true
         )
 
