@@ -38,13 +38,13 @@ class PaymentControllerSpec extends BaseControllerSpec {
     protected Payment payment = PaymentBuilder.builder().withAmount(50.00G).build()
 
     @Shared
-    protected String jsonPayloadInvalidAmount = '{"accountNameOwner":"foo_test","amount":5.1288888, "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadInvalidAmount = '{"amount":5.1288888, "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
-    protected String jsonPayloadMissingAmount = '{"accountNameOwner":"foo_test", "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadMissingAmount = '{"sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"78f65481-f351-4142-aff6-73e99d2a286d", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
-    protected String jsonPayloadInvalidSourceGuid = '{"accountNameOwner":"foo_test", "amount":5.12, "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
+    protected String jsonPayloadInvalidSourceGuid = '{"amount":5.12, "sourceAccount":"test_source", "destinationAccount":"test_destination", "guidSource":"invalid", "guidDestination":"0db56665-0d47-414e-93c5-e5ae4c5e4299", "transactionDate":"2020-11-12"}'
 
     @Shared
     protected String endpointName = 'payment'
@@ -57,8 +57,8 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        // The application creates missing accounts automatically, so this should succeed
-        response.statusCode == HttpStatus.OK
+        // The payment should be rejected when source account doesn't exist
+        response.statusCode == HttpStatus.BAD_REQUEST
         0 * _
     }
 
@@ -74,10 +74,10 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void 'should successfully insert payment for deletion test setup'() {
         given:
-        String accountNameOwner = 'delete-test_brian'
         Payment payment = PaymentBuilder.builder()
                 .withTransactionDate(Date.valueOf('2020-10-13'))
-                .withAccountNameOwner(accountNameOwner)
+                .withSourceAccount('delete-test_brian')
+                .withDestinationAccount('delete-dest_brian')
                 .withAmount(25.00G)
                 .build()
 
@@ -91,7 +91,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
     void 'should successfully delete existing payment'() {
         given:
-        Payment payment1 = paymentRepository.findAll().find { it.accountNameOwner == 'delete-test_brian' }
+        Payment payment1 = paymentRepository.findAll().find { it.sourceAccount == 'delete-test_brian' }
 
         when:
         ResponseEntity<String> response = payment1 ?
@@ -113,7 +113,8 @@ class PaymentControllerSpec extends BaseControllerSpec {
         insertEndpoint('account', '{"accountNameOwner":"delete-me_brian","accountType":"credit","activeStatus":true,"moniker":"0000"}')
         Payment payment = PaymentBuilder.builder()
                 .withTransactionDate(Date.valueOf('2020-12-13'))
-                .withAccountNameOwner(accountNameOwner)
+                .withSourceAccount('delete-me_brian')
+                .withDestinationAccount('delete-dest_brian')
                 .withAmount(15.00G)
                 .build()
 
@@ -125,7 +126,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
         when:
         Transaction transaction = transactionRepository.findAll().find { it?.accountNameOwner == accountNameOwner }
-        Payment payment1 = paymentRepository.findAll().find { it?.accountNameOwner == accountNameOwner }
+        Payment payment1 = paymentRepository.findAll().find { it?.sourceAccount == 'delete-me_brian' }
 
         then:
         // Only proceed with deletion test if both transaction and payment were created successfully
@@ -153,10 +154,14 @@ class PaymentControllerSpec extends BaseControllerSpec {
         given:
         // Create a debit account first
         insertEndpoint('account', '{\"accountNameOwner\":\"bank_brian\",\"accountType\":\"debit\",\"activeStatus\":true,\"moniker\":\"0000\"}')
-        payment.accountNameOwner = 'bank_brian'
+        Payment testPayment = PaymentBuilder.builder()
+                .withDestinationAccount('bank_brian')
+                .withSourceAccount('test_source')
+                .withAmount(100.00G)
+                .build()
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
+        ResponseEntity<String> response = insertEndpoint(endpointName, testPayment.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST

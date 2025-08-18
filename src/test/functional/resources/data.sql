@@ -67,9 +67,9 @@ VALUES ((select account_id from func.t_account where account_name_owner='bank_br
         11.95, 'cleared', 'undefined', true, '', null, '2020-10-27 18:51:06.903105',
         '2020-09-05 20:34:39.360139');
 
-INSERT INTO func.t_payment (account_name_owner, source_account, destination_account, transaction_date, amount, guid_source, guid_destination,
+INSERT INTO func.t_payment (source_account, destination_account, transaction_date, amount, guid_source, guid_destination,
                        active_status, date_updated, date_added)
-VALUES ('referenced_brian', 'referenced_brian', 'bank_brian', '2020-12-31', 11.95, 'ba665bc2-22b6-4123-a566-6f5ab3d796dh',
+VALUES ('referenced_brian', 'bank_brian', '2020-12-31', 11.95, 'ba665bc2-22b6-4123-a566-6f5ab3d796dh',
         'ba665bc2-22b6-4123-a566-6f5ab3d796di', true, '2021-01-09 14:26:26.739000', '2021-01-09 14:26:26.739000');
 
 INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, date_updated, date_added)

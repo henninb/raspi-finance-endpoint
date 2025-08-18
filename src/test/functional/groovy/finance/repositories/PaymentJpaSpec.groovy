@@ -26,7 +26,7 @@ class PaymentJpaSpec extends Specification {
     protected ObjectMapper mapper = new ObjectMapper()
 
     protected String json = """
-{"accountNameOwner": "referenced_brian", "amount":12.99, "transactionDate":"2020-12-30", "guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh", "guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di", "sourceAccount":"referenced_brian", "destinationAccount":"bank_brian" }
+{"amount":12.99, "transactionDate":"2020-12-30", "guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh", "guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di", "sourceAccount":"referenced_brian", "destinationAccount":"bank_brian" }
 """
 
     void 'test payment to JSON - valid insert'() {
@@ -50,7 +50,8 @@ class PaymentJpaSpec extends Specification {
         payment.guidSource = 'ba665bc2-22b6-4123-a566-6f5ab3d796dh'
         payment.guidDestination = 'ba665bc2-22b6-4123-a566-6f5ab3d796di'
         // Create unique values to avoid constraint violations
-        payment.accountNameOwner = 'different_brian'
+        payment.sourceAccount = 'different_brian'
+        payment.destinationAccount = 'different-dest_brian'
         payment.amount = 15.50
         payment.transactionDate = Date.valueOf('2020-12-30')
         Payment result = entityManager.persist(payment)
