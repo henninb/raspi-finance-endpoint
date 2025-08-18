@@ -8,13 +8,9 @@ services:
       - "8086:8086"
     volumes:
       - influxdb-data:/var/lib/influxdb
-    environment:
-      - INFLUXDB_DB=metrics
-      - INFLUXDB_ADMIN_USER=henninb
-      - INFLUXDB_ADMIN_PASSWORD=monday1
-      - INFLUXDB_USER=henninb
-      - INFLUXDB_USER_PASSWORD=monday1
-      - INFLUXDB_URL=http://influxdb-server:8086
+    env_file:
+      - env.influx
+      - env.secrets
     restart: unless-stopped
 
   raspi-finance-endpoint:
