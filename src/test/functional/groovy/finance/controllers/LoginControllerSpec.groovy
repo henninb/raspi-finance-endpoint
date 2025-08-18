@@ -68,7 +68,7 @@ class LoginControllerSpec extends BaseControllerSpec {
             "userId": 0,
             "activeStatus": true,
             "username": "${testUsername}",
-            "password": "different_password",
+            "password": "ValidPass123!",
             "firstName": "functional",
             "lastName": "test"
         }
