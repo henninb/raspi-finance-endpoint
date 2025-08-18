@@ -305,6 +305,7 @@ else
   exit 1
 fi
 
+echo docker network connect finance-lan postgresql-server
 # Run the raspi-finance-endpoint container.
 # For gcp, ensure any preexisting container is deleted.
 # log "Deleting any preexisting raspi-finance-endpoint container..."
