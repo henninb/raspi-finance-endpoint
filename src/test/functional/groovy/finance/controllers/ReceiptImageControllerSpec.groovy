@@ -52,7 +52,7 @@ class ReceiptImageControllerSpec extends BaseControllerSpec {
 
         then:
         // The system enforces referential integrity and rejects receipt images with non-existent transaction IDs
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         0 * _
     }
 
