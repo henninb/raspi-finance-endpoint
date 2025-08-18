@@ -84,7 +84,7 @@ class ReoccurringTypeConverterSpec extends Specification {
 
         where:
         invalidInput << [
-            "invalid", "weekly", "daily", "yearly", "biweekly", 
+            "invalid", "weekly", "daily", "yearly", "biweekly",
             "", " ", "null", "never", "once", "recurring"
         ]
     }
