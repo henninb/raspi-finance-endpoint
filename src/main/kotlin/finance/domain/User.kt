@@ -47,7 +47,7 @@ data class User(
 
         @field:Size(min = 3, max = 60, message = "Username must be between 3 and 60 characters")
         @field:NotBlank(message = "Username cannot be blank")
-        @field:Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username can only contain letters, numbers, dots, underscores, and hyphens")
+        @field:Pattern(regexp = "^[a-zA-Z0-9._@+-]+$", message = "Username can only contain letters, numbers, dots, underscores, hyphens, @ and + symbols")
         @field:Convert(converter = LowerCaseConverter::class)
         @Column(name = "username", unique = true, nullable = false)
         @param:JsonProperty
