@@ -283,7 +283,7 @@ if [ -x "$(command -v docker)" ]; then
     fi
 
     log "Building/deploying images using docker-compose (without nginx or varnish)..."
-    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-postgresql.yml -f docker-compose-influxdb.yml up -d; then
+    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-influxdb.yml up -d; then
       log "docker-compose build failed for gcp deployment."
     else
       log "docker-compose build succeeded for gcp deployment."
