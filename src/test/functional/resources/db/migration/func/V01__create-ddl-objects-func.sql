@@ -203,7 +203,6 @@ CREATE TABLE IF NOT EXISTS func.t_pending_transaction
 CREATE TABLE IF NOT EXISTS func.t_payment
 (
     payment_id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-    account_name_owner TEXT                                  NOT NULL,
     source_account     TEXT                                  NOT NULL,
     destination_account TEXT                                 NOT NULL,
     transaction_date   DATE                                  NOT NULL,
@@ -213,7 +212,7 @@ CREATE TABLE IF NOT EXISTS func.t_payment
     active_status      BOOLEAN       DEFAULT TRUE            NOT NULL,
     date_updated       TIMESTAMP     DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
     date_added         TIMESTAMP     DEFAULT PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S') NOT NULL,
-    CONSTRAINT payment_constraint UNIQUE (account_name_owner, transaction_date, amount),
+    CONSTRAINT payment_constraint UNIQUE (destination_account, transaction_date, amount),
     CONSTRAINT fk_guid_source FOREIGN KEY (guid_source) REFERENCES func.t_transaction (guid) ON DELETE CASCADE,
     CONSTRAINT fk_guid_destination FOREIGN KEY (guid_destination) REFERENCES func.t_transaction (guid) ON DELETE CASCADE
 );
