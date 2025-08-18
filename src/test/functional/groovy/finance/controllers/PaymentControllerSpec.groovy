@@ -63,10 +63,26 @@ class PaymentControllerSpec extends BaseControllerSpec {
     }
 
     void 'should reject duplicate payment insertion'() {
+        given:
+        // Create a payment with valid accounts that exist in data.sql
+        Payment validPayment = PaymentBuilder.builder()
+                .withSourceAccount('referenced_brian')
+                .withDestinationAccount('foo_brian')
+                .withAmount(25.00G)
+                .withGuidSource('ba665bc2-22b6-4123-a566-6f5ab3d796dh')
+                .withGuidDestination('aaaaaaaa-bbbb-cccc-dddd-1234567890de')
+                .withTransactionDate(Date.valueOf('2020-11-14'))
+                .build()
+
+        // First insertion should succeed
+        ResponseEntity<String> firstResponse = insertEndpoint(endpointName, validPayment.toString())
+
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
+        // Second insertion of the same payment should fail
+        ResponseEntity<String> response = insertEndpoint(endpointName, validPayment.toString())
 
         then:
+        firstResponse.statusCode == HttpStatus.OK
         // The duplicate payment should fail with HTTP 409 Conflict
         response.statusCode == HttpStatus.CONFLICT
         0 * _
