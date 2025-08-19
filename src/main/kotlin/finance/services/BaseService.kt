@@ -29,21 +29,36 @@ open class BaseService {
     lateinit var validator: Validator
 
     @Autowired(required = false)
-    var databaseResilienceConfig: DatabaseResilienceConfiguration? = null
+    private var _databaseResilienceConfig: DatabaseResilienceConfiguration? = null
+    open var databaseResilienceConfig: DatabaseResilienceConfiguration?
+        get() = _databaseResilienceConfig
+        set(value) { _databaseResilienceConfig = value }
 
     @Autowired(required = false)
-    var circuitBreaker: CircuitBreaker? = null
+    private var _circuitBreaker: CircuitBreaker? = null
+    open var circuitBreaker: CircuitBreaker?
+        get() = _circuitBreaker
+        set(value) { _circuitBreaker = value }
+
+    @Autowired(required = false) 
+    private var _retry: Retry? = null
+    open var retry: Retry?
+        get() = _retry
+        set(value) { _retry = value }
 
     @Autowired(required = false)
-    var retry: Retry? = null
+    private var _timeLimiter: TimeLimiter? = null
+    open var timeLimiter: TimeLimiter?
+        get() = _timeLimiter
+        set(value) { _timeLimiter = value }
 
     @Autowired(required = false)
-    var timeLimiter: TimeLimiter? = null
+    private var _scheduledExecutorService: ScheduledExecutorService? = null
+    open var scheduledExecutorService: ScheduledExecutorService?
+        get() = _scheduledExecutorService
+        set(value) { _scheduledExecutorService = value }
 
-    @Autowired(required = false)
-    var scheduledExecutorService: ScheduledExecutorService? = null
-
-    fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>, meterService: MeterService) {
+    open fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>, meterService: MeterService) {
         if (constraintViolations.isNotEmpty()) {
             var details = ""
             constraintViolations.forEach { constraintViolation ->

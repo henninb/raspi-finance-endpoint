@@ -22,7 +22,9 @@ open class RequestLoggingFilter : OncePerRequestFilter() {
         val wrappedRequest = if (request is ContentCachingRequestWrapper) {
             request
         } else {
-            ContentCachingRequestWrapper(request)
+            // TODO: ContentCachingRequestWrapper constructor changed in Spring Boot 4.0.0-M1
+            // Added cacheLimit parameter
+            ContentCachingRequestWrapper(request, 1024)  // 1KB cache limit
         }
         try {
             filterChain.doFilter(wrappedRequest, response)
