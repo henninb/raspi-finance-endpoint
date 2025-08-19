@@ -41,6 +41,9 @@ type Query {
     accounts : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
     payments : [Payment]
+    payment(paymentId: Long!) : Payment
+    transfers : [Transfer]
+    transfer(transferId: Long!) : Transfer
     #mutation: Mutation
 }
 
@@ -48,6 +51,9 @@ type Mutation {
     createDescription( description: String) : Description
     createCategory( category: String) : Category
     createPayment( payment: PaymentInput ) : Payment
+    deletePayment( paymentId: Long! ) : Boolean
+    createTransfer( transfer: TransferInput ) : Transfer
+    deleteTransfer( transferId: Long! ) : Boolean
 }
 
 # complete 7/17/2021
@@ -103,7 +109,8 @@ type Transaction {
 # complete 7/17/2021
 type Payment {
     paymentId: Long
-    accountNameOwner: String!
+    sourceAccount: String!
+    destinationAccount: String!
     activeStatus: Boolean!
     transactionDate: Date!
     amount: BigDecimal!
@@ -115,10 +122,31 @@ type Payment {
 
 input PaymentInput {
     paymentId: Long
-    accountNameOwner: String!
-    activeStatus: Boolean!
-    #    transactionDate: Date!
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
     amount: BigDecimal!
+    activeStatus: Boolean
+}
+
+# complete 7/17/2021
+type Transfer {
+    transferId: Long
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
+    amount: BigDecimal!
+    guidSource: String
+    guidDestination: String
+    activeStatus: Boolean!
+}
+
+input TransferInput {
+    sourceAccount: String!
+    destinationAccount: String!
+    transactionDate: Date!
+    amount: BigDecimal!
+    activeStatus: Boolean
 }
 
 # complete 7/17/2021
