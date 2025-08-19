@@ -109,5 +109,5 @@ class HttpErrorLoggingFilterSpec extends Specification {
 
         and:
         meterRegistry.find("http.error.responses").counter() == null
-    }
+}
 }
