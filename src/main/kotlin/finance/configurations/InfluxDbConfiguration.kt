@@ -3,7 +3,8 @@ package finance.configurations
 import io.micrometer.core.instrument.Clock
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxMeterRegistry
-import org.springframework.boot.actuate.autoconfigure.metrics.export.ConditionalOnEnabledMetricsExport
+// TODO: ConditionalOnEnabledMetricsExport may have changed in Spring Boot 4.0.0-M1
+// import org.springframework.boot.actuate.autoconfigure.metrics.export.ConditionalOnEnabledMetricsExport
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -11,7 +12,8 @@ import org.springframework.core.env.Environment
 import java.time.Duration
 
 @Configuration
-@ConditionalOnEnabledMetricsExport("influx")
+// TODO: ConditionalOnEnabledMetricsExport may have changed in Spring Boot 4.0.0-M1  
+// @ConditionalOnEnabledMetricsExport("influx")
 @ConditionalOnProperty(name = ["management.metrics.export.influx.enabled"], havingValue = "true")
 open class InfluxDbConfiguration {
 
