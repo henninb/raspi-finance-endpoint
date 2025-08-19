@@ -78,9 +78,9 @@ class LoginController(private val userService: UserService) : BaseController() {
         val cookieBuilder = ResponseCookie.from("token", token)
             .path("/")
             .maxAge(7 * 24 * 60 * 60)
-            .httpOnly(false) // Allow JavaScript access in development for debugging
-            .secure(false) // Never require HTTPS for local development
-            .sameSite("Lax") // Use Lax for local development
+            .httpOnly(true) // Prevent XSS token theft
+            .secure(!isLocalDev) // Require HTTPS in production
+            .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
 
         // Configure domain based on environment
         val cookie = if (isLocalDev) {
@@ -104,9 +104,9 @@ class LoginController(private val userService: UserService) : BaseController() {
         val cookieBuilder = ResponseCookie.from("token", "")
             .path("/")
             .maxAge(0)
-            .httpOnly(false) // Allow JavaScript access in development for debugging
-            .secure(false) // Never require HTTPS for local development
-            .sameSite("Lax") // Use Lax for local development
+            .httpOnly(true) // Prevent XSS token theft
+            .secure(!isLocalDev) // Require HTTPS in production
+            .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
 
         // Configure domain based on environment
         val cookie = if (isLocalDev) {
@@ -170,10 +170,10 @@ class LoginController(private val userService: UserService) : BaseController() {
                         activeProfile == "dev" || activeProfile == "development"
 
         val cookieBuilder = ResponseCookie.from("token", token)
-            .httpOnly(false) // Allow JavaScript access in development for debugging
-            .secure(false) // Never require HTTPS for local development
+            .httpOnly(true) // Prevent XSS token theft
+            .secure(!isLocalDev) // Require HTTPS in production
             .maxAge(24 * 60 * 60)
-            .sameSite("Lax") // Use Lax for local development
+            .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
             .path("/")
 
         // Configure domain based on environment
