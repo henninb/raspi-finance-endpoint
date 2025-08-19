@@ -67,7 +67,7 @@ class UserServiceSpec extends BaseServiceSpec {
 
         then:
         1 * userRepositoryMock.findByUsername(username) >> Optional.empty()
-        0 * passwordEncoderMock.matches(*_)
+        1 * passwordEncoderMock.matches(rawPassword, '$2a$12$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing') >> false
 
         !result.isPresent()
     }
