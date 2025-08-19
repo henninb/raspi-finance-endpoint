@@ -20,7 +20,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 open class WebSecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val environment: Environment,
-    private val rateLimitingFilter: RateLimitingFilter
+    private val rateLimitingFilter: RateLimitingFilter,
+    private val securityAuditFilter: SecurityAuditFilter
 ) {
 
 
@@ -29,6 +30,7 @@ open class WebSecurityConfig(
     open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter, httpErrorLoggingFilter: HttpErrorLoggingFilter): SecurityFilterChain {
         http
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(securityAuditFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(httpErrorLoggingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .cors { cors ->
@@ -38,8 +40,11 @@ open class WebSecurityConfig(
             .authorizeHttpRequests { auth ->
                 // Allow public access for login and registration endpoints
                 auth.requestMatchers("/api/login", "/api/register", "/api/pending/transaction/insert").permitAll()
-                // Protect all other API endpoints
+                // SECURITY FIX: Protect all API endpoints AND non-API routes that contain sensitive endpoints
                 auth.requestMatchers("/api/**").authenticated()
+                auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
+                // Allow all other requests (for compatibility with existing functionality)
+                auth.anyRequest().permitAll()
             }
             .formLogin { it.disable() } // Disable form login
             .sessionManagement { session ->
