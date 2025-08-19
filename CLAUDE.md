@@ -35,19 +35,28 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 
 ### Database Migration
 - Flyway migration: `./gradlew flywayMigrate --info`
+- Flyway repair: `./run-flyway-repair.sh` or `./gradlew flywayRepair`
+
+### Development Scripts
+- Run application with screen: `./run-screen-bootrun.sh`
+- Run functional tests: `./run-functional.sh`
+- Git setup: `./run-git-setup.sh`
+- Deploy script: `./run-deploy.sh`
 
 ## Architecture Overview
 
 ### Technology Stack
-- **Primary Language**: Kotlin 2.1.x
-- **Test Language**: Groovy with Spock framework
-- **Framework**: Spring Boot 3.5.x
-- **Security**: Spring Security with JWT
-- **Database**: PostgreSQL (prod/stage) or Oracle (prodora)
-- **Build Tool**: Gradle 8.14.x
-- **Messaging**: Apache Camel for file processing routes
+- **Primary Language**: Kotlin 2.2.0
+- **Test Language**: Groovy 4.0.25 with Spock 2.3 framework
+- **Framework**: Spring Boot 3.5.4
+- **Security**: Spring Security 6.5.1 with JWT
+- **Database**: PostgreSQL 42.7.7 (prod/stage) or Oracle (prodora), H2 2.3.232 (test)
+- **Build Tool**: Gradle 8.8
+- **Messaging**: Apache Camel 4.13.0 for file processing routes
 - **Metrics**: Micrometer with InfluxDB
-- **GraphQL**: Custom GraphQL implementation
+- **GraphQL**: Custom GraphQL 19.1 implementation
+- **Resilience**: Resilience4j 2.2.0 for circuit breakers and retry logic
+- **Migration**: Flyway 11.11.0
 
 ### Application Structure
 
@@ -74,7 +83,8 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - **Development/Test**: H2 in-memory database
 - **Production**: PostgreSQL or Oracle based on profile
 - **Migration**: Flyway for database versioning
-- **Profiles**: `prod`, `stage`, `prodora`, `func`, `int`, `unit`, `perf`, `ora`
+- **Resilience**: Resilience4j with circuit breakers, retry logic, and time limiters
+- **Profiles**: `prod`, `stage`, `prodora`, `func`, `int`, `unit`, `perf`, `ora`, `db-resilience`
 
 ### Test Strategy
 - **Unit Tests**: Spock specs in `src/test/unit/groovy/`
@@ -108,7 +118,13 @@ Multiple Docker Compose configurations available:
 - `docker-compose-postgresql.yml` - PostgreSQL setup
 - `docker-compose-oracle.yml` - Oracle setup
 - `docker-compose-prod.yml` - Production configuration
+- `docker-compose-prodora.yml` - Production Oracle configuration
 - `docker-compose-stage.yml` - Staging configuration
+- `docker-compose-base.yml` - Base configuration template
+- `docker-compose-influxdb.yml` - InfluxDB metrics database
+- `docker-compose-elk.yml` - ELK stack (Elasticsearch, Logstash, Kibana)
+- `docker-compose-nginx.yml` - Nginx reverse proxy
+- `docker-compose-varnish.yml` - Varnish HTTP cache
 
 ### File Processing
 Transaction files are processed through Camel routes:
@@ -150,10 +166,13 @@ Transaction files are processed through Camel routes:
 - Memory usage must be monitored for large data operations
 
 ### Testing Requirements
-- 100% test coverage for critical business logic
-- Integration tests for all database operations
-- Performance tests for file processing operations
-- Security tests for authentication and authorization
+- **Coverage Goals**: ~70% functional test coverage target, current ~40%
+- **Integration tests** for all database operations with H2 in-memory database
+- **Performance tests** for file processing operations using dedicated profile
+- **Security tests** for authentication and authorization flows
+- **Test Naming**: All Groovy test files use `Spec.groovy` suffix (Spock framework)
+- **Builder Pattern**: Use dedicated builder classes for test data construction
+- **Test Profiles**: Each test type has dedicated Spring profile configuration
 
 ## Git Commit Quality Reviewer
 
