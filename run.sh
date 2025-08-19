@@ -5,6 +5,221 @@ log() {
   echo "$(date +"%Y-%m-%d %H:%M:%S") - $*"
 }
 
+# Error function for timestamped error messages
+log_error() {
+  echo "$(date +"%Y-%m-%d %H:%M:%S") - ERROR: $*" >&2
+}
+
+# Function to check if SSH agent is running and accessible
+check_ssh_agent() {
+  ssh-add -l >/dev/null 2>&1
+  ssh_add_exit_code=$?
+  if [ $ssh_add_exit_code -ne 0 ]; then
+    case $ssh_add_exit_code in
+      1)
+        log "SSH agent is running but has no identities loaded."
+        return 0
+        ;;
+      2)
+        log_error "SSH agent is not running or not accessible."
+        log "Starting SSH agent..."
+        ssh_agent_output=$(ssh-agent -s)
+        if [ $? -eq 0 ]; then
+          eval "$ssh_agent_output"
+          export SSH_AUTH_SOCK SSH_AGENT_PID
+          log "SSH agent started successfully (PID: $SSH_AGENT_PID, Socket: $SSH_AUTH_SOCK)."
+          return 0
+        else
+          log_error "Failed to start SSH agent."
+          return 1
+        fi
+        ;;
+      *)
+        log_error "Unknown error checking SSH agent status."
+        return 1
+        ;;
+    esac
+  fi
+  log "SSH agent is running and accessible."
+  return 0
+}
+
+# Function to add SSH key with error handling and retry
+add_ssh_key() {
+  local key_path="$1"
+  local max_attempts=3
+  local attempt=1
+
+  if [ ! -f "$key_path" ]; then
+    log_error "SSH key file not found: $key_path"
+    return 1
+  fi
+
+  # Check if SSH agent is accessible
+  if ! check_ssh_agent; then
+    log_error "Cannot proceed without accessible SSH agent."
+    return 1
+  fi
+
+  # Get the fingerprint of the key
+  local key_fingerprint
+  key_fingerprint=$(ssh-keygen -lf "$key_path" 2>/dev/null | awk '{print $2}') || {
+    log_error "Failed to get fingerprint for SSH key: $key_path"
+    return 1
+  }
+
+  # Check if key is already loaded
+  if ssh-add -l 2>/dev/null | grep -q "$key_fingerprint"; then
+    log "SSH key already loaded in agent."
+    return 0
+  fi
+
+  # Attempt to add the key with retry logic
+  while [ $attempt -le $max_attempts ]; do
+    log "Adding SSH key (attempt $attempt/$max_attempts)..."
+
+    # Capture ssh-add output to provide better error context
+    ssh_add_output=$(ssh-add "$key_path" 2>&1)
+    ssh_add_exit_code=$?
+
+    if [ $ssh_add_exit_code -eq 0 ]; then
+      log "SSH key added successfully."
+      return 0
+    else
+      log_error "Failed to add SSH key (attempt $attempt/$max_attempts)."
+
+      # Analyze specific failure reasons
+      if echo "$ssh_add_output" | grep -q "Bad passphrase"; then
+        log_error "SSH key passphrase is incorrect."
+        log_error "Please verify the passphrase for $key_path"
+      elif echo "$ssh_add_output" | grep -q "Could not open a connection to your authentication agent"; then
+        log_error "SSH agent is not running or not accessible."
+        log_error "Try starting SSH agent: eval \"\$(ssh-agent -s)\""
+      elif echo "$ssh_add_output" | grep -q "ssh_askpass.*No such file or directory"; then
+        log_error "SSH askpass utility not found (GUI password prompt not available)."
+        log_error "This is expected in a console environment. Password authentication will be used instead."
+      elif echo "$ssh_add_output" | grep -q "No such file or directory"; then
+        log_error "SSH key file not found: $key_path"
+        log_error "Please verify the key path is correct."
+      elif echo "$ssh_add_output" | grep -q "invalid format"; then
+        log_error "SSH key file has invalid format: $key_path"
+        log_error "Please verify the key file is not corrupted."
+      else
+        log_error "SSH key addition failed with output: $ssh_add_output"
+      fi
+
+      if [ $attempt -eq $max_attempts ]; then
+        log_error "Failed to add SSH key after $max_attempts attempts."
+        log_error ""
+        log_error "Troubleshooting steps:"
+        log_error "  1. Check SSH key file exists: ls -la $key_path"
+        log_error "  2. Verify key permissions: chmod 600 $key_path"
+        log_error "  3. Test key format: ssh-keygen -y -f $key_path"
+        log_error "  4. Check SSH agent: ssh-add -l"
+        log_error "  5. Restart SSH agent: eval \"\$(ssh-agent -s)\""
+        log_error ""
+        log_error "Manual key addition: ssh-add $key_path"
+        return 1
+      fi
+      attempt=$((attempt + 1))
+      sleep 2
+    fi
+  done
+}
+
+# Function to test SSH connection with detailed error handling
+test_ssh_connection() {
+  local host="$1"
+  local timeout=10
+  local ssh_output
+  local ssh_exit_code
+
+  log "Testing SSH connection to $host..."
+
+  # First test basic connectivity (no command execution)
+  if ! ssh -o ConnectTimeout=$timeout -o BatchMode=yes -o StrictHostKeyChecking=no -o PreferredAuthentications=none "$host" exit 2>/dev/null; then
+    # Test if host is reachable at all using SSH (ping may not work with SSH aliases)
+    ssh_basic_output=$(ssh -o ConnectTimeout=$timeout -o BatchMode=yes -o StrictHostKeyChecking=no -o PreferredAuthentications=none "$host" exit 2>&1)
+    if echo "$ssh_basic_output" | grep -q "Connection refused\|No route to host\|Connection timed out"; then
+      log_error "Host $host is not reachable (network connectivity issue)."
+      log_error "Please check:"
+      log_error "  1. Network connectivity to $host"
+      log_error "  2. Host $host exists and is online"
+      log_error "  3. SSH service is running on port 22"
+      return 1
+    fi
+    # If we get here, the host is likely reachable but requires authentication
+  fi
+
+  # Test SSH connection with authentication (prefer key, allow password fallback)
+  # First try non-interactive authentication
+  ssh_output=$(ssh -o ConnectTimeout=$timeout -o StrictHostKeyChecking=no -o BatchMode=yes "$host" 'echo "SSH connection test successful"' 2>&1)
+  ssh_exit_code=$?
+
+  if [ $ssh_exit_code -eq 0 ]; then
+    log "SSH connection to $host successful (key-based authentication)."
+    return 0
+  fi
+
+  # If key-based authentication failed, test if the host accepts connections (might need password)
+  ssh_output=$(ssh -o ConnectTimeout=$timeout -o StrictHostKeyChecking=no -o BatchMode=yes -o PreferredAuthentications=none "$host" 'echo "test"' 2>&1)
+  ssh_exit_code=$?
+
+  if [ $ssh_exit_code -eq 255 ] && echo "$ssh_output" | grep -q "Permission denied"; then
+    log "SSH service is running on $host but requires authentication."
+    log "Automatic key-based authentication failed, but password authentication should work."
+    log "The script will proceed and attempt to use SSH with password prompts when needed."
+    return 0
+  else
+    # Analyze the specific type of failure
+    case $ssh_exit_code in
+      255)
+        if echo "$ssh_output" | grep -q "Permission denied"; then
+          log_error "SSH authentication to $host failed (Permission denied)."
+          log_error "This indicates the SSH key is not properly configured for authentication."
+          log_error "Please check:"
+          log_error "  1. SSH key is added to ssh-agent (run: ssh-add -l)"
+          log_error "  2. Public key is added to ~/.ssh/authorized_keys on $host"
+          log_error "  3. SSH key has correct permissions (private key should be 600)"
+          log_error "  4. SSH agent is running and accessible"
+          log_error ""
+          log_error "Debug steps:"
+          log_error "  - Test manual SSH: ssh $host"
+          log_error "  - Check SSH key fingerprint: ssh-keygen -lf ~/.ssh/id_rsa_gcp"
+          log_error "  - Verify key is loaded: ssh-add -l"
+        elif echo "$ssh_output" | grep -q "Connection refused"; then
+          log_error "SSH connection to $host refused (Connection refused)."
+          log_error "Please check:"
+          log_error "  1. SSH service (sshd) is running on $host"
+          log_error "  2. SSH port (22) is open on $host"
+          log_error "  3. Firewall settings on $host"
+        elif echo "$ssh_output" | grep -q "No route to host"; then
+          log_error "No route to host $host (network routing issue)."
+          log_error "Please check network routing and firewall rules."
+        elif echo "$ssh_output" | grep -q "Connection timed out"; then
+          log_error "SSH connection to $host timed out."
+          log_error "Please check:"
+          log_error "  1. Network connectivity to $host"
+          log_error "  2. SSH service is running and responsive on $host"
+          log_error "  3. Firewall or network latency issues"
+        else
+          log_error "SSH connection to $host failed with exit code $ssh_exit_code."
+          log_error "SSH output: $ssh_output"
+          log_error "Please check:"
+          log_error "  1. SSH service is running on $host"
+          log_error "  2. SSH key authentication is properly configured"
+          log_error "  3. Network connectivity to $host"
+        fi
+        ;;
+      *)
+        log_error "SSH connection to $host failed with unexpected exit code $ssh_exit_code."
+        log_error "SSH output: $ssh_output"
+        ;;
+    esac
+    return 1
+  fi
+}
+
 # Function to validate environment secrets
 validate_env_secrets() {
   local env_file="env.secrets"
@@ -92,32 +307,122 @@ fi
 
 log "Starting deployment in '$env' environment."
 
-KEY_PATH="$HOME/.ssh/id_rsa_gcp"
-# Get the fingerprint of your key
-KEY_FINGERPRINT=$(ssh-keygen -lf "$KEY_PATH" | awk '{print $2}')
-
 if [ "$env" = "gcp" ]; then
-  if ssh-add -l | grep -q "$KEY_FINGERPRINT"; then
-    echo "SSH key already added."
+  KEY_PATH="$HOME/.ssh/id_rsa_gcp"
+
+  # Try to add SSH key, but don't fail if it's not available
+  if [ -f "$KEY_PATH" ]; then
+    log "SSH key found at $KEY_PATH, attempting to add..."
+    if ! add_ssh_key "$KEY_PATH"; then
+      log "Warning: Failed to add SSH key for GCP deployment."
+      log "Will attempt to use password authentication instead."
+    fi
   else
-    echo ssh-add "$KEY_PATH"
-    echo "Adding SSH key..."
-    ssh-add "$KEY_PATH"
+    log "SSH key not found at $KEY_PATH, will use password authentication."
   fi
 fi
 
 # Set HOST_IP as the database IP depending on deployment target.
 if [ "$env" = "proxmox" ]; then
   HOST_IP="192.168.10.10"
-  export CURRENT_UID="$(ssh debian-dockerserver id -u)"
-  export CURRENT_GID="$(ssh debian-dockerserver id -g)"
-  export USERNAME="$(ssh debian-dockerserver whoami)"
+
+  # Test SSH connection to Proxmox host
+  if ! test_ssh_connection "debian-dockerserver"; then
+    log_error "Cannot establish SSH connection to Proxmox host (debian-dockerserver)."
+    exit 1
+  fi
+
+  # Get user info from remote host with error handling
+  log "Getting user information from Proxmox host..."
+  log "Note: You may be prompted for your SSH key passphrase or password."
+
+  # First try with standard SSH (might use key if available)
+  CURRENT_UID="$(ssh debian-dockerserver id -u 2>/dev/null)"
+  if [ -z "$CURRENT_UID" ]; then
+    # If that failed, try with password authentication only
+    log "Key-based authentication failed, trying password authentication..."
+    CURRENT_UID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null debian-dockerserver id -u)" || {
+      log_error "Failed to get UID from debian-dockerserver."
+      exit 1
+    }
+    # Use password auth for remaining commands too
+    CURRENT_GID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null debian-dockerserver id -g)" || {
+      log_error "Failed to get GID from debian-dockerserver."
+      exit 1
+    }
+    USERNAME="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null debian-dockerserver whoami)" || {
+      log_error "Failed to get username from debian-dockerserver."
+      exit 1
+    }
+  else
+    # Key-based auth worked, use it for remaining commands
+    CURRENT_GID="$(ssh debian-dockerserver id -g)" || {
+      log_error "Failed to get GID from debian-dockerserver."
+      exit 1
+    }
+    USERNAME="$(ssh debian-dockerserver whoami)" || {
+      log_error "Failed to get username from debian-dockerserver."
+      exit 1
+    }
+  fi
+  export CURRENT_UID CURRENT_GID USERNAME
+
   # Use env.prod for Proxmox (InfluxDB enabled)
   ENV_FILE="env.prod"
 else
-  export CURRENT_UID="$(ssh gcp-api id -u)"
-  export CURRENT_GID="$(ssh gcp-api id -g)"
-  export USERNAME="$(ssh gcp-api whoami)"
+  # Test SSH connection to GCP host
+  if ! test_ssh_connection "gcp-api"; then
+    log_error "Cannot establish SSH connection to GCP host (gcp-api)."
+    log_error "Deployment cannot continue without SSH access to the remote host."
+    log_error ""
+    log_error "If this is an authentication failure, try these steps:"
+    log_error "  1. Verify SSH key is loaded: ssh-add -l"
+    log_error "  2. Manually test SSH connection: ssh gcp-api"
+    log_error "  3. Re-run SSH key addition: ssh-add ~/.ssh/id_rsa_gcp"
+    log_error "  4. Check if public key is on remote host: cat ~/.ssh/authorized_keys"
+    log_error ""
+    log_error "For connection issues, verify:"
+    log_error "  1. Host gcp-api is reachable: ping gcp-api"
+    log_error "  2. SSH service is running on remote host"
+    log_error "  3. Network/firewall configuration allows SSH"
+    exit 1
+  fi
+
+  # Get user info from remote host with error handling
+  log "Getting user information from GCP host..."
+  log "Note: You may be prompted for your SSH key passphrase or password."
+
+  # First try with standard SSH (should use the key we just added to agent)
+  CURRENT_UID="$(ssh gcp-api id -u 2>/dev/null)"
+  if [ -z "$CURRENT_UID" ]; then
+    # If that failed, try with password authentication only
+    log "Key-based authentication failed, trying password authentication..."
+    CURRENT_UID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api id -u)" || {
+      log_error "Failed to get UID from gcp-api."
+      exit 1
+    }
+    # Use password auth for remaining commands too
+    CURRENT_GID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api id -g)" || {
+      log_error "Failed to get GID from gcp-api."
+      exit 1
+    }
+    USERNAME="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api whoami)" || {
+      log_error "Failed to get username from gcp-api."
+      exit 1
+    }
+  else
+    # Key-based auth worked, use it for remaining commands
+    CURRENT_GID="$(ssh gcp-api id -g)" || {
+      log_error "Failed to get GID from gcp-api."
+      exit 1
+    }
+    USERNAME="$(ssh gcp-api whoami)" || {
+      log_error "Failed to get username from gcp-api."
+      exit 1
+    }
+  fi
+  export CURRENT_UID CURRENT_GID USERNAME
+
   HOST_IP="172.19.0.2"
   # Use env.gcp for GCP (InfluxDB disabled)
   ENV_FILE="env.gcp"
@@ -185,20 +490,40 @@ log "Gradle build succeeded."
 
 # For gcp deployments, adjust the Docker host context.
 if [ "$env" = "gcp" ]; then
-  log "Setting DOCKER_HOST for gcp deployment to ssh://gcp-api..."
-  export DOCKER_HOST=ssh://brianhenning@34.132.189.202
+  log "Setting DOCKER_HOST for gcp deployment..."
   export DOCKER_HOST=ssh://gcp-api
-  docker context ls
-  # Check if the key is already added
-  if ssh-add -l | grep -q "$KEY_FINGERPRINT"; then
-    echo "SSH key already added."
-  else
-    echo "Adding SSH key..."
-    ssh-add "$KEY_PATH"
+
+  # Verify Docker context is accessible
+  log "Verifying Docker context accessibility..."
+  if ! docker context ls >/dev/null 2>&1; then
+    log_error "Failed to list Docker contexts. Docker may not be accessible via SSH."
+    log_error "Please verify:"
+    log_error "  1. Docker is installed and running on the remote host"
+    log_error "  2. Your user has permission to access Docker on the remote host"
+    log_error "  3. SSH connection allows port forwarding"
+    exit 1
   fi
+
+  # Test Docker connectivity over SSH
+  log "Testing Docker connectivity over SSH..."
+  if ! docker version >/dev/null 2>&1; then
+    log_error "Failed to connect to Docker daemon via SSH."
+    log_error "Please check Docker daemon status on the remote host."
+    log_error "You may need to enter your password for SSH authentication."
+    exit 1
+  fi
+  log "Docker connectivity over SSH verified."
 else
   log "Setting DOCKER_HOST for proxmox deployment..."
   export DOCKER_HOST=ssh://192.168.10.10
+
+  # Test Docker connectivity for Proxmox
+  log "Testing Docker connectivity to Proxmox host..."
+  if ! docker version >/dev/null 2>&1; then
+    log_error "Failed to connect to Docker daemon on Proxmox host."
+    exit 1
+  fi
+  log "Docker connectivity to Proxmox host verified."
 fi
 
 # Docker-related commands
@@ -320,8 +645,20 @@ fi
   # docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
 # fi
 
-docker network connect finance-lan postgresql-server
-docker network connect finance-lan raspi-finance-endpoint
+# Connect containers to finance-lan network if not already connected
+if ! docker network inspect finance-lan --format '{{range .Containers}}{{.Name}}{{"\n"}}{{end}}' 2>/dev/null | grep -q "^postgresql-server$"; then
+  log "Connecting postgresql-server to finance-lan network..."
+  docker network connect finance-lan postgresql-server
+else
+  log "postgresql-server already connected to finance-lan network."
+fi
+
+if ! docker network inspect finance-lan --format '{{range .Containers}}{{.Name}}{{"\n"}}{{end}}' 2>/dev/null | grep -q "^raspi-finance-endpoint$"; then
+  log "Connecting raspi-finance-endpoint to finance-lan network..."
+  docker network connect finance-lan raspi-finance-endpoint
+else
+  log "raspi-finance-endpoint already connected to finance-lan network."
+fi
 log "docker network ls"
 docker network ls
 
