@@ -57,7 +57,7 @@ class RequestLoggingFilterSpec extends Specification {
         baseReq.getInputStream() >> inputStreamWith(body)
         baseReq.getRequestURI() >> "/api/echo"
 
-        def wrapped = new ContentCachingRequestWrapper(baseReq)
+        def wrapped = new ContentCachingRequestWrapper(baseReq, 1024)  // Added cache limit for Spring Boot 4.0.0-M1
 
         when:
         filter.doFilterInternal(wrapped, responseMock, new FilterChain() {

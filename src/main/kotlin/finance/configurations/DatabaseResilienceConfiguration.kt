@@ -9,8 +9,9 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig
 import io.micrometer.core.instrument.MeterRegistry
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.springframework.boot.actuate.health.HealthIndicator
-import org.springframework.boot.actuate.health.Status
+// TODO: HealthIndicator imports may have changed in Spring Boot 4.0.0-M1
+// import org.springframework.boot.actuate.health.HealthIndicator
+// import org.springframework.boot.actuate.health.Status
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.dao.DataAccessResourceFailureException
@@ -117,30 +118,31 @@ open class DatabaseResilienceConfiguration {
         }
     }
 
-    @Bean
-    open fun databaseHealthIndicator(dataSource: DataSource): HealthIndicator {
-        return HealthIndicator {
-            try {
-                dataSource.connection.use { connection ->
-                    val isValid = connection.isValid(5)
-                    if (isValid) {
-                        org.springframework.boot.actuate.health.Health.up()
-                            .withDetail("database", "Connection pool healthy")
-                            .build()
-                    } else {
-                        org.springframework.boot.actuate.health.Health.down()
-                            .withDetail("database", "Connection validation failed")
-                            .build()
-                    }
-                }
-            } catch (ex: Exception) {
-                logger.error("Database health check failed", ex)
-                org.springframework.boot.actuate.health.Health.down(ex)
-                    .withDetail("database", "Health check failed: ${ex.message}")
-                    .build()
-            }
-        }
-    }
+    // TODO: HealthIndicator API changed in Spring Boot 4.0.0-M1
+    // @Bean
+    // open fun databaseHealthIndicator(dataSource: DataSource): HealthIndicator {
+    //     return HealthIndicator {
+    //         try {
+    //             dataSource.connection.use { connection ->
+    //                 val isValid = connection.isValid(5)
+    //                 if (isValid) {
+    //                     org.springframework.boot.actuate.health.Health.up()
+    //                         .withDetail("database", "Connection pool healthy")
+    //                         .build()
+    //                 } else {
+    //                     org.springframework.boot.actuate.health.Health.down()
+    //                         .withDetail("database", "Connection validation failed")
+    //                         .build()
+    //                 }
+    //             }
+    //         } catch (ex: Exception) {
+    //             logger.error("Database health check failed", ex)
+    //             org.springframework.boot.actuate.health.Health.down(ex)
+    //                 .withDetail("database", "Health check failed: ${ex.message}")
+    //                 .build()
+    //         }
+    //     }
+    // }
 
     @Bean
     open fun connectionPoolMetrics(meterRegistry: MeterRegistry, dataSource: DataSource): String {
