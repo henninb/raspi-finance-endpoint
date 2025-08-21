@@ -283,7 +283,7 @@ class CamelRouteIntegrationSpec extends Specification {
             // Check that error handling directory exists and contains the failed file, or file was moved to any error directory
             def jsonParsingErrorDir = new File("$baseName/int_json_in/.not-processed-json-parsing-errors")
             def failedWithErrorsDir = new File("$baseName/int_json_in/.not-processed-failed-with-errors")
-            
+
             (jsonParsingErrorDir.exists() && jsonParsingErrorDir.listFiles()?.size() > 0) ||
             (failedWithErrorsDir.exists() && failedWithErrorsDir.listFiles()?.size() > 0) ||
             !destinationFile.exists()  // File was processed (deleted/moved)

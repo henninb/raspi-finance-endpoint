@@ -17,15 +17,15 @@ class UserService(
     fun signIn(user: User): Optional<User> {
         // Retrieve the user by username
         val userOptional = userRepository.findByUsername(user.username)
-        
+
         // Always perform password check to prevent timing attacks
-        val dbUser = userOptional.orElse(User().apply { 
-            password = "\$2a\$12\$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing" 
+        val dbUser = userOptional.orElse(User().apply {
+            password = "\$2a\$12\$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing"
         })
-        
+
         // Always perform password check regardless of user existence
         val passwordMatches = passwordEncoder.matches(user.password, dbUser.password)
-        
+
         return if (userOptional.isPresent && passwordMatches) {
             userOptional
         } else {

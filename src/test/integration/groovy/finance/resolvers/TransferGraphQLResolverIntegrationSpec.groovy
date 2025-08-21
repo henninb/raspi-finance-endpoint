@@ -46,7 +46,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
         transferGraphQLResolver = new TransferGraphQLResolver(transferService, meterRegistry)
         cleanup()
     }
-    
+
     void cleanup() {
         transferRepository.deleteAll()
         transactionRepository.deleteAll()
@@ -83,7 +83,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
     def "should fetch all transfers via GraphQL resolver with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "existing transfers in the database"
         createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("100.00"))
         createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("200.00"))
@@ -102,7 +102,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
     def "should fetch transfer by ID via GraphQL resolver with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "an existing transfer in the database"
         def savedTransfer = createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("150.00"))
 
@@ -137,7 +137,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
     def "should create transfer via GraphQL resolver with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "transfer input data"
         def transferInput = [
             sourceAccount: "transfersource_brian",
@@ -173,7 +173,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
     def "should handle validation errors during transfer creation with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "invalid transfer input data (non-existent source account)"
         def transferInput = [
             sourceAccount: "nonexistent_brian",
@@ -196,7 +196,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
     def "should delete transfer via GraphQL resolver with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "an existing transfer in the database"
         def savedTransfer = createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("250.00"))
 

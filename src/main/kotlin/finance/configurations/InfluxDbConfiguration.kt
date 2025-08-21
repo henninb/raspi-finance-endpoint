@@ -12,7 +12,7 @@ import org.springframework.core.env.Environment
 import java.time.Duration
 
 @Configuration
-// TODO: ConditionalOnEnabledMetricsExport may have changed in Spring Boot 4.0.0-M1  
+// TODO: ConditionalOnEnabledMetricsExport may have changed in Spring Boot 4.0.0-M1
 // @ConditionalOnEnabledMetricsExport("influx")
 @ConditionalOnProperty(name = ["management.metrics.export.influx.enabled"], havingValue = "true")
 open class InfluxDbConfiguration {
