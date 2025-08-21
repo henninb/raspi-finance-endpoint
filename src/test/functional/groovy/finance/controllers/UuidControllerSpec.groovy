@@ -152,6 +152,8 @@ class UuidControllerSpec extends BaseControllerSpec {
     void "test health check endpoint"() {
         when: "posting to health check endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(

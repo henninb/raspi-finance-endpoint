@@ -1,6 +1,8 @@
 package finance.controllers
 
 import finance.Application
+import finance.helpers.TestDataManager
+import finance.helpers.TestFixtures
 import groovy.util.logging.Slf4j
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -16,6 +18,8 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.transaction.annotation.Transactional
+import org.spockframework.spring.EnableSharedInjection
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -23,6 +27,8 @@ import spock.lang.Specification
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = Application)
+@EnableSharedInjection
+@Transactional
 class BaseControllerSpec extends Specification {
     @LocalServerPort
     //@Value("\${local.server.port}")
@@ -30,6 +36,18 @@ class BaseControllerSpec extends Specification {
     //@Value('${local.server.port}')
     //@Value("\${server.port}")
     protected int port
+
+    @Shared
+    @Autowired
+    protected TestDataManager testDataManager
+
+    @Shared
+    @Autowired
+    protected TestFixtures testFixtures
+
+    @Shared
+    protected String testOwner = "test_${UUID.randomUUID().toString().replace('-', '')[0..7]}"
+
     protected String username = "foo"
 
     @Value('${custom.project.jwt.key}')
@@ -37,7 +55,6 @@ class BaseControllerSpec extends Specification {
 
     protected TestRestTemplate restTemplate = new TestRestTemplate()
 
-    @Shared
     protected HttpHeaders headers = new HttpHeaders()
 
     protected String generateJwtToken(String username) {
@@ -86,5 +103,32 @@ class BaseControllerSpec extends Specification {
 
         return restTemplate.exchange(
                 "http://localhost:${port}/api/${endpointName}/delete/${parameter}", HttpMethod.DELETE, entity, String)
+    }
+
+    def setupSpec() {
+        log.info("Setting up test data for test owner: ${testOwner}")
+        testDataManager.createMinimalAccountsFor(testOwner)
+    }
+
+    def cleanupSpec() {
+        log.info("Cleaning up test data for test owner: ${testOwner}")
+        testDataManager.cleanupAccountsFor(testOwner)
+    }
+
+    def setup() {
+        // Create fresh headers for each test to avoid cross-test pollution
+        headers = new HttpHeaders()
+    }
+
+    protected String getPrimaryAccountName() {
+        return "primary_${testOwner}"
+    }
+
+    protected String getSecondaryAccountName() {
+        return "secondary_${testOwner}"
+    }
+
+    protected String getTestCategory() {
+        return "test_category_${testOwner}"
     }
 }

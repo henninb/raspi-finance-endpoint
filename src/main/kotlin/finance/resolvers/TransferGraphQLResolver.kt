@@ -38,7 +38,7 @@ class TransferGraphQLResolver(
             try {
                 val transferId: Long = environment.getArgument("transferId")
                 logger.info("GraphQL: Fetching transfer with ID: $transferId")
-                
+
                 val transferOptional = transferService.findByTransferId(transferId)
                 val result = if (transferOptional.isPresent) {
                     meterRegistry.counter("graphql.transfer.fetch.success").increment()
@@ -64,15 +64,15 @@ class TransferGraphQLResolver(
             try {
                 logger.info("GraphQL: Creating new transfer")
                 val transferInput = environment.getArgument<Map<String, Any>>("transfer")
-                
+
                 // Convert input to Transfer object
                 val transfer = mapper.convertValue(transferInput, Transfer::class.java)
-                
+
                 // Set required fields
                 transfer.guidSource = UUID.randomUUID().toString()
                 transfer.guidDestination = UUID.randomUUID().toString()
                 transfer.activeStatus = true
-                
+
                 // Parse transaction date if provided as string
                 transferInput["transactionDate"]?.let { dateInput ->
                     when (dateInput) {
@@ -80,9 +80,9 @@ class TransferGraphQLResolver(
                         is Date -> transfer.transactionDate = dateInput
                     }
                 }
-                
+
                 logger.debug("GraphQL: Transfer to create: $transfer")
-                
+
                 val result = transferService.insertTransfer(transfer)
                 meterRegistry.counter("graphql.transfer.create.success").increment()
                 logger.info("GraphQL: Successfully created transfer with ID: ${result.transferId}")
@@ -101,7 +101,7 @@ class TransferGraphQLResolver(
             try {
                 val transferId: Long = environment.getArgument("transferId")
                 logger.info("GraphQL: Deleting transfer with ID: $transferId")
-                
+
                 val result = transferService.deleteByTransferId(transferId)
                 if (result) {
                     meterRegistry.counter("graphql.transfer.delete.success").increment()
