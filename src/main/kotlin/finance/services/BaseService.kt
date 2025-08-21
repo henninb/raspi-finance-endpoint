@@ -40,7 +40,7 @@ open class BaseService {
         get() = _circuitBreaker
         set(value) { _circuitBreaker = value }
 
-    @Autowired(required = false) 
+    @Autowired(required = false)
     private var _retry: Retry? = null
     open var retry: Retry?
         get() = _retry

@@ -46,7 +46,7 @@ class SecurityAuditFilter(
             if (isSensitiveEndpoint) {
                 val responseTime = System.currentTimeMillis() - startTime
                 logSecurityAuditEvent(request, response, "AFTER_REQUEST", responseTime)
-                
+
                 // Increment security audit counter
                 Counter.builder("security.audit.endpoint.access")
                     .description("Security audit events for sensitive endpoint access")
@@ -70,7 +70,7 @@ class SecurityAuditFilter(
         val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
 
         val auditType = if (isAuthenticated) "AUTHORIZED_ACCESS" else "UNAUTHORIZED_ACCESS"
-        
+
         securityLogger.info(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} userAgent='{}'",
             auditType, phase, username, request.requestURI, request.method, clientIp, userAgent ?: "unknown"
@@ -78,9 +78,9 @@ class SecurityAuditFilter(
     }
 
     private fun logSecurityAuditEvent(
-        request: HttpServletRequest, 
-        response: HttpServletResponse, 
-        phase: String, 
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        phase: String,
         responseTime: Long
     ) {
         val authentication = SecurityContextHolder.getContext().authentication
@@ -96,18 +96,18 @@ class SecurityAuditFilter(
         }
 
         // Log security violations for non-API routes
-        if (request.requestURI.contains("/select/active") && 
-            !request.requestURI.startsWith("/api/") && 
+        if (request.requestURI.contains("/select/active") &&
+            !request.requestURI.startsWith("/api/") &&
             (response.status == 403 || response.status == 401)) {
             securityLogger.warn(
                 "SECURITY_VIOLATION type=NON_API_ROUTE_ACCESS user={} endpoint={} method={} ip={} status={} responseTime={}ms",
                 username, request.requestURI, request.method, clientIp, response.status, responseTime
             )
         }
-        
+
         securityLogger.info(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} status={} responseTime={}ms userAgent='{}'",
-            auditType, phase, username, request.requestURI, request.method, clientIp, 
+            auditType, phase, username, request.requestURI, request.method, clientIp,
             response.status, responseTime, userAgent ?: "unknown"
         )
     }

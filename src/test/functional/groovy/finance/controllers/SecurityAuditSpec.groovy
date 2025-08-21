@@ -38,15 +38,15 @@ class SecurityAuditSpec extends BaseControllerSpec {
     void 'should reject access to /select/active endpoints without authentication'() {
         when: 'accessing account select/active endpoint without authentication'
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/account/select/active"), 
-                HttpMethod.GET, 
-                null, 
+                createURLWithPort("/account/select/active"),
+                HttpMethod.GET,
+                null,
                 String
         )
 
         then: 'should be forbidden due to missing authentication'
         response.statusCode == HttpStatus.FORBIDDEN || response.statusCode == HttpStatus.UNAUTHORIZED
-        
+
         and: 'response should not contain sensitive data'
         !response.body?.contains("accountNameOwner")
         !response.body?.contains("totals")
@@ -63,7 +63,7 @@ class SecurityAuditSpec extends BaseControllerSpec {
 
         then: 'should be successful'
         response.statusCode == HttpStatus.OK
-        
+
         and: 'response should contain account data'
         response.body?.contains("accountNameOwner")
         response.body?.contains("accountType")
@@ -72,9 +72,9 @@ class SecurityAuditSpec extends BaseControllerSpec {
     void 'should reject access to category endpoints without authentication'() {
         when: 'accessing category select/active endpoint without authentication'
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/category/select/active"), 
-                HttpMethod.GET, 
-                null, 
+                createURLWithPort("/category/select/active"),
+                HttpMethod.GET,
+                null,
                 String
         )
 
@@ -93,9 +93,9 @@ class SecurityAuditSpec extends BaseControllerSpec {
         def entity = new org.springframework.http.HttpEntity<>(null, headers)
 
         return restTemplate.exchange(
-                createURLWithPort("/api/${endpointName}/select/active"), 
-                HttpMethod.GET, 
-                entity, 
+                createURLWithPort("/api/${endpointName}/select/active"),
+                HttpMethod.GET,
+                entity,
                 String
         )
     }

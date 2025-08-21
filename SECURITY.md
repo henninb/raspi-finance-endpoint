@@ -9,7 +9,7 @@ This document contains a comprehensive security assessment of the raspi-finance-
 #### 1. Information Disclosure - Password Logging (RESOLVED ✅)
 **Location**: `UserService.kt:23`
 **Status**: FIXED
-**Original Issue**: 
+**Original Issue**:
 ```kotlin
 logger.info("user-pass: ${user.password}")
 ```
@@ -25,7 +25,7 @@ logger.info("user-pass: ${user.password}")
 #### 3. Information Leakage via Cookie Settings (RESOLVED ✅)
 **Location**: `LoginController.kt:81-82`
 **Status**: FIXED
-**Original Issue**: 
+**Original Issue**:
 ```kotlin
 .httpOnly(false) // Allow JavaScript access in development for debugging
 .secure(false) // Never require HTTPS for local development
@@ -41,7 +41,7 @@ logger.info("user-pass: ${user.password}")
 #### 4. JWT Secret Key Exposure Risk
 **Location**: Multiple files using `@Value("${custom.project.jwt.key}")`
 **Status**: REQUIRES IMPLEMENTATION
-**Impact**: 
+**Impact**:
 - Hardcoded in configuration files
 - No key rotation mechanism
 - Single point of failure if compromised
@@ -52,12 +52,12 @@ logger.info("user-pass: ${user.password}")
 class JwtKeyRotationService {
     @Value("#{systemEnvironment['JWT_SIGNING_KEY'] ?: '${custom.project.jwt.fallback-key:}'}")
     private lateinit var primaryKey: String
-    
+
     @Value("#{systemEnvironment['JWT_PREVIOUS_KEY'] ?: ''}")
     private lateinit var previousKey: String
-    
+
     fun getCurrentSigningKey(): SecretKey = Keys.hmacShaKeyFor(primaryKey.toByteArray())
-    
+
     fun getValidationKeys(): List<SecretKey> = listOfNotNull(
         Keys.hmacShaKeyFor(primaryKey.toByteArray()),
         if (previousKey.isNotBlank()) Keys.hmacShaKeyFor(previousKey.toByteArray()) else null
@@ -94,15 +94,15 @@ class JwtKeyRotationService {
 @Service
 class TokenBlacklistService {
     private val blacklistedTokens = ConcurrentHashMap<String, Long>()
-    
+
     fun blacklistToken(token: String, expirationTime: Long) {
         blacklistedTokens[token] = expirationTime
         // Schedule cleanup for expired tokens
         scheduleCleanup(expirationTime)
     }
-    
+
     fun isBlacklisted(token: String): Boolean = blacklistedTokens.containsKey(token)
-    
+
     private fun scheduleCleanup(expirationTime: Long) {
         // Implementation for cleaning up expired blacklisted tokens
     }
@@ -120,7 +120,7 @@ private fun getClientIpAddress(request: HttpServletRequest): String {
     // Define trusted proxy networks
     val trustedProxies = listOf("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
     val clientIp = request.remoteAddr ?: "unknown"
-    
+
     return if (isFromTrustedProxy(clientIp, trustedProxies)) {
         // Only trust proxy headers from known proxies
         val xForwardedFor = request.getHeader("X-Forwarded-For")
@@ -159,7 +159,7 @@ class LoginAttemptService {
     private val lockoutTimes = ConcurrentHashMap<String, Long>()
     private val maxAttempts = 5
     private val lockoutDurationMs = 900000L // 15 minutes
-    
+
     fun recordFailedAttempt(username: String) {
         val attempts = attemptCounts.computeIfAbsent(username) { AtomicInteger(0) }
         if (attempts.incrementAndGet() >= maxAttempts) {
@@ -167,7 +167,7 @@ class LoginAttemptService {
             logger.warn("Account locked due to excessive failed attempts: $username")
         }
     }
-    
+
     fun isLocked(username: String): Boolean {
         val lockoutTime = lockoutTimes[username] ?: return false
         if (System.currentTimeMillis() >= lockoutTime) {
@@ -178,7 +178,7 @@ class LoginAttemptService {
         }
         return true
     }
-    
+
     fun recordSuccessfulAttempt(username: String) {
         attemptCounts.remove(username)
         lockoutTimes.remove(username)
@@ -191,22 +191,22 @@ class LoginAttemptService {
 @Component
 class SecurityEventLogger {
     private val securityLogger = LoggerFactory.getLogger("SECURITY.Events")
-    
+
     fun logAuthenticationSuccess(username: String, ipAddress: String, userAgent: String) {
-        securityLogger.info("AUTH_SUCCESS: user={}, ip={}, agent={}", 
+        securityLogger.info("AUTH_SUCCESS: user={}, ip={}, agent={}",
             username, ipAddress, sanitizeUserAgent(userAgent))
     }
-    
+
     fun logAuthenticationFailure(username: String?, ipAddress: String, reason: String) {
-        securityLogger.warn("AUTH_FAILURE: user={}, ip={}, reason={}", 
+        securityLogger.warn("AUTH_FAILURE: user={}, ip={}, reason={}",
             username ?: "unknown", ipAddress, reason)
     }
-    
+
     fun logSuspiciousActivity(event: String, details: Map<String, Any>) {
         securityLogger.error("SUSPICIOUS_ACTIVITY: event={}, details={}", event, details)
     }
-    
-    private fun sanitizeUserAgent(userAgent: String): String = 
+
+    private fun sanitizeUserAgent(userAgent: String): String =
         userAgent.take(200).filter { it.isLetterOrDigit() || it in " .,;:-_()" }
 }
 ```
@@ -215,31 +215,31 @@ class SecurityEventLogger {
 ```kotlin
 @Component
 class LoginInputValidator {
-    
+
     fun validateLoginRequest(loginRequest: User): ValidationResult {
         val errors = mutableListOf<String>()
-        
+
         // Username validation
         if (loginRequest.username.isBlank()) {
             errors.add("Username is required")
         } else if (!isValidUsernameFormat(loginRequest.username)) {
             errors.add("Invalid username format")
         }
-        
+
         // Password validation
         if (loginRequest.password.isBlank()) {
             errors.add("Password is required")
         } else if (loginRequest.password.length > 1000) { // Prevent DoS
             errors.add("Password too long")
         }
-        
+
         return ValidationResult(errors.isEmpty(), errors)
     }
-    
+
     private fun isValidUsernameFormat(username: String): Boolean {
         return username.matches("^[a-zA-Z0-9._@+-]{3,60}$".toRegex())
     }
-    
+
     data class ValidationResult(val isValid: Boolean, val errors: List<String>)
 }
 ```
@@ -255,13 +255,13 @@ class MfaService {
         // Store securely in database
         return generateSecretKey()
     }
-    
+
     fun verifyTotpCode(username: String, code: String): Boolean {
         // Verify TOTP code against stored secret
         val secret = getTotpSecret(username)
         return verifyTotp(secret, code)
     }
-    
+
     fun isMfaRequired(username: String): Boolean {
         // Determine if MFA is required for this user
         return getUserMfaSettings(username).isEnabled
@@ -273,7 +273,7 @@ class MfaService {
 ```kotlin
 @Configuration
 class SecurityHeadersConfig {
-    
+
     @Bean
     fun securityHeadersFilter(): FilterRegistrationBean<SecurityHeadersFilter> {
         val registrationBean = FilterRegistrationBean<SecurityHeadersFilter>()
@@ -296,9 +296,9 @@ class SecurityHeadersFilter : OncePerRequestFilter() {
         response.setHeader("X-Frame-Options", "DENY")
         response.setHeader("X-XSS-Protection", "1; mode=block")
         response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.setHeader("Content-Security-Policy", 
+        response.setHeader("Content-Security-Policy",
             "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
-        
+
         filterChain.doFilter(request, response)
     }
 }
@@ -319,14 +319,14 @@ security:
 
 ### Metrics Collection
 - **Authentication success/failure rates**
-- **Response times for login attempts** 
+- **Response times for login attempts**
 - **Rate limit violations**
 - **Geographic access patterns**
 - **Token manipulation attempts**
 
 ### Alert Thresholds
 - **>10 failed attempts/minute**: Potential brute force attack
-- **Unusual geographic access**: Account compromise indicator  
+- **Unusual geographic access**: Account compromise indicator
 - **Token manipulation attempts**: Active attack in progress
 - **Rate limit violations**: Automated attack detection
 

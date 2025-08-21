@@ -103,7 +103,7 @@ class PaymentGraphQLResolverIntegrationSpec extends Specification {
     def "should fetch payment by ID via GraphQL resolver in integration environment"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "an existing payment in the database"
         def savedPayment = createTestPayment("checking_brian", "discover_it", new BigDecimal("150.00"))
 
@@ -167,7 +167,7 @@ class PaymentGraphQLResolverIntegrationSpec extends Specification {
     def "should delete payment via GraphQL resolver in integration environment"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "an existing payment in the database"
         def savedPayment = createTestPayment("checking_brian", "discover_it", new BigDecimal("75.00"))
 
@@ -189,7 +189,7 @@ class PaymentGraphQLResolverIntegrationSpec extends Specification {
     def "should handle validation errors for invalid payment creation in integration environment"() {
         given: "test accounts are created"
         setupTestAccounts()
-        
+
         and: "invalid payment input data (non-existent destination account)"
         def paymentInput = [
             sourceAccount: "checking_brian",
@@ -225,7 +225,7 @@ class PaymentGraphQLResolverIntegrationSpec extends Specification {
         anotherDebitAccount.dateClosed = new Timestamp(System.currentTimeMillis())
         anotherDebitAccount.validationDate = new Timestamp(System.currentTimeMillis())
         accountRepository.save(anotherDebitAccount)
-        
+
         and: "payment input data attempting to pay a debit account"
         def paymentInput = [
             sourceAccount: "checking_brian",

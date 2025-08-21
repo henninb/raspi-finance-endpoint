@@ -38,7 +38,7 @@ class PaymentGraphQLResolver(
             try {
                 val paymentId: Long = environment.getArgument("paymentId")
                 logger.info("GraphQL: Fetching payment with ID: $paymentId")
-                
+
                 val paymentOptional = paymentService.findByPaymentId(paymentId)
                 val result = if (paymentOptional.isPresent) {
                     meterRegistry.counter("graphql.payment.fetch.success").increment()
@@ -64,15 +64,15 @@ class PaymentGraphQLResolver(
             try {
                 logger.info("GraphQL: Creating new payment")
                 val paymentInput = environment.getArgument<Map<String, Any>>("payment")
-                
+
                 // Convert input to Payment object
                 val payment = mapper.convertValue(paymentInput, Payment::class.java)
-                
+
                 // Set required fields
                 payment.guidSource = UUID.randomUUID().toString()
                 payment.guidDestination = UUID.randomUUID().toString()
                 payment.activeStatus = true
-                
+
                 // Parse transaction date if provided as string
                 paymentInput["transactionDate"]?.let { dateInput ->
                     when (dateInput) {
@@ -80,9 +80,9 @@ class PaymentGraphQLResolver(
                         is Date -> payment.transactionDate = dateInput
                     }
                 }
-                
+
                 logger.debug("GraphQL: Payment to create: $payment")
-                
+
                 val result = paymentService.insertPaymentNew(payment)
                 meterRegistry.counter("graphql.payment.create.success").increment()
                 logger.info("GraphQL: Successfully created payment with ID: ${result.paymentId}")
@@ -101,7 +101,7 @@ class PaymentGraphQLResolver(
             try {
                 val paymentId: Long = environment.getArgument("paymentId")
                 logger.info("GraphQL: Deleting payment with ID: $paymentId")
-                
+
                 val result = paymentService.deleteByPaymentId(paymentId)
                 if (result) {
                     meterRegistry.counter("graphql.payment.delete.success").increment()
