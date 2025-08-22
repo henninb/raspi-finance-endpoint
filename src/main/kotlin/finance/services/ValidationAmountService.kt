@@ -28,7 +28,7 @@ open class ValidationAmountService(
         // Determine the target accountId using request payload first, then fallback to path variable
         val providedAccountId = validationAmount.accountId
         val resolvedAccountId: Long = when {
-            providedAccountId != null && providedAccountId > 0L -> {
+            providedAccountId > 0L -> {
                 // Prefer explicit accountId from payload when valid
                 providedAccountId
             }
