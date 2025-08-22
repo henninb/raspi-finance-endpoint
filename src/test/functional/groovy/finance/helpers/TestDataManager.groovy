@@ -12,6 +12,17 @@ class TestDataManager {
     @Autowired
     JdbcTemplate jdbcTemplate
 
+    private static String cleanOwner(String testOwner) {
+        String owner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        return owner.isEmpty() ? "testowner" : owner
+    }
+
+    private static String accountNameFor(String testOwner, String suffix) {
+        String cleanSuffix = suffix.replaceAll(/[^a-z-]/, '').toLowerCase()
+        if (cleanSuffix.isEmpty()) cleanSuffix = "account"
+        return "${cleanSuffix}_${cleanOwner(testOwner)}".toLowerCase()
+    }
+
     void createMinimalAccountsFor(String testOwner) {
         log.info("Creating minimal test data for owner: ${testOwner}")
 
@@ -19,12 +30,10 @@ class TestDataManager {
         cleanupAccountsFor(testOwner)
 
         // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
-        // Remove numbers and special chars from testOwner, keep only letters
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        String ownerClean = cleanOwner(testOwner)
         
         // Create primary test account (Credit type for standard testing)
-        String primaryAccountName = "primary_${cleanOwner}".toLowerCase()
+        String primaryAccountName = accountNameFor(testOwner, "primary")
         jdbcTemplate.update("""
             INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
                                   date_closed, date_updated, date_added)
@@ -33,7 +42,7 @@ class TestDataManager {
         """, primaryAccountName)
 
         // Create secondary account for relationship tests (Debit type)
-        String secondaryAccountName = "secondary_${cleanOwner}".toLowerCase()
+        String secondaryAccountName = accountNameFor(testOwner, "secondary")
         jdbcTemplate.update("""
             INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
                                   date_closed, date_updated, date_added)
@@ -42,7 +51,7 @@ class TestDataManager {
         """, secondaryAccountName)
 
         // Create basic category needed for transactions
-        String categoryName = "test_category_${testOwner}".toLowerCase()
+        String categoryName = "test_category_${ownerClean}".toLowerCase()
         jdbcTemplate.update("""
             INSERT INTO func.t_category (category_name, active_status, date_updated, date_added)
             VALUES (?, true, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
@@ -53,12 +62,7 @@ class TestDataManager {
 
     String createAccountFor(String testOwner, String accountSuffix, String accountType = 'credit', boolean activeStatus = true) {
         // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
-        String cleanSuffix = accountSuffix.replaceAll(/[^a-z-]/, '').toLowerCase()
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanSuffix.isEmpty()) cleanSuffix = "account"
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
-        
-        String accountName = "${cleanSuffix}_${cleanOwner}".toLowerCase()
+        String accountName = accountNameFor(testOwner, accountSuffix)
 
         jdbcTemplate.update("""
             INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
@@ -175,9 +179,9 @@ class TestDataManager {
                                 BigDecimal amount = new BigDecimal("10.00"),
                                 String transactionState = "cleared") {
 
-        String accountName = "${accountSuffix}_${testOwner}".toLowerCase()
+        String accountName = accountNameFor(testOwner, accountSuffix)
         String guid = UUID.randomUUID().toString()
-        String categoryName = "test_category_${testOwner}".toLowerCase()
+        String categoryName = "test_category_${cleanOwner(testOwner)}".toLowerCase()
 
         // Ensure account exists
         ensureAccountExists(testOwner, accountSuffix)
@@ -242,7 +246,7 @@ class TestDataManager {
     }
 
     private void ensureCategoryExists(String testOwner, String categorySuffix) {
-        String categoryName = "${categorySuffix}_${testOwner}".toLowerCase().replaceAll(/[^a-zA-Z0-9]/, '')
+        String categoryName = "${categorySuffix}_${cleanOwner(testOwner)}".toLowerCase().replaceAll(/[^a-zA-Z0-9]/, '')
         Integer count = jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM func.t_category WHERE category_name = ?",
             Integer.class, categoryName
@@ -264,8 +268,8 @@ class TestDataManager {
         String transactionType = transactionData.transactionType ?: "expense"
         String accountType = transactionData.accountType ?: "credit"
 
-        String accountName = "${accountSuffix}_${testOwner}".toLowerCase()
-        String categoryName = "${category}_${testOwner}".toLowerCase().replaceAll(/[^a-zA-Z0-9]/, '')
+        String accountName = accountNameFor(testOwner, accountSuffix)
+        String categoryName = "${category}_${cleanOwner(testOwner)}".toLowerCase().replaceAll(/[^a-zA-Z0-9]/, '')
 
         // Create account if it doesn't exist
         ensureAccountExists(testOwner, accountSuffix)
@@ -287,8 +291,8 @@ class TestDataManager {
     }
 
     void createPaymentFor(String testOwner, BigDecimal amount = new BigDecimal("10.00")) {
-        String sourceAccount = "primary_${testOwner}"
-        String destAccount = "secondary_${testOwner}"
+        String sourceAccount = accountNameFor(testOwner, 'primary')
+        String destAccount = accountNameFor(testOwner, 'secondary')
 
         // Create transactions for both accounts first
         String sourceGuid = UUID.randomUUID().toString()
@@ -330,39 +334,52 @@ class TestDataManager {
         // Delete in proper order to respect foreign key constraints
 
         // Delete payments first
+        String clean = cleanOwner(testOwner)
         jdbcTemplate.update("DELETE FROM func.t_payment WHERE source_account LIKE ? OR destination_account LIKE ?",
                            "%${testOwner}", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_payment WHERE source_account LIKE ? OR destination_account LIKE ?",
+                           "%${clean}", "%${clean}")
 
         // Delete transaction categories
         jdbcTemplate.update("DELETE FROM func.t_transaction_categories WHERE transaction_id IN " +
                            "(SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE ?)",
                            "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_transaction_categories WHERE transaction_id IN " +
+                           "(SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE ?)",
+                           "%${clean}")
 
         // Delete transactions
         jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${clean}")
 
         // Delete accounts
         jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${clean}")
 
         // Delete test-specific categories
         jdbcTemplate.update("DELETE FROM func.t_category WHERE category_name LIKE ?", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_category WHERE category_name LIKE ?", "%${clean}")
 
         // Delete test-specific parameters
         jdbcTemplate.update("DELETE FROM func.t_parameter WHERE parameter_name LIKE ?", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_parameter WHERE parameter_name LIKE ?", "%${clean}")
 
         // Delete test-specific descriptions
         jdbcTemplate.update("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${clean}")
 
         // Delete test-specific validation amounts
         jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
                            "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
+                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${clean}")
 
         log.info("Successfully cleaned up test data for owner: ${testOwner}")
     }
 
     Long createValidationAmountFor(String testOwner, BigDecimal amount = new BigDecimal("100.00"), String transactionState = "cleared") {
         // Find the primary account for this test owner
-        String accountName = "primary_${testOwner}".toLowerCase()
+        String accountName = accountNameFor(testOwner, 'primary')
         Long accountId = jdbcTemplate.queryForObject(
             "SELECT account_id FROM func.t_account WHERE account_name_owner = ?",
             Long.class, accountName
