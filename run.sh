@@ -443,6 +443,19 @@ mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 
+# Ensure ssl directory is owned by the invoking user
+owner_user="${SUDO_USER:-$(id -un)}"
+owner_group="$(id -gn "$owner_user" 2>/dev/null || echo "$owner_user")"
+if [ -d "ssl" ]; then
+  chown "$owner_user":"$owner_group" ssl 2>/dev/null || {
+    if command -v sudo >/dev/null 2>&1; then
+      sudo chown "$owner_user":"$owner_group" ssl && log "Set owner: $owner_user:$owner_group for ssl/" || log_error "Failed to chown ssl/ directory"
+    else
+      log_error "Cannot chown ssl/ and sudo is not available."
+    fi
+  }
+fi
+
 # Copy SSL pem files from letsencrypt into ./ssl with unique names
 copy_pem() {
   src_path="$1"
@@ -460,6 +473,18 @@ copy_pem() {
     else
       log_error "Cannot read $src_path and sudo is not available. Skipping."
     fi
+  fi
+  # Ensure the copied file is owned by the actual user
+  if [ -f "$dest_path" ]; then
+    owner_user="${SUDO_USER:-$(id -un)}"
+    owner_group="$(id -gn "$owner_user" 2>/dev/null || echo "$owner_user")"
+    chown "$owner_user":"$owner_group" "$dest_path" 2>/dev/null || {
+      if command -v sudo >/dev/null 2>&1; then
+        sudo chown "$owner_user":"$owner_group" "$dest_path" && log "Set owner: $owner_user:$owner_group for $dest_path" || log_error "Failed to chown $dest_path"
+      else
+        log_error "Cannot chown $dest_path and sudo is not available."
+      fi
+    }
   fi
   # Lock down permissions if file exists now
   if [ -f "$dest_path" ]; then
