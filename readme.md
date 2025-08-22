@@ -180,3 +180,19 @@ implementation group: 'jakarta.persistence', name: 'jakarta.persistence-api', ve
 ./gradlew integrationTest --tests "*.DatabaseResilienceIntSpec" -Dspring.profiles.active=int
 ./gradlew integrationTest --tests "finance.processors.ProcessorIntegrationSpec"
 ```
+
+
+
+  curl -X POST http://localhost:8080/graphql \
+    -H "Content-Type: application/json" \
+    -d '{
+      "query": "{ transfers { transactionDate sourceAccount destinationAccount amount } }"
+    }'
+
+  Alternative with formatted JSON for readability:
+
+  curl -X POST http://localhost:8080/graphql \
+    -H "Content-Type: application/json" \
+    -d '{
+      "query": "query GetTransfers { transfers { transactionDate sourceAccount destinationAccount amount } }"
+    }'
