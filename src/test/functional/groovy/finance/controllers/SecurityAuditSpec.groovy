@@ -55,7 +55,7 @@ class SecurityAuditSpec extends BaseControllerSpec {
 
     void 'should allow access to /select/active endpoints with valid authentication'() {
         given: 'insert test account for the test'
-        def account = AccountBuilder.builder().withAccountNameOwner('audit_test_account').build()
+        def account = AccountBuilder.builder().withAccountNameOwner('audit-test_account').build()  // Pattern compliant: ^[a-z-]*_[a-z]*$
         insertEndpoint('account', account.toString())
 
         when: 'accessing account select/active endpoint with authentication'

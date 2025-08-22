@@ -62,7 +62,7 @@ class PaymentController(private val paymentService: PaymentService) : BaseContro
             logger.info("Inserting payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
             val paymentResponse = paymentService.insertPaymentNew(payment)
             logger.info("Payment inserted successfully: ${paymentResponse.paymentId}")
-            ResponseEntity.ok(paymentResponse)
+            ResponseEntity.status(HttpStatus.CREATED).body(paymentResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
             logger.error("Failed to insert payment due to data integrity violation for ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.CONFLICT, ex.message ?: "Duplicate payment found.")
