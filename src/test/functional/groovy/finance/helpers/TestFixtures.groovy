@@ -29,10 +29,14 @@ class TestFixtures {
         // Create base accounts through TestDataManager
         testDataManager.createMinimalAccountsFor(testOwner)
 
+        // Generate pattern-compliant account names matching TestDataManager logic
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+
         return new AccountTestContext(
             testOwner: testOwner,
-            primaryAccountName: "primary_${testOwner}".toLowerCase(),
-            secondaryAccountName: "secondary_${testOwner}".toLowerCase(),
+            primaryAccountName: "primary_${cleanOwner}".toLowerCase(),
+            secondaryAccountName: "secondary_${cleanOwner}".toLowerCase(),
             categoryName: "test_category_${testOwner}".toLowerCase(),
             testDataManager: testDataManager
         )
