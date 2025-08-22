@@ -60,7 +60,7 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
         Account testAccount = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("findable")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testAccount.toString())
 
         when:
@@ -103,7 +103,7 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
         Account accountToDelete = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("cascade")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, accountToDelete.toString())
 
         when:
@@ -150,7 +150,7 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
         Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("source")
                 .buildAndValidate()
-        
+
         // Create target account that already exists
         Account targetAccount = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("target")

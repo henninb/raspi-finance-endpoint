@@ -59,7 +59,7 @@ class DescriptionControllerIsolatedSpec extends BaseControllerSpec {
         Description testDescription = SmartDescriptionBuilder.builderForOwner(testOwner)
                 .withUniqueDescriptionName("findable")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testDescription.toString())
 
         when:

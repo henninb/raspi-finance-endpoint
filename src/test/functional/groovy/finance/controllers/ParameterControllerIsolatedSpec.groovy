@@ -61,7 +61,7 @@ class ParameterControllerIsolatedSpec extends BaseControllerSpec {
                 .withUniqueParameterName("findable")
                 .withUniqueParameterValue("findablevalue")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testParameter.toString())
 
         when:

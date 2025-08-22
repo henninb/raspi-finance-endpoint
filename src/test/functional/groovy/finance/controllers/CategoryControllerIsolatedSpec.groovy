@@ -59,7 +59,7 @@ class CategoryControllerIsolatedSpec extends BaseControllerSpec {
         Category testCategory = SmartCategoryBuilder.builderForOwner(testOwner)
                 .withUniqueCategoryName("findable")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testCategory.toString())
 
         when:
@@ -127,7 +127,7 @@ class CategoryControllerIsolatedSpec extends BaseControllerSpec {
         // Parse the fetched category to get the actual category ID
         def jsonSlurper = new groovy.json.JsonSlurper()
         def fetchedCategoryData = jsonSlurper.parseText(fetchResponse.body)
-        
+
         // Create update payload with real category ID and set to inactive
         String deactivatePayload = """{"categoryId":${fetchedCategoryData.categoryId},"categoryName":"${testCategory.categoryName}","activeStatus":false,"categoryCount":${fetchedCategoryData.categoryCount ?: 0}}"""
         HttpEntity deactivateEntity = new HttpEntity<>(deactivatePayload, headers)

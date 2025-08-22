@@ -28,6 +28,12 @@ class ValidationAmountController(private var validationAmountService: Validation
             logger.info(mapper.writeValueAsString(validationAmountResponse))
 
             ResponseEntity.ok(validationAmountResponse)
+        } catch (ex: jakarta.validation.ValidationException) {
+            logger.error("Validation error inserting validation amount: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+        } catch (ex: IllegalArgumentException) {
+            logger.error("Invalid input inserting validation amount: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert validation amount: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert validation amount: ${ex.message}", ex)
