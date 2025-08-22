@@ -339,31 +339,62 @@ class PaymentTestContext {
     BigDecimal paymentAmount
     TestDataManager testDataManager
 
-    Payment createUniquePayment(String prefix = "unique") {
-        String counter = System.currentTimeMillis().toString().takeLast(6)
-        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
-                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
-                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
-                .withAmount(paymentAmount)
-                .build()
+    Payment createUniquePayment(String prefix = "unique", BigDecimal amount = null) {
+        BigDecimal actualAmount = amount ?: paymentAmount
+        Payment payment = SmartPaymentBuilder.builderForOwner(transactionContext.testOwner)
+                .withUniqueAccounts(prefix, "dest${prefix}")
+                .withAmount(actualAmount)
+                .buildAndValidate()
+        
+        // Create the accounts that this payment references
+        createAccountsForPayment(payment)
+        
+        return payment
+    }
+    
+    private void createAccountsForPayment(Payment payment) {
+        // The payment account names are in format: "prefix_owner"
+        // We need to create accounts using the raw account names directly
+        createAccountDirectly(payment.sourceAccount, 'debit')
+        createAccountDirectly(payment.destinationAccount, 'credit')
+    }
+    
+    private void createAccountDirectly(String accountName, String accountType) {
+        // Create account directly with the full account name
+        testDataManager.jdbcTemplate.update("""
+            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
+                                  date_closed, date_updated, date_added)
+            VALUES (?, ?, true, '0000', '1969-12-31 18:00:00.000000',
+                    '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
+        """, accountName, accountType)
     }
 
-    Payment createActivePayment(String prefix) {
-        String counter = System.currentTimeMillis().toString().takeLast(6)
-        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
-                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
-                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+    Payment createActivePayment(String prefix, BigDecimal amount = null) {
+        BigDecimal actualAmount = amount ?: paymentAmount
+        Payment payment = SmartPaymentBuilder.builderForOwner(transactionContext.testOwner)
+                .withUniqueAccounts(prefix, "dest${prefix}")
+                .withAmount(actualAmount)
                 .asActive()
-                .build()
+                .buildAndValidate()
+        
+        // Create the accounts that this payment references
+        createAccountsForPayment(payment)
+        
+        return payment
     }
 
-    Payment createInactivePayment(String prefix) {
-        String counter = System.currentTimeMillis().toString().takeLast(6)
-        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
-                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
-                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+    Payment createInactivePayment(String prefix, BigDecimal amount = null) {
+        BigDecimal actualAmount = amount ?: paymentAmount
+        Payment payment = SmartPaymentBuilder.builderForOwner(transactionContext.testOwner)
+                .withUniqueAccounts(prefix, "dest${prefix}")
+                .withAmount(actualAmount)
                 .asInactive()
-                .build()
+                .buildAndValidate()
+        
+        // Create the accounts that this payment references
+        createAccountsForPayment(payment)
+        
+        return payment
     }
 
     Payment createSmallPayment(String prefix) {
