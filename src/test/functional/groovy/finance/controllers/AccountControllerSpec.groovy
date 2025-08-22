@@ -134,7 +134,7 @@ class AccountControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = deleteEndpoint(endpointName, referencedByTransaction)
 
         then:
-        paymentResponse.statusCode == HttpStatus.OK
+        paymentResponse.statusCode == HttpStatus.CREATED  // PaymentController now returns 201 CREATED
         response.statusCode == HttpStatus.OK  // Account deletion succeeds due to cascade delete
         0 * _
     }

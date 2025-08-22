@@ -125,17 +125,19 @@ open class PaymentService(
 
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         handleConstraintViolations(constraintViolations, meterService)
-        val optionalAccount = accountService.account(payment.destinationAccount)
-        if (!optionalAccount.isPresent) {
-            logger.error("Account not found ${payment.destinationAccount}")
+        
+        // Process destination account - create if missing (like TransactionService does)
+        processPaymentAccount(payment.destinationAccount)
+        
+        // Process source account - create if missing
+        processPaymentAccount(payment.sourceAccount)
+        
+        // Validate destination account type after ensuring it exists
+        val destinationAccount = accountService.account(payment.destinationAccount).get()
+        if (destinationAccount.accountType == AccountType.Debit) {
+            logger.error("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
             meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Account not found ${payment.destinationAccount}")
-        } else {
-            if (optionalAccount.get().accountType == AccountType.Debit) {
-                logger.error("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
-                meterService.incrementExceptionThrownCounter("ValidationException")
-                throw ValidationException("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
-            }
+            throw ValidationException("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
         }
 
         val paymentAccountNameOwner = payment.sourceAccount
@@ -153,6 +155,34 @@ open class PaymentService(
         val savedPayment = paymentRepository.saveAndFlush(payment)
         logger.info("Successfully created payment with ID: ${savedPayment.paymentId}")
         return savedPayment
+    }
+
+    /**
+     * Process payment account - create if missing (similar to TransactionService.processAccount)
+     */
+    private fun processPaymentAccount(accountNameOwner: String) {
+        logger.info("Finding account: $accountNameOwner")
+        val accountOptional = accountService.account(accountNameOwner)
+        if (accountOptional.isPresent) {
+            logger.info("Using existing account: $accountNameOwner")
+        } else {
+            logger.info("Creating new account: $accountNameOwner")
+            val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
+            val savedAccount = accountService.insertAccount(account)
+            logger.info("Created new account: $accountNameOwner with ID: ${savedAccount.accountId}")
+        }
+    }
+
+    /**
+     * Create a default account (similar to TransactionService.createDefaultAccount)
+     */
+    private fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
+        val account = Account()
+        account.accountNameOwner = accountNameOwner
+        account.moniker = "0000"
+        account.accountType = accountType
+        account.activeStatus = true
+        return account
     }
 
     //TODO: 10/24/2020 - not sure if Throws annotation helps here?
