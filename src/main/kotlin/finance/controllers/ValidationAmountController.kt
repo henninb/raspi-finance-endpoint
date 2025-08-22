@@ -19,7 +19,7 @@ class ValidationAmountController(private var validationAmountService: Validation
     fun insertValidationAmount(
         @RequestBody validationAmount: ValidationAmount,
         @PathVariable("accountNameOwner") accountNameOwner: String
-    ): ResponseEntity<ValidationAmount> {
+    ): ResponseEntity<*> {
         return try {
             val validationAmountResponse =
                 validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
@@ -30,16 +30,20 @@ class ValidationAmountController(private var validationAmountService: Validation
             ResponseEntity.ok(validationAmountResponse)
         } catch (ex: jakarta.validation.ValidationException) {
             logger.error("Validation error inserting validation amount: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
+            val errorResponse = mapOf("error" to "Validation error: ${ex.message}")
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
         } catch (ex: IllegalArgumentException) {
             logger.error("Invalid input inserting validation amount: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
+            val errorResponse = mapOf("error" to "Invalid input: ${ex.message}")
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
         } catch (ex: ResponseStatusException) {
             logger.error("Failed to insert validation amount: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to insert validation amount: ${ex.message}", ex)
+            val errorResponse = mapOf("error" to "Failed to insert validation amount: ${ex.message}")
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
         } catch (ex: Exception) {
             logger.error("Unexpected error occurred while inserting validation amount: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+            val errorResponse = mapOf("error" to "Unexpected error: ${ex.message}")
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse)
         }
     }
 
@@ -59,4 +63,6 @@ class ValidationAmountController(private var validationAmountService: Validation
         logger.info(mapper.writeValueAsString(validationAmount))
         return ResponseEntity.ok(validationAmount)
     }
+
+
 }
