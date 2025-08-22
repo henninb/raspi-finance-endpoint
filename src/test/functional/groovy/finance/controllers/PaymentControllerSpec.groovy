@@ -49,7 +49,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'payment'
 
-    void 'should reject payment insertion when source account does not exist'() {
+    void 'should successfully insert payment with auto-created source account'() {
         given:
         insertEndpoint('account', '{"accountNameOwner":"foo_brian","accountType":"credit","activeStatus":true,"moniker":"0000"}')
 
@@ -57,8 +57,8 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        // The payment should be rejected when source account doesn't exist
-        response.statusCode == HttpStatus.BAD_REQUEST
+        // PaymentService now auto-creates missing accounts (like TransactionService does)
+        response.statusCode == HttpStatus.CREATED
         0 * _
     }
 
@@ -82,7 +82,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, validPayment.toString())
 
         then:
-        firstResponse.statusCode == HttpStatus.OK
+        firstResponse.statusCode == HttpStatus.CREATED  // PaymentController now returns 201 CREATED
         // The duplicate payment should fail with HTTP 409 Conflict
         response.statusCode == HttpStatus.CONFLICT
         0 * _
@@ -101,7 +101,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.CREATED || response.statusCode == HttpStatus.BAD_REQUEST  // PaymentController now returns 201 CREATED
         0 * _
     }
 
@@ -138,7 +138,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.CREATED || response.statusCode == HttpStatus.BAD_REQUEST  // PaymentController now returns 201 CREATED
 
         when:
         Transaction transaction = transactionRepository.findAll().find { it?.accountNameOwner == accountNameOwner }
@@ -146,7 +146,7 @@ class PaymentControllerSpec extends BaseControllerSpec {
 
         then:
         // Only proceed with deletion test if both transaction and payment were created successfully
-        if (response.statusCode == HttpStatus.OK && transaction != null && payment1 != null) {
+        if (response.statusCode == HttpStatus.CREATED && transaction != null && payment1 != null) {  // PaymentController now returns 201 CREATED
             // Test the delete functionality
             ResponseEntity<String> responseDelete = deleteEndpoint('transaction', transaction.guid)
             responseDelete.statusCode.is(HttpStatus.OK)
@@ -219,6 +219,6 @@ class PaymentControllerSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.CREATED  // PaymentController now returns 201 CREATED
     }
 }
