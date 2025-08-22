@@ -26,7 +26,7 @@ class SmartCategoryBuilder {
     private String generateUniqueCategoryName() {
         String counter = COUNTER.incrementAndGet().toString()
         String ownerPart = testOwner.replaceAll(/[^a-z0-9]/, '') // Keep only alphanumeric
-        
+
         if (ownerPart.isEmpty()) {
             ownerPart = "test"
         }
@@ -93,11 +93,11 @@ class SmartCategoryBuilder {
     private String generateUniqueCategoryName(String prefix) {
         String cleanPrefix = prefix.replaceAll(/[^a-z0-9]/, '') // Keep only alphanumeric
         String ownerPart = testOwner.replaceAll(/[^a-z0-9]/, '') // Keep only alphanumeric
-        
+
         if (cleanPrefix.isEmpty()) {
             cleanPrefix = "cat"
         }
-        
+
         if (ownerPart.isEmpty()) {
             ownerPart = "test"
         }
