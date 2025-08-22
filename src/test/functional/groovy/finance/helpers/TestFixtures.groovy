@@ -5,7 +5,9 @@ import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Parameter
+import finance.domain.Payment
 import finance.domain.Transaction
+import finance.domain.ValidationAmount
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -59,9 +61,7 @@ class TestFixtures {
     PaymentTestContext createPaymentContext(String testOwner, BigDecimal amount = new BigDecimal("50.00")) {
         TransactionTestContext transactionContext = createTransactionContext(testOwner, amount)
 
-        // Create payment relationship
-        testDataManager.createPaymentFor(testOwner, amount)
-
+        // Don't create actual payment data in setup - let individual tests create them as needed
         return new PaymentTestContext(
             transactionContext: transactionContext,
             paymentAmount: amount,
@@ -81,7 +81,7 @@ class TestFixtures {
 
         return new CategoryTestContext(
             testOwner: testOwner,
-            defaultCategories: defaultCategories.collect { 
+            defaultCategories: defaultCategories.collect {
                 String ownerPart = testOwner.replaceAll(/[^a-z0-9]/, '')
                 if (ownerPart.isEmpty()) ownerPart = "test"
                 "${it}_${ownerPart}".toLowerCase()
@@ -126,6 +126,21 @@ class TestFixtures {
         return new DescriptionTestContext(
             testOwner: testOwner,
             defaultDescriptions: defaultDescriptions.collect { "${it}_${testOwner}".toLowerCase() },
+            testDataManager: testDataManager
+        )
+    }
+
+    /**
+     * Creates test context for validation amount-related operations
+     */
+    ValidationAmountTestContext createValidationAmountTestContext(String testOwner) {
+        log.info("Creating validation amount test context for owner: ${testOwner}")
+
+        // Create base accounts for validation amounts (needed for accountId relationship)
+        testDataManager.createMinimalAccountsFor(testOwner)
+
+        return new ValidationAmountTestContext(
+            testOwner: testOwner,
             testDataManager: testDataManager
         )
     }
@@ -324,6 +339,51 @@ class PaymentTestContext {
     BigDecimal paymentAmount
     TestDataManager testDataManager
 
+    Payment createUniquePayment(String prefix = "unique") {
+        String counter = System.currentTimeMillis().toString().takeLast(6)
+        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
+                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withAmount(paymentAmount)
+                .build()
+    }
+
+    Payment createActivePayment(String prefix) {
+        String counter = System.currentTimeMillis().toString().takeLast(6)
+        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
+                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .asActive()
+                .build()
+    }
+
+    Payment createInactivePayment(String prefix) {
+        String counter = System.currentTimeMillis().toString().takeLast(6)
+        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
+                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .asInactive()
+                .build()
+    }
+
+    Payment createSmallPayment(String prefix) {
+        String counter = System.currentTimeMillis().toString().takeLast(6)
+        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
+                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withAmount(new BigDecimal("5.00"))
+                .build()
+    }
+
+    Payment createLargePayment(String prefix) {
+        String counter = System.currentTimeMillis().toString().takeLast(6)
+        return SmartPaymentBuilder.builderForOwner(transactionContext.accountContext.testOwner)
+                .withSourceAccount("${prefix}${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withDestinationAccount("dest${counter}_${transactionContext.accountContext.testOwner}".toLowerCase())
+                .withAmount(new BigDecimal("500.00"))
+                .build()
+    }
+
     void createPayment(BigDecimal amount) {
         testDataManager.createPaymentFor(transactionContext.accountContext.testOwner, amount)
     }
@@ -506,6 +566,91 @@ class DescriptionTestContext {
 
     String getFirstDefaultDescription() {
         return defaultDescriptions[0]
+    }
+
+    void cleanup() {
+        testDataManager.cleanupAccountsFor(testOwner)
+    }
+}
+
+/**
+ * Test context for validation amount-related operations
+ */
+class ValidationAmountTestContext {
+    String testOwner
+    TestDataManager testDataManager
+
+    // Get the accountId for the test owner's primary account
+    private Long getPrimaryAccountId() {
+        return testDataManager.jdbcTemplate.queryForObject(
+            "SELECT account_id FROM func.t_account WHERE account_name_owner = ?",
+            Long.class, "primary_${testOwner}".toLowerCase()
+        )
+    }
+
+    ValidationAmount createUniqueValidationAmount(String prefix = "unique") {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(new BigDecimal("${100 + Math.abs(prefix.hashCode() % 900)}.00"))
+                .build()  // Use build() instead of buildAndValidate() for simplicity
+    }
+
+    ValidationAmount createClearedValidationAmount(BigDecimal amount = new BigDecimal("100.00")) {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(amount)
+                .asCleared()
+                .build()
+    }
+
+    ValidationAmount createOutstandingValidationAmount(BigDecimal amount = new BigDecimal("200.00")) {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(amount)
+                .asOutstanding()
+                .build()
+    }
+
+    ValidationAmount createFutureValidationAmount(BigDecimal amount = new BigDecimal("300.00")) {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(amount)
+                .asFuture()
+                .build()
+    }
+
+    ValidationAmount createActiveValidationAmount(BigDecimal amount = new BigDecimal("150.00")) {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(amount)
+                .asActive()
+                .build()
+    }
+
+    ValidationAmount createInactiveValidationAmount(BigDecimal amount = new BigDecimal("250.00")) {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(amount)
+                .asInactive()
+                .build()
+    }
+
+    ValidationAmount createSmallValidationAmount() {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(new BigDecimal("5.00"))
+                .build()
+    }
+
+    ValidationAmount createLargeValidationAmount() {
+        return SmartValidationAmountBuilder.builderForOwner(testOwner)
+                .withAccountId(getPrimaryAccountId())
+                .withAmount(new BigDecimal("99999999.99"))
+                .build()
+    }
+
+    Long createPersistentValidationAmount(BigDecimal amount, String transactionState = "cleared") {
+        return testDataManager.createValidationAmountFor(testOwner, amount, transactionState)
     }
 
     void cleanup() {

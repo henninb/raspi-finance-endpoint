@@ -24,18 +24,38 @@ open class ValidationAmountService(
         validationAmount: ValidationAmount
     ): ValidationAmount {
         logger.info("Inserting validation amount for account: $accountNameOwner")
-        var accountId = 0L
-        val accountOptional = accountRepository.findByAccountNameOwner(accountNameOwner)
-        if (accountOptional.isPresent) {
-            accountId = accountOptional.get().accountId
-        } else {
-            logger.warn("Account not found: $accountNameOwner")
+
+        // Determine the target accountId using request payload first, then fallback to path variable
+        val providedAccountId = validationAmount.accountId
+        val resolvedAccountId: Long = when {
+            providedAccountId != null && providedAccountId > 0L -> {
+                // Prefer explicit accountId from payload when valid
+                providedAccountId
+            }
+            else -> {
+                val byOwner = accountRepository.findByAccountNameOwner(accountNameOwner)
+                if (byOwner.isPresent) {
+                    byOwner.get().accountId
+                } else {
+                    logger.warn("Account not found by owner: $accountNameOwner and no valid accountId provided in payload")
+                    0L
+                }
+            }
+        }
+
+        if (resolvedAccountId <= 0L) {
+            throw org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST,
+                "Unable to resolve account for validation amount"
+            )
         }
 
         val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
         handleConstraintViolations(constraintViolations, meterService)
 
-        validationAmount.accountId = accountId
+        // Ensure the entity references the resolved accountId
+        validationAmount.accountId = resolvedAccountId
+
         val timestamp = Timestamp(System.currentTimeMillis())
         validationAmount.dateAdded = timestamp
         validationAmount.dateUpdated = timestamp
@@ -43,13 +63,12 @@ open class ValidationAmountService(
         // Save the ValidationAmount
         val savedValidationAmount = validationAmountRepository.saveAndFlush(validationAmount)
 
-        // Update the validationDate in the Account table
-        if (accountOptional.isPresent) {
-            val account = accountOptional.get()
+        // Update the validationDate in the Account table using the resolved accountId
+        accountRepository.findByAccountId(resolvedAccountId).ifPresent { account ->
             account.validationDate = validationAmount.dateUpdated
             account.dateUpdated = validationAmount.dateUpdated
             accountRepository.saveAndFlush(account)
-            logger.info("Updated validation date for account: $accountNameOwner")
+            logger.info("Updated validation date for accountId: $resolvedAccountId")
         }
 
         logger.info("Successfully inserted validation amount with ID: ${savedValidationAmount.validationId}")
