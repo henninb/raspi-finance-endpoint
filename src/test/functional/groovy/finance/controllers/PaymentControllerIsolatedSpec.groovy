@@ -24,9 +24,12 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully insert new payment with isolated test data'() {
         given:
-        // Use existing accounts created by TestDataManager (they have full name format)
-        String sourceAccountName = "primary_${testOwner}".toLowerCase()
-        String destAccountName = "secondary_${testOwner}".toLowerCase()
+        // Use pattern-compliant account names matching TestDataManager logic
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        
+        String sourceAccountName = "primary_${cleanOwner}".toLowerCase()
+        String destAccountName = "secondary_${cleanOwner}".toLowerCase()
         
         // Create payment JSON with dummy transaction GUIDs (to work around FK constraints)
         String paymentJson = """
@@ -53,12 +56,16 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully handle different payment amounts'() {
         given:
+        // Use pattern-compliant account names
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        
         // Simplified approach - create payments without FK constraint issues by using dummy transaction GUIDs
         String paymentSmallJson = """
         {
             "paymentId": 0,
-            "sourceAccount": "primary_${testOwner}",
-            "destinationAccount": "secondary_${testOwner}",
+            "sourceAccount": "primary_${cleanOwner}",
+            "destinationAccount": "secondary_${cleanOwner}",
             "transactionDate": "2023-01-01",
             "amount": 5.00,
             "guidSource": "00000000-0000-0000-0000-000000000001",
@@ -70,8 +77,8 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         String paymentLargeJson = """
         {
             "paymentId": 0,
-            "sourceAccount": "primary_${testOwner}",
-            "destinationAccount": "secondary_${testOwner}",
+            "sourceAccount": "primary_${cleanOwner}",
+            "destinationAccount": "secondary_${cleanOwner}",
             "transactionDate": "2023-01-02",
             "amount": 999.99,
             "guidSource": "00000000-0000-0000-0000-000000000003",
@@ -93,12 +100,16 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully handle active and inactive payments'() {
         given:
+        // Use pattern-compliant account names
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        
         // Simplified approach using existing test accounts
         String activePaymentJson = """
         {
             "paymentId": 0,
-            "sourceAccount": "primary_${testOwner}",
-            "destinationAccount": "secondary_${testOwner}",
+            "sourceAccount": "primary_${cleanOwner}",
+            "destinationAccount": "secondary_${cleanOwner}",
             "transactionDate": "2023-01-03",
             "amount": 150.00,
             "guidSource": "00000000-0000-0000-0000-000000000005",
@@ -110,8 +121,8 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         String inactivePaymentJson = """
         {
             "paymentId": 0,
-            "sourceAccount": "primary_${testOwner}",
-            "destinationAccount": "secondary_${testOwner}",
+            "sourceAccount": "primary_${cleanOwner}",
+            "destinationAccount": "secondary_${cleanOwner}",
             "transactionDate": "2023-01-04",
             "amount": 250.00,
             "guidSource": "00000000-0000-0000-0000-000000000007",
