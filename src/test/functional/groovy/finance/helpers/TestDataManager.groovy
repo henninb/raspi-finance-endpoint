@@ -18,8 +18,13 @@ class TestDataManager {
         // Clean up any existing data for this test owner first
         cleanupAccountsFor(testOwner)
 
+        // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
+        // Remove numbers and special chars from testOwner, keep only letters
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        
         // Create primary test account (Credit type for standard testing)
-        String primaryAccountName = "primary_${testOwner}".toLowerCase()
+        String primaryAccountName = "primary_${cleanOwner}".toLowerCase()
         jdbcTemplate.update("""
             INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
                                   date_closed, date_updated, date_added)
@@ -28,7 +33,7 @@ class TestDataManager {
         """, primaryAccountName)
 
         // Create secondary account for relationship tests (Debit type)
-        String secondaryAccountName = "secondary_${testOwner}".toLowerCase()
+        String secondaryAccountName = "secondary_${cleanOwner}".toLowerCase()
         jdbcTemplate.update("""
             INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
                                   date_closed, date_updated, date_added)
@@ -47,7 +52,13 @@ class TestDataManager {
     }
 
     String createAccountFor(String testOwner, String accountSuffix, String accountType = 'credit', boolean activeStatus = true) {
-        String accountName = "${accountSuffix}_${testOwner}".toLowerCase()
+        // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
+        String cleanSuffix = accountSuffix.replaceAll(/[^a-z-]/, '').toLowerCase()
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanSuffix.isEmpty()) cleanSuffix = "account"
+        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        
+        String accountName = "${cleanSuffix}_${cleanOwner}".toLowerCase()
 
         jdbcTemplate.update("""
             INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
