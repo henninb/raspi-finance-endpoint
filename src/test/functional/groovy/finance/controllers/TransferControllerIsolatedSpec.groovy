@@ -1,5 +1,7 @@
 package finance.controllers
 
+import finance.domain.Account
+import finance.helpers.SmartAccountBuilder
 import groovy.json.JsonSlurper
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
@@ -14,9 +16,22 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
     @Shared
     Long createdTransferId
 
+    @Shared
+    String secondaryAccountNameIso
+
+    @Shared
+    String tertiaryAccountNameIso
+
     def setupSpec() {
         // BaseControllerSpec.setupSpec() creates minimal accounts for testOwner
-        // Nothing else needed here
+        // Create an extra debit account for destination to match service's debit account type usage
+        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        if (cleanOwner.isEmpty()) cleanOwner = 'testowner'
+        secondaryAccountNameIso = "primary_${cleanOwner}".toLowerCase().replace('primary_', 'secondary_')
+        
+        // Defer HTTP account creation to test body where headers/restTemplate are initialized
+        String tertiaryName = "tertiary_${cleanOwner}".toLowerCase()
+        tertiaryAccountNameIso = tertiaryName
     }
 
     void 'should successfully select all transfers'() {
@@ -43,8 +58,23 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = 'testowner'
 
-        String sourceAccountName = "primary_${cleanOwner}".toLowerCase()
-        String destAccountName = "secondary_${cleanOwner}".toLowerCase()
+        // Ensure both accounts exist via HTTP API (visible in app transaction)
+        Account secondary = SmartAccountBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(secondaryAccountNameIso)
+                .asDebit()
+                .buildAndValidate()
+        ResponseEntity<String> secResp = insertEndpoint('account', secondary.toString())
+        assert secResp.statusCode == HttpStatus.CREATED || secResp.statusCode == HttpStatus.CONFLICT
+
+        Account tertiary = SmartAccountBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(tertiaryAccountNameIso)
+                .asDebit()
+                .buildAndValidate()
+        ResponseEntity<String> terResp = insertEndpoint('account', tertiary.toString())
+        assert terResp.statusCode == HttpStatus.CREATED || terResp.statusCode == HttpStatus.CONFLICT
+
+        String sourceAccountName = secondaryAccountNameIso
+        String destAccountName = tertiaryAccountNameIso
 
         String payload = """
         {
@@ -81,8 +111,23 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = 'testowner'
 
-        String sourceAccountName = "primary_${cleanOwner}".toLowerCase()
-        String destAccountName = "secondary_${cleanOwner}".toLowerCase()
+        // Ensure both accounts exist via HTTP API (visible in app transaction)
+        Account secondary = SmartAccountBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(secondaryAccountNameIso)
+                .asDebit()
+                .buildAndValidate()
+        ResponseEntity<String> secResp = insertEndpoint('account', secondary.toString())
+        assert secResp.statusCode == HttpStatus.CREATED || secResp.statusCode == HttpStatus.CONFLICT
+
+        Account tertiary = SmartAccountBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(tertiaryAccountNameIso)
+                .asDebit()
+                .buildAndValidate()
+        ResponseEntity<String> terResp = insertEndpoint('account', tertiary.toString())
+        assert terResp.statusCode == HttpStatus.CREATED || terResp.statusCode == HttpStatus.CONFLICT
+
+        String sourceAccountName = secondaryAccountNameIso
+        String destAccountName = tertiaryAccountNameIso
 
         String payload = """
         {
