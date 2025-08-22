@@ -342,7 +342,44 @@ class TestDataManager {
         // Delete test-specific descriptions
         jdbcTemplate.update("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${testOwner}")
 
+        // Delete test-specific validation amounts
+        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
+                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
+
         log.info("Successfully cleaned up test data for owner: ${testOwner}")
+    }
+
+    Long createValidationAmountFor(String testOwner, BigDecimal amount = new BigDecimal("100.00"), String transactionState = "cleared") {
+        // Find the primary account for this test owner
+        String accountName = "primary_${testOwner}".toLowerCase()
+        Long accountId = jdbcTemplate.queryForObject(
+            "SELECT account_id FROM func.t_account WHERE account_name_owner = ?",
+            Long.class, accountName
+        )
+
+        // Insert validation amount
+        jdbcTemplate.update("""
+            INSERT INTO func.t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, date_updated, date_added)
+            VALUES (?, NOW(), true, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, accountId, transactionState, amount)
+
+        // Get the generated validation_id
+        Long validationId = jdbcTemplate.queryForObject(
+            "SELECT LAST_INSERT_ID()",
+            Long.class
+        )
+
+        log.info("Created validation amount: ID=${validationId}, accountId=${accountId}, amount=${amount}, state=${transactionState} for test owner: ${testOwner}")
+        return validationId
+    }
+
+    void createValidationAmountsFor(String testOwner, List<Map<String, Object>> validationData) {
+        validationData.each { data ->
+            BigDecimal amount = data.amount as BigDecimal ?: new BigDecimal("100.00")
+            String state = data.transactionState as String ?: "cleared"
+            createValidationAmountFor(testOwner, amount, state)
+        }
+        log.info("Created ${validationData.size()} validation amounts for test owner: ${testOwner}")
     }
 
     void cleanupAllTestData() {
@@ -370,6 +407,10 @@ class TestDataManager {
 
         jdbcTemplate.update("DELETE FROM func.t_category WHERE category_name LIKE 'test_%'")
         jdbcTemplate.update("DELETE FROM func.t_parameter WHERE parameter_name LIKE 'test_%'")
+
+        // Clean up validation amounts
+        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
+                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE 'test_%')")
 
         log.info("Completed full test data cleanup")
     }

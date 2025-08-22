@@ -1,0 +1,39 @@
+## Smaller footprint base image using Java 21 (Alpine JRE)
+## Alpine uses BusyBox and apk; user/group commands differ from Debian
+## If this tag is unavailable in your registry, an alternative is:
+##   eclipse-temurin:21-jre-alpine (preferred)
+##   amazoncorretto:21-alpine (JDK; larger)
+##   openjdk:21-slim (Debian; larger)
+FROM eclipse-temurin:21-jre-alpine
+
+ARG TIMEZONE="set the time zone at build time"
+ENV TIMEZONE ${TIMEZONE}
+ARG APP="set the app at build time"
+ENV APP ${APP}
+ARG USERNAME="set the username as build time"
+ENV USERNAME ${USERNAME}
+ARG CURRENT_GID="set the gid"
+ENV CURRENT_GID ${CURRENT_GID}
+ARG CURRENT_UID="set the uid"
+ENV CURRENT_UID ${CURRENT_UID}
+
+## Install tzdata for system zoneinfo and create app user/group (Alpine variants)
+RUN apk add --no-cache tzdata su-exec \
+ && addgroup -g ${CURRENT_GID} ${USERNAME} \
+ && adduser -D -H -u ${CURRENT_UID} -G ${USERNAME} ${USERNAME}
+
+RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime || true
+RUN mkdir -p -m 0755 /opt/${APP}/bin
+RUN mkdir -p -m 0755 /opt/${APP}/logs/archive
+RUN mkdir -p -m 0755 /opt/${APP}/ssl
+RUN mkdir -p -m 0755 /opt/${APP}/json_in
+COPY ./ssl /opt/${APP}/ssl
+ADD ./build/libs/${APP}.jar /opt/${APP}/bin/${APP}.jar
+RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP} || true
+
+WORKDIR /opt/${APP}/bin
+
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+## No default CMD so entrypoint runs the Java app

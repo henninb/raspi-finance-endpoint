@@ -32,20 +32,36 @@ class SmartPaymentBuilder {
 
     private String generateAlphaUnderscoreName(String prefix) {
         // Must match ^[a-z-]*_[a-z]*$ and be 3-40 chars
-        String counter = COUNTER.incrementAndGet().toString()
+        // No digits allowed, only letters and dashes before/after underscore
         String cleanPrefix = (prefix ?: 'acct').toLowerCase().replaceAll(/[^a-z-]/, '')
         if (cleanPrefix.isEmpty()) cleanPrefix = 'acct'
 
         String ownerPart = (testOwner ?: 'test').toLowerCase().replaceAll(/[^a-z]/, '')
         if (ownerPart.isEmpty()) ownerPart = 'test'
 
-        String base = "${cleanPrefix}${counter}_${ownerPart}"
+        // Use atomic counter but convert to letters to avoid digits
+        int counter = COUNTER.incrementAndGet()
+        String counterLetters = convertCounterToLetters(counter)
+
+        String base = "${cleanPrefix}${counterLetters}_${ownerPart}"
         if (base.length() > 40) {
             String shortOwner = ownerPart.length() > 10 ? ownerPart[0..9] : ownerPart
-            base = "${cleanPrefix}${counter}_${shortOwner}"
+            base = "${cleanPrefix}${counterLetters}_${shortOwner}"
         }
         if (base.length() < 3) base = "acc_${ownerPart}"
         return base.toLowerCase()
+    }
+
+    private String convertCounterToLetters(int counter) {
+        // Convert counter to letters (1->a, 2->b, ..., 26->z, 27->aa, etc.)
+        String result = ""
+        while (counter > 0) {
+            counter-- // Make it 0-based
+            int charIndex = counter % 26
+            result = ((char)('a'.charAt(0) + charIndex)) + result
+            counter = (int)(counter / 26)
+        }
+        return result ?: "a"
     }
 
     Payment build() {
@@ -93,7 +109,7 @@ class SmartPaymentBuilder {
         }
 
         // GUIDs must be UUID format
-        def uuidRegex = /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/
+        def uuidRegex = /^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/
         if (!(payment.guidSource =~ uuidRegex)) {
             throw new IllegalStateException("guidSource '${payment.guidSource}' must be UUID formatted")
         }
@@ -137,12 +153,12 @@ class SmartPaymentBuilder {
     }
 
     SmartPaymentBuilder withGuidSource(String guidSource) {
-        this.guidSource = guidSource?.toLowerCase()
+        this.guidSource = guidSource
         return this
     }
 
     SmartPaymentBuilder withGuidDestination(String guidDestination) {
-        this.guidDestination = guidDestination?.toLowerCase()
+        this.guidDestination = guidDestination
         return this
     }
 
