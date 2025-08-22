@@ -35,7 +35,7 @@ class SmartAccountBuilder {
         // ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$" (letters/dashes + single underscore + letters)
         String counter = COUNTER.incrementAndGet().toString()
         String ownerPart = testOwner.replaceAll(/[^a-z]/, '') // Keep only letters
-        
+
         if (ownerPart.isEmpty()) {
             ownerPart = "test"
         }
@@ -115,11 +115,11 @@ class SmartAccountBuilder {
         // ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$" (letters/dashes + single underscore + letters)
         String cleanPrefix = prefix.replaceAll(/[^a-z]/, '') // Keep only letters
         String ownerPart = testOwner.replaceAll(/[^a-z]/, '') // Keep only letters
-        
+
         if (cleanPrefix.isEmpty()) {
             cleanPrefix = "account"
         }
-        
+
         if (ownerPart.isEmpty()) {
             ownerPart = "test"
         }

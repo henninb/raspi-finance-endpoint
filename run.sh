@@ -443,6 +443,36 @@ mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 
+# Copy SSL pem files from letsencrypt into ./ssl with unique names
+copy_pem() {
+  src_path="$1"
+  dest_path="$2"
+  if [ -f "$dest_path" ]; then
+    log "SSL file already present: $dest_path"
+    return 0
+  fi
+  if [ -r "$src_path" ]; then
+    cp "$src_path" "$dest_path" && log "Copied: $src_path -> $dest_path"
+  else
+    log "Attempting privileged copy for: $src_path"
+    if command -v sudo >/dev/null 2>&1; then
+      sudo cp "$src_path" "$dest_path" && log "Copied with sudo: $src_path -> $dest_path" || log_error "Failed to copy (sudo) $src_path"
+    else
+      log_error "Cannot read $src_path and sudo is not available. Skipping."
+    fi
+  fi
+  # Lock down permissions if file exists now
+  if [ -f "$dest_path" ]; then
+    chmod 600 "$dest_path" 2>/dev/null || true
+  fi
+}
+
+# Ensure presence of the four cert/key files with unique names
+copy_pem "/etc/letsencrypt/live/bhenning.com/fullchain.pem" "ssl/bhenning.fullchain.pem"
+copy_pem "/etc/letsencrypt/live/bhenning.com/privkey.pem"   "ssl/bhenning.privkey.pem"
+copy_pem "/etc/letsencrypt/live/brianhenning.com/fullchain.pem" "ssl/brianhenning.fullchain.pem"
+copy_pem "/etc/letsencrypt/live/brianhenning.com/privkey.pem"   "ssl/brianhenning.privkey.pem"
+
 # Preserve local secret changes
 log "Preserving local secret changes..."
 git update-index --assume-unchanged env.secrets
