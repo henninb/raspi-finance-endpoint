@@ -15,13 +15,13 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
 
     @Shared
     protected String endpointName = 'login'
-    
+
     @Shared
     String testUsername
-    
+
     @Shared
     String testPassword = "FunctionalTestPass123!"
-    
+
     @Shared
     String authToken
 
@@ -124,7 +124,7 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
         and: "extract token for subsequent tests"
         def extractedToken = tokenCookie.split("token=")[1].split(";")[0]
         extractedToken != null
-        
+
         cleanup:
         authToken = extractedToken
         0 * _
