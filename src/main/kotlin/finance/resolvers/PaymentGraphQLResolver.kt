@@ -36,7 +36,7 @@ class PaymentGraphQLResolver(
     fun payment(): DataFetcher<Payment?> {
         return DataFetcher { environment ->
             try {
-                val paymentId: Long = environment.getArgument("paymentId")
+                val paymentId: Long = requireNotNull(environment.getArgument<Long>("paymentId")) { "paymentId is required" }
                 logger.info("GraphQL: Fetching payment with ID: $paymentId")
 
                 val paymentOptional = paymentService.findByPaymentId(paymentId)
@@ -63,7 +63,7 @@ class PaymentGraphQLResolver(
         return DataFetcher { environment ->
             try {
                 logger.info("GraphQL: Creating new payment")
-                val paymentInput = environment.getArgument<Map<String, Any>>("payment")
+                val paymentInput = requireNotNull(environment.getArgument<Map<String, Any>>("payment")) { "payment input is required" }
 
                 // Convert input to Payment object
                 val payment = mapper.convertValue(paymentInput, Payment::class.java)
@@ -99,7 +99,7 @@ class PaymentGraphQLResolver(
     fun deletePayment(): DataFetcher<Boolean> {
         return DataFetcher { environment ->
             try {
-                val paymentId: Long = environment.getArgument("paymentId")
+                val paymentId: Long = requireNotNull(environment.getArgument<Long>("paymentId")) { "paymentId is required" }
                 logger.info("GraphQL: Deleting payment with ID: $paymentId")
 
                 val result = paymentService.deleteByPaymentId(paymentId)
