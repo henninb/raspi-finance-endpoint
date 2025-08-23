@@ -36,7 +36,7 @@ class TransferGraphQLResolver(
     fun transfer(): DataFetcher<Transfer?> {
         return DataFetcher { environment ->
             try {
-                val transferId: Long = environment.getArgument("transferId")
+                val transferId: Long = requireNotNull(environment.getArgument<Long>("transferId")) { "transferId is required" }
                 logger.info("GraphQL: Fetching transfer with ID: $transferId")
 
                 val transferOptional = transferService.findByTransferId(transferId)
@@ -63,7 +63,7 @@ class TransferGraphQLResolver(
         return DataFetcher { environment ->
             try {
                 logger.info("GraphQL: Creating new transfer")
-                val transferInput = environment.getArgument<Map<String, Any>>("transfer")
+                val transferInput = requireNotNull(environment.getArgument<Map<String, Any>>("transfer")) { "transfer input is required" }
 
                 // Convert input to Transfer object
                 val transfer = mapper.convertValue(transferInput, Transfer::class.java)
@@ -99,7 +99,7 @@ class TransferGraphQLResolver(
     fun deleteTransfer(): DataFetcher<Boolean> {
         return DataFetcher { environment ->
             try {
-                val transferId: Long = environment.getArgument("transferId")
+                val transferId: Long = requireNotNull(environment.getArgument<Long>("transferId")) { "transferId is required" }
                 logger.info("GraphQL: Deleting transfer with ID: $transferId")
 
                 val result = transferService.deleteByTransferId(transferId)

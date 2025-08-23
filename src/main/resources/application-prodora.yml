@@ -9,6 +9,8 @@ server:
     enabled: ${SSL_ENABLED}
     enabled-protocols: TLSv1.2
 spring:
+  graphql:
+    path: /graphql
   application:
     name: raspi-finance-endpoint
   #  profiles:
@@ -125,4 +127,3 @@ management:
       exposure:
         include: "*"
 debug: false
-
