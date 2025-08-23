@@ -1,7 +1,7 @@
-#scalar Timestamp
 scalar Long
 scalar Date
-scalar BigDecimal
+scalar BigDecimal  
+scalar Timestamp
 
 enum AccountType {
     Credit
@@ -32,28 +32,55 @@ enum ReoccurringType {
     Undefined
 }
 
+enum TransactionType {
+    Expense
+    Income
+    Transfer
+    Undefined
+}
+
 type Query {
     descriptions : [Description]
     description (descriptionName: String!) : Description
     categories : [Category]
+    category(categoryName: String!) : Category
     account(accountNameOwner: String!) : Account
     #    accounts(accountType: AccountType) : [Account]
     accounts : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
+    transaction(transactionId: Long!) : Transaction
     payments : [Payment]
     payment(paymentId: Long!) : Payment
     transfers : [Transfer]
     transfer(transferId: Long!) : Transfer
+    parameters : [Parameter]
+    parameter(parameterId: Long!) : Parameter
+    validationAmounts : [ValidationAmount]
+    validationAmount(validationId: Long!) : ValidationAmount
+    receiptImages : [ReceiptImage]
+    receiptImage(receiptImageId: Long!) : ReceiptImage
     #mutation: Mutation
 }
 
 type Mutation {
     createDescription( description: String) : Description
     createCategory( category: String) : Category
+    createAccount( account: AccountInput ) : Account
+    updateAccount( account: AccountInput ) : Account
+    deleteAccount( accountId: Long! ) : Boolean
+    createTransaction( transaction: TransactionInput ) : Transaction
+    updateTransaction( transaction: TransactionInput ) : Transaction
+    deleteTransaction( transactionId: Long! ) : Boolean
     createPayment( payment: PaymentInput ) : Payment
     deletePayment( paymentId: Long! ) : Boolean
     createTransfer( transfer: TransferInput ) : Transfer
     deleteTransfer( transferId: Long! ) : Boolean
+    createParameter( parameter: ParameterInput ) : Parameter
+    updateParameter( parameter: ParameterInput ) : Parameter
+    deleteParameter( parameterId: Long! ) : Boolean
+    createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
+    updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
+    deleteValidationAmount( validationId: Long! ) : Boolean
 }
 
 # complete 7/17/2021
@@ -66,7 +93,10 @@ type Account {
     outstanding: BigDecimal
     cleared: BigDecimal
     future: BigDecimal
-    #dateClosed: Date
+    dateClosed: Timestamp
+    validationDate: Timestamp
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -74,8 +104,9 @@ type Category {
     categoryId: Long
     activeStatus: Boolean!
     categoryName: String!
-    #    dateAdded: Timestamp
-    #    dateUpdated: Timestamp
+    categoryCount: Long
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -83,8 +114,9 @@ type Description {
     descriptionId: Long
     activeStatus: Boolean!
     descriptionName: String!
-    #    dateAdded: Timestamp
-    #    dateUpdated: Timestamp
+    descriptionCount: Long
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -93,6 +125,7 @@ type Transaction {
     guid: String!
     accountId: Long
     accountType: AccountType!
+    transactionType: TransactionType!
     activeStatus: Boolean!
     transactionDate: Date!
     accountNameOwner: String!
@@ -102,8 +135,11 @@ type Transaction {
     transactionState: TransactionState!
     reoccurringType: ReoccurringType!
     notes: String!
-    #    dateAdded: Timestamp
-    #    dateUpdated: Timestamp
+    dueDate: Date
+    receiptImageId: Long
+    receiptImage: ReceiptImage
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
 }
 
 # complete 7/17/2021
@@ -116,8 +152,8 @@ type Payment {
     amount: BigDecimal!
     guidSource: String
     guidDestination: String
-    #    dateAdded: Timestamp
-    #    dateUpdated: Timestamp
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
 }
 
 input PaymentInput {
@@ -139,6 +175,8 @@ type Transfer {
     guidSource: String
     guidDestination: String
     activeStatus: Boolean!
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
 }
 
 input TransferInput {
@@ -147,6 +185,63 @@ input TransferInput {
     transactionDate: Date!
     amount: BigDecimal!
     activeStatus: Boolean
+}
+
+input AccountInput {
+    accountId: Long
+    accountNameOwner: String!
+    accountType: AccountType!
+    activeStatus: Boolean
+    moniker: String
+    outstanding: BigDecimal
+    cleared: BigDecimal
+    future: BigDecimal
+    dateClosed: Timestamp
+    validationDate: Timestamp
+}
+
+input TransactionInput {
+    transactionId: Long
+    guid: String
+    accountId: Long
+    accountType: AccountType!
+    transactionType: TransactionType!
+    accountNameOwner: String!
+    transactionDate: Date!
+    description: String!
+    category: String!
+    amount: BigDecimal!
+    transactionState: TransactionState!
+    activeStatus: Boolean
+    reoccurringType: ReoccurringType
+    notes: String
+    dueDate: Date
+    receiptImageId: Long
+}
+
+input ParameterInput {
+    parameterId: Long
+    parameterName: String!
+    parameterValue: String!
+    activeStatus: Boolean
+}
+
+input ValidationAmountInput {
+    validationId: Long
+    accountId: Long!
+    validationDate: Timestamp!
+    activeStatus: Boolean
+    transactionState: TransactionState!
+    amount: BigDecimal!
+}
+
+type ReceiptImage {
+    receiptImageId: Long
+    transactionId: Long
+    activeStatus: Boolean!
+    imageFormatType: ImageFormatType!
+    image: String!
+    thumbnail: String!
 }
 
 # complete 7/17/2021
@@ -159,10 +254,10 @@ type Parameter {
 
 # complete 7/17/2021
 type ValidationAmount {
-    validationAmountId: Long
+    validationId: Long
     accountId: Long
-    #validationDate: Timestamp
+    validationDate: Timestamp!
     activeStatus: Boolean!
-    transactionState: TransactionState
+    transactionState: TransactionState!
     amount: BigDecimal!
 }
