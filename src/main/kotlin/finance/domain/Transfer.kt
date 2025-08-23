@@ -88,11 +88,11 @@ data class Transfer(
         this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
     }
 
-    @JsonIgnore
+    @JsonProperty
     @Column(name = "date_added", nullable = false)
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    @JsonIgnore
+    @JsonProperty
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
