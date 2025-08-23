@@ -1,9 +1,6 @@
 package finance.controllers
 
-import finance.Application
 import groovy.json.JsonSlurper
-import groovy.util.logging.Slf4j
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -11,25 +8,29 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import spock.lang.Shared
-import spock.lang.Stepwise
 
-@Slf4j
-@Stepwise
 @ActiveProfiles("func")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(classes = Application)
-class LoginControllerSpec extends BaseControllerSpec {
+class LoginControllerIsolatedSpec extends BaseControllerSpec {
 
     @Shared
-    String testUsername = "functional_test_user"
+    protected String endpointName = 'login'
+    
+    @Shared
+    String testUsername
+    
     @Shared
     String testPassword = "FunctionalTestPass123!"
+    
     @Shared
     String authToken
 
-    void "test register new user successfully"() {
+    void setupSpec() {
+        // Generate unique test username for this test run
+        testUsername = "functional_test_${testOwner.split('_')[1]}"
+    }
+
+    void 'should register new user successfully'() {
         given: "a new user registration payload"
         String payload = """
         {
@@ -47,7 +48,7 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/register",
+            createURLWithPort("/api/register"),
             HttpMethod.POST, entity, String)
 
         then: "response should be created and contain authentication cookie"
@@ -59,9 +60,10 @@ class LoginControllerSpec extends BaseControllerSpec {
         def cookieHeaders = response.headers.get("Set-Cookie")
         cookieHeaders != null
         cookieHeaders.any { it.contains("token=") }
+        0 * _
     }
 
-    void "test register user with existing username"() {
+    void 'should reject registration with existing username'() {
         given: "a user registration payload with existing username"
         String payload = """
         {
@@ -79,14 +81,15 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/register",
+            createURLWithPort("/api/register"),
             HttpMethod.POST, entity, String)
 
         then: "response should be conflict"
         response.statusCode == HttpStatus.CONFLICT
+        0 * _
     }
 
-    void "test login with valid credentials"() {
+    void 'should login with valid credentials'() {
         given: "valid login credentials"
         String payload = """
         {
@@ -104,7 +107,7 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/login",
+            createURLWithPort("/api/login"),
             HttpMethod.POST, entity, String)
 
         then: "response should be successful with authentication cookie"
@@ -118,13 +121,16 @@ class LoginControllerSpec extends BaseControllerSpec {
         def tokenCookie = cookieHeaders.find { it.contains("token=") }
         tokenCookie != null
 
-
-        cleanup:
+        and: "extract token for subsequent tests"
         def extractedToken = tokenCookie.split("token=")[1].split(";")[0]
+        extractedToken != null
+        
+        cleanup:
         authToken = extractedToken
+        0 * _
     }
 
-    void "test login with invalid credentials"() {
+    void 'should reject login with invalid credentials'() {
         given: "invalid login credentials"
         String payload = """
         {
@@ -142,20 +148,22 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/login",
+            createURLWithPort("/api/login"),
             HttpMethod.POST, entity, String)
 
         then: "response should be unauthorized"
         response.statusCode == HttpStatus.UNAUTHORIZED
+        0 * _
     }
 
-    void "test login with non-existent user"() {
+    void 'should reject login with non-existent user'() {
         given: "non-existent user credentials"
+        String nonExistentUser = "non_existent_user_${testOwner.split('_')[1]}"
         String payload = """
         {
             "userId": 0,
             "activeStatus": true,
-            "username": "non_existent_user",
+            "username": "${nonExistentUser}",
             "password": "SomePass123!",
             "firstName": "non",
             "lastName": "existent"
@@ -167,21 +175,22 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/login",
+            createURLWithPort("/api/login"),
             HttpMethod.POST, entity, String)
 
         then: "response should be unauthorized"
         response.statusCode == HttpStatus.UNAUTHORIZED
+        0 * _
     }
 
-    void "test get current user with valid token"() {
+    void 'should get current user with valid token'() {
         when: "getting current user with valid token"
         HttpHeaders authHeaders = new HttpHeaders()
         authHeaders.set("Cookie", "token=${authToken}")
         HttpEntity entity = new HttpEntity<>(null, authHeaders)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/me",
+            createURLWithPort("/api/me"),
             HttpMethod.GET, entity, String)
 
         then: "response should be successful"
@@ -192,47 +201,51 @@ class LoginControllerSpec extends BaseControllerSpec {
         JsonSlurper jsonSlurper = new JsonSlurper()
         def jsonResponse = jsonSlurper.parseText(response.body)
         jsonResponse.username == testUsername
+        0 * _
     }
 
-    void "test get current user without token"() {
+    void 'should reject get current user without token'() {
         when: "getting current user without token"
         HttpEntity entity = new HttpEntity<>(null, new HttpHeaders())
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/me",
+            createURLWithPort("/api/me"),
             HttpMethod.GET, entity, String)
 
         then: "response should be forbidden"
         response.statusCode == HttpStatus.FORBIDDEN
+        0 * _
     }
 
-    void "test get current user with invalid token"() {
+    void 'should reject get current user with invalid token'() {
         when: "getting current user with invalid token"
         HttpHeaders authHeaders = new HttpHeaders()
         authHeaders.set("Cookie", "token=invalid_token_value")
         HttpEntity entity = new HttpEntity<>(null, authHeaders)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/me",
+            createURLWithPort("/api/me"),
             HttpMethod.GET, entity, String)
 
         then: "response should be forbidden"
         response.statusCode == HttpStatus.FORBIDDEN
+        0 * _
     }
 
-    void "test logout functionality"() {
+    void 'should handle logout functionality'() {
         when: "posting to logout endpoint"
         HttpEntity entity = new HttpEntity<>(null, new HttpHeaders())
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/logout",
+            createURLWithPort("/api/logout"),
             HttpMethod.POST, entity, String)
 
         then: "response should be forbidden when not authenticated"
         response.statusCode == HttpStatus.FORBIDDEN
+        0 * _
     }
 
-    void "test register with invalid payload"() {
+    void 'should reject registration with invalid payload'() {
         given: "invalid registration payload"
         String payload = '{"invalidField": "invalid"}'
 
@@ -241,14 +254,15 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/register",
+            createURLWithPort("/api/register"),
             HttpMethod.POST, entity, String)
 
         then: "response should be bad request"
         response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
-    void "test login with malformed JSON"() {
+    void 'should reject login with malformed JSON'() {
         given: "malformed JSON payload"
         String payload = '{"username": "test", "password": incomplete'
 
@@ -257,42 +271,47 @@ class LoginControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/login",
+            createURLWithPort("/api/login"),
             HttpMethod.POST, entity, String)
 
         then: "response should be bad request"
         response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
-    void "test register with missing required fields"() {
+    void 'should reject registration with missing required fields'() {
         given: "registration payload with missing password"
-        String payload = '{"username": "test_user_no_password"}'
+        String uniqueUsername = "test_user_no_password_${testOwner.split('_')[1]}"
+        String payload = "{\"username\": \"${uniqueUsername}\"}"
 
         when: "posting to register endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/register",
+            createURLWithPort("/api/register"),
             HttpMethod.POST, entity, String)
 
         then: "response should be bad request"
         response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 
-    void "test login with missing required fields"() {
+    void 'should reject login with missing required fields'() {
         given: "login payload with missing password"
-        String payload = '{"userId": 0, "activeStatus": true, "username": "test_user", "firstName": "test", "lastName": "user"}'
+        String uniqueUsername = "test_user_${testOwner.split('_')[1]}"
+        String payload = "{\"userId\": 0, \"activeStatus\": true, \"username\": \"${uniqueUsername}\", \"firstName\": \"test\", \"lastName\": \"user\"}"
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/login",
+            createURLWithPort("/api/login"),
             HttpMethod.POST, entity, String)
 
         then: "response should be bad request"
         response.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
     }
 }

@@ -1,9 +1,6 @@
 package finance.controllers
 
-import finance.Application
 import groovy.json.JsonSlurper
-import groovy.util.logging.Slf4j
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -11,17 +8,15 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
-import spock.lang.Stepwise
+import spock.lang.Shared
 
-@Slf4j
-@Stepwise
 @ActiveProfiles("func")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(classes = Application)
-class UuidControllerSpec extends BaseControllerSpec {
+class UuidControllerIsolatedSpec extends BaseControllerSpec {
 
-    void "test generate single UUID successfully"() {
+    @Shared
+    protected String endpointName = 'uuid'
+
+    void 'should generate single UUID successfully'() {
         when: "posting to generate UUID endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
@@ -29,7 +24,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate",
+            createURLWithPort("/api/uuid/generate"),
             HttpMethod.POST, entity, String)
 
         then: "response should be successful"
@@ -44,9 +39,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         jsonResponse.uuid.length() == 36 // Standard UUID length
         jsonResponse.timestamp != null
         jsonResponse.source == "server"
+        0 * _
     }
 
-    void "test generate batch UUIDs successfully with default count"() {
+    void 'should generate batch UUIDs successfully with default count'() {
         when: "posting to generate batch UUIDs endpoint without count"
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
@@ -54,7 +50,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate/batch",
+            createURLWithPort("/api/uuid/generate/batch"),
             HttpMethod.POST, entity, String)
 
         then: "response should be successful"
@@ -70,9 +66,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         jsonResponse.count == 1
         jsonResponse.timestamp != null
         jsonResponse.source == "server"
+        0 * _
     }
 
-    void "test generate batch UUIDs with specific count"() {
+    void 'should generate batch UUIDs with specific count'() {
         given: "a specific count of UUIDs to generate"
         int count = 5
 
@@ -83,7 +80,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate/batch?count=${count}",
+            createURLWithPort("/api/uuid/generate/batch?count=${count}"),
             HttpMethod.POST, entity, String)
 
         then: "response should be successful"
@@ -99,9 +96,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         jsonResponse.count == count
         jsonResponse.timestamp != null
         jsonResponse.source == "server"
+        0 * _
     }
 
-    void "test generate batch UUIDs with count exceeding limit"() {
+    void 'should reject batch UUIDs with count exceeding limit'() {
         given: "a count exceeding the maximum limit"
         int count = 150 // Exceeds the 100 limit
 
@@ -112,7 +110,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate/batch?count=${count}",
+            createURLWithPort("/api/uuid/generate/batch?count=${count}"),
             HttpMethod.POST, entity, String)
 
         then: "response should be bad request"
@@ -123,9 +121,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         def jsonResponse = jsonSlurper.parseText(response.body)
         jsonResponse.error != null
         jsonResponse.error.contains("Count must be between 1 and 100")
+        0 * _
     }
 
-    void "test generate batch UUIDs with zero count"() {
+    void 'should reject batch UUIDs with zero count'() {
         given: "a count of zero"
         int count = 0
 
@@ -136,7 +135,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate/batch?count=${count}",
+            createURLWithPort("/api/uuid/generate/batch?count=${count}"),
             HttpMethod.POST, entity, String)
 
         then: "response should be bad request"
@@ -147,9 +146,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         def jsonResponse = jsonSlurper.parseText(response.body)
         jsonResponse.error != null
         jsonResponse.error.contains("Count must be between 1 and 100")
+        0 * _
     }
 
-    void "test health check endpoint"() {
+    void 'should successfully respond to health check endpoint'() {
         when: "posting to health check endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
@@ -157,7 +157,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/health",
+            createURLWithPort("/api/uuid/health"),
             HttpMethod.POST, entity, String)
 
         then: "response should be successful"
@@ -170,9 +170,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         jsonResponse.status == "healthy"
         jsonResponse.service == "uuid-generation"
         jsonResponse.timestamp != null
+        0 * _
     }
 
-    void "test unauthorized access to UUID generation endpoints"() {
+    void 'should reject unauthorized access to UUID generation endpoints'() {
         given: "no authentication token"
         HttpHeaders cleanHeaders = new HttpHeaders()
 
@@ -181,14 +182,15 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, cleanHeaders)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate",
+            createURLWithPort("/api/uuid/generate"),
             HttpMethod.POST, entity, String)
 
         then: "response should be unauthorized"
         response.statusCode == HttpStatus.UNAUTHORIZED || response.statusCode == HttpStatus.FORBIDDEN
+        0 * _
     }
 
-    void "test UUID uniqueness in batch generation"() {
+    void 'should generate unique UUIDs in batch generation'() {
         given: "a request for multiple UUIDs"
         int count = 10
 
@@ -199,7 +201,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate/batch?count=${count}",
+            createURLWithPort("/api/uuid/generate/batch?count=${count}"),
             HttpMethod.POST, entity, String)
 
         then: "all UUIDs should be unique"
@@ -211,9 +213,10 @@ class UuidControllerSpec extends BaseControllerSpec {
         and: "verify uniqueness"
         Set<String> uniqueUuids = new HashSet<>(uuids)
         uniqueUuids.size() == count // All UUIDs should be unique
+        0 * _
     }
 
-    void "test UUID format validation"() {
+    void 'should generate UUIDs with valid format'() {
         when: "generating a single UUID"
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
@@ -221,7 +224,7 @@ class UuidControllerSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/uuid/generate",
+            createURLWithPort("/api/uuid/generate"),
             HttpMethod.POST, entity, String)
 
         then: "UUID should match standard format"
@@ -232,5 +235,6 @@ class UuidControllerSpec extends BaseControllerSpec {
 
         and: "verify UUID format (8-4-4-4-12 characters separated by hyphens)"
         uuid.matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+        0 * _
     }
 }
