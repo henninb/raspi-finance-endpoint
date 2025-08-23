@@ -9,6 +9,8 @@ server:
     enabled: ${SSL_ENABLED}
     enabled-protocols: TLSv1.2
 spring:
+  graphql:
+    path: /graphql
   security:
     user:
       name: ${API_USERNAME}

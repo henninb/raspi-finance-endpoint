@@ -99,6 +99,7 @@ dependencies {
 
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-graphql:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
@@ -118,10 +119,9 @@ dependencies {
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:${apacheCamelVersion}")
     implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
-    //graphql
+    // GraphQL (Spring for GraphQL)
+    implementation("org.springframework.boot:spring-boot-starter-graphql")
     implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlVersion}")
-    implementation("com.graphql-java:graphql-java:${graphqlVersion}")
-    implementation("com.graphql-java:graphql-java-spring-boot-starter-webmvc:${graphqlSpringWebmvcVersion}")
     implementation "com.google.guava:guava:31.1-jre"
 
     //postgreSQL database
