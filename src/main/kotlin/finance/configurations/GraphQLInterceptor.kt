@@ -20,7 +20,7 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
             .doOnNext { response ->
                 try {
                     val executionResult = response.executionResult
-                    
+
                     // Log GraphQL response structure
                     logger.debug("GraphQL Response Debug:")
                     logger.debug("  - Errors: ${executionResult.errors?.size ?: 0}")
@@ -36,7 +36,7 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
                             }
                         }
                     }
-                    
+
                     // Log response data structure
                     val data = executionResult.getData<Map<String, Any?>>()
                     if (data != null) {
@@ -60,7 +60,7 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
                                 }
                             }
                         }
-                        
+
                         // Detailed logging for empty responses
                         if (data.values.all { it == null || (it is Collection<*> && it.isEmpty()) }) {
                             logger.warn("GraphQL: All response fields are null or empty - possible serialization failure")
@@ -69,7 +69,7 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
                     } else {
                         logger.error("GraphQL: Response data is null - this indicates a serious problem")
                     }
-                    
+
                 } catch (e: Exception) {
                     logger.error("Error in GraphQL response interceptor", e)
                 }

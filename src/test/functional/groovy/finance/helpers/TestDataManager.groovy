@@ -31,7 +31,7 @@ class TestDataManager {
 
         // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
         String ownerClean = cleanOwner(testOwner)
-        
+
         // Create primary test account (Credit type for standard testing)
         String primaryAccountName = accountNameFor(testOwner, "primary")
         jdbcTemplate.update("""
