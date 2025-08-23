@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.User
+import finance.domain.LoginRequest
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -29,33 +30,36 @@ class LoginController(private val userService: UserService) : BaseController() {
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
     @PostMapping("/login")
     fun login(
-        @Valid @RequestBody loginRequest: User,
+        @Valid @RequestBody loginRequest: LoginRequest,
         bindingResult: BindingResult,
         response: HttpServletResponse
     ): ResponseEntity<Map<String, String>> {
-        // Check for validation errors
+        // Entry log for tracing
+        logger.info("LOGIN_REQUEST username=${loginRequest.username}")
+
+        // Check for validation errors on the minimal DTO
         if (bindingResult.hasErrors()) {
             val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
-            logger.warn("Login validation failed for username: ${loginRequest.username}")
+            logger.warn("LOGIN_400_VALIDATION username=${loginRequest.username} errors=${errors}")
             return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
         }
 
-        // Additional password validation for raw passwords (before encoding)
-        if (!isValidRawPassword(loginRequest.password)) {
-            logger.warn("Login failed - invalid password format for username: ${loginRequest.username}")
-            return ResponseEntity.badRequest().body(mapOf("error" to "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"))
+        // Validate user credentials against stored hash (no strength checks here)
+        val authAttempt = User().apply {
+            username = loginRequest.username
+            password = loginRequest.password
         }
 
-        // Validate user credentials
         val user = try {
-            userService.signIn(loginRequest)
+            userService.signIn(authAttempt)
         } catch (e: Exception) {
-            logger.error("Authentication error for username: ${loginRequest.username}")
+            logger.warn("LOGIN_401_EXCEPTION username=${loginRequest.username} ex=${e.javaClass.simpleName} msg=${e.message}")
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
         }
 
-        logger.info("Login request received: ${loginRequest.username}")
+        logger.info("LOGIN_AUTH_ATTEMPT username=${loginRequest.username}")
         if (user.isEmpty) {
+            logger.warn("LOGIN_401_INVALID_CREDENTIALS username=${loginRequest.username}")
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
         }
 
@@ -90,6 +94,7 @@ class LoginController(private val userService: UserService) : BaseController() {
         }
 
         response.addHeader("Set-Cookie", cookie.toString())
+        logger.info("LOGIN_SUCCESS username=${loginRequest.username}")
         return ResponseEntity.ok(mapOf("message" to "Login successful"))
     }
 

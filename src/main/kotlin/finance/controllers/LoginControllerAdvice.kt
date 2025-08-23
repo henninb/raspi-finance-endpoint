@@ -2,6 +2,7 @@ package finance.controllers
 
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,15 +20,15 @@ class LoginControllerAdvice {
     }
 
     @ExceptionHandler(value = [HttpMessageNotReadableException::class])
-    fun handleMessageNotReadableException(throwable: HttpMessageNotReadableException): ResponseEntity<Map<String, String>> {
-        logger.error("Login - Message not readable: ${throwable.message}", throwable)
+    fun handleMessageNotReadableException(request: HttpServletRequest, throwable: HttpMessageNotReadableException): ResponseEntity<Map<String, String>> {
+        logger.warn("LOGIN_400_NOT_READABLE method=${request.method} uri=${request.requestURI} msg=${throwable.mostSpecificCause?.message ?: throwable.message}")
         val response = mapOf("error" to "Invalid request data: ${throwable.mostSpecificCause?.message ?: throwable.message}")
         return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }
 
     @ExceptionHandler(value = [ValidationException::class])
-    fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, String>> {
-        logger.error("Login - Validation error: ${throwable.message}", throwable)
+    fun handleValidationException(request: HttpServletRequest, throwable: ValidationException): ResponseEntity<Map<String, String>> {
+        logger.warn("LOGIN_400_VALIDATION_EXCEPTION method=${request.method} uri=${request.requestURI} msg=${throwable.message}")
         val response = mapOf("error" to "Validation error: ${throwable.message}")
         return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }
