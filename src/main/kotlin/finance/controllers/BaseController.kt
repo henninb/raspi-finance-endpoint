@@ -77,11 +77,13 @@ open class BaseController {
         val method = request?.method ?: "unknown"
         val uri = request?.requestURI ?: "unknown"
         val userAgent = sanitizeHeader(request?.getHeader("User-Agent"))
+        val exMsg = sanitizeHeader(throwable.message)?.take(180)
 
         val logMessage = buildString {
             append("CONTROLLER_ERROR type=$errorType status=${statusCode.value()} ")
             append("method=$method uri=$uri ip=$clientIp ")
             append("exception=${throwable.javaClass.simpleName}")
+            if (!exMsg.isNullOrBlank()) append(" msg='${exMsg}'")
             if (!userAgent.isNullOrBlank()) append(" userAgent='$userAgent'")
         }
 

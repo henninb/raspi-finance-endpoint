@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.slf4j.LoggerFactory
 
 @Configuration
 open class WebSecurityConfig(
@@ -24,10 +25,16 @@ open class WebSecurityConfig(
     private val securityAuditFilter: SecurityAuditFilter
 ) {
 
+    companion object {
+        private val securityLogger = LoggerFactory.getLogger("SECURITY.${WebSecurityConfig::class.java.simpleName}")
+    }
+
 
     @Bean
     @Profile("!int") // Exclude when integration test profile is active
     open fun securityFilterChain(http: HttpSecurity, loggingCorsFilter: LoggingCorsFilter, httpErrorLoggingFilter: HttpErrorLoggingFilter): SecurityFilterChain {
+        val activeProfiles = environment.activeProfiles.joinToString(",").ifBlank { "default" }
+        securityLogger.info("SECURITY_CONFIG building main chain profiles={} stateless=true jwtFilter=true", activeProfiles)
         http
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(securityAuditFilter, UsernamePasswordAuthenticationFilter::class.java)
@@ -51,7 +58,9 @@ open class WebSecurityConfig(
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
-        return http.build()
+        val chain = http.build()
+        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register','/api/pending/transaction/insert']")
+        return chain
     }
 
     @Bean
@@ -98,6 +107,7 @@ open class WebSecurityConfig(
     @Bean("intSecurityFilterChain")
     @Profile("int")
     open fun intSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        securityLogger.info("SECURITY_CONFIG building integration-test chain (permitAll)")
         http
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
@@ -108,6 +118,8 @@ open class WebSecurityConfig(
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
-        return http.build()
+        val chain = http.build()
+        securityLogger.info("SECURITY_CONFIG built integration-test chain: permitAll=true")
+        return chain
     }
 }
