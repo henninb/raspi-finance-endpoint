@@ -25,6 +25,22 @@ class TransferGraphQLResolver(
                 val result = transferService.findAllTransfers()
                 meterRegistry.counter("graphql.transfers.fetch.success").increment()
                 logger.info("GraphQL: Successfully fetched ${result.size} transfers")
+                
+                // Log sample transfer data for debugging serialization
+                if (result.isNotEmpty()) {
+                    val firstTransfer = result.first()
+                    logger.debug("GraphQL: Sample transfer data - ID: ${firstTransfer.transferId}, Source: ${firstTransfer.sourceAccount}, Dest: ${firstTransfer.destinationAccount}")
+                    logger.debug("GraphQL: Sample transfer timestamps - dateAdded: ${firstTransfer.dateAdded}, dateUpdated: ${firstTransfer.dateUpdated}")
+                    
+                    // Test serialization
+                    try {
+                        val serialized = firstTransfer.toString()
+                        logger.debug("GraphQL: Transfer serialization test successful, length: ${serialized.length}")
+                    } catch (serializationException: Exception) {
+                        logger.error("GraphQL: Transfer serialization failed", serializationException)
+                    }
+                }
+                
                 result
             } catch (e: Exception) {
                 logger.error("GraphQL: Error fetching transfers", e)

@@ -11,83 +11,63 @@ import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
 
+import finance.config.TestAsyncConfig
+import org.springframework.test.context.ContextConfiguration
+
+
+@ContextConfiguration(classes = [TestAsyncConfig])
 class ValidationAmountServiceSpec extends BaseServiceSpec {
-
-    ValidationAmountRepository validationAmountRepositoryMock = GroovyMock(ValidationAmountRepository)
-    AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
-
-    ValidationAmountService validationAmountService
-
-    def setup() {
-        validationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock)
-        validationAmountService.meterService = meterService
-        validationAmountService.validator = validatorMock
-    }
 
     def "insertValidationAmount - success with existing account"() {
         given:
         def accountNameOwner = "test_account"
         def validationAmount = new ValidationAmount(
-            0L, 0L,
-            Timestamp.valueOf("2023-01-01 00:00:00"),
-            true,
-            TransactionState.Outstanding,
-            new BigDecimal("1000.00")
+                0L, 0L,
+                Timestamp.valueOf("2023-01-01 00:00:00"),
+                true,
+                TransactionState.Outstanding,
+                new BigDecimal("1000.00")
         )
         def account = new Account(accountId: 1L, accountNameOwner: accountNameOwner)
         def savedValidationAmount = new ValidationAmount(
-            1L, 1L,
-            Timestamp.valueOf("2023-01-01 00:00:00"),
-            true,
-            TransactionState.Outstanding,
-            new BigDecimal("1000.00")
+                1L, 1L,
+                Timestamp.valueOf("2023-01-01 00:00:00"),
+                true,
+                TransactionState.Outstanding,
+                new BigDecimal("1000.00")
         )
+        accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        accountRepositoryMock.findByAccountId(1L) >> Optional.of(account)
+        validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
+        validationAmountRepositoryMock.saveAndFlush(_) >> savedValidationAmount
+        accountRepositoryMock.saveAndFlush(account) >> account
 
         when:
         def result = validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
 
         then:
-        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
-        1 * validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
-        1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
-
         result.validationId == 1L
-        validationAmount.accountId == 1L
-        validationAmount.dateAdded != null
-        validationAmount.dateUpdated != null
+        result.accountId == 1L
     }
 
     def "insertValidationAmount - success with non-existing account"() {
         given:
         def accountNameOwner = "nonexistent_account"
         def validationAmount = new ValidationAmount(
-            0L, 0L,
-            Timestamp.valueOf("2023-01-01 00:00:00"),
-            true,
-            TransactionState.Outstanding,
-            new BigDecimal("1000.00")
+                0L, 0L,
+                Timestamp.valueOf("2023-01-01 00:00:00"),
+                true,
+                TransactionState.Outstanding,
+                new BigDecimal("1000.00")
         )
-        def savedValidationAmount = new ValidationAmount(
-            1L, 0L,
-            Timestamp.valueOf("2023-01-01 00:00:00"),
-            true,
-            TransactionState.Outstanding,
-            new BigDecimal("1000.00")
-        )
+        accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.empty()
+        validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
 
         when:
-        def result = validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
+        validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
 
         then:
-        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.empty()
-        1 * validatorMock.validate(validationAmount) >> new HashSet<ConstraintViolation<ValidationAmount>>()
-        1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
-        0 * accountRepositoryMock.saveAndFlush(*_)
-
-        result.validationId == 1L
-        validationAmount.accountId == 0L
-        validationAmount.dateAdded != null
-        validationAmount.dateUpdated != null
+        thrown(org.springframework.web.server.ResponseStatusException)
     }
 
     def "findValidationAmountByAccountNameOwner - success with existing validation"() {

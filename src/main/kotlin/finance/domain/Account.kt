@@ -91,11 +91,11 @@ data class Account(
         "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0), Timestamp(0)
     )
 
-    @JsonIgnore
+    @JsonProperty
     @Column(name = "date_added", nullable = false)
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    @JsonIgnore
+    @JsonProperty
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 

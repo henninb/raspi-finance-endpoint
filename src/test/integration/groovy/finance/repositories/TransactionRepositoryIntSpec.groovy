@@ -304,40 +304,4 @@ class TransactionRepositoryIntSpec extends Specification {
         thrown(Exception) // Could be ConstraintViolationException or DataIntegrityViolationException
     }
 
-    @Ignore("Performance test - ignored for regular integration test runs")
-    void 'test transaction query performance with large dataset'() {
-        given:
-        // Create a larger dataset to test query performance
-        List<Transaction> transactions = []
-        for (int i = 0; i < 100; i++) {
-            Transaction transaction = new Transaction(
-                transactionId: 0L,
-                guid: UUID.randomUUID().toString(),
-                accountId: testAccountId,
-                accountType: AccountType.Debit,
-                transactionType: TransactionType.Expense,
-                accountNameOwner: "test_brian",
-                transactionDate: Date.valueOf("2023-01-01"),
-                description: "perftest${i}",
-                category: i % 5 == 0 ? "category_a" : "category_b",
-                amount: new BigDecimal(Math.random() * 1000),
-                transactionState: i % 3 == 0 ? TransactionState.Cleared : TransactionState.Outstanding,
-                activeStatus: true,
-                reoccurringType: ReoccurringType.Undefined,
-                notes: ""
-            )
-            transactions.add(transaction)
-        }
-        transactionRepository.saveAll(transactions)
-
-        when:
-        long startTime = System.currentTimeMillis()
-        List<Transaction> foundTransactions = transactionRepository
-            .findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc("test_brian", true)
-        long endTime = System.currentTimeMillis()
-
-        then:
-        foundTransactions.size() >= 100
-        (endTime - startTime) < 5000  // Query should complete within 5 seconds
-    }
 }

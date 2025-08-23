@@ -137,135 +137,7 @@ class CamelRouteIntegrationSpec extends Specification {
         camelContext.getRouteController().getRouteStatus("JsonFileWriterRoute").isStarted()
     }
 
-    @Ignore("File processing test disabled - complex Camel file polling with shared directories")
-    void 'test complete file processing workflow'() {
-        given:
-        def testTransactionJson = """[
-            {
-                "guid": "${UUID.randomUUID()}",
-                "accountNameOwner": "test-checking_brian",
-                "accountType": "Debit",
-                "description": "Integration Test Transaction",
-                "category": "Test Category",
-                "amount": 123.45,
-                "transactionDate": "2023-05-15",
-                "transactionState": "Cleared",
-                "transactionType": "expense",
-                "notes": "Camel integration test"
-            }
-        ]"""
 
-        File sourceFile = File.createTempFile("test-transaction", ".json")
-        sourceFile.text = testTransactionJson
-        File destinationFile = new File("$baseName/int_json_in/${UUID.randomUUID()}.json")
-
-        when:
-        println("Copying file from ${sourceFile.absolutePath} to ${destinationFile.absolutePath}")
-        println("File exists: ${sourceFile.exists()}, size: ${sourceFile.length()} bytes")
-        println("Directory exists: ${destinationFile.parentFile.exists()}")
-
-        if (!destinationFile.parentFile.exists()) {
-            destinationFile.parentFile.mkdirs()
-            println("Created directory: ${destinationFile.parentFile.absolutePath}")
-        }
-
-        Files.copy(sourceFile.toPath(), destinationFile.toPath())
-        println("File copied successfully. Destination exists: ${destinationFile.exists()}, size: ${destinationFile.length()} bytes")
-
-        then:
-        conditions.eventually {
-            def transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(
-                "Integration Test Transaction", true)
-            transactions.size() == 1
-            transactions[0].description == "Integration Test Transaction"
-            transactions[0].category == "Test Category"
-            transactions[0].amount == 123.45
-            transactions[0].accountNameOwner == "test-checking_brian"
-            transactions[0].transactionState == TransactionState.Cleared
-            transactions[0].transactionType == TransactionType.Expense
-        }
-
-        cleanup:
-        sourceFile?.delete()
-    }
-
-    @Ignore("File processing test disabled - complex Camel file polling with shared directories")
-    void 'test multiple transactions in single file processing'() {
-        given:
-        def multipleTransactionsJson = """[
-            {
-                "guid": "${UUID.randomUUID()}",
-                "accountNameOwner": "test-checking_brian",
-                "accountType": "Debit",
-                "description": "Multi Test Transaction 1",
-                "category": "Test Category A",
-                "amount": 50.00,
-                "transactionDate": "2023-05-15",
-                "transactionState": "Cleared",
-                "transactionType": "income"
-            },
-            {
-                "guid": "${UUID.randomUUID()}",
-                "accountNameOwner": "test-savings_brian",
-                "accountType": "Credit",
-                "description": "Multi Test Transaction 2",
-                "category": "Test Category B",
-                "amount": 75.25,
-                "transactionDate": "2023-05-16",
-                "transactionState": "Outstanding",
-                "transactionType": "expense"
-            },
-            {
-                "guid": "${UUID.randomUUID()}",
-                "accountNameOwner": "test-checking_brian",
-                "accountType": "Debit",
-                "description": "Multi Test Transaction 3",
-                "category": "Test Category C",
-                "amount": 100.00,
-                "transactionDate": "2023-05-17",
-                "transactionState": "Future",
-                "transactionType": "expense"
-            }
-        ]"""
-
-        File sourceFile = File.createTempFile("multi-transaction", ".json")
-        sourceFile.text = multipleTransactionsJson
-        File destinationFile = new File("$baseName/int_json_in/${UUID.randomUUID()}.json")
-
-        when:
-        Files.copy(sourceFile.toPath(), destinationFile.toPath())
-
-        then:
-        conditions.eventually {
-            def transactions1 = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(
-                "Multi Test Transaction 1", true)
-            def transactions2 = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(
-                "Multi Test Transaction 2", true)
-            def transactions3 = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(
-                "Multi Test Transaction 3", true)
-
-            transactions1.size() == 1
-            transactions2.size() == 1
-            transactions3.size() == 1
-
-            transactions1[0].amount == 50.00
-            transactions1[0].transactionType == TransactionType.Income
-            transactions1[0].accountNameOwner == "test-checking_brian"
-
-            transactions2[0].amount == 75.25
-            transactions2[0].transactionState == TransactionState.Outstanding
-            transactions2[0].transactionType == TransactionType.Expense
-            transactions2[0].accountNameOwner == "test-savings_brian"
-
-            transactions3[0].amount == 100.00
-            transactions3[0].transactionState == TransactionState.Future
-            transactions3[0].transactionType == TransactionType.Expense
-            transactions3[0].accountNameOwner == "test-checking_brian"
-        }
-
-        cleanup:
-        sourceFile?.delete()
-    }
 
     void 'test invalid json file handling'() {
         given:
@@ -315,13 +187,6 @@ class CamelRouteIntegrationSpec extends Specification {
         sourceFile?.delete()
     }
 
-    @Ignore("Direct route test bypassed - file processing tests cover the same functionality")
-    void 'test direct route transaction processing'() {
-        // This test is complex due to Transaction validation constraints
-        // File processing tests already cover the route functionality end-to-end
-        expect:
-        true
-    }
 
     void 'test camel route error handling and recovery'() {
         given:
@@ -360,60 +225,6 @@ class CamelRouteIntegrationSpec extends Specification {
         sourceFile?.delete()
     }
 
-    @Ignore("Performance test - ignored for regular integration test runs")
-    void 'test file processing performance with multiple files'() {
-        given:
-        List<File> testFiles = []
-        int fileCount = 3  // Reduced from 5 to 3 for better stability
-        List<String> expectedDescriptions = []
-
-        for (int i = 0; i < fileCount; i++) {
-            String uniqueDesc = "Performance Test Transaction ${UUID.randomUUID()}-${i}"
-            expectedDescriptions.add(uniqueDesc)
-
-            def transactionJson = """[
-                {
-                    "guid": "${UUID.randomUUID()}",
-                    "accountNameOwner": "test-checking_brian",
-                    "accountType": "Debit",
-                    "description": "${uniqueDesc}",
-                    "category": "Performance Category",
-                    "amount": ${10.00 + i},
-                    "transactionDate": "2023-05-${15 + i}",
-                    "transactionState": "Cleared",
-                    "transactionType": "expense"
-                }
-            ]"""
-
-            File sourceFile = File.createTempFile("perf-test-${i}", ".json")
-            sourceFile.text = transactionJson
-            testFiles.add(sourceFile)
-        }
-
-        when:
-        long startTime = System.currentTimeMillis()
-        // Process files with delay to avoid overwhelming the system
-        testFiles.eachWithIndex { sourceFile, i ->
-            File destinationFile = new File("$baseName/int_json_in/${UUID.randomUUID()}.json")
-            Files.copy(sourceFile.toPath(), destinationFile.toPath())
-            Thread.sleep(200)  // Small delay between file copies
-        }
-
-        then:
-        conditions.eventually {
-            def allProcessed = expectedDescriptions.every { desc ->
-                def transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(desc, true)
-                transactions.size() >= 1  // Allow for at least 1 transaction
-            }
-            allProcessed
-        }
-
-        long endTime = System.currentTimeMillis()
-        (endTime - startTime) < 30000  // Should process within 30 seconds
-
-        cleanup:
-        testFiles?.each { it.delete() }
-    }
 
     void 'test camel route metrics and monitoring'() {
         given:
@@ -435,54 +246,4 @@ class CamelRouteIntegrationSpec extends Specification {
         jsonWriterRoute.getCamelContext() != null
     }
 
-    @Ignore("File processing test disabled - complex Camel file polling with shared directories")
-    void 'test concurrent file processing'() {
-        given:
-        List<File> sourceFiles = []
-        int concurrentFiles = 2  // Reduced from 3 to 2 for better stability
-        List<String> expectedDescriptions = []
-
-        for (int i = 0; i < concurrentFiles; i++) {
-            String uniqueDesc = "Concurrent Test Transaction ${UUID.randomUUID()}-${i}"
-            expectedDescriptions.add(uniqueDesc)
-
-            def transactionJson = """[
-                {
-                    "guid": "${UUID.randomUUID()}",
-                    "accountNameOwner": "test-checking_brian",
-                    "accountType": "Debit",
-                    "description": "${uniqueDesc}",
-                    "category": "Concurrent Category",
-                    "amount": ${20.00 + i},
-                    "transactionDate": "2023-06-${10 + i}",
-                    "transactionState": "Cleared",
-                    "transactionType": "expense"
-                }
-            ]"""
-
-            File sourceFile = File.createTempFile("concurrent-test-${i}", ".json")
-            sourceFile.text = transactionJson
-            sourceFiles.add(sourceFile)
-        }
-
-        when:
-        // Process files sequentially with delay to avoid resource contention
-        sourceFiles.eachWithIndex { sourceFile, i ->
-            File destinationFile = new File("$baseName/int_json_in/${UUID.randomUUID()}.json")
-            Files.copy(sourceFile.toPath(), destinationFile.toPath())
-            Thread.sleep(1000)  // Increased delay to 1 second between files
-        }
-
-        then:
-        conditions.eventually {
-            def allProcessed = expectedDescriptions.every { desc ->
-                def transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(desc, true)
-                transactions.size() >= 1  // Allow for at least 1 transaction (avoid duplicates)
-            }
-            allProcessed
-        }
-
-        cleanup:
-        sourceFiles?.each { it.delete() }
-    }
 }

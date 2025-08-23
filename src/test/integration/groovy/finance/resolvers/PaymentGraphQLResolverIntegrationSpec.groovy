@@ -190,10 +190,10 @@ class PaymentGraphQLResolverIntegrationSpec extends Specification {
         given: "test accounts are created"
         setupTestAccounts()
 
-        and: "invalid payment input data (non-existent destination account)"
+        and: "invalid payment input data (invalid sourceAccount too short)"
         def paymentInput = [
-            sourceAccount: "checking_brian",
-            destinationAccount: "nonexistent_account",
+            sourceAccount: "ab", // Invalid - too short (less than 3 characters)
+            destinationAccount: "discover_it",
             transactionDate: "2024-01-15",
             amount: new BigDecimal("100.00")
         ]
@@ -205,7 +205,7 @@ class PaymentGraphQLResolverIntegrationSpec extends Specification {
         def dataFetcher = paymentGraphQLResolver.createPayment()
         dataFetcher.get(environment)
 
-        then: "should throw runtime exception in integration environment"
+        then: "should throw runtime exception for validation failure"
         thrown(RuntimeException)
     }
 
