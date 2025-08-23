@@ -18,13 +18,13 @@ class AccountGraphQLResolver(
                 logger.info("GraphQL: Fetching all active accounts")
                 val accounts = accountService.accounts()
                 logger.info("GraphQL: Successfully fetched ${accounts.size} accounts")
-                
+
                 // Log sample account data for debugging serialization
                 if (accounts.isNotEmpty()) {
                     val firstAccount = accounts.first()
                     logger.debug("GraphQL: Sample account data - ID: ${firstAccount.accountId}, Name: ${firstAccount.accountNameOwner}, Type: ${firstAccount.accountType}")
                     logger.debug("GraphQL: Sample account timestamps - dateAdded: ${firstAccount.dateAdded}, dateUpdated: ${firstAccount.dateUpdated}")
-                    
+
                     // Test serialization
                     try {
                         val serialized = firstAccount.toString()
@@ -33,7 +33,7 @@ class AccountGraphQLResolver(
                         logger.error("GraphQL: Account serialization failed", serializationException)
                     }
                 }
-                
+
                 accounts
             } catch (e: Exception) {
                 logger.error("GraphQL: Error fetching accounts", e)

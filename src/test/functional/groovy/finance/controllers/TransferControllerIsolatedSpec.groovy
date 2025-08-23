@@ -28,7 +28,7 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = 'testowner'
         secondaryAccountNameIso = "primary_${cleanOwner}".toLowerCase().replace('primary_', 'secondary_')
-        
+
         // Defer HTTP account creation to test body where headers/restTemplate are initialized
         String tertiaryName = "tertiary_${cleanOwner}".toLowerCase()
         tertiaryAccountNameIso = tertiaryName
