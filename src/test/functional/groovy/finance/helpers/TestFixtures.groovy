@@ -349,20 +349,20 @@ class PaymentTestContext {
                 .withUniqueAccounts(prefix, "dest${prefix}")
                 .withAmount(actualAmount)
                 .buildAndValidate()
-        
+
         // Create the accounts that this payment references
         createAccountsForPayment(payment)
-        
+
         return payment
     }
-    
+
     private void createAccountsForPayment(Payment payment) {
         // The payment account names are in format: "prefix_owner"
         // We need to create accounts using the raw account names directly
         createAccountDirectly(payment.sourceAccount, 'debit')
         createAccountDirectly(payment.destinationAccount, 'credit')
     }
-    
+
     private void createAccountDirectly(String accountName, String accountType) {
         // Create account directly with the full account name
         testDataManager.jdbcTemplate.update("""
@@ -380,10 +380,10 @@ class PaymentTestContext {
                 .withAmount(actualAmount)
                 .asActive()
                 .buildAndValidate()
-        
+
         // Create the accounts that this payment references
         createAccountsForPayment(payment)
-        
+
         return payment
     }
 
@@ -394,10 +394,10 @@ class PaymentTestContext {
                 .withAmount(actualAmount)
                 .asInactive()
                 .buildAndValidate()
-        
+
         // Create the accounts that this payment references
         createAccountsForPayment(payment)
-        
+
         return payment
     }
 

@@ -125,13 +125,13 @@ open class PaymentService(
 
         val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
         handleConstraintViolations(constraintViolations, meterService)
-        
+
         // Process destination account - create if missing (like TransactionService does)
         processPaymentAccount(payment.destinationAccount)
-        
+
         // Process source account - create if missing
         processPaymentAccount(payment.sourceAccount)
-        
+
         // Validate destination account type after ensuring it exists
         val destinationAccount = accountService.account(payment.destinationAccount).get()
         if (destinationAccount.accountType == AccountType.Debit) {

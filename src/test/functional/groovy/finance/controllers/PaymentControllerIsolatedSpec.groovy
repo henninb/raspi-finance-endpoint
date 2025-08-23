@@ -27,10 +27,10 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         // Use pattern-compliant account names matching TestDataManager logic
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = "testowner"
-        
+
         String sourceAccountName = "primary_${cleanOwner}".toLowerCase()
         String destAccountName = "secondary_${cleanOwner}".toLowerCase()
-        
+
         // Create payment JSON with dummy transaction GUIDs (to work around FK constraints)
         String paymentJson = """
         {
@@ -59,7 +59,7 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         // Use pattern-compliant account names
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = "testowner"
-        
+
         // Simplified approach - create payments without FK constraint issues by using dummy transaction GUIDs
         String paymentSmallJson = """
         {
@@ -73,7 +73,7 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
             "activeStatus": true
         }
         """
-        
+
         String paymentLargeJson = """
         {
             "paymentId": 0,
@@ -103,7 +103,7 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         // Use pattern-compliant account names
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = "testowner"
-        
+
         // Simplified approach using existing test accounts
         String activePaymentJson = """
         {
@@ -117,7 +117,7 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
             "activeStatus": true
         }
         """
-        
+
         String inactivePaymentJson = """
         {
             "paymentId": 0,

@@ -5,12 +5,12 @@ import graphql.schema.*
 import java.sql.Timestamp
 
 object TimestampScalar {
-    
+
     val INSTANCE: GraphQLScalarType = GraphQLScalarType.newScalar()
         .name("Timestamp")
         .description("A custom scalar that handles java.sql.Timestamp as Long milliseconds")
         .coercing(object : Coercing<Timestamp, Long> {
-            
+
             override fun serialize(dataFetcherResult: Any): Long {
                 return when (dataFetcherResult) {
                     is Timestamp -> dataFetcherResult.time
@@ -19,7 +19,7 @@ object TimestampScalar {
                     else -> throw CoercingSerializeException("Unable to serialize $dataFetcherResult as Timestamp")
                 }
             }
-            
+
             override fun parseValue(input: Any): Timestamp {
                 return when (input) {
                     is Long -> Timestamp(input)
@@ -28,7 +28,7 @@ object TimestampScalar {
                     else -> throw CoercingParseValueException("Unable to parse $input as Timestamp")
                 }
             }
-            
+
             override fun parseLiteral(input: Any): Timestamp {
                 return when (input) {
                     is StringValue -> Timestamp(input.value.toLong())

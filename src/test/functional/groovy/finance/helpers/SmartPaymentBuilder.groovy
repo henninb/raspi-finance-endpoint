@@ -146,7 +146,7 @@ class SmartPaymentBuilder {
         // Use the same pattern as TestDataManager.createMinimalAccountsFor()
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = "testowner"
-        
+
         this.sourceAccount = "primary_${cleanOwner}".toLowerCase()
         this.destinationAccount = "secondary_${cleanOwner}".toLowerCase()
         return this
