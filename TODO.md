@@ -851,122 +851,12 @@ CSRF_TOKEN_REFRESH_INTERVAL=3600000  # 1 hour in milliseconds
 
 
 ## 18. Integration Test Fail
-DatabaseResilienceIntSpec. test circuit breaker bean configuration
-DatabaseResilienceIntSpec. test circuit breaker metrics and events
-DatabaseResilienceIntSpec. test circuit breaker with successful database operation
-DatabaseResilienceIntSpec. test concurrent database operations with resilience
-DatabaseResilienceIntSpec. test database health indicator integration
-DatabaseResilienceIntSpec. test resilience configuration executeWithResilience method
-DatabaseResilienceIntSpec. test resilience configuration with database transaction
-DatabaseResilienceIntSpec. test retry bean configuration
-GraphQLIntegrationSpec. test GraphQL data fetcher service integration
-GraphQLIntegrationSpec. test GraphQL endpoint accessibility
-GraphQLIntegrationSpec. test GraphQL mutation service integration
-GraphQLIntegrationSpec. test GraphQL schema introspection capability
-GraphQLIntegrationSpec. test GraphiQL endpoint accessibility
-GraphQLIntegrationSpec. test service layer integration for GraphQL data fetchers
-ProcessorIntegrationSpec. test insert transaction processor with list of transactions
-ProcessorIntegrationSpec. test insert transaction processor with valid transaction
-ProcessorIntegrationSpec. test json transaction processor with multiple transactions
-ProcessorIntegrationSpec. test json transaction processor with valid json
-ProcessorIntegrationSpec. test processor integration with transaction validation
-ProcessorIntegrationSpec. test processor performance with large transaction set
-ProcessorIntegrationSpec. test processor with different transaction types and states
-ProcessorIntegrationSpec. test string transaction processor with csv-like data
-AccountRepositoryIntSpec. test account constraint violations
-AccountRepositoryIntSpec. test account deletion
-AccountRepositoryIntSpec. test account null constraint violations
-AccountRepositoryIntSpec. test account query performance
-AccountRepositoryIntSpec. test account repository basic CRUD operations
-AccountRepositoryIntSpec. test account update operations
-AccountRepositoryIntSpec. test find accounts by account type
-AccountRepositoryIntSpec. test find accounts by active status
-AccountRepositoryIntSpec. test find accounts by active status and account type
-AccountRepositorySimpleIntSpec. test account constraint violations
-AccountRepositorySimpleIntSpec. test account deletion
-AccountRepositorySimpleIntSpec. test account performance with multiple accounts
-AccountRepositorySimpleIntSpec. test account repository basic CRUD operations
-AccountRepositorySimpleIntSpec. test account repository custom queries
-AccountRepositorySimpleIntSpec. test account repository update operations
-AccountRepositorySimpleIntSpec. test find accounts by active status
-TransactionRepositoryIntSpec. test count operations for category and description
-TransactionRepositoryIntSpec. test find by account name owner excluding transaction states
-TransactionRepositoryIntSpec. test find transactions by account name owner and active status
-TransactionRepositoryIntSpec. test find transactions by category and description
-TransactionRepositoryIntSpec. test sum totals for active transactions by account name owner
-TransactionRepositoryIntSpec. test transaction constraint violations
-TransactionRepositoryIntSpec. test transaction query performance with large dataset
-TransactionRepositoryIntSpec. test transaction repository basic CRUD operations
-TransactionRepositorySimpleIntSpec. test count operations for category and description
-TransactionRepositorySimpleIntSpec. test find by account name owner excluding transaction states
-TransactionRepositorySimpleIntSpec. test find transactions by account name owner and active status
-TransactionRepositorySimpleIntSpec. test find transactions by category and description
-TransactionRepositorySimpleIntSpec. test sum totals for active transactions by account name owner
-TransactionRepositorySimpleIntSpec. test transaction query performance with multiple transactions
-TransactionRepositorySimpleIntSpec. test transaction repository basic CRUD operations
-CamelRouteIntegrationSpec. test camel route metrics and monitoring
-CamelRouteIntegrationSpec. test complete file processing workflow
-CamelRouteIntegrationSpec. test concurrent file processing
-CamelRouteIntegrationSpec. test direct route transaction processing
-CamelRouteIntegrationSpec. test file processing performance with multiple files
-CamelRouteIntegrationSpec. test json file reader route exists and is active
-CamelRouteIntegrationSpec. test json file writer route exists and is active
-CamelRouteIntegrationSpec. test multiple transactions in single file processing
-CamelRouteIntegrationSpec. test transaction to database route exists and is active
-SecurityIntegrationSimpleSpec. test CORS headers handling
-SecurityIntegrationSimpleSpec. test concurrent user operations
-SecurityIntegrationSimpleSpec. test protected endpoint access without authentication
-SecurityIntegrationSimpleSpec. test user authentication data integrity
-SecurityIntegrationSimpleSpec. test user service integration
-SecurityIntegrationSimpleSpec. test user service validation and constraints
-SecurityIntegrationSpec. test CORS headers in security configuration
-SecurityIntegrationSpec. test JWT token claims and structure
-SecurityIntegrationSpec. test JWT token refresh scenarios
-SecurityIntegrationSpec. test JWT token with different authorities
-SecurityIntegrationSpec. test concurrent JWT token operations
-SecurityIntegrationSpec. test invalid JWT token validation
-SecurityIntegrationSpec. test protected endpoint access with expired JWT token
-SecurityIntegrationSpec. test protected endpoint access with invalid JWT token
-SecurityIntegrationSpec. test protected endpoint access with valid JWT token
-SecurityIntegrationSpec. test protected endpoint access without authentication
-SecurityIntegrationSpec. test user detail service load user by username
-SecurityIntegrationWorkingSpec. test CORS headers handling
-SecurityIntegrationWorkingSpec. test concurrent user operations
-SecurityIntegrationWorkingSpec. test protected endpoint access without authentication
-SecurityIntegrationWorkingSpec. test user service integration
-SecurityIntegrationWorkingSpec. test user service validation and constraints
-ExternalIntegrationsSpec. test HTTP request metrics
-ExternalIntegrationsSpec. test JVM metrics availability
-ExternalIntegrationsSpec. test actuator beans endpoint
-ExternalIntegrationsSpec. test actuator env endpoint
-ExternalIntegrationsSpec. test actuator health endpoint with detailed information
-ExternalIntegrationsSpec. test actuator info endpoint
-ExternalIntegrationsSpec. test actuator metrics endpoint accessibility
-ExternalIntegrationsSpec. test application health indicators integration
-ExternalIntegrationsSpec. test application startup metrics
-ExternalIntegrationsSpec. test circuit breaker metrics integration
-ExternalIntegrationsSpec. test custom application metrics registration
-ExternalIntegrationsSpec. test custom business metrics with MeterService
-ExternalIntegrationsSpec. test database connection pool metrics
-ExternalIntegrationsSpec. test database metrics with transaction operations
-ExternalIntegrationsSpec. test memory and garbage collection metrics
-ExternalIntegrationsSpec. test meter registry bean configuration
-ExternalIntegrationsSpec. test meter service bean availability
-ExternalIntegrationsSpec. test metrics export configuration
-ExternalIntegrationsSpec. test performance monitoring integration
-ExternalIntegrationsSpec. test thread pool metrics
-ExternalIntegrationsSpec. test transaction metrics integration
-ServiceLayerIntegrationSpec. test account service integration with totals calculation
-ServiceLayerIntegrationSpec. test category service integration with transaction relationships
-ServiceLayerIntegrationSpec. test cross-service integration with transaction and account updates
-ServiceLayerIntegrationSpec. test description service integration with transaction relationships
-ServiceLayerIntegrationSpec. test payment service integration
-ServiceLayerIntegrationSpec. test receipt image service integration
-ServiceLayerIntegrationSpec. test service layer error handling and validation
-ServiceLayerIntegrationSpec. test service layer performance with bulk operations
-ServiceLayerIntegrationSpec. test service layer transaction rollback on failure
-ServiceLayerIntegrationSpec. test transaction service integration with database operations
-ServiceLayerIntegrationSpec. test transfer service integration
-ServiceLayerIntegrationSpec. test validation amount service integration
 
 
+New feature - Track medical expenses.
+
+● Update Todos
+  ⎿  ☐ Analyze ReceiptImageControllerSpec to understand current test structure
+     ☐ Create ReceiptImageControllerIsolatedSpec using established patterns
+     ☐ Verify ReceiptImageControllerIsolatedSpec passes all tests
+     ☐ Remove old ReceiptImageControllerSpec file

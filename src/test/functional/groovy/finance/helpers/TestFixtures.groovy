@@ -4,8 +4,10 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Description
+import finance.domain.ImageFormatType
 import finance.domain.Parameter
 import finance.domain.Payment
+import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.ValidationAmount
 import groovy.util.logging.Slf4j
@@ -147,6 +149,18 @@ class TestFixtures {
             testOwner: testOwner,
             testDataManager: testDataManager
         )
+    }
+
+    /**
+     * Creates test context for receipt image-related operations
+     */
+    ReceiptImageTestContext createReceiptImageTestContext(String testOwner) {
+        log.info("Creating receipt image test context for owner: ${testOwner}")
+
+        // Create base accounts for transactions (needed for receipt image FK relationship)
+        testDataManager.createMinimalAccountsFor(testOwner)
+
+        return new ReceiptImageTestContext(testOwner, testDataManager)
     }
 }
 
@@ -686,6 +700,49 @@ class ValidationAmountTestContext {
 
     Long createPersistentValidationAmount(BigDecimal amount, String transactionState = "cleared") {
         return testDataManager.createValidationAmountFor(testOwner, amount, transactionState)
+    }
+
+    void cleanup() {
+        testDataManager.cleanupAccountsFor(testOwner)
+    }
+}
+
+/**
+ * Test context for receipt image-related operations
+ */
+class ReceiptImageTestContext {
+    String testOwner
+    TestDataManager testDataManager
+
+    ReceiptImageTestContext(String testOwner, TestDataManager testDataManager) {
+        this.testOwner = testOwner
+        this.testDataManager = testDataManager
+    }
+
+    Transaction createUniqueTransaction(String prefix) {
+        return SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueDescription(prefix)
+                .buildAndValidate()
+    }
+    
+    // No longer needed - transactions are created directly via HTTP in tests
+
+    ReceiptImage createJpegReceiptImage(Long transactionId) {
+        return SmartReceiptImageBuilder.builderForOwner(testOwner)
+                .withTransactionId(transactionId)
+                .withImageFormatType(ImageFormatType.Jpeg)
+                .withImageBase64('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                .withThumbnailBase64('/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=')
+                .buildAndValidate()
+    }
+
+    ReceiptImage createPngReceiptImage(Long transactionId) {
+        return SmartReceiptImageBuilder.builderForOwner(testOwner)
+                .withTransactionId(transactionId)
+                .withImageFormatType(ImageFormatType.Png)
+                .withImageBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
+                .withThumbnailBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==')
+                .buildAndValidate()
     }
 
     void cleanup() {
