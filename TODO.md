@@ -850,13 +850,18 @@ CSRF_TOKEN_REFRESH_INTERVAL=3600000  # 1 hour in milliseconds
 **Owner**: Security Engineering Team
 
 
-## 18. Integration Test Fail
 
+act as a master dba and as an master spring boot kotlin developer. I want to add a new feature to this application to Track medical expenses, below are the key data points I want to collect. this account is a special account related to mediacal.
+this change is going to have to start in the database. This project uses flyway to manage the schema. I want you to think hard and figure out a plan to add this business logic to the app. Ideally I want to make changes in small managable sections that are non-breaking changes. please document the plan in MEDICAL_EXPENSE_PLAN.md
 
-New feature - Track medical expenses.
+Date of service
+Provider
+Billed amount
+Insurance discount
+Insurance paid
+Patient responsibility
+Paid date
+Running totals of deductible/out-of-pocket
+out of network
+potenially other important details.
 
-● Update Todos
-  ⎿  ☐ Analyze ReceiptImageControllerSpec to understand current test structure
-     ☐ Create ReceiptImageControllerIsolatedSpec using established patterns
-     ☐ Verify ReceiptImageControllerIsolatedSpec passes all tests
-     ☐ Remove old ReceiptImageControllerSpec file
