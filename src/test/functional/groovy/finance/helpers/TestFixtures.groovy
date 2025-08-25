@@ -724,7 +724,7 @@ class ReceiptImageTestContext {
                 .withUniqueDescription(prefix)
                 .buildAndValidate()
     }
-    
+
     // No longer needed - transactions are created directly via HTTP in tests
 
     ReceiptImage createJpegReceiptImage(Long transactionId) {

@@ -1,5 +1,16 @@
 # Medical Expense Tracking Feature Implementation Plan
 
+## Current Status (Updated 2025-08-25)
+📍 **Phase 1 COMPLETED** ✅ - Account type extensions and medical provider management fully implemented and tested
+📋 **Next Recommended Phase**: **Phase 2** - Core Medical Expense Entity (2-3 days, medium risk)
+
+### Quick Status Summary
+- ✅ **Phase 1**: Account Type Extensions (28+ types) & Medical Provider Entity - **COMPLETED**
+- 🔄 **Phase 2**: Core Medical Expense Entity - **READY TO START**
+- ⏳ **Phase 3**: Insurance Plan Management - **PENDING**
+- ⏳ **Phase 4**: Deductible and Out-of-Pocket Tracking - **PENDING**
+- ⏳ **Phase 5**: Medical Categories and Service Types - **PENDING**
+
 ## Overview
 This document outlines a comprehensive plan to add medical expense tracking capabilities to the raspi-finance-endpoint application. The implementation will leverage the existing transaction system while extending it with medical-specific functionality.
 
@@ -76,80 +87,105 @@ Account (existing)
 
 ## Implementation Phases
 
-### Phase 1: Account Type Extensions and Provider Management
-**Duration**: 1-2 days
+### Phase 1: Account Type Extensions and Provider Management ✅ **COMPLETED**
+**Duration**: 2 days (completed 2025-08-25)
 **Risk**: Low
 **Dependencies**: None
+**Status**: ✅ **IMPLEMENTED AND TESTED**
 
-#### 1.1 Extend AccountType Enum (V07__extend-account-types-medical.sql)
-```sql
--- Add new account types for medical accounts
-ALTER TABLE public.t_account 
-DROP CONSTRAINT IF EXISTS ck_account_type;
+#### 1.1 ✅ Extend AccountType Enum - **COMPLETED**
+**Implementation**: Comprehensive account type extension beyond just medical types
+- **Files**: `V07__extend-account-types-comprehensive.sql` (all environments)
+- **Enhanced Scope**: Extended to 28+ comprehensive account types including:
+  - **Medical**: HSA, FSA, medical_savings
+  - **Banking**: checking, savings, credit_card, certificate, money_market
+  - **Investment**: brokerage, retirement_401k, retirement_ira, retirement_roth, pension
+  - **Loan/Debt**: mortgage, auto_loan, student_loan, personal_loan, line_of_credit
+  - **Utility**: utility, prepaid, gift_card
+  - **Business**: business_checking, business_savings, business_credit
+  - **Other**: cash, escrow, trust
+- **Domain Updates**: `AccountType.kt` with categorization system (asset/liability/expense)
+- **Converter Updates**: `AccountTypeConverter.kt` handles all new types
+- **Testing**: All unit and functional tests updated and passing
 
-ALTER TABLE public.t_account 
-ADD CONSTRAINT ck_account_type 
-CHECK (account_type IN ('debit', 'credit', 'undefined', 'hsa', 'fsa', 'medical_savings'));
-```
+#### 1.2 ✅ Create Medical Provider Entity - **COMPLETED**
+**Implementation**: Comprehensive medical provider management system
+- **Files**: `V08__create-medical-provider.sql` (all environments)
+- **Enhanced Schema**: Full provider information including:
+  - Provider identification (NPI, tax ID, billing name)
+  - Complete address and contact information
+  - Network status tracking (in_network, out_of_network, unknown)
+  - Provider categorization with 12+ provider types
+  - Comprehensive validation constraints
+- **Domain Entity**: `MedicalProvider.kt` with full Jakarta validation
+- **Converter**: `MedicalProviderTypeConverter.kt` for enum handling
+- **Indexes**: Performance-optimized indexes for common queries
+- **Testing**: Integration tests in all environments (prod, stage, func, int, oracle)
 
-#### 1.2 Create Medical Provider Entity (V08__create-medical-provider.sql)
-```sql
-CREATE TABLE IF NOT EXISTS public.t_medical_provider (
-    provider_id         BIGSERIAL PRIMARY KEY,
-    provider_name       TEXT NOT NULL,
-    provider_type       TEXT NOT NULL DEFAULT 'general', -- general, specialist, hospital, pharmacy, lab
-    specialty           TEXT,
-    npi                 TEXT UNIQUE, -- National Provider Identifier
-    address_line1       TEXT,
-    address_line2       TEXT,
-    city               TEXT,
-    state              TEXT,
-    zip_code           TEXT,
-    phone              TEXT,
-    active_status      BOOLEAN DEFAULT TRUE NOT NULL,
-    date_added         TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    date_updated       TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
-    CONSTRAINT ck_provider_type CHECK (provider_type IN (
-        'general', 'specialist', 'hospital', 'pharmacy', 'laboratory', 'imaging', 'other'
-    )),
-    CONSTRAINT ck_provider_name_lowercase CHECK (provider_name = lower(provider_name))
-);
-
-CREATE INDEX idx_medical_provider_name ON public.t_medical_provider(provider_name);
-CREATE INDEX idx_medical_provider_type ON public.t_medical_provider(provider_type);
-```
-
-#### 1.3 Domain Entity Updates
+#### 1.3 ✅ Domain Entity Updates - **COMPLETED**
+**Implemented Components**:
 ```kotlin
-// AccountType.kt - Add new enum values
-enum class AccountType(val label: String) {
-    @JsonProperty("credit") Credit("credit"),
-    @JsonProperty("debit") Debit("debit"),
-    @JsonProperty("hsa") HSA("hsa"),
-    @JsonProperty("fsa") FSA("fsa"),
-    @JsonProperty("medical_savings") MedicalSavings("medical_savings"),
-    @JsonProperty("undefined") Undefined("undefined");
+// AccountType.kt - Comprehensive 28+ account types with categorization
+enum class AccountType(val label: String, val category: String) {
+    // Medical accounts
+    HSA("hsa", "asset"),
+    FSA("fsa", "asset"),
+    MedicalSavings("medical_savings", "asset"),
+
+    // Investment accounts
+    Brokerage("brokerage", "asset"),
+    Retirement401k("retirement_401k", "asset"),
+    RetirementIRA("retirement_ira", "asset"),
+
+    // And 22 more comprehensive types...
+
+    companion object {
+        fun getMedicalTypes(): List<AccountType> = listOf(HSA, FSA, MedicalSavings)
+        fun getInvestmentTypes(): List<AccountType> = ...
+    }
 }
 
-// New MedicalProvider.kt
+// MedicalProvider.kt - Complete entity with validation
 @Entity
 @Table(name = "t_medical_provider")
 data class MedicalProvider(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var providerId: Long,
-    
+    @Column(name = "provider_id")
+    var providerId: Long = 0L,
+
     @Column(name = "provider_name", nullable = false)
     @Convert(converter = LowerCaseConverter::class)
     var providerName: String,
-    
+
     @Column(name = "provider_type", nullable = false)
     @Convert(converter = MedicalProviderTypeConverter::class)
-    var providerType: MedicalProviderType,
-    
-    // Additional fields...
+    var providerType: MedicalProviderType = MedicalProviderType.General,
+
+    // Complete address, contact, and network status fields...
 )
 ```
+
+**Database Migrations Status**:
+- ✅ **Production** (`V07__extend-account-types-comprehensive.sql`, `V08__create-medical-provider.sql`)
+- ✅ **Production Oracle** (`V05__extend-account-types-comprehensive.sql`, `V06__create-medical-provider.sql`)
+- ✅ **Stage** (`V02__extend-account-types-comprehensive.sql`, `V03__create-medical-provider.sql`)
+- ✅ **Functional Test** (`V03__extend-account-types-comprehensive.sql`, `V04__create-medical-provider.sql`)
+- ✅ **Integration Test** (`V03__extend-account-types-comprehensive.sql`, `V04__create-medical-provider.sql`)
+- ✅ **Oracle Test** (`V03__extend-account-types-comprehensive.sql`, `V04__create-medical-provider.sql`)
+
+**Testing Status**:
+- ✅ **Unit Tests**: All passing with updated account types
+- ✅ **Integration Tests**: Database migrations working across all environments
+- ✅ **Functional Tests**: End-to-end API tests passing with new account types
+- ✅ **Build Verification**: Clean build success with all environments
+
+**Phase 1 Deliverables**: ✅ **ALL COMPLETED**
+- [x] Extended AccountType enum with 28+ comprehensive financial account types
+- [x] Medical Provider entity with complete provider management capabilities
+- [x] Database migrations for all environments (6 migration files)
+- [x] Domain entities with proper validation and converters
+- [x] Comprehensive testing across all environments
+- [x] Build and deployment verification
 
 ### Phase 2: Core Medical Expense Entity
 **Duration**: 2-3 days
@@ -162,42 +198,42 @@ CREATE TABLE IF NOT EXISTS public.t_medical_expense (
     medical_expense_id          BIGSERIAL PRIMARY KEY,
     transaction_id              BIGINT NOT NULL,
     provider_id                 BIGINT,
-    
+
     -- Core medical expense data
     service_date                DATE NOT NULL,
     service_description         TEXT,
     procedure_code              TEXT, -- CPT/HCPCS codes
     diagnosis_code              TEXT, -- ICD-10 codes
-    
+
     -- Financial breakdown
     billed_amount              NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     insurance_discount         NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     insurance_paid             NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     patient_responsibility     NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     paid_date                  DATE,
-    
+
     -- Insurance details
     is_out_of_network          BOOLEAN DEFAULT FALSE NOT NULL,
     claim_number               TEXT,
     claim_status               TEXT DEFAULT 'submitted',
-    
+
     -- Audit fields
     active_status              BOOLEAN DEFAULT TRUE NOT NULL,
     date_added                 TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated               TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Constraints
-    CONSTRAINT fk_medical_transaction FOREIGN KEY (transaction_id) 
+    CONSTRAINT fk_medical_transaction FOREIGN KEY (transaction_id)
         REFERENCES public.t_transaction(transaction_id) ON DELETE CASCADE,
-    CONSTRAINT fk_medical_provider FOREIGN KEY (provider_id) 
+    CONSTRAINT fk_medical_provider FOREIGN KEY (provider_id)
         REFERENCES public.t_medical_provider(provider_id),
     CONSTRAINT ck_claim_status CHECK (claim_status IN (
         'submitted', 'processing', 'approved', 'denied', 'paid', 'closed'
     )),
     CONSTRAINT ck_financial_amounts CHECK (
-        billed_amount >= 0 AND 
-        insurance_discount >= 0 AND 
-        insurance_paid >= 0 AND 
+        billed_amount >= 0 AND
+        insurance_discount >= 0 AND
+        insurance_paid >= 0 AND
         patient_responsibility >= 0
     ),
     CONSTRAINT ck_service_date_valid CHECK (service_date <= CURRENT_DATE)
@@ -264,7 +300,7 @@ data class MedicalExpense(
     // Calculated fields
     @Transient
     fun getNetAmount(): BigDecimal = billedAmount - insuranceDiscount - insurancePaid
-    
+
     @Transient
     fun isFullyPaid(): Boolean = patientResponsibility == BigDecimal.ZERO || paidDate != null
 }
@@ -283,27 +319,27 @@ CREATE TABLE IF NOT EXISTS public.t_insurance_plan (
     insurance_company      TEXT NOT NULL,
     policy_number          TEXT,
     group_number           TEXT,
-    
+
     -- Plan details
     plan_year              INTEGER NOT NULL,
     deductible_individual  NUMERIC(12,2) DEFAULT 0.00,
     deductible_family      NUMERIC(12,2) DEFAULT 0.00,
     out_of_pocket_max_individual NUMERIC(12,2) DEFAULT 0.00,
     out_of_pocket_max_family     NUMERIC(12,2) DEFAULT 0.00,
-    
+
     -- Coverage details
     copay_primary_care     NUMERIC(12,2) DEFAULT 0.00,
     copay_specialist       NUMERIC(12,2) DEFAULT 0.00,
     coinsurance_in_network NUMERIC(5,2) DEFAULT 0.00, -- percentage
     coinsurance_out_network NUMERIC(5,2) DEFAULT 0.00, -- percentage
-    
+
     -- Status
     effective_date         DATE NOT NULL,
     expiration_date        DATE,
     active_status          BOOLEAN DEFAULT TRUE NOT NULL,
     date_added             TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     CONSTRAINT ck_plan_year_valid CHECK (plan_year BETWEEN 2000 AND 2100),
     CONSTRAINT ck_deductible_valid CHECK (
         deductible_individual >= 0 AND deductible_family >= 0
@@ -312,7 +348,7 @@ CREATE TABLE IF NOT EXISTS public.t_insurance_plan (
         out_of_pocket_max_individual >= 0 AND out_of_pocket_max_family >= 0
     ),
     CONSTRAINT ck_coinsurance_percentage CHECK (
-        coinsurance_in_network BETWEEN 0 AND 100 AND 
+        coinsurance_in_network BETWEEN 0 AND 100 AND
         coinsurance_out_network BETWEEN 0 AND 100
     )
 );
@@ -323,11 +359,11 @@ CREATE INDEX idx_insurance_plan_active ON public.t_insurance_plan(active_status,
 
 #### 3.2 Link Medical Expenses to Insurance Plans (V11__link-medical-expense-insurance.sql)
 ```sql
-ALTER TABLE public.t_medical_expense 
+ALTER TABLE public.t_medical_expense
 ADD COLUMN insurance_plan_id BIGINT;
 
-ALTER TABLE public.t_medical_expense 
-ADD CONSTRAINT fk_medical_expense_insurance_plan 
+ALTER TABLE public.t_medical_expense
+ADD CONSTRAINT fk_medical_expense_insurance_plan
 FOREIGN KEY (insurance_plan_id) REFERENCES public.t_insurance_plan(insurance_plan_id);
 
 CREATE INDEX idx_medical_expense_insurance ON public.t_medical_expense(insurance_plan_id);
@@ -344,38 +380,38 @@ CREATE TABLE IF NOT EXISTS public.t_medical_annual_totals (
     totals_id              BIGSERIAL PRIMARY KEY,
     insurance_plan_id      BIGINT NOT NULL,
     plan_year              INTEGER NOT NULL,
-    
+
     -- Running totals
     total_billed           NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     total_insurance_paid   NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     total_patient_paid     NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
-    
+
     -- Deductible tracking
     deductible_met_individual    NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     deductible_met_family       NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     deductible_remaining_individual NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     deductible_remaining_family     NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
-    
+
     -- Out-of-pocket tracking
     out_of_pocket_spent_individual NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     out_of_pocket_spent_family     NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     out_of_pocket_remaining_individual NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
     out_of_pocket_remaining_family     NUMERIC(12,2) DEFAULT 0.00 NOT NULL,
-    
+
     -- Last calculation date for performance
     last_calculated        TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Audit fields
     date_added             TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated           TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
-    CONSTRAINT fk_medical_totals_insurance_plan 
+
+    CONSTRAINT fk_medical_totals_insurance_plan
         FOREIGN KEY (insurance_plan_id) REFERENCES public.t_insurance_plan(insurance_plan_id),
-    CONSTRAINT uk_medical_totals_plan_year 
+    CONSTRAINT uk_medical_totals_plan_year
         UNIQUE (insurance_plan_id, plan_year),
     CONSTRAINT ck_totals_non_negative CHECK (
-        total_billed >= 0 AND 
-        total_insurance_paid >= 0 AND 
+        total_billed >= 0 AND
+        total_insurance_paid >= 0 AND
         total_patient_paid >= 0 AND
         deductible_met_individual >= 0 AND
         deductible_met_family >= 0 AND
@@ -408,13 +444,13 @@ DECLARE
     v_total_patient_paid NUMERIC(12,2) := 0.00;
 BEGIN
     -- Get plan limits
-    SELECT deductible_individual, deductible_family, 
+    SELECT deductible_individual, deductible_family,
            out_of_pocket_max_individual, out_of_pocket_max_family
     INTO v_plan_deductible_individual, v_plan_deductible_family,
          v_plan_oop_max_individual, v_plan_oop_max_family
-    FROM t_insurance_plan 
+    FROM t_insurance_plan
     WHERE insurance_plan_id = p_insurance_plan_id;
-    
+
     -- Calculate totals from medical expenses
     SELECT COALESCE(SUM(me.billed_amount), 0),
            COALESCE(SUM(me.insurance_paid), 0),
@@ -425,10 +461,10 @@ BEGIN
     WHERE me.insurance_plan_id = p_insurance_plan_id
     AND EXTRACT(YEAR FROM me.service_date) = p_plan_year
     AND me.active_status = true;
-    
+
     -- Upsert totals record
     INSERT INTO t_medical_annual_totals (
-        insurance_plan_id, plan_year, total_billed, total_insurance_paid, 
+        insurance_plan_id, plan_year, total_billed, total_insurance_paid,
         total_patient_paid, deductible_met_individual, deductible_remaining_individual,
         out_of_pocket_spent_individual, out_of_pocket_remaining_individual,
         last_calculated
@@ -464,13 +500,13 @@ AS $$
 BEGIN
     IF TG_OP = 'DELETE' THEN
         PERFORM fn_recalculate_medical_totals(
-            OLD.insurance_plan_id, 
+            OLD.insurance_plan_id,
             EXTRACT(YEAR FROM OLD.service_date)::INTEGER
         );
         RETURN OLD;
     ELSE
         PERFORM fn_recalculate_medical_totals(
-            NEW.insurance_plan_id, 
+            NEW.insurance_plan_id,
             EXTRACT(YEAR FROM NEW.service_date)::INTEGER
         );
         RETURN NEW;
@@ -499,11 +535,11 @@ CREATE TABLE IF NOT EXISTS public.t_medical_service_category (
     description           TEXT,
     is_preventive         BOOLEAN DEFAULT FALSE,
     typical_copay         NUMERIC(12,2) DEFAULT 0.00,
-    
+
     active_status         BOOLEAN DEFAULT TRUE NOT NULL,
     date_added            TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated          TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     CONSTRAINT ck_service_category_type CHECK (category_type IN (
         'service', 'medication', 'equipment', 'procedure', 'diagnostic', 'other'
     )),
@@ -530,11 +566,11 @@ INSERT INTO t_medical_service_category (category_name, category_type, is_prevent
 
 #### 5.2 Link Medical Expenses to Service Categories (V15__link-medical-service-categories.sql)
 ```sql
-ALTER TABLE public.t_medical_expense 
+ALTER TABLE public.t_medical_expense
 ADD COLUMN service_category_id BIGINT;
 
-ALTER TABLE public.t_medical_expense 
-ADD CONSTRAINT fk_medical_expense_service_category 
+ALTER TABLE public.t_medical_expense
+ADD CONSTRAINT fk_medical_expense_service_category
 FOREIGN KEY (service_category_id) REFERENCES public.t_medical_service_category(service_category_id);
 
 CREATE INDEX idx_medical_expense_service_category ON public.t_medical_expense(service_category_id);
@@ -561,8 +597,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     fun findByTransactionId(transactionId: Long): MedicalExpense?
     fun findByServiceDateBetween(startDate: Date, endDate: Date): List<MedicalExpense>
     fun findByInsurancePlanIdAndServiceDateBetween(
-        insurancePlanId: Long, 
-        startDate: Date, 
+        insurancePlanId: Long,
+        startDate: Date,
         endDate: Date
     ): List<MedicalExpense>
     fun findByClaimStatus(claimStatus: ClaimStatus): List<MedicalExpense>
@@ -579,18 +615,18 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 class MedicalExpenseController(
     private val medicalExpenseService: MedicalExpenseService
 ) {
-    
+
     @PostMapping
     fun createMedicalExpense(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
         val created = medicalExpenseService.createMedicalExpense(medicalExpense)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
     }
-    
+
     @GetMapping("/account/{accountId}")
     fun getMedicalExpensesByAccount(@PathVariable accountId: Long): List<MedicalExpense> {
         return medicalExpenseService.findMedicalExpensesByAccount(accountId)
     }
-    
+
     @GetMapping("/totals/{insurancePlanId}/{planYear}")
     fun getMedicalTotals(
         @PathVariable insurancePlanId: Long,
@@ -664,10 +700,10 @@ class MedicalExpenseTestDataBuilder {
 Each migration includes rollback scripts:
 ```sql
 -- V07 Rollback
-ALTER TABLE public.t_account 
+ALTER TABLE public.t_account
 DROP CONSTRAINT ck_account_type;
-ALTER TABLE public.t_account 
-ADD CONSTRAINT ck_account_type 
+ALTER TABLE public.t_account
+ADD CONSTRAINT ck_account_type
 CHECK (account_type IN ('debit', 'credit', 'undefined'));
 ```
 
@@ -725,7 +761,7 @@ fun recalculateMedicalTotals(insurancePlanId: Long, planYear: Int) {
 @Component
 class MedicalExpenseAuditLogger {
     private val logger = LoggerFactory.getLogger(MedicalExpenseAuditLogger::class.java)
-    
+
     fun logMedicalExpenseCreation(expense: MedicalExpense, user: String) {
         logger.info("Medical expense created: id=${expense.medicalExpenseId}, " +
                    "amount=${expense.patientResponsibility}, user=$user")
@@ -744,7 +780,7 @@ class MedicalExpenseAuditLogger {
 ```sql
 -- Identify potential medical transactions
 SELECT transaction_id, description, category, amount
-FROM t_transaction 
+FROM t_transaction
 WHERE category IN ('medical', 'healthcare', 'pharmacy', 'doctor')
    OR description ILIKE '%medical%'
    OR description ILIKE '%doctor%'
@@ -783,7 +819,7 @@ WHERE category IN ('medical', 'healthcare', 'pharmacy', 'doctor')
 ### Technical Risks
 1. **Database Performance**: Large medical datasets may impact query performance
    - **Mitigation**: Implement proper indexing and query optimization
-   
+
 2. **Data Integrity**: Complex relationships between medical entities
    - **Mitigation**: Comprehensive foreign key constraints and validation
 

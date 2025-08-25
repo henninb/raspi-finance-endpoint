@@ -30,8 +30,8 @@ class ReceiptImageController(private var receiptImageService: ReceiptImageServic
         }
 
         try {
-            val receiptImageId = receiptImageService.insertReceiptImage(receiptImage)
-            return ResponseEntity.ok(mapOf("message" to "Receipt image inserted", "id" to receiptImageId.toString()))
+            val insertedReceiptImage = receiptImageService.insertReceiptImage(receiptImage)
+            return ResponseEntity.ok(mapOf("message" to "Receipt image inserted", "id" to insertedReceiptImage.receiptImageId.toString()))
         } catch (e: Exception) {
             logger.error("Failed to insert receipt image")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to insert receipt image"))
