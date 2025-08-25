@@ -121,10 +121,10 @@ class ReceiptImageControllerIsolatedSpec extends BaseControllerSpec {
         Long transactionId = Long.parseLong(transactionIdStr)
 
         ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
-        
+
         // First insert the receipt image to get its ID
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, receiptImage.toString())
-        
+
         // Try both "id":"1" and "id":1 formats since we're not sure which format is returned
         String receiptImageId
         try {
