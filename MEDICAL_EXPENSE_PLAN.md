@@ -1,12 +1,13 @@
 # Medical Expense Tracking Feature Implementation Plan
 
-## Current Status (Updated 2025-08-25)
-📍 **Phase 1 COMPLETED** ✅ - Account type extensions and medical provider management fully implemented and tested
-📋 **Next Recommended Phase**: **Phase 2** - Core Medical Expense Entity (2-3 days, medium risk)
+## Current Status (Updated 2025-08-25)  
+📍 **Phase 1 & 1.5 COMPLETED** ✅ - Account types, medical providers, and family member tracking implemented
+📋 **Next Recommended Phase**: **Phase 2** - Core Medical Expense Entity with family support (2-3 days, medium risk)
 
 ### Quick Status Summary
 - ✅ **Phase 1**: Account Type Extensions (28+ types) & Medical Provider Entity - **COMPLETED**
-- 🔄 **Phase 2**: Core Medical Expense Entity - **READY TO START**
+- ✅ **Phase 1.5**: Family Member Entity for 6-member family tracking - **COMPLETED**
+- 🔄 **Phase 2**: Core Medical Expense Entity (with family member support) - **READY TO START**
 - ⏳ **Phase 3**: Insurance Plan Management - **PENDING**
 - ⏳ **Phase 4**: Deductible and Out-of-Pocket Tracking - **PENDING**
 - ⏳ **Phase 5**: Medical Categories and Service Types - **PENDING**
@@ -187,12 +188,97 @@ data class MedicalProvider(
 - [x] Comprehensive testing across all environments
 - [x] Build and deployment verification
 
-### Phase 2: Core Medical Expense Entity
-**Duration**: 2-3 days
-**Risk**: Medium
+### Phase 1.5: Family Member Entity ✅ **COMPLETED**
+**Duration**: 1 day (completed 2025-08-25)
+**Risk**: Low
 **Dependencies**: Phase 1
+**Status**: ✅ **IMPLEMENTED AND TESTED**
 
-#### 2.1 Create Medical Expense Entity (V09__create-medical-expense.sql)
+#### 1.5.1 ✅ Family Member Entity - **COMPLETED**
+**Implementation**: Comprehensive family member tracking system for 6+ family members
+- **Files**: `FamilyMember.kt`, `FamilyRelationship.kt`, `FamilyRelationshipConverter.kt`
+- **Database Migrations**: `V09__create-family-member.sql` (all environments)
+- **Family Management Features**:
+  - Individual family member tracking (self, spouse, child, dependent, other)
+  - Insurance member ID tracking for each family member
+  - Medical record number and SSN (last 4 digits) support
+  - Date of birth tracking
+  - Full audit trail with active status management
+
+#### 1.5.2 ✅ Family Relationship Enum - **COMPLETED**
+**Implementation**: Comprehensive relationship tracking
+- **Domain Entity**: `FamilyRelationship.kt` with 5 relationship types
+- **Converter**: `FamilyRelationshipConverter.kt` for database mapping
+- **Supported Relationships**: Self, Spouse, Child, Dependent, Other
+- **JSON Support**: Full Jackson serialization/deserialization
+
+#### 1.5.3 ✅ Database Schema Updates - **COMPLETED**
+**Implemented Components**:
+```sql
+-- Family Member table with comprehensive tracking
+CREATE TABLE t_family_member (
+    family_member_id    BIGSERIAL PRIMARY KEY,
+    owner               TEXT NOT NULL,           -- Links to account owner
+    member_name         TEXT NOT NULL,           -- Family member name  
+    relationship        TEXT NOT NULL,           -- self, spouse, child, etc.
+    date_of_birth       DATE,                   -- Birth date
+    insurance_member_id TEXT,                   -- Insurance card member ID
+    ssn_last_four      TEXT,                    -- Last 4 SSN digits
+    medical_record_number TEXT,                 -- Hospital MRN
+    active_status      BOOLEAN DEFAULT TRUE,    -- Active status
+    -- Full audit fields and constraints
+    CONSTRAINT uk_family_member_owner_name UNIQUE (owner, member_name)
+);
+```
+
+**Database Migrations Status**:
+- ✅ **Production** (`V09__create-family-member.sql`)
+- ✅ **Production Oracle** (`V07__create-family-member.sql`)  
+- ✅ **Stage** (`V04__create-family-member.sql`)
+- ✅ **Functional Test** (`V05__create-family-member.sql`)
+- ✅ **Integration Test** (`V05__create-family-member.sql`)
+- ✅ **Oracle Test** (`V05__create-family-member.sql`)
+
+**Testing Status**:
+- ✅ **Unit Tests**: FamilyMemberSpec and FamilyRelationshipSpec with comprehensive validation
+- ✅ **Migration Tests**: All environments successfully apply family member table creation
+- ✅ **Integration Tests**: Functional test environment validates family member table structure
+- ✅ **Build Verification**: Clean build success with family member entities
+
+**Phase 1.5 Benefits Achieved**:
+- [x] **6-Member Family Support**: Track all family members with relationships
+- [x] **Insurance Integration**: Each member can have unique insurance member ID
+- [x] **Medical Record Tracking**: Link to hospital/clinic medical record numbers
+- [x] **Privacy Protection**: Only stores last 4 SSN digits for identification
+- [x] **Comprehensive Relationships**: Self, spouse, children, dependents, other
+- [x] **Unique Constraints**: Prevent duplicate family member names per owner
+- [x] **Full Audit Trail**: Date added/updated tracking for all family changes
+- [x] **Test Data Seeding**: Pre-populated test family members in all test environments
+
+**Family Member Reporting Capabilities Ready**:
+```sql
+-- Track medical expenses by family member (when Phase 2 is complete)
+SELECT fm.member_name, fm.relationship, COUNT(*) as claim_count
+FROM t_family_member fm 
+WHERE fm.owner = 'your_owner' AND fm.active_status = true
+GROUP BY fm.member_name, fm.relationship;
+
+-- Family hierarchy view
+SELECT owner, 
+       SUM(CASE WHEN relationship = 'self' THEN 1 ELSE 0 END) as primary_members,
+       SUM(CASE WHEN relationship = 'child' THEN 1 ELSE 0 END) as children,
+       SUM(CASE WHEN relationship = 'dependent' THEN 1 ELSE 0 END) as dependents
+FROM t_family_member 
+WHERE active_status = true 
+GROUP BY owner;
+```
+
+### Phase 2: Core Medical Expense Entity (Enhanced with Family Support)
+**Duration**: 2-3 days
+**Risk**: Medium  
+**Dependencies**: Phase 1 and Phase 1.5 (Family Member Entity)
+
+#### 2.1 Create Medical Expense Entity (V10__create-medical-expense.sql) - **UPDATED FOR FAMILY SUPPORT**
 ```sql
 CREATE TABLE IF NOT EXISTS public.t_medical_expense (
     medical_expense_id          BIGSERIAL PRIMARY KEY,
