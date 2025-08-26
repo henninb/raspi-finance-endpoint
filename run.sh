@@ -723,4 +723,5 @@ docker system prune -f
 log "Deployment complete."
 log "To follow logs, run: docker logs raspi-finance-endpoint --follow"
 log "ssh gcp-api 'docker logs raspi-finance-endpoint -f'"
+log "ssh debian-dockerserver 'docker logs raspi-finance-endpoint -f'"
 exit 0
