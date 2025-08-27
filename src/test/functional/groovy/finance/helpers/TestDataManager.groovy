@@ -32,23 +32,9 @@ class TestDataManager {
         // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
         String ownerClean = cleanOwner(testOwner)
 
-        // Create primary test account (Credit type for standard testing)
-        String primaryAccountName = accountNameFor(testOwner, "primary")
-        jdbcTemplate.update("""
-            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
-                                  date_closed, date_updated, date_added)
-            VALUES (?, 'credit', true, '0000', '1969-12-31 18:00:00.000000',
-                    '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
-        """, primaryAccountName)
-
-        // Create secondary account for relationship tests (Debit type)
-        String secondaryAccountName = accountNameFor(testOwner, "secondary")
-        jdbcTemplate.update("""
-            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
-                                  date_closed, date_updated, date_added)
-            VALUES (?, 'debit', true, '0000', '1969-12-31 18:00:00.000000',
-                    '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
-        """, secondaryAccountName)
+        // Ensure primary and secondary accounts exist (idempotent)
+        ensureAccountExists(testOwner, "primary")
+        ensureAccountExists(testOwner, "secondary")
 
         // Create basic category needed for transactions
         String categoryName = "test_category_${ownerClean}".toLowerCase()
@@ -57,7 +43,7 @@ class TestDataManager {
             VALUES (?, true, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
         """, categoryName)
 
-        log.info("Successfully created minimal test data for owner: ${testOwner} - accounts: ${primaryAccountName}, ${secondaryAccountName}")
+        log.info("Successfully created minimal test data for owner: ${testOwner}")
     }
 
     String createAccountFor(String testOwner, String accountSuffix, String accountType = 'credit', boolean activeStatus = true) {
