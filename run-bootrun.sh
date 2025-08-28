@@ -66,7 +66,7 @@ log_info "Loading environment variables..."
 set -a
 # shellcheck disable=SC1091
 . ./env.bootrun
-# shellcheck disable=SC1091  
+# shellcheck disable=SC1091
 . ./env.secrets
 set +a
 log_info "✓ Environment variables loaded successfully"

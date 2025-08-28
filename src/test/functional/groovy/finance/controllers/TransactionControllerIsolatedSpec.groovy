@@ -105,26 +105,12 @@ class TransactionControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should reject transaction insertion with invalid guid format'() {
         given:
-        String invalidPayload = """
-        {
-            "guid": "badGuid",
-            "accountId": 0,
-            "accountType": "credit",
-            "transactionType": "expense",
-            "accountNameOwner": "account_${testOwner}",
-            "transactionDate": "2020-10-05",
-            "description": "test transaction",
-            "category": "online${testOwner}",
-            "amount": 3.14,
-            "transactionState": "cleared",
-            "reoccurringType": "undefined",
-            "activeStatus": true,
-            "notes": ""
-        }
-        """
+        Transaction invalidTransaction = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withGuid("badGuid")  // Invalid GUID format - not UUID
+                .build()  // Use build() not buildAndValidate() to allow invalid data
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, invalidPayload)
+        ResponseEntity<String> response = insertEndpoint(endpointName, invalidTransaction.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -133,6 +119,7 @@ class TransactionControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should reject transaction insertion with missing required fields'() {
         given:
+        // Create JSON with missing required fields (guid, transactionType, accountNameOwner, category, transactionState)
         String invalidPayload = """
         {
             "accountId": 0,
@@ -154,26 +141,12 @@ class TransactionControllerIsolatedSpec extends BaseControllerSpec {
     void 'should reject transaction insertion with invalid category length'() {
         given:
         String longCategory = "a" * 51  // Exceeds 50 char limit
-        String invalidPayload = """
-        {
-            "guid": "${UUID.randomUUID()}",
-            "accountId": 0,
-            "accountType": "credit",
-            "transactionType": "expense",
-            "accountNameOwner": "account_${testOwner}",
-            "transactionDate": "2020-10-05",
-            "description": "test transaction",
-            "category": "${longCategory}",
-            "amount": 3.14,
-            "transactionState": "cleared",
-            "reoccurringType": "undefined",
-            "activeStatus": true,
-            "notes": ""
-        }
-        """
+        Transaction invalidTransaction = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withCategory(longCategory)  // Invalid category length
+                .build()  // Use build() not buildAndValidate() to allow invalid data
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, invalidPayload)
+        ResponseEntity<String> response = insertEndpoint(endpointName, invalidTransaction.toString())
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -289,16 +262,17 @@ class TransactionControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should reject transaction with invalid amount format'() {
         given:
+        // For invalid amount format, need to use raw JSON since SmartTransactionBuilder only accepts BigDecimal
         String invalidPayload = """
         {
             "guid": "${UUID.randomUUID()}",
             "accountId": 0,
             "accountType": "credit",
             "transactionType": "expense",
-            "accountNameOwner": "account_${testOwner}",
+            "accountNameOwner": "account_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}",
             "transactionDate": "2020-10-05",
             "description": "test transaction",
-            "category": "online${testOwner}",
+            "category": "online${testOwner.replaceAll(/[^a-z0-9]/, '').toLowerCase()}",
             "amount": "invalid_amount",
             "transactionState": "cleared",
             "reoccurringType": "undefined",

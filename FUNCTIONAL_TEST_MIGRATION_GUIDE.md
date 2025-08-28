@@ -787,7 +787,7 @@ The architecture is proven, patterns are established, and tooling is complete. A
 
 **Remaining Work Status**:
 - **Essential Systems**: ✅ **COMPLETE** - All core business logic and authentication services migrated
-- **Optional Enhancements**: 2 controllers available for 100% coverage (PendingTransaction, ReceiptImage)  
+- **Optional Enhancements**: 2 controllers available for 100% coverage (PendingTransaction, ReceiptImage)
 - **Migration Difficulty**: Proven patterns make remaining migrations straightforward applications
 
 The functional test migration has successfully achieved **complete coverage of all essential systems** with a robust, maintainable, isolated test architecture supporting every critical business function.
@@ -808,7 +808,7 @@ The functional test migration has successfully achieved **complete coverage of a
 **Key Challenge Resolved**: **Account Name Pattern Violations**
 - **Root Cause**: Account names like `"amount_primary_testowner"` had **two underscores**, but `ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$"` only allows **one underscore**
 - **Solution**: Fixed account names to comply with single underscore pattern:
-  - ❌ `"amount_primary_testowner"` → ✅ `"amountsrc_testowner"`  
+  - ❌ `"amount_primary_testowner"` → ✅ `"amountsrc_testowner"`
   - ❌ `"status_primary_testowner"` → ✅ `"statussrc_testowner"`
 
 **Technical Implementation**:
@@ -825,7 +825,7 @@ The functional test migration has successfully achieved **complete coverage of a
 
 **Architecture Validation**:
 - ✅ **SmartTransferBuilder Integration**: Leverages existing constraint-aware builder architecture
-- ✅ **TestContext Framework**: Successfully integrated TransferTestContext with TestFixtures pattern  
+- ✅ **TestContext Framework**: Successfully integrated TransferTestContext with TestFixtures pattern
 - ✅ **FK Constraint Resolution**: Demonstrates proper approach to complex entity relationships requiring account setup
 
 ### Updated Migration Statistics
@@ -851,7 +851,7 @@ The TransferController migration validates the robustness of the isolated test a
 
 **✅ SmartBuilders Available (13)**:
 - SmartAccountBuilder ✅
-- SmartCategoryBuilder ✅  
+- SmartCategoryBuilder ✅
 - SmartDescriptionBuilder ✅
 - SmartFamilyMemberBuilder ✅
 - SmartMedicalExpenseBuilder ✅
@@ -920,7 +920,7 @@ The TransferController migration validates the robustness of the isolated test a
    - Remove any remaining manual JSON creation
    - Verify all 22 tests still pass
 
-**Phase 3: Low Priority Enhancement (Completeness)**  
+**Phase 3: Low Priority Enhancement (Completeness)**
 4. **Update LoginControllerIsolatedSpec**:
    - Replace manual user JSON with `SmartUserBuilder.builderForOwner(testOwner).withUsername(name).withPassword(pwd).buildAndValidate()`
    - Verify all 13 tests still pass
@@ -955,3 +955,10 @@ SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*ControllerIsolate
 ```
 
 This SmartBuilder standardization completes the architectural consistency of the isolated test framework and ensures all controllers follow the proven constraint-aware test data creation patterns.
+
+
+  Looking at the current TransactionControllerIsolatedSpec.groovy file, I can see that most tests already use SmartBuilders, but there are still 4 test methods using manual JSON:
+  - should reject transaction insertion with invalid guid format
+  - should reject transaction insertion with missing required fields
+  - should reject transaction insertion with invalid category length
+  - should reject transaction with invalid amount format

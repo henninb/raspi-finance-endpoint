@@ -20,7 +20,7 @@ class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
             .withAccountNameOwner("valtest-account_testowner")
             .asDebit()
             .buildAndValidate()
-        
+
         ResponseEntity<String> accountResponse = insertEndpoint('account', account.toString())
         assert accountResponse.statusCode == HttpStatus.CREATED
 
@@ -35,7 +35,7 @@ class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
             .withAmount(75.50)
             .asCleared()
             .buildAndValidate()
-        
+
         String validationAmountJson = validationAmount.toString()
 
         when:

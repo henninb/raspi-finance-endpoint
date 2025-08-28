@@ -39,7 +39,7 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             .withFirstName("functional")
             .withLastName("test")
             .buildAndValidate()
-        
+
         String payload = user.toString()
 
         when: "posting to register endpoint"
@@ -70,7 +70,7 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             .withFirstName("functional")
             .withLastName("test")
             .buildAndValidate()
-        
+
         String payload = user.toString()
 
         when: "posting to register endpoint"
@@ -94,7 +94,7 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             .withFirstName("functional")
             .withLastName("test")
             .buildAndValidate()
-        
+
         String payload = user.toString()
 
         when: "posting to login endpoint"
@@ -133,7 +133,7 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             .withFirstName("functional")
             .withLastName("test")
             .buildAndValidate()
-        
+
         String payload = user.toString()
 
         when: "posting to login endpoint"
@@ -158,7 +158,7 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             .withFirstName("non")
             .withLastName("existent")
             .buildAndValidate()
-        
+
         String payload = user.toString()
 
         when: "posting to login endpoint"

@@ -47,14 +47,14 @@ log_error() {
 cleanup_on_error() {
     local exit_code=$?
     log_error "Script failed with exit code $exit_code. Cleaning up..."
-    
+
     # Restore terminal settings
     stty echo 2>/dev/null || true
-    
+
     # Remove temporary files
     rm -f "${SERVER_NAME}.csr" "${SERVER_NAME}.key" "${SERVER_NAME}.crt" "${SERVER_NAME}.p12" 2>/dev/null || true
     rm -f "$TMP_DIR/${SERVER_NAME}.ext" 2>/dev/null || true
-    
+
     exit $exit_code
 }
 
@@ -73,12 +73,12 @@ trap cleanup_on_interrupt INT TERM
 # Dependency checks
 check_dependencies() {
     log_info "Checking dependencies..."
-    
+
     if ! command -v openssl >/dev/null 2>&1; then
         log_error "OpenSSL is not installed or not in PATH"
         exit 1
     fi
-    
+
     local openssl_version=$(openssl version 2>/dev/null)
     log_success "Found OpenSSL: $openssl_version"
 }
@@ -86,22 +86,22 @@ check_dependencies() {
 # Create directories with error checking
 create_directories() {
     log_info "Creating required directories..."
-    
+
     if ! mkdir -p "$SSL_DIR"; then
         log_error "Failed to create SSL directory: $SSL_DIR"
         exit 1
     fi
-    
+
     if ! mkdir -p "$TMP_DIR"; then
         log_error "Failed to create temporary directory: $TMP_DIR"
         exit 1
     fi
-    
+
     if ! mkdir -p ssl; then
         log_error "Failed to create local SSL directory"
         exit 1
     fi
-    
+
     log_success "Directories created successfully"
 }
 
@@ -109,7 +109,7 @@ create_directories() {
 generate_root_ca() {
     if [ ! -f "$SSL_DIR/rootCA.pem" ]; then
         log_info "Generating root CA certificate..."
-        
+
         if ! openssl req \
             -x509 \
             -new \
@@ -123,18 +123,18 @@ generate_root_ca() {
             log_error "Failed to generate root CA certificate"
             exit 1
         fi
-        
+
         # Set appropriate permissions
         chmod 600 "$SSL_DIR/rootCA.key"
         chmod 644 "$SSL_DIR/rootCA.pem"
-        
+
         log_success "Root CA certificate generated successfully"
-        
+
         # Install root CA based on the system
         install_root_ca
     else
         log_info "Root CA certificate already exists at $SSL_DIR/rootCA.pem"
-        
+
         # Verify the existing certificate
         if ! openssl x509 -in "$SSL_DIR/rootCA.pem" -noout -text >/dev/null 2>&1; then
             log_warning "Existing root CA certificate appears to be corrupted. Regenerating..."
@@ -142,7 +142,7 @@ generate_root_ca() {
             generate_root_ca
             return
         fi
-        
+
         log_success "Root CA certificate is valid"
     fi
 }
@@ -150,7 +150,7 @@ generate_root_ca() {
 # Install root CA certificate in system trust store
 install_root_ca() {
     log_info "Installing root CA certificate in system trust store..."
-    
+
     if command -v pacman >/dev/null 2>&1; then
         log_info "Detected Arch Linux - installing with trust anchor"
         if ! sudo trust anchor --store "$SSL_DIR/rootCA.pem"; then
@@ -181,7 +181,7 @@ install_root_ca() {
 generate_server_extensions() {
     local ext_file="$TMP_DIR/${SERVER_NAME}.ext"
     log_info "Creating server certificate extensions file..."
-    
+
     cat << EOF > "$ext_file"
 subjectAltName = @alt_names
 
@@ -196,14 +196,14 @@ EOF
         log_error "Failed to create extensions file: $ext_file"
         exit 1
     fi
-    
+
     log_success "Extensions file created: $ext_file"
 }
 
 # Generate server certificate
 generate_server_certificate() {
     log_info "Generating server certificate for: $SERVER_NAME"
-    
+
     # Generate RSA private key
     log_info "Generating RSA private key..."
     if ! openssl genrsa -out "./${SERVER_NAME}.key" 4096; then
@@ -212,7 +212,7 @@ generate_server_certificate() {
     fi
     chmod 600 "./${SERVER_NAME}.key"
     log_success "RSA private key generated"
-    
+
     # Generate certificate signing request
     log_info "Generating certificate signing request..."
     if ! openssl req -new -sha256 -key "./${SERVER_NAME}.key" -subj "$SERVER_SUBJECT" -out "${SERVER_NAME}.csr"; then
@@ -220,7 +220,7 @@ generate_server_certificate() {
         exit 1
     fi
     log_success "Certificate signing request generated"
-    
+
     # Generate the certificate using the root CA
     log_info "Generating server certificate..."
     if ! openssl x509 -req -sha256 -days "$SERVER_CERT_VALIDITY_DAYS" \
@@ -235,7 +235,7 @@ generate_server_certificate() {
     fi
     chmod 644 "./${SERVER_NAME}.crt"
     log_success "Server certificate generated"
-    
+
     # Clean up CSR file
     rm -f "${SERVER_NAME}.csr"
 }
@@ -244,27 +244,27 @@ generate_server_certificate() {
 get_keystore_password() {
     local password
     local password_confirm
-    
+
     # Check for environment variable first
     if [ -n "${KEYSTORE_PASSWORD:-}" ]; then
         echo "$KEYSTORE_PASSWORD"
         return
     fi
-    
+
     # Check if running in non-interactive mode
     if [ ! -t 0 ] || [ ! -t 1 ]; then
         log_error "Running in non-interactive mode but no KEYSTORE_PASSWORD environment variable set"
         log_error "Set KEYSTORE_PASSWORD environment variable or run in interactive terminal"
         exit 1
     fi
-    
+
     # Add timeout for interactive input
     local timeout_duration=30
-    
+
     while true; do
         printf "Enter password for PKCS12 keystore (timeout: ${timeout_duration}s): "
         stty -echo
-        
+
         # Use timeout to prevent hanging
         if ! password=$(timeout "$timeout_duration" sh -c 'read -r input; echo "$input"'); then
             stty echo
@@ -273,28 +273,28 @@ get_keystore_password() {
             log_error "Use KEYSTORE_PASSWORD environment variable for non-interactive execution"
             exit 1
         fi
-        
+
         stty echo
         echo
-        
+
         if [ -z "$password" ]; then
             log_warning "Password cannot be empty. Please try again."
             continue
         fi
-        
+
         printf "Confirm password (timeout: ${timeout_duration}s): "
         stty -echo
-        
+
         if ! password_confirm=$(timeout "$timeout_duration" sh -c 'read -r input; echo "$input"'); then
             stty echo
             echo
             log_error "Password confirmation timed out after ${timeout_duration} seconds"
             exit 1
         fi
-        
+
         stty echo
         echo
-        
+
         if [ "$password" = "$password_confirm" ]; then
             echo "$password"
             return
@@ -307,10 +307,10 @@ get_keystore_password() {
 # Generate PKCS12 keystore
 generate_pkcs12_keystore() {
     log_info "Generating PKCS12 keystore..."
-    
+
     local password
     password=$(get_keystore_password)
-    
+
     if ! openssl pkcs12 -export \
         -out "${SERVER_NAME}.p12" \
         -in "${SERVER_NAME}.crt" \
@@ -320,7 +320,7 @@ generate_pkcs12_keystore() {
         log_error "Failed to generate PKCS12 keystore"
         exit 1
     fi
-    
+
     chmod 600 "${SERVER_NAME}.p12"
     log_success "PKCS12 keystore generated: ${SERVER_NAME}.p12"
 }
@@ -328,7 +328,7 @@ generate_pkcs12_keystore() {
 # Copy certificates to appropriate locations
 install_certificates() {
     log_info "Installing certificates in project directories..."
-    
+
     # Ensure target directories exist
     if [ ! -d "src/main/resources" ]; then
         log_warning "src/main/resources directory not found - skipping keystore installation"
@@ -339,14 +339,14 @@ install_certificates() {
             log_warning "Failed to copy keystore to src/main/resources/"
         fi
     fi
-    
+
     # Copy certificate and key to ssl directory
     if cp "${SERVER_NAME}.crt" "ssl/${SERVER_NAME}-raspi-finance-cert.pem"; then
         log_success "Certificate copied to ssl/ directory"
     else
         log_warning "Failed to copy certificate to ssl/ directory"
     fi
-    
+
     if cp "${SERVER_NAME}.key" "ssl/${SERVER_NAME}-raspi-finance-key.pem"; then
         log_success "Private key copied to ssl/ directory"
     else
@@ -357,20 +357,20 @@ install_certificates() {
 # Verify the generated certificate
 verify_certificate() {
     log_info "Verifying the generated certificate..."
-    
+
     if ! openssl verify -CAfile "$SSL_DIR/rootCA.pem" -verbose "./${SERVER_NAME}.crt"; then
         log_error "Certificate verification failed"
         exit 1
     fi
     log_success "Certificate verification passed"
-    
+
     # Display certificate expiration date
     local expiry_date
     expiry_date=$(openssl x509 -in "${SERVER_NAME}.crt" -noout -enddate 2>/dev/null | cut -d= -f2)
     if [ -n "$expiry_date" ]; then
         log_info "Certificate expires: $expiry_date"
     fi
-    
+
     log_info "To check PKCS12 expiration: openssl pkcs12 -in ${SERVER_NAME}.p12 -nodes | openssl x509 -noout -enddate"
     log_info "To list Java keystore: keytool -list -keystore /etc/ssl/certs/java/cacerts"
 }
@@ -378,7 +378,7 @@ verify_certificate() {
 # Main execution
 main() {
     log_info "Starting certificate generation for server: $SERVER_NAME"
-    
+
     check_dependencies
     create_directories
     generate_root_ca
@@ -387,7 +387,7 @@ main() {
     generate_pkcs12_keystore
     install_certificates
     verify_certificate
-    
+
     log_success "Certificate generation completed successfully!"
     log_info "Files generated:"
     log_info "  - ${SERVER_NAME}.crt (server certificate)"
@@ -395,7 +395,7 @@ main() {
     log_info "  - ${SERVER_NAME}.p12 (PKCS12 keystore)"
     log_info "  - $SSL_DIR/rootCA.pem (root CA certificate)"
     log_info "  - $SSL_DIR/rootCA.key (root CA private key)"
-    
+
     # Display expiration dates
     log_info "Certificate expiration dates:"
     local server_expiry
@@ -403,13 +403,13 @@ main() {
     if [ -n "$server_expiry" ]; then
         log_info "  - Server certificate expires: $server_expiry"
     fi
-    
+
     local rootca_expiry
     rootca_expiry=$(openssl x509 -in "$SSL_DIR/rootCA.pem" -noout -enddate 2>/dev/null | cut -d= -f2)
     if [ -n "$rootca_expiry" ]; then
         log_info "  - Root CA certificate expires: $rootca_expiry"
     fi
-    
+
     log_info "Usage for non-interactive mode: KEYSTORE_PASSWORD=\"yourpassword\" ./cert-install.sh hornsup"
 }
 
