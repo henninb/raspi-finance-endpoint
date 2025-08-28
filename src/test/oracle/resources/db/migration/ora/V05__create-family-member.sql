@@ -10,16 +10,16 @@ CREATE TABLE ora.t_family_member (
     relationship        VARCHAR2(20) DEFAULT 'self' NOT NULL,
     date_of_birth       DATE,
     insurance_member_id VARCHAR2(50),
-    
+
     -- Medical identifiers
     ssn_last_four      VARCHAR2(4),
     medical_record_number VARCHAR2(50),
-    
+
     -- Audit and status fields
     active_status      NUMBER(1) DEFAULT 1 NOT NULL CHECK (active_status IN (0, 1)),
     date_added         TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated       TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Constraints
     CONSTRAINT ck_family_relationship CHECK (relationship IN (
         'self', 'spouse', 'child', 'dependent', 'other'

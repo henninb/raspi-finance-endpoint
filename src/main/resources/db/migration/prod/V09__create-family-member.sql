@@ -8,16 +8,16 @@ CREATE TABLE IF NOT EXISTS public.t_family_member (
     relationship        TEXT NOT NULL DEFAULT 'self',
     date_of_birth       DATE,
     insurance_member_id TEXT,
-    
+
     -- Medical identifiers
     ssn_last_four      TEXT,
     medical_record_number TEXT,
-    
+
     -- Audit and status fields
     active_status      BOOLEAN DEFAULT TRUE NOT NULL,
     date_added         TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated       TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Constraints
     CONSTRAINT ck_family_relationship CHECK (relationship IN (
         'self', 'spouse', 'child', 'dependent', 'other'
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.t_family_member (
 );
 
 -- Unique constraint for owner + member_name combination
-ALTER TABLE public.t_family_member 
+ALTER TABLE public.t_family_member
 ADD CONSTRAINT uk_family_member_owner_name UNIQUE (owner, member_name);
 
 -- Indexes for performance
@@ -43,9 +43,9 @@ CREATE INDEX idx_family_member_insurance ON public.t_family_member(insurance_mem
 
 -- Insert default family member for existing owners (self)
 -- This ensures existing medical expenses can be attributed to the primary account holder
-INSERT INTO public.t_family_member (owner, member_name, relationship) 
+INSERT INTO public.t_family_member (owner, member_name, relationship)
 SELECT DISTINCT account_name_owner, account_name_owner, 'self'
-FROM public.t_account 
+FROM public.t_account
 WHERE active_status = true
 AND account_name_owner NOT IN (
     SELECT owner FROM public.t_family_member WHERE relationship = 'self'
