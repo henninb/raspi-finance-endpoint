@@ -1,12 +1,14 @@
 package finance.controllers
 
 import finance.domain.Transfer
+import finance.domain.Account
 import finance.helpers.SmartTransferBuilder
 import finance.helpers.SmartAccountBuilder
 import finance.helpers.TransferTestContext
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
+import java.sql.Date
 
 @ActiveProfiles("func")
 class TransferControllerIsolatedSpec extends BaseControllerSpec {
@@ -24,153 +26,85 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully insert new transfer with isolated test data'() {
         given:
-        // Use pattern-compliant account names matching TestDataManager logic
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        // Create source account using SmartBuilder
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("primary")
+                .asDebit()
+                .buildAndValidate()
 
-        String sourceAccountName = "primary_${cleanOwner}".toLowerCase()
-        String destAccountName = "secondary_${cleanOwner}".toLowerCase()
-
-        // Create source account first
-        String sourceAccountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "${sourceAccountName}",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
-
-        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccountJson)
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
         assert sourceAccountResponse.statusCode == HttpStatus.CREATED || sourceAccountResponse.statusCode == HttpStatus.CONFLICT
 
-        // Create destination account
-        String destAccountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "${destAccountName}",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
+        // Create destination account using SmartBuilder
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("secondary")
+                .asDebit()
+                .buildAndValidate()
 
-        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccountJson)
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
         assert destAccountResponse.statusCode == HttpStatus.CREATED || destAccountResponse.statusCode == HttpStatus.CONFLICT
 
-        // Create transfer JSON with valid UUIDs for both transactions
-        String transferJson = """
-        {
-            "transferId": 0,
-            "sourceAccount": "${sourceAccountName}",
-            "destinationAccount": "${destAccountName}",
-            "transactionDate": "2023-01-01",
-            "amount": 150.75,
-            "guidSource": "ba665bc2-22b6-4123-a566-6f5ab3d796d1",
-            "guidDestination": "ba665bc2-22b6-4123-a566-6f5ab3d796d2",
-            "activeStatus": true
-        }
-        """
+        // Create transfer using SmartTransferBuilder
+        Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(150.75G)
+                .withTransactionDate(Date.valueOf('2023-01-01'))
+                .asActive()
+                .buildAndValidate()
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, transferJson)
+        ResponseEntity<String> response = insertEndpoint(endpointName, transfer.toString())
 
         then:
         response.statusCode == HttpStatus.OK
-        response.body.contains('"sourceAccount":"' + sourceAccountName + '"')
-        response.body.contains('"destinationAccount":"' + destAccountName + '"')
+        response.body.contains('"sourceAccount":"' + sourceAccount.accountNameOwner + '"')
+        response.body.contains('"destinationAccount":"' + destAccount.accountNameOwner + '"')
         response.body.contains('"amount":150.75')
         0 * _
     }
 
     void 'should successfully handle different transfer amounts'() {
         given:
-        // Use pattern-compliant account names
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        // Create source account using SmartBuilder
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("amountsrc")
+                .asDebit()
+                .buildAndValidate()
 
-        String sourceAccountName = "amountsrc_${cleanOwner}".toLowerCase()
-        String destAccountName = "amountdest_${cleanOwner}".toLowerCase()
-
-        // Create accounts first
-        String sourceAccountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "${sourceAccountName}",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
-
-        String destAccountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "${destAccountName}",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
-
-        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccountJson)
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
         assert sourceAccountResponse.statusCode == HttpStatus.CREATED || sourceAccountResponse.statusCode == HttpStatus.CONFLICT
 
-        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccountJson)
+        // Create destination account using SmartBuilder
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("amountdest")
+                .asDebit()
+                .buildAndValidate()
+
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
         assert destAccountResponse.statusCode == HttpStatus.CREATED || destAccountResponse.statusCode == HttpStatus.CONFLICT
 
-        // Small transfer
-        String transferSmallJson = """
-        {
-            "transferId": 0,
-            "sourceAccount": "${sourceAccountName}",
-            "destinationAccount": "${destAccountName}",
-            "transactionDate": "2023-01-01",
-            "amount": 25.50,
-            "guidSource": "ba665bc2-22b6-4123-a566-6f5ab3d796d3",
-            "guidDestination": "ba665bc2-22b6-4123-a566-6f5ab3d796d4",
-            "activeStatus": true
-        }
-        """
+        // Create small transfer using SmartTransferBuilder
+        Transfer transferSmall = SmartTransferBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(25.50G)
+                .withTransactionDate(Date.valueOf('2023-01-01'))
+                .asActive()
+                .buildAndValidate()
 
-        // Large transfer
-        String transferLargeJson = """
-        {
-            "transferId": 0,
-            "sourceAccount": "${sourceAccountName}",
-            "destinationAccount": "${destAccountName}",
-            "transactionDate": "2023-01-02",
-            "amount": 999.99,
-            "guidSource": "ba665bc2-22b6-4123-a566-6f5ab3d796d5",
-            "guidDestination": "ba665bc2-22b6-4123-a566-6f5ab3d796d6",
-            "activeStatus": true
-        }
-        """
+        // Create large transfer using SmartTransferBuilder
+        Transfer transferLarge = SmartTransferBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(999.99G)
+                .withTransactionDate(Date.valueOf('2023-01-02'))
+                .asActive()
+                .buildAndValidate()
 
         when:
-        ResponseEntity<String> smallResponse = insertEndpoint(endpointName, transferSmallJson)
-        ResponseEntity<String> largeResponse = insertEndpoint(endpointName, transferLargeJson)
+        ResponseEntity<String> smallResponse = insertEndpoint(endpointName, transferSmall.toString())
+        ResponseEntity<String> largeResponse = insertEndpoint(endpointName, transferLarge.toString())
 
         then:
         smallResponse.statusCode == HttpStatus.OK
@@ -182,81 +116,45 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully handle active and inactive transfers'() {
         given:
-        // Use pattern-compliant account names
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        // Create source account using SmartBuilder
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("statussrc")
+                .asDebit()
+                .buildAndValidate()
 
-        String sourceAccountName = "statussrc_${cleanOwner}".toLowerCase()
-        String destAccountName = "statusdest_${cleanOwner}".toLowerCase()
-
-        // Create accounts first
-        String sourceAccountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "${sourceAccountName}",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
-
-        String destAccountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "${destAccountName}",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
-
-        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccountJson)
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
         assert sourceAccountResponse.statusCode == HttpStatus.CREATED || sourceAccountResponse.statusCode == HttpStatus.CONFLICT
 
-        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccountJson)
+        // Create destination account using SmartBuilder
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("statusdest")
+                .asDebit()
+                .buildAndValidate()
+
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
         assert destAccountResponse.statusCode == HttpStatus.CREATED || destAccountResponse.statusCode == HttpStatus.CONFLICT
 
-        // Active transfer
-        String activeTransferJson = """
-        {
-            "transferId": 0,
-            "sourceAccount": "${sourceAccountName}",
-            "destinationAccount": "${destAccountName}",
-            "transactionDate": "2023-01-03",
-            "amount": 200.00,
-            "guidSource": "ba665bc2-22b6-4123-a566-6f5ab3d796d7",
-            "guidDestination": "ba665bc2-22b6-4123-a566-6f5ab3d796d8",
-            "activeStatus": true
-        }
-        """
+        // Create active transfer using SmartTransferBuilder
+        Transfer activeTransfer = SmartTransferBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(200.00G)
+                .withTransactionDate(Date.valueOf('2023-01-03'))
+                .asActive()
+                .buildAndValidate()
 
-        // Inactive transfer
-        String inactiveTransferJson = """
-        {
-            "transferId": 0,
-            "sourceAccount": "${sourceAccountName}",
-            "destinationAccount": "${destAccountName}",
-            "transactionDate": "2023-01-04",
-            "amount": 300.00,
-            "guidSource": "ba665bc2-22b6-4123-a566-6f5ab3d796d9",
-            "guidDestination": "ba665bc2-22b6-4123-a566-6f5ab3d79600",
-            "activeStatus": false
-        }
-        """
+        // Create inactive transfer using SmartTransferBuilder
+        Transfer inactiveTransfer = SmartTransferBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(300.00G)
+                .withTransactionDate(Date.valueOf('2023-01-04'))
+                .asInactive()
+                .buildAndValidate()
 
         when:
-        ResponseEntity<String> activeResponse = insertEndpoint(endpointName, activeTransferJson)
-        ResponseEntity<String> inactiveResponse = insertEndpoint(endpointName, inactiveTransferJson)
+        ResponseEntity<String> activeResponse = insertEndpoint(endpointName, activeTransfer.toString())
+        ResponseEntity<String> inactiveResponse = insertEndpoint(endpointName, inactiveTransfer.toString())
 
         then:
         activeResponse.statusCode == HttpStatus.OK

@@ -7,6 +7,7 @@ import finance.helpers.PaymentTestContext
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
+import java.sql.Date
 
 @ActiveProfiles("func")
 class PaymentControllerIsolatedSpec extends BaseControllerSpec {
@@ -24,29 +25,18 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully insert new payment with isolated test data'() {
         given:
-        // Use pattern-compliant account names matching TestDataManager logic
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
-
-        String sourceAccountName = "primary_${cleanOwner}".toLowerCase()
-        String destAccountName = "secondary_${cleanOwner}".toLowerCase()
-
-        // Create payment JSON with dummy transaction GUIDs (to work around FK constraints)
-        String paymentJson = """
-        {
-            "paymentId": 0,
-            "sourceAccount": "${sourceAccountName}",
-            "destinationAccount": "${destAccountName}",
-            "transactionDate": "2023-01-01",
-            "amount": 25.00,
-            "guidSource": "00000000-0000-0000-0000-000000000009",
-            "guidDestination": "00000000-0000-0000-0000-000000000010",
-            "activeStatus": true
-        }
-        """
+        // Create payment using SmartPaymentBuilder with TestDataManager account pattern
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts()
+                .withAmount(25.00G)
+                .withTransactionDate(Date.valueOf('2023-01-01'))
+                .withGuidSource('00000000-0000-0000-0000-000000000009')
+                .withGuidDestination('00000000-0000-0000-0000-000000000010')
+                .asActive()
+                .buildAndValidate()
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, paymentJson)
+        ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
         // May fail due to FK constraints but testing the pattern
@@ -56,40 +46,29 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully handle different payment amounts'() {
         given:
-        // Use pattern-compliant account names
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        // Create small payment using SmartPaymentBuilder
+        Payment paymentSmall = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts()
+                .withAmount(5.00G)
+                .withTransactionDate(Date.valueOf('2023-01-01'))
+                .withGuidSource('00000000-0000-0000-0000-000000000001')
+                .withGuidDestination('00000000-0000-0000-0000-000000000002')
+                .asActive()
+                .buildAndValidate()
 
-        // Simplified approach - create payments without FK constraint issues by using dummy transaction GUIDs
-        String paymentSmallJson = """
-        {
-            "paymentId": 0,
-            "sourceAccount": "primary_${cleanOwner}",
-            "destinationAccount": "secondary_${cleanOwner}",
-            "transactionDate": "2023-01-01",
-            "amount": 5.00,
-            "guidSource": "00000000-0000-0000-0000-000000000001",
-            "guidDestination": "00000000-0000-0000-0000-000000000002",
-            "activeStatus": true
-        }
-        """
-
-        String paymentLargeJson = """
-        {
-            "paymentId": 0,
-            "sourceAccount": "primary_${cleanOwner}",
-            "destinationAccount": "secondary_${cleanOwner}",
-            "transactionDate": "2023-01-02",
-            "amount": 999.99,
-            "guidSource": "00000000-0000-0000-0000-000000000003",
-            "guidDestination": "00000000-0000-0000-0000-000000000004",
-            "activeStatus": true
-        }
-        """
+        // Create large payment using SmartPaymentBuilder
+        Payment paymentLarge = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts()
+                .withAmount(999.99G)
+                .withTransactionDate(Date.valueOf('2023-01-02'))
+                .withGuidSource('00000000-0000-0000-0000-000000000003')
+                .withGuidDestination('00000000-0000-0000-0000-000000000004')
+                .asActive()
+                .buildAndValidate()
 
         when:
-        ResponseEntity<String> smallResponse = insertEndpoint(endpointName, paymentSmallJson)
-        ResponseEntity<String> largeResponse = insertEndpoint(endpointName, paymentLargeJson)
+        ResponseEntity<String> smallResponse = insertEndpoint(endpointName, paymentSmall.toString())
+        ResponseEntity<String> largeResponse = insertEndpoint(endpointName, paymentLarge.toString())
 
         then:
         // May fail due to FK constraints but testing the pattern
@@ -100,40 +79,29 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully handle active and inactive payments'() {
         given:
-        // Use pattern-compliant account names
-        String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        if (cleanOwner.isEmpty()) cleanOwner = "testowner"
+        // Create active payment using SmartPaymentBuilder
+        Payment activePayment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts()
+                .withAmount(150.00G)
+                .withTransactionDate(Date.valueOf('2023-01-03'))
+                .withGuidSource('00000000-0000-0000-0000-000000000005')
+                .withGuidDestination('00000000-0000-0000-0000-000000000006')
+                .asActive()
+                .buildAndValidate()
 
-        // Simplified approach using existing test accounts
-        String activePaymentJson = """
-        {
-            "paymentId": 0,
-            "sourceAccount": "primary_${cleanOwner}",
-            "destinationAccount": "secondary_${cleanOwner}",
-            "transactionDate": "2023-01-03",
-            "amount": 150.00,
-            "guidSource": "00000000-0000-0000-0000-000000000005",
-            "guidDestination": "00000000-0000-0000-0000-000000000006",
-            "activeStatus": true
-        }
-        """
-
-        String inactivePaymentJson = """
-        {
-            "paymentId": 0,
-            "sourceAccount": "primary_${cleanOwner}",
-            "destinationAccount": "secondary_${cleanOwner}",
-            "transactionDate": "2023-01-04",
-            "amount": 250.00,
-            "guidSource": "00000000-0000-0000-0000-000000000007",
-            "guidDestination": "00000000-0000-0000-0000-000000000008",
-            "activeStatus": false
-        }
-        """
+        // Create inactive payment using SmartPaymentBuilder
+        Payment inactivePayment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts()
+                .withAmount(250.00G)
+                .withTransactionDate(Date.valueOf('2023-01-04'))
+                .withGuidSource('00000000-0000-0000-0000-000000000007')
+                .withGuidDestination('00000000-0000-0000-0000-000000000008')
+                .asInactive()
+                .buildAndValidate()
 
         when:
-        ResponseEntity<String> activeResponse = insertEndpoint(endpointName, activePaymentJson)
-        ResponseEntity<String> inactiveResponse = insertEndpoint(endpointName, inactivePaymentJson)
+        ResponseEntity<String> activeResponse = insertEndpoint(endpointName, activePayment.toString())
+        ResponseEntity<String> inactiveResponse = insertEndpoint(endpointName, inactivePayment.toString())
 
         then:
         // May fail due to FK constraints but testing the pattern

@@ -22,8 +22,9 @@ class SmartPaymentBuilder {
 
     private SmartPaymentBuilder(String testOwner) {
         this.testOwner = testOwner
-        this.sourceAccount = generateAlphaUnderscoreName('src')
-        this.destinationAccount = generateAlphaUnderscoreName('dest')
+        // Use simple default account names - will be overridden by fluent methods
+        this.sourceAccount = "src_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase() ?: 'test'}"
+        this.destinationAccount = "dest_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase() ?: 'test'}"
     }
 
     static SmartPaymentBuilder builderForOwner(String testOwner) {
@@ -58,7 +59,8 @@ class SmartPaymentBuilder {
         while (counter > 0) {
             counter-- // Make it 0-based
             int charIndex = counter % 26
-            result = ((char)('a'.charAt(0) + charIndex)) + result
+            String letter = String.valueOf((char)('a' + charIndex))
+            result = letter + result
             counter = (int)(counter / 26)
         }
         return result ?: "a"
