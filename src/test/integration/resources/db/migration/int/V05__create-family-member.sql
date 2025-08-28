@@ -8,16 +8,16 @@ CREATE TABLE IF NOT EXISTS int.t_family_member (
     relationship        TEXT NOT NULL DEFAULT 'self',
     date_of_birth       DATE,
     insurance_member_id TEXT,
-    
+
     -- Medical identifiers
     ssn_last_four      TEXT,
     medical_record_number TEXT,
-    
+
     -- Audit and status fields
     active_status      BOOLEAN DEFAULT TRUE NOT NULL,
     date_added         TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated       TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Constraints
     CONSTRAINT ck_family_relationship CHECK (relationship IN (
         'self', 'spouse', 'child', 'dependent', 'other'
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS int.t_family_member (
     CONSTRAINT ck_medical_record_number_length CHECK (medical_record_number IS NULL OR length(medical_record_number) <= 50)
 );
 
--- Unique constraint for owner + member_name combination  
-ALTER TABLE int.t_family_member 
+-- Unique constraint for owner + member_name combination
+ALTER TABLE int.t_family_member
 ADD CONSTRAINT uk_family_member_owner_name UNIQUE (owner, member_name);
 
 -- Indexes for performance

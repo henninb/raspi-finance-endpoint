@@ -248,7 +248,7 @@ class MedicalExpenseSpec extends Specification {
         MedicalExpense medicalExpense = new MedicalExpense(
             dateUpdated: new Timestamp(0L) // Set to epoch
         )
-        
+
         when: "pre-updating the entity"
         medicalExpense.preUpdate()
 

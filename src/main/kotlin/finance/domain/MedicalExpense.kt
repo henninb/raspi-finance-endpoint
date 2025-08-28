@@ -100,7 +100,7 @@ data class MedicalExpense(
 
     @Column(name = "claim_number")
     @field:NotNull(message = "Claim number cannot be null")
-    @field:Size(max = 50, message = "Claim number cannot exceed 50 characters") 
+    @field:Size(max = 50, message = "Claim number cannot exceed 50 characters")
     @field:Pattern(
         regexp = "^[A-Z0-9-]*$",
         message = "Claim number can only contain uppercase letters, numbers, and hyphens"
@@ -201,7 +201,7 @@ data class MedicalExpense(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is MedicalExpense) return false
-        return medicalExpenseId == other.medicalExpenseId && 
+        return medicalExpenseId == other.medicalExpenseId &&
                transactionId == other.transactionId
     }
 

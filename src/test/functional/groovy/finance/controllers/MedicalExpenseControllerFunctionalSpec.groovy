@@ -25,10 +25,10 @@ class MedicalExpenseControllerIsolatedSpec extends BaseControllerSpec {
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withUniqueDescription("medical-test")
                 .buildAndValidate()
-        
+
         // Insert the transaction to get a valid transaction ID
         ResponseEntity<String> transactionResponse = insertEndpoint("transaction", transaction.toString())
-        
+
         // Create medical expense linked to the transaction
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(extractTransactionIdFromResponse(transactionResponse.body))
@@ -53,15 +53,15 @@ class MedicalExpenseControllerIsolatedSpec extends BaseControllerSpec {
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withUniqueDescription("duplicate-medical")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> transactionResponse = insertEndpoint("transaction", transaction.toString())
         Long transactionId = extractTransactionIdFromResponse(transactionResponse.body)
-        
+
         // First medical expense
         MedicalExpense firstMedicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId)
                 .buildAndValidate()
-        
+
         // Second medical expense for same transaction
         MedicalExpense secondMedicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId)
@@ -84,10 +84,10 @@ class MedicalExpenseControllerIsolatedSpec extends BaseControllerSpec {
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withUniqueDescription("invalid-financial")
                 .buildAndValidate()
-        
+
         ResponseEntity<String> transactionResponse = insertEndpoint("transaction", transaction.toString())
         Long transactionId = extractTransactionIdFromResponse(transactionResponse.body)
-        
+
         // Create medical expense with invalid amounts (billed < allocated)
         MedicalExpense invalidMedicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId)

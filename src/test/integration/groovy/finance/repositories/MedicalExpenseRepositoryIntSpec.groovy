@@ -30,14 +30,14 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
     CategoryRepository categoryRepository
 
 
-    
+
 
     def "MINIMAL TEST - check if test context loads"() {
         expect: "repositories to be injected"
         medicalExpenseRepository != null
         accountRepository != null
     }
-    
+
     def "TDD Step 1: Test Transaction entity creation independently"() {
         given: "a valid account for the transaction"
         Account account = new Account(
@@ -62,7 +62,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             }
             throw e
         }
-        
+
         and: "a valid category for the transaction"
         Category category = new Category(
             categoryId: 0L,
@@ -70,7 +70,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             categoryName: "testcategory"
         )
         Category savedCategory = categoryRepository.save(category)
-        
+
         and: "a transaction with all required fields"
         Transaction transaction = new Transaction(
             transactionId: 0L,
@@ -88,7 +88,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             reoccurringType: ReoccurringType.Undefined,
             notes: ""
         )
-        
+
         when: "saving the transaction"
         Transaction savedTransaction = null
         try {
@@ -100,7 +100,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             }
             throw e
         }
-        
+
         then: "transaction should be saved successfully"
         savedTransaction.transactionId != null
         savedTransaction.guid == "550e8400-e29b-41d4-a716-446655440000"
@@ -124,7 +124,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             validationDate: new java.sql.Timestamp(System.currentTimeMillis())
         )
         Account savedAccount = accountRepository.save(account)
-        
+
         // Create Category
         Category category = new Category(
             categoryId: 0L,
@@ -132,8 +132,8 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             categoryName: "medical"
         )
         Category savedCategory = categoryRepository.save(category)
-        
-        // Create Transaction  
+
+        // Create Transaction
         Transaction transaction = new Transaction(
             transactionId: 0L,
             guid: "123e4567-e89b-12d3-a456-426614174000",
@@ -151,7 +151,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             notes: ""
         )
         Transaction savedTransaction = transactionRepository.save(transaction)
-        
+
         and: "a medical expense with all required fields"
         MedicalExpense medicalExpense = new MedicalExpense(
             medicalExpenseId: 0L,
@@ -173,7 +173,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             dateAdded: new java.sql.Timestamp(System.currentTimeMillis()),
             dateUpdated: new java.sql.Timestamp(System.currentTimeMillis())
         )
-        
+
         when: "saving the medical expense"
         MedicalExpense savedMedicalExpense = null
         try {
@@ -185,7 +185,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
             }
             throw e
         }
-        
+
         then: "medical expense should be saved successfully"
         savedMedicalExpense.medicalExpenseId != null
         savedMedicalExpense.transactionId == savedTransaction.transactionId
@@ -537,7 +537,7 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
         // Pattern: ^[a-z-]*_[a-z]*$ (letters/dashes, exactly one underscore, letters)
         def accountName = "testaccount_${transactionId < 20000 ? 'a' : (transactionId < 30000 ? 'b' : 'c')}"
         def categoryName = "testcategory"
-        
+
         // Check if account already exists
         Account account = accountRepository.findByAccountNameOwner(accountName).orElse(null)
         if (!account) {

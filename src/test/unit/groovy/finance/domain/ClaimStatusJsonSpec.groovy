@@ -38,7 +38,7 @@ class ClaimStatusJsonSpec extends Specification {
         ClaimStatus.Denied.label == "denied"
         ClaimStatus.Paid.label == "paid"
         ClaimStatus.Closed.label == "closed"
-        
+
         and: "fromString method works"
         ClaimStatus.fromString("submitted") == ClaimStatus.Submitted
         ClaimStatus.fromString("processing") == ClaimStatus.Processing

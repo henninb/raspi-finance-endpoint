@@ -15,7 +15,7 @@ open class MedicalExpenseService(
 ) : IMedicalExpenseService, BaseService() {
 
     private val logger = LoggerFactory.getLogger(MedicalExpenseService::class.java)
-    
+
     init {
         logger.info("★★★ MedicalExpenseService constructor called! Repository: $medicalExpenseRepository")
     }
@@ -43,7 +43,7 @@ open class MedicalExpenseService(
 
     override fun updateMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
         logger.info("Updating medical expense with ID: ${medicalExpense.medicalExpenseId}")
-        
+
         val existingExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpense.medicalExpenseId)
             ?: throw IllegalArgumentException("Medical expense not found with ID: ${medicalExpense.medicalExpenseId}")
 
@@ -78,8 +78,8 @@ open class MedicalExpenseService(
     }
 
     override fun findMedicalExpensesByAccountIdAndDateRange(
-        accountId: Long, 
-        startDate: Date, 
+        accountId: Long,
+        startDate: Date,
         endDate: Date
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by account ID: $accountId and date range: $startDate to $endDate")
@@ -97,8 +97,8 @@ open class MedicalExpenseService(
     }
 
     override fun findMedicalExpensesByFamilyMemberAndDateRange(
-        familyMemberId: Long, 
-        startDate: Date, 
+        familyMemberId: Long,
+        startDate: Date,
         endDate: Date
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by family member ID: $familyMemberId and date range: $startDate to $endDate")
@@ -127,7 +127,7 @@ open class MedicalExpenseService(
 
     override fun updateClaimStatus(medicalExpenseId: Long, claimStatus: ClaimStatus): Boolean {
         logger.info("Updating claim status for medical expense ID: $medicalExpenseId to: $claimStatus")
-        
+
         try {
             val updatedRows = medicalExpenseRepository.updateClaimStatus(medicalExpenseId, claimStatus)
             val success = updatedRows > 0
@@ -145,7 +145,7 @@ open class MedicalExpenseService(
 
     override fun softDeleteMedicalExpense(medicalExpenseId: Long): Boolean {
         logger.info("Soft deleting medical expense with ID: $medicalExpenseId")
-        
+
         try {
             val updatedRows = medicalExpenseRepository.softDeleteByMedicalExpenseId(medicalExpenseId)
             val success = updatedRows > 0
@@ -178,7 +178,7 @@ open class MedicalExpenseService(
 
     override fun getClaimStatusCounts(): Map<ClaimStatus, Long> {
         logger.debug("Getting claim status counts")
-        
+
         return ClaimStatus.values().associateWith { status ->
             medicalExpenseRepository.countByClaimStatusAndActiveStatusTrue(status)
         }

@@ -44,7 +44,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
+        SELECT me FROM MedicalExpense me
         WHERE me.transactionId IN (
             SELECT t.transactionId FROM Transaction t WHERE t.accountId = :accountId
         )
@@ -56,7 +56,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
+        SELECT me FROM MedicalExpense me
         WHERE me.transactionId IN (
             SELECT t.transactionId FROM Transaction t WHERE t.accountId = :accountId
         )
@@ -73,8 +73,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT SUM(me.billedAmount) FROM MedicalExpense me 
-        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year 
+        SELECT SUM(me.billedAmount) FROM MedicalExpense me
+        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
         """
     )
@@ -82,8 +82,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT SUM(me.patientResponsibility) FROM MedicalExpense me 
-        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year 
+        SELECT SUM(me.patientResponsibility) FROM MedicalExpense me
+        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
         """
     )
@@ -91,8 +91,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT SUM(me.insurancePaid) FROM MedicalExpense me 
-        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year 
+        SELECT SUM(me.insurancePaid) FROM MedicalExpense me
+        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
         """
     )
@@ -100,8 +100,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
-        WHERE me.familyMemberId = :familyMemberId 
+        SELECT me FROM MedicalExpense me
+        WHERE me.familyMemberId = :familyMemberId
         AND me.serviceDate BETWEEN :startDate AND :endDate
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
@@ -115,8 +115,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT COUNT(*) FROM MedicalExpense me 
-        WHERE me.claimStatus = :claimStatus 
+        SELECT COUNT(*) FROM MedicalExpense me
+        WHERE me.claimStatus = :claimStatus
         AND me.activeStatus = true
         """
     )
@@ -124,9 +124,9 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
-        WHERE me.patientResponsibility > 0 
-        AND me.paidDate IS NULL 
+        SELECT me FROM MedicalExpense me
+        WHERE me.patientResponsibility > 0
+        AND me.paidDate IS NULL
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
         """
@@ -135,8 +135,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
-        WHERE me.claimStatus NOT IN ('paid', 'closed', 'denied') 
+        SELECT me FROM MedicalExpense me
+        WHERE me.claimStatus NOT IN ('paid', 'closed', 'denied')
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
         """
@@ -147,8 +147,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     @Transactional
     @Query(
         """
-        UPDATE MedicalExpense me 
-        SET me.activeStatus = false, me.dateUpdated = CURRENT_TIMESTAMP 
+        UPDATE MedicalExpense me
+        SET me.activeStatus = false, me.dateUpdated = CURRENT_TIMESTAMP
         WHERE me.medicalExpenseId = :medicalExpenseId
         """
     )
@@ -158,8 +158,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     @Transactional
     @Query(
         """
-        UPDATE MedicalExpense me 
-        SET me.claimStatus = :claimStatus, me.dateUpdated = CURRENT_TIMESTAMP 
+        UPDATE MedicalExpense me
+        SET me.claimStatus = :claimStatus, me.dateUpdated = CURRENT_TIMESTAMP
         WHERE me.medicalExpenseId = :medicalExpenseId
         """
     )
@@ -170,8 +170,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
-        WHERE me.procedureCode = :procedureCode 
+        SELECT me FROM MedicalExpense me
+        WHERE me.procedureCode = :procedureCode
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
         """
@@ -180,8 +180,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
     @Query(
         """
-        SELECT me FROM MedicalExpense me 
-        WHERE me.diagnosisCode = :diagnosisCode 
+        SELECT me FROM MedicalExpense me
+        WHERE me.diagnosisCode = :diagnosisCode
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
         """

@@ -24,8 +24,8 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
     @Transactional
     @Query(
         """
-        UPDATE FamilyMember f 
-        SET f.activeStatus = false, f.dateUpdated = CURRENT_TIMESTAMP 
+        UPDATE FamilyMember f
+        SET f.activeStatus = false, f.dateUpdated = CURRENT_TIMESTAMP
         WHERE f.familyMemberId = :familyMemberId
         """
     )
@@ -35,8 +35,8 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
     @Transactional
     @Query(
         """
-        UPDATE FamilyMember f 
-        SET f.activeStatus = :active, f.dateUpdated = CURRENT_TIMESTAMP 
+        UPDATE FamilyMember f
+        SET f.activeStatus = :active, f.dateUpdated = CURRENT_TIMESTAMP
         WHERE f.familyMemberId = :familyMemberId
         """
     )

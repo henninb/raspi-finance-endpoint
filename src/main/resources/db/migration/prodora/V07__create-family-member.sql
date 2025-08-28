@@ -10,16 +10,16 @@ CREATE TABLE prodora.t_family_member (
     relationship        VARCHAR2(20) DEFAULT 'self' NOT NULL,
     date_of_birth       DATE,
     insurance_member_id VARCHAR2(50),
-    
+
     -- Medical identifiers
     ssn_last_four      VARCHAR2(4),
     medical_record_number VARCHAR2(50),
-    
+
     -- Audit and status fields
     active_status      NUMBER(1) DEFAULT 1 NOT NULL CHECK (active_status IN (0, 1)),
     date_added         TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated       TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Constraints
     CONSTRAINT ck_family_relationship CHECK (relationship IN (
         'self', 'spouse', 'child', 'dependent', 'other'
@@ -41,9 +41,9 @@ CREATE INDEX idx_family_member_active ON prodora.t_family_member(active_status, 
 CREATE INDEX idx_family_member_insurance ON prodora.t_family_member(insurance_member_id);
 
 -- Insert default family member for existing owners (self)
-INSERT INTO prodora.t_family_member (owner, member_name, relationship) 
+INSERT INTO prodora.t_family_member (owner, member_name, relationship)
 SELECT DISTINCT account_name_owner, account_name_owner, 'self'
-FROM prodora.t_account 
+FROM prodora.t_account
 WHERE active_status = 1
 AND account_name_owner NOT IN (
     SELECT owner FROM prodora.t_family_member WHERE relationship = 'self'

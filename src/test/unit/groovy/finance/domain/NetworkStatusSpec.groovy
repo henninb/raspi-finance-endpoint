@@ -9,13 +9,13 @@ class NetworkStatusSpec extends BaseDomainSpec {
 
     @Shared
     protected String jsonPayloadInNetwork = '"in_network"'
-    
-    @Shared 
+
+    @Shared
     protected String jsonPayloadOutOfNetwork = '"out_of_network"'
-    
+
     @Shared
     protected String jsonPayloadUnknown = '"unknown"'
-    
+
     @Shared
     protected String jsonPayloadInvalid = '"invalid_status"'
 

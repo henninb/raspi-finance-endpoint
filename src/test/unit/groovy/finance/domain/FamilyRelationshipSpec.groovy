@@ -9,10 +9,10 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
 
     @Shared
     protected String jsonPayloadSelf = '"self"'
-    
-    @Shared 
+
+    @Shared
     protected String jsonPayloadSpouse = '"spouse"'
-    
+
     @Shared
     protected String jsonPayloadInvalid = '"invalid_relationship"'
 
