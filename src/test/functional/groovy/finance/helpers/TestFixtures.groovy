@@ -9,6 +9,7 @@ import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
+import finance.domain.Transfer
 import finance.domain.ValidationAmount
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,6 +72,20 @@ class TestFixtures {
         return new PaymentTestContext(
             transactionContext: transactionContext,
             paymentAmount: amount,
+            testDataManager: testDataManager
+        )
+    }
+
+    /**
+     * Creates test context for transfer-related operations
+     */
+    TransferTestContext createTransferContext(String testOwner, BigDecimal amount = new BigDecimal("150.75")) {
+        TransactionTestContext transactionContext = createTransactionContext(testOwner, amount)
+
+        // Don't create actual transfer data in setup - let individual tests create them as needed
+        return new TransferTestContext(
+            transactionContext: transactionContext,
+            transferAmount: amount,
             testDataManager: testDataManager
         )
     }
@@ -162,6 +177,7 @@ class TestFixtures {
 
         return new ReceiptImageTestContext(testOwner, testDataManager)
     }
+
 }
 
 /**
@@ -747,5 +763,76 @@ class ReceiptImageTestContext {
 
     void cleanup() {
         testDataManager.cleanupAccountsFor(testOwner)
+    }
+}
+
+/**
+ * Test context for transfer-related operations
+ */
+class TransferTestContext {
+    TransactionTestContext transactionContext
+    BigDecimal transferAmount
+    TestDataManager testDataManager
+
+    Transfer createUniqueTransfer(String prefix = "unique", BigDecimal amount = null) {
+        BigDecimal actualAmount = amount ?: transferAmount
+        Transfer transfer = SmartTransferBuilder.builderForOwner(transactionContext.testOwner)
+                .withUniqueAccounts(prefix, "dest${prefix}")
+                .withAmount(actualAmount)
+                .buildAndValidate()
+
+        // Create the accounts that this transfer references
+        createAccountsForTransfer(transfer)
+
+        return transfer
+    }
+
+    private void createAccountsForTransfer(Transfer transfer) {
+        // The transfer account names are in format: "prefix_owner"
+        // We need to create accounts using the raw account names directly
+        createAccountDirectly(transfer.sourceAccount, 'debit')
+        createAccountDirectly(transfer.destinationAccount, 'debit')
+    }
+
+    private void createAccountDirectly(String accountName, String accountType) {
+        // Create account directly with the full account name
+        testDataManager.jdbcTemplate.update("""
+            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
+                                  date_closed, date_updated, date_added)
+            VALUES (?, ?, true, '0000', '1969-12-31 18:00:00.000000',
+                    '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
+        """, accountName, accountType)
+    }
+
+    Transfer createActiveTransfer(String prefix, BigDecimal amount = null) {
+        BigDecimal actualAmount = amount ?: transferAmount
+        Transfer transfer = SmartTransferBuilder.builderForOwner(transactionContext.testOwner)
+                .withUniqueAccounts(prefix, "dest${prefix}")
+                .withAmount(actualAmount)
+                .asActive()
+                .buildAndValidate()
+
+        // Create the accounts that this transfer references
+        createAccountsForTransfer(transfer)
+
+        return transfer
+    }
+
+    Transfer createInactiveTransfer(String prefix, BigDecimal amount = null) {
+        BigDecimal actualAmount = amount ?: transferAmount
+        Transfer transfer = SmartTransferBuilder.builderForOwner(transactionContext.testOwner)
+                .withUniqueAccounts(prefix, "dest${prefix}")
+                .withAmount(actualAmount)
+                .asInactive()
+                .buildAndValidate()
+
+        // Create the accounts that this transfer references
+        createAccountsForTransfer(transfer)
+
+        return transfer
+    }
+
+    void cleanup() {
+        testDataManager.cleanupAccountsFor(transactionContext.testOwner)
     }
 }
