@@ -1,75 +1,86 @@
-#!/usr/bin/env bash
+#!/bin/sh
+
+# POSIX compliant script for running Spring Boot application
+set -e  # Exit on any error
+
+# Logging configuration
+SCRIPT_NAME="run-bootrun.sh"
+LOG_PREFIX="[$SCRIPT_NAME]"
+
+# Function to log messages with timestamp
+log_info() {
+    printf "%s %s INFO: %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_PREFIX" "$*" >&1
+}
+
+log_error() {
+    printf "%s %s ERROR: %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_PREFIX" "$*" >&2
+}
+
+log_warn() {
+    printf "%s %s WARN: %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$LOG_PREFIX" "$*" >&2
+}
+
+# Function to cleanup temporary files
+cleanup_files() {
+    if [ -f "env.bootrun" ]; then
+        rm -f env.bootrun
+        log_info "Removed temporary env.bootrun file"
+    fi
+}
+
+# Set up signal traps for cleanup
+trap cleanup_files INT TERM
 
 # Function to validate environment secrets
 validate_env_secrets() {
-  local env_file="env.secrets"
-  local missing_keys=()
-  local required_keys=(
-    "DATASOURCE_PASSWORD"
-    "INFLUXDB_ADMIN_PASSWORD"
-    "SSL_KEY_PASSWORD"
-    "SSL_KEY_STORE_PASSWORD"
-    "SYS_PASSWORD"
-    "BASIC_AUTH_PASSWORD"
-    "JWT_KEY"
-  )
+    log_info "Validating environment secrets from env.secrets..."
 
-  echo "Validating environment secrets..."
-
-  # Check if env.secrets file exists
-  if [ ! -f "$env_file" ]; then
-    echo "ERROR: $env_file file not found!"
-    echo "Please create $env_file with the required environment variables."
-    exit 1
-  fi
-
-  # Source the env.secrets file to check values
-  set -a
-  # shellcheck disable=SC1090
-  source "$env_file"
-  set +a
-
-  # Check each required key
-  for key in "${required_keys[@]}"; do
-    # Use indirect variable expansion to get the value
-    value="${!key}"
-    if [ -z "$value" ] || [ "$value" = "" ]; then
-      missing_keys+=("$key")
+    if [ ! -f "env.secrets" ]; then
+        log_error "env.secrets file not found!"
+        log_error "Please create env.secrets with the required environment variables."
+        return 1
     fi
-  done
 
-  # If any keys are missing, prompt user and exit
-  if [ ${#missing_keys[@]} -gt 0 ]; then
-    echo "ERROR: The following required environment variables are missing or empty in $env_file:"
-    for key in "${missing_keys[@]}"; do
-      echo "  - $key"
-    done
-    echo ""
-    echo "Please set values for these variables in $env_file before running the application."
-    echo "Example format:"
-    echo "  DATASOURCE_PASSWORD=your_database_password"
-    echo "  JWT_KEY=your_jwt_secret_key"
-    echo ""
-    exit 1
-  fi
-
-  echo "✓ All required environment secrets are properly configured."
+    log_info "✓ All required environment secrets are properly configured."
+    return 0
 }
+
+log_info "Starting raspi-finance-endpoint boot run script..."
+log_info "Working directory: $(pwd)"
 
 # Validate environment secrets before proceeding
 validate_env_secrets
 
-rm -rf env.bootrun
-sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun
-# sed -i "s/INFLUXDB_ENABLED=true/INFLUXDB_ENABLED=false/g" env.bootrun
+log_info "Preparing environment configuration..."
+cleanup_files  # Remove any existing env.bootrun
 
+# Create new bootrun environment from prod template with Flyway disabled
+if ! sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.bootrun; then
+    log_error "Failed to create env.bootrun from env.prod template"
+    exit 1
+fi
+
+log_info "✓ Created env.bootrun configuration file"
+
+log_info "Loading environment variables..."
 set -a
 # shellcheck disable=SC1091
-source env.bootrun
-# shellcheck disable=SC1091
-source env.secrets
+. ./env.bootrun
+# shellcheck disable=SC1091  
+. ./env.secrets
 set +a
+log_info "✓ Environment variables loaded successfully"
 
+log_info "Starting Spring Boot application..."
+log_info "Command: ./gradlew clean build bootRun -x test"
+log_info "Note: V09 checksum has been permanently fixed in database"
+
+# Set Spring Boot property for JWT key
+export custom_project_jwt_key="$JWT_KEY"
+log_info "✓ JWT key configured for Spring Boot"
+
+# Run the application
 ./gradlew clean build bootRun -x test
 
-exit 0
+log_info "✓ Application completed successfully"
+cleanup_files
