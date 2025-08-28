@@ -20,6 +20,7 @@ class SmartAccountBuilder {
     private BigDecimal outstanding = new BigDecimal(0)
     private BigDecimal cleared = new BigDecimal(0)
     private Timestamp dateClosed = new Timestamp(0)
+    private Timestamp validationDate = new Timestamp(System.currentTimeMillis())
 
     private SmartAccountBuilder(String testOwner) {
         this.testOwner = testOwner
@@ -70,6 +71,7 @@ class SmartAccountBuilder {
             outstanding = this.outstanding
             cleared = this.cleared
             dateClosed = this.dateClosed
+            validationDate = this.validationDate
             return it
         }
         return account
@@ -161,6 +163,11 @@ class SmartAccountBuilder {
 
     SmartAccountBuilder withDateClosed(Timestamp dateClosed) {
         this.dateClosed = dateClosed
+        return this
+    }
+
+    SmartAccountBuilder withValidationDate(Timestamp validationDate) {
+        this.validationDate = validationDate
         return this
     }
 
