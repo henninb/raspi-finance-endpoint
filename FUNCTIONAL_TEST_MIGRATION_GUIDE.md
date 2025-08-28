@@ -840,3 +840,118 @@ The functional test migration has successfully achieved **complete coverage of a
 2. **ReceiptImageControllerSpec** - Image upload/processing (high complexity)
 
 The TransferController migration validates the robustness of the isolated test architecture and demonstrates successful pattern application for complex FK-dependent operations.
+
+## Priority Next Steps: SmartBuilder Architecture Improvements
+
+### Overview
+
+**Critical Need**: Ensure all controllers consistently use SmartBuilder pattern instead of manual JSON creation. This improves test maintainability, constraint validation, and reduces boilerplate code.
+
+### Current SmartBuilder Status Analysis
+
+**✅ SmartBuilders Available (13)**:
+- SmartAccountBuilder ✅
+- SmartCategoryBuilder ✅  
+- SmartDescriptionBuilder ✅
+- SmartFamilyMemberBuilder ✅
+- SmartMedicalExpenseBuilder ✅
+- SmartParameterBuilder ✅
+- SmartPaymentBuilder ✅
+- SmartPendingTransactionBuilder ✅
+- SmartReceiptImageBuilder ✅
+- SmartTransactionBuilder ✅
+- SmartTransferBuilder ✅
+- SmartUserBuilder ✅
+- SmartValidationAmountBuilder ✅
+
+**❌ Controllers Using Manual JSON Instead of SmartBuilders**:
+
+1. **TransferControllerIsolatedSpec** - **HIGH PRIORITY**
+   - **Issue**: Creates accounts with manual JSON instead of SmartAccountBuilder
+   - **Impact**: Missing constraint validation, harder maintenance
+   - **Action**: Replace manual account/transfer JSON with SmartAccountBuilder and SmartTransferBuilder
+   - **Lines**: Account creation (~35-67), Transfer creation (~52-61)
+
+2. **ValidationAmountControllerIsolatedSpec** - **HIGH PRIORITY**
+   - **Issue**: Creates accounts with manual JSON instead of SmartAccountBuilder
+   - **Impact**: Duplicated account creation logic, no constraint validation
+   - **Action**: Replace manual account JSON with SmartAccountBuilder
+   - **Lines**: Account creation (~18-30)
+
+3. **TransactionControllerIsolatedSpec** - **MEDIUM PRIORITY**
+   - **Issue**: Uses SmartTransactionBuilder but may have manual account creation
+   - **Impact**: Inconsistent patterns
+   - **Action**: Audit for manual JSON usage, ensure full SmartBuilder adoption
+
+4. **LoginControllerIsolatedSpec** - **LOW PRIORITY**
+   - **Issue**: Uses manual User JSON instead of SmartUserBuilder
+   - **Impact**: Missing constraint validation for user registration tests
+   - **Action**: Replace manual user JSON with SmartUserBuilder
+   - **Lines**: User registration payload (~35-44)
+
+### Missing SmartBuilders Analysis
+
+**Potential Missing SmartBuilders**:
+
+1. **SmartLoginRequestBuilder** - **OPTIONAL**
+   - **Rationale**: LoginRequest is simple (username/password), may not need SmartBuilder
+   - **Decision**: Skip unless LoginController tests become complex
+
+2. **SmartMedicalProviderBuilder** - **NOT NEEDED**
+   - **Rationale**: No MedicalProviderController exists in functional tests
+   - **Decision**: Skip until controller is created
+
+### Implementation Priority Plan
+
+**Phase 1: High Priority Fixes (Essential)**
+1. **Fix TransferControllerIsolatedSpec**:
+   - Replace manual account JSON with `SmartAccountBuilder.builderForOwner(testOwner).withAccountNameOwner(name).asDebit().buildAndValidate()`
+   - Replace manual transfer JSON with `SmartTransferBuilder.builderForOwner(testOwner).withSourceAccount(src).withDestinationAccount(dest).withAmount(amount).buildAndValidate()`
+   - Verify all 5 tests still pass with 100% success rate
+
+2. **Fix ValidationAmountControllerIsolatedSpec**:
+   - Replace manual account JSON with SmartAccountBuilder pattern
+   - Maintain existing FK extraction logic for validation amount creation
+   - Verify all 7 tests still pass with 100% success rate
+
+**Phase 2: Medium Priority Cleanup (Quality)**
+3. **Audit TransactionControllerIsolatedSpec**:
+   - Confirm full SmartBuilder usage (already mostly correct)
+   - Remove any remaining manual JSON creation
+   - Verify all 22 tests still pass
+
+**Phase 3: Low Priority Enhancement (Completeness)**  
+4. **Update LoginControllerIsolatedSpec**:
+   - Replace manual user JSON with `SmartUserBuilder.builderForOwner(testOwner).withUsername(name).withPassword(pwd).buildAndValidate()`
+   - Verify all 13 tests still pass
+
+### Expected Benefits
+
+**Post-Implementation Benefits**:
+- ✅ **Consistent Architecture**: All controllers use SmartBuilder pattern
+- ✅ **Enhanced Validation**: All entity creation goes through constraint validation
+- ✅ **Reduced Boilerplate**: Less manual JSON string construction
+- ✅ **Better Maintainability**: SmartBuilder changes automatically apply to all tests
+- ✅ **AI-Friendly**: SmartBuilders prevent invalid test data creation
+
+### Success Criteria
+
+**Completion Requirements**:
+1. All 4 identified controllers updated to use SmartBuilders exclusively
+2. All existing tests maintain 100% pass rates
+3. No manual JSON entity creation in any *ControllerIsolatedSpec files
+4. All SmartBuilder imports actively used (no dead imports)
+
+**Verification Commands**:
+```bash
+# Verify no manual JSON entity creation remains
+grep -r '".*Id": 0' src/test/functional/groovy/finance/controllers/*ControllerIsolatedSpec.groovy
+
+# Verify all SmartBuilder imports are used
+grep -l "SmartBuilder" src/test/functional/groovy/finance/controllers/*ControllerIsolatedSpec.groovy | xargs grep -L "SmartBuilder.builderForOwner"
+
+# Run all functional tests to ensure 100% pass rates maintained
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*ControllerIsolatedSpec" --continue
+```
+
+This SmartBuilder standardization completes the architectural consistency of the isolated test framework and ensures all controllers follow the proven constraint-aware test data creation patterns.
