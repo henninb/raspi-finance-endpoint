@@ -20,8 +20,8 @@ interface IMedicalExpenseService {
     fun findMedicalExpensesByServiceDateRange(startDate: Date, endDate: Date): List<MedicalExpense>
 
     fun findMedicalExpensesByAccountIdAndDateRange(
-        accountId: Long, 
-        startDate: Date, 
+        accountId: Long,
+        startDate: Date,
         endDate: Date
     ): List<MedicalExpense>
 
@@ -30,8 +30,8 @@ interface IMedicalExpenseService {
     fun findMedicalExpensesByFamilyMemberId(familyMemberId: Long): List<MedicalExpense>
 
     fun findMedicalExpensesByFamilyMemberAndDateRange(
-        familyMemberId: Long, 
-        startDate: Date, 
+        familyMemberId: Long,
+        startDate: Date,
         endDate: Date
     ): List<MedicalExpense>
 

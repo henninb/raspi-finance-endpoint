@@ -44,11 +44,11 @@ class SmartMedicalExpenseBuilder {
     private String generateUniqueServiceDescription() {
         String counter = COUNTER.incrementAndGet().toString()
         String ownerPart = testOwner.replaceAll(/[^a-zA-Z0-9]/, '')
-        
+
         if (ownerPart.isEmpty()) {
             ownerPart = "test"
         }
-        
+
         return "Medical Service ${counter} for ${ownerPart}"
     }
 
@@ -87,7 +87,7 @@ class SmartMedicalExpenseBuilder {
         // Auto-adjust other amounts to maintain financial consistency
         // Keep the insurance discount at 0 for simplicity
         this.insuranceDiscount = BigDecimal.ZERO
-        // Set insurance paid to 70% of billed amount  
+        // Set insurance paid to 70% of billed amount
         this.insurancePaid = billedAmount.multiply(new BigDecimal("0.70")).setScale(2, BigDecimal.ROUND_HALF_UP)
         // Set patient responsibility to remaining amount
         this.patientResponsibility = billedAmount.subtract(this.insurancePaid).setScale(2, BigDecimal.ROUND_HALF_UP)
@@ -145,10 +145,10 @@ class SmartMedicalExpenseBuilder {
 
     private void validateConstraints(MedicalExpense medicalExpense) {
         // Validate financial consistency
-        BigDecimal totalAllocated = medicalExpense.insuranceDiscount + 
-                                   medicalExpense.insurancePaid + 
+        BigDecimal totalAllocated = medicalExpense.insuranceDiscount +
+                                   medicalExpense.insurancePaid +
                                    medicalExpense.patientResponsibility
-        
+
         if (medicalExpense.billedAmount < totalAllocated) {
             throw new IllegalStateException("Billed amount (${medicalExpense.billedAmount}) must be >= total allocated (${totalAllocated})")
         }

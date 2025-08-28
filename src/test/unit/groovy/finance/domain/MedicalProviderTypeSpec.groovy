@@ -9,10 +9,10 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
 
     @Shared
     protected String jsonPayloadGeneral = '"general"'
-    
-    @Shared 
+
+    @Shared
     protected String jsonPayloadSpecialist = '"specialist"'
-    
+
     @Shared
     protected String jsonPayloadInvalid = '"invalid_type"'
 

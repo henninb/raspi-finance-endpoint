@@ -24,16 +24,16 @@ import java.sql.Date
 @RestController
 @RequestMapping("/api/medical-expenses", "/medical-expenses")
 open class MedicalExpenseController(private val medicalExpenseService: IMedicalExpenseService) : BaseController() {
-    
+
     init {
         logger.info("★★★ MedicalExpenseController constructor called! Service: $medicalExpenseService")
     }
-    
+
     @PostMapping
     fun insertMedicalExpense(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
         logger.info("POST /medical-expenses - Creating medical expense for transaction ID: ${medicalExpense.transactionId}")
         logger.info("Service instance: ${medicalExpenseService}")
-        
+
         return try {
             val createdExpense = medicalExpenseService.insertMedicalExpense(medicalExpense)
             logger.info("Successfully created medical expense with ID: ${createdExpense.medicalExpenseId}")
@@ -69,7 +69,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertMedicalExpenseWithInsertEndpoint(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
         logger.info("POST /medical-expenses/insert - Creating medical expense for transaction ID: ${medicalExpense.transactionId}")
-        
+
         return try {
             val createdExpense = medicalExpenseService.insertMedicalExpense(medicalExpense)
             logger.info("Successfully created medical expense with ID: ${createdExpense.medicalExpenseId}")
@@ -108,7 +108,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @Valid @RequestBody medicalExpense: MedicalExpense
     ): ResponseEntity<MedicalExpense> {
         logger.info("PUT /medical-expenses/$medicalExpenseId - Updating medical expense")
-        
+
         return try {
             medicalExpense.medicalExpenseId = medicalExpenseId
             val updatedExpense = medicalExpenseService.updateMedicalExpense(medicalExpense)
@@ -128,7 +128,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long
     ): ResponseEntity<MedicalExpense> {
         logger.info("GET /medical-expenses/$medicalExpenseId - Retrieving medical expense")
-        
+
         return try {
             val medicalExpense = medicalExpenseService.findMedicalExpenseById(medicalExpenseId)
             if (medicalExpense != null) {
@@ -148,7 +148,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(1, message = "Transaction ID must be positive") transactionId: Long
     ): ResponseEntity<MedicalExpense> {
         logger.info("GET /medical-expenses/transaction/$transactionId - Retrieving medical expense by transaction ID")
-        
+
         return try {
             val medicalExpense = medicalExpenseService.findMedicalExpenseByTransactionId(transactionId)
             if (medicalExpense != null) {
@@ -168,7 +168,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(1, message = "Account ID must be positive") accountId: Long
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/account/$accountId - Retrieving medical expenses by account ID")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByAccountId(accountId)
             ResponseEntity.ok(medicalExpenses)
@@ -185,7 +185,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/account/$accountId/date-range - Retrieving medical expenses by account and date range")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByAccountIdAndDateRange(accountId, startDate, endDate)
             ResponseEntity.ok(medicalExpenses)
@@ -200,7 +200,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(1, message = "Provider ID must be positive") providerId: Long
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/provider/$providerId - Retrieving medical expenses by provider ID")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByProviderId(providerId)
             ResponseEntity.ok(medicalExpenses)
@@ -215,7 +215,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(1, message = "Family member ID must be positive") familyMemberId: Long
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/family-member/$familyMemberId - Retrieving medical expenses by family member ID")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByFamilyMemberId(familyMemberId)
             ResponseEntity.ok(medicalExpenses)
@@ -232,7 +232,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/family-member/$familyMemberId/date-range - Retrieving medical expenses by family member and date range")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByFamilyMemberAndDateRange(familyMemberId, startDate, endDate)
             ResponseEntity.ok(medicalExpenses)
@@ -247,7 +247,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable claimStatus: ClaimStatus
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/claim-status/$claimStatus - Retrieving medical expenses by claim status")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByClaimStatus(claimStatus)
             ResponseEntity.ok(medicalExpenses)
@@ -260,7 +260,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     @GetMapping("/out-of-network")
     fun getOutOfNetworkExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/out-of-network - Retrieving out-of-network medical expenses")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findOutOfNetworkExpenses()
             ResponseEntity.ok(medicalExpenses)
@@ -273,7 +273,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     @GetMapping("/outstanding-balances")
     fun getOutstandingPatientBalances(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/outstanding-balances - Retrieving outstanding patient balances")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findOutstandingPatientBalances()
             ResponseEntity.ok(medicalExpenses)
@@ -286,7 +286,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     @GetMapping("/open-claims")
     fun getActiveOpenClaims(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/open-claims - Retrieving active open claims")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findActiveOpenClaims()
             ResponseEntity.ok(medicalExpenses)
@@ -302,7 +302,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @RequestParam claimStatus: ClaimStatus
     ): ResponseEntity<Map<String, String>> {
         logger.info("PATCH /medical-expenses/$medicalExpenseId/claim-status - Updating claim status to: $claimStatus")
-        
+
         return try {
             val success = medicalExpenseService.updateClaimStatus(medicalExpenseId, claimStatus)
             if (success) {
@@ -321,7 +321,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long
     ): ResponseEntity<Map<String, String>> {
         logger.info("DELETE /medical-expenses/$medicalExpenseId - Soft deleting medical expense")
-        
+
         return try {
             val success = medicalExpenseService.softDeleteMedicalExpense(medicalExpenseId)
             if (success) {
@@ -340,12 +340,12 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable @Min(2000, message = "Year must be 2000 or later") year: Int
     ): ResponseEntity<Map<String, BigDecimal>> {
         logger.info("GET /medical-expenses/totals/year/$year - Retrieving medical totals by year")
-        
+
         return try {
             val totalBilled = medicalExpenseService.getTotalBilledAmountByYear(year)
             val totalPatientResponsibility = medicalExpenseService.getTotalPatientResponsibilityByYear(year)
             val totalInsurancePaid = medicalExpenseService.getTotalInsurancePaidByYear(year)
-            
+
             val totals = mapOf(
                 "totalBilled" to totalBilled,
                 "totalPatientResponsibility" to totalPatientResponsibility,
@@ -362,7 +362,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     @GetMapping("/claim-status-counts")
     fun getClaimStatusCounts(): ResponseEntity<Map<ClaimStatus, Long>> {
         logger.info("GET /medical-expenses/claim-status-counts - Retrieving claim status counts")
-        
+
         return try {
             val statusCounts = medicalExpenseService.getClaimStatusCounts()
             ResponseEntity.ok(statusCounts)
@@ -377,7 +377,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable procedureCode: String
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/procedure-code/$procedureCode - Retrieving medical expenses by procedure code")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByProcedureCode(procedureCode)
             ResponseEntity.ok(medicalExpenses)
@@ -392,7 +392,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @PathVariable diagnosisCode: String
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/diagnosis-code/$diagnosisCode - Retrieving medical expenses by diagnosis code")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByDiagnosisCode(diagnosisCode)
             ResponseEntity.ok(medicalExpenses)
@@ -408,7 +408,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/date-range - Retrieving medical expenses by date range")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findMedicalExpensesByServiceDateRange(startDate, endDate)
             ResponseEntity.ok(medicalExpenses)
