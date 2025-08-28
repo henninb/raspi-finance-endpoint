@@ -1,6 +1,6 @@
 # Medical Expense Tracking Feature Implementation Plan
 
-## Current Status (Updated 2025-08-27)  
+## Current Status (Updated 2025-08-27)
 📍 **Phase 2 IN PROGRESS - MAJOR BREAKTHROUGHS** 🔄 - Medical expense entity implemented, TDD validation fixes completed
 📋 **Next Recommended Phase**: **Complete Phase 2** - Fix remaining 5 integration test failures (1-2 hours, low risk)
 
@@ -219,7 +219,7 @@ data class MedicalProvider(
 CREATE TABLE t_family_member (
     family_member_id    BIGSERIAL PRIMARY KEY,
     owner               TEXT NOT NULL,           -- Links to account owner
-    member_name         TEXT NOT NULL,           -- Family member name  
+    member_name         TEXT NOT NULL,           -- Family member name
     relationship        TEXT NOT NULL,           -- self, spouse, child, etc.
     date_of_birth       DATE,                   -- Birth date
     insurance_member_id TEXT,                   -- Insurance card member ID
@@ -233,7 +233,7 @@ CREATE TABLE t_family_member (
 
 **Database Migrations Status**:
 - ✅ **Production** (`V09__create-family-member.sql`)
-- ✅ **Production Oracle** (`V07__create-family-member.sql`)  
+- ✅ **Production Oracle** (`V07__create-family-member.sql`)
 - ✅ **Stage** (`V04__create-family-member.sql`)
 - ✅ **Functional Test** (`V05__create-family-member.sql`)
 - ✅ **Integration Test** (`V05__create-family-member.sql`)
@@ -259,24 +259,24 @@ CREATE TABLE t_family_member (
 ```sql
 -- Track medical expenses by family member (when Phase 2 is complete)
 SELECT fm.member_name, fm.relationship, COUNT(*) as claim_count
-FROM t_family_member fm 
+FROM t_family_member fm
 WHERE fm.owner = 'your_owner' AND fm.active_status = true
 GROUP BY fm.member_name, fm.relationship;
 
 -- Family hierarchy view
-SELECT owner, 
+SELECT owner,
        SUM(CASE WHEN relationship = 'self' THEN 1 ELSE 0 END) as primary_members,
        SUM(CASE WHEN relationship = 'child' THEN 1 ELSE 0 END) as children,
        SUM(CASE WHEN relationship = 'dependent' THEN 1 ELSE 0 END) as dependents
-FROM t_family_member 
-WHERE active_status = true 
+FROM t_family_member
+WHERE active_status = true
 GROUP BY owner;
 ```
 
 ### Phase 2: Core Medical Expense Entity ✅ **97% COMPLETED - MAJOR BREAKTHROUGH**
 **Duration**: 3 days (in progress since 2025-08-26)
 **Risk**: Medium → Low (major issues resolved)
-**Dependencies**: Phase 1 and Phase 1.5 
+**Dependencies**: Phase 1 and Phase 1.5
 **Status**: 🔄 **97% COMPLETE - 5 FINAL TEST FIXES NEEDED**
 
 #### 2.1 ✅ Medical Expense Entity Implementation - **COMPLETED**
@@ -322,16 +322,16 @@ GROUP BY owner;
 #### 2.4 ✅ Integration Test Suite - **97% PASSING**
 **Testing Success**: Comprehensive integration test coverage with systematic TDD fixes
 - **Test File**: `MedicalExpenseRepositoryIntSpec.groovy` (18 tests, 97% success rate)
-- **Test Coverage**: 
+- **Test Coverage**:
   - ✅ Basic CRUD operations (create, read, update, delete)
-  - ✅ Financial calculation methods (billed amounts, patient responsibility)  
+  - ✅ Financial calculation methods (billed amounts, patient responsibility)
   - ✅ Query methods (date ranges, claim status, provider lookups)
   - ✅ Validation constraints (financial consistency, required fields)
   - ✅ Foreign key relationships (transaction, provider, family member)
 - **TDD Fixes Applied**:
   - Fixed Jakarta validation annotations with @field: targeting
   - Resolved Spring CGLIB proxy issues by making Kotlin classes open
-  - Fixed DateValidator null pointer exceptions 
+  - Fixed DateValidator null pointer exceptions
   - Corrected financial consistency validation in test data
   - Resolved foreign key constraint violations
 
@@ -339,7 +339,7 @@ GROUP BY owner;
 **Current Status**: 172 tests passing, 5 failures (97% success rate)
 **Failing Tests** (in MedicalExpenseRepositoryIntSpec):
 1. `should find medical expenses by family member ID`
-2. `should find medical expenses by provider ID`  
+2. `should find medical expenses by provider ID`
 3. `should soft delete medical expense`
 4. `should update claim status`
 5. One additional test requiring investigation
@@ -359,44 +359,44 @@ CREATE TABLE IF NOT EXISTS public.t_medical_expense (
     transaction_id              BIGINT NOT NULL,
     provider_id                 BIGINT,                    -- Optional provider reference
     family_member_id           BIGINT,                    -- Optional family member reference
-    
+
     -- Core medical expense data
     service_date                DATE NOT NULL,             -- Date service was provided
     service_description         TEXT,                      -- Description of medical service
     procedure_code              TEXT,                      -- CPT/HCPCS procedure codes
     diagnosis_code              TEXT,                      -- ICD-10 diagnosis codes
-    
+
     -- Financial breakdown with validation
     billed_amount              NUMERIC(12,2) DEFAULT 0.00 NOT NULL,    -- Original amount billed
     insurance_discount         NUMERIC(12,2) DEFAULT 0.00 NOT NULL,    -- Insurance discount/adjustment
     insurance_paid             NUMERIC(12,2) DEFAULT 0.00 NOT NULL,    -- Amount insurance paid
     patient_responsibility     NUMERIC(12,2) DEFAULT 0.00 NOT NULL,    -- Patient's portion
     paid_date                  DATE,                                   -- Date patient paid
-    
+
     -- Insurance and claim tracking
     is_out_of_network          BOOLEAN DEFAULT FALSE NOT NULL,         -- Network status
     claim_number               TEXT,                                   -- Insurance claim number
     claim_status               TEXT DEFAULT 'submitted' NOT NULL,      -- Claim processing status
-    
+
     -- Audit and management
     active_status              BOOLEAN DEFAULT TRUE NOT NULL,
     date_added                 TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date_updated               TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    
+
     -- Foreign key constraints with CASCADE DELETE
-    CONSTRAINT fk_medical_transaction FOREIGN KEY (transaction_id) 
+    CONSTRAINT fk_medical_transaction FOREIGN KEY (transaction_id)
         REFERENCES public.t_transaction(transaction_id) ON DELETE CASCADE,
-    CONSTRAINT fk_medical_provider FOREIGN KEY (provider_id) 
+    CONSTRAINT fk_medical_provider FOREIGN KEY (provider_id)
         REFERENCES public.t_medical_provider(provider_id),
-    CONSTRAINT fk_medical_family_member FOREIGN KEY (family_member_id) 
+    CONSTRAINT fk_medical_family_member FOREIGN KEY (family_member_id)
         REFERENCES public.t_family_member(family_member_id),
-        
+
     -- Business rule constraints
     CONSTRAINT ck_claim_status CHECK (claim_status IN (
         'submitted', 'processing', 'approved', 'denied', 'paid', 'closed'
     )),
     CONSTRAINT ck_financial_amounts CHECK (
-        billed_amount >= 0 AND insurance_discount >= 0 AND 
+        billed_amount >= 0 AND insurance_discount >= 0 AND
         insurance_paid >= 0 AND patient_responsibility >= 0
     ),
     CONSTRAINT ck_service_date_valid CHECK (service_date <= CURRENT_DATE)
@@ -412,7 +412,7 @@ CREATE INDEX idx_medical_expense_active ON public.t_medical_expense(active_statu
 ```
 
 **Migration Status Across All Environments**:
-- ✅ **Production**: `V10__create-medical-expense.sql` 
+- ✅ **Production**: `V10__create-medical-expense.sql`
 - ✅ **Production Oracle**: `V08__create-medical-expense.sql`
 - ✅ **Stage**: `V05__create-medical-expense.sql`
 - ✅ **Functional Test**: `V06__create-medical-expense.sql`
@@ -439,7 +439,7 @@ data class MedicalExpense(
     @Column(name = "provider_id")
     var providerId: Long? = null,
 
-    @Column(name = "family_member_id") 
+    @Column(name = "family_member_id")
     var familyMemberId: Long? = null,
 
     @field:ValidDate
@@ -459,7 +459,7 @@ data class MedicalExpense(
 
     // ... other financial fields with similar validation
 
-    @field:Convert(converter = ClaimStatusConverter::class) 
+    @field:Convert(converter = ClaimStatusConverter::class)
     @Column(name = "claim_status", nullable = false)
     var claimStatus: ClaimStatus = ClaimStatus.Submitted,
 
@@ -470,7 +470,7 @@ data class MedicalExpense(
 ) {
     // Financial consistency validation
     @PrePersist
-    @PreUpdate  
+    @PreUpdate
     fun validateFinancialConsistency() {
         val totalAllocated = insuranceDiscount + insurancePaid + patientResponsibility
         if (totalAllocated > billedAmount) {
@@ -481,13 +481,13 @@ data class MedicalExpense(
     }
 
     // Calculated fields
-    fun getNetPatientAmount(): BigDecimal = 
+    fun getNetPatientAmount(): BigDecimal =
         billedAmount - insuranceDiscount - insurancePaid
-    
-    fun isFullyPaid(): Boolean = 
+
+    fun isFullyPaid(): Boolean =
         patientResponsibility == BigDecimal.ZERO || paidDate != null
-        
-    fun isOutstanding(): Boolean = 
+
+    fun isOutstanding(): Boolean =
         patientResponsibility > BigDecimal.ZERO && paidDate == null
 }
 ```
@@ -496,13 +496,13 @@ data class MedicalExpense(
 **Applied Test-Driven Development**: Systematic approach to solve complex integration issues
 
 **Phase 1 - RED**: Isolated exact validation failures through focused test methods
-- Created `TDD Step 1: Test Transaction entity creation independently` 
+- Created `TDD Step 1: Test Transaction entity creation independently`
 - Created `TDD Step 2: Test MedicalExpense entity creation`
 - Identified root causes: Jakarta validation + Kotlin interoperability, DateValidator nulls, Spring CGLIB proxy issues
 
 **Phase 2 - GREEN**: Fixed each validation constraint with specific error message targeting
 - **Jakarta Validation Fix**: Changed from `@Size` to `@field:Size` for Kotlin property targeting
-- **DateValidator Fix**: Updated signature from `isValid(value: Date, ...)` to `isValid(value: Date?, ...)`  
+- **DateValidator Fix**: Updated signature from `isValid(value: Date, ...)` to `isValid(value: Date?, ...)`
 - **Spring CGLIB Fix**: Added `open` modifier to Kotlin service classes
 - **Financial Validation**: Implemented @PrePersist/@PreUpdate business rule validation
 
@@ -520,7 +520,7 @@ data class MedicalExpense(
 
 ### Phase 2: Core Medical Expense Entity (LEGACY PLAN - UPDATED ABOVE)
 **Duration**: 2-3 days
-**Risk**: Medium  
+**Risk**: Medium
 **Dependencies**: Phase 1 and Phase 1.5 (Family Member Entity)
 
 #### 2.1 Create Medical Expense Entity (V10__create-medical-expense.sql) - **UPDATED FOR FAMILY SUPPORT**
