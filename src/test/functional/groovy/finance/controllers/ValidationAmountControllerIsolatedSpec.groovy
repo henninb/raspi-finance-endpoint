@@ -1,5 +1,7 @@
 package finance.controllers
 
+import finance.helpers.SmartAccountBuilder
+import finance.helpers.SmartValidationAmountBuilder
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,24 +15,13 @@ class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully insert new validation amount with isolated test data'() {
         given:
-        // Create a dedicated account for this specific test
-        // Use pattern ^[a-z-]*_[a-z]*$ - lowercase letters/hyphens_lowercase letters
-        String accountJson = """
-        {
-            "accountId": 0,
-            "accountNameOwner": "valtest-account_testowner",
-            "accountType": "debit",
-            "activeStatus": true,
-            "moniker": "0000",
-            "outstanding": 0.00,
-            "future": 0.00,
-            "cleared": 0.00,
-            "dateClosed": "1970-01-01T00:00:00.000Z",
-            "validationDate": "2024-01-01T10:00:00.000Z"
-        }
-        """
-
-        ResponseEntity<String> accountResponse = insertEndpoint('account', accountJson)
+        // Create a dedicated account for this specific test using SmartAccountBuilder
+        def account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withAccountNameOwner("valtest-account_testowner")
+            .asDebit()
+            .buildAndValidate()
+        
+        ResponseEntity<String> accountResponse = insertEndpoint('account', account.toString())
         assert accountResponse.statusCode == HttpStatus.CREATED
 
         // Extract accountId from the created account response
@@ -38,16 +29,14 @@ class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
         String accountIdStr = (accountBody =~ /"accountId":(\d+)/)[0][1]
         Long accountId = Long.parseLong(accountIdStr)
 
-        String validationAmountJson = """
-        {
-            "validationId": 0,
-            "accountId": ${accountId},
-            "validationDate": "2024-01-01T10:00:00.000Z",
-            "activeStatus": true,
-            "transactionState": "Cleared",
-            "amount": 75.50
-        }
-        """
+        // Create validation amount using SmartValidationAmountBuilder
+        def validationAmount = SmartValidationAmountBuilder.builderForOwner(testOwner)
+            .withAccountId(accountId)
+            .withAmount(75.50)
+            .asCleared()
+            .buildAndValidate()
+        
+        String validationAmountJson = validationAmount.toString()
 
         when:
         ResponseEntity<String> response = insertValidationAmountEndpoint(validationAmountJson, testOwner)

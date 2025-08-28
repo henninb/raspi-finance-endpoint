@@ -1,5 +1,6 @@
 package finance.controllers
 
+import finance.helpers.SmartUserBuilder
 import groovy.json.JsonSlurper
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -31,17 +32,15 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
     }
 
     void 'should register new user successfully'() {
-        given: "a new user registration payload"
-        String payload = """
-        {
-            "userId": 0,
-            "activeStatus": true,
-            "username": "${testUsername}",
-            "password": "${testPassword}",
-            "firstName": "functional",
-            "lastName": "test"
-        }
-        """
+        given: "a new user registration payload using SmartUserBuilder"
+        def user = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(testUsername)
+            .withPassword(testPassword)
+            .withFirstName("functional")
+            .withLastName("test")
+            .buildAndValidate()
+        
+        String payload = user.toString()
 
         when: "posting to register endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -64,17 +63,15 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
     }
 
     void 'should reject registration with existing username'() {
-        given: "a user registration payload with existing username"
-        String payload = """
-        {
-            "userId": 0,
-            "activeStatus": true,
-            "username": "${testUsername}",
-            "password": "ValidPass123!",
-            "firstName": "functional",
-            "lastName": "test"
-        }
-        """
+        given: "a user registration payload with existing username using SmartUserBuilder"
+        def user = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(testUsername)
+            .withPassword("ValidPass123!")
+            .withFirstName("functional")
+            .withLastName("test")
+            .buildAndValidate()
+        
+        String payload = user.toString()
 
         when: "posting to register endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -90,17 +87,15 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
     }
 
     void 'should login with valid credentials'() {
-        given: "valid login credentials"
-        String payload = """
-        {
-            "userId": 0,
-            "activeStatus": true,
-            "username": "${testUsername}",
-            "password": "${testPassword}",
-            "firstName": "functional",
-            "lastName": "test"
-        }
-        """
+        given: "valid login credentials using SmartUserBuilder"
+        def user = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(testUsername)
+            .withPassword(testPassword)
+            .withFirstName("functional")
+            .withLastName("test")
+            .buildAndValidate()
+        
+        String payload = user.toString()
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -131,17 +126,15 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
     }
 
     void 'should reject login with invalid credentials'() {
-        given: "invalid login credentials"
-        String payload = """
-        {
-            "userId": 0,
-            "activeStatus": true,
-            "username": "${testUsername}",
-            "password": "WrongPass123!",
-            "firstName": "functional",
-            "lastName": "test"
-        }
-        """
+        given: "invalid login credentials using SmartUserBuilder"
+        def user = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(testUsername)
+            .withPassword("WrongPass123!")
+            .withFirstName("functional")
+            .withLastName("test")
+            .buildAndValidate()
+        
+        String payload = user.toString()
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -157,18 +150,16 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
     }
 
     void 'should reject login with non-existent user'() {
-        given: "non-existent user credentials"
+        given: "non-existent user credentials using SmartUserBuilder"
         String nonExistentUser = "non_existent_user_${testOwner.split('_')[1]}"
-        String payload = """
-        {
-            "userId": 0,
-            "activeStatus": true,
-            "username": "${nonExistentUser}",
-            "password": "SomePass123!",
-            "firstName": "non",
-            "lastName": "existent"
-        }
-        """
+        def user = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(nonExistentUser)
+            .withPassword("SomePass123!")
+            .withFirstName("non")
+            .withLastName("existent")
+            .buildAndValidate()
+        
+        String payload = user.toString()
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
