@@ -92,4 +92,39 @@ open class DescriptionService(
         }
         return description
     }
+
+    @Transactional
+    @Timed
+    override fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
+        val normalizedTarget = targetName.trim().lowercase()
+        val normalizedSources = sourceNames.map { it.trim().lowercase() }.distinct()
+        logger.info("Merging descriptions ${normalizedSources.joinToString(",")} into $normalizedTarget")
+
+        // Ensure target exists (create if missing)
+        val target = descriptionRepository.findByDescriptionName(normalizedTarget).orElseGet {
+            val newDesc = Description(0L, true, normalizedTarget)
+            insertDescription(newDesc)
+        }
+
+        // Reassign transactions for each source and deactivate source descriptions
+        normalizedSources.forEach { source ->
+            if (source.equals(normalizedTarget, ignoreCase = true)) return@forEach
+
+            val transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(source)
+            logger.info("Found ${transactions.size} transactions to reassign from $source to $normalizedTarget")
+            transactions.forEach { tx ->
+                tx.description = normalizedTarget
+                transactionRepository.saveAndFlush(tx)
+            }
+
+            // Deactivate the source description if it exists
+            descriptionRepository.findByDescriptionName(source).ifPresent { src ->
+                src.activeStatus = false
+                descriptionRepository.saveAndFlush(src)
+            }
+        }
+
+        return target
+    }
 }
+

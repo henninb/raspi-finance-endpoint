@@ -15,4 +15,6 @@ interface IDescriptionService {
     fun description(descriptionName: String): Optional<Description>
 
     fun updateDescription(description: Description): Description
+
+    fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description
 }
