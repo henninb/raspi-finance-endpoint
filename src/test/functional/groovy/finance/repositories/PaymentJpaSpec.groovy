@@ -1,13 +1,16 @@
 package finance.repositories
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.Application
 import finance.domain.Payment
+import finance.helpers.SmartPaymentBuilder
+import finance.helpers.TestDataManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import spock.lang.Shared
 import spock.lang.Specification
 
 import java.sql.Date
@@ -15,6 +18,7 @@ import java.sql.Date
 @ActiveProfiles("func")
 @DataJpaTest
 @ContextConfiguration(classes = [Application])
+@Import(TestDataManager)
 class PaymentJpaSpec extends Specification {
 
     @Autowired
@@ -23,43 +27,69 @@ class PaymentJpaSpec extends Specification {
     @Autowired
     protected TestEntityManager entityManager
 
-    protected ObjectMapper mapper = new ObjectMapper()
+    @Autowired
+    protected TestDataManager testDataManager
 
-    protected String json = """
-{"amount":12.99, "transactionDate":"2020-12-30", "guidSource":"ba665bc2-22b6-4123-a566-6f5ab3d796dh", "guidDestination":"ba665bc2-22b6-4123-a566-6f5ab3d796di", "sourceAccount":"referenced_brian", "destinationAccount":"bank_brian" }
-"""
+    @Shared
+    protected String testOwner = "jpa_${UUID.randomUUID().toString().replace('-'
+, '')[0..7]}"
 
-    void 'test payment to JSON - valid insert'() {
+    void 'payment insert via JPA with SmartBuilder'() {
 
         given:
-        Payment payment = mapper.readValue(json, Payment)
+        // Prepare minimal accounts and two backing transactions to satisfy FK constraints
+        testDataManager.createMinimalAccountsFor(testOwner)
+        String sourceGuid = testDataManager.createTransactionFor(testOwner, 'primary', 'payment_source', new BigDecimal('12.99'))
+        String destGuid = testDataManager.createTransactionFor(testOwner, 'secondary', 'payment_dest', new BigDecimal('12.99'))
+
+        // Build a valid Payment using SmartBuilder (no JSON)
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts() // primary_${owner} and secondary_${owner}
+                .withAmount(12.99G)
+                .withTransactionDate(Date.valueOf('2020-12-30'))
+                .withGuidSource(sourceGuid)
+                .withGuidDestination(destGuid)
+                .asActive()
+                .buildAndValidate()
+
+        long before = paymentRepository.count()
 
         when:
         Payment result = entityManager.persist(payment)
+        entityManager.flush()
 
         then:
-        paymentRepository.count() == 2L  // 1 existing payment in data.sql + 1 new payment
-        result == payment
+        paymentRepository.count() == before + 1
+        result.paymentId > 0L
+        result.sourceAccount.startsWith('primary_')
+        result.destinationAccount.startsWith('secondary_')
     }
 
-    void 'test payment to JSON - valid insert and delete'() {
+    void 'payment insert and delete via repository'() {
 
         given:
-        Payment payment = mapper.readValue(json, Payment)
-        // Use the same existing GUIDs that are already in the test data
-        payment.guidSource = 'ba665bc2-22b6-4123-a566-6f5ab3d796dh'
-        payment.guidDestination = 'ba665bc2-22b6-4123-a566-6f5ab3d796di'
-        // Create unique values to avoid constraint violations
-        payment.sourceAccount = 'different_brian'
-        payment.destinationAccount = 'different-dest_brian'
-        payment.amount = 15.50
-        payment.transactionDate = Date.valueOf('2020-12-30')
-        Payment result = entityManager.persist(payment)
+        // Prepare minimal accounts and backing transactions for FK constraints
+        testDataManager.createMinimalAccountsFor(testOwner)
+        String sourceGuid = testDataManager.createTransactionFor(testOwner, 'primary', 'payment_source', new BigDecimal('15.50'))
+        String destGuid = testDataManager.createTransactionFor(testOwner, 'secondary', 'payment_dest', new BigDecimal('15.50'))
+
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withTestDataAccounts()
+                .withAmount(15.50G)
+                .withTransactionDate(Date.valueOf('2020-12-30'))
+                .withGuidSource(sourceGuid)
+                .withGuidDestination(destGuid)
+                .asActive()
+                .buildAndValidate()
+
+        long before = paymentRepository.count()
+        Payment saved = entityManager.persist(payment)
+        entityManager.flush()
 
         when:
-        paymentRepository.delete(result)
+        paymentRepository.delete(saved)
 
         then:
-        paymentRepository.count() == 1L  // Should be back to 1 existing payment after delete
+        paymentRepository.count() == before
     }
 }
