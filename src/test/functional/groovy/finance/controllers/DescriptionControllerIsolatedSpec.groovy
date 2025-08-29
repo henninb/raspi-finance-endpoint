@@ -313,4 +313,128 @@ class DescriptionControllerIsolatedSpec extends BaseControllerSpec {
         }
         0 * _
     }
+
+
+    void 'should merge descriptions and move transactions, deactivating sources'() {
+        given:
+        String src1 = "src1_${testOwner}".toLowerCase()
+        String src2 = "src2_${testOwner}".toLowerCase()
+        String target = "target_${testOwner}".toLowerCase()
+
+        // Create two transactions referencing src1 and src2
+        def t1 = finance.helpers.SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName('primary')
+                .withDescription(src1)
+                .buildAndValidate()
+        def t2 = finance.helpers.SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName('primary')
+                .withDescription(src2)
+                .buildAndValidate()
+
+        when: 'insert transactions'
+        ResponseEntity<String> r1 = insertEndpoint('transaction', t1.toString())
+        ResponseEntity<String> r2 = insertEndpoint('transaction', t2.toString())
+
+        then:
+        r1.statusCode == HttpStatus.CREATED
+        r2.statusCode == HttpStatus.CREATED
+
+        when: 'call merge endpoint'
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        String payload = """{
+                "sourceNames":["${src1}","${src2}"],
+                "targetName":"${target}"
+        }"""
+        HttpEntity entity = new HttpEntity<>(payload, headers)
+        ResponseEntity<String> mergeResponse = restTemplate.exchange(
+                createURLWithPort('/api/description/merge'), HttpMethod.POST, entity, String)
+
+        then: 'merge succeeded'
+        mergeResponse.statusCode == HttpStatus.OK
+        mergeResponse.body.contains(target)
+
+        when: 'fetch transactions by new description and old ones'
+        ResponseEntity<String> targetTx = restTemplate.exchange(
+                createURLWithPort("/api/transaction/description/${target}"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String)
+        ResponseEntity<String> src1Tx = restTemplate.exchange(
+                createURLWithPort("/api/transaction/description/${src1}"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String)
+        ResponseEntity<String> src2Tx = restTemplate.exchange(
+                createURLWithPort("/api/transaction/description/${src2}"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String)
+
+        then: 'transactions moved to target; sources empty'
+        targetTx.statusCode == HttpStatus.OK
+        targetTx.body.contains(target)
+        src1Tx.statusCode == HttpStatus.OK
+        !src1Tx.body.contains(src1)
+        src2Tx.statusCode == HttpStatus.OK
+        !src2Tx.body.contains(src2)
+
+        when: 'sources are deactivated'
+        ResponseEntity<String> src1Desc = selectEndpoint('description', src1)
+        ResponseEntity<String> src2Desc = selectEndpoint('description', src2)
+
+        then:
+        src1Desc.statusCode == HttpStatus.OK
+        src1Desc.body.contains('"activeStatus":false')
+        src2Desc.statusCode == HttpStatus.OK
+        src2Desc.body.contains('"activeStatus":false')
+        0 * _
+    }
+
+    void 'should normalize names and skip self-merge when target equals a source'() {
+        given:
+        String targetRaw = " Amazon "
+        String srcSame = "AMAZON"
+        String srcOther = "b_${testOwner}".toLowerCase()
+        String target = "amazon"
+
+        // Create one transaction referencing srcOther
+        def t = finance.helpers.SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName('primary')
+                .withDescription(srcOther)
+                .buildAndValidate()
+
+        when:
+        ResponseEntity<String> r = insertEndpoint('transaction', t.toString())
+
+        then:
+        r.statusCode == HttpStatus.CREATED
+
+        when: 'call merge with normalization'
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        String payload = """{
+                "sourceNames":["${srcSame}","${srcOther}"],
+                "targetName":"${targetRaw}"
+        }"""
+        HttpEntity entity = new HttpEntity<>(payload, headers)
+        ResponseEntity<String> mergeResponse = restTemplate.exchange(
+                createURLWithPort('/api/description/merge'), HttpMethod.POST, entity, String)
+
+        then:
+        mergeResponse.statusCode == HttpStatus.OK
+        mergeResponse.body.contains(target)
+
+        when: 'transactions moved to normalized target; srcOther now empty; self-merge skipped implicitly'
+        ResponseEntity<String> targetTx = restTemplate.exchange(
+                createURLWithPort("/api/transaction/description/${target}"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String)
+        ResponseEntity<String> srcOtherTx = restTemplate.exchange(
+                createURLWithPort("/api/transaction/description/${srcOther}"),
+                HttpMethod.GET, new HttpEntity<>(null, headers), String)
+
+        then:
+        targetTx.statusCode == HttpStatus.OK
+        targetTx.body.contains(target)
+        srcOtherTx.statusCode == HttpStatus.OK
+        !srcOtherTx.body.contains(srcOther)
+        0 * _
+    }
+
 }

@@ -64,4 +64,84 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         1 * descriptionRepositoryMock.delete(description)
         0 * _
     }
+void 'mergeDescriptions creates target if missing, reassigns transactions, deactivates sources'() {
+        given:
+        String target = 'target'
+        List<String> sources = ['s1','s2']
+
+        when:
+        Description result = descriptionService.mergeDescriptions(target, sources)
+
+        then:
+        1 * descriptionRepositoryMock.findByDescriptionName(target) >> Optional.empty()
+        1 * validatorMock.validate(_ as Description) >> ([] as Set)
+        1 * descriptionRepositoryMock.saveAndFlush({ it.descriptionName == target }) >> { Description d -> d }
+
+        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc('s1', true) >> [
+                finance.helpers.TransactionBuilder.builder().withDescription('s1').build()
+        ]
+        1 * transactionRepositoryMock.saveAndFlush({ it.description == target }) >> { tx -> tx }
+        1 * descriptionRepositoryMock.findByDescriptionName('s1') >> Optional.of(DescriptionBuilder.builder().withDescription('s1').build())
+        1 * descriptionRepositoryMock.saveAndFlush({ it.descriptionName == 's1' && it.activeStatus == false }) >> { Description d -> d }
+
+        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc('s2', true) >> [
+                finance.helpers.TransactionBuilder.builder().withDescription('s2').build(),
+                finance.helpers.TransactionBuilder.builder().withDescription('s2').build()
+        ]
+        2 * transactionRepositoryMock.saveAndFlush({ it.description == target }) >> { tx -> tx }
+        1 * descriptionRepositoryMock.findByDescriptionName('s2') >> Optional.of(DescriptionBuilder.builder().withDescription('s2').build())
+        1 * descriptionRepositoryMock.saveAndFlush({ it.descriptionName == 's2' && it.activeStatus == false }) >> { Description d -> d }
+
+        result.descriptionName == target
+        0 * _
+    }
+
+    void 'mergeDescriptions uses existing target and does not recreate it'() {
+        given:
+        String target = 'existing'
+        List<String> sources = ['s1']
+        def existingTarget = DescriptionBuilder.builder().withDescription(target).build()
+
+        when:
+        Description result = descriptionService.mergeDescriptions(target, sources)
+
+        then:
+        1 * descriptionRepositoryMock.findByDescriptionName(target) >> Optional.of(existingTarget)
+
+        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc('s1', true) >> [
+                finance.helpers.TransactionBuilder.builder().withDescription('s1').build()
+        ]
+        1 * transactionRepositoryMock.saveAndFlush({ it.description == target }) >> { tx -> tx }
+        1 * descriptionRepositoryMock.findByDescriptionName('s1') >> Optional.of(DescriptionBuilder.builder().withDescription('s1').build())
+        1 * descriptionRepositoryMock.saveAndFlush({ it.descriptionName == 's1' && it.activeStatus == false }) >> { Description d -> d }
+
+        result.descriptionName == target
+        0 * _
+    }
+
+
+
+    void 'mergeDescriptions normalizes names and skips self-merge for identical source'() {
+        given:
+        String target = ' Amazon '
+        List<String> sources = ['AMAZON', ' b ']
+        def existingTarget = DescriptionBuilder.builder().withDescription('amazon').build()
+
+        when:
+        Description result = descriptionService.mergeDescriptions(target, sources)
+
+        then:
+        1 * descriptionRepositoryMock.findByDescriptionName('amazon') >> Optional.of(existingTarget)
+        // Only process 'b' source
+        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc('b', true) >> [
+                finance.helpers.TransactionBuilder.builder().withDescription('b').build()
+        ]
+        1 * transactionRepositoryMock.saveAndFlush({ it.description == 'amazon' }) >> { tx -> tx }
+        1 * descriptionRepositoryMock.findByDescriptionName('b') >> Optional.of(DescriptionBuilder.builder().withDescription('b').build())
+        1 * descriptionRepositoryMock.saveAndFlush({ it.descriptionName == 'b' && it.activeStatus == false }) >> { Description d -> d }
+
+        result.descriptionName == 'amazon'
+        0 * _
+    }
+
 }
