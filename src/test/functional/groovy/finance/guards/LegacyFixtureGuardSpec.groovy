@@ -3,7 +3,6 @@ package finance.guards
 import spock.lang.Ignore
 import spock.lang.Specification
 
-@Ignore
 class LegacyFixtureGuardSpec extends Specification {
 
     def "no legacy data.sql or schema.sql in functional resources"() {

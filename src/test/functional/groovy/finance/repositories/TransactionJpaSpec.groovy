@@ -69,7 +69,7 @@ class TransactionJpaSpec extends Specification {
         result.guid == transactionFromBuilder.guid
     }
 
-    void 'test Transaction to JSON - attempt to insert same record twice - different uuid'() {
+    void 'test Transaction to JSON - attempt to insert same record twice - different uuid and description'() {
         given:
         long beforeTx = transactionRepository.count()
         Account account = SmartAccountBuilder.builderForOwner('brian')
@@ -98,7 +98,7 @@ class TransactionJpaSpec extends Specification {
         transactionRepository.count() == beforeTx + 2
     }
 
-    void 'test Transaction to JSON - attempt to insert same record twice - different guid'() {
+    void 'test Transaction to JSON - attempt to insert same record twice - different guid and description'() {
         given:
         long beforeTx = transactionRepository.count()
         Account account = SmartAccountBuilder.builderForOwner('brian')
@@ -117,6 +117,7 @@ class TransactionJpaSpec extends Specification {
             .withAccountNameOwner(res.accountNameOwner)
             .withCategory('online')
             .withGuid('3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd')
+            .withDescription('a different description')
             .build()
 
         when:
