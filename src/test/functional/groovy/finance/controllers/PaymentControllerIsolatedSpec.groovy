@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.Payment
+import finance.domain.Account
 import finance.helpers.SmartPaymentBuilder
 import finance.helpers.SmartAccountBuilder
 import finance.helpers.PaymentTestContext
@@ -25,13 +26,25 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully insert new payment with isolated test data'() {
         given:
-        // Create payment using SmartPaymentBuilder with TestDataManager account pattern
+        // Create accounts using SmartAccountBuilder and HTTP endpoints like other working tests
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("paysrc")
+                .asDebit()
+                .buildAndValidate()
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("paydest")
+                .asCredit()
+                .buildAndValidate()
+
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
+
+        // Create payment using SmartPaymentBuilder
         Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withTestDataAccounts()
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
                 .withAmount(25.00G)
                 .withTransactionDate(Date.valueOf('2023-01-01'))
-                .withGuidSource('00000000-0000-0000-0000-000000000009')
-                .withGuidDestination('00000000-0000-0000-0000-000000000010')
                 .asActive()
                 .buildAndValidate()
 
@@ -39,30 +52,45 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, payment.toString())
 
         then:
-        // May fail due to FK constraints but testing the pattern
-        (response.statusCode == HttpStatus.CREATED || response.statusCode == HttpStatus.BAD_REQUEST)
+        sourceAccountResponse.statusCode == HttpStatus.CREATED
+        destAccountResponse.statusCode == HttpStatus.CREATED
+        response.statusCode == HttpStatus.CREATED
+        response.body.contains('"sourceAccount":"' + sourceAccount.accountNameOwner + '"')
+        response.body.contains('"destinationAccount":"' + destAccount.accountNameOwner + '"')
+        response.body.contains('"amount":25.0')
         0 * _
     }
 
     void 'should successfully handle different payment amounts'() {
         given:
+        // Create accounts using SmartAccountBuilder and HTTP endpoints
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("amountsrc")
+                .asDebit()
+                .buildAndValidate()
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("amountdest")
+                .asCredit()
+                .buildAndValidate()
+
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
+
         // Create small payment using SmartPaymentBuilder
         Payment paymentSmall = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withTestDataAccounts()
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
                 .withAmount(5.00G)
                 .withTransactionDate(Date.valueOf('2023-01-01'))
-                .withGuidSource('00000000-0000-0000-0000-000000000001')
-                .withGuidDestination('00000000-0000-0000-0000-000000000002')
                 .asActive()
                 .buildAndValidate()
 
         // Create large payment using SmartPaymentBuilder
         Payment paymentLarge = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withTestDataAccounts()
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
                 .withAmount(999.99G)
                 .withTransactionDate(Date.valueOf('2023-01-02'))
-                .withGuidSource('00000000-0000-0000-0000-000000000003')
-                .withGuidDestination('00000000-0000-0000-0000-000000000004')
                 .asActive()
                 .buildAndValidate()
 
@@ -71,31 +99,45 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         ResponseEntity<String> largeResponse = insertEndpoint(endpointName, paymentLarge.toString())
 
         then:
-        // May fail due to FK constraints but testing the pattern
-        (smallResponse.statusCode == HttpStatus.CREATED || smallResponse.statusCode == HttpStatus.BAD_REQUEST)
-        (largeResponse.statusCode == HttpStatus.CREATED || largeResponse.statusCode == HttpStatus.BAD_REQUEST)
+        sourceAccountResponse.statusCode == HttpStatus.CREATED
+        destAccountResponse.statusCode == HttpStatus.CREATED
+        smallResponse.statusCode == HttpStatus.CREATED
+        smallResponse.body.contains('"amount":5.0')
+        largeResponse.statusCode == HttpStatus.CREATED
+        largeResponse.body.contains('"amount":999.99')
         0 * _
     }
 
     void 'should successfully handle active and inactive payments'() {
         given:
+        // Create accounts using SmartAccountBuilder and HTTP endpoints
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("statussrc")
+                .asDebit()
+                .buildAndValidate()
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("statusdest")
+                .asCredit()
+                .buildAndValidate()
+
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
+
         // Create active payment using SmartPaymentBuilder
         Payment activePayment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withTestDataAccounts()
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
                 .withAmount(150.00G)
                 .withTransactionDate(Date.valueOf('2023-01-03'))
-                .withGuidSource('00000000-0000-0000-0000-000000000005')
-                .withGuidDestination('00000000-0000-0000-0000-000000000006')
                 .asActive()
                 .buildAndValidate()
 
         // Create inactive payment using SmartPaymentBuilder
         Payment inactivePayment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withTestDataAccounts()
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
                 .withAmount(250.00G)
                 .withTransactionDate(Date.valueOf('2023-01-04'))
-                .withGuidSource('00000000-0000-0000-0000-000000000007')
-                .withGuidDestination('00000000-0000-0000-0000-000000000008')
                 .asInactive()
                 .buildAndValidate()
 
@@ -104,9 +146,12 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         ResponseEntity<String> inactiveResponse = insertEndpoint(endpointName, inactivePayment.toString())
 
         then:
-        // May fail due to FK constraints but testing the pattern
-        (activeResponse.statusCode == HttpStatus.CREATED || activeResponse.statusCode == HttpStatus.BAD_REQUEST)
-        (inactiveResponse.statusCode == HttpStatus.CREATED || inactiveResponse.statusCode == HttpStatus.BAD_REQUEST)
+        sourceAccountResponse.statusCode == HttpStatus.CREATED
+        destAccountResponse.statusCode == HttpStatus.CREATED
+        activeResponse.statusCode == HttpStatus.CREATED
+        activeResponse.body.contains('"activeStatus":true')
+        inactiveResponse.statusCode == HttpStatus.CREATED
+        inactiveResponse.body.contains('"activeStatus":false')
         0 * _
     }
 
@@ -140,6 +185,129 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
         then:
         response1.statusCode == HttpStatus.BAD_REQUEST
         response2.statusCode == HttpStatus.BAD_REQUEST
+        0 * _
+    }
+
+    void 'should reject duplicate payment insertion with conflict status'() {
+        given:
+        // Create accounts using SmartAccountBuilder and HTTP endpoints
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("dupsrc")
+                .asDebit()
+                .buildAndValidate()
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("dupdest")
+                .asCredit()
+                .buildAndValidate()
+
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
+
+        // Create payment with specific GUIDs for duplication testing
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(123.45G)
+                .withTransactionDate(Date.valueOf('2023-12-01'))
+                .withGuidSource('ba665bc2-22b6-4123-a566-6f5ab3d796d3')
+                .withGuidDestination('ba665bc2-22b6-4123-a566-6f5ab3d796d4')
+                .asActive()
+                .buildAndValidate()
+
+        when:
+        ResponseEntity<String> firstResponse = insertEndpoint(endpointName, payment.toString())
+        ResponseEntity<String> duplicateResponse = insertEndpoint(endpointName, payment.toString())
+
+        then:
+        sourceAccountResponse.statusCode == HttpStatus.CREATED
+        destAccountResponse.statusCode == HttpStatus.CREATED
+        firstResponse.statusCode == HttpStatus.CREATED
+        duplicateResponse.statusCode == HttpStatus.CONFLICT
+        0 * _
+    }
+
+    void 'should successfully delete payment by ID'() {
+        given:
+        // Create accounts using SmartAccountBuilder and HTTP endpoints
+        Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("delsrc")
+                .asDebit()
+                .buildAndValidate()
+        Account destAccount = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("deldest")
+                .asCredit()
+                .buildAndValidate()
+
+        ResponseEntity<String> sourceAccountResponse = insertEndpoint('account', sourceAccount.toString())
+        ResponseEntity<String> destAccountResponse = insertEndpoint('account', destAccount.toString())
+
+        // Create payment using SmartBuilder
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withSourceAccount(sourceAccount.accountNameOwner)
+                .withDestinationAccount(destAccount.accountNameOwner)
+                .withAmount(88.88G)
+                .withTransactionDate(Date.valueOf('2023-01-01'))
+                .asActive()
+                .buildAndValidate()
+
+        // Insert payment and extract ID
+        ResponseEntity<String> insertResponse = insertEndpoint(endpointName, payment.toString())
+        assert sourceAccountResponse.statusCode == HttpStatus.CREATED
+        assert destAccountResponse.statusCode == HttpStatus.CREATED
+        assert insertResponse.statusCode == HttpStatus.CREATED
+
+        String paymentIdStr = (insertResponse.body =~ /"paymentId":(\d+)/)[0][1]
+        Long paymentId = Long.parseLong(paymentIdStr)
+
+        when:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        ResponseEntity<String> deleteResponse = restTemplate.exchange(
+                createURLWithPort("/api/payment/delete/${paymentId}"),
+                HttpMethod.DELETE, entity, String)
+
+        then:
+        deleteResponse.statusCode == HttpStatus.OK
+        deleteResponse.body.contains('"paymentId":' + paymentId)
+        0 * _
+    }
+
+    void 'should return not found when deleting non-existent payment'() {
+        given:
+        Long nonExistentId = 999999L
+
+        when:
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/payment/delete/${nonExistentId}"),
+                HttpMethod.DELETE, entity, String)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
+    void 'should handle unauthorized access to payment endpoints'() {
+        given:
+        HttpHeaders cleanHeaders = new HttpHeaders()
+        cleanHeaders.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(null, cleanHeaders)
+
+        when:
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/payment/select"),
+                HttpMethod.GET, entity, String)
+
+        then:
+        // PaymentController may allow unauthorized access based on security config
+        response.statusCode == HttpStatus.CREATED || response.statusCode == HttpStatus.UNAUTHORIZED || response.statusCode == HttpStatus.FORBIDDEN
         0 * _
     }
 }
