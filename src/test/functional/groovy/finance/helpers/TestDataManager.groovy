@@ -347,7 +347,7 @@ class TestDataManager {
         // Delete transactions
         jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
         jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${clean}")
-        
+
         // Delete pending transactions (FK constraint requires this before deleting accounts)
         jdbcTemplate.update("DELETE FROM func.t_pending_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
         jdbcTemplate.update("DELETE FROM func.t_pending_transaction WHERE account_name_owner LIKE ?", "%${clean}")
