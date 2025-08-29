@@ -163,19 +163,25 @@ class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should reject validation amount with invalid amount precision'() {
         given:
-        String invalidAmountJson = """
-        {
-            \"validationId\": 0,
-            \"accountId\": 1,
-            \"validationDate\": \"2024-01-01T10:00:00.000Z\",
-            \"activeStatus\": true,
-            \"transactionState\": \"Cleared\",
-            \"amount\": 25.123456
-        }
-        """
+        // Create an account and use its ID to ensure resolution
+        def account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("valinvalidprec")
+            .asDebit()
+            .buildAndValidate()
+        ResponseEntity<String> accountResponse = insertEndpoint('account', account.toString())
+        assert accountResponse.statusCode == HttpStatus.CREATED
+        String accountIdStr = (accountResponse.body =~ /\"accountId\":(\d+)/)[0][1]
+        Long accountId = Long.parseLong(accountIdStr)
+
+        // Build invalid payload via builder (no validation) with too many fraction digits
+        def invalid = SmartValidationAmountBuilder.builderForOwner(testOwner)
+            .withAccountId(accountId)
+            .asCleared()
+            .withAmount(25.123456G)
+            .build() // do NOT validate; we want to send invalid data
 
         when:
-        ResponseEntity<String> response = insertValidationAmountEndpoint(invalidAmountJson, testOwner)
+        ResponseEntity<String> response = insertValidationAmountEndpoint(invalid.toString(), account.accountNameOwner)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -184,19 +190,27 @@ class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should reject validation amount with invalid transaction state'() {
         given:
-        String invalidStateJson = """
-        {
-            \"validationId\": 0,
-            \"accountId\": 1,
-            \"validationDate\": \"2024-01-01T10:00:00.000Z\",
-            \"activeStatus\": true,
-            \"transactionState\": \"INVALID_STATE\",
-            \"amount\": 100.00
-        }
-        """
+        // Create an account and use its ID
+        def account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("valinvalidstate")
+            .asDebit()
+            .buildAndValidate()
+        ResponseEntity<String> accountResponse = insertEndpoint('account', account.toString())
+        assert accountResponse.statusCode == HttpStatus.CREATED
+        String accountIdStr = (accountResponse.body =~ /\"accountId\":(\d+)/)[0][1]
+        Long accountId = Long.parseLong(accountIdStr)
+
+        // Start from a valid builder payload, then tamper the serialized JSON to an invalid enum value
+        def valid = SmartValidationAmountBuilder.builderForOwner(testOwner)
+            .withAccountId(accountId)
+            .asCleared()
+            .withAmount(100.00G)
+            .build()
+
+        String invalidStateJson = valid.toString().replace('"transactionState":"cleared"', '"transactionState":"INVALID_STATE"')
 
         when:
-        ResponseEntity<String> response = insertValidationAmountEndpoint(invalidStateJson, testOwner)
+        ResponseEntity<String> response = insertValidationAmountEndpoint(invalidStateJson, account.accountNameOwner)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
