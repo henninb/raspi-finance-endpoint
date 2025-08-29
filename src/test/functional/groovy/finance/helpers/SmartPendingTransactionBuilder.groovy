@@ -14,7 +14,7 @@ class SmartPendingTransactionBuilder {
     private String testOwner
 
     private String accountNameOwner
-    private Date transactionDate
+    private String transactionDate
     private String description
     private BigDecimal amount = 0.00G
     private String reviewStatus = 'pending'
@@ -23,8 +23,8 @@ class SmartPendingTransactionBuilder {
     private SmartPendingTransactionBuilder(String testOwner) {
         this.testOwner = testOwner
         this.accountNameOwner = generateUniqueAccountName('account')
-        // within last year, always > 2000-01-01
-        this.transactionDate = new Date(System.currentTimeMillis() - (Math.random() * 180 * 24 * 60 * 60 * 1000L) as Long)
+        // within last year, always > 2000-01-01, format as yyyy-MM-dd string
+        this.transactionDate = generateValidDateString()
         this.description = generateUniqueDescription('pending')
         this.owner = testOwner
     }
@@ -34,63 +34,85 @@ class SmartPendingTransactionBuilder {
     }
 
     PendingTransaction build() {
-        PendingTransaction pt = new PendingTransaction().with {
-            pendingTransactionId = 0L
-            accountNameOwner = this.accountNameOwner
-            transactionDate = this.transactionDate
-            description = this.description
-            amount = this.amount
-            reviewStatus = this.reviewStatus
-            owner = this.owner
-            return it
-        }
+        // Convert string date to java.sql.Date for proper object creation
+        java.sql.Date sqlDate = java.sql.Date.valueOf(this.transactionDate)
+        
+        // Use no-arg constructor and set fields individually
+        PendingTransaction pt = new PendingTransaction()
+        pt.pendingTransactionId = 0L
+        pt.accountNameOwner = this.accountNameOwner
+        pt.transactionDate = sqlDate
+        pt.description = this.description
+        pt.amount = this.amount
+        pt.reviewStatus = this.reviewStatus
+        pt.owner = this.owner
         return pt
     }
 
     PendingTransaction buildAndValidate() {
-        PendingTransaction pt = build()
-        validateConstraints(pt)
-        return pt
+        validateConstraints()
+        return build()
     }
 
-    private void validateConstraints(PendingTransaction pt) {
+    private void validateConstraints() {
         // accountNameOwner: 3-40, ^[a-z-]*_[a-z]*$
-        if (pt.accountNameOwner == null || pt.accountNameOwner.length() < 3 || pt.accountNameOwner.length() > 40) {
-            throw new IllegalStateException("accountNameOwner '${pt.accountNameOwner}' violates length constraints (3-40)")
+        if (this.accountNameOwner == null || this.accountNameOwner.length() < 3 || this.accountNameOwner.length() > 40) {
+            throw new IllegalStateException("accountNameOwner '${this.accountNameOwner}' violates length constraints (3-40)")
         }
-        if (!pt.accountNameOwner.matches(/^[a-z-]*_[a-z]*$/)) {
-            throw new IllegalStateException("accountNameOwner '${pt.accountNameOwner}' must match alpha_underscore pattern (letters/dashes_letters)")
+        if (!this.accountNameOwner.matches(/^[a-z-]*_[a-z]*$/)) {
+            throw new IllegalStateException("accountNameOwner '${this.accountNameOwner}' must match alpha_underscore pattern (letters/dashes_letters)")
         }
 
-        // transactionDate: must be > 2000-01-01
-        if (pt.transactionDate == null || !pt.transactionDate.after(Date.valueOf('2000-01-01'))) {
-            throw new IllegalStateException("transactionDate must be greater than 2000-01-01")
+        // transactionDate: validate string format and constraint
+        if (this.transactionDate == null || !this.transactionDate.matches(/^\d{4}-\d{2}-\d{2}$/)) {
+            throw new IllegalStateException("transactionDate '${this.transactionDate}' must be in yyyy-MM-dd format")
+        }
+        // Parse and validate it's > 2000-01-01
+        try {
+            Date parsedDate = Date.valueOf(this.transactionDate)
+            if (!parsedDate.after(Date.valueOf('2000-01-01'))) {
+                throw new IllegalStateException("transactionDate must be greater than 2000-01-01")
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Invalid transactionDate format: ${this.transactionDate}")
         }
 
         // description: 1-75 ASCII
-        if (pt.description == null || pt.description.length() < 1 || pt.description.length() > 75) {
+        if (this.description == null || this.description.length() < 1 || this.description.length() > 75) {
             throw new IllegalStateException("description length must be 1-75 characters")
         }
-        if (!pt.description.matches(/^[\x20-\x7E]*$/)) {
+        if (!this.description.matches(/^[\x20-\x7E]*$/)) {
             throw new IllegalStateException("description must be ASCII characters")
         }
 
         // amount: Digits(12,2)
-        if (pt.amount == null) {
+        if (this.amount == null) {
             throw new IllegalStateException("amount must not be null")
         }
-        if (pt.amount.scale() > 2) {
+        if (this.amount.scale() > 2) {
             throw new IllegalStateException("amount must have at most 2 decimal places")
         }
         BigDecimal max = new BigDecimal('999999999999.99')
-        if (pt.amount.abs() > max) {
+        if (this.amount.abs() > max) {
             throw new IllegalStateException("amount exceeds allowed precision (12,2)")
         }
 
-        log.debug("PendingTransaction passed constraint validation: acct=${pt.accountNameOwner}, amt=${pt.amount}")
+        log.debug("PendingTransaction passed constraint validation: acct=${this.accountNameOwner}, date=${this.transactionDate}, amt=${this.amount}")
     }
 
+
     // Helpers for unique field generation
+    private String generateValidDateString() {
+        // Generate a date within the last year, always > 2000-01-01
+        long currentTime = System.currentTimeMillis()
+        long randomOffset = (Math.random() * 180 * 24 * 60 * 60 * 1000L) as Long  // Random days within 180 days
+        Date randomDate = new Date(currentTime - randomOffset)
+        
+        // Format as yyyy-MM-dd
+        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat('yyyy-MM-dd')
+        return formatter.format(randomDate)
+    }
+
     private String generateUniqueAccountName(String prefix) {
         // Must match ^[a-z-]*_[a-z]*$
         String cleanPrefix = (prefix ?: 'account').toLowerCase().replaceAll(/[^a-z-]/, '')
@@ -128,8 +150,14 @@ class SmartPendingTransactionBuilder {
         return this
     }
 
-    SmartPendingTransactionBuilder withTransactionDate(Date transactionDate) {
+    SmartPendingTransactionBuilder withTransactionDate(String transactionDate) {
         this.transactionDate = transactionDate
+        return this
+    }
+
+    SmartPendingTransactionBuilder withTransactionDate(Date transactionDate) {
+        java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat('yyyy-MM-dd')
+        this.transactionDate = formatter.format(transactionDate)
         return this
     }
 
