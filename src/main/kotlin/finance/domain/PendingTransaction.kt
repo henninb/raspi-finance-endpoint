@@ -69,6 +69,13 @@ data class PendingTransaction(
 
     constructor() : this(0L, "", Date(0),"",BigDecimal(0.00), "pending", "")
 
+    @JsonGetter("transactionDate")
+    fun jsonGetterTransactionDate(): String {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
+        simpleDateFormat.isLenient = false
+        return simpleDateFormat.format(this.transactionDate)
+    }
+
     @JsonSetter("transactionDate")
     fun jsonSetterPaymentDate(stringDate: String) {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
