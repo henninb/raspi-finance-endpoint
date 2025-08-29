@@ -2,8 +2,7 @@ package finance.repositories
 
 import finance.Application
 import finance.domain.Account
-import finance.domain.TransactionState
-import finance.helpers.AccountBuilder
+import finance.helpers.SmartAccountBuilder
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -38,19 +37,27 @@ class AccountJpaSpec extends Specification {
 
     void 'test account - valid insert'() {
         given:
-        Account account = AccountBuilder.builder().withAccountNameOwner('testa_brian').build()
+        long before = accountRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('testa')
+            .asCredit()
+            .buildAndValidate()
 
         when:
         Account accountResult = entityManager.persist(account)
 
         then:
-        accountRepository.count() == 6L
+        accountRepository.count() == before + 1
         accountResult.accountNameOwner == account.accountNameOwner
     }
 
     void 'test account - valid insert - 2 of the same does the update on the first record'() {
         given:
-        Account account = new AccountBuilder().withAccountNameOwner('testb_brian').build()
+        long before = accountRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('testb')
+            .asCredit()
+            .buildAndValidate()
         entityManager.persist(account)
         account.moniker = '9999'
 
@@ -58,14 +65,17 @@ class AccountJpaSpec extends Specification {
         Account accountResult = entityManager.persist(account)
 
         then:
-        accountRepository.count() == 6L
-        '9999' == accountResult.moniker
+        accountRepository.count() == before + 1
+        accountResult.moniker == '9999'
         accountResult.accountNameOwner == account.accountNameOwner
     }
 
     void 'test account - invalid moniker'() {
         given:
-        Account account = new AccountBuilder().withAccountNameOwner('testc_brian').build()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('testc')
+            .asCredit()
+            .buildAndValidate()
         account.moniker = 'invalid'
 
         when:
@@ -78,7 +88,10 @@ class AccountJpaSpec extends Specification {
 
     void 'test account - invalid accountNameOwner'() {
         given:
-        Account account = new AccountBuilder().withAccountNameOwner('testd_brian').build()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('testd')
+            .asCredit()
+            .buildAndValidate()
         account.accountNameOwner = 'invalid'
 
         when:
