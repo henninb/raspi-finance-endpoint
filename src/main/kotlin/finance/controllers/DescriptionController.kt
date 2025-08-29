@@ -115,4 +115,23 @@ class DescriptionController(private val descriptionService: DescriptionService) 
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete description: ${ex.message}", ex)
         }
     }
+
+
+    // Matches UI: POST /api/description/merge with JSON { sourceNames: [...], targetName: "..." }
+    @PostMapping("/merge", consumes = ["application/json"], produces = ["application/json"])
+    fun mergeDescriptions(@RequestBody request: MergeDescriptionsRequest): ResponseEntity<Description> {
+        return try {
+            if (request.targetName.isBlank() || request.sourceNames.isEmpty()) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetName and sourceNames are required")
+            }
+            logger.info("Merging descriptions ${request.sourceNames} into ${request.targetName}")
+            val merged = descriptionService.mergeDescriptions(request.targetName, request.sourceNames)
+            ResponseEntity.ok(merged)
+        } catch (ex: ResponseStatusException) {
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to merge descriptions into ${request.targetName}: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge descriptions: ${ex.message}", ex)
+        }
+    }
 }

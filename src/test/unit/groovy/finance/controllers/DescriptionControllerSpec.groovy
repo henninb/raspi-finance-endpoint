@@ -141,5 +141,31 @@ class DescriptionControllerSpec extends Specification {
         ex.statusCode == HttpStatus.NOT_FOUND
         ex.reason == 'Description not found: missing'
     }
-}
 
+def "mergeDescriptions returns OK with merged description"() {
+        given:
+        def payload = new finance.controllers.MergeDescriptionsRequest(["a","b"], "merged")
+        def merged = new Description(descriptionId: 99L, activeStatus: true, descriptionName: 'merged')
+
+        when:
+        ResponseEntity<Description> response = controller.mergeDescriptions(payload)
+
+        then:
+        1 * descriptionService.mergeDescriptions('merged', ["a","b"]) >> merged
+        response.statusCode == HttpStatus.OK
+        response.body == merged
+    }
+
+    def "mergeDescriptions maps service failure to 500"() {
+        given:
+        def payload = new finance.controllers.MergeDescriptionsRequest(["x"], "y")
+
+        when:
+        controller.mergeDescriptions(payload)
+
+        then:
+        1 * descriptionService.mergeDescriptions('y', ["x"]) >> { throw new RuntimeException('boom') }
+        ResponseStatusException ex = thrown(ResponseStatusException)
+        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+    }
+}
