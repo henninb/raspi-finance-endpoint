@@ -36,7 +36,7 @@ class SmartPendingTransactionBuilder {
     PendingTransaction build() {
         // Convert string date to java.sql.Date for proper object creation
         java.sql.Date sqlDate = java.sql.Date.valueOf(this.transactionDate)
-        
+
         // Use no-arg constructor and set fields individually
         PendingTransaction pt = new PendingTransaction()
         pt.pendingTransactionId = 0L
@@ -107,7 +107,7 @@ class SmartPendingTransactionBuilder {
         long currentTime = System.currentTimeMillis()
         long randomOffset = (Math.random() * 180 * 24 * 60 * 60 * 1000L) as Long  // Random days within 180 days
         Date randomDate = new Date(currentTime - randomOffset)
-        
+
         // Format as yyyy-MM-dd
         java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat('yyyy-MM-dd')
         return formatter.format(randomDate)
