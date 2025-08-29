@@ -270,7 +270,7 @@ class TransferControllerIsolatedSpec extends BaseControllerSpec {
         // Insert transfer and extract ID
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, transfer.toString())
         assert insertResponse.statusCode == HttpStatus.OK
-        
+
         String transferIdStr = (insertResponse.body =~ /"transferId":(\d+)/)[0][1]
         Long transferId = Long.parseLong(transferIdStr)
 
