@@ -41,26 +41,32 @@ class CategoryJpaSpec extends Specification {
 
     void 'test category - valid insert, insert a second category with the same name'() {
         given:
-        long before = categoryRepository.count()
         Category category1 = SmartCategoryBuilder.builderForOwner('brian')
             .withUniqueCategoryName('catsame')
             .asActive()
             .buildAndValidate()
-        Category categoryResult1 = entityManager.persist(category1)
+        entityManager.persist(category1)
+        entityManager.flush()
 
+        // second category uses the exact same name
         Category category2 = SmartCategoryBuilder.builderForOwner('brian')
             .withCategoryName(category1.categoryName)
             .asActive()
             .build()
 
         when:
-        Category categoryResult2 = entityManager.persist(category2)
+        entityManager.persist(category2)
+        try {
+            entityManager.flush()
+            assert false: "Expected unique constraint violation for duplicate category_name"
+        } catch (org.hibernate.exception.ConstraintViolationException e) {
+            // Clean persistence context so subsequent queries don't auto-flush the broken entity
+            entityManager.getEntityManager().clear()
+            throw e
+        }
 
         then:
-        categoryRepository.count() >= before + 1
-        categoryRepository.count() <= before + 2
-        categoryResult2.categoryName == category2.categoryName
-        categoryResult1.categoryName == category1.categoryName
+        thrown(org.hibernate.exception.ConstraintViolationException)
         0 * _
     }
 
