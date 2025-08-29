@@ -1,11 +1,11 @@
 package finance.repositories
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.Application
 import finance.domain.Account
 import finance.domain.Transaction
-import finance.helpers.AccountBuilder
+import finance.helpers.SmartAccountBuilder
 import finance.helpers.TransactionBuilder
+import finance.helpers.SmartCategoryBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
@@ -28,99 +28,127 @@ class TransactionJpaSpec extends Specification {
 
     @Autowired
     protected TestEntityManager entityManager
+    @Autowired
+    protected CategoryRepository categoryRepository
 
-    protected ObjectMapper mapper = new ObjectMapper()
+    def setup() {
+        ensureCategoryExists('online')
+    }
 
-    protected String jsonPayload = '''
-{"accountId":0,
-"accountType":"credit",
-"transactionType":"expense",
-"transactionDate":"2020-12-02",
-"guid":"4ea3be58-3993-46de-88a2-4ffc7f1d73bb",
-"accountNameOwner":"chase_brian",
-"description":"aliexpress.com",
-"category":"online",
-"amount":3.14,
-"transactionState":"cleared",
-"reoccurringType":"undefined",
-"notes":"my note to you"}
-'''
+    private void ensureCategoryExists(String name) {
+        if (!categoryRepository.findByCategoryName(name).isPresent()) {
+            def cat = SmartCategoryBuilder.builderForOwner('brian')
+                .withCategoryName(name)
+                .asActive()
+                .buildAndValidate()
+            entityManager.persist(cat)
+        }
+    }
 
     void 'test Transaction to JSON - valid insert'() {
         given:
-        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
-        Account account = new AccountBuilder().withAccountNameOwner('testa_brian').build()
+        long beforeTx = transactionRepository.count()
+        long beforeAcct = accountRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txa')
+            .asCredit()
+            .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        transactionFromString.accountId = accountResult.accountId
-        transactionFromString.accountNameOwner = accountResult.accountNameOwner
+        Transaction transactionFromBuilder = TransactionBuilder.builder()
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('online')
+            .build()
 
         when:
-        Transaction result = entityManager.persist(transactionFromString)
+        Transaction result = entityManager.persist(transactionFromBuilder)
 
         then:
-        transactionRepository.count() == 6L
-        accountRepository.count() == 6L
-        result.guid == transactionFromString.guid
+        transactionRepository.count() == beforeTx + 1
+        accountRepository.count() == beforeAcct + 1
+        result.guid == transactionFromBuilder.guid
     }
 
     void 'test Transaction to JSON - attempt to insert same record twice - different uuid'() {
         given:
-        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
-        Account account = new AccountBuilder().withAccountNameOwner('testb_brian').build()
+        long beforeTx = transactionRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txb')
+            .asCredit()
+            .buildAndValidate()
         Account res = entityManager.persist(account)
-        transactionFromString.accountId = res.accountId
-        transactionFromString.accountNameOwner = res.accountNameOwner
-        entityManager.persist(transactionFromString)
-        Transaction transactionFromString2 = mapper.readValue(jsonPayload, Transaction)
-        transactionFromString2.accountId = account.accountId
-        transactionFromString2.accountNameOwner = account.accountNameOwner
-        transactionFromString2.guid = '3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73b1'
-        transactionFromString2.description = 'different_description'
+        Transaction t1 = TransactionBuilder.builder()
+            .withAccountId(res.accountId)
+            .withAccountNameOwner(res.accountNameOwner)
+            .withCategory('online')
+            .build()
+        entityManager.persist(t1)
+        Transaction t2 = TransactionBuilder.builder()
+            .withAccountId(res.accountId)
+            .withAccountNameOwner(res.accountNameOwner)
+            .withCategory('online')
+            .withGuid('3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73b1')
+            .withDescription('different_description')
+            .build()
 
         when:
-        entityManager.persist(transactionFromString2)
+        entityManager.persist(t2)
 
         then:
-        transactionRepository.count() == 7L
+        transactionRepository.count() == beforeTx + 2
     }
 
     void 'test Transaction to JSON - attempt to insert same record twice - different guid'() {
         given:
-        Transaction transactionFromString = mapper.readValue(jsonPayload, Transaction)
-        transactionFromString.category = 'online'
-        Transaction transaction1 = TransactionBuilder.builder().build()
-        Account account = new AccountBuilder().withAccountNameOwner('testc_brian').build()
+        long beforeTx = transactionRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txc')
+            .asCredit()
+            .buildAndValidate()
         Account res = entityManager.persist(account)
-        transaction1.accountId = res.accountId
-        transaction1.accountNameOwner = res.accountNameOwner
-        transactionFromString.accountId = res.accountId
-        transactionFromString.accountNameOwner = res.accountNameOwner
-        Transaction first = entityManager.persist(transactionFromString)
-        transaction1.guid = '3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd'
+        Transaction tFirst = TransactionBuilder.builder()
+            .withAccountId(res.accountId)
+            .withAccountNameOwner(res.accountNameOwner)
+            .withCategory('online')
+            .build()
+        Transaction first = entityManager.persist(tFirst)
+        Transaction tSecond = TransactionBuilder.builder()
+            .withAccountId(res.accountId)
+            .withAccountNameOwner(res.accountNameOwner)
+            .withCategory('online')
+            .withGuid('3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd')
+            .build()
 
         when:
-        Transaction sec = entityManager.persist(transaction1)
+        Transaction sec = entityManager.persist(tSecond)
 
         then:
-        first.guid == transactionFromString.guid
-        sec.guid == transaction1.guid
-        transactionRepository.count() == 7L
+        first.guid == tFirst.guid
+        sec.guid == tSecond.guid
+        transactionRepository.count() == beforeTx + 2
     }
 
     void 'test transaction repository - insert a valid record'() {
         given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().withAccountNameOwner('testd_brian').build()
+        long beforeTx = transactionRepository.count()
+        long beforeAcct = accountRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txd')
+            .asCredit()
+            .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.accountNameOwner = accountResult.accountNameOwner
+        Transaction transaction = TransactionBuilder.builder()
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('online')
+            .build()
 
         when:
         Transaction transactionResult = entityManager.persist(transaction)
 
         then:
-        transactionRepository.count() == 6L
-        accountRepository.count() == 6L
+        transactionRepository.count() == beforeTx + 1
+        accountRepository.count() == beforeAcct + 1
         transactionRepository.findByGuid(transaction.guid).get().guid == transaction.guid
         transactionResult.guid == transaction.guid
     }
@@ -128,18 +156,25 @@ class TransactionJpaSpec extends Specification {
     void 'test transaction repository - insert 2 records with duplicate guid - throws an exception'() {
         given:
         String duplicateGuid = '11111111-2222-3333-4444-555555555555'
-        Transaction transaction1 = new TransactionBuilder().withGuid(duplicateGuid).build()
-        Transaction transaction2 = new TransactionBuilder().withGuid(duplicateGuid).build()
-        transaction2.category = 'online'
-        transaction2.description = 'my-description-data'
-        transaction2.notes = 'my-notes'
-
-        Account account = new AccountBuilder().withAccountNameOwner('teste_brian').build()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txe')
+            .asCredit()
+            .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        transaction1.accountId = accountResult.accountId
-        transaction1.accountNameOwner = accountResult.accountNameOwner
-        transaction2.accountId = accountResult.accountId
-        transaction2.accountNameOwner = accountResult.accountNameOwner
+        Transaction transaction1 = TransactionBuilder.builder()
+            .withGuid(duplicateGuid)
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('online')
+            .build()
+        Transaction transaction2 = TransactionBuilder.builder()
+            .withGuid(duplicateGuid)
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('online')
+            .withDescription('my-description-data')
+            .withNotes('my-notes')
+            .build()
         entityManager.persist(transaction1)
 
         when:
@@ -152,12 +187,16 @@ class TransactionJpaSpec extends Specification {
 
     void 'test transaction repository - attempt to insert a transaction with a category with too many characters'() {
         given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().withAccountNameOwner('testf_brian').build()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txf')
+            .asCredit()
+            .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.accountNameOwner = accountResult.accountNameOwner
-        transaction.category = '123451234512345123451234512345123451234512345123451234512345'
+        Transaction transaction = TransactionBuilder.builder()
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('123451234512345123451234512345123451234512345123451234512345')
+            .build()
 
         when:
         entityManager.persist(transaction)
@@ -170,12 +209,17 @@ class TransactionJpaSpec extends Specification {
 
     void 'test transaction repository - attempt to insert a transaction with an invalid guid'() {
         given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().withAccountNameOwner('testg_brian').build()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txg')
+            .asCredit()
+            .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.accountNameOwner = accountResult.accountNameOwner
-        transaction.guid = '123'
+        Transaction transaction = TransactionBuilder.builder()
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('online')
+            .withGuid('123')
+            .build()
 
         when:
         entityManager.persist(transaction)
@@ -188,19 +232,25 @@ class TransactionJpaSpec extends Specification {
 
     void 'test transaction repository - delete record'() {
         given:
-        Transaction transaction = new TransactionBuilder().build()
-        Account account = new AccountBuilder().withAccountNameOwner('testh_brian').build()
-
+        long beforeTx = transactionRepository.count()
+        long beforeAcct = accountRepository.count()
+        Account account = SmartAccountBuilder.builderForOwner('brian')
+            .withUniqueAccountName('txh')
+            .asCredit()
+            .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        transaction.accountId = accountResult.accountId
-        transaction.accountNameOwner = accountResult.accountNameOwner
+        Transaction transaction = TransactionBuilder.builder()
+            .withAccountId(accountResult.accountId)
+            .withAccountNameOwner(accountResult.accountNameOwner)
+            .withCategory('online')
+            .build()
         entityManager.persist(transaction)
 
         when:
         transactionRepository.delete(transaction)
 
         then:
-        transactionRepository.count() == 5L
-        accountRepository.count() == 6L
+        transactionRepository.count() == beforeTx
+        accountRepository.count() == beforeAcct + 1
     }
 }
