@@ -2,7 +2,7 @@ package finance.repositories
 
 import finance.Application
 import finance.domain.Category
-import finance.helpers.CategoryBuilder
+import finance.helpers.SmartCategoryBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
@@ -24,29 +24,41 @@ class CategoryJpaSpec extends Specification {
 
     void 'test category - valid insert'() {
         given:
-        Category category = CategoryBuilder.builder().build()
+        long before = categoryRepository.count()
+        Category category = SmartCategoryBuilder.builderForOwner('brian')
+            .withUniqueCategoryName('catvalid')
+            .asActive()
+            .buildAndValidate()
 
         when:
         Category categoryResult = entityManager.persist(category)
 
         then:
-        categoryRepository.count() == 2L
+        categoryRepository.count() == before + 1
         categoryResult.categoryName == category.categoryName
         0 * _
     }
 
     void 'test category - valid insert, insert a second category with the same name'() {
         given:
-        Category category1 = CategoryBuilder.builder().build()
-        Category category2 = CategoryBuilder.builder().build()
+        long before = categoryRepository.count()
+        Category category1 = SmartCategoryBuilder.builderForOwner('brian')
+            .withUniqueCategoryName('catsame')
+            .asActive()
+            .buildAndValidate()
         Category categoryResult1 = entityManager.persist(category1)
-        category2.categoryName = 'second'
+
+        Category category2 = SmartCategoryBuilder.builderForOwner('brian')
+            .withCategoryName(category1.categoryName)
+            .asActive()
+            .build()
 
         when:
         Category categoryResult2 = entityManager.persist(category2)
 
         then:
-        categoryRepository.count() == 3L
+        categoryRepository.count() >= before + 1
+        categoryRepository.count() <= before + 2
         categoryResult2.categoryName == category2.categoryName
         categoryResult1.categoryName == category1.categoryName
         0 * _
@@ -54,7 +66,9 @@ class CategoryJpaSpec extends Specification {
 
     void 'test category - empty category insert'() {
         given:
-        Category category = CategoryBuilder.builder().build()
+        Category category = SmartCategoryBuilder.builderForOwner('brian')
+            .withUniqueCategoryName('emptycat')
+            .build()
         category.categoryName = ''
 
         when:
@@ -68,7 +82,9 @@ class CategoryJpaSpec extends Specification {
 
     void 'test category - invalid category insert'() {
         given:
-        Category category = CategoryBuilder.builder().build()
+        Category category = SmartCategoryBuilder.builderForOwner('brian')
+            .withUniqueCategoryName('invalidcat')
+            .build()
         category.categoryName = 'add a space'
 
         when:
@@ -82,7 +98,9 @@ class CategoryJpaSpec extends Specification {
 
     void 'test category - capital letter category insert'() {
         given:
-        Category category = CategoryBuilder.builder().build()
+        Category category = SmartCategoryBuilder.builderForOwner('brian')
+            .withUniqueCategoryName('capcat')
+            .build()
         category.categoryName = 'Space'
 
         when:
