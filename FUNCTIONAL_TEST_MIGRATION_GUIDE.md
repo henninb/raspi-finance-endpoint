@@ -1066,3 +1066,24 @@ This SmartBuilder standardization completes the architectural consistency of the
 The functional test migration represents a **complete architectural transformation** that has successfully modernized the testing approach for all business functionality. With 100% completion covering all core business logic, authentication, advanced features, and transaction processing, the migration has achieved total coverage with zero technical debt.
 
 **The isolated test architecture is now the proven standard for all development**, providing a robust foundation for continued application evolution with reliable, maintainable, and scalable functional testing across the entire application domain.
+
+
+think harder when you add the new tests be sure to use SmartBuilder and no JSON. TestDataManager should be used where applicable to address these tests
+ValidationAmountControllerIsolatedSpec. should successfully handle active and inactive validation amounts
+ValidationAmountControllerIsolatedSpec. should successfully handle different amount ranges
+ValidationAmountControllerIsolatedSpec. should successfully handle different transaction states.
+
+
+need to start using smart builder.
+AccountJpaSpec. test account - valid insert
+AccountJpaSpec. test account - valid insert - 2 of the same does the update on the first record
+CategoryJpaSpec. test category - valid insert
+CategoryJpaSpec. test category - valid insert, insert a second category with the same name
+PaymentJpaSpec. test payment to JSON - valid insert
+PaymentJpaSpec. test payment to JSON - valid insert and delete
+TransactionJpaSpec. test Transaction to JSON - attempt to insert same record twice - different guid
+TransactionJpaSpec. test Transaction to JSON - attempt to insert same record twice - different uuid
+TransactionJpaSpec. test Transaction to JSON - valid insert
+TransactionJpaSpec. test transaction repository - delete record
+TransactionJpaSpec. test transaction repository - insert 2 records with duplicate guid - throws an exception
+TransactionJpaSpec. test transaction repository - insert a valid record
