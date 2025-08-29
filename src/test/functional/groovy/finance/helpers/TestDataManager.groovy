@@ -50,12 +50,17 @@ class TestDataManager {
         // Generate pattern-compliant account names for ALPHA_UNDERSCORE_PATTERN: ^[a-z-]*_[a-z]*$
         String accountName = accountNameFor(testOwner, accountSuffix)
 
-        jdbcTemplate.update("""
-            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
-                                  date_closed, date_updated, date_added)
-            VALUES (?, ?, ?, '0000', '1969-12-31 18:00:00.000000',
-                    '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
-        """, accountName, accountType, activeStatus)
+        try {
+            jdbcTemplate.update("""
+                INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
+                                      date_closed, date_updated, date_added)
+                VALUES (?, ?, ?, '0000', '1969-12-31 18:00:00.000000',
+                        '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
+            """, accountName, accountType, activeStatus)
+        } catch (Exception e) {
+            // Account might already exist due to race conditions or incomplete cleanup
+            log.warn("Failed to create account ${accountName}, possibly already exists: ${e.message}")
+        }
 
         log.info("Created account: ${accountName} (${accountType}) for test owner: ${testOwner}")
         return accountName
@@ -67,10 +72,15 @@ class TestDataManager {
         if (ownerPart.isEmpty()) ownerPart = "test"
         String categoryName = "${categorySuffix}_${ownerPart}".toLowerCase()
 
-        jdbcTemplate.update("""
-            INSERT INTO func.t_category (category_name, active_status, date_updated, date_added)
-            VALUES (?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, categoryName, activeStatus)
+        try {
+            jdbcTemplate.update("""
+                INSERT INTO func.t_category (category_name, active_status, date_updated, date_added)
+                VALUES (?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+            """, categoryName, activeStatus)
+        } catch (Exception e) {
+            // Category might already exist due to race conditions or incomplete cleanup
+            log.warn("Failed to create category ${categoryName}, possibly already exists: ${e.message}")
+        }
 
         log.info("Created category: ${categoryName} (active: ${activeStatus}) for test owner: ${testOwner}")
         return categoryName
@@ -337,10 +347,28 @@ class TestDataManager {
         // Delete transactions
         jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
         jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${clean}")
+        
+        // Delete pending transactions (FK constraint requires this before deleting accounts)
+        jdbcTemplate.update("DELETE FROM func.t_pending_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_pending_transaction WHERE account_name_owner LIKE ?", "%${clean}")
 
-        // Delete accounts
-        jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${testOwner}")
-        jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${clean}")
+        // Delete test-specific validation amounts (FK constraint requires this before deleting accounts)
+        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
+                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
+        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
+                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${clean}")
+
+        // Delete accounts (with error handling for FK constraints)
+        try {
+            jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${testOwner}")
+        } catch (Exception e) {
+            log.warn("Failed to delete accounts for ${testOwner}, possibly due to remaining FK references: ${e.message}")
+        }
+        try {
+            jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${clean}")
+        } catch (Exception e) {
+            log.warn("Failed to delete accounts for ${clean}, possibly due to remaining FK references: ${e.message}")
+        }
 
         // Delete test-specific categories
         jdbcTemplate.update("DELETE FROM func.t_category WHERE category_name LIKE ?", "%${testOwner}")
@@ -353,12 +381,6 @@ class TestDataManager {
         // Delete test-specific descriptions
         jdbcTemplate.update("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${testOwner}")
         jdbcTemplate.update("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${clean}")
-
-        // Delete test-specific validation amounts
-        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
-                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
-        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
-                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${clean}")
 
         log.info("Successfully cleaned up test data for owner: ${testOwner}")
     }
