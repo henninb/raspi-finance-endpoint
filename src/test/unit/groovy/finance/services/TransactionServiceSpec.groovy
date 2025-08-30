@@ -378,5 +378,5 @@ class TransactionServiceSpec extends BaseServiceSpec {
         _ * _ // Allow logging and other interactions
     }
 
-    
+
 }
