@@ -29,6 +29,20 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
         logger.info("★★★ MedicalExpenseController constructor called! Service: $medicalExpenseService")
     }
 
+    @GetMapping
+    fun getAllMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
+        logger.info("GET /medical-expenses - Retrieving all medical expenses")
+        
+        return try {
+            val medicalExpenses = medicalExpenseService.findAllMedicalExpenses()
+            logger.info("Successfully retrieved ${medicalExpenses.size} medical expenses")
+            ResponseEntity.ok(medicalExpenses)
+        } catch (e: Exception) {
+            logger.error("Error retrieving all medical expenses", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
     @PostMapping
     fun insertMedicalExpense(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
         logger.info("POST /medical-expenses - Creating medical expense for transaction ID: ${medicalExpense.transactionId}")
