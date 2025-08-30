@@ -111,7 +111,7 @@ Recently created descriptions that are not currently used by any transactions:
 #### By Type:
 - **Medical Providers (21)**: Allina variations, doctor-specific entries, medical ID numbers
 - **Retail Stores (8)**: ALDI variations, Great Clips, Forever 21, Goodwill
-- **Restaurants (4)**: Pizza places, taverns, Asian restaurants  
+- **Restaurants (4)**: Pizza places, taverns, Asian restaurants
 - **Financial Services (6)**: American Express variations, payment services
 - **Recent Merge Artifacts (2)**: Active descriptions from today's merge operations
 - **Schools/Organizations (3)**: School district variations, sports tryouts
@@ -144,7 +144,7 @@ Recently created descriptions that are not currently used by any transactions:
 - **Used**: `serums` (transaction 36134, updated 13:03:18)
 - **Conclusion**: "serums good time" was likely consolidated to "serums"
 
-#### Case 2: Hardware Store Description Merge  
+#### Case 2: Hardware Store Description Merge
 - **Unused**: `the hardware` (created 00:39:34)
 - **Used**: `the hardware store` (transaction 36113, updated 12:51:18)
 - **Conclusion**: "the hardware" was likely expanded to "the hardware store"
@@ -161,7 +161,7 @@ transaction_id | description | date_updated
 
 ### Hardware Store Usage
 ```sql
-transaction_id | description | date_updated  
+transaction_id | description | date_updated
 36113 | the hardware store | 2025-08-30 12:51:18.373
 26133 | the hardware store | 2022-03-01 06:21:37.685
 26134 | the hardware store | 2022-03-01 06:21:27.514
@@ -197,6 +197,6 @@ The description table maintains excellent referential integrity with only 54 orp
 The foreign key relationship ensures all transaction descriptions exist in the reference table, preventing data integrity issues. The small number of discrepancies indicates a well-maintained system with effective description management processes.
 
 ---
-*Analysis performed: 2025-08-30*  
-*Database: finance_db on postgresql-server*  
+*Analysis performed: 2025-08-30*
+*Database: finance_db on postgresql-server*
 *Total transactions analyzed: All historical records*

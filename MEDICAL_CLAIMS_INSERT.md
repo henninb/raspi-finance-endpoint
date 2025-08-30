@@ -21,30 +21,30 @@ ssh debian-dockerserver 'docker exec postgresql-server psql -U henninb -d financ
 
 ### Check Medical Account
 ```sql
-SELECT account_id, account_name_owner, account_type, active_status 
-FROM t_account 
+SELECT account_id, account_name_owner, account_type, active_status
+FROM t_account
 WHERE account_name_owner = 'medical_john' AND active_status = true;
 ```
 Expected result: `account_id = 1045, account_type = credit`
 
 ### Check Family Members
 ```sql
-SELECT family_member_id, member_name, relationship, owner 
-FROM t_family_member 
-WHERE active_status = true 
+SELECT family_member_id, member_name, relationship, owner
+FROM t_family_member
+WHERE active_status = true
 ORDER BY member_name;
 ```
 Expected mapping:
 - `john smith` (self) = family_member_id: 81
-- `jane smith` (spouse) = family_member_id: 82  
+- `jane smith` (spouse) = family_member_id: 82
 - `alice smith` (child) = family_member_id: 84
 
 ## Step 2: Check Categories
 ```sql
-SELECT category_name 
-FROM t_category 
-WHERE active_status = true 
-AND (category_name ILIKE '%medical%' OR category_name ILIKE '%health%') 
+SELECT category_name
+FROM t_category
+WHERE active_status = true
+AND (category_name ILIKE '%medical%' OR category_name ILIKE '%health%')
 ORDER BY category_name;
 ```
 Use category: `medical`
@@ -54,7 +54,7 @@ Use category: `medical`
 Medical expenses require descriptions to exist in `t_description` table:
 
 ```sql
-INSERT INTO t_description (description_name, owner, active_status, date_added, date_updated) 
+INSERT INTO t_description (description_name, owner, active_status, date_added, date_updated)
 VALUES
 ('provider name 1', 'john', true, NOW(), NOW()),
 ('provider name 2', 'john', true, NOW(), NOW())
@@ -67,12 +67,12 @@ Each medical expense needs a corresponding transaction:
 
 ```sql
 INSERT INTO t_transaction (
-    guid, account_id, account_type, transaction_type, account_name_owner, 
-    transaction_date, description, category, amount, transaction_state, 
+    guid, account_id, account_type, transaction_type, account_name_owner,
+    transaction_date, description, category, amount, transaction_state,
     active_status, date_added, date_updated
-) VALUES 
-(gen_random_uuid()::text, 1045, 'credit', 'expense', 'medical_john', 
- '2025-08-08', 'provider name 1', 'medical', 150.70, 'outstanding', 
+) VALUES
+(gen_random_uuid()::text, 1045, 'credit', 'expense', 'medical_john',
+ '2025-08-08', 'provider name 1', 'medical', 150.70, 'outstanding',
  true, NOW(), NOW())
 RETURNING transaction_id, description, amount;
 ```
@@ -93,12 +93,12 @@ Link medical expenses to transactions and family members:
 INSERT INTO t_medical_expense (
     transaction_id, family_member_id, service_date, service_description,
     billed_amount, insurance_discount, insurance_paid, patient_responsibility,
-    claim_status, claim_number, is_out_of_network, active_status, 
+    claim_status, claim_number, is_out_of_network, active_status,
     date_added, date_updated
-) VALUES 
-(36127, 82, '2025-08-08', 'Provider Name 1', 267.04, 0.00, 0.00, 150.70, 
+) VALUES
+(36127, 82, '2025-08-08', 'Provider Name 1', 267.04, 0.00, 0.00, 150.70,
  'approved', 'CLAIM-20250808-001', false, true, NOW(), NOW())
-RETURNING medical_expense_id, transaction_id, service_description, 
+RETURNING medical_expense_id, transaction_id, service_description,
          billed_amount, patient_responsibility;
 ```
 
@@ -122,7 +122,7 @@ RETURNING medical_expense_id, transaction_id, service_description,
 Verify the inserted data:
 
 ```sql
-SELECT 
+SELECT
     me.service_date,
     fm.member_name as patient,
     me.service_description as provider,
@@ -135,7 +135,7 @@ SELECT
 FROM t_medical_expense me
 JOIN t_transaction t ON me.transaction_id = t.transaction_id
 JOIN t_family_member fm ON me.family_member_id = fm.family_member_id
-WHERE t.account_name_owner = 'medical_john' 
+WHERE t.account_name_owner = 'medical_john'
   AND me.active_status = true
 ORDER BY me.service_date DESC;
 ```
