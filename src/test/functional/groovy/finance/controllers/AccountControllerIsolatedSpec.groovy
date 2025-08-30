@@ -2,7 +2,6 @@ package finance.controllers
 
 import finance.domain.Account
 import finance.helpers.SmartAccountBuilder
-import finance.helpers.AccountTestContext
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
@@ -13,12 +12,9 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
     @Shared
     protected String endpointName = 'account'
 
-    @Shared
-    protected AccountTestContext accountTestContext
-
     def setupSpec() {
-        // Parent setupSpec() is called automatically
-        accountTestContext = testFixtures.createAccountTestContext(testOwner)
+        // Parent setupSpec() is called automatically - provides testOwner and basic setup
+        // No need to create accountTestContext as we'll use SmartBuilder directly for all tests
     }
 
     void 'should successfully insert new account with isolated test data'() {
@@ -84,7 +80,9 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully delete account by account name owner'() {
         given:
-        Account account = accountTestContext.createUniqueAccount("todelete")
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("todelete")
+                .buildAndValidate()
 
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, account.toString())
 
@@ -117,13 +115,12 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
 
     void 'should successfully rename account name owner'() {
         given:
-        // Use timestamp-based unique names to ensure no conflicts across test runs
-        String uniqueId = System.currentTimeMillis().toString().takeRight(6)
+        // Use SmartBuilder's built-in uniqueness mechanism instead of manual timestamps
         Account oldAccount = SmartAccountBuilder.builderForOwner(testOwner)
-                .withUniqueAccountName("oldren${uniqueId}")
+                .withUniqueAccountName("oldren")
                 .buildAndValidate()
         Account newAccountTemplate = SmartAccountBuilder.builderForOwner(testOwner)
-                .withUniqueAccountName("newren${uniqueId}")
+                .withUniqueAccountName("newren")
                 .buildAndValidate()
 
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, oldAccount.toString())
