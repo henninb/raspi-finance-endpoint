@@ -20,6 +20,18 @@ open class MedicalExpenseService(
         logger.info("★★★ MedicalExpenseService constructor called! Repository: $medicalExpenseRepository")
     }
 
+    override fun findAllMedicalExpenses(): List<MedicalExpense> {
+        logger.info("Retrieving all active medical expenses")
+        return try {
+            val medicalExpenses = medicalExpenseRepository.findByActiveStatusTrueOrderByServiceDateDesc()
+            logger.info("Successfully retrieved ${medicalExpenses.size} active medical expenses")
+            medicalExpenses
+        } catch (e: Exception) {
+            logger.error("Error retrieving all medical expenses", e)
+            throw e
+        }
+    }
+
     override fun insertMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
         logger.info("Inserting medical expense for transaction ID: ${medicalExpense.transactionId}")
 

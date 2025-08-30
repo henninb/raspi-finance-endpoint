@@ -7,6 +7,8 @@ import java.sql.Date
 
 interface IMedicalExpenseService {
 
+    fun findAllMedicalExpenses(): List<MedicalExpense>
+
     fun insertMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense
 
     fun updateMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense

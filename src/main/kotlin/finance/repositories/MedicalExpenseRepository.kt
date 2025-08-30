@@ -14,6 +14,8 @@ import java.sql.Date
 @Repository
 interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
 
+    fun findByActiveStatusTrueOrderByServiceDateDesc(): List<MedicalExpense>
+
     fun findByTransactionId(transactionId: Long): MedicalExpense?
 
     fun findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId: Long): MedicalExpense?
