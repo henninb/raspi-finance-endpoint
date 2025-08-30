@@ -4,13 +4,14 @@ import finance.Application
 import finance.domain.Account
 import finance.domain.Transaction
 import finance.helpers.SmartAccountBuilder
-import finance.helpers.TransactionBuilder
+import finance.helpers.SmartTransactionBuilder
 import finance.helpers.SmartCategoryBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import spock.lang.Shared
 import spock.lang.Specification
 import jakarta.persistence.PersistenceException
 import jakarta.validation.ConstraintViolationException
@@ -31,13 +32,16 @@ class TransactionJpaSpec extends Specification {
     @Autowired
     protected CategoryRepository categoryRepository
 
+    @Shared
+    protected String testOwner = "jpa_${UUID.randomUUID().toString().replace('-', '')[0..7]}"
+
     def setup() {
         ensureCategoryExists('online')
     }
 
     private void ensureCategoryExists(String name) {
         if (!categoryRepository.findByCategoryName(name).isPresent()) {
-            def cat = SmartCategoryBuilder.builderForOwner('brian')
+            def cat = SmartCategoryBuilder.builderForOwner(testOwner)
                 .withCategoryName(name)
                 .asActive()
                 .buildAndValidate()
@@ -49,16 +53,16 @@ class TransactionJpaSpec extends Specification {
         given:
         long beforeTx = transactionRepository.count()
         long beforeAcct = accountRepository.count()
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txa')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        Transaction transactionFromBuilder = TransactionBuilder.builder()
+        Transaction transactionFromBuilder = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('online')
-            .build()
+            .buildAndValidate()
 
         when:
         Transaction result = entityManager.persist(transactionFromBuilder)
@@ -72,24 +76,24 @@ class TransactionJpaSpec extends Specification {
     void 'test Transaction to JSON - attempt to insert same record twice - different uuid and description'() {
         given:
         long beforeTx = transactionRepository.count()
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txb')
             .asCredit()
             .buildAndValidate()
         Account res = entityManager.persist(account)
-        Transaction t1 = TransactionBuilder.builder()
+        Transaction t1 = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(res.accountId)
             .withAccountNameOwner(res.accountNameOwner)
             .withCategory('online')
-            .build()
+            .buildAndValidate()
         entityManager.persist(t1)
-        Transaction t2 = TransactionBuilder.builder()
+        Transaction t2 = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(res.accountId)
             .withAccountNameOwner(res.accountNameOwner)
             .withCategory('online')
             .withGuid('3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73b1')
             .withDescription('different_description')
-            .build()
+            .buildAndValidate()
 
         when:
         entityManager.persist(t2)
@@ -101,24 +105,24 @@ class TransactionJpaSpec extends Specification {
     void 'test Transaction to JSON - attempt to insert same record twice - different guid and description'() {
         given:
         long beforeTx = transactionRepository.count()
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txc')
             .asCredit()
             .buildAndValidate()
         Account res = entityManager.persist(account)
-        Transaction tFirst = TransactionBuilder.builder()
+        Transaction tFirst = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(res.accountId)
             .withAccountNameOwner(res.accountNameOwner)
             .withCategory('online')
-            .build()
+            .buildAndValidate()
         Transaction first = entityManager.persist(tFirst)
-        Transaction tSecond = TransactionBuilder.builder()
+        Transaction tSecond = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(res.accountId)
             .withAccountNameOwner(res.accountNameOwner)
             .withCategory('online')
             .withGuid('3ea3be58-aaaa-cccc-bbbb-4ffc7f1d73bd')
             .withDescription('a different description')
-            .build()
+            .buildAndValidate()
 
         when:
         Transaction sec = entityManager.persist(tSecond)
@@ -133,16 +137,16 @@ class TransactionJpaSpec extends Specification {
         given:
         long beforeTx = transactionRepository.count()
         long beforeAcct = accountRepository.count()
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txd')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        Transaction transaction = TransactionBuilder.builder()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('online')
-            .build()
+            .buildAndValidate()
 
         when:
         Transaction transactionResult = entityManager.persist(transaction)
@@ -157,25 +161,25 @@ class TransactionJpaSpec extends Specification {
     void 'test transaction repository - insert 2 records with duplicate guid - throws an exception'() {
         given:
         String duplicateGuid = '11111111-2222-3333-4444-555555555555'
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txe')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        Transaction transaction1 = TransactionBuilder.builder()
+        Transaction transaction1 = SmartTransactionBuilder.builderForOwner(testOwner)
             .withGuid(duplicateGuid)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('online')
-            .build()
-        Transaction transaction2 = TransactionBuilder.builder()
+            .buildAndValidate()
+        Transaction transaction2 = SmartTransactionBuilder.builderForOwner(testOwner)
             .withGuid(duplicateGuid)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('online')
             .withDescription('my-description-data')
             .withNotes('my-notes')
-            .build()
+            .buildAndValidate()
         entityManager.persist(transaction1)
 
         when:
@@ -188,16 +192,16 @@ class TransactionJpaSpec extends Specification {
 
     void 'test transaction repository - attempt to insert a transaction with a category with too many characters'() {
         given:
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txf')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        Transaction transaction = TransactionBuilder.builder()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('123451234512345123451234512345123451234512345123451234512345')
-            .build()
+            .build()  // Use build() instead of buildAndValidate() to allow constraint violation
 
         when:
         entityManager.persist(transaction)
@@ -210,17 +214,17 @@ class TransactionJpaSpec extends Specification {
 
     void 'test transaction repository - attempt to insert a transaction with an invalid guid'() {
         given:
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txg')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        Transaction transaction = TransactionBuilder.builder()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('online')
             .withGuid('123')
-            .build()
+            .build()  // Use build() instead of buildAndValidate() to allow constraint violation
 
         when:
         entityManager.persist(transaction)
@@ -235,16 +239,16 @@ class TransactionJpaSpec extends Specification {
         given:
         long beforeTx = transactionRepository.count()
         long beforeAcct = accountRepository.count()
-        Account account = SmartAccountBuilder.builderForOwner('brian')
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('txh')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        Transaction transaction = TransactionBuilder.builder()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withCategory('online')
-            .build()
+            .buildAndValidate()
         entityManager.persist(transaction)
 
         when:
