@@ -234,6 +234,33 @@ class [Entity]ControllerIsolatedSpec extends BaseControllerSpec {
 **Error**: FK constraint violations during cleanup
 **Solution**: Use TestDataManager cleanup methods (respects FK order)
 
+## TODOs: Functional Test Builders
+
+● SmartFamilyMemberBuilder Adoption
+
+  ☐ Replace legacy FamilyMember test data with SmartFamilyMemberBuilder
+  ☐ Use `memberName` instead of first/last name in tests
+  ☐ Use `FamilyRelationship` enum (Self, Spouse, Child, Other)
+  ☐ Add/verify helpers in builder: `asActive()`, `asInactive()`, `withDateOfBirth(String)`, `withRelationship(String)`
+  ☐ Update repository expectations to current API (e.g., `findByOwnerAndActiveStatusTrue`)
+
+● SmartPendingTransactionBuilder Adoption
+
+  ☐ Align `reviewStatus` to func DB check constraint: `pending`, `approved`, `rejected`
+  ☐ Ensure generated `accountNameOwner` matches `^[a-z-]*_[a-z]*$` and length limits
+  ☐ Ensure `transactionDate` is valid (yyyy-MM-dd, > 2000-01-01)
+  ☐ Keep `description` ASCII and within 1–75 chars
+  ☐ For precision tests, assert DB-stored rounding (NUMERIC(12,2)) by reloading after flush/clear
+  ☐ Update repository usage to `findByPendingTransactionIdOrderByTransactionDateDesc`
+
+● Cross-Cutting Functional Test Notes
+
+  ☐ Seed required reference data (e.g., categories) in func profile before FK inserts
+  ☐ Document rounding vs. validation behavior differences:
+     - PendingTransaction/Transfer: DB column scale enforces rounding
+     - ValidationAmount: Bean Validation enforces precision; expect ConstraintViolationException
+  ☐ Prefer SmartBuilders + TestDataManager for relationship-aware setup and cleanup
+
 ## Migration Benefits
 
 1. **Eliminates Test Brittleness**: No more cascading failures from data.sql changes
