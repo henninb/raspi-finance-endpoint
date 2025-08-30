@@ -32,7 +32,7 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     @GetMapping
     fun getAllMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses - Retrieving all medical expenses")
-        
+
         return try {
             val medicalExpenses = medicalExpenseService.findAllMedicalExpenses()
             logger.info("Successfully retrieved ${medicalExpenses.size} medical expenses")
