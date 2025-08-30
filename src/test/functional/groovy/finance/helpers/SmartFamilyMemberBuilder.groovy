@@ -36,6 +36,16 @@ class SmartFamilyMemberBuilder {
         return this
     }
 
+    SmartFamilyMemberBuilder withRelationship(String relationship) {
+        if (relationship == null) return this
+        try {
+            this.relationship = FamilyRelationship.valueOf(relationship.capitalize())
+        } catch(Exception ignored) {
+            // default remains
+        }
+        return this
+    }
+
     SmartFamilyMemberBuilder withInsuranceId(String id) {
         this.insuranceMemberId = id
         return this
@@ -56,6 +66,30 @@ class SmartFamilyMemberBuilder {
         return this
     }
 
+    SmartFamilyMemberBuilder asActive() {
+        this.activeStatus = true
+        return this
+    }
+
+    SmartFamilyMemberBuilder asInactive() {
+        this.activeStatus = false
+        return this
+    }
+
+    SmartFamilyMemberBuilder withDateOfBirth(Date dob) {
+        this.dateOfBirth = dob
+        return this
+    }
+
+    SmartFamilyMemberBuilder withDateOfBirth(String dob) {
+        try {
+            this.dateOfBirth = Date.valueOf(dob)
+        } catch(Exception ignored) {
+            // leave as null to let validation fail in persistence if needed
+        }
+        return this
+    }
+
     FamilyMember build() {
         new FamilyMember().with {
             owner = this.owner
@@ -70,4 +104,3 @@ class SmartFamilyMemberBuilder {
         }
     }
 }
-

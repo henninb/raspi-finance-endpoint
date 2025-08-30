@@ -198,13 +198,12 @@ class SmartPendingTransactionBuilder {
     }
 
     SmartPendingTransactionBuilder asReviewed() {
-        this.reviewStatus = 'reviewed'
+        this.reviewStatus = 'approved'
         return this
     }
 
     SmartPendingTransactionBuilder asIgnored() {
-        this.reviewStatus = 'ignored'
+        this.reviewStatus = 'rejected'
         return this
     }
 }
-
