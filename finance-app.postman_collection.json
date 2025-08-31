@@ -120,10 +120,37 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "const jar = pm.cookies.jar();",
-          "const base = pm.variables.replaceIn('{{baseUrl}}');",
-          "const t = pm.collectionVariables.get('token');",
-          "if (t) { jar.set(base, 'token', t, function (err) { if (err) console.log('cookie set error', err); }); }"
+          "// Skip token setup for login and logout endpoints",
+          "const isAuthEndpoint = pm.request.url.toString().includes('/login') || pm.request.url.toString().includes('/logout');",
+          "",
+          "if (!isAuthEndpoint) {",
+          "    const token = pm.collectionVariables.get('token');",
+          "    if (token) {",
+          "        // Method 1: Try cookie jar first (works in some Postman versions)",
+          "        try {",
+          "            const jar = pm.cookies.jar();",
+          "            const baseUrl = pm.variables.replaceIn('{{baseUrl}}');",
+          "            jar.set(baseUrl, 'token', token, function (err) {",
+          "                if (err) {",
+          "                    console.log('Cookie jar method failed, using header fallback');",
+          "                } else {",
+          "                    console.log('Token cookie set via jar successfully');",
+          "                }",
+          "            });",
+          "        } catch (e) {",
+          "            console.log('Cookie jar not available, using header method');",
+          "        }",
+          "        ",
+          "        // Method 2: Set cookie header manually (universal fallback)",
+          "        pm.request.headers.add({",
+          "            key: 'Cookie',",
+          "            value: `token=${token}`",
+          "        });",
+          "        console.log('Token added via Cookie header');",
+          "    } else {",
+          "        console.log('No token available - please run login first');",
+          "    }",
+          "}"
         ]
       }
     }
@@ -134,6 +161,32 @@
       "item": [
         {
           "name": "login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Prompt for username and password if not already set",
+                  "let username = pm.collectionVariables.get('username');",
+                  "let password = pm.collectionVariables.get('password');",
+                  "",
+                  "// Use environment/collection variables if available, otherwise use defaults",
+                  "if (!username) {",
+                  "    username = 'henninb'; // fallback default",
+                  "    pm.collectionVariables.set('username', username);",
+                  "}",
+                  "",
+                  "if (!password) {",
+                  "    password = 'monday1'; // fallback default", 
+                  "    pm.collectionVariables.set('password', password);",
+                  "}",
+                  "",
+                  "console.log('Using credentials for user:', username);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -166,8 +219,26 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status 200', ()=>pm.expect(pm.response.code).to.eql(200));",
-                  "const tk = pm.cookies.get('token'); if (tk) { pm.collectionVariables.set('token', tk); }",
-                  "pm.test('Token cookie present', ()=>pm.expect(pm.cookies.get('token')).to.exist);"
+                  "",
+                  "// Extract token from Set-Cookie header if cookie method fails",
+                  "let token = pm.cookies.get('token');",
+                  "if (!token) {",
+                  "    const setCookieHeader = pm.response.headers.get('Set-Cookie');",
+                  "    if (setCookieHeader) {",
+                  "        const match = setCookieHeader.match(/token=([^;]+)/);",
+                  "        if (match) token = match[1];",
+                  "    }",
+                  "}",
+                  "",
+                  "// Store token in collection variable",
+                  "if (token) {",
+                  "    pm.collectionVariables.set('token', token);",
+                  "    console.log('Token captured and stored:', token.substring(0, 20) + '...');",
+                  "} else {",
+                  "    console.log('No token found in response');",
+                  "}",
+                  "",
+                  "pm.test('Token present', ()=>pm.expect(token).to.exist);"
                 ]
               }
             }
