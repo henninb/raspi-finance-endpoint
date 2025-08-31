@@ -5,6 +5,9 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.Validation
 import jakarta.validation.Validator
 import jakarta.validation.ValidatorFactory
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import groovy.json.JsonSlurper
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -12,10 +15,13 @@ import java.sql.Timestamp
 class MedicalExpenseSpec extends Specification {
 
     Validator validator
+    ObjectMapper objectMapper
 
     void setup() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory()
         validator = factory.getValidator()
+        objectMapper = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     }
 
     def "should create valid medical expense"() {
@@ -325,6 +331,95 @@ class MedicalExpenseSpec extends Specification {
         then: "validation should fail"
         !violations.isEmpty()
         violations.any { it.message.contains("Claim number can only contain uppercase letters, numbers, and hyphens") }
+    }
+
+    def "should serialize isOutOfNetwork property correctly to JSON when true"() {
+        given: "a medical expense with isOutOfNetwork = true"
+        MedicalExpense medicalExpense = createValidMedicalExpense()
+        medicalExpense.isOutOfNetwork = true
+        medicalExpense.claimNumber = "CLM-2024-001"
+
+        when: "serializing to JSON"
+        String jsonString = objectMapper.writeValueAsString(medicalExpense)
+
+        then: "JSON should contain 'isOutOfNetwork': true (@JsonProperty annotation working correctly)"
+        def jsonSlurper = new JsonSlurper()
+        def jsonObject = jsonSlurper.parseText(jsonString)
+        jsonObject.isOutOfNetwork == true
+        jsonString.contains('"isOutOfNetwork":true')
+        
+        and: "JSON should NOT contain 'outOfNetwork' property name (annotation fix resolved this)"
+        jsonObject.outOfNetwork == null
+        !jsonString.contains('"outOfNetwork":')
+    }
+
+    def "should serialize isOutOfNetwork property correctly to JSON when false"() {
+        given: "a medical expense with isOutOfNetwork = false"
+        MedicalExpense medicalExpense = createValidMedicalExpense()
+        medicalExpense.isOutOfNetwork = false
+        medicalExpense.claimNumber = "CLM-2024-002"
+
+        when: "serializing to JSON"
+        String jsonString = objectMapper.writeValueAsString(medicalExpense)
+
+        then: "JSON should contain 'isOutOfNetwork': false (@JsonProperty annotation working correctly)"
+        def jsonSlurper = new JsonSlurper()
+        def jsonObject = jsonSlurper.parseText(jsonString)
+        jsonObject.isOutOfNetwork == false
+        jsonString.contains('"isOutOfNetwork":false')
+        
+        and: "JSON should NOT contain 'outOfNetwork' property name (annotation fix resolved this)"
+        jsonObject.outOfNetwork == null
+        !jsonString.contains('"outOfNetwork":')
+    }
+
+    def "should demonstrate fixed JSON serialization behavior"() {
+        given: "a medical expense with isOutOfNetwork = true"
+        MedicalExpense medicalExpense = createValidMedicalExpense()
+        medicalExpense.isOutOfNetwork = true
+        medicalExpense.claimNumber = "CLM-2024-003"
+
+        when: "serializing to JSON"
+        String jsonString = objectMapper.writeValueAsString(medicalExpense)
+
+        then: "JSON should contain 'isOutOfNetwork': true (fixed behavior)"
+        def jsonSlurper = new JsonSlurper()
+        def jsonObject = jsonSlurper.parseText(jsonString)
+        jsonObject.isOutOfNetwork == true
+        
+        and: "object property is accessible as isOutOfNetwork in Kotlin"
+        medicalExpense.isOutOfNetwork == true
+        
+        and: "JSON serialization now correctly uses 'isOutOfNetwork' (@JsonProperty annotation working)"
+        jsonString.contains('"isOutOfNetwork":true')
+        !jsonString.contains('"outOfNetwork":')
+    }
+
+    def "should document fixed JSON property name behavior (annotation working correctly)"() {
+        given: "a medical expense with isOutOfNetwork = true"
+        MedicalExpense medicalExpense = createValidMedicalExpense()
+        medicalExpense.isOutOfNetwork = true
+        medicalExpense.claimNumber = "CLM-2024-005"
+
+        when: "serializing to JSON"
+        String jsonString = objectMapper.writeValueAsString(medicalExpense)
+
+        then: "JSON now correctly contains 'isOutOfNetwork' (as expected with working annotation)"
+        jsonString.contains('"isOutOfNetwork":')
+        
+        and: "JSON does NOT contain the old 'outOfNetwork' property name"
+        !jsonString.contains('"outOfNetwork":')
+        !jsonString.contains('"out_of_network":')
+        !jsonString.contains('"OutOfNetwork":')
+        
+        and: "property is accessible via JsonSlurper with correct 'isOutOfNetwork' key"
+        def jsonSlurper = new JsonSlurper()
+        def jsonObject = jsonSlurper.parseText(jsonString)
+        jsonObject.containsKey('isOutOfNetwork')
+        !jsonObject.containsKey('outOfNetwork')
+        
+        and: "this demonstrates the @JsonProperty annotation is now working properly"
+        jsonObject.isOutOfNetwork == true
     }
 
     private MedicalExpense createValidMedicalExpense() {
