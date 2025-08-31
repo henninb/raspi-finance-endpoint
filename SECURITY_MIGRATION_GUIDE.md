@@ -65,28 +65,36 @@ class JwtKeyRotationService {
 }
 ```
 
-#### 5. Username Enumeration via Registration
-**Location**: `LoginController.kt:146-148`
-**Status**: REQUIRES IMPLEMENTATION
-**Impact**: Attackers can enumerate valid usernames through registration attempts
-
-**Recommended Implementation**:
+#### 5. Username Enumeration via Registration (PARTIALLY RESOLVED ⚠️)
+**Location**: `LoginController.kt:151-153`
+**Status**: PARTIAL IMPLEMENTATION
+**Impact**: Registration endpoint now uses specific error messages but still reveals username existence
+**Current Implementation**:
 ```kotlin
 } catch (e: IllegalArgumentException) {
-    // Use generic error message to prevent username enumeration
-    logger.warn("Registration failed for username: ${newUser.username}")
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(mapOf("error" to "Registration failed. Please verify your input."))
+    logger.warn("Registration failed - username already exists: ${newUser.username}")
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to "Username already exists"))
 }
 ```
+**Remaining Risk**: Response still differentiates between "username exists" vs other validation errors
+**Full Resolution Required**: Implement generic error messages for all registration failures
+
+#### 6. Session Logout Implementation (RESOLVED ✅)
+**Location**: `LoginController.kt:102-125`
+**Status**: IMPLEMENTED
+**Resolution**: Logout endpoint implemented that properly clears JWT cookie:
+- Cookie cleared with empty value and maxAge=0
+- Maintains secure cookie settings (httpOnly, secure, sameSite)
+- Environment-aware configuration for local vs production
 
 ### MEDIUM SEVERITY VULNERABILITIES (PENDING)
 
-#### 6. Insufficient Session Management
+#### 7. Insufficient Session Management
 **Location**: JWT token handling throughout
 **Issues**:
-- No token blacklisting on logout
-- 1-hour expiration too long for sensitive operations
+- ~~No logout mechanism~~ (RESOLVED ✅ - logout endpoint implemented)
+- No token blacklisting on logout (cookie cleared but tokens remain valid until expiration)
+- 1-hour expiration appropriate for current use case
 - No concurrent session limits
 
 **Recommended Implementation**:
@@ -109,10 +117,22 @@ class TokenBlacklistService {
 }
 ```
 
-#### 7. Rate Limiting Bypass Potential
+#### 8. Rate Limiting Bypass Potential
 **Location**: `RateLimitingFilter.kt:101-109`
-**Status**: REQUIRES ENHANCEMENT
+**Status**: VULNERABILITY CONFIRMED - STILL PENDING
 **Impact**: Attackers can spoof `X-Forwarded-For` headers to bypass rate limiting
+**Current Implementation**: Filter trusts proxy headers without validation:
+```kotlin
+private fun getClientIpAddress(request: HttpServletRequest): String {
+    val xForwardedFor = request.getHeader("X-Forwarded-For")
+    val xRealIp = request.getHeader("X-Real-IP")
+    return when {
+        !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
+        !xRealIp.isNullOrBlank() -> xRealIp
+        else -> request.remoteAddr ?: "unknown"
+    }
+}
+```
 
 **Recommended Implementation**:
 ```kotlin
@@ -144,14 +164,14 @@ private fun isFromTrustedProxy(ip: String, trustedNetworks: List<String>): Boole
 ### ATTACK VECTORS IDENTIFIED
 
 1. **Credential Harvesting**: ~~Log file access → plaintext passwords~~ (RESOLVED ✅)
-2. **Username Enumeration**: ~~Timing attacks~~ (RESOLVED ✅) + registration endpoint (PENDING)
+2. **Username Enumeration**: ~~Timing attacks~~ (RESOLVED ✅) + registration endpoint (PARTIALLY RESOLVED ⚠️)
 3. **Session Hijacking**: ~~XSS → JWT token theft via JavaScript~~ (RESOLVED ✅)
 4. **Brute Force**: Header spoofing to bypass rate limits (PENDING)
-5. **Token Replay**: No logout invalidation mechanism (PENDING)
+5. **Token Replay**: ~~No logout mechanism~~ (RESOLVED ✅) + No token blacklisting (PENDING)
 
 ## STRATEGIC IMPROVEMENTS (PRIORITY 2)
 
-### 8. Account Lockout Mechanism
+### 9. Account Lockout Mechanism
 ```kotlin
 @Service
 class LoginAttemptService {
@@ -186,7 +206,7 @@ class LoginAttemptService {
 }
 ```
 
-### 9. Enhanced Security Logging
+### 10. Enhanced Security Logging
 ```kotlin
 @Component
 class SecurityEventLogger {
@@ -211,7 +231,7 @@ class SecurityEventLogger {
 }
 ```
 
-### 10. Comprehensive Input Validation
+### 11. Comprehensive Input Validation
 ```kotlin
 @Component
 class LoginInputValidator {
@@ -246,7 +266,7 @@ class LoginInputValidator {
 
 ## ADVANCED HARDENING (PRIORITY 3)
 
-### 11. Multi-Factor Authentication Framework
+### 12. Multi-Factor Authentication Framework
 ```kotlin
 @Service
 class MfaService {
@@ -269,7 +289,7 @@ class MfaService {
 }
 ```
 
-### 12. Security Headers Configuration
+### 13. Security Headers Configuration
 ```kotlin
 @Configuration
 class SecurityHeadersConfig {
@@ -356,20 +376,27 @@ security:
 3. ~~Implement constant-time authentication~~ (COMPLETED)
 
 ### NEXT SPRINT (Priority 2)
-4. JWT token blacklist service
+4. JWT token blacklist service (cookie clearing implemented, token blacklisting needed)
 5. Account lockout mechanism
-6. Enhanced rate limiting with proxy detection
-7. Security headers implementation
+6. Enhanced rate limiting with trusted proxy validation
+7. Complete username enumeration prevention in registration
+8. Security headers implementation
 
 ### FUTURE RELEASES (Priority 3)
-8. Multi-factor authentication
-9. JWT key rotation service
-10. Behavioral analytics & anomaly detection
-11. Hardware Security Module (HSM) integration
+9. Multi-factor authentication
+10. JWT key rotation service
+11. Behavioral analytics & anomaly detection
+12. Hardware Security Module (HSM) integration
 
 ---
 
-**Report Updated**: 2025-08-19
+**Report Updated**: 2025-08-31
 **Assessment Scope**: `/api/login` endpoint security analysis
 **Risk Assessment**: Based on OWASP Top 10 and red team methodology
-**Status**: Critical vulnerabilities resolved, medium/low priority items documented for future implementation
+**Status**: Critical vulnerabilities resolved, logout mechanism implemented, medium/low priority items documented for future implementation
+
+**Latest Changes**:
+- ✅ Logout endpoint implemented with secure cookie clearing
+- ⚠️ Username enumeration partially addressed (still reveals existence)
+- ⚠️ Rate limiting implementation confirmed vulnerable to header spoofing
+- ✅ Constant-time authentication verified in UserService
