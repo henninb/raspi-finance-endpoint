@@ -36,6 +36,10 @@ open class FamilyMemberController(private val familyMemberService: IFamilyMember
     fun getAll(): ResponseEntity<List<FamilyMember>> =
         ResponseEntity.ok(familyMemberService.findAll())
 
+    @GetMapping("/all", produces = ["application/json"])
+    fun getAllWithSuffix(): ResponseEntity<List<FamilyMember>> =
+        ResponseEntity.ok(familyMemberService.findAll())
+
     @GetMapping("/owner/{owner}", produces = ["application/json"])
     fun byOwner(@PathVariable owner: String): ResponseEntity<List<FamilyMember>> =
         ResponseEntity.ok(familyMemberService.findByOwner(owner))
