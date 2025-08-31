@@ -2,7 +2,7 @@ package finance.repositories
 
 import finance.Application
 import finance.domain.Parameter
-import finance.helpers.ParameterBuilder
+import finance.helpers.SmartParameterBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
@@ -14,6 +14,8 @@ import spock.lang.Specification
 @DataJpaTest
 @ContextConfiguration(classes = [Application])
 class ParameterJpaSpec extends Specification {
+
+    String testOwner = "test_${UUID.randomUUID().toString().replace('-', '').substring(0, 8)}"
 
     @Autowired
     protected ParameterRepository parameterRepository
@@ -31,7 +33,7 @@ class ParameterJpaSpec extends Specification {
 
     void 'test parameter - valid insert'() {
         given:
-        Parameter parameter = ParameterBuilder.builder().build()
+        Parameter parameter = SmartParameterBuilder.builderForOwner(testOwner).build()
         Long initialCount = parameterRepository.count()
 
         when:
@@ -46,7 +48,7 @@ class ParameterJpaSpec extends Specification {
 
     void 'test parameter - valid insert and find it'() {
         given:
-        Parameter parameter = ParameterBuilder.builder().build()
+        Parameter parameter = SmartParameterBuilder.builderForOwner(testOwner).build()
         Long initialCount = parameterRepository.count()
         entityManager.persist(parameter)
 
