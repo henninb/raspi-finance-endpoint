@@ -347,7 +347,7 @@ class MedicalExpenseSpec extends Specification {
         def jsonObject = jsonSlurper.parseText(jsonString)
         jsonObject.isOutOfNetwork == true
         jsonString.contains('"isOutOfNetwork":true')
-        
+
         and: "JSON should NOT contain 'outOfNetwork' property name (annotation fix resolved this)"
         jsonObject.outOfNetwork == null
         !jsonString.contains('"outOfNetwork":')
@@ -367,7 +367,7 @@ class MedicalExpenseSpec extends Specification {
         def jsonObject = jsonSlurper.parseText(jsonString)
         jsonObject.isOutOfNetwork == false
         jsonString.contains('"isOutOfNetwork":false')
-        
+
         and: "JSON should NOT contain 'outOfNetwork' property name (annotation fix resolved this)"
         jsonObject.outOfNetwork == null
         !jsonString.contains('"outOfNetwork":')
@@ -386,10 +386,10 @@ class MedicalExpenseSpec extends Specification {
         def jsonSlurper = new JsonSlurper()
         def jsonObject = jsonSlurper.parseText(jsonString)
         jsonObject.isOutOfNetwork == true
-        
+
         and: "object property is accessible as isOutOfNetwork in Kotlin"
         medicalExpense.isOutOfNetwork == true
-        
+
         and: "JSON serialization now correctly uses 'isOutOfNetwork' (@JsonProperty annotation working)"
         jsonString.contains('"isOutOfNetwork":true')
         !jsonString.contains('"outOfNetwork":')
@@ -406,18 +406,18 @@ class MedicalExpenseSpec extends Specification {
 
         then: "JSON now correctly contains 'isOutOfNetwork' (as expected with working annotation)"
         jsonString.contains('"isOutOfNetwork":')
-        
+
         and: "JSON does NOT contain the old 'outOfNetwork' property name"
         !jsonString.contains('"outOfNetwork":')
         !jsonString.contains('"out_of_network":')
         !jsonString.contains('"OutOfNetwork":')
-        
+
         and: "property is accessible via JsonSlurper with correct 'isOutOfNetwork' key"
         def jsonSlurper = new JsonSlurper()
         def jsonObject = jsonSlurper.parseText(jsonString)
         jsonObject.containsKey('isOutOfNetwork')
         !jsonObject.containsKey('outOfNetwork')
-        
+
         and: "this demonstrates the @JsonProperty annotation is now working properly"
         jsonObject.isOutOfNetwork == true
     }

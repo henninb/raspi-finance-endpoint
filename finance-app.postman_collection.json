@@ -178,7 +178,7 @@
                   "}",
                   "",
                   "if (!password) {",
-                  "    password = 'monday1'; // fallback default", 
+                  "    password = 'monday1'; // fallback default",
                   "    pm.collectionVariables.set('password', password);",
                   "}",
                   "",
