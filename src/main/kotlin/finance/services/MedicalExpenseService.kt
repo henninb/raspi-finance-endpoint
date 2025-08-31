@@ -35,11 +35,13 @@ open class MedicalExpenseService(
     override fun insertMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
         logger.info("Inserting medical expense for transaction ID: ${medicalExpense.transactionId}")
 
-        // Reinstate duplicate check now that repository is stable
-        if (medicalExpense.transactionId > 0) {
-            val existingExpense = medicalExpenseRepository.findByTransactionId(medicalExpense.transactionId)
-            if (existingExpense != null) {
-                throw DuplicateMedicalExpenseException("Medical expense already exists for transaction ID: ${medicalExpense.transactionId}")
+        // Reinstate duplicate check now that repository is stable (only if transactionId is provided)
+        medicalExpense.transactionId?.let { transactionId ->
+            if (transactionId > 0) {
+                val existingExpense = medicalExpenseRepository.findByTransactionId(transactionId)
+                if (existingExpense != null) {
+                    throw DuplicateMedicalExpenseException("Medical expense already exists for transaction ID: $transactionId")
+                }
             }
         }
 
@@ -204,5 +206,110 @@ open class MedicalExpenseService(
     override fun findMedicalExpensesByDiagnosisCode(diagnosisCode: String): List<MedicalExpense> {
         logger.debug("Finding medical expenses by diagnosis code: $diagnosisCode")
         return medicalExpenseRepository.findByDiagnosisCodeAndActiveStatusTrue(diagnosisCode)
+    }
+
+    // New payment-related methods for Phase 2.5
+    override fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense {
+        logger.info("Linking payment transaction $transactionId to medical expense $medicalExpenseId")
+
+        val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+            ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
+
+        // Check if transaction already linked to another medical expense
+        val existingExpense = medicalExpenseRepository.findByTransactionId(transactionId)
+        if (existingExpense != null && existingExpense.medicalExpenseId != medicalExpenseId) {
+            throw DuplicateMedicalExpenseException("Transaction $transactionId is already linked to medical expense ${existingExpense.medicalExpenseId}")
+        }
+
+        try {
+            medicalExpense.transactionId = transactionId
+            // Note: In a full implementation, we would fetch the transaction amount and set paidAmount
+            // For now, we'll rely on the updatePaidAmount method to sync the amounts
+            val savedExpense = medicalExpenseRepository.save(medicalExpense)
+            logger.info("Successfully linked transaction $transactionId to medical expense $medicalExpenseId")
+            return savedExpense
+        } catch (e: Exception) {
+            logger.error("Error linking transaction $transactionId to medical expense $medicalExpenseId", e)
+            throw e
+        }
+    }
+
+    override fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense {
+        logger.info("Unlinking payment transaction from medical expense $medicalExpenseId")
+
+        val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+            ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
+
+        try {
+            medicalExpense.transactionId = null
+            medicalExpense.paidAmount = BigDecimal.ZERO
+            val savedExpense = medicalExpenseRepository.save(medicalExpense)
+            logger.info("Successfully unlinked payment transaction from medical expense $medicalExpenseId")
+            return savedExpense
+        } catch (e: Exception) {
+            logger.error("Error unlinking payment transaction from medical expense $medicalExpenseId", e)
+            throw e
+        }
+    }
+
+    override fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
+        logger.info("Updating paid amount for medical expense $medicalExpenseId")
+
+        val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+            ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
+
+        try {
+            medicalExpense.transactionId?.let { transactionId ->
+                // In a full implementation, we would fetch the transaction and sync the amount
+                // For now, we'll rely on the service layer or controller to provide the amount
+                logger.debug("Transaction ID exists: $transactionId, paid amount will be synced externally")
+            } ?: run {
+                // If no transaction linked, ensure paid amount is zero
+                medicalExpense.paidAmount = BigDecimal.ZERO
+                logger.debug("No transaction linked, setting paid amount to zero")
+            }
+
+            val savedExpense = medicalExpenseRepository.save(medicalExpense)
+            logger.info("Successfully updated paid amount for medical expense $medicalExpenseId")
+            return savedExpense
+        } catch (e: Exception) {
+            logger.error("Error updating paid amount for medical expense $medicalExpenseId", e)
+            throw e
+        }
+    }
+
+    override fun findUnpaidMedicalExpenses(): List<MedicalExpense> {
+        logger.debug("Finding unpaid medical expenses")
+        return medicalExpenseRepository.findUnpaidMedicalExpenses()
+    }
+
+    override fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense> {
+        logger.debug("Finding partially paid medical expenses")
+        return medicalExpenseRepository.findPartiallyPaidMedicalExpenses()
+    }
+
+    override fun findFullyPaidMedicalExpenses(): List<MedicalExpense> {
+        logger.debug("Finding fully paid medical expenses")
+        return medicalExpenseRepository.findFullyPaidMedicalExpenses()
+    }
+
+    override fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense> {
+        logger.debug("Finding medical expenses without linked transactions")
+        return medicalExpenseRepository.findMedicalExpensesWithoutTransaction()
+    }
+
+    override fun findOverpaidMedicalExpenses(): List<MedicalExpense> {
+        logger.debug("Finding overpaid medical expenses")
+        return medicalExpenseRepository.findOverpaidMedicalExpenses()
+    }
+
+    override fun getTotalPaidAmountByYear(year: Int): BigDecimal {
+        logger.debug("Getting total paid amount for year: $year")
+        return medicalExpenseRepository.getTotalPaidAmountByYear(year) ?: BigDecimal.ZERO
+    }
+
+    override fun getTotalUnpaidBalance(): BigDecimal {
+        logger.debug("Getting total unpaid balance")
+        return medicalExpenseRepository.getTotalUnpaidBalance() ?: BigDecimal.ZERO
     }
 }

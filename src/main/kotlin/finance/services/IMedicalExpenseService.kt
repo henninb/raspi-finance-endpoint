@@ -60,4 +60,25 @@ interface IMedicalExpenseService {
     fun findMedicalExpensesByProcedureCode(procedureCode: String): List<MedicalExpense>
 
     fun findMedicalExpensesByDiagnosisCode(diagnosisCode: String): List<MedicalExpense>
+
+    // New payment-related methods for Phase 2.5
+    fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense
+
+    fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense
+
+    fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense
+
+    fun findUnpaidMedicalExpenses(): List<MedicalExpense>
+
+    fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense>
+
+    fun findFullyPaidMedicalExpenses(): List<MedicalExpense>
+
+    fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense>
+
+    fun findOverpaidMedicalExpenses(): List<MedicalExpense>
+
+    fun getTotalPaidAmountByYear(year: Int): BigDecimal
+
+    fun getTotalUnpaidBalance(): BigDecimal
 }
