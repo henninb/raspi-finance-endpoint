@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import finance.helpers.AccountBuilder
+import finance.helpers.SmartAccountBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -55,7 +55,7 @@ class SecurityAuditSpec extends BaseControllerSpec {
 
     void 'should allow access to /select/active endpoints with valid authentication'() {
         given: 'insert test account for the test'
-        def account = AccountBuilder.builder().withAccountNameOwner('audit-test_account').build()  // Pattern compliant: ^[a-z-]*_[a-z]*$
+        def account = SmartAccountBuilder.builderForOwner(testOwner).withAccountNameOwner('audit-test_account').build()  // Pattern compliant: ^[a-z-]*_[a-z]*$
         insertEndpoint('account', account.toString())
 
         when: 'accessing account select/active endpoint with authentication'
