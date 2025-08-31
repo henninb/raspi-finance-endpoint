@@ -1,901 +1,1857 @@
 {
-	"info": {
-		"_postman_id": "3d3e251b-912b-4184-b1b0-a2179a5c64d9",
-		"name": "finance-app-localhost",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "localhost-account-insert-test_brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": " {\"accountNameOwner\":\"test_brian\", \"accountType\":\"credit\", \"moniker\":\"0000\", \"outstanding\": \"0\", \"future\": \"0\", \"cleared\":\"0\", \"dateClosed\": \"0\"} "
-				},
-				"url": {
-					"raw": "http://localhost:8443/account/insert",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"insert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-account-totals",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://hornsup:8443/account/totals",
-					"protocol": "http",
-					"host": [
-						"hornsup"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"totals"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-account-payment-required",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/account/payment/required",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"payment",
-						"required"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-account-select-active",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/account/select/active",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"select",
-						"active"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-account-select-test_brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/account/select/test_brian",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"select",
-						"test_brian"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-account-select-chase-brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/account/select/chase_brian",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"select",
-						"chase_brian"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-account-delete-test_brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/account/delete/test_brian",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"account",
-						"delete",
-						"test_brian"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-category-select-active",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/category/select/active",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"category",
-						"select",
-						"active"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-category-select-all",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/category/select/active",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"category",
-						"select",
-						"active"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-category-insert-random",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": " {\"categoryName\":\"random\"} "
-				},
-				"url": {
-					"raw": "http://localhost:8443/category/insert",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"category",
-						"insert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-category-delete-random",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/category/delete/random",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"category",
-						"delete",
-						"random"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-category-select-test",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/category/select/active",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"category",
-						"select",
-						"active"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-description-select-random",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/description/select/random",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"description",
-						"select",
-						"random"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-description-select-active",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/description/select/all",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"description",
-						"select",
-						"all"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-description-delete-random",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/description/delete/random",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"description",
-						"delete",
-						"random"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-description-insert-random",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": " {\"descriptionName\":\"random\"} "
-				},
-				"url": {
-					"raw": "http://localhost:8443/description/insert",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"description",
-						"insert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-transaction-insert-testing",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"guid\":\"4029bbda-733d-48a2-9cff-164b2f0c7506\",\"transactionDate\":\"2022-09-11\",\"description\":\"amazon.com\",\"category\":\"online\",\"notes\":\"\",\"amount\":0,\"transactionType\":\"income\",\"transactionState\":\"outstanding\",\"activeStatus\":true,\"accountType\":\"undefined\",\"reoccurringType\":\"onetime\",\"accountNameOwner\":\"amazon_brian\"}"
-				},
-				"url": {
-					"raw": "http://localhost:8443/transaction/insert",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"transaction",
-						"insert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-transaction-select-amazon_brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/transaction/account/select/amazon_brian",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"transaction",
-						"account",
-						"select",
-						"amazon_brian"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-payment-select",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"url": {
-					"raw": "http://localhost:8443/payment/select",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"payment",
-						"select"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-payment-insert-test_brian",
-			"request": {
-				"auth": {
-					"type": "basic",
-					"basic": [
-						{
-							"key": "password",
-							"value": "monday1",
-							"type": "string"
-						},
-						{
-							"key": "username",
-							"value": "henninb",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": " {\"accountNameOwner\":\"test_brian\", \"transactionDate\":\"2022-03-31\", \"amount\":0.0} "
-				},
-				"url": {
-					"raw": "http://localhost:8443/payment/insert",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"payment",
-						"insert"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "localhost-user-login",
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"type": "default"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"username\":\"henninb\",\"password\":\"monday1\"}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8443/user/signin",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8443",
-					"path": [
-						"user",
-						"signin"
-					]
-				}
-			},
-			"response": []
-		}
-	]
+  "info": {
+    "_postman_id": "c2c6b7e2-0bff-4a9c-8f1e-raspi-finance-endpoint",
+    "name": "finance-app-localhost",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8433"
+    },
+    {
+      "key": "baseProtocol",
+      "value": "http"
+    },
+    {
+      "key": "baseHost",
+      "value": "localhost"
+    },
+    {
+      "key": "basePort",
+      "value": "8433"
+    },
+    {
+      "key": "username",
+      "value": "henninb"
+    },
+    {
+      "key": "password",
+      "value": "monday1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "accountNameOwner",
+      "value": "chase_brian"
+    },
+    {
+      "key": "guid",
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "key": "category_name",
+      "value": "ach"
+    },
+    {
+      "key": "description_name",
+      "value": "amazon"
+    },
+    {
+      "key": "parameterName",
+      "value": "payment_account"
+    },
+    {
+      "key": "receipt_image_id",
+      "value": "1"
+    },
+    {
+      "key": "transactionStateValue",
+      "value": "cleared"
+    },
+    {
+      "key": "owner",
+      "value": "brian"
+    },
+    {
+      "key": "relationship",
+      "value": "SELF"
+    },
+    {
+      "key": "medicalExpenseId",
+      "value": "1"
+    },
+    {
+      "key": "transactionId",
+      "value": "1"
+    },
+    {
+      "key": "accountId",
+      "value": "1"
+    },
+    {
+      "key": "providerId",
+      "value": "1"
+    },
+    {
+      "key": "familyMemberId",
+      "value": "1"
+    },
+    {
+      "key": "startDate",
+      "value": "2024-01-01"
+    },
+    {
+      "key": "endDate",
+      "value": "2024-12-31"
+    },
+    {
+      "key": "claimStatus",
+      "value": "OPEN"
+    },
+    {
+      "key": "year",
+      "value": "2024"
+    },
+    {
+      "key": "procedureCode",
+      "value": "99213"
+    },
+    {
+      "key": "diagnosisCode",
+      "value": "E11.9"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const jar = pm.cookies.jar();",
+          "const base = pm.variables.replaceIn('{{baseUrl}}');",
+          "const t = pm.collectionVariables.get('token');",
+          "if (t) { jar.set(base, 'token', t, function (err) { if (err) console.log('cookie set error', err); }); }"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{username}}\",\"password\":\"{{password}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', ()=>pm.expect(pm.response.code).to.eql(200));",
+                  "const tk = pm.cookies.get('token'); if (tk) { pm.collectionVariables.set('token', tk); }",
+                  "pm.test('Token cookie present', ()=>pm.expect(pm.cookies.get('token')).to.exist);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/me",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "api",
+                "me"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/logout",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "api",
+                "logout"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.unset('token');",
+                  "pm.test('Status 200/204', ()=>pm.expect([200,204]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "totals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/account/totals",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "account",
+                "totals"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "payment-required",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/account/payment/required",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "account",
+                "payment",
+                "required"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "select-active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/account/select/active",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "account",
+                "select",
+                "active"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "select-by-owner",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/account/select/{{accountNameOwner}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "account",
+                "select",
+                "{{accountNameOwner}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        {
+          "name": "select-active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/category/select/active",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "category",
+                "select",
+                "active"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "select-by-name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/category/select/{{category_name}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "category",
+                "select",
+                "{{category_name}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "item": [
+        {
+          "name": "select-active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/description/select/active",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "description",
+                "select",
+                "active"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "select-by-name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/description/select/{{description_name}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "description",
+                "select",
+                "{{description_name}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Parameter",
+      "item": [
+        {
+          "name": "select-active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parameter/select/active",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "parameter",
+                "select",
+                "active"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "select-by-name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parameter/select/{{parameterName}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "parameter",
+                "select",
+                "{{parameterName}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "select",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payment/select",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "payment",
+                "select"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transfer",
+      "item": [
+        {
+          "name": "select",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transfer/select",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "transfer",
+                "select"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pending Transactions",
+      "item": [
+        {
+          "name": "all",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pending/transaction/all",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "pending",
+                "transaction",
+                "all"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Receipt Image",
+      "item": [
+        {
+          "name": "select-by-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/receipt/image/select/{{receipt_image_id}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "receipt",
+                "image",
+                "select",
+                "{{receipt_image_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Validation Amount",
+      "item": [
+        {
+          "name": "select",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/validation/amount/select/{{accountNameOwner}}/{{transactionStateValue}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "validation",
+                "amount",
+                "select",
+                "{{accountNameOwner}}",
+                "{{transactionStateValue}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transaction",
+      "item": [
+        {
+          "name": "by-account-owner",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/account/select/{{accountNameOwner}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "transaction",
+                "account",
+                "select",
+                "{{accountNameOwner}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "account-totals-by-owner",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/account/totals/{{accountNameOwner}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "transaction",
+                "account",
+                "totals",
+                "{{accountNameOwner}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "select-by-guid",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/select/{{guid}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "transaction",
+                "select",
+                "{{guid}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/category/{{category_name}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "transaction",
+                "category",
+                "{{category_name}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-description",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transaction/description/{{description_name}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "transaction",
+                "description",
+                "{{description_name}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Family Members",
+      "item": [
+        {
+          "name": "all",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/family-members",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "family-members"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/family-members/{{familyMemberId}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "family-members",
+                "{{familyMemberId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-owner",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/family-members/owner/{{owner}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "family-members",
+                "owner",
+                "{{owner}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-owner-relationship",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/family-members/owner/{{owner}}/relationship/{{relationship}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "family-members",
+                "owner",
+                "{{owner}}",
+                "relationship",
+                "{{relationship}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Medical Expenses",
+      "item": [
+        {
+          "name": "all",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/{{medicalExpenseId}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "{{medicalExpenseId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-transaction-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/transaction/{{transactionId}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "transaction",
+                "{{transactionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx or 404', ()=>pm.expect([200,404]).to.include(pm.response.code));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-account-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/account/{{accountId}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "account",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-account-date-range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/account/{{accountId}}/date-range?startDate={{startDate}}&endDate={{endDate}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "account",
+                "{{accountId}}",
+                "date-range"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-provider-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/provider/{{providerId}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "provider",
+                "{{providerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-family-member-id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/family-member/{{familyMemberId}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "family-member",
+                "{{familyMemberId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-family-member-date-range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/family-member/{{familyMemberId}}/date-range?startDate={{startDate}}&endDate={{endDate}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "family-member",
+                "{{familyMemberId}}",
+                "date-range"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-claim-status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/claim-status/{{claimStatus}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "claim-status",
+                "{{claimStatus}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "out-of-network",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/out-of-network",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "out-of-network"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "outstanding-balances",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/outstanding-balances",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "outstanding-balances"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "open-claims",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/open-claims",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "open-claims"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "totals-by-year",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/totals/year/{{year}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "totals",
+                "year",
+                "{{year}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "claim-status-counts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/claim-status-counts",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "claim-status-counts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-procedure-code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/procedure-code/{{procedureCode}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "procedure-code",
+                "{{procedureCode}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-diagnosis-code",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/diagnosis-code/{{diagnosisCode}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "diagnosis-code",
+                "{{diagnosisCode}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "by-date-range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/medical-expenses/date-range?startDate={{startDate}}&endDate={{endDate}}",
+              "protocol": "{{baseProtocol}}",
+              "host": [
+                "{{baseHost}}"
+              ],
+              "port": "{{basePort}}",
+              "path": [
+                "medical-expenses",
+                "date-range"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 2xx', ()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                  "pm.test('JSON when body',()=>{const ct=(pm.response.headers.get('Content-Type')||'').toLowerCase(); if(pm.response.text().length>0) pm.expect(ct).to.include('application/json');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
