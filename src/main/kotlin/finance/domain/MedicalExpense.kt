@@ -95,7 +95,7 @@ data class MedicalExpense(
 
     @Column(name = "is_out_of_network", nullable = false)
     @field:NotNull(message = "Out of network status cannot be null")
-    @JsonProperty("isOutOfNetwork")
+    @get:JsonProperty("isOutOfNetwork")
     var isOutOfNetwork: Boolean = false,
 
     @Column(name = "claim_number")
