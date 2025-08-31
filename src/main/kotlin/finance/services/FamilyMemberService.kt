@@ -37,6 +37,9 @@ open class FamilyMemberService(
     override fun findByOwnerAndRelationship(owner: String, relationship: FamilyRelationship): List<FamilyMember> =
         familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
 
+    override fun findAll(): List<FamilyMember> =
+        familyMemberRepository.findByActiveStatusTrue()
+
     override fun updateActiveStatus(id: Long, active: Boolean): Boolean =
         familyMemberRepository.updateActiveStatus(id, active) > 0
 
