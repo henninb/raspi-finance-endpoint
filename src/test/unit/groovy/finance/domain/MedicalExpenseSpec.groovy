@@ -173,10 +173,11 @@ class MedicalExpenseSpec extends Specification {
         fullyPaid
     }
 
-    def "should determine if fully paid when paid date is set"() {
-        given: "a medical expense with paid date"
+    def "should determine if fully paid when paid amount covers patient responsibility"() {
+        given: "a medical expense with paid amount equal to patient responsibility"
         MedicalExpense medicalExpense = new MedicalExpense(
             patientResponsibility: new BigDecimal("50.00"),
+            paidAmount: new BigDecimal("50.00"),
             paidDate: Date.valueOf("2024-02-01")
         )
 
@@ -187,10 +188,11 @@ class MedicalExpenseSpec extends Specification {
         fullyPaid
     }
 
-    def "should determine if not fully paid when responsibility exists and no paid date"() {
-        given: "a medical expense with patient responsibility and no paid date"
+    def "should determine if not fully paid when paid amount is less than patient responsibility"() {
+        given: "a medical expense with patient responsibility but no payment"
         MedicalExpense medicalExpense = new MedicalExpense(
             patientResponsibility: new BigDecimal("50.00"),
+            paidAmount: new BigDecimal("0.00"),
             paidDate: null
         )
 
@@ -434,5 +436,90 @@ class MedicalExpenseSpec extends Specification {
         medicalExpense.claimStatus = ClaimStatus.Submitted
         medicalExpense.activeStatus = true
         return medicalExpense
+    }
+
+    // New tests for Phase 2.5: Payment Decoupling functionality
+    def "should create medical expense without transaction ID"() {
+        given: "a medical expense with no transaction"
+        MedicalExpense medicalExpense = new MedicalExpense(
+            serviceDate: Date.valueOf("2024-01-15"),
+            billedAmount: new BigDecimal("250.00"),
+            patientResponsibility: new BigDecimal("50.00"),
+            paidAmount: new BigDecimal("0.00"),
+            transactionId: null,
+            claimStatus: ClaimStatus.Submitted
+        )
+
+        expect: "expense should be unpaid and have correct amounts"
+        medicalExpense.transactionId == null
+        medicalExpense.isUnpaid()
+        !medicalExpense.isFullyPaid()
+        !medicalExpense.isPartiallyPaid()
+        !medicalExpense.isOverpaid()
+        medicalExpense.getUnpaidAmount() == new BigDecimal("50.00")
+    }
+
+    def "should handle partial payment correctly"() {
+        given: "a medical expense with partial payment"
+        MedicalExpense medicalExpense = new MedicalExpense(
+            patientResponsibility: new BigDecimal("100.00"),
+            paidAmount: new BigDecimal("30.00"),
+            transactionId: 123L
+        )
+
+        expect: "expense should be partially paid"
+        medicalExpense.isPartiallyPaid()
+        !medicalExpense.isUnpaid()
+        !medicalExpense.isFullyPaid()
+        !medicalExpense.isOverpaid()
+        medicalExpense.getUnpaidAmount() == new BigDecimal("70.00")
+    }
+
+    def "should handle overpayment correctly"() {
+        given: "a medical expense with overpayment"
+        MedicalExpense medicalExpense = new MedicalExpense(
+            patientResponsibility: new BigDecimal("50.00"),
+            paidAmount: new BigDecimal("75.00"),
+            transactionId: 456L
+        )
+
+        expect: "expense should be overpaid"
+        medicalExpense.isOverpaid()
+        medicalExpense.isFullyPaid()
+        !medicalExpense.isUnpaid()
+        !medicalExpense.isPartiallyPaid()
+        medicalExpense.getUnpaidAmount() == BigDecimal.ZERO
+    }
+
+    def "should handle exact payment correctly"() {
+        given: "a medical expense with exact payment"
+        MedicalExpense medicalExpense = new MedicalExpense(
+            patientResponsibility: new BigDecimal("50.00"),
+            paidAmount: new BigDecimal("50.00"),
+            transactionId: 789L
+        )
+
+        expect: "expense should be fully paid but not overpaid"
+        medicalExpense.isFullyPaid()
+        !medicalExpense.isUnpaid()
+        !medicalExpense.isPartiallyPaid()
+        !medicalExpense.isOverpaid()
+        medicalExpense.getUnpaidAmount() == BigDecimal.ZERO
+    }
+
+    def "should handle zero patient responsibility correctly"() {
+        given: "a medical expense with no patient responsibility"
+        MedicalExpense medicalExpense = new MedicalExpense(
+            patientResponsibility: BigDecimal.ZERO,
+            paidAmount: BigDecimal.ZERO,
+            transactionId: null
+        )
+
+        expect: "expense should be considered fully paid"
+        medicalExpense.isFullyPaid()
+        !medicalExpense.isUnpaid()
+        !medicalExpense.isPartiallyPaid()
+        !medicalExpense.isOverpaid()
+        medicalExpense.getUnpaidAmount() == BigDecimal.ZERO
     }
 }

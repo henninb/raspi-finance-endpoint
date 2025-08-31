@@ -23,10 +23,9 @@ data class MedicalExpense(
     @Column(name = "medical_expense_id")
     var medicalExpenseId: Long = 0L,
 
-    @Column(name = "transaction_id", nullable = false)
-    @field:NotNull(message = "Transaction ID cannot be null")
-    @field:Min(value = 1, message = "Transaction ID must be positive")
-    var transactionId: Long = 0L,
+    @Column(name = "transaction_id")
+    @field:Min(value = 1, message = "Transaction ID must be positive when specified")
+    var transactionId: Long? = null,
 
     @Column(name = "provider_id")
     @field:Min(value = 1, message = "Provider ID must be positive when specified")
@@ -122,7 +121,14 @@ data class MedicalExpense(
 
     @Column(name = "date_updated", nullable = false)
     @field:NotNull(message = "Date updated cannot be null")
-    var dateUpdated: Timestamp = Timestamp(System.currentTimeMillis())
+    var dateUpdated: Timestamp = Timestamp(System.currentTimeMillis()),
+
+    @Column(name = "paid_amount", precision = 12, scale = 2, nullable = false)
+    @field:NotNull(message = "Paid amount cannot be null")
+    @field:DecimalMin(value = "0.00", message = "Paid amount must be non-negative")
+    @field:DecimalMax(value = "999999999.99", message = "Paid amount cannot exceed 999,999,999.99")
+    @field:Digits(integer = 10, fraction = 2, message = "Paid amount must have at most 10 integer digits and 2 decimal places")
+    var paidAmount: BigDecimal = BigDecimal.ZERO
 ) {
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -155,7 +161,31 @@ data class MedicalExpense(
     @Transient
     @JsonProperty("is_fully_paid")
     fun isFullyPaid(): Boolean {
-        return patientResponsibility == BigDecimal.ZERO || paidDate != null
+        return paidAmount >= patientResponsibility
+    }
+
+    @Transient
+    @JsonProperty("unpaid_amount")
+    fun getUnpaidAmount(): BigDecimal {
+        return (patientResponsibility - paidAmount).max(BigDecimal.ZERO)
+    }
+
+    @Transient
+    @JsonProperty("is_partially_paid")
+    fun isPartiallyPaid(): Boolean {
+        return paidAmount > BigDecimal.ZERO && paidAmount < patientResponsibility
+    }
+
+    @Transient
+    @JsonProperty("is_unpaid")
+    fun isUnpaid(): Boolean {
+        return paidAmount.compareTo(BigDecimal.ZERO) == 0 && patientResponsibility.compareTo(BigDecimal.ZERO) > 0
+    }
+
+    @Transient
+    @JsonProperty("is_overpaid")
+    fun isOverpaid(): Boolean {
+        return paidAmount > patientResponsibility
     }
 
     @Transient
@@ -201,12 +231,11 @@ data class MedicalExpense(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is MedicalExpense) return false
-        return medicalExpenseId == other.medicalExpenseId &&
-               transactionId == other.transactionId
+        return medicalExpenseId == other.medicalExpenseId
     }
 
     override fun hashCode(): Int {
-        return medicalExpenseId.hashCode() * 31 + transactionId.hashCode()
+        return medicalExpenseId.hashCode()
     }
 
     companion object {

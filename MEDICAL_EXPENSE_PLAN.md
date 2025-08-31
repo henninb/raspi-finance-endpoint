@@ -1252,3 +1252,343 @@ The design leverages the existing transaction system's strengths while adding me
 - Performance optimizations implemented with proper indexing
 
 The medical expense tracking system represents a **major milestone** in the raspi-finance application's evolution, providing comprehensive healthcare financial management capabilities while maintaining the system's architectural integrity and performance standards.
+
+### Phase 2.5: Medical Expense Payment Decoupling ⏳ **PENDING**
+**Duration**: 2 days
+**Risk**: Low
+**Dependencies**: Phase 2
+**Status**: 🔄 **DESIGN PHASE - READY FOR IMPLEMENTATION**
+
+#### Overview
+Redesign the medical expense system to decouple expense creation from payment transactions. This allows medical expenses to be created independently and linked to payment transactions later when payment is actually made.
+
+#### Current Design Issues
+- Medical expenses currently require a `transaction_id` at creation time
+- This forces artificial coupling between expense occurrence and payment
+- Real workflow: Medical service happens → Bill received → Payment made later
+
+#### Proposed Design Changes
+
+##### 2.5.1 Database Schema Updates (V11__decouple-medical-expense-payments.sql)
+```sql
+-- Make transaction_id nullable and add paid_amount field
+ALTER TABLE public.t_medical_expense 
+ALTER COLUMN transaction_id DROP NOT NULL;
+
+-- Add paid_amount field to track actual payments
+ALTER TABLE public.t_medical_expense 
+ADD COLUMN paid_amount NUMERIC(12,2) DEFAULT 0.00 NOT NULL;
+
+-- Add constraint to ensure paid_amount is non-negative
+ALTER TABLE public.t_medical_expense 
+ADD CONSTRAINT ck_paid_amount_non_negative CHECK (paid_amount >= 0);
+
+-- Update existing records to sync paid_amount with patient_responsibility where transaction exists
+UPDATE public.t_medical_expense 
+SET paid_amount = patient_responsibility 
+WHERE transaction_id IS NOT NULL;
+```
+
+##### 2.5.2 Entity Updates (MedicalExpense.kt)
+```kotlin
+@Entity
+@Table(name = "t_medical_expense")
+data class MedicalExpense(
+    // ... existing fields ...
+    
+    @Column(name = "transaction_id")  // Remove nullable = false
+    var transactionId: Long? = null,  // Make nullable
+    
+    // Add new paid_amount field
+    @field:Digits(integer = 12, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @Column(name = "paid_amount", nullable = false)
+    var paidAmount: BigDecimal = BigDecimal("0.00"),
+    
+    // ... existing fields ...
+) {
+    // Add helper methods for payment status
+    fun getUnpaidAmount(): BigDecimal = 
+        (patientResponsibility - paidAmount).max(BigDecimal.ZERO)
+    
+    fun isFullyPaid(): Boolean = 
+        paidAmount >= patientResponsibility
+    
+    fun isPartiallyPaid(): Boolean = 
+        paidAmount > BigDecimal.ZERO && paidAmount < patientResponsibility
+    
+    fun isUnpaid(): Boolean = 
+        paidAmount == BigDecimal.ZERO
+    
+    fun isOverpaid(): Boolean = 
+        paidAmount > patientResponsibility
+}
+```
+
+##### 2.5.3 Service Layer Updates
+```kotlin
+interface MedicalExpenseService {
+    // ... existing methods ...
+    
+    // New payment-related methods
+    fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense
+    fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense
+    fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense  // Sync with transaction amount
+    fun findUnpaidMedicalExpenses(): List<MedicalExpense>
+    fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense>
+}
+
+@Service
+class MedicalExpenseServiceImpl(
+    private val medicalExpenseRepository: MedicalExpenseRepository,
+    private val transactionRepository: TransactionRepository
+) : MedicalExpenseService {
+    
+    @Transactional
+    fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense {
+        val medicalExpense = medicalExpenseRepository.findById(medicalExpenseId)
+            .orElseThrow { EntityNotFoundException("Medical expense not found: $medicalExpenseId") }
+        
+        val transaction = transactionRepository.findById(transactionId)
+            .orElseThrow { EntityNotFoundException("Transaction not found: $transactionId") }
+        
+        medicalExpense.transactionId = transactionId
+        medicalExpense.paidAmount = transaction.amount.abs()  // Use absolute value for payment
+        
+        return medicalExpenseRepository.save(medicalExpense)
+    }
+    
+    @Transactional
+    fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
+        val medicalExpense = medicalExpenseRepository.findById(medicalExpenseId)
+            .orElseThrow { EntityNotFoundException("Medical expense not found: $medicalExpenseId") }
+        
+        if (medicalExpense.transactionId != null) {
+            val transaction = transactionRepository.findById(medicalExpense.transactionId!!)
+                .orElseThrow { EntityNotFoundException("Transaction not found: ${medicalExpense.transactionId}") }
+            
+            medicalExpense.paidAmount = transaction.amount.abs()
+            return medicalExpenseRepository.save(medicalExpense)
+        }
+        
+        return medicalExpense
+    }
+}
+```
+
+##### 2.5.4 Repository Updates
+```kotlin
+interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
+    // ... existing methods ...
+    
+    // New payment-related queries
+    @Query("SELECT me FROM MedicalExpense me WHERE me.paidAmount = 0 AND me.activeStatus = true")
+    fun findUnpaidMedicalExpenses(): List<MedicalExpense>
+    
+    @Query("SELECT me FROM MedicalExpense me WHERE me.paidAmount > 0 AND me.paidAmount < me.patientResponsibility AND me.activeStatus = true")
+    fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense>
+    
+    @Query("SELECT me FROM MedicalExpense me WHERE me.paidAmount >= me.patientResponsibility AND me.activeStatus = true")
+    fun findFullyPaidMedicalExpenses(): List<MedicalExpense>
+    
+    @Query("SELECT me FROM MedicalExpense me WHERE me.transactionId IS NULL AND me.activeStatus = true")
+    fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense>
+}
+```
+
+##### 2.5.5 Controller Updates
+```kotlin
+@RestController
+@RequestMapping("/medical-expenses")
+class MedicalExpenseController(
+    private val medicalExpenseService: MedicalExpenseService
+) {
+    // ... existing endpoints ...
+    
+    @PostMapping("/{medicalExpenseId}/payments/{transactionId}")
+    fun linkPaymentTransaction(
+        @PathVariable medicalExpenseId: Long,
+        @PathVariable transactionId: Long
+    ): ResponseEntity<MedicalExpense> {
+        val updated = medicalExpenseService.linkPaymentTransaction(medicalExpenseId, transactionId)
+        return ResponseEntity.ok(updated)
+    }
+    
+    @DeleteMapping("/{medicalExpenseId}/payments")
+    fun unlinkPaymentTransaction(
+        @PathVariable medicalExpenseId: Long
+    ): ResponseEntity<MedicalExpense> {
+        val updated = medicalExpenseService.unlinkPaymentTransaction(medicalExpenseId)
+        return ResponseEntity.ok(updated)
+    }
+    
+    @GetMapping("/unpaid")
+    fun getUnpaidMedicalExpenses(): List<MedicalExpense> {
+        return medicalExpenseService.findUnpaidMedicalExpenses()
+    }
+    
+    @GetMapping("/partially-paid")
+    fun getPartiallyPaidMedicalExpenses(): List<MedicalExpense> {
+        return medicalExpenseService.findPartiallyPaidMedicalExpenses()
+    }
+    
+    @PutMapping("/{medicalExpenseId}/sync-payment")
+    fun syncPaymentAmount(
+        @PathVariable medicalExpenseId: Long
+    ): ResponseEntity<MedicalExpense> {
+        val updated = medicalExpenseService.updatePaidAmount(medicalExpenseId)
+        return ResponseEntity.ok(updated)
+    }
+}
+```
+
+#### Implementation Benefits
+
+##### Workflow Improvements
+1. **Natural Workflow**: Create medical expense when service occurs, link payment later
+2. **Flexible Payment Timing**: No forced coupling between expense and payment dates
+3. **UI Simplicity**: Show unpaid expenses for payment selection
+4. **Payment Independence**: Can create expenses without knowing payment method
+
+##### Data Integrity
+1. **Optional Payments**: Medical expenses can exist without payments
+2. **Payment Tracking**: `paid_amount` accurately reflects actual payments
+3. **Overpayment Handling**: System can track overpayments without validation errors
+4. **Audit Trail**: Maintain complete history of expense creation vs payment
+
+##### Reporting Capabilities
+1. **Unpaid Expenses**: Easy identification of outstanding medical bills
+2. **Payment Status**: Clear distinction between paid, unpaid, and partially paid
+3. **Cash Flow**: Better understanding of pending medical payments
+4. **Financial Planning**: Track upcoming medical payment obligations
+
+#### Testing Strategy
+
+##### Unit Tests Updates
+```groovy
+class MedicalExpenseSpec extends Specification {
+    def "should create medical expense without transaction"() {
+        given: "a medical expense without transaction"
+        def expense = new MedicalExpense(
+            serviceDate: Date.valueOf("2024-01-15"),
+            billedAmount: new BigDecimal("250.00"),
+            patientResponsibility: new BigDecimal("50.00"),
+            paidAmount: BigDecimal.ZERO,
+            transactionId: null
+        )
+        
+        expect: "expense is valid and unpaid"
+        expense.isUnpaid()
+        expense.getUnpaidAmount() == new BigDecimal("50.00")
+    }
+    
+    def "should link payment transaction and update paid amount"() {
+        given: "an unpaid medical expense"
+        def expense = createUnpaidMedicalExpense()
+        
+        when: "transaction is linked"
+        expense.transactionId = 123L
+        expense.paidAmount = new BigDecimal("50.00")
+        
+        then: "expense is fully paid"
+        expense.isFullyPaid()
+        expense.getUnpaidAmount() == BigDecimal.ZERO
+    }
+}
+```
+
+##### Integration Tests Updates
+```groovy
+class MedicalExpenseRepositoryIntSpec extends Specification {
+    def "should find unpaid medical expenses"() {
+        given: "mix of paid and unpaid expenses"
+        createPaidMedicalExpense()
+        def unpaidExpense = createUnpaidMedicalExpense()
+        
+        when: "searching for unpaid expenses"
+        def unpaidExpenses = medicalExpenseRepository.findUnpaidMedicalExpenses()
+        
+        then: "only unpaid expenses are returned"
+        unpaidExpenses.size() == 1
+        unpaidExpenses[0].medicalExpenseId == unpaidExpense.medicalExpenseId
+    }
+}
+```
+
+##### Functional Tests Updates
+```groovy
+class MedicalExpenseControllerIsolatedSpec extends Specification {
+    def "should create medical expense without transaction"() {
+        given: "medical expense data without transaction"
+        def expenseData = [
+            serviceDate: "2024-01-15",
+            billedAmount: "250.00",
+            patientResponsibility: "50.00"
+        ]
+        
+        when: "creating medical expense"
+        def response = restTemplate.postForEntity("/medical-expenses", expenseData, Map)
+        
+        then: "expense is created successfully"
+        response.statusCode == HttpStatus.CREATED
+        response.body.transactionId == null
+        response.body.paidAmount == "0.00"
+    }
+    
+    def "should link payment transaction to medical expense"() {
+        given: "an existing unpaid medical expense"
+        def expense = createUnpaidMedicalExpense()
+        def transaction = createTestTransaction()
+        
+        when: "linking payment transaction"
+        def response = restTemplate.postForEntity(
+            "/medical-expenses/${expense.medicalExpenseId}/payments/${transaction.transactionId}",
+            null, Map
+        )
+        
+        then: "expense is updated with payment"
+        response.statusCode == HttpStatus.OK
+        response.body.transactionId == transaction.transactionId
+        response.body.paidAmount == transaction.amount.abs().toString()
+    }
+}
+```
+
+#### Migration Considerations
+
+##### Backward Compatibility
+1. **Existing Data**: All existing medical expenses with transactions remain functional
+2. **API Compatibility**: Existing endpoints continue to work
+3. **Validation**: New validation allows but doesn't require transaction_id
+
+##### Migration Steps
+1. **Database**: Make transaction_id nullable, add paid_amount field
+2. **Entity**: Update Kotlin entity with nullable transactionId and paidAmount
+3. **Service**: Add payment linking methods
+4. **Controller**: Add new payment management endpoints
+5. **Tests**: Update test suites for new workflow
+
+#### Risk Assessment
+
+##### Low Risk Factors
+1. **Additive Changes**: No breaking changes to existing functionality
+2. **Gradual Migration**: Can implement incrementally
+3. **Fallback**: Existing workflow still supported
+4. **Simple Logic**: Payment linking is straightforward
+
+##### Mitigation Strategies
+1. **Thorough Testing**: Complete test coverage for new payment workflows
+2. **Database Migration**: Careful migration with proper rollback scripts
+3. **Validation**: Ensure data consistency during transition
+4. **Documentation**: Clear documentation of new workflow patterns
+
+#### Phase 2.5 Deliverables
+- [ ] Database migration V11__decouple-medical-expense-payments.sql
+- [ ] Updated MedicalExpense.kt entity with nullable transactionId and paidAmount
+- [ ] Enhanced MedicalExpenseService with payment linking methods
+- [ ] New repository query methods for payment status filtering
+- [ ] Updated REST endpoints for payment management
+- [ ] Comprehensive test suite updates (unit, integration, functional)
+- [ ] Migration scripts for existing data
+- [ ] Documentation updates for new workflow
+
+This design provides the flexibility you need for real-world medical expense management while maintaining system integrity and supporting both the new decoupled workflow and existing functionality during the transition period.

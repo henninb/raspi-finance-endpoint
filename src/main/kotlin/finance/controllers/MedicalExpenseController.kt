@@ -431,4 +431,166 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
+
+    // New payment-related endpoints for Phase 2.5
+    @PostMapping("/{medicalExpenseId}/payments/{transactionId}")
+    fun linkPaymentTransaction(
+        @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long,
+        @PathVariable @Min(1, message = "Transaction ID must be positive") transactionId: Long
+    ): ResponseEntity<MedicalExpense> {
+        logger.info("POST /medical-expenses/$medicalExpenseId/payments/$transactionId - Linking payment transaction")
+
+        return try {
+            val updatedExpense = medicalExpenseService.linkPaymentTransaction(medicalExpenseId, transactionId)
+            logger.info("Successfully linked transaction $transactionId to medical expense $medicalExpenseId")
+            ResponseEntity.ok(updatedExpense)
+        } catch (e: DuplicateMedicalExpenseException) {
+            logger.warn("Duplicate transaction linkage attempted: ${e.message}")
+            throw ResponseStatusException(HttpStatus.CONFLICT, e.message)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Bad request for transaction linkage: ${e.message}")
+            ResponseEntity.badRequest().build()
+        } catch (e: Exception) {
+            logger.error("Error linking transaction $transactionId to medical expense $medicalExpenseId", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @DeleteMapping("/{medicalExpenseId}/payments")
+    fun unlinkPaymentTransaction(
+        @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long
+    ): ResponseEntity<MedicalExpense> {
+        logger.info("DELETE /medical-expenses/$medicalExpenseId/payments - Unlinking payment transaction")
+
+        return try {
+            val updatedExpense = medicalExpenseService.unlinkPaymentTransaction(medicalExpenseId)
+            logger.info("Successfully unlinked payment transaction from medical expense $medicalExpenseId")
+            ResponseEntity.ok(updatedExpense)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Bad request for transaction unlinking: ${e.message}")
+            ResponseEntity.badRequest().build()
+        } catch (e: Exception) {
+            logger.error("Error unlinking payment transaction from medical expense $medicalExpenseId", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @PutMapping("/{medicalExpenseId}/sync-payment")
+    fun syncPaymentAmount(
+        @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long
+    ): ResponseEntity<MedicalExpense> {
+        logger.info("PUT /medical-expenses/$medicalExpenseId/sync-payment - Syncing payment amount")
+
+        return try {
+            val updatedExpense = medicalExpenseService.updatePaidAmount(medicalExpenseId)
+            logger.info("Successfully synced payment amount for medical expense $medicalExpenseId")
+            ResponseEntity.ok(updatedExpense)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Bad request for payment sync: ${e.message}")
+            ResponseEntity.badRequest().build()
+        } catch (e: Exception) {
+            logger.error("Error syncing payment amount for medical expense $medicalExpenseId", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/unpaid")
+    fun getUnpaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
+        logger.info("GET /medical-expenses/unpaid - Retrieving unpaid medical expenses")
+
+        return try {
+            val medicalExpenses = medicalExpenseService.findUnpaidMedicalExpenses()
+            logger.info("Successfully retrieved ${medicalExpenses.size} unpaid medical expenses")
+            ResponseEntity.ok(medicalExpenses)
+        } catch (e: Exception) {
+            logger.error("Error retrieving unpaid medical expenses", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/partially-paid")
+    fun getPartiallyPaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
+        logger.info("GET /medical-expenses/partially-paid - Retrieving partially paid medical expenses")
+
+        return try {
+            val medicalExpenses = medicalExpenseService.findPartiallyPaidMedicalExpenses()
+            logger.info("Successfully retrieved ${medicalExpenses.size} partially paid medical expenses")
+            ResponseEntity.ok(medicalExpenses)
+        } catch (e: Exception) {
+            logger.error("Error retrieving partially paid medical expenses", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/fully-paid")
+    fun getFullyPaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
+        logger.info("GET /medical-expenses/fully-paid - Retrieving fully paid medical expenses")
+
+        return try {
+            val medicalExpenses = medicalExpenseService.findFullyPaidMedicalExpenses()
+            logger.info("Successfully retrieved ${medicalExpenses.size} fully paid medical expenses")
+            ResponseEntity.ok(medicalExpenses)
+        } catch (e: Exception) {
+            logger.error("Error retrieving fully paid medical expenses", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/without-transaction")
+    fun getMedicalExpensesWithoutTransaction(): ResponseEntity<List<MedicalExpense>> {
+        logger.info("GET /medical-expenses/without-transaction - Retrieving medical expenses without linked transactions")
+
+        return try {
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesWithoutTransaction()
+            logger.info("Successfully retrieved ${medicalExpenses.size} medical expenses without transactions")
+            ResponseEntity.ok(medicalExpenses)
+        } catch (e: Exception) {
+            logger.error("Error retrieving medical expenses without transactions", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/overpaid")
+    fun getOverpaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
+        logger.info("GET /medical-expenses/overpaid - Retrieving overpaid medical expenses")
+
+        return try {
+            val medicalExpenses = medicalExpenseService.findOverpaidMedicalExpenses()
+            logger.info("Successfully retrieved ${medicalExpenses.size} overpaid medical expenses")
+            ResponseEntity.ok(medicalExpenses)
+        } catch (e: Exception) {
+            logger.error("Error retrieving overpaid medical expenses", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/totals/year/{year}/paid")
+    fun getTotalPaidAmountByYear(
+        @PathVariable @Min(2000, message = "Year must be 2000 or later") year: Int
+    ): ResponseEntity<Map<String, BigDecimal>> {
+        logger.info("GET /medical-expenses/totals/year/$year/paid - Retrieving total paid amount by year")
+
+        return try {
+            val totalPaid = medicalExpenseService.getTotalPaidAmountByYear(year)
+            val response = mapOf("totalPaid" to totalPaid, "year" to BigDecimal(year))
+            ResponseEntity.ok(response)
+        } catch (e: Exception) {
+            logger.error("Error retrieving total paid amount for year: $year", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/totals/unpaid-balance")
+    fun getTotalUnpaidBalance(): ResponseEntity<Map<String, BigDecimal>> {
+        logger.info("GET /medical-expenses/totals/unpaid-balance - Retrieving total unpaid balance")
+
+        return try {
+            val totalUnpaid = medicalExpenseService.getTotalUnpaidBalance()
+            val response = mapOf("totalUnpaidBalance" to totalUnpaid)
+            ResponseEntity.ok(response)
+        } catch (e: Exception) {
+            logger.error("Error retrieving total unpaid balance", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
 }
