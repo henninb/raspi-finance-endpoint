@@ -34,20 +34,19 @@ class SmartAccountBuilder {
 
     private String generateUniqueAccountName() {
         // ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$" (letters/dashes + single underscore + letters)
-        String counter = COUNTER.incrementAndGet().toString()
         String ownerPart = testOwner.replaceAll(/[^a-z]/, '') // Keep only letters
 
         if (ownerPart.isEmpty()) {
             ownerPart = "test"
         }
 
-        // Create base name in correct pattern: letters_letters
-        String baseName = "account${counter}_${ownerPart}"
+        // Create base name in correct pattern: letters_letters (no numbers allowed!)
+        String baseName = "account_${ownerPart}"
 
         // Ensure length constraints (3-40 chars)
         if (baseName.length() > 40) {
             String shortOwner = ownerPart.length() > 8 ? ownerPart[0..7] : ownerPart
-            baseName = "acc${counter}_${shortOwner}"
+            baseName = "acc_${shortOwner}"
         }
 
         if (baseName.length() < 3) {
@@ -115,7 +114,7 @@ class SmartAccountBuilder {
 
     private String generateUniqueAccountName(String prefix) {
         // ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$" (letters/dashes + single underscore + letters)
-        String cleanPrefix = prefix.replaceAll(/[^a-z]/, '') // Keep only letters
+        String cleanPrefix = prefix.replaceAll(/[^a-z-]/, '') // Keep only letters and dashes
         String ownerPart = testOwner.replaceAll(/[^a-z]/, '') // Keep only letters
 
         if (cleanPrefix.isEmpty()) {
@@ -152,12 +151,7 @@ class SmartAccountBuilder {
     }
 
     SmartAccountBuilder withMoniker(String moniker) {
-        if (!moniker.matches(/^\d{4}$/)) {
-            log.warn("Invalid moniker '${moniker}', using default '0000'")
-            this.moniker = '0000'
-        } else {
-            this.moniker = moniker
-        }
+        this.moniker = moniker
         return this
     }
 
