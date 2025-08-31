@@ -18,6 +18,8 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
 
     fun findByOwnerAndRelationshipAndActiveStatusTrue(owner: String, relationship: FamilyRelationship): List<FamilyMember>
 
+    fun findByActiveStatusTrue(): List<FamilyMember>
+
     fun findByOwnerAndMemberName(owner: String, memberName: String): FamilyMember?
 
     @Modifying(clearAutomatically = true)

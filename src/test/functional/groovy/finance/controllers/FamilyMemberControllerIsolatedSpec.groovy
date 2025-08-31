@@ -71,6 +71,23 @@ class FamilyMemberControllerIsolatedSpec extends BaseControllerSpec {
         del.statusCode == HttpStatus.OK
     }
 
+    void 'should retrieve all family members'() {
+        when:
+        def post1 = postMember(testOwner, "${testOwner}-member1", FamilyRelationship.Self)
+        def post2 = postMember(testOwner, "${testOwner}-member2", FamilyRelationship.Spouse)
+        def post3 = postMember(testOwner, "${testOwner}-member3", FamilyRelationship.Child)
+        def getAll = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}"), HttpMethod.GET, new HttpEntity<>(null, headers), String)
+
+        then:
+        post1.statusCode == HttpStatus.CREATED
+        post2.statusCode == HttpStatus.CREATED
+        post3.statusCode == HttpStatus.CREATED
+        getAll.statusCode == HttpStatus.OK
+        getAll.body.contains("${testOwner}-member1")
+        getAll.body.contains("${testOwner}-member2")
+        getAll.body.contains("${testOwner}-member3")
+    }
+
     private Long extractLong(String json, String field) {
         def m = (json =~ /\"${field}\":(\d+)/)
         return m ? Long.parseLong(m[0][1]) : 0L
