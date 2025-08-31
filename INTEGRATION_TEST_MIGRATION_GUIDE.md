@@ -4,16 +4,46 @@
 
 This guide outlines the migration strategy to transform the current integration test architecture from brittle patterns to a robust, maintainable framework based on the proven success of the functional test migration. The goal is to eliminate brittleness, improve test isolation, and make integration tests easier to write and maintain.
 
+## Test Architecture Clarification
+
+**Important Note**: Controller tests are located in the `src/test/functional/` directory, not integration. This migration guide focuses specifically on integration tests which handle:
+- Repository layer testing (database integration)
+- Service layer integration 
+- GraphQL resolver integration
+- Security integration
+- Camel route integration
+- Configuration testing
+
+**Functional Test Layer** (separate from this migration):
+- 17 Controller test files (already using isolated patterns)
+- Full application context testing
+- HTTP endpoint testing
+- End-to-end scenarios
+
 ## Current Integration Test Assessment
 
 ### Analyzed Integration Tests (20 files)
 
-**Repository Tests (4 files)**:
+**Repository Tests (5 files - 8 missing)**:
+
+*Existing Repository Tests:*
 - `AccountRepositoryIntSpec.groovy` - Manual entity creation, basic CRUD testing
 - `TransactionRepositoryIntSpec.groovy` - Setup method with manual account creation, complex entity relationships
 - `AccountRepositorySimpleIntSpec.groovy` - Simplified repository testing
 - `TransactionRepositorySimpleIntSpec.groovy` - Basic repository operations
 - `MedicalExpenseRepositoryIntSpec.groovy` - Medical domain repository testing
+
+*Missing Repository Tests (identified for creation):*
+- `CategoryRepositoryIntSpec.groovy` - **MISSING** - Category CRUD and constraint testing
+- `DescriptionRepositoryIntSpec.groovy` - **MISSING** - Description management testing
+- `FamilyMemberRepositoryIntSpec.groovy` - **MISSING** - Family member data testing
+- `ParameterRepositoryIntSpec.groovy` - **MISSING** - System parameter testing
+- `PaymentRepositoryIntSpec.groovy` - **MISSING** - Payment transaction testing
+- `PendingTransactionRepositoryIntSpec.groovy` - **MISSING** - Pending transaction testing
+- `ReceiptImageRepositoryIntSpec.groovy` - **MISSING** - Receipt image storage testing
+- `TransferRepositoryIntSpec.groovy` - **MISSING** - Transfer operation testing
+- `UserRepositoryIntSpec.groovy` - **MISSING** - User authentication data testing
+- `ValidationAmountRepositoryIntSpec.groovy` - **MISSING** - Validation amount testing
 
 **Service Layer Tests (3 files)**:
 - `AccountServiceIntSpec.groovy` - Service layer integration, limited test coverage
@@ -33,9 +63,11 @@ This guide outlines the migration strategy to transform the current integration 
 - `CamelRouteIntegrationSpec.groovy` - File processing routes, complex setup/cleanup
 - `CamelSpec.groovy` - Basic Camel context testing
 
-**Configuration Tests (2 files)**:
+**Configuration Tests (4 files)**:
 - `DatabaseResilienceIntSpec.groovy` - Database resilience and circuit breaker testing
-- `RandomPortSpec.groovy`, `HealthEndpointSpec.groovy` - Infrastructure testing
+- `RandomPortSpec.groovy` - Random port configuration testing
+- `HealthEndpointSpec.groovy` - Health endpoint integration testing
+- `GraphQLIntegrationSpec.groovy` - GraphQL configuration integration testing
 
 **Processor Tests (1 file)**:
 - `ProcessorIntegrationSpec.groovy` - Message processing integration
@@ -600,38 +632,70 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 - ✅ Create integration-specific `TestFixtures`
 - ✅ Add SmartBuilder extensions for integration test formats
 
-### Phase 2: Repository Tests (Week 3)
-- 🎯 Migrate `AccountRepositoryIntSpec` (5 tests)
-- 🎯 Migrate `TransactionRepositoryIntSpec` (7 tests)  
+### Phase 2: Repository Tests - Existing Migration (Week 3)
+- 🎯 Migrate `TransactionRepositoryIntSpec` (7 tests) - **HIGHEST PRIORITY** (currently all failing)
+- 🎯 Migrate `AccountRepositoryIntSpec` (8 tests)
 - 🎯 Migrate `MedicalExpenseRepositoryIntSpec` (3 tests)
-- **Success Criteria**: 100% pass rate, zero hardcoded entity names
+- 🎯 Migrate `AccountRepositorySimpleIntSpec` (3 tests)
+- 🎯 Migrate `TransactionRepositorySimpleIntSpec` (4 tests)
+- **Success Criteria**: 100% pass rate, zero hardcoded entity names for existing tests
 
-### Phase 3: Service Layer (Week 4)
+### Phase 2b: Repository Tests - Missing Test Creation (Week 4)
+- 🎯 Create `CategoryRepositoryIntSpec` - Category CRUD, unique constraint testing
+- 🎯 Create `DescriptionRepositoryIntSpec` - Description management testing
+- 🎯 Create `ParameterRepositoryIntSpec` - System parameter CRUD testing
+- 🎯 Create `UserRepositoryIntSpec` - User authentication data testing
+- 🎯 Create `ValidationAmountRepositoryIntSpec` - Account validation testing
+- **Success Criteria**: New repository tests follow SmartBuilder patterns from the start
+
+### Phase 2c: Repository Tests - Financial Domain (Week 5)  
+- 🎯 Create `PaymentRepositoryIntSpec` - Payment transaction testing
+- 🎯 Create `TransferRepositoryIntSpec` - Transfer operation testing
+- 🎯 Create `PendingTransactionRepositoryIntSpec` - Pending transaction testing
+- 🎯 Create `ReceiptImageRepositoryIntSpec` - Receipt image storage testing
+- 🎯 Create `FamilyMemberRepositoryIntSpec` - Family member data testing
+- **Success Criteria**: Complete repository test coverage using new architecture
+
+### Phase 3: Service Layer (Week 6)
 - 🎯 Migrate `AccountServiceIntSpec` (3 tests)
 - 🎯 Migrate `ServiceLayerIntegrationSpec` (5+ tests)
+- 🎯 Migrate `ExternalIntegrationsSpec` (4+ tests)
 - **Success Criteria**: Service integration scenarios use SmartBuilders
 
-### Phase 4: GraphQL Resolvers (Week 5-6)
+### Phase 4: GraphQL Resolvers (Week 7)
 - 🎯 Migrate `PaymentGraphQLResolverIntegrationSpec` (8 tests)
 - 🎯 Migrate `TransferGraphQLResolverIntegrationSpec` (6+ tests)
 - **Success Criteria**: Complex GraphQL scenarios with isolated test data
 
-### Phase 5: Security & Camel (Week 7)
-- 🎯 Migrate Security integration tests (3 files, 15+ tests)
+### Phase 5: Security & Camel (Week 8)
+- 🎯 Migrate `SecurityIntegrationSpec` (5+ tests)
+- 🎯 Migrate `SecurityIntegrationSimpleSpec` (3+ tests)
+- 🎯 Migrate `SecurityIntegrationWorkingSpec` (4+ tests)
 - 🎯 Migrate `CamelRouteIntegrationSpec` (8+ tests)
+- 🎯 Migrate `CamelSpec` (3+ tests)
 - **Success Criteria**: File processing and security flows use robust test data
+
+### Phase 6: Configuration & Processor Tests (Week 9)
+- 🎯 Migrate `DatabaseResilienceIntSpec` (6+ tests)
+- 🎯 Migrate `RandomPortSpec` (2+ tests)
+- 🎯 Migrate `HealthEndpointSpec` (3+ tests)
+- 🎯 Migrate `GraphQLIntegrationSpec` (4+ tests)
+- 🎯 Migrate `ProcessorIntegrationSpec` (5+ tests)
+- **Success Criteria**: Configuration and infrastructure tests use isolated patterns
 
 ## Success Metrics
 
 ### Technical Metrics
 | Metric | Current State | Target State |
 |--------|---------------|--------------|
+| **Repository Test Coverage** | 5/13 repositories (38%) | 13/13 repositories (100%) |
 | **Hardcoded Entity Names** | ~40+ instances | 0 instances |
 | **Manual Entity Creation** | ~80% of tests | 0% of tests |
 | **Test Isolation** | Partial (timestamp-based) | Complete (testOwner-based) |
 | **Constraint Validation** | Runtime only | Build-time + Runtime |
 | **Shared Test Data** | ~60% of tests | 0% of tests |
 | **FK Cleanup Issues** | Multiple reported | 0 issues |
+| **Missing Repository Tests** | 8 repositories uncovered | 0 repositories uncovered |
 
 ### Quality Metrics  
 | Metric | Current | Target |
@@ -710,6 +774,32 @@ grep -r "buildAndValidate()" src/test/integration/groovy/ | wc -l
 # Should show buildAndValidate() calls in most tests
 ```
 
+## Architecture Scope and Boundaries
+
+### Integration Test Layer (This Migration)
+**Target**: 30+ files in `src/test/integration/groovy/` (20 existing + 10 new repository tests)
+- Repository layer database integration (5 existing + 8 missing = 13 total)
+- Service layer business logic integration
+- GraphQL resolver integration
+- Security authentication/authorization integration
+- Camel route file processing integration
+- Configuration and infrastructure integration
+
+### Functional Test Layer (Separate - Already Migrated)
+**Status**: ✅ Complete with isolated patterns
+- 17 Controller test files in `src/test/functional/groovy/finance/controllers/`
+- Full Spring Boot application context
+- HTTP endpoint testing with TestRestTemplate
+- End-to-end user scenarios
+- Already using SmartBuilder patterns and test isolation
+
+### Unit Test Layer (Separate - Different Strategy)
+**Status**: Standard unit test patterns
+- 11+ Controller unit tests in `src/test/unit/groovy/finance/controllers/`
+- Mocked dependencies
+- Fast execution, no external dependencies
+- Traditional unit test isolation
+
 ## Conclusion
 
 This migration transforms integration tests from a brittle, shared-data approach to a robust, isolated architecture. By applying the proven patterns from the functional test migration, integration tests will achieve:
@@ -722,3 +812,5 @@ This migration transforms integration tests from a brittle, shared-data approach
 - **Maintainable Test Suite**: Centralized architecture reduces boilerplate and improves consistency
 
 The integration test migration provides a solid foundation for reliable database integration testing, service layer validation, and complex system integration scenarios across the entire application domain.
+
+**Note**: Controller tests are already handled by the robust functional test layer, which uses similar isolated patterns and doesn't require migration as part of this integration test initiative.
