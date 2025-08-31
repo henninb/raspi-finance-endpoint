@@ -2,7 +2,7 @@ package finance.routes
 
 import finance.Application
 import finance.domain.Transaction
-import finance.helpers.TransactionBuilder
+import finance.helpers.SmartTransactionBuilder
 import org.apache.camel.CamelExecutionException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -12,6 +12,8 @@ import spock.lang.Ignore
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
+
+    String testOwner = "test_${UUID.randomUUID().toString().replace('-', '').substring(0, 8)}"
 
     @Autowired
     protected TransactionToDatabaseRouteBuilder transactionToDatabaseRouteBuilder
@@ -27,7 +29,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test valid payload - 1 transaction'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().build()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner).build()
 
         when:
         producer.sendBody([transaction])
@@ -39,7 +41,7 @@ class TransactionToDatabaseRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test valid payload - 1 transaction with validation errors'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().withAccountNameOwner('').build()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner).withAccountNameOwner('').build()
 
         when:
         producer.sendBody([transaction])

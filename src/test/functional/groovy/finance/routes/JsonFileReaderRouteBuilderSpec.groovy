@@ -1,7 +1,7 @@
 package finance.routes
 
 import finance.domain.Transaction
-import finance.helpers.TransactionBuilder
+import finance.helpers.SmartTransactionBuilder
 import finance.repositories.TransactionRepository
 import org.apache.camel.Exchange
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,6 +10,8 @@ import org.springframework.util.ResourceUtils
 
 @ActiveProfiles("func")
 class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
+
+    String testOwner = "test_${UUID.randomUUID().toString().replace('-', '').substring(0, 8)}"
 
     @Autowired
     protected JsonFileReaderRouteBuilder jsonFileReaderRouteBuilder
@@ -28,7 +30,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test jsonFileReaderRouteBuilder - 1 transaction'() {
         given:
-        Transaction transaction = TransactionBuilder.builder()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAmount(0.00)
                 .withGuid(UUID.randomUUID().toString())
                 .build()
@@ -48,13 +50,13 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test jsonFileReaderRouteBuilder - 2 transaction'() {
         given:
-        Transaction transaction1 = TransactionBuilder.builder()
+        Transaction transaction1 = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAmount(0.00)
                 .withAccountNameOwner('foo_brian')
                 .withDescription(UUID.randomUUID().toString())
                 .withGuid(UUID.randomUUID().toString())
                 .build()
-        Transaction transaction2 = TransactionBuilder.builder()
+        Transaction transaction2 = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAmount(0.01)
                 .withGuid(UUID.randomUUID().toString())
                 .withDescription(UUID.randomUUID().toString())
@@ -81,11 +83,11 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test jsonFileReaderRouteBuilder - 2 transaction - second transaction fails to insert'() {
         given:
-        Transaction transaction1 = TransactionBuilder.builder()
+        Transaction transaction1 = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAmount(0.00)
                 .withGuid(UUID.randomUUID().toString())
                 .build()
-        Transaction transaction2 = TransactionBuilder.builder()
+        Transaction transaction2 = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAmount(0.01)
                 .withGuid(UUID.randomUUID().toString())
                 .withAccountNameOwner('')
@@ -108,7 +110,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test jsonFileReaderRouteBuilder - with empty description'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().withAmount(0.00).withGuid(UUID.randomUUID().toString()).withDescription('').build()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner).withAmount(0.00).withGuid(UUID.randomUUID().toString()).withDescription('').build()
         List<Transaction> transactions = [transaction]
         String fileName = "${UUID.randomUUID()}-transactions.json"
 
@@ -123,7 +125,7 @@ class JsonFileReaderRouteBuilderSpec extends BaseRouteBuilderSpec {
 
     void 'test jsonFileReaderRouteBuilder - non json filename'() {
         given:
-        Transaction transaction = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner).withGuid(UUID.randomUUID().toString()).build()
         List<Transaction> transactions = [transaction]
         String fileName = "${UUID.randomUUID()}-transactions.txt"
 
