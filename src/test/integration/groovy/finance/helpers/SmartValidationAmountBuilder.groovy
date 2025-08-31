@@ -38,9 +38,34 @@ class SmartValidationAmountBuilder {
     }
 
     ValidationAmount buildAndValidate() {
+        // Pre-validate builder field values before instantiating Kotlin entity
+        // to avoid NullPointerExceptions from non-null setters (e.g., amount).
+        prevalidateFields()
         ValidationAmount va = build()
         validateConstraints(va)
         return va
+    }
+
+    private void prevalidateFields() {
+        if (this.accountId == null || this.accountId < 0L) {
+            throw new IllegalStateException("accountId must be >= 0")
+        }
+        if (this.validationDate == null) {
+            throw new IllegalStateException("validationDate must not be null")
+        }
+        if (this.transactionState == null) {
+            throw new IllegalStateException("transactionState must not be null")
+        }
+        if (this.amount == null) {
+            throw new IllegalStateException("amount must not be null")
+        }
+        if (this.amount.scale() > 2) {
+            throw new IllegalStateException("amount must have at most 2 decimal places")
+        }
+        BigDecimal max = new BigDecimal('99999999.99')
+        if (this.amount.abs() > max) {
+            throw new IllegalStateException("amount exceeds allowed precision (8,2)")
+        }
     }
 
     private void validateConstraints(ValidationAmount va) {
@@ -119,4 +144,3 @@ class SmartValidationAmountBuilder {
         return this
     }
 }
-
