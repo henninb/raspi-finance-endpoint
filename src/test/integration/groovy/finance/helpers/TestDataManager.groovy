@@ -73,9 +73,10 @@ class TestDataManager {
         try {
             jdbcTemplate.update("""
                 INSERT INTO t_account(account_name_owner, account_type, active_status, moniker,
-                                  date_closed, date_updated, date_added)
+                                  date_closed, date_updated, date_added, validation_date, future, outstanding, cleared)
                 VALUES (?, ?, ?, '0000', '1969-12-31 18:00:00.000000',
-                        '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
+                        '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330',
+                        '2020-09-05 20:33:34.077330', 0.00, 0.00, 0.00)
             """, accountName, accountType, activeStatus)
         } catch (Exception e) {
             // Account might already exist due to race conditions or incomplete cleanup

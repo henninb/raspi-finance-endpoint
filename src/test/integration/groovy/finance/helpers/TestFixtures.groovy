@@ -10,6 +10,7 @@ import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.Transfer
+import finance.domain.User
 import finance.domain.ValidationAmount
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
