@@ -25,6 +25,7 @@ import java.util.UUID
 @SpringBootTest
 @ContextConfiguration(classes = Application)
 @Transactional
+@Ignore("Legacy brittle spec replaced by TransactionRepositoryMigratedIntSpec; keeping for reference.")
 class TransactionRepositoryIntSpec extends Specification {
 
     @Autowired
