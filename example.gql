@@ -1,7 +1,0 @@
-{
-    descriptions {
-        descriptionId
-        description
-        activeStatus
-    }
-}
