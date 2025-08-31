@@ -26,7 +26,7 @@ class BaseIntegrationSpec extends Specification {
     protected TestDataManager testDataManager
 
     @Shared
-    @Autowired  
+    @Autowired
     protected TestFixtures testFixtures
 
     @Shared

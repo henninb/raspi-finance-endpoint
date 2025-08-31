@@ -35,19 +35,19 @@ class TransferJpaSpec extends Specification {
         given:
         long beforeTransfer = transferRepository.count()
         long beforeAccount = accountRepository.count()
-        
+
         Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('transfersrc')
             .asCredit()
             .buildAndValidate()
         Account sourceResult = entityManager.persist(sourceAccount)
-        
+
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('transferdest')
             .asCredit()
             .buildAndValidate()
         Account destResult = entityManager.persist(destinationAccount)
-        
+
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
@@ -72,19 +72,19 @@ class TransferJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account sourceResult = entityManager.persist(sourceAccount)
-        
+
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('statedest')
             .asCredit()
             .buildAndValidate()
         Account destResult = entityManager.persist(destinationAccount)
-        
+
         Transfer clearedTransfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
             .withAmount(100.00G)
             .buildAndValidate()
-            
+
         Transfer outstandingTransfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
@@ -107,20 +107,20 @@ class TransferJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account sourceResult = entityManager.persist(sourceAccount)
-        
+
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('activedest')
             .asCredit()
             .buildAndValidate()
         Account destResult = entityManager.persist(destinationAccount)
-        
+
         Transfer activeTransfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
             .withAmount(75.50G)
             .asActive()
             .buildAndValidate()
-            
+
         Transfer inactiveTransfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
@@ -143,19 +143,19 @@ class TransferJpaSpec extends Specification {
         given:
         long beforeTransfer = transferRepository.count()
         long beforeAccount = accountRepository.count()
-        
+
         Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('deletesrc')
             .asCredit()
             .buildAndValidate()
         Account sourceResult = entityManager.persist(sourceAccount)
-        
+
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('deletedest')
             .asCredit()
             .buildAndValidate()
         Account destResult = entityManager.persist(destinationAccount)
-        
+
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
@@ -178,13 +178,13 @@ class TransferJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account sourceResult = entityManager.persist(sourceAccount)
-        
+
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('precisiondest')
             .asCredit()
             .buildAndValidate()
         Account destResult = entityManager.persist(destinationAccount)
-        
+
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
@@ -209,7 +209,7 @@ class TransferJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(accountResult.accountNameOwner)
             .withDestinationAccount(accountResult.accountNameOwner)  // Same as source
@@ -232,13 +232,13 @@ class TransferJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account sourceResult = entityManager.persist(sourceAccount)
-        
+
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('finddest')
             .asCredit()
             .buildAndValidate()
         Account destResult = entityManager.persist(destinationAccount)
-        
+
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
             .withSourceAccount(sourceResult.accountNameOwner)
             .withDestinationAccount(destResult.accountNameOwner)
