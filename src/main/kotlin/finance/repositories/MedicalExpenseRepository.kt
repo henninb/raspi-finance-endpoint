@@ -189,4 +189,88 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         """
     )
     fun findByDiagnosisCodeAndActiveStatusTrue(@Param("diagnosisCode") diagnosisCode: String): List<MedicalExpense>
+
+    // New payment-related queries for Phase 2.5
+    @Query(
+        """
+        SELECT me FROM MedicalExpense me
+        WHERE me.paidAmount = 0
+        AND me.activeStatus = true
+        ORDER BY me.serviceDate DESC
+        """
+    )
+    fun findUnpaidMedicalExpenses(): List<MedicalExpense>
+
+    @Query(
+        """
+        SELECT me FROM MedicalExpense me
+        WHERE me.paidAmount > 0
+        AND me.paidAmount < me.patientResponsibility
+        AND me.activeStatus = true
+        ORDER BY me.serviceDate DESC
+        """
+    )
+    fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense>
+
+    @Query(
+        """
+        SELECT me FROM MedicalExpense me
+        WHERE me.paidAmount >= me.patientResponsibility
+        AND me.activeStatus = true
+        ORDER BY me.serviceDate DESC
+        """
+    )
+    fun findFullyPaidMedicalExpenses(): List<MedicalExpense>
+
+    @Query(
+        """
+        SELECT me FROM MedicalExpense me
+        WHERE me.transactionId IS NULL
+        AND me.activeStatus = true
+        ORDER BY me.serviceDate DESC
+        """
+    )
+    fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense>
+
+    @Query(
+        """
+        SELECT me FROM MedicalExpense me
+        WHERE me.paidAmount > me.patientResponsibility
+        AND me.activeStatus = true
+        ORDER BY me.serviceDate DESC
+        """
+    )
+    fun findOverpaidMedicalExpenses(): List<MedicalExpense>
+
+    @Query(
+        """
+        SELECT SUM(me.paidAmount) FROM MedicalExpense me
+        WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
+        AND me.activeStatus = true
+        """
+    )
+    fun getTotalPaidAmountByYear(@Param("year") year: Int): BigDecimal?
+
+    @Query(
+        """
+        SELECT SUM(me.patientResponsibility - me.paidAmount) FROM MedicalExpense me
+        WHERE me.paidAmount < me.patientResponsibility
+        AND me.activeStatus = true
+        """
+    )
+    fun getTotalUnpaidBalance(): BigDecimal?
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(
+        """
+        UPDATE MedicalExpense me
+        SET me.paidAmount = :paidAmount, me.dateUpdated = CURRENT_TIMESTAMP
+        WHERE me.medicalExpenseId = :medicalExpenseId
+        """
+    )
+    fun updatePaidAmount(
+        @Param("medicalExpenseId") medicalExpenseId: Long,
+        @Param("paidAmount") paidAmount: BigDecimal
+    ): Int
 }
