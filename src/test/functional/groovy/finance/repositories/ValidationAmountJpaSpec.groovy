@@ -65,13 +65,13 @@ class ValidationAmountJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         ValidationAmount clearedAmount = SmartValidationAmountBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAmount(100.00G)
             .asCleared()
             .buildAndValidate()
-            
+
         ValidationAmount outstandingAmount = SmartValidationAmountBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAmount(200.00G)
@@ -96,14 +96,14 @@ class ValidationAmountJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         ValidationAmount activeAmount = SmartValidationAmountBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAmount(75.25G)
             .asActive()
             .asCleared()
             .buildAndValidate()
-            
+
         ValidationAmount inactiveAmount = SmartValidationAmountBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAmount(125.50G)

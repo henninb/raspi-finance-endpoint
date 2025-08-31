@@ -8,7 +8,7 @@ This guide outlines the migration strategy to transform the current integration 
 
 **Important Note**: Controller tests are located in the `src/test/functional/` directory, not integration. This migration guide focuses specifically on integration tests which handle:
 - Repository layer testing (database integration)
-- Service layer integration 
+- Service layer integration
 - GraphQL resolver integration
 - Security integration
 - Camel route integration
@@ -53,7 +53,7 @@ This guide outlines the migration strategy to transform the current integration 
 
 **TestFixtures (Integration)** - ✅ Integration contexts implemented
 - ✅ RepositoryTestContext for database-layer testing
-- ✅ ServiceIntegrationContext for business logic testing  
+- ✅ ServiceIntegrationContext for business logic testing
 - ✅ GraphQLIntegrationContext for resolver testing
 - ✅ CamelIntegrationContext for route testing
 
@@ -73,7 +73,7 @@ This guide outlines the migration strategy to transform the current integration 
    - ✅ Constraint-aware test data creation
    - ✅ 8+ test methods covering CRUD, constraints, and edge cases
 
-2. **`TransactionRepositoryMigratedIntSpec`** ✅ - `/repositories/TransactionRepositoryMigratedIntSpec.groovy`  
+2. **`TransactionRepositoryMigratedIntSpec`** ✅ - `/repositories/TransactionRepositoryMigratedIntSpec.groovy`
    - ✅ Uses BaseIntegrationSpec + SmartTransactionBuilder
    - ✅ Complex entity relationships with proper FK management
    - ✅ Transaction state testing with isolated data
@@ -265,7 +265,7 @@ void cleanup() {
     accountRepository.deleteAll()  // FK constraint issues!
 }
 
-// TransactionRepositoryIntSpec.groovy lines 38-55  
+// TransactionRepositoryIntSpec.groovy lines 38-55
 void setup() {
     Account testAccount = new Account()
     testAccount.accountNameOwner = "test_brian"  // Hardcoded again!
@@ -290,8 +290,8 @@ private void createTestAccount() {
     Account testAccount = new Account()
     testAccount.accountNameOwner = "test-checking_brian"
     // ... 15+ lines of manual configuration
-    
-    Account testSavingsAccount = new Account()  
+
+    Account testSavingsAccount = new Account()
     testSavingsAccount.accountNameOwner = "test-savings_brian"
     // ... another 15+ lines of duplication
 }
@@ -351,16 +351,16 @@ Create a standardized base class for all integration tests:
 @EnableSharedInjection  // Required for Spock @Shared fields
 @Transactional          // Transaction boundary management
 class BaseIntegrationSpec extends Specification {
-    
+
     @Shared String testOwner = "test_${UUID.randomUUID().toString().replace('-', '').substring(0, 8)}"
     @Shared @Autowired TestDataManager testDataManager
     @Shared @Autowired TestFixtures testFixtures
-    
+
     def setupSpec() {
         // Common integration test setup
         testDataManager.initializeIntegrationTestEnvironment(testOwner)
     }
-    
+
     def cleanupSpec() {
         // FK-aware cleanup
         testDataManager.cleanupIntegrationTestsFor(testOwner)
@@ -375,33 +375,33 @@ Extend TestDataManager for integration test-specific needs:
 ```groovy
 @Component
 class TestDataManager {
-    
+
     @Autowired JdbcTemplate jdbcTemplate
-    
+
     // Integration test specific methods
     void initializeIntegrationTestEnvironment(String testOwner) {
         // Create minimal required reference data for integration tests
         createMinimalCategoriesFor(testOwner)
         createMinimalAccountsFor(testOwner)
     }
-    
+
     void cleanupIntegrationTestsFor(String testOwner) {
         // FK-aware cleanup order for integration tests
         jdbcTemplate.update("DELETE FROM int.t_validation_amount WHERE account_name_owner LIKE ?", "${testOwner}%")
-        jdbcTemplate.update("DELETE FROM int.t_transaction WHERE account_name_owner LIKE ?", "${testOwner}%") 
+        jdbcTemplate.update("DELETE FROM int.t_transaction WHERE account_name_owner LIKE ?", "${testOwner}%")
         jdbcTemplate.update("DELETE FROM int.t_payment WHERE source_account LIKE ? OR destination_account LIKE ?", "${testOwner}%", "${testOwner}%")
         jdbcTemplate.update("DELETE FROM int.t_account WHERE account_name_owner LIKE ?", "${testOwner}%")
         jdbcTemplate.update("DELETE FROM int.t_category WHERE category LIKE ?", "${testOwner}%")
         jdbcTemplate.update("DELETE FROM int.t_user WHERE username LIKE ?", "${testOwner}%")
     }
-    
+
     // Repository-specific helpers
     Long createAccountForIntegrationTest(String testOwner, String accountSuffix, AccountType accountType) {
         Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withAccountNameOwner("${accountSuffix}_${testOwner}")
             .withAccountType(accountType)
             .buildAndValidate()
-            
+
         return accountRepository.save(account).accountId
     }
 }
@@ -412,18 +412,18 @@ class TestDataManager {
 Create specialized test fixtures for integration testing patterns:
 
 ```groovy
-@Component  
+@Component
 class TestFixtures {
-    
+
     // Repository Testing Context
     class RepositoryTestContext {
         String testOwner
         TestDataManager testDataManager
-        
+
         Long createTestAccount(String prefix = "test", AccountType type = AccountType.Debit) {
             return testDataManager.createAccountForIntegrationTest(testOwner, prefix, type)
         }
-        
+
         Transaction createTestTransaction(Long accountId, String description = "test transaction") {
             return SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAccountId(accountId)
@@ -431,37 +431,37 @@ class TestFixtures {
                 .buildAndValidate()
         }
     }
-    
+
     // Service Layer Testing Context
     class ServiceIntegrationContext {
         String testOwner
         TestDataManager testDataManager
-        
+
         AccountServiceTestScenario createAccountServiceScenario() {
             return new AccountServiceTestScenario(testOwner, testDataManager)
         }
     }
-    
-    // GraphQL Resolver Testing Context  
+
+    // GraphQL Resolver Testing Context
     class GraphQLIntegrationContext {
         String testOwner
         TestDataManager testDataManager
-        
+
         PaymentTestScenario createPaymentScenario() {
             Long sourceAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "source", AccountType.Debit)
             Long destAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "dest", AccountType.Credit)
             return new PaymentTestScenario(sourceAccountId, destAccountId, testDataManager)
         }
     }
-    
+
     RepositoryTestContext createRepositoryTestContext(String testOwner) {
         return new RepositoryTestContext(testOwner: testOwner, testDataManager: testDataManager)
     }
-    
+
     ServiceIntegrationContext createServiceIntegrationContext(String testOwner) {
         return new ServiceIntegrationContext(testOwner: testOwner, testDataManager: testDataManager)
     }
-    
+
     GraphQLIntegrationContext createGraphQLIntegrationContext(String testOwner) {
         return new GraphQLIntegrationContext(testOwner: testOwner, testDataManager: testDataManager)
     }
@@ -474,7 +474,7 @@ class TestFixtures {
 
 **Target Files**:
 - `AccountRepositoryIntSpec.groovy`
-- `TransactionRepositoryIntSpec.groovy` 
+- `TransactionRepositoryIntSpec.groovy`
 - `MedicalExpenseRepositoryIntSpec.groovy`
 
 **Step 1: Create BaseIntegrationSpec**
@@ -490,11 +490,11 @@ class BaseIntegrationSpec extends Specification {
     @Shared @Autowired TestDataManager testDataManager
     @Shared @Autowired TestFixtures testFixtures
     @Shared RepositoryTestContext repositoryContext
-    
+
     def setupSpec() {
         repositoryContext = testFixtures.createRepositoryTestContext(testOwner)
     }
-    
+
     def cleanupSpec() {
         testDataManager.cleanupIntegrationTestsFor(testOwner)
     }
@@ -518,7 +518,7 @@ void 'test account repository basic CRUD operations'() {
 **After (Robust)**:
 ```groovy
 class AccountRepositoryIntegratedSpec extends BaseIntegrationSpec {
-    
+
     void 'test account repository basic CRUD operations'() {
         given:
         Account account = SmartAccountBuilder.builderForOwner(testOwner)
@@ -526,10 +526,10 @@ class AccountRepositoryIntegratedSpec extends BaseIntegrationSpec {
             .asDebit()
             .withClearedAmount(1500.50)
             .buildAndValidate()
-            
+
         when:
         Account savedAccount = accountRepository.save(account)
-        
+
         then:
         savedAccount.accountId != null
         savedAccount.accountNameOwner.contains(testOwner)
@@ -557,20 +557,20 @@ void setup() {
 **After (Isolated)**:
 ```groovy
 class TransactionRepositoryIntegratedSpec extends BaseIntegrationSpec {
-    
+
     void 'test transaction repository basic CRUD operations'() {
         given:
         Long testAccountId = repositoryContext.createTestAccount("transaction")
-        
+
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(testAccountId)
             .withDescription("test transaction")
             .withAmount(100.50)
             .buildAndValidate()
-            
+
         when:
         Transaction savedTransaction = transactionRepository.save(transaction)
-        
+
         then:
         savedTransaction.transactionId != null
         savedTransaction.accountNameOwner.contains(testOwner)
@@ -589,28 +589,28 @@ class TransactionRepositoryIntegratedSpec extends BaseIntegrationSpec {
 **Migration Pattern**:
 ```groovy
 class AccountServiceIntegratedSpec extends BaseIntegrationSpec {
-    
+
     @Shared ServiceIntegrationContext serviceContext
-    
+
     def setupSpec() {
         super.setupSpec()
         serviceContext = testFixtures.createServiceIntegrationContext(testOwner)
     }
-    
+
     void 'test account service with transaction state calculations'() {
         given:
         AccountServiceTestScenario scenario = serviceContext.createAccountServiceScenario()
-        
-        // Create test accounts with SmartBuilders  
+
+        // Create test accounts with SmartBuilders
         Long accountId = scenario.createAccountWithTransactions([
             [state: TransactionState.Cleared, amount: 100.00],
             [state: TransactionState.Outstanding, amount: 50.00],
             [state: TransactionState.Future, amount: 25.00]
         ])
-        
+
         when:
         BigDecimal clearedTotal = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
-        
+
         then:
         clearedTotal >= new BigDecimal("100.00")  // At least our test data
         0 * _ // No unexpected interactions
@@ -627,32 +627,32 @@ class AccountServiceIntegratedSpec extends BaseIntegrationSpec {
 **Migration Pattern**:
 ```groovy
 class PaymentGraphQLResolverIntegratedSpec extends BaseIntegrationSpec {
-    
+
     @Shared GraphQLIntegrationContext graphqlContext
     @Shared PaymentGraphQLResolver paymentGraphQLResolver
-    
+
     def setupSpec() {
         super.setupSpec()
         graphqlContext = testFixtures.createGraphQLIntegrationContext(testOwner)
         paymentGraphQLResolver = new PaymentGraphQLResolver(paymentService, meterRegistry)
     }
-    
+
     def "should create payment via GraphQL resolver with integrated test data"() {
         given:
         PaymentTestScenario scenario = graphqlContext.createPaymentScenario()
-        
+
         def paymentInput = SmartPaymentBuilder.builderForOwner(testOwner)
             .withSourceAccount(scenario.sourceAccountName)
-            .withDestinationAccount(scenario.destinationAccountName)  
+            .withDestinationAccount(scenario.destinationAccountName)
             .withAmount(250.00)
             .withTransactionDate("2024-01-15")
             .buildForGraphQLInput()  // New method for GraphQL format
-            
+
         def environment = [getArgument: { String arg -> paymentInput }] as DataFetchingEnvironment
-        
+
         when:
         def result = paymentGraphQLResolver.createPayment().get(environment)
-        
+
         then:
         result != null
         result.paymentId > 0
@@ -666,32 +666,32 @@ class PaymentGraphQLResolverIntegratedSpec extends BaseIntegrationSpec {
 ### Phase 4: Security Integration Tests (Medium Impact, Low Risk)
 
 **Target Files**:
-- `SecurityIntegrationSpec.groovy` 
+- `SecurityIntegrationSpec.groovy`
 - `SecurityIntegrationSimpleSpec.groovy`
 - `SecurityIntegrationWorkingSpec.groovy`
 
 **Migration Pattern**:
 ```groovy
 class SecurityIntegrationEnhancedSpec extends BaseIntegrationSpec {
-    
+
     void 'test user authentication with isolated test data'() {
         given:
         User testUser = SmartUserBuilder.builderForOwner(testOwner)
             .withUniqueUsername("security")
             .withSecurePassword()
             .buildAndValidate()
-            
+
         when:
         User savedUser = userRepository.save(testUser)
-        
+
         then:
-        savedUser.userId != null  
+        savedUser.userId != null
         savedUser.username.contains(testOwner)
         savedUser.username != "security"  // Should be unique
-        
+
         when:
         Optional<User> foundUser = userRepository.findByUsername(savedUser.username)
-        
+
         then:
         foundUser.isPresent()
         foundUser.get().username == savedUser.username
@@ -708,32 +708,32 @@ class SecurityIntegrationEnhancedSpec extends BaseIntegrationSpec {
 **Migration Pattern**:
 ```groovy
 class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
-    
+
     @Shared CamelIntegrationContext camelContext
-    
+
     def setupSpec() {
         super.setupSpec()
         camelContext = testFixtures.createCamelIntegrationContext(testOwner)
     }
-    
+
     void 'test transaction file processing with isolated test accounts'() {
         given:
         // Create test accounts with proper constraint compliance
         Long checkingAccountId = repositoryContext.createTestAccount("checking", AccountType.Debit)
         Long savingsAccountId = repositoryContext.createTestAccount("savings", AccountType.Credit)
-        
+
         // Generate valid JSON with SmartBuilder
         def transactionJson = SmartTransactionBuilder.builderForOwner(testOwner)
-            .withAccountId(checkingAccountId) 
+            .withAccountId(checkingAccountId)
             .withDescription("camel test transaction")
             .withAmount(100.00)
             .buildForCamelJsonArray()  // New method for Camel file format
-            
+
         File jsonFile = camelContext.createTestFile(transactionJson)
-        
+
         when:
         camelContext.processJsonFile(jsonFile)
-        
+
         then:
         conditions.eventually {
             List<Transaction> transactions = transactionRepository
@@ -753,9 +753,9 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 - **To**: Dynamic names like `"testsavings_test47a8b2c1"` guaranteeing uniqueness
 - **Impact**: Zero cross-test contamination
 
-### 2. **Enhanced Test Isolation** 
+### 2. **Enhanced Test Isolation**
 - **From**: Global `setup()` methods creating shared test state
-- **To**: Per-test context creation with unique `testOwner` identifiers  
+- **To**: Per-test context creation with unique `testOwner` identifiers
 - **Impact**: Tests can run concurrently without interference
 
 ### 3. **Constraint-Aware Test Data**
@@ -791,7 +791,7 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 - ✅ ~~Migrate `AccountRepositoryIntSpec` (8 tests)~~ → **COMPLETED** as `AccountRepositoryMigratedIntSpec`
 - ✅ ~~Migrate `TransactionRepositoryIntSpec` (7 tests)~~ → **COMPLETED** as `TransactionRepositoryMigratedIntSpec`
 - ❌ Migrate `MedicalExpenseRepositoryIntSpec` (3 tests) - **PENDING**
-- ❌ Migrate `AccountRepositorySimpleIntSpec` (3 tests) - **PENDING**  
+- ❌ Migrate `AccountRepositorySimpleIntSpec` (3 tests) - **PENDING**
 - ❌ Migrate `TransactionRepositorySimpleIntSpec` (4 tests) - **PENDING**
 - **Success Criteria**: ⚠️ **PARTIAL** - 40% migrated, hardcoded names still exist in 3 files
 
@@ -805,7 +805,7 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 
 ### Phase 2c: Repository Tests - Financial Domain (Week 5) - **0% COMPLETED**
 - ❌ Create `PaymentRepositoryIntSpec` - Payment transaction testing - **NOT STARTED**
-- ❌ Create `TransferRepositoryIntSpec` - Transfer operation testing - **NOT STARTED**  
+- ❌ Create `TransferRepositoryIntSpec` - Transfer operation testing - **NOT STARTED**
 - ❌ Create `PendingTransactionRepositoryIntSpec` - Pending transaction testing - **NOT STARTED**
 - ❌ Create `ReceiptImageRepositoryIntSpec` - Receipt image storage testing - **NOT STARTED**
 - ❌ Create `FamilyMemberRepositoryIntSpec` - Family member data testing - **NOT STARTED**
@@ -854,7 +854,7 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 | **FK Cleanup Issues** | Multiple reported | **Resolved (new tests)** | 0 issues | 🔄 **50%** |
 | **Missing Repository Tests** | 8 repositories | **4 repositories** | 0 repositories | 🔄 **50%** |
 
-### Quality Metrics  
+### Quality Metrics
 | Metric | Current | Target |
 |--------|---------|--------|
 | **Test Pass Rate** | ~95% | 100% |
@@ -879,7 +879,7 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 **Problem**: Tests fail with "violates foreign key constraint" during cleanup
 **Solution**: Use `TestDataManager.cleanupIntegrationTestsFor()` with proper FK ordering
 
-### Issue 2: Account Name Pattern Violations  
+### Issue 2: Account Name Pattern Violations
 **Problem**: Tests create accounts with invalid patterns like `"test_user_with_underscores"`
 **Solution**: Use `SmartAccountBuilder.builderForOwner(testOwner).buildAndValidate()`
 
@@ -900,7 +900,7 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 ls -la src/test/integration/groovy/finance/BaseIntegrationSpec.groovy
 # ✅ EXISTS: 62 lines, fully implemented with testOwner isolation
 
-ls -la src/test/integration/groovy/finance/helpers/TestDataManager.groovy  
+ls -la src/test/integration/groovy/finance/helpers/TestDataManager.groovy
 # ✅ EXISTS: 351 lines, comprehensive FK-aware implementation
 
 ls -la src/test/integration/groovy/finance/helpers/TestFixtures.groovy
@@ -920,7 +920,7 @@ grep -r "\".*_brian" src/test/integration/groovy/ | wc -l
 find src/test/integration -name "*Spec.groovy" -exec grep -l "extends BaseIntegrationSpec" {} \;
 # CURRENT RESULT: 4 files migrated
 
-# Check SmartBuilder adoption (should show 4 files)  
+# Check SmartBuilder adoption (should show 4 files)
 find src/test/integration -name "*Spec.groovy" -exec grep -l "SmartBuilder" {} \;
 # CURRENT RESULT: 4 files using SmartBuilder patterns
 
@@ -960,7 +960,7 @@ grep -r "builderForOwner" src/test/integration/groovy/ | wc -l
 # TARGET: Should increase as more files migrate
 
 # Current testOwner usage (should be ~4 files)
-grep -r "testOwner" src/test/integration/groovy/ | grep -v "TestDataManager" | wc -l  
+grep -r "testOwner" src/test/integration/groovy/ | grep -v "TestDataManager" | wc -l
 # TARGET: Should be 24+ when all tests migrate
 
 # Current constraint validation (should be ~4 files)
@@ -1014,7 +1014,7 @@ find src/test/integration -name "*Spec.groovy" -exec grep -l "_brian" {} \; | wc
 - SmartBuilder pattern adoption eliminating manual entity creation
 - FK constraint cleanup issues resolved in new tests
 
-**✅ Architecture Validation** 
+**✅ Architecture Validation**
 - New architecture patterns proven in `CategoryRepositoryIntSpec` and `ValidationAmountRepositoryIntSpec`
 - SmartBuilder constraint validation working correctly
 - TestDataManager FK cleanup preventing constraint violations
@@ -1025,7 +1025,7 @@ find src/test/integration -name "*Spec.groovy" -exec grep -l "_brian" {} \; | wc
 **High Impact, Low Risk:**
 1. **Complete remaining repository migrations** - 5 files still using hardcoded "_brian" patterns
    - `MedicalExpenseRepositoryIntSpec` (3 test methods)
-   - `AccountRepositorySimpleIntSpec` (3 test methods) 
+   - `AccountRepositorySimpleIntSpec` (3 test methods)
    - `TransactionRepositorySimpleIntSpec` (4 test methods)
 
 2. **Create missing critical repository tests** - 4 domain entities uncovered
@@ -1053,7 +1053,7 @@ find src/test/integration -name "*Spec.groovy" -exec grep -l "_brian" {} \; | wc
 ### 🛠️ **TECHNICAL DEBT STATUS**
 
 **Eliminated in Migrated Tests:**
-- ✅ Hardcoded entity names 
+- ✅ Hardcoded entity names
 - ✅ Manual entity field management
 - ✅ Runtime constraint violations
 - ✅ FK cleanup failures
@@ -1061,7 +1061,7 @@ find src/test/integration -name "*Spec.groovy" -exec grep -l "_brian" {} \; | wc
 
 **Remaining in 20 Unmigrated Files:**
 - ❌ ~30 hardcoded "_brian" references
-- ❌ ~70% manual entity creation patterns  
+- ❌ ~70% manual entity creation patterns
 - ❌ Timestamp-based partial isolation (fragile)
 - ❌ FK constraint cleanup issues
 - ❌ Shared test data between test methods
@@ -1097,7 +1097,7 @@ This migration transforms integration tests from a brittle, shared-data approach
 | File | Priority | Hardcoded Patterns | Test Methods |
 |------|----------|-------------------|-------------|
 | `AccountRepositoryIntSpec.groovy` | HIGH | ❌ "testsavings_brian" | 8 methods |
-| `TransactionRepositoryIntSpec.groovy` | HIGH | ❌ "test_brian" | 7 methods | 
+| `TransactionRepositoryIntSpec.groovy` | HIGH | ❌ "test_brian" | 7 methods |
 | `MedicalExpenseRepositoryIntSpec.groovy` | HIGH | ❌ "_brian" patterns | 3 methods |
 | `AccountRepositorySimpleIntSpec.groovy` | MEDIUM | ❌ "testsavings_brian" | 3 methods |
 | `TransactionRepositorySimpleIntSpec.groovy` | MEDIUM | ❌ "test_brian" | 4 methods |

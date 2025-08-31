@@ -9,7 +9,7 @@ import spock.lang.Shared
 
 /**
  * INTEGRATION TEST - CategoryRepository using robust, isolated architecture
- * 
+ *
  * This integration test demonstrates the new architecture:
  * ✅ No hardcoded category names - all use testOwner for uniqueness
  * ✅ SmartBuilder pattern with constraint validation
@@ -74,7 +74,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
                 .buildAndValidate()
 
         categoryRepository.save(activeCategory1)
-        categoryRepository.save(activeCategory2)  
+        categoryRepository.save(activeCategory2)
         categoryRepository.save(inactiveCategory)
 
         when:
@@ -86,15 +86,15 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         activeCategories.every { it.activeStatus == true }
         inactiveCategories.size() >= 1
         inactiveCategories.every { it.activeStatus == false }
-        
+
         // Verify our test categories are included
         activeCategories.any { it.categoryName == activeCategory1.categoryName }
         activeCategories.any { it.categoryName == activeCategory2.categoryName }
         inactiveCategories.any { it.categoryName == inactiveCategory.categoryName }
 
         // Verify ordering by category name
-        def ourActiveCategories = activeCategories.findAll { 
-            it.categoryName.contains(testOwner.replaceAll(/[^a-z0-9]/, '')) 
+        def ourActiveCategories = activeCategories.findAll {
+            it.categoryName.contains(testOwner.replaceAll(/[^a-z0-9]/, ''))
         }
         if (ourActiveCategories.size() > 1) {
             assert ourActiveCategories == ourActiveCategories.sort { it.categoryName }
@@ -154,7 +154,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         then: "constraint violation is caught at build time, not at save time"
         def ex = thrown(IllegalStateException)
         ex.message.contains("violates length constraints")
-        
+
         when: "trying to create a category with invalid name length (too long)"
         SmartCategoryBuilder.builderForOwner(testOwner)
                 .withCategoryName("a" * 51)  // Too long - violates size constraint (max 50)
@@ -163,7 +163,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         then: "constraint violation is caught at build time"
         def ex2 = thrown(IllegalStateException)
         ex2.message.contains("violates length constraints")
-        
+
         when: "trying to create a category with invalid pattern"
         SmartCategoryBuilder.builderForOwner(testOwner)
                 .withCategoryName("invalid spaces")  // Violates ALPHA_NUMERIC_NO_SPACE_PATTERN
@@ -265,7 +265,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         savedOnline.categoryName.contains("online")
         savedOnline.categoryName.contains(testOwner.replaceAll(/[^a-z0-9]/, ''))
         savedOnline.activeStatus == true
-        
+
         savedUtilities.categoryName.contains("utilities")
         savedUtilities.categoryName.contains(testOwner.replaceAll(/[^a-z0-9]/, ''))
         savedUtilities.activeStatus == false

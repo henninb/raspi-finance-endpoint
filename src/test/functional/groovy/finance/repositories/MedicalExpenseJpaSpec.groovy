@@ -56,13 +56,13 @@ class MedicalExpenseJpaSpec extends Specification {
         long beforeMedicalExpense = medicalExpenseRepository.count()
         long beforeTransaction = transactionRepository.count()
         long beforeAccount = accountRepository.count()
-        
+
         Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('medicaltest')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         // ensure category FK
         ensureCategoryExists('online')
 
@@ -73,7 +73,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .withAmount(125.50G)
             .buildAndValidate()
         Transaction transactionResult = entityManager.persist(transaction)
-        
+
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
             .withTransactionId(transactionResult.transactionId)
             .withBilledAmount(new BigDecimal('125.50'))
@@ -97,7 +97,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         ensureCategoryExists('online')
         Transaction transaction1 = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
@@ -106,7 +106,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .withAmount(100.00G)
             .buildAndValidate()
         Transaction transactionResult1 = entityManager.persist(transaction1)
-        
+
         Transaction transaction2 = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
             .withAccountNameOwner(accountResult.accountNameOwner)
@@ -114,12 +114,12 @@ class MedicalExpenseJpaSpec extends Specification {
             .withAmount(200.00G)
             .buildAndValidate()
         Transaction transactionResult2 = entityManager.persist(transaction2)
-        
+
         MedicalExpense me1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
             .withTransactionId(transactionResult1.transactionId)
             .withBilledAmount(new BigDecimal('100.00'))
             .buildAndValidate()
-            
+
         MedicalExpense me2 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
             .withTransactionId(transactionResult2.transactionId)
             .withBilledAmount(new BigDecimal('200.00'))
@@ -141,7 +141,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         ensureCategoryExists('online')
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
@@ -150,7 +150,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .withAmount(75.25G)
             .buildAndValidate()
         Transaction transactionResult = entityManager.persist(transaction)
-        
+
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
             .withTransactionId(transactionResult.transactionId)
             .withBilledAmount(new BigDecimal('75.25'))
@@ -170,13 +170,13 @@ class MedicalExpenseJpaSpec extends Specification {
         given:
         long beforeMedicalExpense = medicalExpenseRepository.count()
         long beforeTransaction = transactionRepository.count()
-        
+
         Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('deletetest')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         ensureCategoryExists('online')
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
@@ -185,7 +185,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .withAmount(50.00G)
             .buildAndValidate()
         Transaction transactionResult = entityManager.persist(transaction)
-        
+
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
             .withTransactionId(transactionResult.transactionId)
             .withBilledAmount(new BigDecimal('50.00'))
@@ -223,7 +223,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         ensureCategoryExists('online')
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
             .withAccountId(accountResult.accountId)
@@ -232,7 +232,7 @@ class MedicalExpenseJpaSpec extends Specification {
             .withAmount(25.12G)
             .buildAndValidate()
         Transaction transactionResult = entityManager.persist(transaction)
-        
+
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
             .withTransactionId(transactionResult.transactionId)
             .withBilledAmount(new BigDecimal('25.123456'))  // Too many decimal places

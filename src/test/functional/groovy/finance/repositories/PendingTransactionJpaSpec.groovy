@@ -36,13 +36,13 @@ class PendingTransactionJpaSpec extends Specification {
         given:
         long beforePendingTransaction = pendingTransactionRepository.count()
         long beforeAccount = accountRepository.count()
-        
+
         Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('pendingtest')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction pendingTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(175.50G)
@@ -67,14 +67,14 @@ class PendingTransactionJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction clearedTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(100.00G)
             .withDescription("Cleared pending transaction")
             .asReviewed()
             .buildAndValidate()
-            
+
         PendingTransaction outstandingTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(200.00G)
@@ -100,14 +100,14 @@ class PendingTransactionJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction activeTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(75.25G)
             .withDescription("Active pending transaction")
             .asPending()
             .buildAndValidate()
-            
+
         PendingTransaction inactiveTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(125.75G)
@@ -133,7 +133,7 @@ class PendingTransactionJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction transaction1 = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(50.00G)
@@ -162,13 +162,13 @@ class PendingTransactionJpaSpec extends Specification {
         given:
         long beforePendingTransaction = pendingTransactionRepository.count()
         long beforeAccount = accountRepository.count()
-        
+
         Account account = SmartAccountBuilder.builderForOwner(testOwner)
             .withUniqueAccountName('deletetest')
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction pendingTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(99.99G)
@@ -191,7 +191,7 @@ class PendingTransactionJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction pendingTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(25.123456G)  // Too many decimal places
@@ -233,7 +233,7 @@ class PendingTransactionJpaSpec extends Specification {
             .asCredit()
             .buildAndValidate()
         Account accountResult = entityManager.persist(account)
-        
+
         PendingTransaction pendingTransaction = SmartPendingTransactionBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(accountResult.accountNameOwner)
             .withAmount(100.00G)

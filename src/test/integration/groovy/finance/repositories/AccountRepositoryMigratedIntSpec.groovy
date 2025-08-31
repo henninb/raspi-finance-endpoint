@@ -13,7 +13,7 @@ import java.sql.Timestamp
 
 /**
  * MIGRATED INTEGRATION TEST - Demonstrates robust, isolated architecture
- * 
+ *
  * This is the migrated version of AccountRepositoryIntSpec showing:
  * ✅ No hardcoded account names - all use testOwner for uniqueness
  * ✅ SmartBuilder pattern with constraint validation
@@ -90,7 +90,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         activeAccounts.every { it.activeStatus == true }
         inactiveAccounts.size() >= 1
         inactiveAccounts.every { it.activeStatus == false }
-        
+
         // Verify our test accounts are included
         activeAccounts.any { it.accountNameOwner == activeAccount.accountNameOwner }
         inactiveAccounts.any { it.accountNameOwner == inactiveAccount.accountNameOwner }
@@ -124,7 +124,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         debitAccounts.every { it.accountType == AccountType.Debit }
         creditAccounts.size() >= 1
         creditAccounts.every { it.accountType == AccountType.Credit }
-        
+
         // Verify our test accounts are included
         debitAccounts.any { it.accountNameOwner == checkingAccount.accountNameOwner }
         creditAccounts.any { it.accountNameOwner == savingsAccount.accountNameOwner }
@@ -204,7 +204,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         then: "constraint violation is caught at build time, not at save time"
         def ex = thrown(IllegalStateException)
         ex.message.contains("violates length constraints")
-        
+
         when: "trying to create an account with invalid pattern"
         SmartAccountBuilder.builderForOwner(testOwner)
                 .withAccountNameOwner("invalid pattern with spaces")  // Violates ALPHA_UNDERSCORE_PATTERN
@@ -213,7 +213,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         then: "constraint violation is caught at build time"
         def ex2 = thrown(IllegalStateException)
         ex2.message.contains("violates alpha_underscore pattern")
-        
+
         when: "trying to create an account with invalid moniker"
         SmartAccountBuilder.builderForOwner(testOwner)
                 .withMoniker("123")  // Too short - must be exactly 4 digits
@@ -284,7 +284,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         then:
         foundAccount.isPresent()
         foundAccount.get().accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
-        
+
         savedUniqueAccount.accountId != null
         savedUniqueAccount.accountNameOwner.contains("unique")
         savedUniqueAccount.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
@@ -298,7 +298,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
                 .asActive()
                 .withBalances(
                     new BigDecimal("1000.00"),  // cleared
-                    new BigDecimal("100.00"),   // outstanding  
+                    new BigDecimal("100.00"),   // outstanding
                     new BigDecimal("50.00")     // future
                 )
                 .buildAndValidate()
@@ -312,7 +312,7 @@ class AccountRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         savedAccount.cleared == new BigDecimal("1000.00")
         savedAccount.outstanding == new BigDecimal("100.00")
         savedAccount.future == new BigDecimal("50.00")
-        
+
         // Account name follows pattern and contains test owner
         savedAccount.accountNameOwner.matches(/^[a-z-]*_[a-z]*$/)
         savedAccount.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))

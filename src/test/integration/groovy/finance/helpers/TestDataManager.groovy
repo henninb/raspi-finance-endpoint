@@ -25,14 +25,14 @@ class TestDataManager {
 
     void initializeIntegrationTestEnvironment(String testOwner) {
         log.info("Initializing integration test environment for owner: ${testOwner}")
-        
+
         // Clean up any existing data for this test owner first
         cleanupIntegrationTestsFor(testOwner)
-        
+
         // Create minimal required reference data for integration tests
         createMinimalCategoriesFor(testOwner)
         createMinimalAccountsFor(testOwner)
-        
+
         log.info("Successfully initialized integration test environment for owner: ${testOwner}")
     }
 
@@ -89,13 +89,13 @@ class TestDataManager {
 
     Long createAccountForIntegrationTest(String testOwner, String accountSuffix, String accountType) {
         String accountName = createAccountFor(testOwner, accountSuffix, accountType, true)
-        
+
         // Get the generated account ID
         Long accountId = jdbcTemplate.queryForObject(
             "SELECT account_id FROM t_account WHERE account_name_owner = ?",
             Long.class, accountName
         )
-        
+
         log.info("Created account for integration test: ID=${accountId}, name=${accountName}, type=${accountType}")
         return accountId
     }

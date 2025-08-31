@@ -67,7 +67,7 @@ class TestFixtures {
     GraphQLIntegrationContext createGraphQLIntegrationContext(String testOwner) {
         log.info("Creating GraphQL integration context for test owner: ${testOwner}")
 
-        // Initialize integration test environment  
+        // Initialize integration test environment
         testDataManager.initializeIntegrationTestEnvironment(testOwner)
 
         return new GraphQLIntegrationContext(
@@ -203,7 +203,7 @@ class AccountServiceTestScenario {
             String description = txnData.description ?: "service_test_transaction"
             BigDecimal amount = txnData.amount ?: new BigDecimal("100.00")
             String state = txnData.state ?: "cleared"
-            
+
             testDataManager.createTransactionFor(testOwner, "service", description, amount, state)
         }
 
@@ -251,11 +251,11 @@ class PaymentServiceTestScenario {
     PaymentServiceTestScenario(String testOwner, TestDataManager testDataManager) {
         this.testOwner = testOwner
         this.testDataManager = testDataManager
-        
+
         // Create source and destination accounts for payment scenarios
         this.sourceAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "source", "debit")
         this.destinationAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "dest", "credit")
-        
+
         // Get the actual account names created
         this.sourceAccountName = "source_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
         this.destinationAccountName = "dest_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
@@ -284,7 +284,7 @@ class GraphQLIntegrationContext {
     }
 
     TransferTestScenario createTransferScenario() {
-        Long sourceAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "source", "debit") 
+        Long sourceAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "source", "debit")
         Long destAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "dest", "debit")
         return new TransferTestScenario(sourceAccountId, destAccountId, testDataManager, testOwner)
     }
@@ -310,7 +310,7 @@ class PaymentTestScenario {
         this.destinationAccountId = destAccountId
         this.testDataManager = testDataManager
         this.testOwner = testOwner
-        
+
         // Generate the account names that were created
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         this.sourceAccountName = "source_${cleanOwner}"
@@ -342,7 +342,7 @@ class TransferTestScenario {
         this.destinationAccountId = destAccountId
         this.testDataManager = testDataManager
         this.testOwner = testOwner
-        
+
         // Generate the account names that were created
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         this.sourceAccountName = "source_${cleanOwner}"
@@ -368,7 +368,7 @@ class SecurityIntegrationContext {
     User createTestUser(String username = null, String password = null) {
         String actualUsername = username ?: "test_user_${testOwner}"
         String actualPassword = password ?: "test_password_${System.currentTimeMillis()}"
-        
+
         return SmartUserBuilder.builderForOwner(testOwner)
                 .withUsername(actualUsername)
                 .withPassword(actualPassword)
@@ -404,7 +404,7 @@ class CamelIntegrationContext {
         if (!inputDir.exists()) {
             inputDir.mkdirs()
         }
-        
+
         File targetFile = new File(inputDir, "${UUID.randomUUID()}.json")
         targetFile.text = jsonFile.text
     }
