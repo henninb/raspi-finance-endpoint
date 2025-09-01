@@ -16,7 +16,7 @@ plugins {
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
     id "org.flywaydb.flyway" version "${flywayVersion}"
-    id "com.github.ben-manes.versions" version "${gradleVersionsPlugin}"
+    id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
 }
 
 apply from: 'test.gradle'
@@ -121,20 +121,20 @@ dependencies {
 
     // GraphQL (Spring for GraphQL)
     implementation("org.springframework.boot:spring-boot-starter-graphql")
-    implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlVersion}")
-    implementation "com.google.guava:guava:31.1-jre"
+    implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlExtendedScalarsVersion}")
+    implementation "com.google.guava:guava:${guavaVersion}"
 
     //postgreSQL database
-    runtimeOnly("org.postgresql:postgresql:${postgresqlVersion}")
+    runtimeOnly("org.postgresql:postgresql:${postgresqlDriverVersion}")
 
     // jooq
     implementation("org.jooq:jooq:${jooqVersion}")
-    jooqGenerator "org.postgresql:postgresql:${postgresqlVersion}"
+    jooqGenerator "org.postgresql:postgresql:${postgresqlDriverVersion}"
 
     // Oracle database
     runtimeOnly fileTree(dir: 'libs', include: 'ojdbc8.jar')
     //runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
-    implementation("org.apache.tomcat:tomcat-jdbc:${tomcatJdbcVersion}")
+    implementation("org.apache.tomcat:tomcat-jdbc:${apacheTomcatJdbcVersion}")
 
     //Flyway
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
@@ -142,7 +142,7 @@ dependencies {
 
 
     //influx
-    implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxVersion}")
+    implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxRegistryVersion}")
 
     //Resilience4j for circuit breaker, retry, and timeout patterns
     implementation("io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}")
@@ -152,11 +152,11 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-micrometer:${resilience4jVersion}")
 
     //Validation
-    implementation("javax.validation:validation-api:${validationVersion}")
+    implementation("javax.validation:validation-api:${javaxValidationVersion}")
     //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
 
     //logstash
-    runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackVersion}")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}")
 
     //Used for transactional
     // implementation("org.aspectj:aspectjweaver:1.9.6")
@@ -166,11 +166,11 @@ dependencies {
     //implementation("org.springframework.security:spring-security-core:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
-    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
-    implementation "javax.xml.bind:jaxb-api:2.3.1"
-    implementation "org.glassfish.jaxb:jaxb-runtime:2.3.1"
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+    implementation "javax.xml.bind:jaxb-api:${jaxbApiVersion}"
+    implementation "org.glassfish.jaxb:jaxb-runtime:${jaxbRuntimeVersion}"
 
     //
     //Graphics
@@ -185,7 +185,7 @@ dependencies {
     compileOnly("jakarta.platform:jakarta.jakartaee-api:${jakartaVersion}")
 
     //Logging
-    implementation("ch.qos.logback:logback-classic:${logbackVersion}")
+    implementation("ch.qos.logback:logback-classic:${logbackClassicVersion}")
     //implementation 'org.slf4j:slf4j-log4j12:2.0.0'
 
     //implementation group: 'org.slf4j', name: 'jul-to-slf4j', version: '2.0.1'
