@@ -8,7 +8,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
-import spock.lang.Ignore
 import java.math.BigDecimal
 import java.sql.Date
 
@@ -16,7 +15,6 @@ import java.sql.Date
 @ActiveProfiles("int")
 @ContextConfiguration(classes = Application)
 @Transactional
-@Ignore("Legacy brittle spec replaced by MedicalExpenseRepositoryMigratedIntSpec; keeping for reference.")
 class MedicalExpenseRepositoryIntSpec extends Specification {
 
     @Autowired
