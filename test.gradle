@@ -59,14 +59,14 @@ dependencies {
     testImplementation("org.apache.groovy:groovy:${groovyVersion}")
     testImplementation("org.apache.groovy:groovy-json:${groovyVersion}")
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
-    testImplementation("org.spockframework:spock-core:${spockVersion}")
-    testImplementation("org.spockframework:spock-spring:${spockVersion}")
-    testImplementation("org.testcontainers:spock:${testContainersVersion}")
-    testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
-    testImplementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
-    testImplementation("com.squareup.retrofit2:retrofit-mock:${retrofitVersion}")
+    testImplementation("org.spockframework:spock-core:${spockFrameworkVersion}")
+    testImplementation("org.spockframework:spock-spring:${spockFrameworkVersion}")
+    testImplementation("org.testcontainers:spock:${testcontainersVersion}")
+    testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderNgVersion}")
+    testImplementation("com.squareup.retrofit2:retrofit:${squareRetrofitVersion}")
+    testImplementation("com.squareup.retrofit2:retrofit-mock:${squareRetrofitVersion}")
     //h2 database
-    runtimeOnly("com.h2database:h2:${h2Version}")
+    runtimeOnly("com.h2database:h2:${h2DatabaseVersion}")
 }
 
 ////provide dependency scopes

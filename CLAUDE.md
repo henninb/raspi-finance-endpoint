@@ -11,6 +11,8 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - Prioritize accuracy and clarity over politeness
 - Never leave trailing spaces in any source file
 - Question implementation decisions if they appear suboptimal
+- Always use profile-specific test commands (SPRING_PROFILES_ACTIVE=func/int) for proper test isolation
+- Verify all environment variables are properly sourced before running applications
 
 ## Build and Test Commands
 
@@ -22,26 +24,35 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 
 #### Critical Build Requirements
 - MUST run linting/code quality checks before any commit
-- MUST verify all tests pass before deployment
+- MUST verify all tests pass before deployment (use `--continue` flag to see all failures)
 - Build failures require investigation - do NOT ignore warnings
+- Source environment variables with `source env.secrets` before running bootRun
+- Use `./git-commit-review.sh` for automated pre-commit validation
 
 ### Test Commands
 - Unit tests: `./gradlew test`
-- Single test: `./gradlew test --tests "finance.domain.AccountSpec"`
+- Single unit test: `./gradlew test --tests "finance.domain.AccountSpec"`
 - Integration tests: `./gradlew integrationTest`
+- Single integration test: `SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "finance.repositories.AccountRepositoryIntSpec"`
 - Functional tests: `./gradlew functionalTest`
+- Single functional test: `SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.AccountControllerIsolatedSpec"`
 - Performance tests: `./gradlew performanceTest`
 - Oracle tests: `./gradlew oracleTest`
+- All tests with continue on failure: `./gradlew test integrationTest functionalTest --continue`
 
 ### Database Migration
 - Flyway migration: `./gradlew flywayMigrate --info`
 - Flyway repair: `./run-flyway-repair.sh` or `./gradlew flywayRepair`
 
 ### Development Scripts
+- Run application: `./run-bootrun.sh` (sources env.secrets automatically)
 - Run application with screen: `./run-screen-bootrun.sh`
 - Run functional tests: `./run-functional.sh`
+- Database backup: `./run-backup.sh`
+- Flyway repair: `./run-flyway-repair.sh`
 - Git setup: `./run-git-setup.sh`
 - Deploy script: `./run-deploy.sh`
+- Git commit quality reviewer: `./git-commit-review.sh`
 
 ## Architecture Overview
 
@@ -51,12 +62,17 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - **Framework**: Spring Boot 3.5.4
 - **Security**: Spring Security 6.5.1 with JWT
 - **Database**: PostgreSQL 42.7.7 (prod/stage) or Oracle (prodora), H2 2.3.232 (test)
-- **Build Tool**: Gradle 8.8
+- **Build Tool**: Gradle 8.14.3
 - **Messaging**: Apache Camel 4.13.0 for file processing routes
-- **Metrics**: Micrometer with InfluxDB
-- **GraphQL**: Custom GraphQL 19.1 implementation
+- **Metrics**: Micrometer 1.14.8 with InfluxDB
+- **GraphQL**: Custom GraphQL 19.1 implementation with Spring WebMVC integration
 - **Resilience**: Resilience4j 2.2.0 for circuit breakers and retry logic
-- **Migration**: Flyway 11.11.0
+- **Migration**: Flyway 11.11.1
+- **Data Access**: Hibernate 6.6.18.Final, JOOQ 3.20.6
+- **Testing**: JUnit 5.11.8, Testcontainers 1.20.4
+- **JSON Processing**: Jackson 2.19.1
+- **File Processing**: Apache POI 5.4.1 for Excel files
+- **Image Processing**: Thumbnailator 0.4.19
 
 ### Application Structure
 
@@ -139,17 +155,24 @@ Transaction files are processed through Camel routes:
 - Metrics integration for monitoring
 
 ### Security
-- JWT token-based authentication
+- JWT token-based authentication with configurable secret key
 - CORS configuration for cross-origin requests
 - Role-based access control
 - Request/response logging filters
+- Environment-based configuration isolation
+
+#### Security Best Practices
+- JWT secret key stored in `env.secrets` file (excluded from version control)
+- Profile-specific security configurations prevent test credentials in production
+- Input validation through Spring Boot validation annotations
+- Database connection pooling with timeout configurations
+- Test isolation using dedicated H2 databases per test profile
 
 #### Security Risks to Address
-- JWT token storage and rotation strategy unclear
-- CORS policy may be too permissive - needs review
-- Input validation requirements not specified
-- No mention of rate limiting or DDoS protection
-- Database connection security not documented
+- JWT token storage and rotation strategy needs documentation
+- CORS policy configuration should be reviewed for production deployment
+- Rate limiting and DDoS protection not currently implemented
+- Database connection security configuration needs comprehensive documentation
 
 ## Code Quality Standards
 
@@ -286,9 +309,16 @@ When synchronizing configurations between environments:
 4. **Rollback Strategy**: Keep previous working configuration for quick rollback
 5. **Documentation**: Record which configurations were successfully added and which failed
 
-**Example Test Command:**
+**Example Test Commands:**
 ```bash
-SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.AccountControllerSpec"
+# Functional test with profile
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.AccountControllerIsolatedSpec"
+
+# Integration test with profile
+SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "finance.repositories.AccountRepositoryIntSpec"
+
+# Run all functional tests with continue on failure
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --continue
 ```
 
 This approach ensures configuration consistency without compromising test reliability or introducing environment-specific bugs.
@@ -319,3 +349,58 @@ This approach ensures configuration consistency without compromising test reliab
 - **Performance Consistency**: Query timeouts and batch processing behavior matches production
 - **Database Behavior**: Connection management and transaction handling aligns with production settings
 - **Early Issue Detection**: Integration tests can catch resilience-related issues before deployment
+
+## Environment Configuration
+
+### Required Environment Setup
+
+#### Environment Variables File (`env.secrets`)
+Create an `env.secrets` file in the project root with the following variables:
+```bash
+# JWT Configuration
+export JWT_KEY="your-jwt-secret-key-here"
+export custom_project_jwt_key=$JWT_KEY
+
+# Database Configuration (if using external databases)
+export PGPASSWORD="your-postgres-password"
+export DATABASE_URL="jdbc:postgresql://localhost:5432/finance"
+
+# Application Configuration
+export SPRING_PROFILES_ACTIVE="prod"  # or stage, func, int, etc.
+```
+
+#### Application Startup
+```bash
+# Source environment variables before running
+source env.secrets
+./gradlew bootRun
+
+# Or use the provided script that handles this automatically
+./run-bootrun.sh
+```
+
+#### Security Note
+- The `env.secrets` file is excluded from version control (`.gitignore`)
+- Never commit sensitive credentials to the repository
+- Each environment (dev, stage, prod) should have its own `env.secrets` configuration
+- Use strong, unique JWT secret keys for each environment
+
+### Profile-Specific Testing
+
+#### Test Profile Usage
+```bash
+# Functional tests (full application context)
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest
+
+# Integration tests (database + services)
+SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest
+
+# Unit tests (no profile needed, uses H2)
+./gradlew test
+```
+
+#### Test Data Isolation
+- Each test profile uses independent H2 database instances
+- Test data builders create consistent, isolated test scenarios
+- "IsolatedSpec" tests use dedicated test data setups
+- Database state is reset between test runs for reliability
