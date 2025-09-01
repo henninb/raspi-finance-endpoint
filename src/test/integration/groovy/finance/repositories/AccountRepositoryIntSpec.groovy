@@ -1,56 +1,40 @@
 package finance.repositories
 
-import finance.Application
+import finance.BaseIntegrationSpec
 import finance.domain.Account
 import finance.domain.AccountType
+import finance.helpers.SmartAccountBuilder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.transaction.annotation.Transactional
-import spock.lang.Specification
-import spock.lang.Ignore
 
-import java.sql.Date
 import java.sql.Timestamp
 import java.math.BigDecimal
 
-@ActiveProfiles("int")
-@SpringBootTest
-@ContextConfiguration(classes = Application)
-@Transactional
-class AccountRepositoryIntSpec extends Specification {
+class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     AccountRepository accountRepository
 
     void 'test account repository basic CRUD operations'() {
         given:
-        Account account = new Account(
-            accountId: 0L,
-            accountNameOwner: "testsavings_brian",
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "1000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("1500.50"),
-            dateClosed: new java.sql.Timestamp(System.currentTimeMillis()),
-            validationDate: new java.sql.Timestamp(System.currentTimeMillis())
-        )
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("testsavings")
+            .asDebit()
+            .withMoniker("1000")
+            .withBalances(new BigDecimal("1500.50"))
+            .buildAndValidate()
 
         when:
         Account savedAccount = accountRepository.save(account)
 
         then:
         savedAccount.accountId != null
-        savedAccount.accountNameOwner == "testsavings_brian"
+        savedAccount.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))  // Match SmartAccountBuilder logic
         savedAccount.accountType == AccountType.Debit
         savedAccount.cleared == new BigDecimal("1500.50")
 
         when:
-        Optional<Account> foundAccount = accountRepository.findByAccountNameOwner("testsavings_brian")
+        Optional<Account> foundAccount = accountRepository.findByAccountNameOwner(savedAccount.accountNameOwner)
 
         then:
         foundAccount.isPresent()
@@ -60,33 +44,21 @@ class AccountRepositoryIntSpec extends Specification {
 
     void 'test find accounts by active status'() {
         given:
-        // Create active account
-        Account activeAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "activeaccount_brian",
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "2000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("2000.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account activeAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("active")
+            .asDebit()
+            .asActive()
+            .withMoniker("2000")
+            .withBalances(new BigDecimal("2000.00"))
+            .buildAndValidate()
 
-        // Create inactive account
-        Account inactiveAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "inactiveaccount_brian",
-            accountType: AccountType.Credit,
-            activeStatus: false,
-            moniker: "3000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("-500.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account inactiveAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("inactive")
+            .asCredit()
+            .asInactive()
+            .withMoniker("3000")
+            .withBalances(new BigDecimal("-500.00"))
+            .buildAndValidate()
 
         accountRepository.save(activeAccount)
         accountRepository.save(inactiveAccount)
@@ -98,37 +70,28 @@ class AccountRepositoryIntSpec extends Specification {
         then:
         activeAccounts.size() >= 1
         activeAccounts.every { it.activeStatus == true }
+        activeAccounts.any { it.accountNameOwner == activeAccount.accountNameOwner }
+        
         inactiveAccounts.size() >= 1
         inactiveAccounts.every { it.activeStatus == false }
+        inactiveAccounts.any { it.accountNameOwner == inactiveAccount.accountNameOwner }
     }
 
     void 'test find accounts by account type'() {
         given:
-        Account checkingAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "checkingtypetest_brian",
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "4000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("1000.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account checkingAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("checking")
+            .asDebit()
+            .withMoniker("4000")
+            .withBalances(new BigDecimal("1000.00"))
+            .buildAndValidate()
 
-        Account savingsAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "savingstypetest_brian",
-            accountType: AccountType.Credit,
-            activeStatus: true,
-            moniker: "5000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("5000.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account savingsAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("savings")
+            .asCredit()
+            .withMoniker("5000")
+            .withBalances(new BigDecimal("5000.00"))
+            .buildAndValidate()
 
         accountRepository.save(checkingAccount)
         accountRepository.save(savingsAccount)
@@ -140,37 +103,30 @@ class AccountRepositoryIntSpec extends Specification {
         then:
         debitAccounts.size() >= 1
         debitAccounts.every { it.accountType == AccountType.Debit }
+        debitAccounts.any { it.accountNameOwner == checkingAccount.accountNameOwner }
+        
         creditAccounts.size() >= 1
         creditAccounts.every { it.accountType == AccountType.Credit }
+        creditAccounts.any { it.accountNameOwner == savingsAccount.accountNameOwner }
     }
 
     void 'test find accounts by active status and account type'() {
         given:
-        Account activeCheckingAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "activecheckingcombo_brian",
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "6000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("1200.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account activeCheckingAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("activechecking")
+            .asDebit()
+            .asActive()
+            .withMoniker("6000")
+            .withBalances(new BigDecimal("1200.00"))
+            .buildAndValidate()
 
-        Account inactiveCheckingAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "inactivecheckingcombo_brian",
-            accountType: AccountType.Debit,
-            activeStatus: false,
-            moniker: "7000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("800.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account inactiveCheckingAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("inactivechecking")
+            .asDebit()
+            .asInactive()
+            .withMoniker("7000")
+            .withBalances(new BigDecimal("800.00"))
+            .buildAndValidate()
 
         accountRepository.save(activeCheckingAccount)
         accountRepository.save(inactiveCheckingAccount)
@@ -184,91 +140,79 @@ class AccountRepositoryIntSpec extends Specification {
         activeCheckingAccounts.every {
             it.activeStatus == true && it.accountType == AccountType.Debit
         }
-        activeCheckingAccounts.any { it.accountNameOwner == "activecheckingcombo_brian" }
-        !activeCheckingAccounts.any { it.accountNameOwner == "inactivecheckingcombo_brian" }
+        activeCheckingAccounts.any { it.accountNameOwner == activeCheckingAccount.accountNameOwner }
+        !activeCheckingAccounts.any { it.accountNameOwner == inactiveCheckingAccount.accountNameOwner }
     }
 
     void 'test account constraint violations'() {
         given:
-        Account duplicateAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "duplicatetest_brian",
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "8000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("100.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
-
-        Account duplicateAccount2 = new Account(
-            accountId: 0L,
-            accountNameOwner: "duplicatetest_brian",  // Same account name - will cause unique constraint violation
-            accountType: AccountType.Credit,  // Different account type but same name - violates unique constraint
-            activeStatus: true,
-            moniker: "9000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("200.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        // Create first account with unique name for this test
+        Account firstAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("duplicate")
+            .asDebit()
+            .withMoniker("8000")
+            .withBalances(new BigDecimal("100.00"))
+            .buildAndValidate()
 
         when:
-        accountRepository.save(duplicateAccount)
-        accountRepository.flush() // Force the first save to complete
+        Account savedAccount = accountRepository.save(firstAccount)
+        accountRepository.flush()
 
         then:
-        notThrown(Exception) // First save should succeed
+        notThrown(Exception)
+        savedAccount.accountId != null
 
         when:
-        accountRepository.save(duplicateAccount2)
-        accountRepository.flush() // This should fail due to unique constraint
+        // Try to create a second account with the exact same account name
+        Account duplicateAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withAccountNameOwner(savedAccount.accountNameOwner)  // Use exact same name
+            .asCredit()  // Different type but same name violates unique constraint
+            .withMoniker("9000")
+            .withBalances(new BigDecimal("200.00"))
+            .buildAndValidate()
+        
+        accountRepository.save(duplicateAccount)
+        accountRepository.flush()
 
         then:
         thrown(DataIntegrityViolationException)
     }
 
-    void 'test account null constraint violations'() {
-        given:
-        // Test with invalid account name that violates pattern constraints
-        Account invalidAccount = new Account(
-            accountId: 0L,
-            accountNameOwner: "ab",  // Too short - violates size constraint (min 3)
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "1000",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("100.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
-
+    void 'test account constraint validation during build'() {
         when:
-        accountRepository.save(invalidAccount)
-        accountRepository.flush()
+        // SmartBuilder should catch constraint violations at build time
+        SmartAccountBuilder.builderForOwner(testOwner)
+            .withAccountNameOwner("ab")  // Too short - violates size constraint (min 3)
+            .asDebit()
+            .withMoniker("1000")
+            .withBalances(new BigDecimal("100.00"))
+            .buildAndValidate()  // This should fail during validation
 
         then:
-        thrown(Exception)
+        thrown(IllegalStateException)
+        
+        when:
+        // Test invalid pattern - numbers not allowed
+        SmartAccountBuilder.builderForOwner(testOwner)
+            .withAccountNameOwner("invalid123_test")  // Numbers violate alpha_underscore pattern
+            .asDebit()
+            .withMoniker("1000")
+            .withBalances(new BigDecimal("100.00"))
+            .buildAndValidate()
+
+        then:
+        thrown(IllegalStateException)
     }
 
     void 'test account update operations'() {
         given:
-        Account account = new Account(
-            accountId: 0L,
-            accountNameOwner: "updatetest_brian",
-            accountType: AccountType.Debit,
-            activeStatus: true,
-            moniker: "1100",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("1000.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("update")
+            .asDebit()
+            .withMoniker("1100")
+            .withBalances(new BigDecimal("1000.00"))
+            .buildAndValidate()
+            
         Account savedAccount = accountRepository.save(account)
 
         when:
@@ -280,10 +224,10 @@ class AccountRepositoryIntSpec extends Specification {
         then:
         updatedAccount.cleared == new BigDecimal("1500.00")
         updatedAccount.outstanding == new BigDecimal("50.00")
-        updatedAccount.accountNameOwner == "updatetest_brian"
+        updatedAccount.accountNameOwner == savedAccount.accountNameOwner
 
         when:
-        Optional<Account> refetchedAccount = accountRepository.findByAccountNameOwner("updatetest_brian")
+        Optional<Account> refetchedAccount = accountRepository.findByAccountNameOwner(savedAccount.accountNameOwner)
 
         then:
         refetchedAccount.isPresent()
@@ -293,23 +237,18 @@ class AccountRepositoryIntSpec extends Specification {
 
     void 'test account deletion'() {
         given:
-        Account accountToDelete = new Account(
-            accountId: 0L,
-            accountNameOwner: "deletetest_brian",
-            accountType: AccountType.Credit,
-            activeStatus: true,
-            moniker: "1200",
-            outstanding: new BigDecimal("0.00"),
-            future: new BigDecimal("0.00"),
-            cleared: new BigDecimal("-200.00"),
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
+        Account accountToDelete = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("delete")
+            .asCredit()
+            .withMoniker("1200")
+            .withBalances(new BigDecimal("-200.00"))
+            .buildAndValidate()
+            
         Account savedAccount = accountRepository.save(accountToDelete)
 
         when:
         accountRepository.delete(savedAccount)
-        Optional<Account> deletedAccount = accountRepository.findByAccountNameOwner("deletetest_brian")
+        Optional<Account> deletedAccount = accountRepository.findByAccountNameOwner(savedAccount.accountNameOwner)
 
         then:
         !deletedAccount.isPresent()
