@@ -64,7 +64,7 @@ class TransactionRepositoryMigratedIntSpec extends BaseIntegrationSpec {
                 .withAccountNameOwner(ownerAccountName)
                 .withTransactionDate(Date.valueOf("2023-01-01"))
                 .withDescription("test transaction")
-                .withCategory("test_${testOwner.replaceAll(/[^a-z0-9]/, '').toLowerCase()}")
+                .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
                 .withAmount("100.50")
                 .asCleared()
                 .buildAndValidate()
