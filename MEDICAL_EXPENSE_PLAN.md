@@ -1272,20 +1272,20 @@ Redesign the medical expense system to decouple expense creation from payment tr
 ##### 2.5.1 Database Schema Updates (V11__decouple-medical-expense-payments.sql)
 ```sql
 -- Make transaction_id nullable and add paid_amount field
-ALTER TABLE public.t_medical_expense 
+ALTER TABLE public.t_medical_expense
 ALTER COLUMN transaction_id DROP NOT NULL;
 
 -- Add paid_amount field to track actual payments
-ALTER TABLE public.t_medical_expense 
+ALTER TABLE public.t_medical_expense
 ADD COLUMN paid_amount NUMERIC(12,2) DEFAULT 0.00 NOT NULL;
 
 -- Add constraint to ensure paid_amount is non-negative
-ALTER TABLE public.t_medical_expense 
+ALTER TABLE public.t_medical_expense
 ADD CONSTRAINT ck_paid_amount_non_negative CHECK (paid_amount >= 0);
 
 -- Update existing records to sync paid_amount with patient_responsibility where transaction exists
-UPDATE public.t_medical_expense 
-SET paid_amount = patient_responsibility 
+UPDATE public.t_medical_expense
+SET paid_amount = patient_responsibility
 WHERE transaction_id IS NOT NULL;
 ```
 
@@ -1295,31 +1295,31 @@ WHERE transaction_id IS NOT NULL;
 @Table(name = "t_medical_expense")
 data class MedicalExpense(
     // ... existing fields ...
-    
+
     @Column(name = "transaction_id")  // Remove nullable = false
     var transactionId: Long? = null,  // Make nullable
-    
+
     // Add new paid_amount field
     @field:Digits(integer = 12, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "paid_amount", nullable = false)
     var paidAmount: BigDecimal = BigDecimal("0.00"),
-    
+
     // ... existing fields ...
 ) {
     // Add helper methods for payment status
-    fun getUnpaidAmount(): BigDecimal = 
+    fun getUnpaidAmount(): BigDecimal =
         (patientResponsibility - paidAmount).max(BigDecimal.ZERO)
-    
-    fun isFullyPaid(): Boolean = 
+
+    fun isFullyPaid(): Boolean =
         paidAmount >= patientResponsibility
-    
-    fun isPartiallyPaid(): Boolean = 
+
+    fun isPartiallyPaid(): Boolean =
         paidAmount > BigDecimal.ZERO && paidAmount < patientResponsibility
-    
-    fun isUnpaid(): Boolean = 
+
+    fun isUnpaid(): Boolean =
         paidAmount == BigDecimal.ZERO
-    
-    fun isOverpaid(): Boolean = 
+
+    fun isOverpaid(): Boolean =
         paidAmount > patientResponsibility
 }
 ```
@@ -1328,7 +1328,7 @@ data class MedicalExpense(
 ```kotlin
 interface MedicalExpenseService {
     // ... existing methods ...
-    
+
     // New payment-related methods
     fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense
     fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense
@@ -1342,34 +1342,34 @@ class MedicalExpenseServiceImpl(
     private val medicalExpenseRepository: MedicalExpenseRepository,
     private val transactionRepository: TransactionRepository
 ) : MedicalExpenseService {
-    
+
     @Transactional
     fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense {
         val medicalExpense = medicalExpenseRepository.findById(medicalExpenseId)
             .orElseThrow { EntityNotFoundException("Medical expense not found: $medicalExpenseId") }
-        
+
         val transaction = transactionRepository.findById(transactionId)
             .orElseThrow { EntityNotFoundException("Transaction not found: $transactionId") }
-        
+
         medicalExpense.transactionId = transactionId
         medicalExpense.paidAmount = transaction.amount.abs()  // Use absolute value for payment
-        
+
         return medicalExpenseRepository.save(medicalExpense)
     }
-    
+
     @Transactional
     fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
         val medicalExpense = medicalExpenseRepository.findById(medicalExpenseId)
             .orElseThrow { EntityNotFoundException("Medical expense not found: $medicalExpenseId") }
-        
+
         if (medicalExpense.transactionId != null) {
             val transaction = transactionRepository.findById(medicalExpense.transactionId!!)
                 .orElseThrow { EntityNotFoundException("Transaction not found: ${medicalExpense.transactionId}") }
-            
+
             medicalExpense.paidAmount = transaction.amount.abs()
             return medicalExpenseRepository.save(medicalExpense)
         }
-        
+
         return medicalExpense
     }
 }
@@ -1379,17 +1379,17 @@ class MedicalExpenseServiceImpl(
 ```kotlin
 interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     // ... existing methods ...
-    
+
     // New payment-related queries
     @Query("SELECT me FROM MedicalExpense me WHERE me.paidAmount = 0 AND me.activeStatus = true")
     fun findUnpaidMedicalExpenses(): List<MedicalExpense>
-    
+
     @Query("SELECT me FROM MedicalExpense me WHERE me.paidAmount > 0 AND me.paidAmount < me.patientResponsibility AND me.activeStatus = true")
     fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense>
-    
+
     @Query("SELECT me FROM MedicalExpense me WHERE me.paidAmount >= me.patientResponsibility AND me.activeStatus = true")
     fun findFullyPaidMedicalExpenses(): List<MedicalExpense>
-    
+
     @Query("SELECT me FROM MedicalExpense me WHERE me.transactionId IS NULL AND me.activeStatus = true")
     fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense>
 }
@@ -1403,7 +1403,7 @@ class MedicalExpenseController(
     private val medicalExpenseService: MedicalExpenseService
 ) {
     // ... existing endpoints ...
-    
+
     @PostMapping("/{medicalExpenseId}/payments/{transactionId}")
     fun linkPaymentTransaction(
         @PathVariable medicalExpenseId: Long,
@@ -1412,7 +1412,7 @@ class MedicalExpenseController(
         val updated = medicalExpenseService.linkPaymentTransaction(medicalExpenseId, transactionId)
         return ResponseEntity.ok(updated)
     }
-    
+
     @DeleteMapping("/{medicalExpenseId}/payments")
     fun unlinkPaymentTransaction(
         @PathVariable medicalExpenseId: Long
@@ -1420,17 +1420,17 @@ class MedicalExpenseController(
         val updated = medicalExpenseService.unlinkPaymentTransaction(medicalExpenseId)
         return ResponseEntity.ok(updated)
     }
-    
+
     @GetMapping("/unpaid")
     fun getUnpaidMedicalExpenses(): List<MedicalExpense> {
         return medicalExpenseService.findUnpaidMedicalExpenses()
     }
-    
+
     @GetMapping("/partially-paid")
     fun getPartiallyPaidMedicalExpenses(): List<MedicalExpense> {
         return medicalExpenseService.findPartiallyPaidMedicalExpenses()
     }
-    
+
     @PutMapping("/{medicalExpenseId}/sync-payment")
     fun syncPaymentAmount(
         @PathVariable medicalExpenseId: Long
@@ -1475,20 +1475,20 @@ class MedicalExpenseSpec extends Specification {
             paidAmount: BigDecimal.ZERO,
             transactionId: null
         )
-        
+
         expect: "expense is valid and unpaid"
         expense.isUnpaid()
         expense.getUnpaidAmount() == new BigDecimal("50.00")
     }
-    
+
     def "should link payment transaction and update paid amount"() {
         given: "an unpaid medical expense"
         def expense = createUnpaidMedicalExpense()
-        
+
         when: "transaction is linked"
         expense.transactionId = 123L
         expense.paidAmount = new BigDecimal("50.00")
-        
+
         then: "expense is fully paid"
         expense.isFullyPaid()
         expense.getUnpaidAmount() == BigDecimal.ZERO
@@ -1503,10 +1503,10 @@ class MedicalExpenseRepositoryIntSpec extends Specification {
         given: "mix of paid and unpaid expenses"
         createPaidMedicalExpense()
         def unpaidExpense = createUnpaidMedicalExpense()
-        
+
         when: "searching for unpaid expenses"
         def unpaidExpenses = medicalExpenseRepository.findUnpaidMedicalExpenses()
-        
+
         then: "only unpaid expenses are returned"
         unpaidExpenses.size() == 1
         unpaidExpenses[0].medicalExpenseId == unpaidExpense.medicalExpenseId
@@ -1524,27 +1524,27 @@ class MedicalExpenseControllerIsolatedSpec extends Specification {
             billedAmount: "250.00",
             patientResponsibility: "50.00"
         ]
-        
+
         when: "creating medical expense"
         def response = restTemplate.postForEntity("/medical-expenses", expenseData, Map)
-        
+
         then: "expense is created successfully"
         response.statusCode == HttpStatus.CREATED
         response.body.transactionId == null
         response.body.paidAmount == "0.00"
     }
-    
+
     def "should link payment transaction to medical expense"() {
         given: "an existing unpaid medical expense"
         def expense = createUnpaidMedicalExpense()
         def transaction = createTestTransaction()
-        
+
         when: "linking payment transaction"
         def response = restTemplate.postForEntity(
             "/medical-expenses/${expense.medicalExpenseId}/payments/${transaction.transactionId}",
             null, Map
         )
-        
+
         then: "expense is updated with payment"
         response.statusCode == HttpStatus.OK
         response.body.transactionId == transaction.transactionId

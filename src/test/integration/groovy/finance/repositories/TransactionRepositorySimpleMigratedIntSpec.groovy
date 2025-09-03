@@ -153,7 +153,7 @@ class TransactionRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
         // Create multiple transactions with same category and description
         String uniqueCategory = "count-test-category-${testOwner.replaceAll(/[^a-z]/, '')}"
         String uniqueDescription = "count-test-description-${testOwner.replaceAll(/[^a-z]/, '')}"
-        
+
         for (int i = 0; i < 3; i++) {
             Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
                     .withAccountId(primaryAccountId)
@@ -341,7 +341,7 @@ class TransactionRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
         saved1.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
         saved2.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
         saved1.accountNameOwner == saved2.accountNameOwner  // Same account for this test owner
-        
+
         and: "Transaction types are correctly set"
         saved1.transactionType == TransactionType.Expense
         saved2.transactionType == TransactionType.Income
