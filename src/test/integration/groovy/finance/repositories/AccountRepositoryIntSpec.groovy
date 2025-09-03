@@ -71,7 +71,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         activeAccounts.size() >= 1
         activeAccounts.every { it.activeStatus == true }
         activeAccounts.any { it.accountNameOwner == activeAccount.accountNameOwner }
-        
+
         inactiveAccounts.size() >= 1
         inactiveAccounts.every { it.activeStatus == false }
         inactiveAccounts.any { it.accountNameOwner == inactiveAccount.accountNameOwner }
@@ -104,7 +104,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         debitAccounts.size() >= 1
         debitAccounts.every { it.accountType == AccountType.Debit }
         debitAccounts.any { it.accountNameOwner == checkingAccount.accountNameOwner }
-        
+
         creditAccounts.size() >= 1
         creditAccounts.every { it.accountType == AccountType.Credit }
         creditAccounts.any { it.accountNameOwner == savingsAccount.accountNameOwner }
@@ -170,7 +170,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
             .withMoniker("9000")
             .withBalances(new BigDecimal("200.00"))
             .buildAndValidate()
-        
+
         accountRepository.save(duplicateAccount)
         accountRepository.flush()
 
@@ -190,7 +190,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
         then:
         thrown(IllegalStateException)
-        
+
         when:
         // Test invalid pattern - numbers not allowed
         SmartAccountBuilder.builderForOwner(testOwner)
@@ -212,7 +212,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
             .withMoniker("1100")
             .withBalances(new BigDecimal("1000.00"))
             .buildAndValidate()
-            
+
         Account savedAccount = accountRepository.save(account)
 
         when:
@@ -243,7 +243,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
             .withMoniker("1200")
             .withBalances(new BigDecimal("-200.00"))
             .buildAndValidate()
-            
+
         Account savedAccount = accountRepository.save(accountToDelete)
 
         when:

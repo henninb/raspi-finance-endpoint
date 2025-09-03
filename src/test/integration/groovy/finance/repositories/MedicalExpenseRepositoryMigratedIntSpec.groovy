@@ -108,7 +108,7 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
     def "should find medical expenses by service date range"() {
         given:
         Long transactionId1 = createTestTransaction("expense1")
-        Long transactionId2 = createTestTransaction("expense2") 
+        Long transactionId2 = createTestTransaction("expense2")
         Long transactionId3 = createTestTransaction("expense3")
 
         MedicalExpense expense1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
@@ -145,7 +145,7 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         given:
         Long transactionId1 = createTestTransaction("provider1")
         Long transactionId2 = createTestTransaction("provider2")
-        
+
         MedicalExpense expense1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId1)
                 .withProviderId(null)
@@ -232,7 +232,7 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         given:
         Long transactionId = createTestTransaction("claimtest")
         String uniqueClaimNumber = "CLM-${testOwner.replaceAll(/[^a-zA-Z0-9]/, '').toUpperCase()}-TEST"
-        
+
         MedicalExpense expense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId)
                 .build()  // Use build() instead of buildAndValidate() to allow customization
@@ -283,7 +283,7 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
         MedicalExpense expense1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId1)
                 .withServiceDate(Date.valueOf("2024-01-15"))
-                .withBilledAmount(new BigDecimal("300.00"))  // Set billed amount first 
+                .withBilledAmount(new BigDecimal("300.00"))  // Set billed amount first
                 .build()  // Use build() to allow manual financial setup
         expense1.patientResponsibility = new BigDecimal("100.00")  // Then set patient responsibility
         expense1.insurancePaid = new BigDecimal("200.00")         // And adjust insurance paid
@@ -346,10 +346,10 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
 
         then:
         outstanding.size() >= 1
-        outstanding.any { 
-            it.transactionId == transactionId2 && 
+        outstanding.any {
+            it.transactionId == transactionId2 &&
             it.patientResponsibility > BigDecimal.ZERO &&
-            it.paidDate == null 
+            it.paidDate == null
         }
     }
 
@@ -429,7 +429,7 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
     def "should find medical expenses by procedure code"() {
         given:
         Long transactionId1 = createTestTransaction("procedure1")
-        Long transactionId2 = createTestTransaction("procedure2") 
+        Long transactionId2 = createTestTransaction("procedure2")
         Long transactionId3 = createTestTransaction("procedure3")
 
         MedicalExpense expense1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
@@ -492,7 +492,7 @@ class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
     }
 
     // Helper methods using new architecture
-    
+
     private Long createTestTransaction(String suffix = "medical") {
         // Create transaction using SmartBuilder pattern (like other migrated tests)
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
