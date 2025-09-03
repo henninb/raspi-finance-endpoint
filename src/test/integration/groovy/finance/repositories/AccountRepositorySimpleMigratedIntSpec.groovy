@@ -15,7 +15,7 @@ import java.util.Optional
  * MIGRATED INTEGRATION TEST - Account Repository Simple with robust, isolated architecture
  *
  * This is the migrated version of AccountRepositorySimpleIntSpec showing:
- * ✅ No hardcoded account names - all use testOwner for uniqueness  
+ * ✅ No hardcoded account names - all use testOwner for uniqueness
  * ✅ SmartBuilder pattern with constraint validation
  * ✅ Test isolation - each test gets its own test data
  * ✅ Constraint-aware test data creation using SmartAccountBuilder
@@ -72,7 +72,7 @@ class AccountRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
                 .withMoniker("2000")
                 .buildAndValidate()
 
-        // Create inactive account  
+        // Create inactive account
         Account inactiveAccount = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("inactiveaccount")
                 .asCredit()
@@ -156,7 +156,7 @@ class AccountRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
                 .asDebit()
                 .withCleared(new BigDecimal("200.00"))
                 .withMoniker("9000")
-                .build()  // Use build() not buildAndValidate() 
+                .build()  // Use build() not buildAndValidate()
         // Override the account name to match the first one
         duplicateAccount2.accountNameOwner = savedAccount.accountNameOwner
 
@@ -214,7 +214,7 @@ class AccountRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
 
         Account account2 = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("isolation_two")
-                .asCredit() 
+                .asCredit()
                 .buildAndValidate()
 
         when: "Saving accounts"
@@ -225,7 +225,7 @@ class AccountRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
         saved1.accountNameOwner != saved2.accountNameOwner
         saved1.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
         saved2.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
-        
+
         and: "Account types are correctly set"
         saved1.accountType == AccountType.Debit
         saved2.accountType == AccountType.Credit
