@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
+import spock.lang.Ignore
 
 import java.math.BigDecimal
 import java.sql.Date
@@ -23,6 +24,7 @@ import java.util.UUID
 @ActiveProfiles("int")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = Application)
+@Ignore("Legacy brittle spec replaced by PaymentGraphQLResolverMigratedIntegrationSpec; keeping for reference.")
 class PaymentGraphQLResolverIntegrationSpec extends Specification {
 
     @Autowired
