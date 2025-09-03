@@ -20,7 +20,7 @@ This guide outlines the migration strategy to transform the current integration 
 - HTTP endpoint testing
 - End-to-end scenarios
 
-## CURRENT MIGRATION STATUS (Updated 2025-09-01)
+## CURRENT MIGRATION STATUS (Updated 2025-09-03)
 
 ### 📊 **Migration Progress Summary**
 
@@ -34,7 +34,7 @@ This guide outlines the migration strategy to transform the current integration 
 | **Camel Tests** | 2 | 0 | 2 | ❌ 0% |
 | **Config Tests** | 4 | 0 | 4 | ❌ 0% |
 | **Processor Tests** | 1 | 0 | 1 | ❌ 0% |
-| **TOTAL** | 31 | 11 | 20 | 🔄 **35%** |
+| **TOTAL** | 28 | 8 | 20 | 🔄 **29%** |
 
 ### ✅ **COMPLETED - Foundation Architecture (100%)**
 
@@ -846,19 +846,19 @@ class CamelRouteIntegratedSpec extends BaseIntegrationSpec {
 
 ## Success Metrics
 
-### Current Technical Metrics (Updated 2025-09-01)
+### Current Technical Metrics (Updated 2025-09-03)
 | Metric | Original State | Current State | Target State | Progress |
 |--------|----------------|---------------|--------------|----------|
-| **Repository Test Coverage** | 5/13 (38%) | **11/13 (85%)** | 13/13 (100%) | 🔄 **85%** |
+| **Repository Test Coverage** | 5/13 (38%) | **8/13 (62%)** | 13/13 (100%) | 🔄 **62%** |
 | **Foundation Architecture** | 0/3 (0%) | **3/3 (100%)** | 3/3 (100%) | ✅ **100%** |
-| **Hardcoded Entity Names** | ~40+ instances | **~15 instances** | 0 instances | 🔄 **63%** |
-| **Manual Entity Creation** | ~80% of tests | **~45% of tests** | 0% of tests | 🔄 **44%** |
-| **Test Isolation** | Partial (timestamp) | **Good (testOwner)** | Complete (testOwner) | 🔄 **75%** |
+| **Hardcoded Entity Names** | ~40+ instances | **~150 instances** | 0 instances | ❌ **Still High** |
+| **Manual Entity Creation** | ~80% of tests | **~71% of tests** | 0% of tests | 🔄 **29%** |
+| **Test Isolation** | Partial (timestamp) | **Good (testOwner)** | Complete (testOwner) | 🔄 **29%** |
 | **Constraint Validation** | Runtime only | **Build-time (SmartBuilder)** | Build-time + Runtime | ✅ **100%** |
-| **BaseIntegrationSpec Usage** | 0/24 files (0%) | **8/24 files (33%)** | 24/24 files (100%) | 🔄 **33%** |
-| **SmartBuilder Adoption** | 0/24 files (0%) | **8/24 files (33%)** | 24/24 files (100%) | 🔄 **33%** |
+| **BaseIntegrationSpec Usage** | 0/28 files (0%) | **8/28 files (29%)** | 28/28 files (100%) | 🔄 **29%** |
+| **SmartBuilder Adoption** | 0/28 files (0%) | **8/28 files (29%)** | 28/28 files (100%) | 🔄 **29%** |
 | **FK Cleanup Issues** | Multiple reported | **Mostly Resolved** | 0 issues | 🔄 **80%** |
-| **Missing Repository Tests** | 8 repositories | **3 repositories** | 0 repositories | 🔄 **75%** |
+| **Missing Repository Tests** | 8 repositories | **5 repositories** | 0 repositories | 🔄 **38%** |
 
 ### Quality Metrics
 | Metric | Current | Target |
@@ -1031,24 +1031,29 @@ find src/test/integration -name "*Spec.groovy" -exec grep -l "_brian" {} \; | wc
 ### 🏃 **IMMEDIATE NEXT PRIORITIES (Weeks 4-5)**
 
 **High Impact, Low Risk:**
-1. **Complete final repository migrations** - 2 files still using hardcoded "_brian" patterns
+1. **Complete final repository migrations** - 4 files still using hardcoded "_brian" patterns
    - `TransactionRepositoryIntSpec.groovy` (7 test methods) - Complex setup/cleanup needs migration
    - `TransactionRepositorySimpleIntSpec.groovy` (4 test methods) - Original file still unmigrated
+   - `AccountRepositorySimpleIntSpec.groovy` (3 test methods) - Original file still unmigrated
+   - `MedicalExpenseRepositoryIntSpec.groovy` (2 test methods) - Original file still unmigrated
 
-2. **Create missing critical repository tests** - 3 domain entities uncovered
+2. **Create missing critical repository tests** - 5 domain entities uncovered
    - `DescriptionRepositoryIntSpec` - Description management patterns
    - `ParameterRepositoryIntSpec` - System configuration testing
    - `UserRepositoryIntSpec` - Authentication data validation
+   - `PaymentRepositoryIntSpec` - Payment transaction testing
+   - `TransferRepositoryIntSpec` - Transfer operation testing
 
 **Medium Impact, Medium Risk:**
-3. **Service layer test migration** - 3 files with complex service integration scenarios
-4. **Security test migration** - 3 files with authentication/authorization patterns
-5. **GraphQL resolver test migration** - 2 files with complex entity relationships
+3. **Service layer test migration** - 2 files with complex service integration scenarios
+4. **GraphQL resolver test migration** - 2 files with complex entity relationships
+5. **Camel route test migration** - 1 file with extensive manual account creation
 
 ### ⚠️ **MIGRATION BLOCKERS & RISKS**
 
 **Current Blockers:**
-- **8 files still contain hardcoded "_brian" patterns** causing test failures
+- **10 files still contain hardcoded "_brian" patterns** causing test failures
+- **150+ hardcoded "_brian" instances** across unmigrated files
 - **FK constraint violations** in unmigrated tests during parallel execution
 - **Test data pollution** between old and new architecture patterns
 
@@ -1067,9 +1072,9 @@ find src/test/integration -name "*Spec.groovy" -exec grep -l "_brian" {} \; | wc
 - ✅ FK cleanup failures
 - ✅ Cross-test data contamination
 
-**Remaining in 16 Unmigrated Files:**
-- ❌ ~15 hardcoded "_brian" references (down from ~40)
-- ❌ ~45% manual entity creation patterns (down from ~80%)
+**Remaining in 20 Unmigrated Files:**
+- ❌ ~150 hardcoded "_brian" references (actually increased due to better discovery)
+- ❌ ~71% manual entity creation patterns (down from ~80%)
 - ❌ Timestamp-based partial isolation (fragile)
 - ❌ FK constraint cleanup issues in complex tests
 - ❌ Shared test data between test methods in GraphQL/Service tests
@@ -1103,18 +1108,19 @@ This migration transforms integration tests from a brittle, shared-data approach
 | `TransactionRepositorySimpleMigratedIntSpec.groovy` | ✅ Migrated | `/repositories/` | 4+ methods |
 | `AccountRepositoryIntSpec.groovy` | ✅ Migrated In-Place | `/repositories/` | 8+ methods |
 
-### ❌ **PENDING MIGRATION - Contains Hardcoded Patterns (16 files)**
+### ❌ **PENDING MIGRATION - Contains Hardcoded Patterns (10 files)**
 
-**Repository Tests (2 files):**
+**Repository Tests (4 files):**
 | File | Priority | Hardcoded Patterns | Test Methods |
 |------|----------|-------------------|-------------|
 | `TransactionRepositoryIntSpec.groovy` | HIGH | ❌ "test_brian" | 7 methods |
 | `TransactionRepositorySimpleIntSpec.groovy` | MEDIUM | ❌ "test_brian" | 4 methods |
+| `AccountRepositorySimpleIntSpec.groovy` | MEDIUM | ❌ "test_brian" | 3 methods |
+| `MedicalExpenseRepositoryIntSpec.groovy` | MEDIUM | ❌ "test_brian" | 2 methods |
 
-**Service Layer Tests (3 files):**
+**Service Layer Tests (2 files):**
 | File | Priority | Hardcoded Patterns | Test Methods |
 |------|----------|-------------------|-------------|
-| `AccountServiceIntSpec.groovy` | MEDIUM | ❌ Manual setup | 3+ methods |
 | `ServiceLayerIntegrationSpec.groovy` | MEDIUM | ❌ "_brian" patterns | 5+ methods |
 | `ExternalIntegrationsSpec.groovy` | MEDIUM | ❌ "_brian" patterns | 4+ methods |
 
@@ -1124,37 +1130,23 @@ This migration transforms integration tests from a brittle, shared-data approach
 | `PaymentGraphQLResolverIntegrationSpec.groovy` | HIGH | ❌ Complex "_brian" | 8+ methods |
 | `TransferGraphQLResolverIntegrationSpec.groovy` | HIGH | ❌ "_brian" patterns | 6+ methods |
 
-**Security Tests (3 files):**
-| File | Priority | Hardcoded Patterns | Test Methods |
-|------|----------|-------------------|-------------|
-| `SecurityIntegrationSpec.groovy` | MEDIUM | ❌ Timestamp isolation | 5+ methods |
-| `SecurityIntegrationSimpleSpec.groovy` | MEDIUM | ❌ "security_test_user" | 3+ methods |
-| `SecurityIntegrationWorkingSpec.groovy` | MEDIUM | ❌ Legacy patterns | 4+ methods |
-
-**Camel Route Tests (2 files):**
+**Camel Route Tests (1 file):**
 | File | Priority | Hardcoded Patterns | Test Methods |
 |------|----------|-------------------|-------------|
 | `CamelRouteIntegrationSpec.groovy` | HIGH | ❌ "test-checking_brian" | 8+ methods |
-| `CamelSpec.groovy` | LOW | ❌ Basic patterns | 3+ methods |
 
-**Configuration Tests (4 files):**
+**GraphQL Configuration Tests (1 file):**
 | File | Priority | Hardcoded Patterns | Test Methods |
 |------|----------|-------------------|-------------|
-| `DatabaseResilienceIntSpec.groovy` | LOW | ❌ Config patterns | 6+ methods |
-| `RandomPortSpec.groovy` | LOW | ❌ N/A | 2+ methods |
-| `HealthEndpointSpec.groovy` | LOW | ❌ N/A | 3+ methods |
 | `GraphQLIntegrationSpec.groovy` | MEDIUM | ❌ "_brian" patterns | 4+ methods |
 
-**Processor Tests (1 file):**
-| File | Priority | Hardcoded Patterns | Test Methods |
-|------|----------|-------------------|-------------|
-| `ProcessorIntegrationSpec.groovy` | MEDIUM | ❌ Manual setup | 5+ methods |
-
-### ⚠️ **STILL MISSING - Repository Tests (3 files needed)**
+### ⚠️ **STILL MISSING - Repository Tests (5 files needed)**
 | Missing File | Domain | Priority | Estimated Methods |
 |-------------|--------|----------|------------------|
 | `DescriptionRepositoryIntSpec.groovy` | Description mgmt | HIGH | 5+ methods |
 | `ParameterRepositoryIntSpec.groovy` | System config | HIGH | 4+ methods |
 | `UserRepositoryIntSpec.groovy` | User authentication | MEDIUM | 5+ methods |
+| `PaymentRepositoryIntSpec.groovy` | Payment transactions | HIGH | 6+ methods |
+| `TransferRepositoryIntSpec.groovy` | Transfer operations | HIGH | 5+ methods |
 
-**Migration Progress: 8/27 total files completed (30% overall, with 100% foundation ready and proven)**
+**Migration Progress: 8/28 total files completed (29% overall, with 100% foundation ready and proven)**
