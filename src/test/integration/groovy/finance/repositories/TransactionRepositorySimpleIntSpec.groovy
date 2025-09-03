@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
+import spock.lang.Ignore
 
 import java.math.BigDecimal
 import java.sql.Date
@@ -21,6 +22,7 @@ import java.sql.Timestamp
 @SpringBootTest
 @ContextConfiguration(classes = Application)
 @Transactional
+@Ignore("Legacy brittle spec replaced by TransactionRepositorySimpleMigratedIntSpec; keeping for reference.")
 class TransactionRepositorySimpleIntSpec extends Specification {
 
     @Autowired
