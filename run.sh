@@ -507,6 +507,9 @@ chmod +x gradle/wrapper/gradle-wrapper.jar
 cat <<  'EOF' > "nginx.tmp"
 server_tokens off;
 
+# Log to stdout so it's visible in docker logs
+access_log /dev/stdout combined;
+
 server {
   listen 443 ssl;
   server_name finance.bhenning.com;
@@ -527,7 +530,7 @@ server {
 EOF
 
 cat <<  'EOF' > "docker.tmp"
-FROM nginx:1.27.3-alpine
+FROM nginx:1.29.1-alpine
 
 COPY nginx.tmp /etc/nginx/conf.d/default.conf
 
