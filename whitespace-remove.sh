@@ -70,6 +70,10 @@ process_file() {
       cp -- "$f" "$f.bak" 2>/dev/null || cp "$f" "$f.bak"
     fi
 
+    # Preserve permissions of original file.
+    # This uses a GNU extension to chmod, but fails gracefully on other systems.
+    chmod --reference="$f" "$tmp" 2>/dev/null || true
+
     # Replace the original
     mv -- "$tmp" "$f" 2>/dev/null || mv "$tmp" "$f"
     echo "trimmed: $f"
