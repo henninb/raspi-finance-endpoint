@@ -105,7 +105,7 @@ class SmartPaymentBuilder {
         if (payment.amount.scale() > 2) {
             throw new IllegalStateException("Amount must have at most 2 decimal places")
         }
-        BigDecimal max = new BigDecimal('99999999.99')
+        BigDecimal max = new BigDecimal('999999.99')  // 6 integer + 2 decimal = 8 total precision
         if (payment.amount > max) {
             throw new IllegalStateException("Amount exceeds allowed precision (8,2)")
         }
