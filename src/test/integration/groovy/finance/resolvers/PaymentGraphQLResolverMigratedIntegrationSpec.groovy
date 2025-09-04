@@ -72,11 +72,11 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
     def setupSpec() {
         repositoryContext = testFixtures.createRepositoryTestContext(testOwner)
         paymentGraphQLResolver = new PaymentGraphQLResolver(paymentService, meterRegistry)
-        
+
         // Create test accounts using SmartBuilder
         sourceAccountName = "checking_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
         destinationAccountName = "credit_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
-        
+
         // Source account (debit - checking)
         Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("checking")
@@ -86,7 +86,7 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         Account savedSourceAccount = accountRepository.save(sourceAccount)
         sourceAccountId = savedSourceAccount.accountId
         sourceAccountName = savedSourceAccount.accountNameOwner
-        
+
         // Destination account (credit - credit card)
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
                 .withUniqueAccountName("credit")
@@ -250,8 +250,8 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         then: "should execute successfully with testOwner-based accounts"
         payments != null
         payments.size() >= 1
-        payments.any { 
-            it.amount == new BigDecimal("50.00") && 
+        payments.any {
+            it.amount == new BigDecimal("50.00") &&
             it.sourceAccount.contains(testOwner.replaceAll(/[^a-z]/, '')) &&
             it.destinationAccount.contains(testOwner.replaceAll(/[^a-z]/, ''))
         }
@@ -266,7 +266,7 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         when: "querying all payments for this testOwner"
         def dataFetcher = paymentGraphQLResolver.payments
         def payments = dataFetcher.get(null)
-        def testOwnerPayments = payments.findAll { 
+        def testOwnerPayments = payments.findAll {
             it.sourceAccount.contains(testOwner.replaceAll(/[^a-z]/, ''))
         }
 
@@ -282,7 +282,7 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
 
         and: "corresponding transactions should exist with proper account relationships"
         def allTransactions = transactionRepository.findAll()
-        def testOwnerTransactions = allTransactions.findAll { 
+        def testOwnerTransactions = allTransactions.findAll {
             it.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, ''))
         }
         testOwnerTransactions.size() >= 6  // 2 transactions per payment (source + destination)
