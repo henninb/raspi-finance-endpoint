@@ -77,11 +77,11 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test payment unique constraint on destination, date, and amount'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String uniqueDestination = "unique_dest_${cleanOwner}"
+        String uniqueDestination = "unique_${cleanOwner}"
         Date transactionDate = Date.valueOf("2024-02-20")
         BigDecimal amount = new BigDecimal("100.50")
 
-        Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("source1", "uniquedest")
                 .withAmount(amount)
                 .withTransactionDate(transactionDate)
@@ -97,7 +97,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
         savedPayment1.paymentId != null
 
         when: "trying to save payment with same destination, date, and amount"
-        Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("source2", "uniquedest")
                 .withAmount(amount)
                 .withTransactionDate(transactionDate)
@@ -115,10 +115,10 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test payment with different amounts allows duplicate destinations and dates'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String sharedDestination = "shared_dest_${cleanOwner}"
+        String sharedDestination = "shared_${cleanOwner}"
         Date sharedDate = Date.valueOf("2024-03-15")
 
-        Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("src1", "sharedest")
                 .withAmount(new BigDecimal("100.00"))
                 .withTransactionDate(sharedDate)
@@ -126,7 +126,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
 
         payment1.destinationAccount = sharedDestination
 
-        Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("src2", "sharedest")
                 .withAmount(new BigDecimal("200.00"))  // Different amount
                 .withTransactionDate(sharedDate)
@@ -150,11 +150,11 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test find duplicate payment excluding current payment ID'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String destination = "duplicate_test_${cleanOwner}"
+        String destination = "duplicate_${cleanOwner}"
         Date transactionDate = Date.valueOf("2024-04-10")
         BigDecimal amount = new BigDecimal("75.25")
 
-        Payment originalPayment = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment originalPayment = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("original", "duplicatetest")
                 .withAmount(amount)
                 .withTransactionDate(transactionDate)
@@ -176,7 +176,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
         !duplicate.isPresent()
 
         when: "creating another payment with same details"
-        Payment anotherPayment = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment anotherPayment = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("another", "duplicatetest")
                 .withAmount(amount)
                 .withTransactionDate(transactionDate)
@@ -197,10 +197,10 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test payment with different transaction dates allows same destination and amount'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String destination = "date_test_${cleanOwner}"
+        String destination = "date_${cleanOwner}"
         BigDecimal amount = new BigDecimal("150.75")
 
-        Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("date1", "datetest")
                 .withAmount(amount)
                 .withTransactionDate(Date.valueOf("2024-05-01"))
@@ -208,7 +208,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
 
         payment1.destinationAccount = destination
 
-        Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("date2", "datetest")
                 .withAmount(amount)
                 .withTransactionDate(Date.valueOf("2024-05-02"))  // Different date
@@ -286,7 +286,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
                 .asActive()
                 .buildAndValidate()
 
-        Payment inactivePayment = SmartPaymentBuilder.builderForOwner(testOwner.toString())
+        Payment inactivePayment = SmartPaymentBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("inactivesrc", "inactivedest")
                 .withAmount(new BigDecimal("75.00"))
                 .withTransactionDate(Date.valueOf("2024-07-02"))

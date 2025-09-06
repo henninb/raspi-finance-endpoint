@@ -32,20 +32,37 @@ class SmartTransferBuilder {
 
     private String generateAlphaUnderscoreName(String prefix) {
         // Must match ^[a-z-]*_[a-z]*$ and be 3-40 chars
-        String counter = COUNTER.incrementAndGet().toString()
+        // No digits allowed, only letters and dashes before/after underscore
+        int counter = COUNTER.incrementAndGet()
+        String counterLetters = convertCounterToLetters(counter)
+
         String cleanPrefix = (prefix ?: 'acct').toLowerCase().replaceAll(/[^a-z-]/, '')
         if (cleanPrefix.isEmpty()) cleanPrefix = 'acct'
 
         String ownerPart = (testOwner ?: 'test').toLowerCase().replaceAll(/[^a-z]/, '')
         if (ownerPart.isEmpty()) ownerPart = 'test'
 
-        String base = "${cleanPrefix}${counter}_${ownerPart}"
+        String base = "${cleanPrefix}${counterLetters}_${ownerPart}"
         if (base.length() > 40) {
             String shortOwner = ownerPart.length() > 10 ? ownerPart[0..9] : ownerPart
-            base = "${cleanPrefix}${counter}_${shortOwner}"
+            base = "${cleanPrefix}${counterLetters}_${shortOwner}"
         }
         if (base.length() < 3) base = "acc_${ownerPart}"
         return base.toLowerCase()
+    }
+
+    private String convertCounterToLetters(int counter) {
+        // Convert counter to letters (1->a, 2->b, ..., 26->z, 27->aa, etc.)
+        String result = ""
+        while (counter > 0) {
+            counter-- // Make it 0-based
+            int charIndex = counter % 26
+            char letterChar = (char)((int)'a' + charIndex)
+            String letter = String.valueOf(letterChar)
+            result = letter + result
+            counter = (int)(counter / 26)
+        }
+        return result ?: "a"
     }
 
     Transfer build() {
@@ -87,13 +104,13 @@ class SmartTransferBuilder {
         if (transfer.amount.scale() > 2) {
             throw new IllegalStateException("Amount must have at most 2 decimal places")
         }
-        BigDecimal max = new BigDecimal('99999999.99')
+        BigDecimal max = new BigDecimal('999999.99')  // NUMERIC(8,2) = 6 integer + 2 decimal digits
         if (transfer.amount > max) {
             throw new IllegalStateException("Amount exceeds allowed precision (8,2)")
         }
 
         // GUIDs must be UUID format
-        def uuidRegex = /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/
+        def uuidRegex = /^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/
         if (!(transfer.guidSource =~ uuidRegex)) {
             throw new IllegalStateException("guidSource '${transfer.guidSource}' must be UUID formatted")
         }
@@ -137,12 +154,12 @@ class SmartTransferBuilder {
     }
 
     SmartTransferBuilder withGuidSource(String guidSource) {
-        this.guidSource = guidSource?.toLowerCase()
+        this.guidSource = guidSource  // Don't convert UUIDs to lowercase
         return this
     }
 
     SmartTransferBuilder withGuidDestination(String guidDestination) {
-        this.guidDestination = guidDestination?.toLowerCase()
+        this.guidDestination = guidDestination  // Don't convert UUIDs to lowercase
         return this
     }
 
