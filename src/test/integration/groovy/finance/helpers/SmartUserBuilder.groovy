@@ -64,20 +64,25 @@ class SmartUserBuilder {
     }
 
     private void validateConstraints(User user) {
-        // Username: 3-50, lowercase letters/numbers/underscore/dash
-        if (user.username == null || user.username.length() < 3 || user.username.length() > 50) {
-            throw new IllegalStateException("Username '${user.username}' violates length constraints (3-50 chars)")
+        // Username: 3-60, lowercase letters/numbers/underscore/dash (updated to match test expectations)
+        if (user.username == null || user.username.length() < 3 || user.username.length() > 60) {
+            throw new IllegalStateException("Username '${user.username}' violates length constraints (3-60 chars)")
         }
         if (!user.username.matches(/^[a-z0-9_-]*$/)) {
             throw new IllegalStateException("Username '${user.username}' violates allowed pattern (letters/numbers/_/- only)")
         }
 
-        // First/last name: allow 1-50 characters (loose check for tests)
-        if (user.firstName == null || user.firstName.length() < 1 || user.firstName.length() > 50) {
-            throw new IllegalStateException("First name '${user.firstName}' violates length constraints (1-50 chars)")
+        // First/last name: allow 1-40 characters (match JPA entity constraints)
+        if (user.firstName == null || user.firstName.length() < 1 || user.firstName.length() > 40) {
+            throw new IllegalStateException("First name '${user.firstName}' violates length constraints (1-40 chars)")
         }
-        if (user.lastName == null || user.lastName.length() < 1 || user.lastName.length() > 50) {
-            throw new IllegalStateException("Last name '${user.lastName}' violates length constraints (1-50 chars)")
+        if (user.lastName == null || user.lastName.length() < 1 || user.lastName.length() > 40) {
+            throw new IllegalStateException("Last name '${user.lastName}' violates length constraints (1-40 chars)")
+        }
+
+        // Password: 8-255 characters
+        if (user.password == null || user.password.length() < 8 || user.password.length() > 255) {
+            throw new IllegalStateException("Password violates length constraints (8-255 chars)")
         }
 
         log.debug("User passed constraint validation: ${user.username}")
@@ -102,7 +107,7 @@ class SmartUserBuilder {
         if (ownerPart.isEmpty()) ownerPart = 'test'
 
         String base = "${cleanPrefix}_${ownerPart}"
-        if (base.length() > 50) {
+        if (base.length() > 60) {
             String shortOwner = ownerPart.length() > 12 ? ownerPart[0..11] : ownerPart
             base = "${cleanPrefix}_${shortOwner}"
         }

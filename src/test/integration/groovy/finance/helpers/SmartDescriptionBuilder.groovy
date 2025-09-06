@@ -24,33 +24,10 @@ class SmartDescriptionBuilder {
     }
 
     private String generateUniqueDescriptionName() {
-        String baseName = "desc_${COUNTER.incrementAndGet()}_${testOwner}"
-
-        // Ensure it meets constraints:
-        // - Size: min 1, max 50
-        // - Converted to lowercase
-
-        if (baseName.length() > 50) {
-            // Truncate while keeping testOwner identifier
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            baseName = "desc_${COUNTER.get()}_${shortOwner}"
-        }
-
-        // Ensure minimum length
-        if (baseName.length() < 1) {
-            baseName = "d_${COUNTER.get()}"
-        }
-
-        // Clean and convert to lowercase
-        String cleaned = baseName.toLowerCase()
-
-        // Ensure we still have a valid name after processing
-        if (cleaned.length() < 1) {
-            cleaned = "description${COUNTER.get()}"
-        }
-
-        log.debug("Generated description name: ${cleaned} for test owner: ${testOwner}")
-        return cleaned
+        String baseName = "desc_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        String result = ensureValidLength(baseName)
+        log.debug("Generated description name: ${result} for test owner: ${testOwner}")
+        return result
     }
 
     Description build() {
@@ -79,8 +56,26 @@ class SmartDescriptionBuilder {
 
     // Fluent API methods
     SmartDescriptionBuilder withDescriptionName(String descriptionName) {
-        this.descriptionName = descriptionName.toLowerCase()
+        this.descriptionName = ensureValidLength(descriptionName.toLowerCase())
         return this
+    }
+
+    private String ensureValidLength(String input) {
+        // Ensure constraints: min 1, max 50 chars
+        if (input.length() > 50) {
+            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
+            String shortened = input.replace(testOwner, shortOwner)
+            if (shortened.length() > 50) {
+                shortened = shortened[0..49]
+            }
+            return shortened
+        }
+
+        if (input.length() < 1) {
+            return "desc${COUNTER.get()}"
+        }
+
+        return input
     }
 
     SmartDescriptionBuilder withUniqueDescriptionName(String prefix = "test") {
@@ -89,14 +84,8 @@ class SmartDescriptionBuilder {
     }
 
     private String generateUniqueDescriptionName(String prefix) {
-        String baseName = "${prefix}_${COUNTER.incrementAndGet()}_${testOwner}"
-
-        if (baseName.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            baseName = "${prefix}_${COUNTER.get()}_${shortOwner}"
-        }
-
-        return baseName.toLowerCase()
+        String baseName = "${prefix}_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        return ensureValidLength(baseName)
     }
 
     SmartDescriptionBuilder withActiveStatus(Boolean activeStatus) {
@@ -117,62 +106,32 @@ class SmartDescriptionBuilder {
 
     // Common description patterns for testing
     SmartDescriptionBuilder asStoreDescription() {
-        this.descriptionName = "store_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-
-        // Ensure length constraints
-        if (this.descriptionName.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            this.descriptionName = "store_${COUNTER.get()}_${shortOwner}".toLowerCase()
-        }
-
+        String baseName = "store_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        this.descriptionName = ensureValidLength(baseName)
         return this
     }
 
     SmartDescriptionBuilder asRestaurantDescription() {
-        this.descriptionName = "restaurant_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-
-        // Ensure length constraints
-        if (this.descriptionName.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            this.descriptionName = "rest_${COUNTER.get()}_${shortOwner}".toLowerCase()
-        }
-
+        String baseName = "restaurant_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        this.descriptionName = ensureValidLength(baseName)
         return this
     }
 
     SmartDescriptionBuilder asServiceDescription() {
-        this.descriptionName = "service_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-
-        // Ensure length constraints
-        if (this.descriptionName.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            this.descriptionName = "svc_${COUNTER.get()}_${shortOwner}".toLowerCase()
-        }
-
+        String baseName = "service_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        this.descriptionName = ensureValidLength(baseName)
         return this
     }
 
     SmartDescriptionBuilder asOnlineDescription() {
-        this.descriptionName = "online_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-
-        // Ensure length constraints
-        if (this.descriptionName.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            this.descriptionName = "online_${COUNTER.get()}_${shortOwner}".toLowerCase()
-        }
-
+        String baseName = "online_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        this.descriptionName = ensureValidLength(baseName)
         return this
     }
 
     SmartDescriptionBuilder withBusinessDescription(String businessType) {
-        this.descriptionName = "${businessType}_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-
-        // Ensure length constraints
-        if (this.descriptionName.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            this.descriptionName = "${businessType}_${COUNTER.get()}_${shortOwner}".toLowerCase()
-        }
-
+        String baseName = "${businessType}_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
+        this.descriptionName = ensureValidLength(baseName)
         return this
     }
 }
