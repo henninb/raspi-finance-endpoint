@@ -139,6 +139,12 @@ class RepositoryTestContext {
                 .buildAndValidate()
     }
 
+    Description createUniqueDescription(String prefix = "unique") {
+        return SmartDescriptionBuilder.builderForOwner(testOwner)
+                .withUniqueDescriptionName(prefix)
+                .buildAndValidate()
+    }
+
     Transaction createUniqueTransaction(String prefix = "unique") {
         return SmartTransactionBuilder.builderForOwner(testOwner)
                 .withUniqueGuid()
@@ -150,6 +156,16 @@ class RepositoryTestContext {
         return SmartValidationAmountBuilder.builderForOwner(testOwner)
                 .withAccountId(accountId)
                 .withAmount(amount)
+                .buildAndValidate()
+    }
+
+    User createTestUser(String prefix = "user", String password = "testpassword123") {
+        return SmartUserBuilder.builderForOwner(testOwner)
+                .withUniqueUsername(prefix)
+                .withFirstName("Test")
+                .withLastName("User")
+                .withPassword(password)
+                .asActive()
                 .buildAndValidate()
     }
 
