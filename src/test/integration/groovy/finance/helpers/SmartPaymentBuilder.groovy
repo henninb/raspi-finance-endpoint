@@ -59,7 +59,8 @@ class SmartPaymentBuilder {
         while (counter > 0) {
             counter-- // Make it 0-based
             int charIndex = counter % 26
-            String letter = String.valueOf((char)('a' + charIndex))
+            char letterChar = (char)((int)'a' + charIndex)
+            String letter = String.valueOf(letterChar)
             result = letter + result
             counter = (int)(counter / 26)
         }
