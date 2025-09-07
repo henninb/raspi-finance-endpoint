@@ -10,7 +10,6 @@ This document outlines the successful upgrade from Spring Boot 3.5.4 to Spring B
 - **Spring Boot**: 3.5.4 → 4.0.0-M2
 - **Spring Security**: 6.5.1 → 7.0.0-M2
 - **Hibernate**: 6.6.18.Final → 7.1.0.Final
-- **Apache Camel**: 4.13.0 → 4.14.0
 - **Jackson**: 2.19.2 → 2.19.1
 - **Resilience4j**: 2.2.0 → 2.3.0
 - **Flyway**: 11.11.2 → 11.12.0

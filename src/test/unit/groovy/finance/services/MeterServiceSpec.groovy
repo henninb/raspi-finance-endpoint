@@ -99,23 +99,4 @@ class MeterServiceSpec extends Specification {
         0 * _
     }
 
-    void "IncrementCamelStringProcessor"() {
-        when:
-        meterService.incrementCamelStringProcessor('test')
-
-        then:
-        1 * meterRegistryMock.counter(setMeterId(CAMEL_STRING_PROCESSOR_COUNTER, 'test')) >> counter
-        1 * counter.increment()
-        0 * _
-    }
-
-    void "IncrementCamelTransactionSuccessfullyInsertedCounter"() {
-        when:
-        meterService.incrementCamelTransactionSuccessfullyInsertedCounter('test')
-
-        then:
-        1 * meterRegistryMock.counter(setMeterId(CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER, 'test')) >> counter
-        1 * counter.increment()
-        0 * _
-    }
 }

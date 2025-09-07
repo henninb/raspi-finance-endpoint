@@ -119,9 +119,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     implementation("com.google.code.gson:gson:${gsonVersion}")
 
-    //Camel
-    implementation("org.apache.camel.springboot:camel-spring-boot-starter:${apacheCamelVersion}")
-    implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
     // GraphQL (Spring for GraphQL)
     implementation("org.springframework.boot:spring-boot-starter-graphql")

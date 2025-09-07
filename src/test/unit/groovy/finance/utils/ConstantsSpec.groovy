@@ -10,8 +10,6 @@ class ConstantsSpec extends Specification {
         Constants.EXCEPTION_CAUGHT_COUNTER == "exception.caught.counter"
         Constants.TRANSACTION_ALREADY_EXISTS_COUNTER == "transaction.already.exists.counter"
         Constants.TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER == "transaction.successfully.inserted.counter"
-        Constants.CAMEL_STRING_PROCESSOR_COUNTER == "camel.string.processor.counter"
-        Constants.CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER == "camel.transaction.successfully.inserted.counter"
     }
 
     def "Constants - tag names are defined correctly"() {

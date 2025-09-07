@@ -211,11 +211,6 @@ Logging & monitoring gaps — inability to detect or audit malicious behavior.
    - **Risk**: Silent failures in image processing
    - **Solution**: Log errors appropriately and return meaningful error responses
 
-6. **Camel Route Error Handling**
-   - **Location**: `TransactionToDatabaseRouteBuilder.kt:28-31`
-   - **Issue**: Only logs InvalidPayloadException, no dead letter queue
-   - **Risk**: Lost messages on processing failures
-   - **Solution**: Implement dead letter queue and retry mechanisms
 
 #### **Low Priority**
 
@@ -261,9 +256,6 @@ Logging & monitoring gaps — inability to detect or audit malicious behavior.
    - Add structured logging for authentication failures
    - Implement security event monitoring with Micrometer
 
-5. **Dead Letter Queue for Camel Routes**
-   - Configure error handling and retry policies
-   - Implement message recovery mechanisms
 
 ### **Testing Requirements:**
 - Unit tests for all custom exceptions

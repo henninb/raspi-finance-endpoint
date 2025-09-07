@@ -63,7 +63,6 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - **Security**: Spring Security 6.5.1 with JWT
 - **Database**: PostgreSQL 42.7.7 (prod/stage) or Oracle (prodora), H2 2.3.232 (test)
 - **Build Tool**: Gradle 8.14.3
-- **Messaging**: Apache Camel 4.13.0 for file processing routes
 - **Metrics**: Micrometer 1.14.8 with InfluxDB
 - **GraphQL**: Custom GraphQL 19.1 implementation with Spring WebMVC integration
 - **Resilience**: Resilience4j 2.2.0 for circuit breakers and retry logic
@@ -82,16 +81,14 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - `finance.services/` - Business logic layer with interfaces
 - `finance.repositories/` - JPA repositories using Spring Data
 - `finance.configurations/` - Spring configuration classes
-- `finance.routes/` - Apache Camel route builders for file processing
-- `finance.processors/` - Camel processors for transaction handling
 - `finance.resolvers/` - GraphQL data fetchers
 - `finance.utils/` - Utility classes and validators
 
 #### Key Components
-- **Transaction Processing**: File-based transaction import via Camel routes
+- **Transaction Processing**: Excel file upload and manual transaction entry
 - **Multi-Database Support**: Configurable PostgreSQL/Oracle support
 - **Security**: JWT-based authentication with role-based access
-- **File Processing**: Excel file upload and JSON transaction processing
+- **File Processing**: Excel file upload and processing
 - **Image Management**: Receipt image storage and validation
 - **GraphQL API**: Query and mutation support for financial data
 
@@ -143,9 +140,9 @@ Multiple Docker Compose configurations available:
 - `docker-compose-varnish.yml` - Varnish HTTP cache
 
 ### File Processing
-Transaction files are processed through Camel routes:
-- JSON input files in `json_in/`, `int_json_in/`, `func_json_in/`
+Transaction files are processed through:
 - Excel file processing via REST endpoint
+- Manual transaction entry through API endpoints
 - Automatic transaction categorization and validation
 
 ### API Endpoints
@@ -229,7 +226,7 @@ Format: `<type>: <description>`
 **Examples:**
 - `feat: add GraphQL mutation for transaction categorization`
 - `fix: resolve null pointer exception in AccountController:142`
-- `test: add integration tests for Camel route processing`
+- `test: add integration tests for transaction processing`
 - `migration: create indexes for transaction query optimization`
 
 ### Branch Strategy Guidelines
@@ -338,10 +335,10 @@ This approach ensures configuration consistency without compromising test reliab
 - **External Service Configuration**: InfluxDB and monitoring settings - kept disabled for integration tests
 
 **Integration Test Results:**
-- ✅ All integration tests pass (CamelSpec and others)
+- ✅ All integration tests pass
 - ✅ Database operations work correctly with new Hibernate settings
 - ✅ Circuit breaker and resilience patterns function properly
-- ✅ Transaction processing through Camel routes operates as expected
+- ✅ Transaction processing operates as expected
 - ✅ No performance degradation observed
 
 **Key Benefits of Int Profile Sync:**

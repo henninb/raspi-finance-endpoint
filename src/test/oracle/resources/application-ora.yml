@@ -81,17 +81,6 @@ custom:
   project:
     excluded-accounts:
       - test_brian
-    camel-route:
-      auto-start-route: true
-      json-file-reader-route-id: jsonFileReaderRoute
-      transaction-to-database-route-id: transactionToDatabaseRoute
-      json-file-writer-route-id: jsonFileWriterRoute
-      json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
-      transaction-to-database-Route: direct:transactionToDatabaseRoute
-      json-file-writer-route: direct:jsonFileWriterRoute
-      saved-file-endpoint: "file:func_json_in/.processed-successfully"
-      failed-Json-file-endpoint: "file:func_json_in/.not-processed-non-json-file"
-      failed-json-parser-endpoint: "file:func_json_in/.not-processed-json-parsing-errors"
 
 # ===============================
 # = Logging
