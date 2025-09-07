@@ -95,32 +95,36 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
 
 
-    void 'test GraphQL endpoint accessibility'() {
+    void 'graphql POST endpoint serves introspection'() {
+        given:
+        def introspectionQuery = """
+            query {
+                __schema { queryType { name } }
+            }
+        """
+        Map<String, Object> body = [query: introspectionQuery]
+
         when:
-        int code
-        try {
-            ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/graphql", String)
-            code = response.statusCode.value()
-        } catch (Exception e) {
-            code = e.message?.contains("404") ? 404 : e.message?.contains("405") ? 405 : 500
-        }
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(body, headers)
+        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
 
         then:
-        code in [200, 404, 405]
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("__schema")
     }
 
-    void 'test GraphiQL endpoint accessibility'() {
+    void 'graphiql UI is enabled for integration profile'() {
         when:
-        int code
-        try {
-            ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/graphiql", String)
-            code = response.statusCode.value()
-        } catch (Exception e) {
-            code = e.message?.contains("404") ? 404 : 500
-        }
+        ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/graphiql", String)
 
         then:
-        code in [200, 404]
+        response.statusCode in [HttpStatus.OK]
+        // Basic sanity: HTML payload expected
+        response.body != null
+        response.body.toLowerCase().contains("graphiql")
     }
 
 
@@ -143,37 +147,29 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
 
 
-    void 'test GraphQL schema introspection capability'() {
+    void 'introspection returns query and mutation types'() {
         given:
         def introspectionQuery = """
             query {
                 __schema {
-                    queryType {
-                        name
-                    }
-                    mutationType {
-                        name
-                    }
+                    queryType { name }
+                    mutationType { name }
                 }
             }
         """
-
-        Map<String, Object> queryMap = [query: introspectionQuery]
+        Map<String, Object> body = [query: introspectionQuery]
 
         when:
-        int code
-        try {
-            HttpHeaders headers = new HttpHeaders()
-            headers.setContentType(MediaType.APPLICATION_JSON)
-            HttpEntity<Object> entity = new HttpEntity<>(queryMap, headers)
-            ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
-            code = response.statusCode.value()
-        } catch (Exception e) {
-            code = e.message?.contains("404") ? 404 : e.message?.contains("405") ? 405 : 500
-        }
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(body, headers)
+        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
 
         then:
-        code in [200, 404, 405]
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("queryType")
+        response.body.contains("mutationType")
     }
 
     void 'test service layer integration for GraphQL data fetchers'() {

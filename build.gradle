@@ -46,9 +46,9 @@ configurations {
 }
 
 configurations.configureEach {
-    resolutionStrategy.eachDependency {
-      if ( it.requested.group == 'org.apache.logging.log4j') {
-        it.useVersion "${apacheLoggingVersion}"
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if ( details.requested.group == 'org.apache.logging.log4j') {
+        details.useVersion "${apacheLoggingVersion}"
       }
     }
 }
@@ -67,6 +67,11 @@ java {
 // Configure Kotlin toolchain instead of per-task compatibility
 kotlin {
     jvmToolchain(21)
+
+    // Gradle 9 preparation: explicit compilation configurations
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
 
 sourceSets {

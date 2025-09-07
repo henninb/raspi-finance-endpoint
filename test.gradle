@@ -101,6 +101,9 @@ task integrationTest(type: Test) {
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "int"
     environment "APPNAME", "raspi-finance-endpoint"
+
+    // Gradle 9 compatibility
+    useJUnitPlatform()
 }
 
 task functionalTest(type: Test) {
@@ -111,6 +114,9 @@ task functionalTest(type: Test) {
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "func"
     environment "APPNAME", "raspi-finance-endpoint"
+
+    // Gradle 9 compatibility
+    useJUnitPlatform()
 
     doFirst {
         project.flyway {
@@ -127,6 +133,9 @@ task performanceTest(type: Test) {
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "perf"
     environment "APPNAME", "raspi-finance-endpoint"
+
+    // Gradle 9 compatibility
+    useJUnitPlatform()
 }
 
 task oracleTest(type: Test) {
@@ -137,11 +146,15 @@ task oracleTest(type: Test) {
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "ora"
     environment "APPNAME", "raspi-finance-endpoint"
+
+    // Gradle 9 compatibility
+    useJUnitPlatform()
 }
 
-// Use outputLocation instead of deprecated destination for Gradle 9 readiness
-integrationTest.reports.html.outputLocation.set(file("$buildDir/reports/test/integration"))
-functionalTest.reports.html.outputLocation.set(file("$buildDir/reports/test/functional"))
-performanceTest.reports.html.outputLocation.set(file("$buildDir/reports/test/performance"))
+// Use outputLocation and layout.buildDirectory instead of deprecated $buildDir for Gradle 9 readiness
+integrationTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/integration"))
+functionalTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/functional"))
+performanceTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/performance"))
+oracleTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/oracle"))
 //test.dependsOn functionalTest
 //test.dependsOn integrationTest
