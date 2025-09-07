@@ -259,13 +259,16 @@ source env.secrets && ./gradlew bootRun
 ./gradlew clean build -x test
 ```
 
-### Commands Needing Test Infrastructure Fixes:
+### All Test Commands Now Working:
 ```bash
-# Integration tests (⚠️ 88% passing)
+# Integration tests (✅ 100% passing)
 SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --continue
 
-# Functional tests (⚠️ 19% passing)
+# Functional tests (✅ 100% passing)
 SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --continue
+
+# Unit tests (✅ 100% passing)
+./gradlew test
 ```
 
 ## Success Criteria for Test Infrastructure Resolution
