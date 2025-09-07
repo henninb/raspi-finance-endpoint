@@ -51,7 +51,7 @@ open class WebSecurityConfig(
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/api/login", "/api/register", "/api/pending/transaction/insert").permitAll()
+                auth.requestMatchers("/api/login", "/api/register").permitAll()
                 auth.requestMatchers("/api/**").authenticated()
                 auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
                 auth.anyRequest().permitAll()
@@ -60,7 +60,7 @@ open class WebSecurityConfig(
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter::class.java)
         val chain = http.build()
-        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register','/api/pending/transaction/insert']")
+        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register']")
         return chain
     }
 

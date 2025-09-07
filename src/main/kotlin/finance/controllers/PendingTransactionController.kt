@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
 @RestController
-@RequestMapping("/pending/transaction", "/api/pending/transaction")
+@RequestMapping("/api/pending/transaction")
 class PendingTransactionController(private val pendingTransactionService: PendingTransactionService) : BaseController() {
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner": "test_brian", "description": "pending transaction", "amount": 50.00}' https://localhost:8443/pending/transaction/insert

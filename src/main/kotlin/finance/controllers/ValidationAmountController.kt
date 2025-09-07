@@ -11,7 +11,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/validation/amount", "/api/validation/amount")
+@RequestMapping("/api/validation/amount")
 class ValidationAmountController(private var validationAmountService: ValidationAmountService) : BaseController() {
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionDate": "2024-01-01", "amount": 100.00}' https://localhost:8443/validation/amount/insert/test_brian

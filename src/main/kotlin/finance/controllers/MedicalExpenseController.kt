@@ -22,7 +22,7 @@ import java.sql.Date
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/medical-expenses", "/medical-expenses")
+@RequestMapping("/api/medical-expenses")
 open class MedicalExpenseController(private val medicalExpenseService: IMedicalExpenseService) : BaseController() {
 
     init {

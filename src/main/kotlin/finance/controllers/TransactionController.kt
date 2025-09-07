@@ -13,7 +13,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/transaction", "/api/transaction")
+@RequestMapping("/api/transaction")
 class TransactionController(private val transactionService: TransactionService, private val meterService: MeterService) :
     BaseController() {
 

@@ -11,7 +11,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 //TODO: need to change to parameter
-@RequestMapping("/parm", "/api/parameter", "/api/parm", "/parameter")
+@RequestMapping("/api/parameter")
 class ParameterController(private val parameterService: ParameterService) : BaseController() {
 
     // curl -k https://localhost:8443/parameter/select/active
