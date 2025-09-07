@@ -32,9 +32,8 @@ class TestSecurityConfig {
             .csrf { it.disable() }
             .anonymous { it.disable() }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/api/login", "/api/register", "/api/pending/transaction/insert").permitAll()
+                auth.requestMatchers("/api/login", "/api/register").permitAll()
                 auth.requestMatchers("/api/**").authenticated()
-                auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
                 auth.anyRequest().permitAll()
             }
             .formLogin { it.disable() }

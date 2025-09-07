@@ -11,7 +11,7 @@ import spock.lang.Shared
 class ParameterControllerIsolatedSpec extends BaseControllerSpec {
 
     @Shared
-    protected String endpointName = 'parm'  // Note: matches original spec
+    protected String endpointName = 'parameter'  // Updated to match new controller mapping
 
     @Shared
     protected ParameterTestContext parameterTestContext
@@ -169,7 +169,7 @@ class ParameterControllerIsolatedSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/api/parm/select/active"),
+                createURLWithPort("/api/parameter/select/active"),
                 HttpMethod.GET, entity, String)
 
         then:
