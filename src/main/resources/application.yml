@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: raspi-finance-endpoint
+
+  # GraphQL Configuration for Spring Boot 4.0
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+    path: /graphql
+    cors:
+      allowed-origins: "*"
+      allowed-methods: GET,POST
+      allowed-headers: "*"
+    schema:
+      printer:
+        enabled: true
+      locations: classpath:graphql/
+      file-extensions: .graphqls,.gqls
+
+  profiles:
+    active: prod
