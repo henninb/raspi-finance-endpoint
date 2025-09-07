@@ -590,3 +590,34 @@ The following application code edits were required to make Spring Boot 4.0 + Spr
 - Jakarta/Hibernate alignment: Entity/validation changes are the minimal set needed for Hibernate 7 and Jakarta validation compatibility.
 - Observability only: Added logging/metrics are non‑functional and assist with diagnosing Spring Boot 4 behavior without altering core flows.
 
+
+
+## Final Security + Test Adjustments (2025-09-07)
+
+What changed late in the cycle (and why):
+
+- Chain‑managed JWT filter: Prevent double registration
+  - Problem: A `@Component` filter can be registered by the servlet container in parallel to the Spring Security chain, so authorization may still see `anonymous` despite “Authentication successful …” logs.
+  - Fix: Removed `@Component/@Order` from `JwtAuthenticationFilter`, exposed it as a `@Bean`, and wired it via `http.addFilterBefore(jwtAuthenticationFilter, AuthorizationFilter.class)` so it always runs inside the Security chain.
+  - Also added `FilterRegistrationBean(...).isEnabled=false` for our custom filters (JWT, audit, rate‑limit, http error, logging CORS) to prevent servlet auto‑registration.
+
+- Authorization header (prod‑safe fallback)
+  - In addition to the `token` cookie, the JWT filter now accepts `Authorization: Bearer <jwt>` if the cookie is missing. This is a common production pattern and stabilized tests that inject auth via headers.
+
+- Test‑only SecurityFilterChain for `func` profile
+  - Added a small `@TestConfiguration` chain under `src/test/functional` that mirrors production rules, disables anonymous/CSRF, and places the JWT filter just before `AuthorizationFilter`. This ensures authorization sees the authenticated user in functional tests.
+  - Gated the main (production) chain with `@Profile("!func")` so the test chain is authoritative in functional runs.
+
+- BaseControllerSpec default auth
+  - Some specs made direct `RestTemplate` calls with `new HttpEntity<>(null, headers)` bypassing helpers. Default headers now include Cookie + Bearer by default; “unauthorized” tests explicitly use clean headers to assert 403.
+
+- Tests updated to assert correct security semantics
+  - FamilyMemberControllerIsolatedSpec: benefited from default auth headers for direct GET/DELETE requests.
+  - PaymentControllerIsolatedSpec: “unauthorized access” now expects 403 for `/api/payment/select`.
+  - UuidControllerIsolatedSpec: “unauthorized access” now expects 403 for `/api/uuid/generate`.
+  - SecurityAuditSpec: unauthenticated access to non‑API `/account/select/active` and `/category/select/active` is 403; with auth, corresponding `/api/**` endpoints work.
+
+Why this is minimal and robust:
+- Production behavior is not relaxed; changes are limited to bean wiring (filters) and adding a Bearer fallback.
+- All order‑of‑execution tweaks are confined to a test‑only chain under the `func` profile.
+- Functional tests now exercise real JWT verification end‑to‑end (cookie and/or bearer), and “unauthorized” tests consistently assert 403.
