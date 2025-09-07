@@ -311,12 +311,24 @@ open class MedicalExpenseController(private val medicalExpenseService: IMedicalE
     }
 
     @PatchMapping("/{medicalExpenseId}/claim-status")
-    fun updateClaimStatus(
+    fun updateClaimStatusPatch(
         @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long,
         @RequestParam claimStatus: ClaimStatus
     ): ResponseEntity<Map<String, String>> {
         logger.info("PATCH /medical-expenses/$medicalExpenseId/claim-status - Updating claim status to: $claimStatus")
+        return updateClaimStatusInternal(medicalExpenseId, claimStatus)
+    }
 
+    @PutMapping("/{medicalExpenseId}/claim-status")
+    fun updateClaimStatusPut(
+        @PathVariable @Min(1, message = "Medical expense ID must be positive") medicalExpenseId: Long,
+        @RequestParam claimStatus: ClaimStatus
+    ): ResponseEntity<Map<String, String>> {
+        logger.info("PUT /medical-expenses/$medicalExpenseId/claim-status - Updating claim status to: $claimStatus")
+        return updateClaimStatusInternal(medicalExpenseId, claimStatus)
+    }
+
+    private fun updateClaimStatusInternal(medicalExpenseId: Long, claimStatus: ClaimStatus): ResponseEntity<Map<String, String>> {
         return try {
             val success = medicalExpenseService.updateClaimStatus(medicalExpenseId, claimStatus)
             if (success) {
