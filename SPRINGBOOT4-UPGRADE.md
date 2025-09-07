@@ -375,6 +375,115 @@ The Spring Boot 4.0.0-M2 upgrade has been **successfully completed** with all is
 
 *Spring Boot 4.0 Upgrade completed successfully on 2025-09-06. All framework components, business logic, and test infrastructure are fully operational.*
 
+---
+
+## ❌ **CRITICAL ISSUE DISCOVERED: GraphQL Endpoint Completely Broken**
+
+### **Root Cause Analysis**
+
+During the Spring Boot 4.0 migration, the GraphQL endpoints have been **completely disabled/broken**. Investigation reveals several critical issues:
+
+#### **1. Legacy GraphQL Configuration Disabled**
+- **File**: `src/main/kotlin/finance/configurations/GraphqlProvider.kt`
+- **Status**: **ENTIRELY COMMENTED OUT** - All GraphQL provider configuration is disabled
+- **Impact**: No GraphQL endpoint available at `/graphql` or `/graphiql`
+
+#### **2. Spring Boot 4.0 GraphQL Architecture Changes**
+Based on research findings:
+
+**Critical Migration Requirements:**
+- Spring Boot 4.0 **requires migration** from third-party GraphQL starters to **official Spring GraphQL**
+- The `graphql-java-kickstart` libraries are **deprecated/archived**
+- Must use official `spring-boot-starter-graphql` (which is already in build.gradle)
+- Package name changes from legacy GraphQL implementations
+
+**Current State Analysis:**
+```kotlin
+// CURRENT: All legacy GraphQL provider code is commented out
+// src/main/kotlin/finance/configurations/GraphqlProvider.kt - DISABLED
+// GraphQL endpoint: UNAVAILABLE (404 responses)
+// GraphiQL endpoint: UNAVAILABLE (404 responses)
+```
+
+#### **3. Working Components vs Broken Endpoint**
+**✅ Still Functional:**
+- GraphQL schema file: `src/main/resources/graphql/schema.graphqls` - Complete and valid
+- GraphQL resolvers: All resolver classes exist and compile successfully:
+  - `AccountGraphQLResolver.kt`
+  - `PaymentGraphQLResolver.kt`
+  - `TransferGraphQLResolver.kt`
+- RuntimeWiring configuration: `GraphQLWiringConfig.kt` - Properly configured for Spring Boot 4.0
+
+**❌ Broken/Missing:**
+- HTTP endpoint registration: `/graphql` returns 404
+- GraphiQL web interface: `/graphiql` returns 404
+- GraphQL query execution: No HTTP transport layer
+
+#### **4. Test Evidence**
+Integration test results confirm the issue:
+```groovy
+// GraphQLIntegrationSpec.groovy shows:
+void 'test GraphQL endpoint accessibility'() {
+    // Tests expect 200, 404, or 405 - currently getting 404s
+    // Indicates complete absence of GraphQL HTTP endpoint
+}
+```
+
+### **Required Resolution Actions**
+
+#### **High Priority - Immediate Fix Required**
+
+1. **Enable Spring Boot 4.0 GraphQL Transport**
+   - Re-enable GraphQL HTTP endpoint using Spring Boot 4.0 official patterns
+   - Remove dependency on legacy `GraphqlProvider` (commented out code)
+   - Configure GraphQL HTTP transport through Spring Boot auto-configuration
+
+2. **Update GraphQL Configuration**
+   - Verify `GraphQLWiringConfig` integration with Spring Boot 4.0 GraphQL transport
+   - Ensure proper registration of custom scalars and resolvers
+   - Test GraphQL introspection and query execution
+
+3. **Restore GraphiQL Interface**
+   - Enable GraphiQL web interface for development/testing
+   - Configure proper endpoint paths for Spring Boot 4.0
+
+#### **Impact Assessment**
+- **Business Impact**: **HIGH** - All GraphQL functionality is unavailable
+- **API Surface**: GraphQL queries and mutations completely non-functional
+- **Development Impact**: No GraphiQL interface for GraphQL development/testing
+- **Integration**: REST API still functional, GraphQL API completely broken
+
+#### **Migration Strategy**
+**Phase 1: Basic Endpoint Recovery**
+- Enable basic GraphQL endpoint using Spring Boot 4.0 official configuration
+- Restore `/graphql` HTTP POST functionality
+- Verify schema loading and basic query execution
+
+**Phase 2: Full Feature Restoration**
+- Restore GraphiQL interface at `/graphiql`
+- Verify all custom resolvers work correctly
+- Test complex queries, mutations, and introspection
+
+**Phase 3: Integration Testing**
+- Update GraphQL integration tests for Spring Boot 4.0
+- Verify all schema types and operations function correctly
+- Performance testing of GraphQL queries
+
+### **Technical Analysis: Why GraphQL Broke**
+
+**Migration Path Abandoned:**
+The GraphQL functionality was likely working in Spring Boot 3.x but was **intentionally disabled** during the Spring Boot 4.0 migration due to:
+
+1. **Breaking Changes**: Legacy GraphQL provider patterns incompatible with Spring Boot 4.0
+2. **Dependency Conflicts**: Third-party GraphQL libraries conflicting with Spring Boot 4.0 modularization
+3. **Configuration Complexity**: Rather than migrate GraphQL, it was completely disabled as "non-critical"
+
+**Current Status**: GraphQL has been **abandoned** rather than **migrated**, leaving a significant functional gap in the API layer.
+
+---
+
+**UPGRADE STATUS REVISION**: While core application functionality works, **GraphQL API is completely non-functional** and requires immediate attention to restore full API capabilities.
+
 
 
 Excellent progress! I can see from the logs that the RestTemplate migration is working successfully:
