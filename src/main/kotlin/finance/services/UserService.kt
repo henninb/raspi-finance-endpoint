@@ -41,7 +41,7 @@ class UserService(
 
         // Hash the raw password securely using BCrypt
         val hashedPassword = passwordEncoder.encode(user.password)
-        user.password = hashedPassword
+        user.password = hashedPassword ?: throw IllegalStateException("Password encoding failed")
         return userRepository.saveAndFlush(user)
     }
 

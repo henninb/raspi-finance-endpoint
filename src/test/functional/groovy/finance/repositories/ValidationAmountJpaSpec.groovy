@@ -178,6 +178,7 @@ class ValidationAmountJpaSpec extends Specification {
 
         when:
         entityManager.persist(validationAmount)
+        entityManager.flush()  // Force constraint validation in Hibernate 7.1.0
 
         then:
         PersistenceException ex = thrown()

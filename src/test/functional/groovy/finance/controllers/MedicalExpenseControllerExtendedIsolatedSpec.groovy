@@ -5,10 +5,7 @@ import finance.domain.MedicalExpense
 import finance.domain.Transaction
 import finance.helpers.SmartMedicalExpenseBuilder
 import finance.helpers.SmartTransactionBuilder
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 
 @ActiveProfiles("func")
@@ -54,9 +51,19 @@ class MedicalExpenseControllerExtendedIsolatedSpec extends BaseControllerSpec {
         def postResp = postMedicalExpenseForNewTransaction(200.00G, ClaimStatus.Submitted)
         Long meId = extractLong(postResp.body, 'medicalExpenseId')
 
-        def patchResp = restTemplate.exchange(
-                createURLWithPort("/api/${ENDPOINT}/${meId}/claim-status?claimStatus=Paid"),
-                HttpMethod.PATCH, new HttpEntity<>(null, headers), String)
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        ResponseEntity<String> patchResp
+        try {
+            patchResp = restTemplate.exchange(
+                    createURLWithPort("/api/${ENDPOINT}/${meId}/claim-status?claimStatus=Paid"),
+                    HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            patchResp = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
 
         then:
         postResp.statusCode == HttpStatus.CREATED

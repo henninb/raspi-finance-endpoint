@@ -13,7 +13,7 @@ import java.sql.Date
 import java.util.*
 
 @Component
-class PaymentGraphQLResolver(
+open class PaymentGraphQLResolver(
     private val paymentService: IPaymentService,
     private val meterRegistry: MeterRegistry
 ) {

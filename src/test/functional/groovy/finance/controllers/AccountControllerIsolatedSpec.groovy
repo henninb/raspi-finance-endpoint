@@ -162,9 +162,14 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> response = restTemplate.exchange(
-                createURLWithPort("/api/account/rename?old=${sourceAccount.accountNameOwner}&new=${targetAccount.accountNameOwner}"),
-                HttpMethod.PUT, entity, String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.exchange(
+                    createURLWithPort("/api/account/rename?old=${sourceAccount.accountNameOwner}&new=${targetAccount.accountNameOwner}"),
+                    HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            response = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
 
         then:
         sourceResponse.statusCode == HttpStatus.CREATED
@@ -234,12 +239,22 @@ class AccountControllerIsolatedSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> deleteResponse = deleteEndpoint(endpointName, nonExistentAccount)
-        ResponseEntity<String> deactivateResponse = restTemplate.exchange(
-                createURLWithPort("/api/account/deactivate/${nonExistentAccount}"),
-                HttpMethod.PUT, entity, String)
-        ResponseEntity<String> activateResponse = restTemplate.exchange(
-                createURLWithPort("/api/account/activate/${nonExistentAccount}"),
-                HttpMethod.PUT, entity, String)
+        ResponseEntity<String> deactivateResponse
+        try {
+            deactivateResponse = restTemplate.exchange(
+                    createURLWithPort("/api/account/deactivate/${nonExistentAccount}"),
+                    HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            deactivateResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
+        ResponseEntity<String> activateResponse
+        try {
+            activateResponse = restTemplate.exchange(
+                    createURLWithPort("/api/account/activate/${nonExistentAccount}"),
+                    HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            activateResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
 
         then:
         deleteResponse.statusCode == HttpStatus.NOT_FOUND

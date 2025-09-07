@@ -4,7 +4,6 @@ import finance.Application
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
@@ -22,15 +21,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GraphqlSpec extends BaseControllerSpec {
 
-    @LocalServerPort
-    protected int port
 
     @Autowired
     MockMvc mockMvc
 
-    protected String createURLWithPort(String uri) {
-        return "http://localhost:${port}" + uri
-    }
 
 //    void 'description test'() {
 //        when:

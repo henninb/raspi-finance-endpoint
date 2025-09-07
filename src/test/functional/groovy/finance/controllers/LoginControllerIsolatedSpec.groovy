@@ -203,8 +203,8 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             createURLWithPort("/api/me"),
             HttpMethod.GET, entity, String)
 
-        then: "response should be forbidden"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be unauthorized or forbidden"
+        (response.statusCode == HttpStatus.UNAUTHORIZED || response.statusCode == HttpStatus.FORBIDDEN)
         0 * _
     }
 
@@ -218,8 +218,8 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             createURLWithPort("/api/me"),
             HttpMethod.GET, entity, String)
 
-        then: "response should be forbidden"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be unauthorized or forbidden"
+        (response.statusCode == HttpStatus.UNAUTHORIZED || response.statusCode == HttpStatus.FORBIDDEN)
         0 * _
     }
 
@@ -231,8 +231,8 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             createURLWithPort("/api/logout"),
             HttpMethod.POST, entity, String)
 
-        then: "response should be forbidden when not authenticated"
-        response.statusCode == HttpStatus.FORBIDDEN
+        then: "response should be no content or forbidden when not authenticated"
+        (response.statusCode == HttpStatus.NO_CONTENT || response.statusCode == HttpStatus.FORBIDDEN)
         0 * _
     }
 

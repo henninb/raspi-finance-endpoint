@@ -3,10 +3,7 @@ package finance.controllers
 import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.helpers.SmartFamilyMemberBuilder
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 
 @ActiveProfiles("func")
@@ -59,16 +56,38 @@ class FamilyMemberControllerIsolatedSpec extends BaseControllerSpec {
     }
 
     void 'should update active status and soft delete'() {
-        when:
+        given:
         def post = postMember(testOwner, "${testOwner}-child", FamilyRelationship.Child)
         Long id = extractLong(post.body, 'familyMemberId')
-        def patch = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}/${id}/active?active=false"), HttpMethod.PATCH, new HttpEntity<>(null, headers), String)
-        def del = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}/${id}"), HttpMethod.DELETE, new HttpEntity<>(null, headers), String)
+
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        HttpEntity entity = new HttpEntity<>(null, headers)
+
+        when:
+        ResponseEntity<String> deactivateResponse
+        try {
+            deactivateResponse = restTemplate.exchange(
+                createURLWithPort("/api/${ENDPOINT}/${id}/deactivate"),
+                HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            deactivateResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
+
+        ResponseEntity<String> deleteResponse
+        try {
+            deleteResponse = restTemplate.exchange(
+                createURLWithPort("/api/${ENDPOINT}/${id}"),
+                HttpMethod.DELETE, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            deleteResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
 
         then:
         post.statusCode == HttpStatus.CREATED
-        patch.statusCode == HttpStatus.OK
-        del.statusCode == HttpStatus.OK
+        deactivateResponse.statusCode == HttpStatus.OK
+        deleteResponse.statusCode == HttpStatus.OK
     }
 
     void 'should retrieve all family members'() {

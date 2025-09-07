@@ -24,6 +24,7 @@ import java.util.concurrent.ScheduledExecutorService
 import javax.sql.DataSource
 
 @Configuration
+@org.springframework.context.annotation.Profile("!func")
 open class DatabaseResilienceConfiguration {
 
     companion object {

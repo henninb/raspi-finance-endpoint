@@ -13,7 +13,7 @@ import java.sql.Date
 import java.util.*
 
 @Component
-class TransferGraphQLResolver(
+open class TransferGraphQLResolver(
     private val transferService: ITransferService,
     private val meterRegistry: MeterRegistry
 ) {
