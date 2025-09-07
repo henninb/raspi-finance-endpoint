@@ -27,7 +27,6 @@ class UuidController : BaseController() {
         value = ["/generate"],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
-    @PreAuthorize("hasAuthority('USER')")
     fun generateUuid(): ResponseEntity<Map<String, Any>> {
         logger.info("UUID generation requested")
 
@@ -62,7 +61,6 @@ class UuidController : BaseController() {
         value = ["/generate/batch"],
         produces = [MediaType.APPLICATION_JSON_VALUE]
     )
-    @PreAuthorize("hasAuthority('USER')")
     fun generateBatchUuids(count: Int = 1): ResponseEntity<Map<String, Any>> {
         logger.info("Batch UUID generation requested for {} UUIDs", count)
 

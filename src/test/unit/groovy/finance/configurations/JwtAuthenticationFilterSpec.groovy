@@ -10,22 +10,21 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.core.env.Environment
 import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 
 class JwtAuthenticationFilterSpec extends Specification {
 
     JwtAuthenticationFilter jwtAuthenticationFilter
-    Environment environmentMock = Mock(Environment)
     MeterRegistry meterRegistry = new SimpleMeterRegistry()
     HttpServletRequest requestMock = Mock(HttpServletRequest)
     HttpServletResponse responseMock = Mock(HttpServletResponse)
     FilterChain filterChainMock = Mock(FilterChain)
 
     def setup() {
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(environmentMock, meterRegistry)
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(meterRegistry)
         jwtAuthenticationFilter.jwtKey = "mySecretKeyForJwtTokensThisKeyMustBe256BitsOrMore"
+
 
         // Clear security context before each test
         SecurityContextHolder.clearContext()
@@ -135,8 +134,8 @@ class JwtAuthenticationFilterSpec extends Specification {
         1 * filterChainMock.doFilter(requestMock, responseMock)
         SecurityContextHolder.context.authentication != null
         SecurityContextHolder.context.authentication.name == "testuser"
-        SecurityContextHolder.context.authentication.authorities.size() == 1
-        SecurityContextHolder.context.authentication.authorities[0].authority == "ROLE_USER"
+        SecurityContextHolder.context.authentication.authorities.size() == 2
+        SecurityContextHolder.context.authentication.authorities*.authority.containsAll(["ROLE_USER", "USER"])
     }
 
     def "test getClientIpAddress extracts IP from X-Forwarded-For header"() {

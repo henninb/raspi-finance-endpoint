@@ -191,12 +191,22 @@ class CategoryControllerIsolatedSpec extends BaseControllerSpec {
 
         when:
         ResponseEntity<String> deleteResponse = deleteEndpoint(endpointName, nonExistentCategory)
-        ResponseEntity<String> deactivateResponse = restTemplate.exchange(
-                createURLWithPort("/api/category/deactivate/${nonExistentCategory}"),
-                HttpMethod.PUT, entity, String)
-        ResponseEntity<String> activateResponse = restTemplate.exchange(
-                createURLWithPort("/api/category/activate/${nonExistentCategory}"),
-                HttpMethod.PUT, entity, String)
+        ResponseEntity<String> deactivateResponse
+        try {
+            deactivateResponse = restTemplate.exchange(
+                    createURLWithPort("/api/category/deactivate/${nonExistentCategory}"),
+                    HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            deactivateResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
+        ResponseEntity<String> activateResponse
+        try {
+            activateResponse = restTemplate.exchange(
+                    createURLWithPort("/api/category/activate/${nonExistentCategory}"),
+                    HttpMethod.PUT, entity, String)
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            activateResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
 
         then:
         deleteResponse.statusCode == HttpStatus.NOT_FOUND

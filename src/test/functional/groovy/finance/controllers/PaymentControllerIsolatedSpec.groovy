@@ -306,8 +306,8 @@ class PaymentControllerIsolatedSpec extends BaseControllerSpec {
                 HttpMethod.GET, entity, String)
 
         then:
-        // PaymentController may allow unauthorized access based on security config
-        response.statusCode == HttpStatus.CREATED || response.statusCode == HttpStatus.UNAUTHORIZED || response.statusCode == HttpStatus.FORBIDDEN
+        // Unauthenticated requests to protected endpoints should be forbidden
+        response.statusCode == HttpStatus.FORBIDDEN
         0 * _
     }
 }

@@ -185,8 +185,8 @@ class UuidControllerIsolatedSpec extends BaseControllerSpec {
             createURLWithPort("/api/uuid/generate"),
             HttpMethod.POST, entity, String)
 
-        then: "response should be unauthorized"
-        response.statusCode == HttpStatus.UNAUTHORIZED || response.statusCode == HttpStatus.FORBIDDEN
+        then: "unauthenticated access should be forbidden"
+        response.statusCode == HttpStatus.FORBIDDEN
         0 * _
     }
 

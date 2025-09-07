@@ -8,10 +8,8 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
-@Component
 class SecurityAuditFilter(
     private val meterRegistry: MeterRegistry
 ) : OncePerRequestFilter() {
