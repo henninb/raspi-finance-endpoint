@@ -15,55 +15,5 @@
       "type": "java.lang.String",
       "description": "Description for custom.project.excel-input-file-path."
     },
-    {
-      "name": "custom.project.camel-route.failed-json-parser-endpoint",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.failed-json-parser-endpoint."
-    },
-    {
-      "name": "custom.project.camel-route.failed-Json-file-endpoint",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.failed-Json-file-endpoint."
-    },
-    {
-      "name": "custom.project.camel-route.saved-file-endpoint",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.saved-file-endpoint."
-    },
-    {
-      "name": "custom.project.camel-route.json-file-writer-route",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.json-file-writer-route."
-    },
-    {
-      "name": "custom.project.camel-route.json-file-writer-route-id",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.json-file-writer-route-id."
-    },
-    {
-      "name": "custom.project.camel-route.transaction-to-database-Route",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.transaction-to-database-Route."
-    },
-    {
-      "name": "custom.project.camel-route.transaction-to-database-route-id",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.transaction-to-database-route-id."
-    },
-    {
-      "name": "custom.project.camel-route.json-file-reader-route",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.json-file-reader-route."
-    },
-    {
-      "name": "custom.project.camel-route.json-file-reader-route-id",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.json-file-reader-route-id."
-    },
-    {
-      "name": "custom.project.camel-route.auto-start-route",
-      "type": "java.lang.String",
-      "description": "Description for custom.project.camel-route.auto-start-route."
-    }
   ]
 }
