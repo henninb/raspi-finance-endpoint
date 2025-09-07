@@ -10,7 +10,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/payment", "/api/payment")
+@RequestMapping("/api/payment")
 class PaymentController(private val paymentService: PaymentService) : BaseController() {
 
     // curl -k https://localhost:8443/payment/select

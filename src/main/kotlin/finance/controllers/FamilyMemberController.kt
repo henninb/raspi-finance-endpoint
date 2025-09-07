@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/family-members", "/family-members")
+@RequestMapping("/api/family-members")
 open class FamilyMemberController(private val familyMemberService: IFamilyMemberService) : BaseController() {
 
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])

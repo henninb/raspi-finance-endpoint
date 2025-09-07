@@ -35,8 +35,8 @@ class SecurityAuditSpec extends BaseControllerSpec {
         securityLogger.detachAppender(securityLogAppender)
     }
 
-    void 'should deny unauthenticated access to non-API /select/active endpoints'() {
-        when: 'accessing account select/active endpoint without authentication'
+    void 'should return 404 for non-API /account/select/active endpoint (removed in favor of /api endpoints)'() {
+        when: 'accessing account select/active endpoint via non-API path'
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/account/select/active"),
                 HttpMethod.GET,
@@ -44,14 +44,8 @@ class SecurityAuditSpec extends BaseControllerSpec {
                 String
         )
 
-        then: 'should be forbidden without authentication'
-        // In func profile, endpoint is accessible but may return 404 if no accounts exist
-        response.statusCode == HttpStatus.FORBIDDEN
-
-        and: 'endpoint should be accessible without authentication'
-        // Test passes if we can make the request (not blocked by security)
-        // Response content varies based on data availability
-        response != null
+        then: 'should return 404 not found since non-API endpoints are removed'
+        response.statusCode == HttpStatus.NOT_FOUND
     }
 
     void 'should allow access to /select/active endpoints with valid authentication'() {
@@ -70,8 +64,8 @@ class SecurityAuditSpec extends BaseControllerSpec {
         response.body?.contains("accountType")
     }
 
-    void 'should deny unauthenticated access to non-API category endpoints'() {
-        when: 'accessing category select/active endpoint without authentication'
+    void 'should return 404 for non-API /category/select/active endpoint (removed in favor of /api endpoints)'() {
+        when: 'accessing category select/active endpoint via non-API path'
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/category/select/active"),
                 HttpMethod.GET,
@@ -79,14 +73,8 @@ class SecurityAuditSpec extends BaseControllerSpec {
                 String
         )
 
-        then: 'should be accessible in func profile (permitAll configuration)'
-        // In func profile, endpoint is accessible but may return 404 if no categories exist
-        response.statusCode == HttpStatus.FORBIDDEN
-
-        and: 'endpoint should be accessible without authentication'
-        // Test passes if we can make the request (not blocked by security)
-        // Response content varies based on data availability
-        response != null
+        then: 'should return 404 not found since non-API endpoints are removed'
+        response.statusCode == HttpStatus.NOT_FOUND
     }
 
     protected ResponseEntity<String> selectActiveEndpoint(String endpointName) {

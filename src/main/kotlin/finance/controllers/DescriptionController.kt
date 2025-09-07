@@ -10,7 +10,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/description", "/api/description")
+@RequestMapping("/api/description")
 class DescriptionController(private val descriptionService: DescriptionService) : BaseController() {
 
     // curl -k https://localhost:8443/description/select/active
