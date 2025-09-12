@@ -31,6 +31,11 @@ data class ValidationAmount(
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", insertable = false, updatable = false)
+    @JsonIgnore
+    val account: Account? = null,
+
     //@field:ValidTimestamp
     @Column(name = "validation_date", nullable = false)
     @param:JsonProperty
@@ -50,7 +55,7 @@ data class ValidationAmount(
     @Column(name = "amount", nullable = false, precision = 10, scale = 2, columnDefinition = "NUMERIC(10,2) DEFAULT 0.00")
     var amount: BigDecimal
 ) {
-    constructor() : this(0L, 0L, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
+    constructor() : this(0L, 0L, null, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

@@ -17,8 +17,6 @@ object Constants {
         "transaction.rest.transaction.state.update.failure.counter"
     const val TRANSACTION_REST_REOCCURRING_TYPE_UPDATE_FAILURE_COUNTER =
         "transaction.rest.reoccurring.type.update.failure.counter"
-    const val CAMEL_STRING_PROCESSOR_COUNTER = "camel.string.processor.counter"
-    const val CAMEL_TRANSACTION_SUCCESSFULLY_INSERTED_COUNTER = "camel.transaction.successfully.inserted.counter"
 
     const val ALPHA_NUMERIC_NO_SPACE_PATTERN = "^[a-z0-9_-]*$"
     const val ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$"

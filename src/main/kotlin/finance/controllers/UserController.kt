@@ -10,7 +10,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
 @RestController
-@RequestMapping("/user", "/api/user")
+@RequestMapping("/api/user")
 class UserController @Autowired constructor(private var userService: UserService) : BaseController() {
 
     //curl -X POST -H "Content-Type: application/json"  -d '{"username":"user","password":"pass"}' http://localhost:8443/user/signin

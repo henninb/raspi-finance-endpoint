@@ -10,7 +10,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/transfer", "/api/transfer")
+@RequestMapping("/api/transfer")
 class TransferController(private var transferService: TransferService) : BaseController() {
 
     // curl -k https://localhost:8443/transfer/select

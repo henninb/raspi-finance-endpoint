@@ -10,7 +10,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/category", "/api/category")
+@RequestMapping("/api/category")
 class CategoryController(private val categoryService: CategoryService) : BaseController() {
 
     // curl -k https://localhost:8443/category/select/active

@@ -296,7 +296,7 @@ class PendingTransactionControllerIsolatedSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should allow unauthorized access to pending transaction endpoints'() {
+    void 'should reject unauthorized access to pending transaction insert endpoint'() {
         given: 'a valid pending transaction without authentication'
         // Create account first using SmartAccountBuilder
         def account = SmartAccountBuilder.builderForOwner(testOwner)
@@ -322,8 +322,8 @@ class PendingTransactionControllerIsolatedSpec extends BaseControllerSpec {
             "http://localhost:${port}/api/pending/transaction/insert",
             HttpMethod.POST, entity, String)
 
-        then: 'response should be successful (endpoint is not secured)'
-        response.statusCode == HttpStatus.OK
+        then: 'response should be forbidden (endpoint requires authentication)'
+        response.statusCode == HttpStatus.FORBIDDEN
 
         0 * _
     }

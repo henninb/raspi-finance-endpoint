@@ -1,19 +1,13 @@
 package finance.graphql
 
-import finance.Application
+import finance.BaseRestTemplateIntegrationSpec
 import finance.domain.*
 import finance.domain.AccountType
 import finance.repositories.*
 import finance.services.*
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.*
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
-import spock.lang.Specification
 import spock.lang.Ignore
 
 import java.sql.Date
@@ -21,17 +15,8 @@ import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.*
 
-@ActiveProfiles("int")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(classes = Application)
 @Transactional
-class GraphQLIntegrationSpec extends Specification {
-
-    @LocalServerPort
-    int port
-
-    @Autowired
-    TestRestTemplate restTemplate
+class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     // GraphQL is currently disabled in the application
     // @Autowired(required = false)
@@ -64,11 +49,7 @@ class GraphQLIntegrationSpec extends Specification {
     @Autowired
     PaymentRepository paymentRepository
 
-    String baseUrl
-
     void setup() {
-        baseUrl = "http://localhost:${port}"
-
         // NOTE: setupTestData() disabled temporarily due to entity constructor issues
         // setupTestData()
     }
@@ -114,25 +95,36 @@ class GraphQLIntegrationSpec extends Specification {
 
 
 
-    void 'test GraphQL endpoint accessibility'() {
+    void 'graphql POST endpoint serves introspection'() {
+        given:
+        def introspectionQuery = """
+            query {
+                __schema { queryType { name } }
+            }
+        """
+        Map<String, Object> body = [query: introspectionQuery]
+
         when:
-        ResponseEntity<String> response = restTemplate.getForEntity("${baseUrl}/graphql", String.class)
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(body, headers)
+        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
 
         then:
-        // GraphQL endpoint may not be enabled, so we check for various expected responses
-        response.statusCode == HttpStatus.OK ||
-        response.statusCode == HttpStatus.NOT_FOUND ||
-        response.statusCode == HttpStatus.METHOD_NOT_ALLOWED
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("__schema")
     }
 
-    void 'test GraphiQL endpoint accessibility'() {
+    void 'graphiql UI is enabled for integration profile'() {
         when:
-        ResponseEntity<String> response = restTemplate.getForEntity("${baseUrl}/graphiql", String.class)
+        ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/graphiql", String)
 
         then:
-        // GraphiQL endpoint may not be enabled, so we check for various expected responses
-        response.statusCode == HttpStatus.OK ||
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode in [HttpStatus.OK]
+        // Basic sanity: HTML payload expected
+        response.body != null
+        response.body.toLowerCase().contains("graphiql")
     }
 
 
@@ -155,39 +147,29 @@ class GraphQLIntegrationSpec extends Specification {
 
 
 
-    void 'test GraphQL schema introspection capability'() {
+    void 'introspection returns query and mutation types'() {
         given:
         def introspectionQuery = """
             query {
                 __schema {
-                    queryType {
-                        name
-                    }
-                    mutationType {
-                        name
-                    }
+                    queryType { name }
+                    mutationType { name }
                 }
             }
         """
-
-        Map<String, Object> queryMap = [query: introspectionQuery]
-        HttpHeaders headers = new HttpHeaders()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity<Map> entity = new HttpEntity<>(queryMap, headers)
+        Map<String, Object> body = [query: introspectionQuery]
 
         when:
-        ResponseEntity<Map> response = restTemplate.exchange(
-            "${baseUrl}/graphql",
-            HttpMethod.POST,
-            entity,
-            Map.class
-        )
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(body, headers)
+        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
 
         then:
-        // GraphQL introspection should be available in development
-        response.statusCode == HttpStatus.OK ||
-        response.statusCode == HttpStatus.NOT_FOUND ||
-        response.statusCode == HttpStatus.METHOD_NOT_ALLOWED
+        response.statusCode == HttpStatus.OK
+        response.body != null
+        response.body.contains("queryType")
+        response.body.contains("mutationType")
     }
 
     void 'test service layer integration for GraphQL data fetchers'() {

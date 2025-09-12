@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/family-members", "/family-members")
+@RequestMapping("/api/family-members")
 open class FamilyMemberController(private val familyMemberService: IFamilyMemberService) : BaseController() {
 
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
@@ -51,10 +51,16 @@ open class FamilyMemberController(private val familyMemberService: IFamilyMember
     ): ResponseEntity<List<FamilyMember>> =
         ResponseEntity.ok(familyMemberService.findByOwnerAndRelationship(owner, relationship))
 
-    @PatchMapping("/{id}/active")
-    fun updateActive(@PathVariable id: Long, @RequestParam active: Boolean): ResponseEntity<Map<String, String>> {
-        val ok = familyMemberService.updateActiveStatus(id, active)
-        return if (ok) ResponseEntity.ok(mapOf("message" to "Active status updated")) else ResponseEntity.notFound().build()
+    @PutMapping("/{id}/activate")
+    fun activateMember(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
+        val ok = familyMemberService.updateActiveStatus(id, true)
+        return if (ok) ResponseEntity.ok(mapOf("message" to "Family member activated")) else ResponseEntity.notFound().build()
+    }
+
+    @PutMapping("/{id}/deactivate")
+    fun deactivateMember(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
+        val ok = familyMemberService.updateActiveStatus(id, false)
+        return if (ok) ResponseEntity.ok(mapOf("message" to "Family member deactivated")) else ResponseEntity.notFound().build()
     }
 
     @DeleteMapping("/{id}")

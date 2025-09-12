@@ -13,7 +13,7 @@ import org.springframework.validation.BindingResult
 
 @CrossOrigin
 @RestController
-@RequestMapping("/receipt/image", "/api/receipt/image")
+@RequestMapping("/api/receipt/image")
 class ReceiptImageController(private var receiptImageService: ReceiptImageService) : BaseController() {
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionId": 1, "image": "base64encodedimage"}' https://localhost:8443/receipt/image/insert

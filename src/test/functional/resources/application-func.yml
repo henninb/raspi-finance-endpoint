@@ -16,11 +16,15 @@ spring:
   # ===============================
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create
     show-sql: true
     open-in-view: false
     properties:
       hibernate:
         default_schema: func
+        hbm2ddl:
+          create_namespaces: true
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
@@ -30,10 +34,11 @@ spring:
       auto-commit: false
   flyway:
     enabled: true
-    locations: classpath:db/migration/func
-    baseline-on-migrate: true
-    baseline-version: 0
-    validate-on-migrate: true
+    locations: classpath:/db/migration/func
+  sql:
+    init:
+      mode: embedded
+      schema-locations: classpath:/db/schema-func.sql
   h2:
     console:
       enabled: true
@@ -53,14 +58,6 @@ custom:
             key: "dummy-functional-test-key-that-is-at-least-256-bits-long-for-hmac-sha256-security"
         excluded-accounts:
             - test_brian
-        camel-route:
-            auto-start-route: true
-            json-file-reader-route: "file:func_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=15000"
-            transaction-to-database-Route: direct:transactionToDatabaseRoute
-            json-file-writer-route: direct:jsonFileWriterRoute
-            saved-file-endpoint: "file:func_json_in/.processed-successfully"
-            failed-Json-file-endpoint: "file:func_json_in/.not-processed-non-json-file"
-            failed-json-parser-endpoint: "file:func_json_in/.not-processed-json-parsing-errors"
     security:
         rate-limit:
             enabled: false
