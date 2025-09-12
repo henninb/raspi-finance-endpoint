@@ -117,12 +117,6 @@ task functionalTest(type: Test) {
 
     // Gradle 9 compatibility
     useJUnitPlatform()
-
-    doFirst {
-        project.flyway {
-            locations = ["classpath:db/migration/func"]
-        }
-    }
 }
 
 task performanceTest(type: Test) {
