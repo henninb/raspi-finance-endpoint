@@ -1,17 +1,45 @@
 services:
   influxdb-server:
-    image: influxdb:1.11.8
+    image: influxdb:2.7.10-alpine  # Security: Update to InfluxDB 2.x and use Alpine
     container_name: influxdb-server
     hostname: influxdb-server
-    # user: "${CURRENT_UID}:${CURRENT_GID}"
+    restart: unless-stopped
     ports:
-      - "8086:8086"
+      - "192.168.10.10:8086:8086"  # Security: Bind to specific network interface
     volumes:
-      - influxdb-data:/var/lib/influxdb
+      - influxdb-data:/var/lib/influxdb2:rw
     env_file:
       - env.influx
       - env.secrets
-    restart: unless-stopped
+    # Security: Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    # Security: Enhanced security context (reduced for InfluxDB data directory creation)
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - FOWNER    # Required for directory creation
+      - DAC_OVERRIDE  # Required for permission overrides
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+    # Health check for InfluxDB 2.x
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   raspi-finance-endpoint:
     depends_on:

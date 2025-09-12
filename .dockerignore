@@ -1,4 +1,53 @@
+# Security: Exclude sensitive files and directories
 os-env
 run.sh
 run-docker.sh
 git-setup
+
+# Security: Environment and secrets
+env.*
+*.env
+.env*
+env.secrets
+*.key
+*.pem
+*.crt
+
+# Security: Git and development files
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Security: Build and temporary files
+target/
+# build/ - Commented out to allow JAR file inclusion
+.gradle/
+gradle/
+*.log
+*.tmp
+*.cache
+
+# Allow JAR files for Docker build
+!build/libs/*.jar
+
+# Security: Documentation and development scripts
+*.md
+README*
+CHANGELOG*
+LICENSE*
+docs/
+documentation/
+
+# Security: Database and backup files
+*.sql
+*.db
+*.sqlite
+*-data/
+backups/
+
+# Security: Docker files (prevent recursive inclusion)
+Dockerfile*
+docker-compose*
+.dockerignore

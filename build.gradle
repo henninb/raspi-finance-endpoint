@@ -21,6 +21,14 @@ plugins {
 
 apply from: 'test.gradle'
 
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = true
+        html.required = true
+    }
+}
+
 repositories {
     mavenCentral()
 //    maven {

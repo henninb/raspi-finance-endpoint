@@ -138,6 +138,36 @@ mkdir -p 'grafana-data'
 mkdir -p 'logs'
 mkdir -p 'ssl'
 
+# Fix directory permissions for Docker volume mounts (required for non-root containers)
+log "Fixing directory permissions for Docker volume mounts..."
+fix_docker_permissions() {
+  local dir="$1"
+  local description="$2"
+
+  if [ -d "$dir" ]; then
+    log "  Setting permissions for $description: $dir"
+    # Create subdirectories as needed
+    if [[ "$dir" == "logs" ]]; then
+      mkdir -p "$dir/archive"
+    fi
+    # Set ownership and permissions
+    if [ "$env" = "proxmox" ]; then
+      ssh debian-dockerserver "cd ~/raspi-finance-endpoint && sudo chown -R $CURRENT_UID:$CURRENT_GID '$dir' && find '$dir' -type d -exec chmod 755 {} \; && find '$dir' -type f -exec chmod 644 {} \;"
+    else
+      ssh gcp-api "cd ~/raspi-finance-endpoint && sudo chown -R $CURRENT_UID:$CURRENT_GID '$dir' && find '$dir' -type d -exec chmod 755 {} \; && find '$dir' -type f -exec chmod 644 {} \;"
+    fi
+    log "  ✓ Fixed permissions for $description"
+  fi
+}
+
+fix_docker_permissions "logs" "Application logs directory"
+fix_docker_permissions "json_in" "JSON input directory"
+fix_docker_permissions "influxdb-data" "InfluxDB data directory"
+fix_docker_permissions "grafana-data" "Grafana data directory"
+if [ -d "ssl" ]; then
+  fix_docker_permissions "ssl" "SSL certificates directory"
+fi
+
 # Preserve local secret changes
 log "Preserving local secret changes..."
 git update-index --assume-unchanged env.secrets

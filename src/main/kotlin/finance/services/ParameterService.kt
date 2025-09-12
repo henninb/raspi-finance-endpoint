@@ -49,7 +49,7 @@ open class ParameterService(
             savedParameter
         } catch (ex: DataIntegrityViolationException) {
             logger.error("Database constraint violation while inserting parameter: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Database constraint violation: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate parameter found", ex)
         } catch (ex: Exception) {
             logger.error("Unexpected error while inserting parameter: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)

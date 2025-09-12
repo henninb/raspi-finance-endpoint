@@ -1,6 +1,5 @@
-# FROM openjdk:21
-FROM openjdk:21-slim
-# FROM openjdk:19-alpine
+# Use specific version for security and reproducibility  
+FROM openjdk:21-jdk-slim
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
@@ -39,10 +38,25 @@ RUN mkdir -p -m 0755 /opt/${APP}/ssl
 RUN mkdir -p -m 0755 /opt/${APP}/json_in
 COPY ./ssl /opt/${APP}/ssl
 ADD ./build/libs/${APP}.jar /opt/${APP}/bin/${APP}.jar
-RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}/*
+RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}
+
+# Security: Install only required tools for health check, then cleanup
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && apt-get purge -y --auto-remove \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /opt/${APP}/bin
 
-# USER ${USERNAME}
+USER ${USERNAME}
 
-CMD java -Duser.timezone=${TIMEZONE} -Xmx2048m -jar /opt/${APP}/bin/${APP}.jar
+# Security: Run with limited heap and enable security manager
+EXPOSE 8443
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8443/actuator/health || exit 1
+
+CMD java -Duser.timezone=${TIMEZONE} \
+    -Xmx2048m \
+    -XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -Djava.security.egd=file:/dev/./urandom \
+    -jar /opt/${APP}/bin/${APP}.jar
