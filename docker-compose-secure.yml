@@ -1,0 +1,110 @@
+# Security-hardened Docker Compose configuration
+# This file demonstrates comprehensive container security best practices
+
+services:
+  raspi-finance-endpoint:
+    extends:
+      file: docker-compose-base.yml
+      service: raspi-finance-endpoint
+    environment:
+      # Security: JVM security settings
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom
+    # Security: Network restrictions
+    networks:
+      - finance-secure
+    # Security: Enhanced logging for audit trail
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=finance-endpoint"
+
+  postgresql-server:
+    extends:
+      file: docker-compose-postgresql.yml
+      service: postgresql-server
+    networks:
+      - finance-secure
+    # Security: Database-specific environment
+    environment:
+      # Security: Non-default database settings
+      - POSTGRES_INITDB_ARGS=--auth-host=md5 --auth-local=peer
+    # Security: Enhanced logging for audit trail
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=postgresql"
+
+  nginx-reverse-proxy-finance:
+    extends:
+      file: docker-compose-nginx.yml
+      service: nginx-reverse-proxy-finance
+    networks:
+      - finance-secure
+    # Security: Nginx depends on application
+    depends_on:
+      raspi-finance-endpoint:
+        condition: service_healthy
+    # Security: Enhanced logging for audit trail
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=nginx-proxy"
+
+  influxdb-server:
+    extends:
+      file: docker-compose-influxdb.yml
+      service: influxdb-server
+    networks:
+      - finance-secure
+    # Security: Enhanced logging for audit trail
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=influxdb"
+
+# Security: Isolated network with custom configuration
+networks:
+  finance-secure:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: finance-secure
+      com.docker.network.bridge.enable_icc: "false"  # Disable inter-container communication by default
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: 1500
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+# Security: Managed volumes with explicit configuration
+volumes:
+  postgresql-volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./postgresql-data-secure
+  influxdb-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./influxdb-data-secure
+
+# Security: Docker Compose secrets (for future implementation)
+# secrets:
+#   jwt_key:
+#     file: ./secrets/jwt.key
+#   ssl_cert:
+#     file: ./secrets/ssl.crt
+#   ssl_key:
+#     file: ./secrets/ssl.key

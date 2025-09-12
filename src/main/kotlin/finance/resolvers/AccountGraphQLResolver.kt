@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger
 import org.springframework.stereotype.Component
 
 @Component
-class AccountGraphQLResolver(
+open class AccountGraphQLResolver(
     private val accountService: IAccountService,
 ) {
 
@@ -53,4 +53,3 @@ class AccountGraphQLResolver(
         val logger: Logger = LogManager.getLogger()
     }
 }
-

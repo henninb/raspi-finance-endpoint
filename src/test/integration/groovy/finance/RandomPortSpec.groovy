@@ -1,23 +1,12 @@
 package finance
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.ApplicationContext
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
-import spock.lang.Specification
 
-@ActiveProfiles("int")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(classes = Application)
-class RandomPortSpec extends Specification {
+class RandomPortSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     ApplicationContext applicationContext
-
-    @LocalServerPort
-    int port
 
     void 'test spring wiring'() {
         given:
@@ -34,5 +23,6 @@ class RandomPortSpec extends Specification {
         expect:
         applicationContext != null
         port > 0
+        baseUrl.startsWith("http://localhost:")
     }
 }

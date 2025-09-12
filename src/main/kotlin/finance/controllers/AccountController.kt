@@ -12,7 +12,7 @@ import java.util.*
 
 @CrossOrigin
 @RestController
-@RequestMapping("/api/account", "/account")
+@RequestMapping("/api/account")
 class AccountController(private val accountService: AccountService) : BaseController() {
 
     // curl -k https://localhost:8443/account/totals

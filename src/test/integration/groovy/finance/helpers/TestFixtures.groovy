@@ -88,20 +88,6 @@ class TestFixtures {
         )
     }
 
-    /**
-     * Creates test context for Camel route integration testing
-     */
-    CamelIntegrationContext createCamelIntegrationContext(String testOwner) {
-        log.info("Creating Camel integration context for test owner: ${testOwner}")
-
-        // Initialize integration test environment
-        testDataManager.initializeIntegrationTestEnvironment(testOwner)
-
-        return new CamelIntegrationContext(
-            testOwner: testOwner,
-            testDataManager: testDataManager
-        )
-    }
 
 }
 
@@ -396,43 +382,3 @@ class SecurityIntegrationContext {
     }
 }
 
-/**
- * Test context for Camel route integration testing
- */
-class CamelIntegrationContext {
-    String testOwner
-    TestDataManager testDataManager
-
-    CamelIntegrationContext(String testOwner, TestDataManager testDataManager) {
-        this.testOwner = testOwner
-        this.testDataManager = testDataManager
-    }
-
-    File createTestFile(String jsonContent) {
-        File testFile = File.createTempFile("integration_test_${testOwner}", ".json")
-        testFile.text = jsonContent
-        return testFile
-    }
-
-    void processJsonFile(File jsonFile) {
-        // Copy file to integration test input directory for Camel processing
-        File inputDir = new File("int_json_in")
-        if (!inputDir.exists()) {
-            inputDir.mkdirs()
-        }
-
-        File targetFile = new File(inputDir, "${UUID.randomUUID()}.json")
-        targetFile.text = jsonFile.text
-    }
-
-    Transaction createTestTransactionForCamel(Long accountId) {
-        return SmartTransactionBuilder.builderForOwner(testOwner)
-                .withAccountId(accountId)
-                .withDescription("camel_integration_test")
-                .buildAndValidate()
-    }
-
-    void cleanup() {
-        testDataManager.cleanupIntegrationTestsFor(testOwner)
-    }
-}

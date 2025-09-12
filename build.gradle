@@ -21,6 +21,14 @@ plugins {
 
 apply from: 'test.gradle'
 
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = true
+        html.required = true
+    }
+}
+
 repositories {
     mavenCentral()
 //    maven {
@@ -46,9 +54,9 @@ configurations {
 }
 
 configurations.configureEach {
-    resolutionStrategy.eachDependency {
-      if ( it.requested.group == 'org.apache.logging.log4j') {
-        it.useVersion "${apacheLoggingVersion}"
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if ( details.requested.group == 'org.apache.logging.log4j') {
+        details.useVersion "${apacheLoggingVersion}"
       }
     }
 }
@@ -67,6 +75,11 @@ java {
 // Configure Kotlin toolchain instead of per-task compatibility
 kotlin {
     jvmToolchain(21)
+
+    // Gradle 9 preparation: explicit compilation configurations
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
 
 sourceSets {
@@ -102,6 +115,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-graphql:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+
+    // Spring Boot 4.0 test dependencies
+    integrationTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
+    functionalTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
@@ -115,9 +132,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     implementation("com.google.code.gson:gson:${gsonVersion}")
 
-    //Camel
-    implementation("org.apache.camel.springboot:camel-spring-boot-starter:${apacheCamelVersion}")
-    implementation("org.apache.camel:camel-core:${apacheCamelVersion}")
 
     // GraphQL (Spring for GraphQL)
     implementation("org.springframework.boot:spring-boot-starter-graphql")

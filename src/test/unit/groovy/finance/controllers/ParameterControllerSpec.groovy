@@ -144,7 +144,7 @@ class ParameterControllerSpec extends Specification {
         }
         ResponseStatusException ex = thrown(ResponseStatusException)
         ex.statusCode == HttpStatus.CONFLICT
-        ex.reason == "Duplicate parameter found."
+        ex.reason == "Duplicate parameter found"
     }
 
     def "insertParameter should throw BAD_REQUEST on validation error"() {

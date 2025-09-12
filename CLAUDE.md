@@ -45,55 +45,61 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - Flyway repair: `./run-flyway-repair.sh` or `./gradlew flywayRepair`
 
 ### Development Scripts
-- Run application: `./run-bootrun.sh` (sources env.secrets automatically)
-- Run application with screen: `./run-screen-bootrun.sh`
-- Run functional tests: `./run-functional.sh`
-- Database backup: `./run-backup.sh`
-- Flyway repair: `./run-flyway-repair.sh`
-- Git setup: `./run-git-setup.sh`
-- Deploy script: `./run-deploy.sh`
-- Git commit quality reviewer: `./git-commit-review.sh`
+- **Run application**: `./run-bootrun.sh` (sources env.secrets automatically)
+- **Run functional tests**: `./run-functional.sh`
+- **Database operations**: `./run-flyway-repair.sh`, `./run-flyway.sh`
+- **Docker operations**: `./run-podman.sh` (comprehensive container management)
+- **Git utilities**: `./git-commit-review.sh` (commit quality validation)
+- **Certificate management**: `./cert-install.sh`, `./check-cert-expiry.sh`
+- **Cleanup utilities**: `./cleanup-orphaned-descriptions.sh`, `./whitespace-remove.sh`
+- **Main runner**: `./run.sh` (comprehensive application runner with multiple profiles)
 
 ## Architecture Overview
 
 ### Technology Stack
 - **Primary Language**: Kotlin 2.2.0
 - **Test Language**: Groovy 4.0.25 with Spock 2.3 framework
-- **Framework**: Spring Boot 3.5.4
-- **Security**: Spring Security 6.5.1 with JWT
+- **Framework**: Spring Boot 4.0.0-M2
+- **Security**: Spring Security 7.0.0-M2 with JWT
 - **Database**: PostgreSQL 42.7.7 (prod/stage) or Oracle (prodora), H2 2.3.232 (test)
 - **Build Tool**: Gradle 8.14.3
-- **Messaging**: Apache Camel 4.13.0 for file processing routes
+- **Java/Kotlin Toolchain**: Java 21 (JVM toolchain)
 - **Metrics**: Micrometer 1.14.8 with InfluxDB
-- **GraphQL**: Custom GraphQL 19.1 implementation with Spring WebMVC integration
-- **Resilience**: Resilience4j 2.2.0 for circuit breakers and retry logic
-- **Migration**: Flyway 11.11.1
-- **Data Access**: Hibernate 6.6.18.Final, JOOQ 3.20.6
-- **Testing**: JUnit 5.11.8, Testcontainers 1.20.4
+- **GraphQL**: Spring Boot Starter GraphQL with GraphQL Extended Scalars 19.1
+- **Resilience**: Resilience4j 2.3.0 for circuit breakers, retry logic, and time limiters
+- **Migration**: Flyway 11.12.0
+- **Data Access**: Hibernate 7.1.0.Final, JOOQ 3.20.6
+- **Testing**: Testcontainers 1.21.3, Spock Framework 2.3
 - **JSON Processing**: Jackson 2.19.1
 - **File Processing**: Apache POI 5.4.1 for Excel files
-- **Image Processing**: Thumbnailator 0.4.19
+- **Image Processing**: Thumbnailator 0.4.20
+- **Logging**: Logback 1.5.15, Apache Log4j 2.20.0
+- **Jakarta EE**: Jakarta Platform 11.0.0
 
 ### Application Structure
 
 #### Core Packages
-- `finance.domain/` - JPA entities and enums (Account, Transaction, Category, etc.)
-- `finance.controllers/` - REST API endpoints
+- `finance.domain/` - JPA entities and enums (Account, Transaction, Category, MedicalExpense, etc.)
+- `finance.controllers/` - REST API endpoints with Spring Web MVC
 - `finance.services/` - Business logic layer with interfaces
 - `finance.repositories/` - JPA repositories using Spring Data
-- `finance.configurations/` - Spring configuration classes
-- `finance.routes/` - Apache Camel route builders for file processing
-- `finance.processors/` - Camel processors for transaction handling
-- `finance.resolvers/` - GraphQL data fetchers
-- `finance.utils/` - Utility classes and validators
+- `finance.configurations/` - Spring configuration classes including GraphQL setup
+- `finance.resolvers/` - GraphQL resolvers and data fetchers
+- `finance.utils/` - Utility classes, validators, and converters
+- `finance.converters/` - Custom type converters for JPA entities
+- `finance.exceptions/` - Custom exception classes
 
 #### Key Components
-- **Transaction Processing**: File-based transaction import via Camel routes
-- **Multi-Database Support**: Configurable PostgreSQL/Oracle support
-- **Security**: JWT-based authentication with role-based access
-- **File Processing**: Excel file upload and JSON transaction processing
-- **Image Management**: Receipt image storage and validation
-- **GraphQL API**: Query and mutation support for financial data
+- **Transaction Processing**: Excel file upload, manual entry, and automated categorization
+- **Medical Expense Tracking**: Healthcare cost management with claim processing
+- **Multi-Database Support**: PostgreSQL/Oracle/H2 with profile-based configuration
+- **Security**: JWT-based authentication with Spring Security 7.0
+- **Rate Limiting**: Configurable request rate limiting for API protection
+- **File Processing**: Excel file upload with POI integration
+- **Image Management**: Receipt image storage, validation, and thumbnail generation
+- **GraphQL API**: Modern GraphQL endpoint with GraphiQL interface
+- **Resilience Patterns**: Circuit breakers, retry logic, and timeouts via Resilience4j
+- **Metrics and Monitoring**: InfluxDB integration with detailed application metrics
 
 ### Database Configuration
 - **Development/Test**: H2 in-memory database
@@ -143,23 +149,28 @@ Multiple Docker Compose configurations available:
 - `docker-compose-varnish.yml` - Varnish HTTP cache
 
 ### File Processing
-Transaction files are processed through Camel routes:
-- JSON input files in `json_in/`, `int_json_in/`, `func_json_in/`
+Transaction files are processed through:
 - Excel file processing via REST endpoint
+- Manual transaction entry through API endpoints
 - Automatic transaction categorization and validation
 
 ### API Endpoints
-- REST API at base path with controllers for each domain
-- GraphQL endpoint at `/graphql` with GraphiQL at `/graphiql`
-- Health checks at `/actuator/health`
-- Metrics integration for monitoring
+- **REST API**: Domain-specific controllers for all financial entities
+- **GraphQL Endpoint**: `/graphql` with interactive GraphiQL at `/graphiql`
+- **Health Checks**: Spring Boot Actuator at `/actuator/health` with detailed info
+- **Metrics**: Full metrics exposure at `/actuator/*` endpoints
+- **H2 Console**: Available in test profiles at `/h2-console` for debugging
+- **CORS Support**: Configurable cross-origin resource sharing
 
 ### Security
-- JWT token-based authentication with configurable secret key
-- CORS configuration for cross-origin requests
-- Role-based access control
-- Request/response logging filters
-- Environment-based configuration isolation
+- **JWT Authentication**: Token-based auth with configurable secret keys
+- **Spring Security 7.0**: Latest security framework with modern patterns
+- **Rate Limiting**: Built-in request rate limiting (5000 RPM default)
+- **CORS Configuration**: Multi-origin support for web applications
+- **SSL/TLS Support**: HTTPS with configurable keystores
+- **Environment Isolation**: Profile-specific security configurations
+- **Input Validation**: Jakarta validation annotations throughout
+- **Database Security**: Connection pooling with timeout and leak detection
 
 #### Security Best Practices
 - JWT secret key stored in `env.secrets` file (excluded from version control)
@@ -168,34 +179,40 @@ Transaction files are processed through Camel routes:
 - Database connection pooling with timeout configurations
 - Test isolation using dedicated H2 databases per test profile
 
-#### Security Risks to Address
-- JWT token storage and rotation strategy needs documentation
-- CORS policy configuration should be reviewed for production deployment
-- Rate limiting and DDoS protection not currently implemented
-- Database connection security configuration needs comprehensive documentation
+#### Security Implementation Status
+- **✅ JWT Authentication**: Implemented with configurable secret keys
+- **✅ Rate Limiting**: Built-in protection (5000 RPM default, configurable)
+- **✅ CORS Policy**: Multi-origin support configured for production
+- **✅ SSL/TLS**: Full HTTPS support with keystore configuration
+- **✅ Connection Security**: HikariCP with leak detection and timeouts
+- **✅ Input Validation**: Jakarta validation throughout the application
+- **⚠️ Token Rotation**: JWT rotation strategy needs documentation
+- **⚠️ DDoS Protection**: Advanced DDoS mitigation needs review
 
 ## Code Quality Standards
 
 ### Mandatory Practices
-- No trailing whitespace in any file
-- All public methods must have proper documentation
-- Exception handling must be explicit and meaningful
-- Database queries must be optimized and reviewed for N+1 problems
-- All external API calls must have timeout and retry logic
+- **No trailing whitespace** in any file (enforced by `whitespace-remove.sh`)
+- **Java 21 compliance** - all code must use Java 21 toolchain features
+- **Spring Boot 4.0 patterns** - use modern Spring framework conventions
+- **Exception handling** must be explicit with proper logging
+- **Database queries** optimized with proper indexing and N+1 prevention
+- **Resilience patterns** - all external calls must have circuit breakers and timeouts
 
 ### Performance Requirements
-- All database queries > 100ms must be logged and investigated
-- File uploads must have size limits and validation
-- Memory usage must be monitored for large data operations
+- **Database query monitoring** - queries >100ms logged and investigated
+- **Connection pooling** - HikariCP with leak detection and monitoring
+- **File upload validation** - size limits and MIME type checking
+- **Memory monitoring** - heap usage tracked for large operations
+- **Metrics collection** - comprehensive application metrics via Micrometer
 
 ### Testing Requirements
-- **Coverage Goals**: ~70% functional test coverage target, current ~40%
-- **Integration tests** for all database operations with H2 in-memory database
-- **Performance tests** for file processing operations using dedicated profile
-- **Security tests** for authentication and authorization flows
-- **Test Naming**: All Groovy test files use `Spec.groovy` suffix (Spock framework)
-- **Builder Pattern**: Use dedicated builder classes for test data construction
-- **Test Profiles**: Each test type has dedicated Spring profile configuration
+- **Multi-level testing**: Unit, Integration, Functional, Performance, Oracle-specific
+- **Test isolation**: Each test profile uses independent H2 databases
+- **Spock framework**: All Groovy tests use `.groovy` extension with Spock 2.3
+- **Builder patterns**: Consistent test data construction across all test types
+- **Profile-specific configs**: Dedicated Spring profiles for each test environment
+- **Testcontainers**: Integration tests with real database containers where needed
 
 ## Git Commit Quality Reviewer
 
@@ -229,7 +246,7 @@ Format: `<type>: <description>`
 **Examples:**
 - `feat: add GraphQL mutation for transaction categorization`
 - `fix: resolve null pointer exception in AccountController:142`
-- `test: add integration tests for Camel route processing`
+- `test: add integration tests for transaction processing`
 - `migration: create indexes for transaction query optimization`
 
 ### Branch Strategy Guidelines
@@ -255,27 +272,82 @@ Format: `<type>: <description>`
 
 ## Configuration Management
 
-### Profile Configuration Drift Management
+### Spring Boot 4.0 Configuration Updates
 
-Configuration drift between production and test profiles can lead to environment-specific bugs and inconsistencies. Regular comparison and synchronization of configuration settings ensures reliable deployment and testing.
+#### GraphQL Configuration
+**New Spring Boot 4.0 GraphQL Integration:**
+```yaml
+spring:
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+    path: /graphql
+    cors:
+      allowed-origins: "*"
+      allowed-methods: GET,POST
+      allowed-headers: "*"
+    schema:
+      printer:
+        enabled: true
+      locations: classpath:graphql/
+      file-extensions: .graphqls,.gqls
+```
 
-#### Profile Alignment Status
+#### Java 21 Toolchain Configuration
+```gradle
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
-**Production (prod) → Functional Test (func) Configuration Sync:**
+kotlin {
+    jvmToolchain(21)
+}
+```
 
-**✅ Successfully Synchronized Configurations:**
-- **Spring Application Name**: `raspi-finance-endpoint` - ensures consistent application naming across environments
-- **Jackson Configuration**: Property naming strategy (`LOWER_CAMEL_CASE`), null handling (`non_null`), enum case handling, and timezone settings (`America/Chicago`) - ensures consistent JSON serialization
-- **JPA Configuration**: `open-in-view: false` - prevents lazy loading issues and follows best practices
-- **Excluded Accounts**: `test_brian` - maintains consistency with production data filtering
-- **Flyway Validation**: `baseline-on-migrate`, `baseline-version: 0`, `validate-on-migrate: true` - ensures database migration consistency
+### Profile Configuration Management
 
-**❌ Configurations Not Compatible with Test Environment:**
-- **Advanced Hibernate Settings**: Query timeouts, batch processing, and connection provider settings - these conflict with H2 in-memory database behavior
-- **Production Database Pooling**: HikariCP production settings - not applicable to H2 test database
-- **Server Configuration**: SSL, ports, and production server settings - tests use random ports and HTTP
-- **Security Configuration**: Production authentication settings - tests use auto-generated credentials
-- **SQL Init Configuration**: Production-specific SQL initialization - conflicts with test data setup
+#### Production (prod) Configuration Features
+**✅ Advanced Database Pooling (HikariCP):**
+- Connection pooling: 20 max, 5 min idle
+- Leak detection: 60 second threshold
+- Query timeout: 30 seconds
+- Connection validation and monitoring
+
+**✅ Resilience4j Integration:**
+- Circuit breaker patterns for database operations
+- Retry logic with exponential backoff
+- Time limiters for query timeout management
+- Health indicator integration
+
+**✅ Security Enhancements:**
+- Rate limiting: 5000 requests per minute (configurable)
+- Multi-origin CORS support
+- SSL/TLS with keystore configuration
+- JWT secret key management
+
+#### Test Profile Configurations
+
+**Functional Test (func) Profile:**
+- H2 in-memory database with embedded mode
+- Flyway enabled with test-specific migrations
+- GraphQL debugging enabled
+- Resilience4j patterns included for testing
+- Rate limiting disabled for test performance
+
+**Integration Test (int) Profile:**
+- Advanced Hibernate settings synchronized with production
+- Circuit breaker and retry patterns enabled
+- Database resilience testing capabilities
+- Query timeout and connection management testing
+
+**Environment-Specific Exclusions:**
+- **Server/SSL Configuration**: Not applicable to test environments
+- **Production Credentials**: Tests use hardcoded safe credentials
+- **External Service Integration**: InfluxDB and monitoring disabled in tests
+- **CORS Origins**: Test-appropriate origins configured
 
 #### Configuration Drift Prevention
 
@@ -323,32 +395,27 @@ SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --continue
 
 This approach ensures configuration consistency without compromising test reliability or introducing environment-specific bugs.
 
-**Production (prod) → Integration Test (int) Configuration Sync:**
+#### Configuration Synchronization Status
 
-**✅ Successfully Synchronized Configurations:**
-- **SQL Init Mode**: Added `mode: never` setting for consistency with production SQL initialization behavior
-- **Advanced JPA/Hibernate Configuration**: Successfully added query timeouts (`query.timeout: 30000`), connection provider settings (`connection.provider_disables_autocommit: true`), JDBC batch processing (`batch_size: 20`, `batch_versioned_data: true`, `time_zone: UTC`), and query plan cache settings (`query.plan_cache_max_size: 2048`, `query.plan_parameter_metadata_max_size: 128`)
-- **Resilience4j Configuration**: Added complete circuit breaker, retry, and time limiter configurations for database operations - critical for integration testing of production-like resilience patterns
+**✅ Synchronized Across All Profiles:**
+- **Application Naming**: `raspi-finance-endpoint` consistent everywhere
+- **Jackson JSON Processing**: Consistent serialization patterns
+- **JPA Best Practices**: `open-in-view: false` across all environments
+- **Resilience Patterns**: Circuit breakers and retry logic in all profiles
+- **Business Logic**: Account filtering and validation rules
 
-**❌ Configurations Not Compatible with Integration Test Environment:**
-- **Server Configuration**: SSL, address, and port settings - integration tests use random ports and HTTP
-- **Security Configuration**: Production authentication settings - integration tests use hardcoded test credentials
-- **Production Database Pooling**: Full HikariCP production settings - not all applicable to H2 test database
-- **Allowed Origins**: CORS configuration - not relevant for integration test environment
-- **External Service Configuration**: InfluxDB and monitoring settings - kept disabled for integration tests
+**✅ Profile-Specific Optimizations:**
+- **Production**: Full connection pooling and SSL configuration
+- **Integration**: Production-like Hibernate settings with H2 compatibility
+- **Functional**: Embedded database with complete feature testing
+- **Unit**: Minimal configuration for fast test execution
 
-**Integration Test Results:**
-- ✅ All integration tests pass (CamelSpec and others)
-- ✅ Database operations work correctly with new Hibernate settings
-- ✅ Circuit breaker and resilience patterns function properly
-- ✅ Transaction processing through Camel routes operates as expected
-- ✅ No performance degradation observed
-
-**Key Benefits of Int Profile Sync:**
-- **Resilience Testing**: Integration tests now include the same circuit breaker and retry logic as production
-- **Performance Consistency**: Query timeouts and batch processing behavior matches production
-- **Database Behavior**: Connection management and transaction handling aligns with production settings
-- **Early Issue Detection**: Integration tests can catch resilience-related issues before deployment
+**✅ Spring Boot 4.0 Migration Benefits:**
+- **Modern GraphQL**: New Spring GraphQL starter with improved performance
+- **Jakarta EE 11**: Latest enterprise Java standards
+- **Java 21 Features**: Virtual threads and pattern matching support
+- **Enhanced Security**: Spring Security 7.0 with modern authentication patterns
+- **Improved Metrics**: Better Micrometer integration and monitoring
 
 ## Environment Configuration
 
@@ -399,8 +466,82 @@ SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest
 ./gradlew test
 ```
 
-#### Test Data Isolation
-- Each test profile uses independent H2 database instances
-- Test data builders create consistent, isolated test scenarios
-- "IsolatedSpec" tests use dedicated test data setups
-- Database state is reset between test runs for reliability
+#### Test Data Management
+
+**Database Isolation Strategy:**
+- **Independent H2 Instances**: Each test profile uses separate database schemas
+- **IsolatedSpec Pattern**: Dedicated test data builders for consistent scenarios
+- **Transaction Rollback**: Automatic cleanup between test executions
+- **Migration Testing**: Flyway migrations validated in each test environment
+
+**Test Data Builders:**
+- Spock framework with Groovy builders
+- Consistent entity creation patterns
+- Realistic financial data scenarios
+- Medical expense test data for healthcare tracking
+
+**Multi-Environment Testing:**
+- **Unit Tests**: Fast, isolated component testing
+- **Integration Tests**: Database and service layer validation
+- **Functional Tests**: Full application stack testing
+- **Performance Tests**: Load testing with realistic data volumes
+- **Oracle Tests**: Database-specific compatibility validation
+
+## Migration and Documentation
+
+### Available Migration Guides
+- **SPRINGBOOT4-UPGRADE.md**: Comprehensive Spring Boot 4.0 migration guide
+- **FUNCTIONAL_TEST_MIGRATION_GUIDE.md**: Functional test migration patterns
+- **INTEGRATION_TEST_MIGRATION_GUIDE.md**: Integration test updates
+- **SECURITY_MIGRATION_GUIDE.md**: Spring Security 7.0 migration
+- **MEDICAL_EXPENSE_PLAN.md**: Medical expense feature implementation
+- **MEDICAL_CLAIMS_INSERT.md**: Medical claims processing guide
+- **DESCRIPTION_DETAILS.md**: Transaction description management
+- **TODO.md**: Current development tasks and priorities
+
+### Spring Boot 4.0 Migration Status
+- **✅ Core Framework**: Migrated to Spring Boot 4.0.0-M2
+- **✅ Java 21**: Full toolchain migration completed
+- **✅ Security**: Spring Security 7.0.0-M2 integration
+- **✅ GraphQL**: New Spring Boot GraphQL starter
+- **✅ Testing**: All test profiles updated and validated
+- **⚠️ Performance**: Optimization and benchmarking in progress
+- **⚠️ Documentation**: Final documentation updates needed
+
+### Test Execution Examples
+```bash
+# Functional tests with Spring Boot 4.0
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*IsolatedSpec" --continue
+
+# Integration tests with Java 21 features
+SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "*IntSpec" --continue
+
+# Medical expense functionality testing
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*MedicalExpense*" --continue
+
+# Circuit breaker and resilience testing
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.*ControllerIsolatedSpec" --continue
+```
+
+## Utility Scripts and Tools
+
+### Code Quality and Maintenance
+- **whitespace-remove.sh**: Removes trailing whitespace from all source files
+- **cleanup-orphaned-descriptions.sh**: Database cleanup for orphaned transaction descriptions
+- **git-commit-review.sh**: Automated commit quality validation with build verification
+
+### Certificate and Security Management
+- **cert-install.sh**: SSL certificate installation and configuration
+- **check-cert-expiry.sh**: Certificate expiration monitoring
+
+### Container and Deployment
+- **run-podman.sh**: Comprehensive container management with multiple profiles
+- **run.sh**: Main application runner with profile selection and environment setup
+- **docker-entrypoint.sh**: Container startup script
+
+### Database Operations
+- **run-flyway.sh**: Database migration execution
+- **run-flyway-repair.sh**: Migration repair and recovery
+- **run-docker-backup.sh**: Dockerized database backup
+
+These utilities support the complete development lifecycle from code quality to production deployment.

@@ -1,13 +1,51 @@
 server:
   port: 0
+  tomcat:
+    connection-timeout: 30000
+    keep-alive-timeout: 30000
+    max-connections: 10000
+    max-threads: 200
+    accept-count: 100
+    threads:
+      min-spare: 10
+    # Additional Spring Boot 4.0 compatibility settings
+    remoteip:
+      protocol-header: x-forwarded-proto
+      remote-ip-header: x-forwarded-for
+  shutdown: graceful
+  netty:
+    connection-timeout: 30s
+    h2c-max-content-length: 0
+    initial-buffer-size: 128
+    max-chunk-size: 8192
+    max-initial-line-length: 4096
+    validate-headers: true
 spring:
   main:
     web-application-type: servlet
     allow-bean-definition-overriding: true
     banner-mode: console
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+        keep-alive: 10s
   web:
     resources:
       add-mappings: true
+  webflux:
+    multipart:
+      max-in-memory-size: 1MB
+  reactor:
+    netty:
+      pool:
+        max-connections: 100
+        max-idle-time: 30s
+        max-life-time: 60s
   security:
     user:
       name: foo
@@ -94,14 +132,6 @@ custom:
       key: test-jwt-key-for-integration-tests-that-is-at-least-256-bits-long-for-hmac-sha256-security
     excluded-accounts:
       - test_brian
-    camel-route:
-      auto-start-route: true
-      json-file-reader-route: "file:int_json_in?delete=true&moveFailed=.not-processed-failed-with-errors&delay=2000"
-      transaction-to-database-Route: direct:transactionToDatabaseRoute
-      json-file-writer-route: direct:jsonFileWriterRoute
-      saved-file-endpoint: "file:int_json_in/.processed-successfully"
-      failed-Json-file-endpoint: "file:int_json_in/.not-processed-non-json-file"
-      failed-json-parser-endpoint: "file:int_json_in/.not-processed-json-parsing-errors"
   security:
     rate-limit:
       enabled: false
@@ -146,6 +176,9 @@ management:
     web:
       exposure:
         include: "*"
+      base-path: /actuator
+  server:
+    port: ${server.port}
 debug: false
 
 # Circuit breaker and resilience patterns
