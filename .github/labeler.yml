@@ -1,47 +1,47 @@
-# Configuration for the GitHub labeler action
+# Configuration for the GitHub labeler action v5
 # https://github.com/actions/labeler
 
 # Label PRs that modify documentation
 documentation:
-  - "**/*.md"
-  - "docs/**/*"
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', 'docs/**/*']
 
 # Label PRs that modify tests
 tests:
-  - "src/test/**/*"
-  - "**/*Test*"
-  - "**/*Spec*"
+  - changed-files:
+    - any-glob-to-any-file: ['src/test/**/*', '**/*Test*', '**/*Spec*']
 
 # Label PRs that modify build configuration
 build:
-  - "build.gradle*"
-  - "gradle/**/*"
-  - "gradlew*"
-  - "Dockerfile*"
-  - "docker-compose*.yml"
+  - changed-files:
+    - any-glob-to-any-file: ['build.gradle*', 'gradle/**/*', 'gradlew*', 'Dockerfile*', 'docker-compose*.yml']
 
 # Label PRs that modify GitHub workflows
 ci/cd:
-  - ".github/**/*"
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**/*']
 
 # Label PRs that modify Kotlin source code
 kotlin:
-  - "src/main/kotlin/**/*"
+  - changed-files:
+    - any-glob-to-any-file: ['src/main/kotlin/**/*']
 
 # Label PRs that modify Groovy test code
 groovy:
-  - "src/test/**/*.groovy"
+  - changed-files:
+    - any-glob-to-any-file: ['src/test/**/*.groovy']
 
 # Label PRs that modify database migrations
 database:
-  - "src/main/resources/db/migration/**/*"
+  - changed-files:
+    - any-glob-to-any-file: ['src/main/resources/db/migration/**/*']
 
 # Label PRs that modify configuration files
 config:
-  - "src/main/resources/**/*.yml"
-  - "src/main/resources/**/*.yaml"
-  - "src/main/resources/**/*.properties"
+  - changed-files:
+    - any-glob-to-any-file: ['src/main/resources/**/*.yml', 'src/main/resources/**/*.yaml', 'src/main/resources/**/*.properties']
 
 # Label PRs that modify GraphQL schemas
 graphql:
-  - "src/main/resources/graphql/**/*"
+  - changed-files:
+    - any-glob-to-any-file: ['src/main/resources/graphql/**/*']
