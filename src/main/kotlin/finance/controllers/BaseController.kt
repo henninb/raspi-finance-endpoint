@@ -15,6 +15,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -27,7 +28,7 @@ open class BaseController {
     @ExceptionHandler(
         value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
             MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-            IllegalArgumentException::class, DataIntegrityViolationException::class]
+            IllegalArgumentException::class, MethodArgumentNotValidException::class]
     )
     fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, String>> {
         logSecureError("BAD_REQUEST", throwable, HttpStatus.BAD_REQUEST)
@@ -46,7 +47,8 @@ open class BaseController {
     fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, String>> {
         val httpStatus = HttpStatus.valueOf(throwable.statusCode.value())
         logSecureError("RESPONSE_STATUS_EXCEPTION", throwable, httpStatus)
-        val response = mapOf("response" to "${throwable.statusCode}: ${throwable.javaClass.simpleName}")
+        val errorMessage = throwable.reason ?: "${throwable.statusCode}: ${throwable.javaClass.simpleName}"
+        val response = mapOf("response" to errorMessage)
         return ResponseEntity(response, throwable.statusCode)
     }
 
