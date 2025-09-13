@@ -235,10 +235,12 @@ validate_env_secrets() {
     exit 1
   fi
 
-  # Source the env.secrets file to check values
+  # Source the env.secrets file to check values and export variables
   # shellcheck disable=SC1090
   if [ -f "$env_file" ]; then
+    set -a  # Automatically export all variables
     . "./$env_file"
+    set +a  # Disable automatic export
   fi
 
   # Check each required key (using sh-compatible approach)
@@ -388,38 +390,48 @@ else
     exit 1
   fi
 
-  # Get user info from remote host with error handling
-  log "Getting user information from GCP host..."
-  log "Note: You may be prompted for your SSH key passphrase or password."
-
-  # First try with standard SSH (should use the key we just added to agent)
-  CURRENT_UID="$(ssh gcp-api id -u 2>/dev/null)"
-  if [ -z "$CURRENT_UID" ]; then
-    # If that failed, try with password authentication only
-    log "Key-based authentication failed, trying password authentication..."
-    CURRENT_UID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api id -u)" || {
-      log_error "Failed to get UID from gcp-api."
-      exit 1
-    }
-    # Use password auth for remaining commands too
-    CURRENT_GID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api id -g)" || {
-      log_error "Failed to get GID from gcp-api."
-      exit 1
-    }
-    USERNAME="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api whoami)" || {
-      log_error "Failed to get username from gcp-api."
-      exit 1
-    }
+  # Check if user info was pre-gathered (either from environment or file)
+  if [ -n "$CURRENT_UID" ] && [ -n "$CURRENT_GID" ] && [ -n "$USERNAME" ]; then
+    log "Using pre-gathered user information from environment variables..."
+    log "✓ Loaded user info: UID=$CURRENT_UID, GID=$CURRENT_GID, User=$USERNAME"
+  elif [ -f "gcp-user-info.tmp" ]; then
+    log "Using pre-gathered user information from gcp-user-info.tmp..."
+    # shellcheck disable=SC1091
+    . "./gcp-user-info.tmp"
+    log "✓ Loaded user info: UID=$CURRENT_UID, GID=$CURRENT_GID, User=$USERNAME"
   else
-    # Key-based auth worked, use it for remaining commands
-    CURRENT_GID="$(ssh gcp-api id -g)" || {
-      log_error "Failed to get GID from gcp-api."
+    # Get user info from remote host with error handling
+    log "Getting user information from GCP host..."
+    log "Note: You may be prompted for your SSH key passphrase or password."
+    log "Tip: Run ./fix-gcp-ssh.sh first to pre-gather this information and avoid repeated prompts."
+
+    # First try with standard SSH (should use the key we just added to agent)
+    CURRENT_UID="$(ssh gcp-api id -u 2>/dev/null)"
+    if [ -z "$CURRENT_UID" ]; then
+      # If that failed, try with password authentication only
+      log "Key-based authentication failed, trying password authentication..."
+      CURRENT_UID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api id -u 2>/dev/null)"
+      if [ -z "$CURRENT_UID" ]; then
+        log_error "Failed to get UID from gcp-api."
+        log_error "SSH authentication is not working. Please run ./fix-gcp-ssh.sh to diagnose and fix SSH connectivity."
+        exit 1
+      fi
+      # Use password auth for remaining commands too
+      CURRENT_GID="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api id -g 2>/dev/null)"
+      USERNAME="$(ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no -o IdentitiesOnly=yes -o IdentityFile=/dev/null gcp-api whoami 2>/dev/null)"
+    else
+      # Key-based auth worked, use it for remaining commands
+      CURRENT_GID="$(ssh gcp-api id -g 2>/dev/null)"
+      USERNAME="$(ssh gcp-api whoami 2>/dev/null)"
+    fi
+
+    # Validate we got all required info
+    if [ -z "$CURRENT_UID" ] || [ -z "$CURRENT_GID" ] || [ -z "$USERNAME" ]; then
+      log_error "Failed to retrieve complete user information from gcp-api."
+      log_error "UID='$CURRENT_UID', GID='$CURRENT_GID', Username='$USERNAME'"
+      log_error "Please run ./fix-gcp-ssh.sh to diagnose and fix SSH connectivity issues."
       exit 1
-    }
-    USERNAME="$(ssh gcp-api whoami)" || {
-      log_error "Failed to get username from gcp-api."
-      exit 1
-    }
+    fi
   fi
   export CURRENT_UID CURRENT_GID USERNAME
 
@@ -504,40 +516,6 @@ git update-index --assume-unchanged env.secrets
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 
-cat <<  'EOF' > "nginx.tmp"
-server_tokens off;
-
-# Log to stdout so it's visible in docker logs
-access_log /dev/stdout combined;
-
-server {
-  listen 443 ssl;
-  server_name finance.bhenning.com;
-
-  ssl_certificate /etc/nginx/certs/bhenning.fullchain.pem;
-  ssl_certificate_key /etc/nginx/certs/bhenning.privkey.pem;
-
-  location / {
-    proxy_pass http://raspi-finance-endpoint:8443;
-    proxy_set_header Origin $http_origin;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
-}
-
-# vim: set ft=conf:
-EOF
-
-cat <<  'EOF' > "docker.tmp"
-FROM nginx:1.29.1-alpine
-
-COPY nginx.tmp /etc/nginx/conf.d/default.conf
-
-COPY ssl/bhenning.fullchain.pem /etc/nginx/certs/
-COPY ssl/bhenning.privkey.pem /etc/nginx/certs/
-EOF
-
 # Build the project with gradle (excluding tests)
 log "Building project with gradle..."
 if ! ./gradlew clean build -x test; then
@@ -587,11 +565,30 @@ fi
 # Docker-related commands
 if [ -x "$(command -v docker)" ]; then
 
-  if ! docker network ls --filter "name=^finance-lan$" -q | grep -q .; then
-    echo "Creating network finance-lan..."
-    docker network create finance-lan
+  # Create appropriate network based on environment
+  if [ "$env" = "proxmox" ]; then
+    NETWORK_NAME="finance-lan"
   else
-    echo "Network finance-lan already exists."
+    NETWORK_NAME="finance-gcp-secure"
+  fi
+
+  if ! docker network ls --filter "name=^$NETWORK_NAME$" -q | grep -q .; then
+    log "Creating network $NETWORK_NAME..."
+    if [ "$env" = "proxmox" ]; then
+      docker network create "$NETWORK_NAME"
+    else
+      # Create GCP network with security-focused configuration
+      docker network create "$NETWORK_NAME" \
+        --driver bridge \
+        --opt com.docker.network.bridge.name="$NETWORK_NAME" \
+        --opt com.docker.network.bridge.enable_icc=true \
+        --opt com.docker.network.bridge.enable_ip_masquerade=true \
+        --opt com.docker.network.driver.mtu=1500 \
+        --subnet=172.21.0.0/16 \
+        --gateway=172.21.0.1
+    fi
+  else
+    log "Network $NETWORK_NAME already exists."
   fi
 
   log "Docker detected. Cleaning up dangling images and volumes..."
@@ -631,11 +628,17 @@ if [ -x "$(command -v docker)" ]; then
       docker rmi -f influxdb:1.11.8
     fi
 
-    log "Building images/deploying images using docker-compose..."
+    log "Running Docker security validation for Proxmox deployment..."
+    if ! ./validate-docker-security.sh; then
+      log_error "Docker security validation failed. Deployment halted for security."
+      exit 1
+    fi
+
+    log "Building images/deploying with security-hardened configuration (LAN accessible)..."
     if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-influxdb.yml up -d; then
       log "docker-compose build failed for proxmox deployment."
     else
-      log "docker-compose build succeeded for proxmox deployment."
+      log "docker-compose build succeeded for proxmox deployment with security hardening."
     fi
   else
     log "GCP environment detected. Cleaning up existing raspi-finance-endpoint and influxdb containers..."
@@ -665,17 +668,127 @@ if [ -x "$(command -v docker)" ]; then
       docker rmi -f nginx-gcp-proxy
     fi
 
-    log "Building/deploying images using docker-compose (without nginx or varnish)..."
-    if ! docker compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-influxdb.yml up -d; then
-      log "docker-compose build failed for gcp deployment."
-    else
-      log "docker-compose build succeeded for gcp deployment."
+    log "Running Docker security validation for GCP deployment..."
+    if ! DOCKER_HOST=ssh://gcp-api ./validate-docker-security.sh; then
+      log_error "Docker security validation failed. Deployment halted for security."
+      exit 1
     fi
 
-    log "build gcp proxy server..."
-    docker build -f docker.tmp -t nginx-gcp-proxy .
-    log "run gcp proxy server..."
-    docker run -dit --restart unless-stopped --network finance-lan -p 443:443 --name nginx-gcp-proxy -h nginx-gcp-proxy  nginx-gcp-proxy
+    log "Building/deploying with security-hardened configuration for GCP (localhost-only)..."
+    if ! docker compose -f docker-compose-gcp.yml up -d; then
+      log "docker-compose build failed for gcp deployment."
+    else
+      log "docker-compose build succeeded for gcp deployment with security hardening."
+    fi
+
+    log "Creating GCP nginx configuration..."
+    cat <<  'EOF' > "nginx-gcp.conf"
+server_tokens off;
+
+# Log to stdout so it's visible in docker logs
+access_log /dev/stdout combined;
+
+# Define upstream with resolver for dynamic lookup
+upstream raspi-finance-app {
+    server raspi-finance-endpoint:8443;
+}
+
+server {
+  listen 443 ssl;
+  server_name finance.bhenning.com;
+
+  ssl_certificate /etc/nginx/certs/bhenning.fullchain.pem;
+  ssl_certificate_key /etc/nginx/certs/bhenning.privkey.pem;
+
+  # Add resolver for container name resolution
+  resolver 127.0.0.11 valid=30s;
+
+  location / {
+    # Use variable to force runtime resolution
+    set $upstream "http://raspi-finance-endpoint:8443";
+    proxy_pass $upstream;
+    proxy_set_header Origin $http_origin;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    # Add timeout settings
+    proxy_connect_timeout 5s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+
+    # Handle connection errors gracefully
+    proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+  }
+
+  # Health check endpoint
+  location /nginx-health {
+    access_log off;
+    return 200 "nginx ok\n";
+    add_header Content-Type text/plain;
+  }
+}
+
+# vim: set ft=conf:
+EOF
+
+    cat <<  EOF > "Dockerfile.nginx-gcp"
+FROM nginx:1.29.1-alpine
+
+# Create nginx user and group with specific IDs
+RUN addgroup -g ${CURRENT_GID:-1000} nginxgroup && \\
+    adduser -u ${CURRENT_UID:-1000} -G nginxgroup -D -s /bin/sh nginxuser
+
+# Create all necessary directories and set permissions
+RUN mkdir -p /etc/nginx/certs \\
+             /var/cache/nginx/client_temp \\
+             /var/cache/nginx/proxy_temp \\
+             /var/cache/nginx/fastcgi_temp \\
+             /var/cache/nginx/uwsgi_temp \\
+             /var/cache/nginx/scgi_temp \\
+             /var/run/nginx && \\
+    chown -R nginxuser:nginxgroup /etc/nginx/certs \\
+                                  /var/cache/nginx \\
+                                  /var/log/nginx \\
+                                  /etc/nginx/conf.d \\
+                                  /var/run/nginx
+
+# Create custom nginx.conf for non-root execution
+RUN echo 'pid /var/run/nginx/nginx.pid;' > /etc/nginx/nginx.conf && \\
+    echo 'error_log /var/log/nginx/error.log warn;' >> /etc/nginx/nginx.conf && \\
+    echo 'events { worker_connections 1024; }' >> /etc/nginx/nginx.conf && \\
+    echo 'http {' >> /etc/nginx/nginx.conf && \\
+    echo '    include /etc/nginx/mime.types;' >> /etc/nginx/nginx.conf && \\
+    echo '    default_type application/octet-stream;' >> /etc/nginx/nginx.conf && \\
+    echo '    sendfile on;' >> /etc/nginx/nginx.conf && \\
+    echo '    keepalive_timeout 65;' >> /etc/nginx/nginx.conf && \\
+    echo '    client_body_temp_path /var/cache/nginx/client_temp 1 2;' >> /etc/nginx/nginx.conf && \\
+    echo '    proxy_temp_path /var/cache/nginx/proxy_temp 1 2;' >> /etc/nginx/nginx.conf && \\
+    echo '    fastcgi_temp_path /var/cache/nginx/fastcgi_temp 1 2;' >> /etc/nginx/nginx.conf && \\
+    echo '    uwsgi_temp_path /var/cache/nginx/uwsgi_temp 1 2;' >> /etc/nginx/nginx.conf && \\
+    echo '    scgi_temp_path /var/cache/nginx/scgi_temp 1 2;' >> /etc/nginx/nginx.conf && \\
+    echo '    include /etc/nginx/conf.d/*.conf;' >> /etc/nginx/nginx.conf && \\
+    echo '}' >> /etc/nginx/nginx.conf
+
+COPY nginx-gcp.conf /etc/nginx/conf.d/default.conf
+COPY ssl/bhenning.fullchain.pem /etc/nginx/certs/
+COPY ssl/bhenning.privkey.pem /etc/nginx/certs/
+
+# Set correct permissions for SSL certificates
+RUN chown nginxuser:nginxgroup /etc/nginx/certs/* && \\
+    chmod 600 /etc/nginx/certs/bhenning.privkey.pem && \\
+    chmod 644 /etc/nginx/certs/bhenning.fullchain.pem && \\
+    chown nginxuser:nginxgroup /etc/nginx/nginx.conf
+
+USER nginxuser
+
+EXPOSE 443
+
+CMD ["nginx", "-g", "daemon off;"]
+EOF
+
+    log "Building secure GCP proxy server..."
+    docker build -f Dockerfile.nginx-gcp -t nginx-gcp-proxy .
   fi
     # log "change the port to 8443"
     # sed -i 's/^\(SERVER_PORT=\)[0-9]\+/\18443/' env.prod
@@ -703,19 +816,79 @@ fi
   # docker run --name=nginx-proxy-finance-server -h nginx-proxy-finance-server --restart unless-stopped -p 9443:443 -d nginx-proxy-finance-server
 # fi
 
-# Connect containers to finance-lan network if not already connected
-if ! docker network inspect finance-lan --format '{{range .Containers}}{{.Name}}{{"\n"}}{{end}}' 2>/dev/null | grep -q "^postgresql-server$"; then
-  log "Connecting postgresql-server to finance-lan network..."
-  docker network connect finance-lan postgresql-server
+# Connect containers to appropriate network based on environment
+if [ "$env" = "proxmox" ]; then
+  NETWORK_NAME="finance-lan"
 else
-  log "postgresql-server already connected to finance-lan network."
+  NETWORK_NAME="finance-gcp-secure"
 fi
 
-if ! docker network inspect finance-lan --format '{{range .Containers}}{{.Name}}{{"\n"}}{{end}}' 2>/dev/null | grep -q "^raspi-finance-endpoint$"; then
-  log "Connecting raspi-finance-endpoint to finance-lan network..."
-  docker network connect finance-lan raspi-finance-endpoint
+# Only connect PostgreSQL to network for Proxmox deployments (GCP uses external database)
+if [ "$env" = "proxmox" ]; then
+  if ! docker network inspect "$NETWORK_NAME" --format '{{range .Containers}}{{.Name}}{{"\n"}}{{end}}' 2>/dev/null | grep -q "^postgresql-server$"; then
+    log "Connecting postgresql-server to $NETWORK_NAME network..."
+    docker network connect "$NETWORK_NAME" postgresql-server
+  else
+    log "postgresql-server already connected to $NETWORK_NAME network."
+  fi
 else
-  log "raspi-finance-endpoint already connected to finance-lan network."
+  log "GCP deployment: Skipping postgresql-server network connection (using external database)."
+fi
+
+if ! docker network inspect "$NETWORK_NAME" --format '{{range .Containers}}{{.Name}}{{"\n"}}{{end}}' 2>/dev/null | grep -q "^raspi-finance-endpoint$"; then
+  log "Connecting raspi-finance-endpoint to $NETWORK_NAME network..."
+  docker network connect "$NETWORK_NAME" raspi-finance-endpoint
+else
+  log "raspi-finance-endpoint already connected to $NETWORK_NAME network."
+fi
+
+# Deploy nginx proxy for GCP after application container is ready
+if [ "$env" = "gcp" ]; then
+  log "Deploying nginx proxy for GCP after application container is ready..."
+
+  # Wait for application container to be healthy
+  log "Waiting for raspi-finance-endpoint to be ready..."
+  for i in $(seq 1 15); do
+    # Try health check first, fall back to container status check
+    if docker exec raspi-finance-endpoint curl -f -s http://localhost:8443/actuator/health >/dev/null 2>&1; then
+      log "Application container is ready!"
+      break
+    elif [ $i -eq 15 ]; then
+      # Final check - is container at least running?
+      if docker ps --filter name=raspi-finance-endpoint --format "{{.Status}}" | grep -q "Up"; then
+        log "Application container is running but health check failed - proceeding anyway"
+        break
+      else
+        log "ERROR: Application container failed to start properly"
+        exit 1
+      fi
+    fi
+    log "Waiting for application... ($i/15)"
+    sleep 3
+  done
+
+  # Clean up any existing nginx container
+  nginx_container=$(docker ps -a -f 'name=nginx-gcp-proxy' --format "{{.ID}}") 2> /dev/null
+  if [ -n "${nginx_container}" ]; then
+    log "Stopping and removing existing nginx-gcp-proxy container..."
+    docker stop "${nginx_container}"
+    docker rm -f "${nginx_container}" 2> /dev/null
+  fi
+
+  log "Running secure GCP proxy server (public access)..."
+  docker run -dit --restart unless-stopped --network finance-gcp-secure \
+    -p 443:443 --name nginx-gcp-proxy -h nginx-gcp-proxy \
+    --security-opt no-new-privileges:true --cap-drop ALL --cap-add CHOWN --cap-add SETGID --cap-add SETUID \
+    nginx-gcp-proxy
+
+  # Verify nginx is running
+  sleep 3
+  if docker ps --filter name=nginx-gcp-proxy --format "{{.Names}}" | grep -q nginx-gcp-proxy; then
+    log "✓ nginx-gcp-proxy is running successfully"
+  else
+    log_error "✗ nginx-gcp-proxy failed to start"
+    docker logs nginx-gcp-proxy --tail 10
+  fi
 fi
 log "docker network ls"
 docker network ls

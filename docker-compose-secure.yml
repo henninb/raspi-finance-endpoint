@@ -1,5 +1,6 @@
 # Security-hardened Docker Compose configuration
 # This file demonstrates comprehensive container security best practices
+# Note: PostgreSQL and Nginx are deployed separately and not included in this configuration
 
 services:
   raspi-finance-endpoint:
@@ -20,41 +21,7 @@ services:
         max-file: "3"
         labels: "service=finance-endpoint"
 
-  postgresql-server:
-    extends:
-      file: docker-compose-postgresql.yml
-      service: postgresql-server
-    networks:
-      - finance-secure
-    # Security: Database-specific environment
-    environment:
-      # Security: Non-default database settings
-      - POSTGRES_INITDB_ARGS=--auth-host=md5 --auth-local=peer
-    # Security: Enhanced logging for audit trail
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=postgresql"
 
-  nginx-reverse-proxy-finance:
-    extends:
-      file: docker-compose-nginx.yml
-      service: nginx-reverse-proxy-finance
-    networks:
-      - finance-secure
-    # Security: Nginx depends on application
-    depends_on:
-      raspi-finance-endpoint:
-        condition: service_healthy
-    # Security: Enhanced logging for audit trail
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=nginx-proxy"
 
   influxdb-server:
     extends:
@@ -87,12 +54,6 @@ networks:
 
 # Security: Managed volumes with explicit configuration
 volumes:
-  postgresql-volume:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./postgresql-data-secure
   influxdb-data:
     driver: local
     driver_opts:
