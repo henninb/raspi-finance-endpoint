@@ -62,6 +62,11 @@ fi
 
 log_info "✓ Created env.bootrun configuration file"
 
+log_info "Overriding database and influxdb hosts for local development..."
+sed 's/postgresql-server:5432/192.168.10.10:5432/g' env.bootrun > env.bootrun.tmp && mv env.bootrun.tmp env.bootrun
+sed 's/influxdb-server:8086/192.168.10.10:8086/g' env.bootrun > env.bootrun.tmp && mv env.bootrun.tmp env.bootrun
+log_info "✓ Overrides applied."
+
 log_info "Loading environment variables..."
 set -a
 # shellcheck disable=SC1091

@@ -1,0 +1,73 @@
+# GCP-specific Docker Compose configuration for security-hardened deployment
+# This configuration provides localhost-only access for GCP cloud environment
+# PostgreSQL and InfluxDB are external services, not deployed as containers
+
+services:
+  raspi-finance-endpoint:
+    image: raspi-finance-endpoint
+    build:
+      context: ./
+      args:
+       - APP=raspi-finance-endpoint
+       - TIMEZONE=America/Chicago
+       - USERNAME=${USERNAME}
+       - CURRENT_UID=${CURRENT_UID}
+       - CURRENT_GID=${CURRENT_GID}
+      dockerfile: Dockerfile
+    container_name: raspi-finance-endpoint
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8443:8443"  # Security: GCP localhost-only binding (nginx proxy handles public access)
+    hostname: hornsup-endpoint
+    volumes:
+      - ./json_in:/opt/raspi-finance-endpoint/json_in:rw
+      # Security: Mount SSL as read-only secret
+      - ./ssl:/opt/raspi-finance-endpoint/ssl:ro
+      # Note: Logs are ephemeral (container-only) - no host persistence
+    extra_hosts:
+      - "hornsup:${HOST_IP}"
+      - "raspi:172.19.0.2"  # GCP-specific IP
+      - "finance-db.lan:${HOST_IP}"
+    env_file:
+      - env.secrets
+      - ${ENV_FILE:-env.gcp}
+    environment:
+      # GCP-specific environment variables
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom
+      # Ensure critical environment variables are passed through
+      - JWT_KEY=${JWT_KEY}
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD}
+    # Security: Resource limits and constraints
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    # Security: Container hardening
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    user: "${CURRENT_UID}:${CURRENT_GID}"
+    # Security: Enhanced logging for audit trail
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=finance-endpoint,environment=gcp"
+
+# Security: Use external GCP network (created by run.sh)
+networks:
+  default:
+    name: finance-gcp-secure
+    external: true

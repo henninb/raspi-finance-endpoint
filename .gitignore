@@ -59,6 +59,8 @@ tags
 env.bootrun
 v3.ext
 *.tmp
+Dockerfile.nginx-gcp
+gcp-user-info.tmp
 kls_database.db
 *.log
 excel_in

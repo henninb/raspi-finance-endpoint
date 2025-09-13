@@ -6,18 +6,107 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import jakarta.validation.Valid
 import java.util.*
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/description")
-class DescriptionController(private val descriptionService: DescriptionService) : BaseController() {
+class DescriptionController(private val descriptionService: DescriptionService) :
+    StandardizedBaseController(), StandardRestController<Description, String> {
 
-    // curl -k https://localhost:8443/description/select/active
+    // ===== STANDARDIZED ENDPOINTS (NEW) =====
+
+    /**
+     * Standardized collection retrieval - GET /api/description/active
+     * Returns empty list instead of throwing 404 (standardized behavior)
+     */
+    @GetMapping("/active", produces = ["application/json"])
+    override fun findAllActive(): ResponseEntity<List<Description>> {
+        return handleCrudOperation("Find all active descriptions", null) {
+            logger.debug("Retrieving all active descriptions")
+            val descriptions: List<Description> = descriptionService.fetchAllDescriptions()
+            logger.info("Retrieved ${descriptions.size} active descriptions")
+            descriptions
+        }
+    }
+
+    /**
+     * Standardized single entity retrieval - GET /api/description/{descriptionName}
+     * Uses camelCase parameter without @PathVariable annotation
+     */
+    @GetMapping("/{descriptionName}", produces = ["application/json"])
+    override fun findById(@PathVariable descriptionName: String): ResponseEntity<Description> {
+        return handleCrudOperation("Find description by name", descriptionName) {
+            logger.debug("Retrieving description: $descriptionName")
+            val description = descriptionService.findByDescriptionName(descriptionName)
+                .orElseThrow {
+                    logger.warn("Description not found: $descriptionName")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Description not found: $descriptionName")
+                }
+            logger.info("Retrieved description: $descriptionName")
+            description
+        }
+    }
+
+    /**
+     * Standardized entity creation - POST /api/description
+     * Returns 201 CREATED
+     */
+    @PostMapping(consumes = ["application/json"], produces = ["application/json"])
+    override fun save(@Valid @RequestBody description: Description): ResponseEntity<Description> {
+        return handleCreateOperation("Description", description.descriptionName) {
+            logger.info("Creating description: ${description.descriptionName}")
+            val result = descriptionService.insertDescription(description)
+            logger.info("Description created successfully: ${description.descriptionName}")
+            result
+        }
+    }
+
+    /**
+     * Standardized entity update - PUT /api/description/{descriptionName}
+     * Uses camelCase parameter without @PathVariable annotation
+     */
+    @PutMapping("/{descriptionName}", consumes = ["application/json"], produces = ["application/json"])
+    override fun update(@PathVariable descriptionName: String, @Valid @RequestBody description: Description): ResponseEntity<Description> {
+        return handleCrudOperation("Update description", descriptionName) {
+            logger.info("Updating description: $descriptionName")
+            // Validate description exists first
+            descriptionService.findByDescriptionName(descriptionName)
+                .orElseThrow {
+                    logger.warn("Description not found for update: $descriptionName")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Description not found: $descriptionName")
+                }
+            val result = descriptionService.updateDescription(description)
+            logger.info("Description updated successfully: $descriptionName")
+            result
+        }
+    }
+
+    /**
+     * Standardized entity deletion - DELETE /api/description/{descriptionName}
+     * Returns 200 OK with deleted entity
+     */
+    @DeleteMapping("/{descriptionName}", produces = ["application/json"])
+    override fun deleteById(@PathVariable descriptionName: String): ResponseEntity<Description> {
+        return handleDeleteOperation(
+            "Description",
+            descriptionName,
+            { descriptionService.findByDescriptionName(descriptionName) },
+            { descriptionService.deleteByDescriptionName(descriptionName) }
+        )
+    }
+
+    // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
+
+    /**
+     * Legacy endpoint - GET /api/description/select/active
+     * Maintains original behavior
+     */
     @GetMapping("/select/active", produces = ["application/json"])
     fun selectAllDescriptions(): ResponseEntity<List<Description>> {
         return try {
-            logger.debug("Retrieving all descriptions")
+            logger.debug("Retrieving all descriptions (legacy endpoint)")
             val descriptions = descriptionService.fetchAllDescriptions()
             logger.info("Retrieved ${descriptions.size} descriptions")
             ResponseEntity.ok(descriptions)
@@ -27,14 +116,17 @@ class DescriptionController(private val descriptionService: DescriptionService) 
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request PUT --data '{"descriptionName":"amazon", "activeStatus": true}' https://localhost:8443/description/update/amazon
+    /**
+     * Legacy endpoint - PUT /api/description/update/{description_name}
+     * Maintains snake_case @PathVariable annotation for backward compatibility
+     */
     @PutMapping("/update/{description_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateDescription(
         @PathVariable("description_name") descriptionName: String,
         @RequestBody toBePatchedDescription: Description
     ): ResponseEntity<Description> {
         return try {
-            logger.info("Updating description: $descriptionName")
+            logger.info("Updating description: $descriptionName (legacy endpoint)")
             descriptionService.findByDescriptionName(descriptionName)
                 .orElseThrow {
                     logger.warn("Description not found for update: $descriptionName")
@@ -51,11 +143,14 @@ class DescriptionController(private val descriptionService: DescriptionService) 
         }
     }
 
-    // curl -k https://localhost:8443/description/select/amazon
+    /**
+     * Legacy endpoint - GET /api/description/select/{description_name}
+     * Maintains snake_case @PathVariable annotation for backward compatibility
+     */
     @GetMapping("/select/{description_name}")
     fun selectDescriptionName(@PathVariable("description_name") descriptionName: String): ResponseEntity<Description> {
         return try {
-            logger.debug("Retrieving description: $descriptionName")
+            logger.debug("Retrieving description: $descriptionName (legacy endpoint)")
             val description = descriptionService.findByDescriptionName(descriptionName)
                 .orElseThrow {
                     logger.warn("Description not found: $descriptionName")
@@ -71,11 +166,13 @@ class DescriptionController(private val descriptionService: DescriptionService) 
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"descriptionName":"test", "activeStatus": true}' https://localhost:8443/description/insert
+    /**
+     * Legacy endpoint - POST /api/description/insert
+     */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertDescription(@RequestBody description: Description): ResponseEntity<Description> {
         return try {
-            logger.info("Inserting description: ${description.descriptionName}")
+            logger.info("Inserting description: ${description.descriptionName} (legacy endpoint)")
             val descriptionResponse = descriptionService.insertDescription(description)
             logger.info("Description inserted successfully: ${descriptionResponse.descriptionName}")
             ResponseEntity(descriptionResponse, HttpStatus.CREATED)
@@ -94,11 +191,13 @@ class DescriptionController(private val descriptionService: DescriptionService) 
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/description/delete/test
+    /**
+     * Legacy endpoint - DELETE /api/description/delete/{descriptionName}
+     */
     @DeleteMapping("/delete/{descriptionName}", produces = ["application/json"])
     fun deleteByDescription(@PathVariable descriptionName: String): ResponseEntity<Description> {
         return try {
-            logger.info("Attempting to delete description: $descriptionName")
+            logger.info("Attempting to delete description: $descriptionName (legacy endpoint)")
             val description = descriptionService.findByDescriptionName(descriptionName)
                 .orElseThrow {
                     logger.warn("Description not found for deletion: $descriptionName")
@@ -116,8 +215,13 @@ class DescriptionController(private val descriptionService: DescriptionService) 
         }
     }
 
+    // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
 
-    // Matches UI: POST /api/description/merge with JSON { sourceNames: [...], targetName: "..." }
+
+    /**
+     * Business logic endpoint - POST /api/description/merge
+     * Preserved as-is, not part of standardization
+     */
     @PostMapping("/merge", consumes = ["application/json"], produces = ["application/json"])
     fun mergeDescriptions(@RequestBody request: MergeDescriptionsRequest): ResponseEntity<Description> {
         return try {
