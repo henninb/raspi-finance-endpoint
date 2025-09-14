@@ -3,6 +3,13 @@ package finance.controllers
 import finance.domain.Account
 import finance.domain.TransactionState
 import finance.services.AccountService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -10,12 +17,22 @@ import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.util.*
 
+@Tag(name = "Account Management", description = "Operations for managing financial accounts")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/account")
 class AccountController(private val accountService: AccountService) : BaseController() {
 
-    // curl -k https://localhost:8443/account/totals
+    @Operation(
+        summary = "Get account totals",
+        description = "Computes the total amounts for all accounts by transaction state (cleared, outstanding, future)"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Account totals computed successfully",
+            content = [Content(mediaType = "application/json",
+            schema = Schema(implementation = Map::class))]),
+        ApiResponse(responseCode = "500", description = "Internal server error")
+    ])
     @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): ResponseEntity<Map<String, String>> {
         return try {
@@ -57,7 +74,15 @@ class AccountController(private val accountService: AccountService) : BaseContro
         }
     }
 
-    // curl -k https://localhost:8443/account/select/active
+    @Operation(
+        summary = "Get active accounts",
+        description = "Retrieves all active financial accounts with updated totals"
+    )
+    @ApiResponses(value = [
+        ApiResponse(responseCode = "200", description = "Active accounts retrieved successfully"),
+        ApiResponse(responseCode = "404", description = "No active accounts found"),
+        ApiResponse(responseCode = "500", description = "Internal server error")
+    ])
     @GetMapping("/select/active", produces = ["application/json"])
     fun accounts(): ResponseEntity<List<Account>> {
         return try {

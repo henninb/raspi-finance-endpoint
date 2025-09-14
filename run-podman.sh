@@ -185,7 +185,9 @@ server {
   ssl_certificate_key /etc/nginx/certs/bhenning.privkey.pem;
 
   location / {
-    proxy_pass http://raspi-finance-endpoint:8443;
+    proxy_pass https://raspi-finance-endpoint:8443;
+    proxy_ssl_verify off;
+    proxy_ssl_server_name on;
     proxy_set_header Origin $http_origin;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;

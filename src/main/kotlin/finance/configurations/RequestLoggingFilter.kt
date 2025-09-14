@@ -18,20 +18,11 @@ open class RequestLoggingFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // Wrap the request so we can read the content later.
-        val wrappedRequest = if (request is ContentCachingRequestWrapper) {
-            request
-        } else {
-            // TODO: ContentCachingRequestWrapper constructor changed in Spring Boot 4.0.0-M1
-            // Added cacheLimit parameter
-            ContentCachingRequestWrapper(request, 1024)  // 1KB cache limit
-        }
         try {
-            filterChain.doFilter(wrappedRequest, response)
+            filterChain.doFilter(request, response)
         } finally {
-            // Retrieve the cached request body as a String.
-            val payload = String(wrappedRequest.contentAsByteArray, StandardCharsets.UTF_8)
-            logger.info("Request URI: ${request.requestURI}, Raw Payload: $payload")
+            // Simple logging without caching request body to avoid Spring Boot 4.0 compatibility issues
+            logger.info("Request URI: ${request.requestURI}")
         }
     }
 }

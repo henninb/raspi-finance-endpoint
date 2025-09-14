@@ -14,6 +14,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.net.InetAddress
 
 class RateLimitingFilter : OncePerRequestFilter() {
 
@@ -61,6 +62,18 @@ class RateLimitingFilter : OncePerRequestFilter() {
         }
 
         val clientIp = getClientIpAddress(request)
+
+        // Log suspicious activity if proxy headers were ignored
+        val hasProxyHeaders = !request.getHeader("X-Forwarded-For").isNullOrBlank() ||
+                             !request.getHeader("X-Real-IP").isNullOrBlank()
+        if (hasProxyHeaders && !isFromTrustedProxy(request.remoteAddr ?: "unknown")) {
+            securityLogger.warn(
+                "Proxy headers ignored from untrusted source: {} - X-Forwarded-For: {}, X-Real-IP: {}",
+                request.remoteAddr,
+                request.getHeader("X-Forwarded-For"),
+                request.getHeader("X-Real-IP")
+            )
+        }
         val currentTime = System.currentTimeMillis()
         val windowStart = currentTime - TimeUnit.MINUTES.toMillis(windowSizeMinutes)
 
@@ -97,13 +110,93 @@ class RateLimitingFilter : OncePerRequestFilter() {
     }
 
     private fun getClientIpAddress(request: HttpServletRequest): String {
-        val xForwardedFor = request.getHeader("X-Forwarded-For")
-        val xRealIp = request.getHeader("X-Real-IP")
+        val clientIp = request.remoteAddr ?: "unknown"
 
-        return when {
-            !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
-            !xRealIp.isNullOrBlank() -> xRealIp
-            else -> request.remoteAddr ?: "unknown"
+        // Only trust proxy headers from known trusted networks
+        return if (isFromTrustedProxy(clientIp)) {
+            val xForwardedFor = request.getHeader("X-Forwarded-For")
+            val xRealIp = request.getHeader("X-Real-IP")
+            when {
+                !xForwardedFor.isNullOrBlank() -> {
+                    // Take the first IP from X-Forwarded-For chain and validate it
+                    val forwardedIp = xForwardedFor.split(",")[0].trim()
+                    if (isValidIpAddress(forwardedIp)) forwardedIp else clientIp
+                }
+                !xRealIp.isNullOrBlank() -> {
+                    if (isValidIpAddress(xRealIp)) xRealIp else clientIp
+                }
+                else -> clientIp
+            }
+        } else {
+            // For untrusted sources, only use the direct connection IP
+            securityLogger.debug("Ignoring proxy headers from untrusted IP: {}", clientIp)
+            clientIp
+        }
+    }
+
+    private fun isFromTrustedProxy(clientIp: String): Boolean {
+        if (clientIp == "unknown") return false
+
+        val trustedNetworks = listOf(
+            "10.0.0.0/8",       // Private Class A
+            "172.16.0.0/12",    // Private Class B
+            "192.168.0.0/16",   // Private Class C
+            "127.0.0.0/8"       // Loopback
+        )
+
+        return try {
+            trustedNetworks.any { network -> isIpInNetwork(clientIp, network) }
+        } catch (e: Exception) {
+            securityLogger.warn("Error checking trusted proxy for IP: {} - {}", clientIp, e.message)
+            false
+        }
+    }
+
+    private fun isIpInNetwork(ip: String, network: String): Boolean {
+        try {
+            val parts = network.split("/")
+            val networkAddress = parts[0]
+            val prefixLength = parts[1].toInt()
+
+            val ipAddr = InetAddress.getByName(ip)
+            val networkAddr = InetAddress.getByName(networkAddress)
+
+            val ipBytes = ipAddr.address
+            val networkBytes = networkAddr.address
+
+            if (ipBytes.size != networkBytes.size) return false
+
+            val bytesToCheck = prefixLength / 8
+            val bitsInLastByte = prefixLength % 8
+
+            // Check full bytes
+            for (i in 0 until bytesToCheck) {
+                if (ipBytes[i] != networkBytes[i]) return false
+            }
+
+            // Check remaining bits in the last byte if needed
+            if (bitsInLastByte > 0 && bytesToCheck < ipBytes.size) {
+                val mask = (0xFF shl (8 - bitsInLastByte)).toByte()
+                val ipByte = (ipBytes[bytesToCheck].toInt() and 0xFF) and mask.toInt()
+                val networkByte = (networkBytes[bytesToCheck].toInt() and 0xFF) and mask.toInt()
+                if (ipByte != networkByte) return false
+            }
+
+            return true
+        } catch (e: Exception) {
+            securityLogger.debug("Error checking IP {} against network {} - {}", ip, network, e.message)
+            return false
+        }
+    }
+
+    private fun isValidIpAddress(ip: String): Boolean {
+        return try {
+            InetAddress.getByName(ip)
+            // Basic validation - reject obvious spoofing attempts
+            ip.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$".toRegex()) ||
+            ip.matches("^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$".toRegex()) // Basic IPv6
+        } catch (e: Exception) {
+            false
         }
     }
 
