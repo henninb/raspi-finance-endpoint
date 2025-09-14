@@ -122,6 +122,7 @@ export DOCKER_HOST=ssh://gcp-api
 
 app_status=$(docker ps --filter name=raspi-finance-endpoint --format "{{.Status}}" 2>/dev/null)
 nginx_status=$(docker ps --filter name=nginx-gcp-proxy --format "{{.Status}}" 2>/dev/null)
+influxdb_status=$(docker ps --filter name=influxdb-server --format "{{.Status}}" 2>/dev/null)
 
 if echo "$app_status" | grep -q "Up"; then
     log "✓ Application container is running: $app_status"
@@ -139,12 +140,29 @@ else
     log "Status: $nginx_status"
 fi
 
+if echo "$influxdb_status" | grep -q "Up"; then
+    log "✓ InfluxDB server is running: $influxdb_status"
+else
+    log_error "✗ InfluxDB server is not running properly"
+    log "Status: $influxdb_status"
+    log "Check InfluxDB logs with: ssh gcp-api 'docker logs influxdb-server'"
+fi
+
 # Test application health
 log "Testing application health..."
 if ssh gcp-api 'curl -f -s http://localhost:8443/actuator/health >/dev/null 2>&1'; then
     log "✓ Application health check passed"
 else
     log "⚠ Application health check failed - application may still be starting"
+fi
+
+# Test InfluxDB health
+log "Testing InfluxDB health..."
+if ssh gcp-api 'curl -f -s http://localhost:8086/ping >/dev/null 2>&1'; then
+    log "✓ InfluxDB health check passed"
+else
+    log "⚠ InfluxDB health check failed - InfluxDB may still be starting"
+    log "  Run troubleshooting: ./scripts/troubleshoot-influxdb-gcp.sh"
 fi
 
 # Test public access
@@ -162,6 +180,7 @@ log "✓ SSH connectivity: Working"
 log "✓ User info: UID=$CURRENT_UID, GID=$CURRENT_GID, User=$USERNAME"
 log "✓ Application deployed: $(echo "$app_status" | head -1)"
 log "✓ Nginx proxy deployed: $(echo "$nginx_status" | head -1)"
+log "✓ InfluxDB server deployed: $(echo "$influxdb_status" | head -1)"
 log ""
 log "Access URLs:"
 log "  Public HTTPS: https://34.132.189.202/"
@@ -172,10 +191,12 @@ log ""
 log "Monitoring commands:"
 log "  Application logs: ssh gcp-api 'docker logs raspi-finance-endpoint -f'"
 log "  Nginx logs: ssh gcp-api 'docker logs nginx-gcp-proxy -f'"
+log "  InfluxDB logs: ssh gcp-api 'docker logs influxdb-server -f'"
 log "  Container status: ssh gcp-api 'docker ps'"
 log ""
 log "Troubleshooting:"
-log "  Full diagnostics: ./diagnose-gcp-deployment.sh"
+log "  Full diagnostics: ./scripts/diagnose-gcp-deployment.sh"
+log "  InfluxDB diagnostics: ./scripts/troubleshoot-influxdb-gcp.sh"
 log "  Restart deployment: ./deploy-gcp.sh"
 
 exit 0

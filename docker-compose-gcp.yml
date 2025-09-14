@@ -1,6 +1,6 @@
 # GCP-specific Docker Compose configuration for security-hardened deployment
 # This configuration provides localhost-only access for GCP cloud environment
-# PostgreSQL and InfluxDB are external services, not deployed as containers
+# PostgreSQL and InfluxDB are deployed as containers for GCP environment
 
 services:
   raspi-finance-endpoint:
@@ -65,9 +65,65 @@ services:
         max-size: "10m"
         max-file: "3"
         labels: "service=finance-endpoint,environment=gcp"
+    depends_on:
+      - influxdb-server
+
+  influxdb-server:
+    image: influxdb:2.7.10-alpine  # Security: InfluxDB 2.x with Alpine for minimal attack surface
+    container_name: influxdb-server
+    hostname: influxdb-server
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8086:8086"  # Security: GCP localhost-only binding (matches app container pattern)
+    volumes:
+      - influxdb-gcp-data:/var/lib/influxdb2:rw
+    env_file:
+      - env.influx.gcp
+      - env.secrets
+    # Security: Resource limits for GCP environment
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    # Security: Container hardening (same pattern as main app)
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - FOWNER         # Required for InfluxDB data directory creation
+      - DAC_OVERRIDE   # Required for permission overrides
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+    # Health check for InfluxDB 2.x
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    # Security: Enhanced logging for audit trail
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=influxdb-server,environment=gcp"
 
 # Security: Use external GCP network (created by run.sh)
 networks:
   default:
     name: finance-gcp-secure
     external: true
+
+# GCP-specific volumes for persistent data
+volumes:
+  influxdb-gcp-data:
+    driver: local
