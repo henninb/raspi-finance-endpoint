@@ -132,12 +132,12 @@ echo "======================================"
 info "Testing Spring Boot Actuator health endpoint..."
 
 # Try internal health check first
-HEALTH_RESPONSE=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -s http://localhost:8443/actuator/health' 2>/dev/null || echo "FAILED")
+HEALTH_RESPONSE=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -k -s https://localhost:8443/actuator/health' 2>/dev/null || echo "FAILED")
 
 if [[ "$HEALTH_RESPONSE" == "FAILED" ]]; then
     warning "Internal health check failed, trying external endpoint..."
     # Try external endpoint
-    HEALTH_RESPONSE=$(ssh debian-dockerserver 'curl -s http://192.168.10.10:8443/actuator/health' 2>/dev/null || echo "FAILED")
+    HEALTH_RESPONSE=$(ssh debian-dockerserver 'curl -k -s https://192.168.10.10:8443/actuator/health' 2>/dev/null || echo "FAILED")
 fi
 
 if [[ "$HEALTH_RESPONSE" == "FAILED" ]]; then
@@ -243,7 +243,7 @@ info "  Database: $DB_NAME"
 info "  User: $DATASOURCE_USERNAME"
 
 # Test database connectivity via application
-DB_CONN_TEST=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -s http://localhost:8443/actuator/health/db' 2>/dev/null || echo "FAILED")
+DB_CONN_TEST=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -k -s https://localhost:8443/actuator/health/db' 2>/dev/null || echo "FAILED")
 
 if [[ "$DB_CONN_TEST" == "FAILED" ]]; then
     error "Cannot test database connectivity via application"
@@ -275,7 +275,7 @@ echo "======================================"
 info "Testing InfluxDB connectivity from application..."
 
 # Check InfluxDB health via application - try multiple paths
-FULL_HEALTH=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -s http://localhost:8443/actuator/health' 2>/dev/null || echo "FAILED")
+FULL_HEALTH=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -k -s https://localhost:8443/actuator/health' 2>/dev/null || echo "FAILED")
 
 if [[ "$FULL_HEALTH" != "FAILED" ]]; then
     # Try different possible component names
@@ -298,7 +298,7 @@ if [[ "$FULL_HEALTH" != "FAILED" ]]; then
 
             # Alternative test - check if metrics are being published
             info "Checking InfluxDB metrics publishing instead..."
-            METRICS_TEST=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -s http://localhost:8443/actuator/metrics' 2>/dev/null || echo "FAILED")
+            METRICS_TEST=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -k -s https://localhost:8443/actuator/metrics' 2>/dev/null || echo "FAILED")
             if [[ "$METRICS_TEST" != "FAILED" ]] && echo "$METRICS_TEST" | jq -e '.names[]' | grep -q "influx"; then
                 success "InfluxDB metrics are available"
             else
@@ -339,7 +339,7 @@ info "Testing key REST API endpoints..."
 ENDPOINTS=("/actuator/info" "/actuator/metrics" "/api/accounts" "/api/categories")
 
 for endpoint in "${ENDPOINTS[@]}"; do
-    ENDPOINT_TEST=$(ssh debian-dockerserver "curl -s -w '%{http_code}' -o /dev/null http://localhost:8443$endpoint" 2>/dev/null || echo "FAILED")
+    ENDPOINT_TEST=$(ssh debian-dockerserver "curl -k -s -w '%{http_code}' -o /dev/null https://localhost:8443$endpoint" 2>/dev/null || echo "FAILED")
 
     case $ENDPOINT_TEST in
         "200")
@@ -373,7 +373,7 @@ echo "======================================"
 info "Testing GraphQL endpoint..."
 
 # Test GraphQL endpoint availability
-GRAPHQL_TEST=$(ssh debian-dockerserver "curl -s -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{\"query\":\"query { __typename }\"}' http://localhost:8443/graphql" 2>/dev/null || echo "FAILED")
+GRAPHQL_TEST=$(ssh debian-dockerserver "curl -k -s -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{\"query\":\"query { __typename }\"}' https://localhost:8443/graphql" 2>/dev/null || echo "FAILED")
 
 GRAPHQL_CODE=$(echo "$GRAPHQL_TEST" | tail -c 4)
 case $GRAPHQL_CODE in
@@ -392,7 +392,7 @@ case $GRAPHQL_CODE in
 esac
 
 # Check GraphiQL interface
-GRAPHIQL_TEST=$(ssh debian-dockerserver "curl -s -w '%{http_code}' -o /dev/null http://localhost:8443/graphiql" 2>/dev/null || echo "FAILED")
+GRAPHIQL_TEST=$(ssh debian-dockerserver "curl -k -s -w '%{http_code}' -o /dev/null https://localhost:8443/graphiql" 2>/dev/null || echo "FAILED")
 if [[ "$GRAPHIQL_TEST" == "200" ]]; then
     success "GraphiQL interface is available"
 else
@@ -409,7 +409,7 @@ echo "======================================"
 info "Checking JVM metrics and performance..."
 
 # Get JVM metrics if available
-JVM_METRICS=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -s http://localhost:8443/actuator/metrics/jvm.memory.used' 2>/dev/null || echo "FAILED")
+JVM_METRICS=$(ssh debian-dockerserver 'docker exec raspi-finance-endpoint curl -k -s https://localhost:8443/actuator/metrics/jvm.memory.used' 2>/dev/null || echo "FAILED")
 
 if [[ "$JVM_METRICS" != "FAILED" ]]; then
     if echo "$JVM_METRICS" | jq -e '.measurements[0].value' >/dev/null 2>&1; then
@@ -495,7 +495,7 @@ echo "======================================"
 info "Checking security configuration..."
 
 # Test security endpoints
-SECURITY_TEST=$(ssh debian-dockerserver 'curl -s -w "%{http_code}" -o /dev/null http://localhost:8443/api/accounts' 2>/dev/null || echo "FAILED")
+SECURITY_TEST=$(ssh debian-dockerserver 'curl -k -s -w "%{http_code}" -o /dev/null https://localhost:8443/api/accounts' 2>/dev/null || echo "FAILED")
 
 case $SECURITY_TEST in
     "401"|"403")
@@ -559,10 +559,10 @@ fi
 
 echo
 info "Application monitoring URLs (if accessible):"
-echo "  Health: http://192.168.10.10:8443/actuator/health"
-echo "  Metrics: http://192.168.10.10:8443/actuator/metrics"
-echo "  Info: http://192.168.10.10:8443/actuator/info"
-echo "  GraphiQL: http://192.168.10.10:8443/graphiql"
+echo "  Health: https://192.168.10.10:8443/actuator/health"
+echo "  Metrics: https://192.168.10.10:8443/actuator/metrics"
+echo "  Info: https://192.168.10.10:8443/actuator/info"
+echo "  GraphiQL: https://192.168.10.10:8443/graphiql"
 
 echo
 info "Re-run this script after making changes to verify fixes"
