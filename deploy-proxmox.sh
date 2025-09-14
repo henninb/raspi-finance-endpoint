@@ -209,4 +209,6 @@ log "  Restart deployment: ./deploy-proxmox.sh"
 log "  Check network connectivity: ssh $PROXMOX_HOST 'docker network inspect finance-lan'"
 log "  Application diagnostics: ssh $PROXMOX_HOST 'curl -s http://localhost:8443/actuator/info'"
 
+docker inspect influxdb-server --format '{{ range .Mounts }}{{ if eq .Type "volume" }}{{ .Name }}{{ end }}{{ end }}'
+
 exit 0

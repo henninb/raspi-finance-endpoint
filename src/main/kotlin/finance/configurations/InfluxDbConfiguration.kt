@@ -3,8 +3,6 @@ package finance.configurations
 import io.micrometer.core.instrument.Clock
 import io.micrometer.influx.InfluxConfig
 import io.micrometer.influx.InfluxMeterRegistry
-// TODO: ConditionalOnEnabledMetricsExport may have changed in Spring Boot 4.0.0-M1
-// import org.springframework.boot.actuate.autoconfigure.metrics.export.ConditionalOnEnabledMetricsExport
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -23,7 +21,13 @@ open class InfluxDbConfiguration {
     }
 
     class CustomInfluxConfig(private val environment: Environment) : InfluxConfig {
-        override fun get(key: String): String? = null
+        override fun get(key: String): String? {
+            // Return property values for Micrometer's internal use
+            return when (key) {
+                "apiVersion" -> environment.getProperty("management.metrics.export.influx.api-version", "v1")
+                else -> null
+            }
+        }
 
         override fun enabled(): Boolean {
             return environment.getProperty("management.metrics.export.influx.enabled", Boolean::class.java, false)
@@ -38,11 +42,13 @@ open class InfluxDbConfiguration {
         }
 
         override fun userName(): String? {
-            return environment.getProperty("management.metrics.export.influx.user-name")
+            val username = environment.getProperty("management.metrics.export.influx.user-name")
+            return if (username.isNullOrBlank()) null else username
         }
 
         override fun password(): String? {
-            return environment.getProperty("management.metrics.export.influx.password")
+            val password = environment.getProperty("management.metrics.export.influx.password")
+            return if (password.isNullOrBlank()) null else password
         }
 
         override fun autoCreateDb(): Boolean {
@@ -66,6 +72,18 @@ open class InfluxDbConfiguration {
         override fun readTimeout(): Duration {
             val timeoutString = environment.getProperty("management.metrics.export.influx.read-timeout", "30s")
             return Duration.parse("PT$timeoutString")
+        }
+
+        override fun bucket(): String? {
+            return environment.getProperty("management.metrics.export.influx.bucket")
+        }
+
+        override fun org(): String? {
+            return environment.getProperty("management.metrics.export.influx.org")
+        }
+
+        override fun token(): String? {
+            return environment.getProperty("management.metrics.export.influx.token")
         }
     }
 
