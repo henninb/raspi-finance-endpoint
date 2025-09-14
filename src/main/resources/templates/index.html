@@ -1,10 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
-<head lang="en">
-    <title>raspi-finance-endpoint</title>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspi Finance API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .feature {
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .endpoints {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+        }
+
+        .endpoints h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .endpoint-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .endpoint {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .endpoint:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+            border-radius: 25px;
+            font-weight: 500;
+        }
+
+        .status::before {
+            content: "●";
+            color: #16a34a;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+                margin: 10px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>raspi-finance-endpoint</h1>
+    <div class="container">
+        <h1 class="logo">💰 Raspi Finance</h1>
+        <p class="subtitle">Personal Finance Management API</p>
+
+        <div class="feature-grid">
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Transaction Tracking</h3>
+                <p>Comprehensive financial transaction management and categorization</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🏥</div>
+                <h3>Medical Expenses</h3>
+                <p>Healthcare cost tracking and claims processing</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <h3>GraphQL API</h3>
+                <p>Modern query interface with real-time data access</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🛡️</div>
+                <h3>Secure & Resilient</h3>
+                <p>JWT authentication with circuit breakers and rate limiting</p>
+            </div>
+        </div>
+
+        <div class="endpoints">
+            <h3>Available Endpoints</h3>
+            <div class="endpoint-list">
+                <a href="/graphiql" class="endpoint">GraphiQL Explorer</a>
+                <a href="/actuator/health" class="endpoint">Health Check</a>
+                <a href="/swagger-ui/index.html" class="endpoint">API Docs</a>
+            </div>
+        </div>
+
+        <div class="status">
+            API Service Online
+        </div>
+    </div>
 </body>
 </html>

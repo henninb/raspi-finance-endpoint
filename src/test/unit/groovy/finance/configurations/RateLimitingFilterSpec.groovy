@@ -120,11 +120,11 @@ class RateLimitingFilterSpec extends Specification {
         (0.._) * responseMock.setHeader("X-RateLimit-Reset", _)
     }
 
-    def "test getClientIpAddress extracts IP from X-Forwarded-For header"() {
+    def "test getClientIpAddress extracts IP from X-Forwarded-For header when from trusted proxy"() {
         given:
         requestMock.getHeader("X-Forwarded-For") >> "203.0.113.1, 198.51.100.1"
         requestMock.getHeader("X-Real-IP") >> "198.51.100.1"
-        requestMock.remoteAddr >> "192.168.1.1"
+        requestMock.remoteAddr >> "192.168.1.1" // Trusted private IP
 
         when:
         String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
@@ -133,11 +133,11 @@ class RateLimitingFilterSpec extends Specification {
         clientIp == "203.0.113.1"
     }
 
-    def "test getClientIpAddress extracts IP from X-Real-IP header when X-Forwarded-For is empty"() {
+    def "test getClientIpAddress extracts IP from X-Real-IP header when X-Forwarded-For is empty from trusted proxy"() {
         given:
         requestMock.getHeader("X-Forwarded-For") >> null
         requestMock.getHeader("X-Real-IP") >> "198.51.100.1"
-        requestMock.remoteAddr >> "192.168.1.1"
+        requestMock.remoteAddr >> "192.168.1.1" // Trusted private IP
 
         when:
         String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
@@ -226,13 +226,13 @@ class RateLimitingFilterSpec extends Specification {
         filter.rateLimitingEnabled == true
     }
 
-    def "test X-Forwarded-For with multiple IPs uses first one"() {
+    def "test X-Forwarded-For with multiple IPs uses first one from trusted proxy"() {
         given:
         rateLimitingFilter.rateLimitingEnabled = true
         rateLimitingFilter.rateLimitPerMinute = 500
         requestMock.getHeader("X-Forwarded-For") >> "203.0.113.1, 198.51.100.1, 192.168.1.1"
         requestMock.getHeader("X-Real-IP") >> null
-        requestMock.remoteAddr >> "192.168.1.1"
+        requestMock.remoteAddr >> "192.168.1.1" // Trusted private IP
 
         when:
         rateLimitingFilter.doFilterInternal(requestMock, responseMock, filterChainMock)
@@ -241,5 +241,86 @@ class RateLimitingFilterSpec extends Specification {
         1 * filterChainMock.doFilter(requestMock, responseMock)
         // Verify that the first IP from X-Forwarded-For is used
         rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+    }
+
+    def "test proxy headers ignored from untrusted source"() {
+        given:
+        requestMock.getHeader("X-Forwarded-For") >> "203.0.113.1"
+        requestMock.getHeader("X-Real-IP") >> "198.51.100.1"
+        requestMock.remoteAddr >> "203.0.113.5" // Public IP - untrusted
+
+        when:
+        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+
+        then:
+        clientIp == "203.0.113.5" // Should use remoteAddr, ignoring proxy headers
+    }
+
+    def "test trusted proxy networks include private ranges"() {
+        given:
+        requestMock.getHeader("X-Forwarded-For") >> "203.0.113.1"
+        requestMock.getHeader("X-Real-IP") >> null
+
+        when: "request comes from trusted 10.x network"
+        requestMock.remoteAddr >> "10.0.0.5"
+
+        then:
+        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+
+        when: "request comes from trusted 172.16.x network"
+        requestMock.remoteAddr >> "172.16.0.5"
+
+        then:
+        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+
+        when: "request comes from trusted 192.168.x network"
+        requestMock.remoteAddr >> "192.168.0.5"
+
+        then:
+        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+
+        when: "request comes from localhost"
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        then:
+        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+    }
+
+    def "test invalid forwarded IP falls back to remoteAddr"() {
+        given:
+        requestMock.getHeader("X-Forwarded-For") >> "invalid-ip"
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "192.168.1.1"
+
+        when:
+        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+
+        then:
+        clientIp == "192.168.1.1" // Should fall back to remoteAddr for invalid forwarded IP
+    }
+
+    def "test header spoofing prevention blocks malicious headers"() {
+        given:
+        rateLimitingFilter.rateLimitingEnabled = true
+        rateLimitingFilter.rateLimitPerMinute = 2
+        rateLimitingFilter.windowSizeMinutes = 1L
+
+        // Simulate attacker trying to spoof headers from public IP
+        requestMock.getHeader("X-Forwarded-For") >> "1.1.1.1" // Spoofed header
+        requestMock.getHeader("X-Real-IP") >> "8.8.8.8" // Spoofed header
+        requestMock.remoteAddr >> "203.0.113.5" // Actual public IP
+
+        when:
+        // Make requests that should be rate limited based on actual IP, not spoofed headers
+        3.times {
+            rateLimitingFilter.doFilterInternal(requestMock, responseMock, filterChainMock)
+        }
+
+        then:
+        // Should rate limit based on actual IP (203.0.113.5), not spoofed headers
+        2 * filterChainMock.doFilter(requestMock, responseMock) // First 2 allowed
+        1 * responseMock.setStatus(HttpStatus.TOO_MANY_REQUESTS.value()) // Third blocked
+        1 * responseMock.setContentType("application/json")
+        1 * writerMock.write('{"error":"Rate limit exceeded","message":"Too many requests"}')
     }
 }

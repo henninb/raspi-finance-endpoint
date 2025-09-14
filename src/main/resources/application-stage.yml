@@ -1,13 +1,19 @@
 server:
+  address: 0.0.0.0
   port: ${SERVER_PORT}
+  http2:
+    enabled: true
+  tomcat:
+    connection-timeout: 10s
   ssl:
-    key-store: classpath:hornsup-raspi-finance-keystore.p12
-    key-store-password: ${SSL_KEY_STORE_PASSWORD}
-    key-store-type: pkcs12
-    key-alias: hornsup-raspi-finance
-    key-password: ${SSL_KEY_PASSWORD}
     enabled: ${SSL_ENABLED}
-    enabled-protocols: TLSv1.2
+    key-store: classpath:bhenning-letsencrypt.p12
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: bhenning
+    key-password: ${SSL_KEY_PASSWORD}
+    enabled-protocols: TLSv1.3,TLSv1.2
+    protocol: TLS
 spring:
   graphql:
     path: /graphql

@@ -38,13 +38,15 @@ logger.info("user-pass: ${user.password}")
 
 ### HIGH SEVERITY VULNERABILITIES (PENDING)
 
-#### 4. JWT Secret Key Exposure Risk
+#### 4. JWT Secret Key Management (HIGH RISK CONFIRMED ⚠️)
 **Location**: Multiple files using `@Value("${custom.project.jwt.key}")`
-**Status**: REQUIRES IMPLEMENTATION
-**Impact**:
-- Hardcoded in configuration files
-- No key rotation mechanism
-- Single point of failure if compromised
+**Status**: ENVIRONMENT VARIABLE DEPENDENCY - NEEDS IMPROVEMENT
+**Current Implementation**: Uses `${JWT_KEY}` environment variable in prod, hardcoded in tests
+**Risk Assessment**:
+- ✅ Not hardcoded in source (uses env var in production)
+- ❌ No key rotation mechanism
+- ❌ Single point of failure if compromised
+- ❌ Test keys are visible in source code
 
 **Recommended Implementation**:
 ```kotlin
@@ -65,10 +67,10 @@ class JwtKeyRotationService {
 }
 ```
 
-#### 5. Username Enumeration via Registration (PARTIALLY RESOLVED ⚠️)
+#### 5. Username Enumeration via Registration (ACTIVE VULNERABILITY CONFIRMED 🚨)
 **Location**: `LoginController.kt:151-153`
-**Status**: PARTIAL IMPLEMENTATION
-**Impact**: Registration endpoint now uses specific error messages but still reveals username existence
+**Status**: VULNERABILITY CONFIRMED - IMMEDIATE FIX REQUIRED
+**Impact**: Registration endpoint reveals username existence, enabling account enumeration
 **Current Implementation**:
 ```kotlin
 } catch (e: IllegalArgumentException) {
@@ -76,8 +78,8 @@ class JwtKeyRotationService {
     return ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to "Username already exists"))
 }
 ```
-**Remaining Risk**: Response still differentiates between "username exists" vs other validation errors
-**Full Resolution Required**: Implement generic error messages for all registration failures
+**Attack Vector**: Automated scripts can test millions of usernames to build target lists
+**Risk Level**: MEDIUM-HIGH - Enables targeted phishing, social engineering attacks
 
 #### 6. Session Logout Implementation (RESOLVED ✅)
 **Location**: `LoginController.kt:102-125`
@@ -117,11 +119,11 @@ class TokenBlacklistService {
 }
 ```
 
-#### 8. Rate Limiting Bypass Potential
-**Location**: `RateLimitingFilter.kt:101-109`
-**Status**: VULNERABILITY CONFIRMED - STILL PENDING
-**Impact**: Attackers can spoof `X-Forwarded-For` headers to bypass rate limiting
-**Current Implementation**: Filter trusts proxy headers without validation:
+#### 8. Rate Limiting Bypass Potential (CRITICAL VULNERABILITY CONFIRMED 🚨)
+**Location**: `RateLimitingFilter.kt:99-107`
+**Status**: ACTIVE VULNERABILITY - IMMEDIATE FIX REQUIRED
+**Impact**: Attackers can easily bypass rate limiting by spoofing headers
+**Current Implementation**: Filter blindly trusts proxy headers without validation:
 ```kotlin
 private fun getClientIpAddress(request: HttpServletRequest): String {
     val xForwardedFor = request.getHeader("X-Forwarded-For")
@@ -132,6 +134,9 @@ private fun getClientIpAddress(request: HttpServletRequest): String {
         else -> request.remoteAddr ?: "unknown"
     }
 }
+```
+**Vulnerability**: Any client can send `X-Forwarded-For: 192.168.1.1` to appear as different IP
+**Risk Level**: HIGH - Enables unlimited API abuse, credential brute force attacks
 ```
 
 **Recommended Implementation**:
@@ -161,13 +166,23 @@ private fun isFromTrustedProxy(ip: String, trustedNetworks: List<String>): Boole
 }
 ```
 
-### ATTACK VECTORS IDENTIFIED
+### ACTIVE ATTACK VECTORS (2025-09-14 Assessment)
 
-1. **Credential Harvesting**: ~~Log file access → plaintext passwords~~ (RESOLVED ✅)
-2. **Username Enumeration**: ~~Timing attacks~~ (RESOLVED ✅) + registration endpoint (PARTIALLY RESOLVED ⚠️)
-3. **Session Hijacking**: ~~XSS → JWT token theft via JavaScript~~ (RESOLVED ✅)
-4. **Brute Force**: Header spoofing to bypass rate limits (PENDING)
-5. **Token Replay**: ~~No logout mechanism~~ (RESOLVED ✅) + No token blacklisting (PENDING)
+#### 🚨 CRITICAL ACTIVE THREATS
+1. **Rate Limit Bypass**: Header spoofing enables unlimited API abuse
+2. **Username Enumeration**: Registration endpoint reveals account existence
+3. **Token Persistence**: Logout doesn't invalidate JWT tokens
+
+#### ⚠️ HIGH RISK VECTORS
+4. **Brute Force Amplification**: No account lockout + rate limit bypass = unlimited attempts
+5. **Session Extension**: Tokens valid for full duration even after "logout"
+6. **Key Compromise Impact**: No rotation means single key compromise = total breach
+
+#### ✅ MITIGATED THREATS
+- ~~Credential Harvesting~~ (Password logging eliminated)
+- ~~Timing Attacks~~ (Constant-time authentication implemented)
+- ~~Session Hijacking~~ (Secure cookie configuration implemented)
+- ~~XSS Token Theft~~ (HttpOnly cookies prevent JavaScript access)
 
 ## STRATEGIC IMPROVEMENTS (PRIORITY 2)
 
@@ -370,33 +385,189 @@ security:
 
 ## IMPLEMENTATION PRIORITY
 
-### IMMEDIATE (Deploy Today) ✅
-1. ~~Remove password logging~~ (COMPLETED)
-2. ~~Fix cookie security settings~~ (COMPLETED)
-3. ~~Implement constant-time authentication~~ (COMPLETED)
+### CRITICAL (Immediate Action Required) 🚨
+1. **Rate Limiting Header Spoofing Fix** - RateLimitingFilter.kt:99-107 confirmed vulnerable
+2. **Username Enumeration in Registration** - LoginController.kt:151-153 still reveals existence
+3. **JWT Token Blacklisting** - Tokens remain valid after logout until expiration
 
-### NEXT SPRINT (Priority 2)
-4. JWT token blacklist service (cookie clearing implemented, token blacklisting needed)
-5. Account lockout mechanism
-6. Enhanced rate limiting with trusted proxy validation
-7. Complete username enumeration prevention in registration
-8. Security headers implementation
+### HIGH PRIORITY (Next Sprint)
+4. **JWT Key Rotation Service** - Currently uses single environment variable
+5. **Account Lockout Mechanism** - No protection against brute force attacks
+6. **Security Headers Implementation** - Missing comprehensive security headers
+7. **Enhanced Input Validation** - Strengthen validation across all endpoints
 
-### FUTURE RELEASES (Priority 3)
-9. Multi-factor authentication
-10. JWT key rotation service
-11. Behavioral analytics & anomaly detection
-12. Hardware Security Module (HSM) integration
+### MEDIUM PRIORITY (Future Releases)
+8. **Multi-factor Authentication Framework**
+9. **Advanced Monitoring & Alerting**
+10. **Behavioral Analytics & Anomaly Detection**
+11. **Hardware Security Module (HSM) Integration**
+
+### ✅ COMPLETED ITEMS
+- ~~Remove password logging~~ (VERIFIED: No logging in UserService.kt)
+- ~~Fix cookie security settings~~ (VERIFIED: Secure, httpOnly, sameSite implemented)
+- ~~Implement constant-time authentication~~ (VERIFIED: Dummy hash for timing consistency)
+- ~~Session logout implementation~~ (VERIFIED: Proper cookie clearing in place)
 
 ---
 
-**Report Updated**: 2025-08-31
-**Assessment Scope**: `/api/login` endpoint security analysis
-**Risk Assessment**: Based on OWASP Top 10 and red team methodology
-**Status**: Critical vulnerabilities resolved, logout mechanism implemented, medium/low priority items documented for future implementation
+**Report Updated**: 2025-09-14
+**Assessment Scope**: Comprehensive security analysis of authentication and authorization
+**Risk Assessment**: Live code analysis with confirmed vulnerability testing
+**Overall Security Status**: 🟡 MODERATE RISK - Critical vulnerabilities identified requiring immediate attention
 
-**Latest Changes**:
-- ✅ Logout endpoint implemented with secure cookie clearing
-- ⚠️ Username enumeration partially addressed (still reveals existence)
-- ⚠️ Rate limiting implementation confirmed vulnerable to header spoofing
-- ✅ Constant-time authentication verified in UserService
+**Verified Implementation Status**:
+- ✅ Password security: No logging, proper hashing, constant-time comparison
+- ✅ Cookie security: HttpOnly, Secure, SameSite configuration verified
+- ✅ Logout mechanism: Proper cookie clearing implementation confirmed
+- 🚨 Rate limiting: CONFIRMED vulnerable to X-Forwarded-For spoofing
+- 🚨 Registration endpoint: CONFIRMED username enumeration vulnerability
+- ⚠️ JWT management: Environment-based key, no rotation, no blacklisting
+
+**Immediate Action Items**:
+1. Fix rate limiting header validation (RateLimitingFilter.kt:99-107)
+2. Implement generic registration error messages (LoginController.kt:151-153)
+3. Add JWT token blacklisting for proper logout functionality
+
+## UPDATED SECURITY IMPLEMENTATION ROADMAP
+
+### Phase 1: CRITICAL FIXES (Deploy This Week)
+
+#### 1.1 Fix Rate Limiting Header Spoofing
+**File**: `src/main/kotlin/finance/configurations/RateLimitingFilter.kt:99-107`
+**Issue**: Blindly trusts proxy headers allowing easy bypass
+**Fix**: Implement trusted proxy validation
+```kotlin
+private fun getClientIpAddress(request: HttpServletRequest): String {
+    val trustedProxies = listOf("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+    val clientIp = request.remoteAddr ?: "unknown"
+
+    return if (isFromTrustedProxy(clientIp, trustedProxies)) {
+        val xForwardedFor = request.getHeader("X-Forwarded-For")
+        val xRealIp = request.getHeader("X-Real-IP")
+        when {
+            !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
+            !xRealIp.isNullOrBlank() -> xRealIp
+            else -> clientIp
+        }
+    } else {
+        clientIp // Only use direct connection IP for untrusted sources
+    }
+}
+```
+
+#### 1.2 Eliminate Username Enumeration in Registration
+**File**: `src/main/kotlin/finance/controllers/LoginController.kt:151-153`
+**Issue**: Returns "Username already exists" revealing account existence
+**Fix**: Generic error responses for all registration failures
+```kotlin
+} catch (e: IllegalArgumentException) {
+    logger.warn("Registration failed for username: ${newUser.username} - ${e.message}")
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(mapOf("error" to "Registration failed. Please check your information and try again."))
+} catch (e: Exception) {
+    logger.error("Registration error for username: ${newUser.username}")
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(mapOf("error" to "Registration failed. Please check your information and try again."))
+}
+```
+
+#### 1.3 Implement JWT Token Blacklisting
+**New File**: `src/main/kotlin/finance/services/TokenBlacklistService.kt`
+**Purpose**: Invalidate tokens on logout instead of just clearing cookies
+**Implementation**:
+```kotlin
+@Service
+class TokenBlacklistService {
+    private val blacklistedTokens = ConcurrentHashMap<String, Long>()
+    private val cleanup = Executors.newScheduledThreadPool(1)
+
+    init {
+        cleanup.scheduleWithFixedDelay(::cleanupExpiredTokens, 1, 1, TimeUnit.HOURS)
+    }
+
+    fun blacklistToken(token: String, expirationTime: Long) {
+        blacklistedTokens[token] = expirationTime
+        logger.info("Token blacklisted, expires at: ${Date(expirationTime)}")
+    }
+
+    fun isBlacklisted(token: String): Boolean = blacklistedTokens.containsKey(token)
+
+    private fun cleanupExpiredTokens() {
+        val now = System.currentTimeMillis()
+        blacklistedTokens.entries.removeIf { it.value < now }
+    }
+}
+```
+
+### Phase 2: HIGH PRIORITY ENHANCEMENTS (Next Sprint)
+
+#### 2.1 Account Lockout Implementation
+**Files**: `LoginController.kt`, `UserService.kt`
+**Purpose**: Prevent brute force attacks with progressive lockout
+**Key Features**:
+- 5 failed attempts = 15 minute lockout
+- Progressive lockout duration for repeat offenses
+- IP-based and username-based tracking
+
+#### 2.2 JWT Key Rotation Service
+**New File**: `src/main/kotlin/finance/services/JwtKeyRotationService.kt`
+**Purpose**: Enable key rotation without service interruption
+**Features**:
+- Primary + previous key support for seamless rotation
+- Environment variable + fallback configuration
+- Automated rotation scheduling
+
+#### 2.3 Security Headers Filter
+**New File**: `src/main/kotlin/finance/configurations/SecurityHeadersFilter.kt`
+**Purpose**: Add comprehensive security headers
+**Headers**: X-Content-Type-Options, X-Frame-Options, CSP, HSTS
+
+### Phase 3: MONITORING & ADVANCED SECURITY (Future)
+
+#### 3.1 Enhanced Security Logging
+- Structured security event logging
+- Failed attempt correlation
+- Geographic anomaly detection
+- Suspicious pattern identification
+
+#### 3.2 Advanced Rate Limiting
+- Per-endpoint rate limits
+- Adaptive rate limiting based on user behavior
+- Distributed rate limiting for load balancing
+
+#### 3.3 Multi-Factor Authentication
+- TOTP implementation
+- Backup codes
+- Device registration and trust
+
+### Testing Requirements for Each Phase
+
+#### Phase 1 Testing (Critical Fixes)
+```bash
+# Test rate limiting bypass prevention
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*RateLimiting*"
+
+# Test registration error consistency
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*Registration*"
+
+# Test token blacklisting
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*Logout*"
+```
+
+#### Security Test Coverage Requirements
+- ✅ All critical fixes must have functional tests
+- ✅ Penetration testing for rate limit bypass
+- ✅ Username enumeration prevention validation
+- ✅ Token invalidation verification
+- ✅ Regression testing for all existing functionality
+
+### Risk Assessment Matrix
+
+| Vulnerability | Current Risk | Post-Fix Risk | Implementation Priority |
+|---------------|-------------|---------------|----------------------|
+| Rate Limit Bypass | 🔴 CRITICAL | 🟢 LOW | 1 (This Week) |
+| Username Enumeration | 🟡 MEDIUM-HIGH | 🟢 LOW | 1 (This Week) |
+| Token Persistence | 🟡 MEDIUM | 🟢 LOW | 1 (This Week) |
+| No Account Lockout | 🟡 MEDIUM | 🟢 LOW | 2 (Next Sprint) |
+| Key Rotation | 🟡 MEDIUM | 🟢 LOW | 2 (Next Sprint) |
+| Missing Security Headers | 🟡 MEDIUM | 🟢 LOW | 2 (Next Sprint) |

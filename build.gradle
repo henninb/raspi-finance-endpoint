@@ -138,6 +138,9 @@ dependencies {
     implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlExtendedScalarsVersion}")
     implementation "com.google.guava:guava:${guavaVersion}"
 
+    // SpringDoc OpenAPI (Swagger)
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocOpenapiVersion}")
+
     //postgreSQL database
     runtimeOnly("org.postgresql:postgresql:${postgresqlDriverVersion}")
 
