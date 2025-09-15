@@ -98,4 +98,98 @@ open class ValidationAmountService(
         logger.warn("Account not found: $accountNameOwner")
         return ValidationAmount()
     }
+
+    // ===== STANDARDIZED CRUD METHODS =====
+
+    @Timed
+    override fun findAllActiveValidationAmounts(): List<ValidationAmount> {
+        logger.info("Finding all active validation amounts")
+        val validationAmounts = validationAmountRepository.findByActiveStatusTrueOrderByValidationDateDesc()
+        logger.info("Found ${validationAmounts.size} active validation amounts")
+        return validationAmounts
+    }
+
+    @Timed
+    override fun findValidationAmountById(validationId: Long): Optional<ValidationAmount> {
+        logger.info("Finding validation amount by ID: $validationId")
+        val validationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(validationId)
+        if (validationAmount.isPresent) {
+            logger.info("Found validation amount: $validationId")
+        } else {
+            logger.warn("Validation amount not found: $validationId")
+        }
+        return validationAmount
+    }
+
+    @Timed
+    override fun insertValidationAmount(validationAmount: ValidationAmount): ValidationAmount {
+        logger.info("Inserting validation amount (standardized)")
+
+        val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
+        handleConstraintViolations(constraintViolations, meterService)
+
+        val timestamp = Timestamp(System.currentTimeMillis())
+        validationAmount.dateAdded = timestamp
+        validationAmount.dateUpdated = timestamp
+
+        // Save the ValidationAmount
+        val savedValidationAmount = validationAmountRepository.saveAndFlush(validationAmount)
+
+        // Update the validationDate in the Account table using the accountId
+        accountRepository.findByAccountId(validationAmount.accountId).ifPresent { account ->
+            account.validationDate = validationAmount.dateUpdated
+            account.dateUpdated = validationAmount.dateUpdated
+            accountRepository.saveAndFlush(account)
+            logger.info("Updated validation date for accountId: ${validationAmount.accountId}")
+        }
+
+        logger.info("Successfully inserted validation amount with ID: ${savedValidationAmount.validationId}")
+        return savedValidationAmount
+    }
+
+    @Timed
+    override fun updateValidationAmount(validationAmount: ValidationAmount): ValidationAmount {
+        logger.info("Updating validation amount: ${validationAmount.validationId}")
+
+        val constraintViolations: Set<ConstraintViolation<ValidationAmount>> = validator.validate(validationAmount)
+        handleConstraintViolations(constraintViolations, meterService)
+
+        val timestamp = Timestamp(System.currentTimeMillis())
+        validationAmount.dateUpdated = timestamp
+
+        // Save the updated ValidationAmount
+        val savedValidationAmount = validationAmountRepository.saveAndFlush(validationAmount)
+
+        // Update the validationDate in the Account table
+        accountRepository.findByAccountId(validationAmount.accountId).ifPresent { account ->
+            account.validationDate = validationAmount.dateUpdated
+            account.dateUpdated = validationAmount.dateUpdated
+            accountRepository.saveAndFlush(account)
+            logger.info("Updated validation date for accountId: ${validationAmount.accountId}")
+        }
+
+        logger.info("Successfully updated validation amount: ${validationAmount.validationId}")
+        return savedValidationAmount
+    }
+
+    @Timed
+    override fun deleteValidationAmount(validationId: Long) {
+        logger.info("Deleting validation amount: $validationId")
+
+        val validationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(validationId)
+            .orElseThrow {
+                logger.warn("Validation amount not found for deletion: $validationId")
+                org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND,
+                    "Validation amount not found: $validationId"
+                )
+            }
+
+        // Soft delete by setting activeStatus to false
+        validationAmount.activeStatus = false
+        validationAmount.dateUpdated = Timestamp(System.currentTimeMillis())
+        validationAmountRepository.saveAndFlush(validationAmount)
+
+        logger.info("Successfully deleted validation amount: $validationId")
+    }
 }
