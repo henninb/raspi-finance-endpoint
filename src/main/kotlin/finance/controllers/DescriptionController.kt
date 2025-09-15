@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.Description
+import finance.domain.MergeDescriptionsRequest
 import finance.services.DescriptionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

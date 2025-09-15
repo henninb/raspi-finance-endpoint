@@ -28,8 +28,17 @@ open class PendingTransactionService(
         return pendingTransactionRepository.findAll()
     }
 
-    override fun deleteAllPendingTransactions() : Boolean {
+    override fun deleteAllPendingTransactions(): Boolean {
         pendingTransactionRepository.deleteAll()
         return true
+    }
+
+    // Added for standardized controller support
+    override fun findByPendingTransactionId(pendingTransactionId: Long): Optional<PendingTransaction> {
+        return pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId)
+    }
+
+    override fun updatePendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
+        return pendingTransactionRepository.saveAndFlush(pendingTransaction)
     }
 }

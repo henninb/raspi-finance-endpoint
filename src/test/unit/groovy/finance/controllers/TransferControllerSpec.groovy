@@ -50,7 +50,7 @@ class TransferControllerSpec extends Specification {
         0 * transferService.deleteByTransferId(_)
         ResponseStatusException ex = thrown(ResponseStatusException)
         ex.statusCode == HttpStatus.NOT_FOUND
-        ex.reason == 'transaction not deleted: 42'
+        ex.reason == 'Transfer not found: 42'
     }
 }
 

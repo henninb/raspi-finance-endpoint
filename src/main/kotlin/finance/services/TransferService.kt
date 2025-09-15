@@ -134,4 +134,29 @@ open class TransferService(
         }
         return Optional.empty()
     }
+
+    @Timed
+    override fun updateTransfer(transfer: Transfer): Transfer {
+        logger.info("Updating transfer with ID: ${transfer.transferId}")
+
+        // Validate transfer
+        val constraintViolations: Set<ConstraintViolation<Transfer>> = validator.validate(transfer)
+        handleConstraintViolations(constraintViolations, meterService)
+
+        // Validate transfer exists
+        val existingTransfer = transferRepository.findByTransferId(transfer.transferId!!)
+        if (!existingTransfer.isPresent) {
+            logger.error("Transfer not found for update: ${transfer.transferId}")
+            meterService.incrementExceptionThrownCounter("RuntimeException")
+            throw RuntimeException("Transfer not found: ${transfer.transferId}")
+        }
+
+        // Update timestamp
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transfer.dateUpdated = timestamp
+
+        val updatedTransfer = transferRepository.saveAndFlush(transfer)
+        logger.info("Successfully updated transfer with ID: ${updatedTransfer.transferId}")
+        return updatedTransfer
+    }
 }

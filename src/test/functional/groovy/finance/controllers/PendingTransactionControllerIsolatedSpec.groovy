@@ -53,7 +53,7 @@ class PendingTransactionControllerIsolatedSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, pendingTransaction.toString())
 
         then: 'response should be successful'
-        response.statusCode == HttpStatus.OK
+        response.statusCode == HttpStatus.CREATED
         response.body != null
 
         and: 'response should contain pending transaction data with unique test values'
