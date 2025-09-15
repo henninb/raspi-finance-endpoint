@@ -27,6 +27,7 @@ jacocoTestReport {
         csv.required = true
         html.required = true
     }
+    sourceSets sourceSets.main
 }
 
 repositories {
