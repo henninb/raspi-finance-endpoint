@@ -1,4 +1,4 @@
-package finance.controllers
+package finance.domain
 
 data class MergeDescriptionsRequest(
     val sourceNames: List<String> = listOf(),
