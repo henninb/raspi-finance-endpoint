@@ -9,9 +9,7 @@
 ALTER TABLE public.t_medical_expense
 ALTER COLUMN transaction_id DROP NOT NULL;
 
--- Add paid_amount field to track actual payment amounts
-ALTER TABLE public.t_medical_expense
-ADD COLUMN paid_amount NUMERIC(12,2) DEFAULT 0.00 NOT NULL;
+-- paid_amount field already exists in Hibernate entity definition
 
 -- Add constraint to ensure paid_amount is non-negative
 ALTER TABLE public.t_medical_expense

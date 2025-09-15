@@ -58,10 +58,4 @@ CREATE INDEX IF NOT EXISTS idx_medical_provider_active ON int.t_medical_provider
 CREATE INDEX IF NOT EXISTS idx_medical_provider_network ON int.t_medical_provider(network_status, provider_type);
 CREATE INDEX IF NOT EXISTS idx_medical_provider_location ON int.t_medical_provider(state, city);
 
--- Insert common medical provider types for initial data
-INSERT INTO int.t_medical_provider (provider_name, provider_type, specialty, network_status) VALUES
-('int_test_provider', 'general', NULL, 'in_network'),
-('int_test_pharmacy', 'pharmacy', 'retail_pharmacy', 'in_network'),
-('int_test_urgent_care', 'urgent_care', NULL, 'out_of_network'),
-('int_test_hospital', 'hospital', NULL, 'in_network'),
-('int_test_laboratory', 'laboratory', 'general_lab', 'in_network');
+-- No seed data - medical providers created dynamically by SmartMedicalProviderBuilder in tests

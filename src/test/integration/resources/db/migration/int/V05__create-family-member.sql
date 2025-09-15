@@ -29,9 +29,7 @@ CREATE TABLE IF NOT EXISTS int.t_family_member (
     CONSTRAINT ck_medical_record_number_length CHECK (medical_record_number IS NULL OR length(medical_record_number) <= 50)
 );
 
--- Unique constraint for owner + member_name combination
-ALTER TABLE int.t_family_member
-ADD CONSTRAINT uk_family_member_owner_name UNIQUE (owner, member_name);
+-- Unique constraint already defined in Hibernate entity mapping
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_family_member_owner ON int.t_family_member(owner);
@@ -39,10 +37,4 @@ CREATE INDEX IF NOT EXISTS idx_family_member_relationship ON int.t_family_member
 CREATE INDEX IF NOT EXISTS idx_family_member_active ON int.t_family_member(active_status, owner);
 CREATE INDEX IF NOT EXISTS idx_family_member_insurance ON int.t_family_member(insurance_member_id);
 
--- Insert integration test family members
-INSERT INTO int.t_family_member (owner, member_name, relationship, insurance_member_id) VALUES
-('int_test_user', 'int_test_user', 'self', 'INT001'),
-('int_test_user', 'int_spouse', 'spouse', 'INT002'),
-('int_test_user', 'int_child1', 'child', 'INT003'),
-('int_test_user', 'int_child2', 'child', 'INT004'),
-('int_test_user', 'int_dependent', 'dependent', 'INT005');
+-- No seed data - family members created dynamically by SmartFamilyMemberBuilder in tests
