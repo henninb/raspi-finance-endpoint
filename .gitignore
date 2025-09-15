@@ -64,3 +64,4 @@ gcp-user-info.tmp
 kls_database.db
 *.log
 excel_in
+.DS_Store
