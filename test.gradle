@@ -78,6 +78,7 @@ dependencies {
 //}
 
 test {
+    finalizedBy jacocoTestReport
     //useJUnitPlatform()
 //    afterSuite { suite, result ->
 //        result.exception?.printStackTrace()
