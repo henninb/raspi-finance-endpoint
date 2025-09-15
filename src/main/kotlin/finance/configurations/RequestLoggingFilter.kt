@@ -1,13 +1,11 @@
 package finance.configurations
 
-
-
-import org.springframework.stereotype.Component
-import org.springframework.web.filter.OncePerRequestFilter
-import org.springframework.web.util.ContentCachingRequestWrapper
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.stereotype.Component
+import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.util.ContentCachingRequestWrapper
 import java.nio.charset.StandardCharsets
 
 @Component
@@ -18,10 +16,24 @@ open class RequestLoggingFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        val wrappedRequest = if (request is ContentCachingRequestWrapper) {
+            request
+        } else {
+            ContentCachingRequestWrapper(request, 1024)
+        }
+
         try {
-            filterChain.doFilter(request, response)
+            filterChain.doFilter(wrappedRequest, response)
         } finally {
-            // Simple logging without caching request body to avoid Spring Boot 4.0 compatibility issues
+            logRequest(wrappedRequest)
+        }
+    }
+
+    private fun logRequest(request: ContentCachingRequestWrapper) {
+        val requestBody = String(request.contentAsByteArray, StandardCharsets.UTF_8)
+        if (requestBody.isNotEmpty()) {
+            logger.info("Request URI: ${request.requestURI}, Request Body: $requestBody")
+        } else {
             logger.info("Request URI: ${request.requestURI}")
         }
     }

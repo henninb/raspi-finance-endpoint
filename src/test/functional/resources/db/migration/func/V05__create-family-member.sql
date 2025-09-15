@@ -29,9 +29,7 @@ CREATE TABLE IF NOT EXISTS func.t_family_member (
     CONSTRAINT ck_medical_record_number_length CHECK (medical_record_number IS NULL OR length(medical_record_number) <= 50)
 );
 
--- Unique constraint for owner + member_name combination
-ALTER TABLE func.t_family_member
-ADD CONSTRAINT uk_family_member_owner_name UNIQUE (owner, member_name);
+-- Unique constraint already defined in Hibernate entity mapping
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_family_member_owner ON func.t_family_member(owner);
@@ -39,10 +37,4 @@ CREATE INDEX IF NOT EXISTS idx_family_member_relationship ON func.t_family_membe
 CREATE INDEX IF NOT EXISTS idx_family_member_active ON func.t_family_member(active_status, owner);
 CREATE INDEX IF NOT EXISTS idx_family_member_insurance ON func.t_family_member(insurance_member_id);
 
--- Insert functional test family members
-INSERT INTO func.t_family_member (owner, member_name, relationship, insurance_member_id) VALUES
-('func_test_user', 'func_test_user', 'self', 'FUNC001'),
-('func_test_user', 'func_spouse', 'spouse', 'FUNC002'),
-('func_test_user', 'func_child1', 'child', 'FUNC003'),
-('func_test_user', 'func_child2', 'child', 'FUNC004'),
-('func_test_user', 'func_dependent', 'dependent', 'FUNC005');
+-- No seed data - family members created dynamically by SmartFamilyMemberBuilder in tests

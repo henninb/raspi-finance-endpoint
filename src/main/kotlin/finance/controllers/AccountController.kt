@@ -15,13 +15,100 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import jakarta.validation.Valid
 import java.util.*
 
 @Tag(name = "Account Management", description = "Operations for managing financial accounts")
 @CrossOrigin
 @RestController
 @RequestMapping("/api/account")
-class AccountController(private val accountService: AccountService) : BaseController() {
+class AccountController(private val accountService: AccountService) :
+    StandardizedBaseController(), StandardRestController<Account, String> {
+
+    // ===== STANDARDIZED ENDPOINTS (NEW) =====
+
+    /**
+     * Standardized collection retrieval - GET /api/account/active
+     * Returns empty list instead of throwing 404 (standardized behavior)
+     */
+    @GetMapping("/active", produces = ["application/json"])
+    override fun findAllActive(): ResponseEntity<List<Account>> {
+        return handleCrudOperation("Find all active accounts", null) {
+            logger.debug("Retrieving all active accounts (standardized)")
+            accountService.updateTotalsForAllAccounts()
+            val accounts: List<Account> = accountService.accounts()
+            logger.info("Retrieved ${accounts.size} active accounts (standardized)")
+            accounts
+        }
+    }
+
+    /**
+     * Standardized single entity retrieval - GET /api/account/{accountNameOwner}
+     * Uses camelCase parameter without @PathVariable annotation
+     */
+    @GetMapping("/{accountNameOwner}", produces = ["application/json"])
+    override fun findById(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+        return handleCrudOperation("Find account by name", accountNameOwner) {
+            logger.debug("Retrieving account: $accountNameOwner (standardized)")
+            val account = accountService.account(accountNameOwner)
+                .orElseThrow {
+                    logger.warn("Account not found: $accountNameOwner (standardized)")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+                }
+            logger.info("Retrieved account: $accountNameOwner (standardized)")
+            account
+        }
+    }
+
+    /**
+     * Standardized entity creation - POST /api/account
+     * Returns 201 CREATED
+     */
+    @PostMapping(consumes = ["application/json"], produces = ["application/json"])
+    override fun save(@Valid @RequestBody account: Account): ResponseEntity<Account> {
+        return handleCreateOperation("Account", account.accountNameOwner) {
+            logger.info("Creating account: ${account.accountNameOwner} (standardized)")
+            val result = accountService.insertAccount(account)
+            logger.info("Account created successfully: ${result.accountNameOwner} (standardized)")
+            result
+        }
+    }
+
+    /**
+     * Standardized entity update - PUT /api/account/{accountNameOwner}
+     * Uses entity type instead of Map<String, Any>
+     */
+    @PutMapping("/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
+    override fun update(@PathVariable accountNameOwner: String, @Valid @RequestBody account: Account): ResponseEntity<Account> {
+        return handleCrudOperation("Update account", accountNameOwner) {
+            logger.info("Updating account: $accountNameOwner (standardized)")
+            // Validate account exists first
+            accountService.account(accountNameOwner)
+                .orElseThrow {
+                    logger.warn("Account not found for update: $accountNameOwner (standardized)")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+                }
+            val result = accountService.updateAccount(account)
+            logger.info("Account updated successfully: $accountNameOwner (standardized)")
+            result
+        }
+    }
+
+    /**
+     * Standardized entity deletion - DELETE /api/account/{accountNameOwner}
+     * Returns 200 OK with deleted entity
+     */
+    @DeleteMapping("/{accountNameOwner}", produces = ["application/json"])
+    override fun deleteById(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+        return handleDeleteOperation(
+            "Account",
+            accountNameOwner,
+            { accountService.account(accountNameOwner) },
+            { accountService.deleteAccount(accountNameOwner) }
+        )
+    }
+
+    // ===== BUSINESS LOGIC ENDPOINTS (SPECIALIZED) =====
 
     @Operation(
         summary = "Get account totals",
@@ -74,6 +161,12 @@ class AccountController(private val accountService: AccountService) : BaseContro
         }
     }
 
+    // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
+
+    /**
+     * Legacy endpoint - GET /api/account/select/active
+     * Maintains original behavior including 404 when empty
+     */
     @Operation(
         summary = "Get active accounts",
         description = "Retrieves all active financial accounts with updated totals"
@@ -104,7 +197,10 @@ class AccountController(private val accountService: AccountService) : BaseContro
         }
     }
 
-    // curl -k https://localhost:8443/account/select/test_brian
+    /**
+     * Legacy endpoint - GET /api/account/select/{accountNameOwner}
+     * Maintains original behavior
+     */
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
     fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         return try {
@@ -124,7 +220,10 @@ class AccountController(private val accountService: AccountService) : BaseContro
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": true, "moniker": "0000", "totals": 0.00, "totalsBalanced": 0.00}' https://localhost:8443/account/insert
+    /**
+     * Legacy endpoint - POST /api/account/insert
+     * Maintains original behavior
+     */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
         return try {
@@ -147,7 +246,10 @@ class AccountController(private val accountService: AccountService) : BaseContro
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/account/delete/test_brian
+    /**
+     * Legacy endpoint - DELETE /api/account/delete/{accountNameOwner}
+     * Maintains original behavior
+     */
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
     fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         return try {
@@ -169,7 +271,10 @@ class AccountController(private val accountService: AccountService) : BaseContro
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request PUT --data '{"accountNameOwner":"test_brian", "accountType": "credit", "activeStatus": true}' https://localhost:8443/account/update/test_brian
+    /**
+     * Legacy endpoint - PUT /api/account/update/{accountNameOwner}
+     * Maintains original behavior using Map<String, Any>
+     */
     @PutMapping("/update/{accountNameOwner}", produces = ["application/json"])
     fun updateAccount(
         @PathVariable("accountNameOwner") accountNameOwner: String,
