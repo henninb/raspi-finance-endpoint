@@ -8,6 +8,8 @@ interface ITransferService {
     fun findAllTransfers(): List<Transfer>
 
     fun insertTransfer(transfer: Transfer): Transfer
+
+    fun updateTransfer(transfer: Transfer): Transfer
 //
 //    fun populateDebitTransaction(
 //        transactionDebit: Transaction,

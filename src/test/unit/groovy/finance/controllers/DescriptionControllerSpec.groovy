@@ -144,7 +144,7 @@ class DescriptionControllerSpec extends Specification {
 
 def "mergeDescriptions returns OK with merged description"() {
         given:
-        def payload = new finance.controllers.MergeDescriptionsRequest(["a","b"], "merged")
+        def payload = new finance.domain.MergeDescriptionsRequest(["a","b"], "merged")
         def merged = new Description(descriptionId: 99L, activeStatus: true, descriptionName: 'merged')
 
         when:
@@ -158,7 +158,7 @@ def "mergeDescriptions returns OK with merged description"() {
 
     def "mergeDescriptions maps service failure to 500"() {
         given:
-        def payload = new finance.controllers.MergeDescriptionsRequest(["x"], "y")
+        def payload = new finance.domain.MergeDescriptionsRequest(["x"], "y")
 
         when:
         controller.mergeDescriptions(payload)

@@ -45,5 +45,20 @@ open class FamilyMemberService(
 
     override fun softDelete(id: Long): Boolean =
         familyMemberRepository.softDeleteByFamilyMemberId(id) > 0
+
+    override fun updateFamilyMember(member: FamilyMember): FamilyMember {
+        try {
+            // Validate member exists
+            val existing = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(member.familyMemberId!!)
+            if (existing == null) {
+                throw IllegalArgumentException("Family member not found: ${member.familyMemberId}")
+            }
+
+            return familyMemberRepository.save(member)
+        } catch (e: Exception) {
+            logger.error("Failed to update family member ID='${member.familyMemberId}'", e)
+            throw e
+        }
+    }
 }
 
