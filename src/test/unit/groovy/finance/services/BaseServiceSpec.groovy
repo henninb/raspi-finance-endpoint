@@ -17,7 +17,7 @@ class BaseServiceSpec extends Specification {
     protected Validator validatorMock = GroovyMock(Validator)
     protected MeterRegistry meterRegistryMock = Mock(MeterRegistry)
     protected Counter counterMock = Mock(Counter)
-    protected MeterService meterService = new MeterService(meterRegistryMock)
+    protected MeterService meterService = new MeterService(new io.micrometer.core.instrument.simple.SimpleMeterRegistry())
     protected CategoryRepository categoryRepositoryMock = GroovyMock(CategoryRepository)
     protected DescriptionRepository descriptionRepositoryMock = GroovyMock(DescriptionRepository)
     protected PaymentRepository paymentRepositoryMock = GroovyMock(PaymentRepository)

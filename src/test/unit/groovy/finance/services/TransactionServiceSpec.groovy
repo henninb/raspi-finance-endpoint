@@ -22,6 +22,12 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void setup() {
         transactionService.validator = validatorMock
         descriptionService.validator = validatorMock
+        transactionService.accountService = accountServiceMock
+        transactionService.categoryService = categoryServiceMock
+        transactionService.descriptionService = descriptionService
+        transactionService.receiptImageService = receiptImageServiceMock
+        transactionService.transactionRepository = transactionRepositoryMock
+        descriptionService.descriptionRepository = descriptionRepositoryMock
 
         // Use a real SimpleMeterRegistry instead of a mock to handle Counter.Builder properly
         MeterRegistry realMeterRegistry = new SimpleMeterRegistry()
@@ -59,6 +65,31 @@ class TransactionServiceSpec extends BaseServiceSpec {
         !isDeleted
         1 * transactionRepositoryMock.findByGuid(guid) >> transactionOptional
         _ * _ // Allow logging and other interactions
+    }
+
+    void 'test deleteReceiptImage - success'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().withReceiptImageId(1L).build()
+        ReceiptImage receiptImage = ReceiptImageBuilder.builder().build()
+
+        when:
+        boolean result = transactionService.deleteReceiptImage(transaction)
+
+        then:
+        1 * receiptImageServiceMock.findByReceiptImageId(1L) >> Optional.of(receiptImage)
+        1 * receiptImageServiceMock.deleteReceiptImage(receiptImage)
+        result
+    }
+
+    void 'test deleteReceiptImage - no receipt image id'() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        boolean result = transactionService.deleteReceiptImage(transaction)
+
+        then:
+        !result
     }
 
     void 'test transactionService - findByGuid'() {
@@ -301,7 +332,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         receiptImage.receiptImageId = 1
         //Set<ConstraintViolation<ReceiptImage>> constraintViolations = validator.validate(receiptImage)
         String base64Jpeg = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='
-        byte[] jpgFileBytes = ResourceUtils.getFile("${baseName}/src/test/unit/resources/viking-icon.jpg").getBytes()
+        byte[] jpgFileBytes = ResourceUtils.getFile("src/test/unit/resources/viking-icon.jpg").getBytes()
         base64Jpeg = Base64.getEncoder().encodeToString(jpgFileBytes)
 
         when:
@@ -378,5 +409,35 @@ class TransactionServiceSpec extends BaseServiceSpec {
         _ * _ // Allow logging and other interactions
     }
 
+    void 'test changeAccountNameOwner - success'() {
+        given:
+        def guid = 'test-guid'
+        def newAccountNameOwner = 'new-account'
+        def transaction = TransactionBuilder.builder().withGuid(guid).build()
+        def account = AccountBuilder.builder().withAccountNameOwner(newAccountNameOwner).build()
+        def map = [guid: guid, accountNameOwner: newAccountNameOwner]
 
+        when:
+        def result = transactionService.changeAccountNameOwner(map)
+
+        then:
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * accountServiceMock.account(newAccountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.saveAndFlush(_ as Transaction) >> { it[0] }
+        result.accountNameOwner == newAccountNameOwner
+    }
+
+    void 'test changeAccountNameOwner - transaction not found'() {
+        given:
+        def guid = 'test-guid'
+        def newAccountNameOwner = 'new-account'
+        def map = [guid: guid, accountNameOwner: newAccountNameOwner]
+
+        when:
+        transactionService.changeAccountNameOwner(map)
+
+        then:
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        thrown(AccountValidationException)
+    }
 }

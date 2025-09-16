@@ -4,86 +4,243 @@ import finance.domain.*
 import finance.helpers.AccountBuilder
 import finance.helpers.PaymentBuilder
 import finance.helpers.TransactionBuilder
+import finance.repositories.PaymentRepository
 import finance.utils.Constants
+import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Ignore
 import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import java.math.BigDecimal
+import java.sql.Timestamp
 
 @SuppressWarnings("GroovyAccessibility")
 class PaymentServiceSpec extends BaseServiceSpec {
+    // Define missing mocks used in setup
+    protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
+    protected ParameterService parameterServiceMock = GroovyMock(ParameterService)
 
     void setup() {
         paymentService.validator = validatorMock
         paymentService.meterService = meterService
+        paymentService.paymentRepository = paymentRepositoryMock
+        paymentService.transactionService = transactionServiceMock
+        paymentService.accountService = accountServiceMock
+        paymentService.parameterService = parameterServiceMock
     }
 
-    void 'test findAll payments empty'() {
+    void 'test findAllPayments - success'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-        List<Payment> payments = []
-        payments.add(payment)
+        List<Payment> payments = [payment]
 
         when:
         List<Payment> results = paymentService.findAllPayments()
 
         then:
-        results.size() == 1
         1 * paymentRepositoryMock.findAll() >> payments
-        0 * _
+        results.size() == 1
+        results[0].paymentId == payment.paymentId
     }
 
-    @Ignore("needs to be fixed")
-    void 'test insertPayment - existing'() {
-        given:
-        Payment payment = PaymentBuilder.builder().withAmount(5.0).build()
-        Transaction transaction = TransactionBuilder.builder().build()
-        Account account = AccountBuilder.builder().build()
-        Parameter parameter = new Parameter()
-        parameter.parameterValue = 'val'
-        parameter.parameterName = 'payment_account'
-        Set<ConstraintViolation<Payment>> constraintViolations = validator.validate(payment)
-
+    void 'test findAllPayments - empty'() {
         when:
-        Payment paymentInserted = paymentService.insertPaymentNew(payment)
+        List<Payment> results = paymentService.findAllPayments()
 
         then:
-        //thrown(RuntimeException)
-        paymentInserted.destinationAccount == payment.destinationAccount
-        1 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(account)
-        1 * validatorMock.validate(_ as Payment) >> constraintViolations
-        1 * validatorMock.validate({ Transaction transactionDebit ->
-            assert transactionDebit.category == 'bill_pay'
-            assert transactionDebit.description == 'payment'
-            assert transactionDebit.notes == 'to ' + payment.destinationAccount
-            assert transactionDebit.amount == (payment.amount * -1.0)
-            assert transactionDebit.accountType == AccountType.Debit
-        }) >> [].toSet()
-        1 * validatorMock.validate({ Transaction transactionCredit ->
-            assert transactionCredit.category == 'bill_pay'
-            assert transactionCredit.description == 'payment'
-            assert transactionCredit.notes == 'from ' + payment.sourceAccount
-            assert transactionCredit.amount == (payment.amount * -1.0)
-            assert transactionCredit.accountType == AccountType.Credit
-        }) >> [].toSet()
-        2 * transactionRepositoryMock.findByGuid(_ as String) >> Optional.of(transaction)
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
-        1 * meterRegistryMock.counter(setMeterId(Constants.TRANSACTION_ALREADY_EXISTS_COUNTER, transaction.accountNameOwner)) >> counter
-        2 * counter.increment()
-        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
-        0 * _
+        1 * paymentRepositoryMock.findAll() >> []
+        results.isEmpty()
     }
 
-    void 'test insertPayment - findByParameterName throws an exception'() {
+    void 'test findByPaymentId - success'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
-        Set<ConstraintViolation<Payment>> constraintViolations = [].toSet()
+
+        when:
+        Optional<Payment> result = paymentService.findByPaymentId(payment.paymentId)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(payment.paymentId) >> Optional.of(payment)
+        result.isPresent()
+        result.get().paymentId == payment.paymentId
+    }
+
+    void 'test findByPaymentId - not found'() {
+        given:
+        long paymentId = 1L
+
+        when:
+        Optional<Payment> result = paymentService.findByPaymentId(paymentId)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.empty()
+        !result.isPresent()
+    }
+
+    void 'test deleteByPaymentId - success'() {
+        given:
+        Payment payment = PaymentBuilder.builder().build()
+
+        when:
+        boolean result = paymentService.deleteByPaymentId(payment.paymentId)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(payment.paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.delete(payment)
+        result
+    }
+
+    void 'test deleteByPaymentId - not found'() {
+        given:
+        long paymentId = 1L
+
+        when:
+        boolean result = paymentService.deleteByPaymentId(paymentId)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.empty()
+        0 * paymentRepositoryMock.delete(_)
+        !result
+    }
+
+    void 'test updatePayment - success'() {
+        given:
+        Payment existingPayment = PaymentBuilder.builder().withAmount(100.0).build()
+        existingPayment.paymentId = 1L
+        Payment patch = PaymentBuilder.builder().withAmount(200.0).build()
+        Transaction sourceTx = TransactionBuilder.builder().withGuid(existingPayment.guidSource).build()
+        Transaction destTx = TransactionBuilder.builder().withGuid(existingPayment.guidDestination).build()
+
+        when:
+        Payment result = paymentService.updatePayment(existingPayment.paymentId, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(existingPayment.paymentId) >> Optional.of(existingPayment)
+        1 * transactionServiceMock.findTransactionByGuid(existingPayment.guidSource) >> Optional.of(sourceTx)
+        1 * transactionServiceMock.findTransactionByGuid(existingPayment.guidDestination) >> Optional.of(destTx)
+        1 * paymentRepositoryMock.findByDestinationAccountAndTransactionDateAndAmountAndPaymentIdNot(
+                existingPayment.destinationAccount, existingPayment.transactionDate, patch.amount, existingPayment.paymentId) >> Optional.empty()
+        2 * transactionServiceMock.updateTransaction(_ as Transaction)
+        1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment p -> p }
+        result.amount == patch.amount
+    }
+
+    void 'test updatePayment - payment not found'() {
+        given:
+        long paymentId = 1L
+        Payment patch = PaymentBuilder.builder().build()
+
+        when:
+        paymentService.updatePayment(paymentId, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.empty()
+        thrown(ValidationException)
+    }
+
+    void 'test updatePayment - no changes'() {
+        given:
+        Payment existingPayment = PaymentBuilder.builder().build()
+        existingPayment.paymentId = 1L
+        Payment patch = new Payment() // Empty patch with no changes
+
+        when:
+        Payment result = paymentService.updatePayment(existingPayment.paymentId, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(existingPayment.paymentId) >> Optional.of(existingPayment)
+        result == existingPayment
+    }
+
+    void 'test updatePayment - duplicate payment conflict'() {
+        given:
+        Payment existingPayment = PaymentBuilder.builder().withAmount(100.0).build()
+        existingPayment.paymentId = 1L
+        Payment patch = PaymentBuilder.builder().withAmount(200.0).build()
+        Payment duplicatePayment = PaymentBuilder.builder().build()
+        duplicatePayment.paymentId = 2L
+
+        when:
+        paymentService.updatePayment(existingPayment.paymentId, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByPaymentId(existingPayment.paymentId) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.findByDestinationAccountAndTransactionDateAndAmountAndPaymentIdNot(
+                existingPayment.destinationAccount, existingPayment.transactionDate, patch.amount, existingPayment.paymentId) >> Optional.of(duplicatePayment)
+        thrown(DataIntegrityViolationException)
+    }
+
+    void 'test insertPaymentNew - success'() {
+        given:
+        Payment payment = PaymentBuilder.builder().withAmount(50.0).build()
+        Account account = AccountBuilder.builder().withAccountType(AccountType.Credit).build()
+        Set<ConstraintViolation<Payment>> constraintViolations = [] as Set
+
+        when:
+        Payment result = paymentService.insertPaymentNew(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> constraintViolations
+        2 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(account)
+        1 * accountServiceMock.account(payment.sourceAccount) >> Optional.of(account)
+        2 * transactionServiceMock.insertTransaction(_ as Transaction)
+        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
+        result.paymentId == payment.paymentId
+    }
+
+    void 'test insertPaymentNew - validation failure'() {
+        given:
+        Payment payment = PaymentBuilder.builder().build()
+        Set<ConstraintViolation<Payment>> constraintViolations = [Mock(ConstraintViolation)] as Set
 
         when:
         paymentService.insertPaymentNew(payment)
 
         then:
-        thrown(RuntimeException)
         1 * validatorMock.validate(payment) >> constraintViolations
-        1 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.empty()
-        _ * _  // Allow any other interactions (logging, etc.)
+        thrown(ValidationException)
+    }
+
+    void 'test insertPaymentNew - destination is debit account'() {
+        given:
+        Payment payment = PaymentBuilder.builder().build()
+        Account account = AccountBuilder.builder().withAccountType(AccountType.Debit).build()
+        Set<ConstraintViolation<Payment>> constraintViolations = [] as Set
+
+        when:
+        paymentService.insertPaymentNew(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> constraintViolations
+        2 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(account)
+        1 * accountServiceMock.account(payment.sourceAccount) >> Optional.of(account)
+        thrown(ValidationException)
+    }
+
+    void 'test populateDebitTransaction - positive amount'() {
+        given:
+        Transaction transaction = new Transaction()
+        Payment payment = PaymentBuilder.builder().withAmount(100.0).build()
+
+        when:
+        paymentService.populateDebitTransaction(transaction, payment, "test_account")
+
+        then:
+        transaction.amount == -100.0
+        transaction.accountType == AccountType.Debit
+        transaction.description == "payment"
+    }
+
+    void 'test populateCreditTransaction - positive amount'() {
+        given:
+        Transaction transaction = new Transaction()
+        Payment payment = PaymentBuilder.builder().withAmount(100.0).build()
+
+        when:
+        paymentService.populateCreditTransaction(transaction, payment, "test_account")
+
+        then:
+        transaction.amount == -100.0
+        transaction.accountType == AccountType.Credit
+        transaction.description == "payment"
     }
 }
