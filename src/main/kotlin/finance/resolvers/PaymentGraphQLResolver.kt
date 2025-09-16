@@ -83,7 +83,7 @@ open class PaymentGraphQLResolver(
 
                 logger.debug("GraphQL: Payment to create: $payment")
 
-                val result = paymentService.insertPaymentNew(payment)
+                val result = paymentService.insertPayment(payment)
                 meterRegistry.counter("graphql.payment.create.success").increment()
                 logger.info("GraphQL: Successfully created payment with ID: ${result.paymentId}")
                 result

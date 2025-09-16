@@ -8,10 +8,12 @@ import jakarta.validation.ValidationException
 
 @SuppressWarnings("GroovyAccessibility")
 class DescriptionServiceSpec extends BaseServiceSpec {
+    io.micrometer.core.instrument.simple.SimpleMeterRegistry registry
 
     void setup() {
         descriptionService.validator = validatorMock
-        descriptionService.meterService = meterService
+        registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
+        descriptionService.meterService = new MeterService(registry)
     }
 
     void 'test - insert description'() {
@@ -47,7 +49,8 @@ class DescriptionServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 1
         thrown(ValidationException)
         1 * validatorMock.validate(description) >> constraintViolations
-        _ * _  // Allow any other interactions (logging, etc.)
+        def c = registry.find('exception.thrown.counter').tag('exception.name.tag','ValidationException').counter()
+        assert c != null && c.count() >= 1
     }
 
     void 'test - delete description'() {
@@ -140,6 +143,34 @@ void 'mergeDescriptions creates target if missing, reassigns transactions, deact
 
         result.descriptionName == 'amazon'
         0 * _
+    }
+
+    void 'updateDescription - success updates fields and saves'() {
+        given:
+        def existing = DescriptionBuilder.builder().withDescription('old').build()
+        existing.descriptionId = 7L
+        def patch = new Description(descriptionId: 7L, descriptionName: 'new', activeStatus: false)
+
+        when:
+        def result = descriptionService.updateDescription(patch)
+
+        then:
+        1 * descriptionRepositoryMock.findByDescriptionId(7L) >> Optional.of(existing)
+        1 * descriptionRepositoryMock.saveAndFlush({ it.descriptionId == 7L && it.descriptionName == 'new' && it.activeStatus == false }) >> { it[0] }
+        result.descriptionName == 'new'
+        !result.activeStatus
+    }
+
+    void 'updateDescription - not found throws RuntimeException'() {
+        given:
+        def patch = new Description(descriptionId: 77L, descriptionName: 'x')
+
+        when:
+        descriptionService.updateDescription(patch)
+
+        then:
+        1 * descriptionRepositoryMock.findByDescriptionId(77L) >> Optional.empty()
+        thrown(RuntimeException)
     }
 
 }

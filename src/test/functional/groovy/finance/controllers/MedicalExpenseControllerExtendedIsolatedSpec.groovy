@@ -76,7 +76,7 @@ class MedicalExpenseControllerExtendedIsolatedSpec extends BaseControllerSpec {
         def postResp = postMedicalExpenseForNewTransaction()
         Long meId = extractLong(postResp.body, 'medicalExpenseId')
         def delResp = restTemplate.exchange(
-                createURLWithPort("/api/${ENDPOINT}/${meId}"),
+                createURLWithPort("/api/${ENDPOINT}/delete/${meId}"),
                 HttpMethod.DELETE, new HttpEntity<>(null, headers), String)
 
         then:

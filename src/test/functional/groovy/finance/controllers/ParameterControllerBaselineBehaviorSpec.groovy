@@ -274,7 +274,7 @@ class ParameterControllerBaselineBehaviorSpec extends BaseControllerSpec {
         // updateParameter() - standard update pattern
         // deleteByParameterName() - standard delete pattern
         //
-        // Consistent standard naming vs PaymentController insertPaymentNew()
+        // Consistent standard naming vs PaymentController insertPayment()
         true
     }
 

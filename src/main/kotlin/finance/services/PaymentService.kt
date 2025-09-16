@@ -118,7 +118,7 @@ open class PaymentService(
 
 
     @Timed
-    override fun insertPaymentNew(payment: Payment): Payment {
+    override fun insertPayment(payment: Payment): Payment {
         logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
@@ -265,47 +265,4 @@ open class PaymentService(
         return Optional.empty()
     }
 
-    /*
-    @Deprecated("Use insertPaymentNew instead")
-    @Timed
-    fun insertPayment(payment: Payment): Payment {
-        val transactionCredit = Transaction()
-        val transactionDebit = Transaction()
-
-        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
-        handleConstraintViolations(constraintViolations, meterService)
-        val optionalAccount = accountService.account(payment.accountNameOwner)
-        if (!optionalAccount.isPresent) {
-            logger.error("Account not found ${payment.accountNameOwner}")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Account not found ${payment.accountNameOwner}")
-        } else {
-            if (optionalAccount.get().accountType == AccountType.Debit) {
-                logger.error("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-                meterService.incrementExceptionThrownCounter("ValidationException")
-                throw ValidationException("Account cannot make a payment to a debit account: ${payment.accountNameOwner}")
-            }
-        }
-
-        val optionalParameter = parameterService.findByParameterName("payment_account")
-        if (optionalParameter.isPresent) {
-            val paymentAccountNameOwner = optionalParameter.get().parameterValue
-            populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
-            populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
-
-            transactionService.insertTransaction(transactionCredit)
-            transactionService.insertTransaction(transactionDebit)
-            payment.guidDestination = transactionCredit.guid
-            payment.guidSource = transactionDebit.guid
-            val timestamp = Timestamp(System.currentTimeMillis())
-            payment.dateUpdated = timestamp
-            payment.dateAdded = timestamp
-            return paymentRepository.saveAndFlush(payment)
-        } else {
-            logger.error("Parameter not found: payment_account")
-            meterService.incrementExceptionThrownCounter("ValidationException")
-            throw ValidationException("Parameter not found: payment_account")
-        }
-    }
-    */
 }

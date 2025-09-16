@@ -232,7 +232,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
 
         when:
-        Payment savedPayment = paymentService.insertPaymentNew(testPayment)
+        Payment savedPayment = paymentService.insertPayment(testPayment)
 
         then:
         savedPayment != null

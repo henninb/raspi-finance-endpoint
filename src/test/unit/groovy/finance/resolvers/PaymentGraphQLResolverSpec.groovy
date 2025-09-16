@@ -117,7 +117,7 @@ class PaymentGraphQLResolverSpec extends Specification {
         Payment result = dataFetcher.get(environment)
 
         then: "should call payment service with proper payment object and return created payment"
-        1 * paymentService.insertPaymentNew({ Payment payment ->
+        1 * paymentService.insertPayment({ Payment payment ->
             payment.sourceAccount == "checking_brian" &&
             payment.destinationAccount == "discover_it" &&
             payment.amount == new BigDecimal("150.00") &&
@@ -144,7 +144,7 @@ class PaymentGraphQLResolverSpec extends Specification {
         ]
 
         and: "payment service throws validation exception"
-        paymentService.insertPaymentNew(_ as Payment) >> {
+        paymentService.insertPayment(_ as Payment) >> {
             throw new RuntimeException("Validation failed: Source account cannot be empty")
         }
 
@@ -249,7 +249,7 @@ class PaymentGraphQLResolverSpec extends Specification {
         Payment result = dataFetcher.get(environment)
 
         then: "should successfully create payment"
-        1 * paymentService.insertPaymentNew(_ as Payment) >> createdPayment
+        1 * paymentService.insertPayment(_ as Payment) >> createdPayment
         result.paymentId == 1L
     }
 
