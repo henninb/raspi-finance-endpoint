@@ -169,14 +169,14 @@ class PaymentServiceSpec extends BaseServiceSpec {
         thrown(DataIntegrityViolationException)
     }
 
-    void 'test insertPaymentNew - success'() {
+    void 'test insertPayment - success'() {
         given:
         Payment payment = PaymentBuilder.builder().withAmount(50.0).build()
         Account account = AccountBuilder.builder().withAccountType(AccountType.Credit).build()
         Set<ConstraintViolation<Payment>> constraintViolations = [] as Set
 
         when:
-        Payment result = paymentService.insertPaymentNew(payment)
+        Payment result = paymentService.insertPayment(payment)
 
         then:
         1 * validatorMock.validate(payment) >> constraintViolations
@@ -187,27 +187,27 @@ class PaymentServiceSpec extends BaseServiceSpec {
         result.paymentId == payment.paymentId
     }
 
-    void 'test insertPaymentNew - validation failure'() {
+    void 'test insertPayment - validation failure'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         Set<ConstraintViolation<Payment>> constraintViolations = [Mock(ConstraintViolation)] as Set
 
         when:
-        paymentService.insertPaymentNew(payment)
+        paymentService.insertPayment(payment)
 
         then:
         1 * validatorMock.validate(payment) >> constraintViolations
         thrown(ValidationException)
     }
 
-    void 'test insertPaymentNew - destination is debit account'() {
+    void 'test insertPayment - destination is debit account'() {
         given:
         Payment payment = PaymentBuilder.builder().build()
         Account account = AccountBuilder.builder().withAccountType(AccountType.Debit).build()
         Set<ConstraintViolation<Payment>> constraintViolations = [] as Set
 
         when:
-        paymentService.insertPaymentNew(payment)
+        paymentService.insertPayment(payment)
 
         then:
         1 * validatorMock.validate(payment) >> constraintViolations

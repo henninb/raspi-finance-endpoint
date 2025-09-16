@@ -74,7 +74,7 @@ class PaymentControllerSpec extends Specification {
         ResponseEntity<Payment> response = controller.insertPayment(sample())
 
         then:
-        1 * paymentService.insertPaymentNew(_) >> { Payment p ->
+        1 * paymentService.insertPayment(_) >> { Payment p ->
             p.paymentId = 99L
             return p
         }
@@ -85,7 +85,7 @@ class PaymentControllerSpec extends Specification {
         controller.insertPayment(sample())
 
         then:
-        1 * paymentService.insertPaymentNew(_) >> { throw new DataIntegrityViolationException('dupe') }
+        1 * paymentService.insertPayment(_) >> { throw new DataIntegrityViolationException('dupe') }
         ResponseStatusException ex = thrown(ResponseStatusException)
         ex.statusCode == HttpStatus.CONFLICT
     }

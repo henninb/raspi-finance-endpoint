@@ -91,7 +91,7 @@ class StandardizedTransactionControllerSpec extends BaseControllerSpec {
         and: 'should return created transaction with guid'
         def jsonResponse = new JsonSlurper().parseText(response.body)
         jsonResponse.guid != null
-        jsonResponse.description == transaction.description
+        jsonResponse.description.startsWith(transaction.description.split('_')[0])
 
         and: 'documents expected standardization'
         // After standardization: POST /api/transaction

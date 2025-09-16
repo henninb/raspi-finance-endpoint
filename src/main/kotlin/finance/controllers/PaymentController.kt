@@ -75,7 +75,7 @@ class PaymentController(private val paymentService: PaymentService) :
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {
         return try {
             logger.info("Inserting payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
-            val paymentResponse = paymentService.insertPaymentNew(payment)
+            val paymentResponse = paymentService.insertPayment(payment)
             logger.info("Payment inserted successfully: ${paymentResponse.paymentId}")
             ResponseEntity.status(HttpStatus.CREATED).body(paymentResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -163,7 +163,7 @@ class PaymentController(private val paymentService: PaymentService) :
     override fun save(@Valid @RequestBody payment: Payment): ResponseEntity<Payment> {
         return handleCreateOperation("Payment", "${payment.sourceAccount} -> ${payment.destinationAccount}") {
             logger.info("Creating payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
-            val result = paymentService.insertPaymentNew(payment)
+            val result = paymentService.insertPayment(payment)
             logger.info("Payment created successfully: ${result.paymentId}")
             result
         }
