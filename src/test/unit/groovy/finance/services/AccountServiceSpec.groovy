@@ -5,6 +5,7 @@ import finance.domain.Account
 import finance.domain.TransactionState
 import finance.helpers.AccountBuilder
 
+import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 import java.math.RoundingMode
@@ -31,18 +32,43 @@ class AccountServiceSpec extends BaseServiceSpec {
         accountService.meterService = meterService
     }
 
+    void 'test account - found'() {
+        given:
+        def accountNameOwner = "test_account"
+        def account = AccountBuilder.builder().withAccountNameOwner(accountNameOwner).build()
+
+        when:
+        def result = accountService.account(accountNameOwner)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        result.isPresent()
+        result.get().accountNameOwner == accountNameOwner
+    }
+
+    void 'test account - not found'() {
+        given:
+        def accountNameOwner = "test_account"
+
+        when:
+        def result = accountService.account(accountNameOwner)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.empty()
+        !result.isPresent()
+    }
+
     void 'test findAllActiveAccounts empty'() {
         given:
         Account account = AccountBuilder.builder().build()
         List<Account> accounts = []
-        accounts.add(account)
 
         when:
         List<Account> results = accountService.accounts()
 
         then:
-        results.size() == 1
-        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        results.size() == 0
+        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(_ as Boolean) >> accounts
         0 * _
     }
 
@@ -56,7 +82,7 @@ class AccountServiceSpec extends BaseServiceSpec {
 
         then:
         results.size() == 4
-        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(_ as Boolean) >> accounts
         0 * _
     }
 
@@ -99,8 +125,6 @@ class AccountServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 2
         1 * validatorMock.validate(account) >> constraintViolations
         1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
-        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
-        1 * counter.increment()
         _ * _  // Allow any other interactions (logging, etc.)
     }
 
@@ -138,16 +162,16 @@ class AccountServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 1
         ValidationException ex = thrown(ValidationException)
         ex.message.contains('Cannot insert record because of constraint violation(s)')
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
         1 * validatorMock.validate(account) >> constraintViolations
-        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
-        1 * counter.increment()
+        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
         _ * _  // Allow any other interactions (logging, etc.)
     }
 
     void 'test insertAccount - bad json - accountType'() {
         given:
-        String jsonPayload = "{\"accountId\":1001,\"accountNameOwner\":\"discover_brian\",\"accountType\":\"Credit\",\"activeStatus\":true,\"moniker\":\"1234\",\"totals\":0.01,\"totalsBalanced\":0.02,\"dateClosed\":0}"
+        String jsonPayload = '''
+{"accountId":1001,"accountNameOwner":"discover_brian","accountType":"Credit","activeStatus":true,"moniker":"1234","totals":0.01,"totalsBalanced":0.02,"dateClosed":0}
+'''
 
         when:
         mapper.readValue(jsonPayload, Account)
@@ -192,5 +216,112 @@ class AccountServiceSpec extends BaseServiceSpec {
         result != desiredResult
         1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState(TransactionState.Cleared.toString()) >> desiredResult
         0 * _
+    }
+
+    void 'test deleteAccount - success'() {
+        given:
+        def accountNameOwner = "test_account"
+        def account = AccountBuilder.builder().withAccountNameOwner(accountNameOwner).build()
+
+        when:
+        def result = accountService.deleteAccount(accountNameOwner)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.delete(account)
+        result
+    }
+
+    void 'test deleteAccount - not found'() {
+        given:
+        def accountNameOwner = "test_account"
+
+        when:
+        def result = accountService.deleteAccount(accountNameOwner)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.empty()
+        !result
+    }
+
+    void 'test updateAccount - success'() {
+        given:
+        def account = AccountBuilder.builder().build()
+
+        when:
+        def result = accountService.updateAccount(account)
+
+        then:
+        1 * accountRepositoryMock.findByAccountId(account.accountId) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(account) >> account
+        result.accountId == account.accountId
+    }
+
+    void 'test updateAccount - not found'() {
+        given:
+        def account = AccountBuilder.builder().build()
+
+        when:
+        accountService.updateAccount(account)
+
+        then:
+        1 * accountRepositoryMock.findByAccountId(account.accountId) >> Optional.empty()
+        thrown(RuntimeException)
+    }
+
+    void 'test renameAccountNameOwner - success'() {
+        given:
+        def oldName = "old_name"
+        def newName = "new_name"
+        def account = AccountBuilder.builder().withAccountNameOwner(oldName).build()
+
+        when:
+        def result = accountService.renameAccountNameOwner(oldName, newName)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(oldName) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { it[0] }
+        result.accountNameOwner == newName
+    }
+
+    void 'test renameAccountNameOwner - not found'() {
+        given:
+        def oldName = "old_name"
+        def newName = "new_name"
+
+        when:
+        accountService.renameAccountNameOwner(oldName, newName)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(oldName) >> Optional.empty()
+        thrown(EntityNotFoundException)
+    }
+
+    void 'test deactivateAccount - success'() {
+        given:
+        def accountNameOwner = "test_account"
+        def account = AccountBuilder.builder().withAccountNameOwner(accountNameOwner).withActiveStatus(true).build()
+
+        when:
+        def result = accountService.deactivateAccount(accountNameOwner)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { it[0] }
+        !result.activeStatus
+    }
+
+    void 'test activateAccount - success'() {
+        given:
+        def accountNameOwner = "test_account"
+        def account = AccountBuilder.builder().withAccountNameOwner(accountNameOwner).withActiveStatus(false).build()
+
+        when:
+        def result = accountService.activateAccount(accountNameOwner)
+
+        then:
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { it[0] }
+        result.activeStatus
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
+import jakarta.validation.Valid
 import java.math.BigDecimal
 import java.util.*
 
@@ -15,9 +16,105 @@ import java.util.*
 @RestController
 @RequestMapping("/api/transaction")
 class TransactionController(private val transactionService: TransactionService, private val meterService: MeterService) :
-    BaseController() {
+    StandardizedBaseController(), StandardRestController<Transaction, String> {
 
-    // curl -k https://localhost:8443/transaction/account/select/chase_brian
+    // ===== STANDARDIZED ENDPOINTS (NEW) =====
+
+    /**
+     * Standardized collection retrieval - GET /api/transaction/active
+     * Returns empty list (standardized behavior) - use business endpoints for meaningful queries
+     * Note: Transactions are typically queried by account, category, or other criteria
+     */
+    @GetMapping("/active", produces = ["application/json"])
+    override fun findAllActive(): ResponseEntity<List<Transaction>> {
+        return handleCrudOperation("Find all active transactions", null) {
+            logger.debug("Retrieving all active transactions (standardized endpoint)")
+            // For standardization compliance, return empty list
+            // Business logic endpoints like /account/select/{account} should be used for actual queries
+            val transactions: List<Transaction> = emptyList()
+            logger.info("Standardized endpoint - returning empty list. Use business endpoints for data.")
+            transactions
+        }
+    }
+
+    /**
+     * Standardized single entity retrieval - GET /api/transaction/{guid}
+     * Uses camelCase parameter without @PathVariable annotation
+     */
+    @GetMapping("/{guid}", produces = ["application/json"])
+    override fun findById(@PathVariable guid: String): ResponseEntity<Transaction> {
+        return handleCrudOperation("Find transaction by guid", guid) {
+            logger.debug("Retrieving transaction: $guid")
+            val transaction = transactionService.findTransactionByGuid(guid)
+                .orElseThrow {
+                    logger.warn("Transaction not found: $guid")
+                    meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
+                }
+            logger.info("Retrieved transaction: $guid")
+            transaction
+        }
+    }
+
+    /**
+     * Standardized entity creation - POST /api/transaction
+     * Returns 201 CREATED
+     */
+    @PostMapping(consumes = ["application/json"], produces = ["application/json"])
+    override fun save(@Valid @RequestBody transaction: Transaction): ResponseEntity<Transaction> {
+        return handleCreateOperation("Transaction", transaction.guid) {
+            logger.info("Creating transaction: ${transaction.guid}")
+            val result = transactionService.insertTransaction(transaction)
+            logger.info("Transaction created successfully: ${transaction.guid}")
+            result
+        }
+    }
+
+    /**
+     * Standardized entity update - PUT /api/transaction/{guid}
+     * Uses camelCase parameter without @PathVariable annotation
+     */
+    @PutMapping("/{guid}", consumes = ["application/json"], produces = ["application/json"])
+    override fun update(@PathVariable guid: String, @Valid @RequestBody transaction: Transaction): ResponseEntity<Transaction> {
+        return handleCrudOperation("Update transaction", guid) {
+            logger.info("Updating transaction: $guid")
+            // Validate transaction exists first
+            val existingTransaction = transactionService.findTransactionByGuid(guid)
+                .orElseThrow {
+                    logger.warn("Transaction not found for update: $guid")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
+                }
+            // Preserve existing transaction ID and ensure guid matches path parameter
+            val updatedTransaction = transaction.copy(
+                transactionId = existingTransaction.transactionId,
+                guid = guid
+            )
+            val result = transactionService.updateTransaction(updatedTransaction)
+            logger.info("Transaction updated successfully: $guid")
+            result
+        }
+    }
+
+    /**
+     * Standardized entity deletion - DELETE /api/transaction/{guid}
+     * Returns 200 OK with deleted entity
+     */
+    @DeleteMapping("/{guid}", produces = ["application/json"])
+    override fun deleteById(@PathVariable guid: String): ResponseEntity<Transaction> {
+        return handleDeleteOperation(
+            "Transaction",
+            guid,
+            { transactionService.findTransactionByGuid(guid) },
+            { transactionService.deleteTransactionByGuid(guid) }
+        )
+    }
+
+    // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
+
+    /**
+     * Legacy business logic endpoint - GET /api/transaction/account/select/{accountNameOwner}
+     * Returns transactions for specific account (business logic preserved)
+     */
     @GetMapping("/account/select/{accountNameOwner}", produces = ["application/json"])
     fun selectByAccountNameOwner(@PathVariable("accountNameOwner") accountNameOwner: String): ResponseEntity<List<Transaction>> {
         return try {
@@ -55,7 +152,10 @@ class TransactionController(private val transactionService: TransactionService, 
     }
 
 
-    // curl -k https://localhost:8443/transaction/select/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    /**
+     * Legacy CRUD endpoint - GET /api/transaction/select/{guid}
+     * Original method name preserved for backward compatibility
+     */
     @GetMapping("/select/{guid}", produces = ["application/json"])
     fun findTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         logger.debug("findTransaction() - Searching for transaction with guid = $guid")
@@ -72,7 +172,10 @@ class TransactionController(private val transactionService: TransactionService, 
         return ResponseEntity.ok(transaction)
     }
 
-    // curl -k --header "Content-Type: application/json" --request PUT --data '{"guid":"340c315d-39ad-4a02-a294-84a74c1c7ddc", "description":"updated description", "amount": 100.00}' https://localhost:8443/transaction/update/340c315d-39ad-4a02-a294-84a74c1c7ddc
+    /**
+     * Legacy CRUD endpoint - PUT /api/transaction/update/{guid}
+     * Original method name preserved for backward compatibility
+     */
     @PutMapping("/update/{guid}", consumes = ["application/json"], produces = ["application/json"])
     fun updateTransaction(
         @PathVariable("guid") guid: String,
@@ -80,9 +183,22 @@ class TransactionController(private val transactionService: TransactionService, 
     ): ResponseEntity<Transaction> {
         return try {
             logger.info("Updating transaction: $guid")
-            val transactionResponse = transactionService.updateTransaction(toBePatchedTransaction)
+            // Validate transaction exists first
+            val existingTransaction = transactionService.findTransactionByGuid(guid)
+                .orElseThrow {
+                    logger.warn("Transaction not found for update: $guid")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
+                }
+            // Preserve existing transaction ID and ensure guid matches path parameter
+            val updatedTransaction = toBePatchedTransaction.copy(
+                transactionId = existingTransaction.transactionId,
+                guid = guid
+            )
+            val transactionResponse = transactionService.updateTransaction(updatedTransaction)
             logger.info("Transaction updated successfully: $guid")
             ResponseEntity.ok(transactionResponse)
+        } catch (ex: ResponseStatusException) {
+            throw ex
         } catch (ex: Exception) {
             logger.error("Failed to update transaction $guid: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction: ${ex.message}", ex)
@@ -116,7 +232,10 @@ class TransactionController(private val transactionService: TransactionService, 
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "description":"test transaction", "category":"misc", "amount": 10.00, "transactionDate":"2024-01-01", "transactionState":"cleared"}' https://localhost:8443/transaction/insert
+    /**
+     * Legacy CRUD endpoint - POST /api/transaction/insert
+     * Original method name preserved for backward compatibility
+     */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
         return try {
@@ -206,7 +325,10 @@ class TransactionController(private val transactionService: TransactionService, 
         }
     }
 
-    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/transaction/delete/38739c5b-e2c6-41cc-82c2-d41f39a33f9a
+    /**
+     * Legacy CRUD endpoint - DELETE /api/transaction/delete/{guid}
+     * Original method name preserved for backward compatibility
+     */
     @DeleteMapping("/delete/{guid}", produces = ["application/json"])
     fun deleteTransaction(@PathVariable("guid") guid: String): ResponseEntity<Transaction> {
         val transaction = transactionService.findTransactionByGuid(guid)

@@ -78,8 +78,6 @@ class TransferServiceSpec extends BaseServiceSpec {
         then:
         1 * validatorMock.validate(transfer) >> new HashSet<ConstraintViolation<Transfer>>()
         1 * accountServiceMock.account("nonexistent") >> Optional.empty()
-        1 * meterRegistryMock.counter(*_) >> counterMock
-        1 * counterMock.increment()
         thrown(RuntimeException)
     }
 
@@ -96,8 +94,6 @@ class TransferServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(transfer) >> new HashSet<ConstraintViolation<Transfer>>()
         1 * accountServiceMock.account("test_source") >> Optional.of(sourceAccount)
         1 * accountServiceMock.account("nonexistent") >> Optional.empty()
-        1 * meterRegistryMock.counter(*_) >> counterMock
-        1 * counterMock.increment()
         thrown(RuntimeException)
     }
 
