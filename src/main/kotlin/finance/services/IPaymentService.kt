@@ -7,8 +7,6 @@ import java.util.*
 interface IPaymentService {
     fun findAllPayments(): List<Payment>
 
-    //fun insertPayment(payment: Payment): Payment
-
     fun populateDebitTransaction(
         transactionDebit: Transaction,
         payment: Payment,
@@ -23,6 +21,6 @@ interface IPaymentService {
 
     fun deleteByPaymentId(paymentId: Long): Boolean
     fun findByPaymentId(paymentId: Long): Optional<Payment>
-    fun insertPaymentNew(payment: Payment): Payment
+    fun insertPayment(payment: Payment): Payment
     fun updatePayment(paymentId: Long, patch: Payment): Payment
 }

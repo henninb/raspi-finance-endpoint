@@ -178,6 +178,16 @@ class TestFixtures {
         return new ReceiptImageTestContext(testOwner, testDataManager)
     }
 
+    /**
+     * Creates test context for user-related operations
+     */
+    UserTestContext createUserTestContext(String testOwner) {
+        log.info("Creating user test context for owner: ${testOwner}")
+
+        // No base setup needed for users - they are independent entities
+        return new UserTestContext(testOwner, testDataManager)
+    }
+
 }
 
 /**
@@ -834,5 +844,64 @@ class TransferTestContext {
 
     void cleanup() {
         testDataManager.cleanupAccountsFor(transactionContext.testOwner)
+    }
+}
+
+/**
+ * Test context for user-related operations
+ * Provides easy access to user creation and management methods
+ */
+class UserTestContext {
+    String testOwner
+    TestDataManager testDataManager
+
+    UserTestContext(String testOwner, TestDataManager testDataManager) {
+        this.testOwner = testOwner
+        this.testDataManager = testDataManager
+    }
+
+    finance.domain.User createUniqueUser(String prefix = "unique") {
+        return SmartUserBuilder.builderForOwner(testOwner)
+                .withUniqueUsername(prefix)
+                .withFirstName('functional')
+                .withLastName('test')
+                .asActive()
+                .buildAndValidate()
+    }
+
+    finance.domain.User createActiveUser(String username) {
+        return SmartUserBuilder.builderForOwner(testOwner)
+                .withUsername(username)
+                .withFirstName('functional')
+                .withLastName('test')
+                .asActive()
+                .buildAndValidate()
+    }
+
+    finance.domain.User createInactiveUser(String username) {
+        return SmartUserBuilder.builderForOwner(testOwner)
+                .withUsername(username)
+                .withFirstName('functional')
+                .withLastName('test')
+                .asInactive()
+                .buildAndValidate()
+    }
+
+    finance.domain.User createUserWithPassword(String username, String password) {
+        return SmartUserBuilder.builderForOwner(testOwner)
+                .withUsername(username)
+                .withPassword(password)
+                .withFirstName('functional')
+                .withLastName('test')
+                .asActive()
+                .buildAndValidate()
+    }
+
+    String createUserInDatabase(String suffix) {
+        return testDataManager.createUserFor(testOwner, suffix)
+    }
+
+    void cleanup() {
+        testDataManager.cleanupUsersFor(testOwner)
     }
 }

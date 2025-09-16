@@ -424,6 +424,10 @@ class TestDataManager {
         safeUpdate("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${testOwner}")
         safeUpdate("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${clean}")
 
+        // Delete test-specific users
+        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${clean}")
+
         log.info("Successfully cleaned up test data for owner: ${testOwner}")
     }
 
@@ -460,6 +464,50 @@ class TestDataManager {
         log.info("Created ${validationData.size()} validation amounts for test owner: ${testOwner}")
     }
 
+    String createUserFor(String testOwner, String usernameSuffix, String password = 'test_password', boolean activeStatus = true) {
+        // Generate pattern-compliant username for user constraint validation
+        String ownerPart = testOwner.replaceAll(/[^a-z0-9]/, '').toLowerCase()
+        if (ownerPart.isEmpty()) ownerPart = "test"
+
+        String username = "${usernameSuffix}_${ownerPart}".toLowerCase()
+
+        // Ensure length constraints (3-50 chars)
+        if (username.length() > 50) {
+            String shortOwner = ownerPart.length() > 8 ? ownerPart[0..7] : ownerPart
+            username = "${usernameSuffix}_${shortOwner}".toLowerCase()
+        }
+        if (username.length() < 3) username = "usr"
+
+        try {
+            jdbcTemplate.update("""
+                INSERT INTO func.t_user (user_id, username, first_name, last_name, password, active_status, date_updated, date_added)
+                VALUES (0, ?, 'functional', 'test', ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+            """, username, password, activeStatus)
+        } catch (Exception e) {
+            log.warn("Failed to create user ${username}, possibly already exists: ${e.message}")
+        }
+
+        log.info("Created user: ${username} (active: ${activeStatus}) for test owner: ${testOwner}")
+        return username
+    }
+
+    void createUsersFor(String testOwner, List<String> usernameSuffixes) {
+        usernameSuffixes.each { suffix ->
+            createUserFor(testOwner, suffix, 'test_password', true)
+        }
+        log.info("Created ${usernameSuffixes.size()} users for test owner: ${testOwner}")
+    }
+
+    void cleanupUsersFor(String testOwner) {
+        log.info("Cleaning up users for owner: ${testOwner}")
+
+        String clean = cleanOwner(testOwner)
+        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${clean}")
+
+        log.info("Successfully cleaned up users for owner: ${testOwner}")
+    }
+
     void cleanupAllTestData() {
         log.info("Performing full test data cleanup")
 
@@ -489,6 +537,9 @@ class TestDataManager {
         // Clean up validation amounts
         jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
                            "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE 'test_%')")
+
+        // Clean up users
+        jdbcTemplate.update("DELETE FROM func.t_user WHERE username LIKE 'test_%'")
 
         log.info("Completed full test data cleanup")
     }

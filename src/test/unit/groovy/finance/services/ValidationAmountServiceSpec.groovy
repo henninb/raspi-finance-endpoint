@@ -134,4 +134,90 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         result != null
         result.validationId == 0L // should return empty ValidationAmount
     }
+
+    def "insertValidationAmount (standardized) - validation fails increments metric"() {
+        given:
+        def va = new ValidationAmount(
+                0L, 1L, null,
+                Timestamp.valueOf("2023-01-01 00:00:00"),
+                true,
+                TransactionState.Outstanding,
+                new BigDecimal("1000.00")
+        )
+        jakarta.validation.ConstraintViolation<ValidationAmount> violation = Mock(jakarta.validation.ConstraintViolation)
+        def violations = [violation] as Set
+
+        when:
+        validationAmountService.insertValidationAmount(va)
+
+        then:
+        1 * validatorMock.validate(va) >> violations
+        thrown(jakarta.validation.ValidationException)
+    }
+
+    def "updateValidationAmount - validation fails increments metric"() {
+        given:
+        def va = new ValidationAmount(
+                2L, 1L, null,
+                Timestamp.valueOf("2023-01-01 00:00:00"),
+                true,
+                TransactionState.Outstanding,
+                new BigDecimal("1000.00")
+        )
+        jakarta.validation.ConstraintViolation<ValidationAmount> violation = Mock(jakarta.validation.ConstraintViolation)
+        def violations = [violation] as Set
+
+        when:
+        validationAmountService.updateValidationAmount(va)
+
+        then:
+        1 * validatorMock.validate(va) >> violations
+        thrown(jakarta.validation.ValidationException)
+    }
+
+    def "findAllActiveValidationAmounts returns list"() {
+        given:
+        def va = new ValidationAmount(1L,1L,null,Timestamp.valueOf("2023-01-01 00:00:00"),true,TransactionState.Outstanding,new BigDecimal("1"))
+
+        when:
+        def list = validationAmountService.findAllActiveValidationAmounts()
+
+        then:
+        1 * validationAmountRepositoryMock.findByActiveStatusTrueOrderByValidationDateDesc() >> [va]
+        list.size() == 1
+    }
+
+    def "findValidationAmountById present and missing"() {
+        given:
+        def va = new ValidationAmount(3L,1L,null,Timestamp.valueOf("2023-01-01 00:00:00"),true,TransactionState.Outstanding,new BigDecimal("1"))
+
+        when:
+        def present = validationAmountService.findValidationAmountById(3L)
+        def missing = validationAmountService.findValidationAmountById(4L)
+
+        then:
+        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(3L) >> Optional.of(va)
+        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(4L) >> Optional.empty()
+        present.isPresent()
+        missing.isEmpty()
+    }
+
+    def "deleteValidationAmount - success and missing"() {
+        given:
+        def va = new ValidationAmount(5L,1L,null,Timestamp.valueOf("2023-01-01 00:00:00"),true,TransactionState.Outstanding,new BigDecimal("1"))
+
+        when:
+        validationAmountService.deleteValidationAmount(5L)
+
+        then:
+        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(5L) >> Optional.of(va)
+        1 * validationAmountRepositoryMock.saveAndFlush(_ as ValidationAmount)
+
+        when:
+        validationAmountService.deleteValidationAmount(6L)
+
+        then:
+        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(6L) >> Optional.empty()
+        thrown(org.springframework.web.server.ResponseStatusException)
+    }
 }

@@ -298,6 +298,6 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         payment.guidDestination = UUID.randomUUID().toString()
         payment.activeStatus = true
 
-        return paymentService.insertPaymentNew(payment)
+        return paymentService.insertPayment(payment)
     }
 }
