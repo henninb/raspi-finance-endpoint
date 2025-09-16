@@ -111,6 +111,37 @@ class UserServiceSpec extends BaseServiceSpec {
         thrown(IllegalArgumentException)
     }
 
+    def "signUp - encoder returns null triggers IllegalStateException"() {
+        given:
+        def username = "newuser2"
+        def rawPassword = "password123"
+        def inputUser = new User(username: username, password: rawPassword)
+
+        when:
+        userService.signUp(inputUser)
+
+        then:
+        1 * userRepositoryMock.findByUsername(username) >> Optional.empty()
+        1 * passwordEncoderMock.encode(rawPassword) >> null
+        0 * userRepositoryMock.saveAndFlush(*_)
+        thrown(IllegalStateException)
+    }
+
+    def "signIn - user not found but matches returns true still returns empty (no bypass)"() {
+        given:
+        def username = "ghost"
+        def rawPassword = "password123"
+        def inputUser = new User(username: username, password: rawPassword)
+
+        when:
+        def result = userService.signIn(inputUser)
+
+        then:
+        1 * userRepositoryMock.findByUsername(username) >> Optional.empty()
+        1 * passwordEncoderMock.matches(rawPassword, '$2a$12$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing') >> true
+        !result.isPresent()
+    }
+
     def "findUserByUsername - success with existing user"() {
         given:
         def username = "testuser"

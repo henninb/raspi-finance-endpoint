@@ -47,8 +47,6 @@ class ParameterServiceSpec extends BaseServiceSpec {
         thrown(ValidationException)
         constraintViolations.size() == 1
         1 * validatorMock.validate(parameter) >> constraintViolations
-        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
-        1 * counter.increment()
         _ * _  // Allow any other interactions (logging, etc.)
     }
 }

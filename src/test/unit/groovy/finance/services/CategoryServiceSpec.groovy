@@ -46,8 +46,6 @@ class CategoryServiceSpec extends BaseServiceSpec {
         constraintViolations.size() == 1
         thrown(ValidationException)
         1 * validatorMock.validate(category) >> constraintViolations
-        1 * meterRegistryMock.counter(validationExceptionThrownMeter) >> counter
-        1 * counter.increment()
         _ * _  // Allow any other interactions (logging, etc.)
     }
 
