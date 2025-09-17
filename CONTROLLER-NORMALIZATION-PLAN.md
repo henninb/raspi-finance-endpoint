@@ -571,6 +571,191 @@ Each controller migration must pass:
 **Phase 4B - Simple Utilities (Low Priority):**
 3. **UserController** - Simple authentication endpoints
 
+## Phase 5: Legacy Endpoint Elimination Strategy 🧹
+
+### Overview
+
+With 11/14 controllers now standardized using the dual endpoint approach, we have both **legacy** and **modern** endpoints serving the same functionality. This phase focuses on eliminating redundant legacy endpoints while preserving essential business logic endpoints.
+
+### Endpoint Analysis Summary
+
+Based on comprehensive analysis of standardized controllers, here's the current endpoint landscape:
+
+#### **ELIMINABLE Legacy Endpoints (Direct Modern Equivalents)**
+
+These legacy endpoints have direct modern replacements and can be safely removed:
+
+**AccountController:**
+- ❌ `GET /api/account/select/active` → ✅ `GET /api/account/active`
+- ❌ `GET /api/account/select/{accountNameOwner}` → ✅ `GET /api/account/{accountNameOwner}`
+- ❌ `POST /api/account/insert` → ✅ `POST /api/account`
+- ❌ `PUT /api/account/update/{accountNameOwner}` → ✅ `PUT /api/account/{accountNameOwner}`
+- ❌ `DELETE /api/account/delete/{accountNameOwner}` → ✅ `DELETE /api/account/{accountNameOwner}`
+
+**CategoryController:**
+- ❌ `GET /api/category/select/active` → ✅ `GET /api/category/active`
+- ❌ `GET /api/category/select/{category_name}` → ✅ `GET /api/category/{categoryName}`
+- ❌ `POST /api/category/insert` → ✅ `POST /api/category`
+- ❌ `PUT /api/category/update/{category_name}` → ✅ `PUT /api/category/{categoryName}`
+- ❌ `DELETE /api/category/delete/{categoryName}` → ✅ `DELETE /api/category/{categoryName}`
+
+**TransactionController:**
+- ❌ `GET /api/transaction/select/{guid}` → ✅ `GET /api/transaction/{guid}`
+- ❌ `PUT /api/transaction/update/{guid}` → ✅ `PUT /api/transaction/{guid}`
+- ❌ `POST /api/transaction/insert` → ✅ `POST /api/transaction`
+- ❌ `DELETE /api/transaction/delete/{guid}` → ✅ `DELETE /api/transaction/{guid}`
+
+**Similar patterns exist across all 11 standardized controllers** with 5 eliminable legacy endpoints each.
+
+#### **PRESERVED Business Logic Endpoints (No Modern Equivalents)**
+
+These endpoints provide specialized business functionality and must be preserved:
+
+**AccountController:**
+- ✅ `GET /api/account/totals` - Account totals computation
+- ✅ `GET /api/account/payment/required` - Payment requirement analysis
+- ✅ `PUT /api/account/rename` - Account renaming operations
+- ✅ `PUT /api/account/activate/{accountNameOwner}` - Account activation
+- ✅ `PUT /api/account/deactivate/{accountNameOwner}` - Account deactivation
+
+**CategoryController:**
+- ✅ `PUT /api/category/merge` - Category merging operations
+
+**TransactionController:**
+- ✅ `GET /api/transaction/account/select/{accountNameOwner}` - Account-specific transaction queries
+- ✅ `GET /api/transaction/account/totals/{accountNameOwner}` - Account totals calculation
+- ✅ `PUT /api/transaction/state/update` - Transaction state updates
+- ✅ `GET /api/transaction/category/{category_name}` - Category-based transaction queries
+- ✅ `GET /api/transaction/description/{description_name}` - Description-based queries
+- ✅ `POST /api/transaction/future/insert` - Future transaction creation
+- ✅ `PUT /api/transaction/update/account` - Account update operations
+- ✅ `PUT /api/transaction/update/receipt/image/{guid}` - Receipt image management
+
+### Legacy Endpoint Elimination Plan
+
+#### **Phase 5A: Impact Analysis (Week 1)**
+
+1. **Frontend Audit**:
+   - Analyze Next.js application hooks and API calls
+   - Identify all legacy endpoint usage patterns
+   - Map legacy calls to modern equivalents
+   - Document breaking changes and required UI updates
+
+2. **API Usage Analysis**:
+   - Review server logs to identify active legacy endpoint usage
+   - Quantify usage patterns for each eliminable endpoint
+   - Identify any external API consumers (if applicable)
+
+#### **Phase 5B: UI Migration Strategy (Weeks 2-4)**
+
+**Next.js Application Hook Migration:**
+
+1. **API Hook Refactoring**:
+   ```typescript
+   // Before (Legacy Pattern)
+   const response = await fetch('/api/account/select/active')
+
+   // After (Modern Pattern)
+   const response = await fetch('/api/account/active')
+   ```
+
+2. **Hook Updates by Category**:
+   - **Account Hooks**: Update `useAccounts`, `useAccount`, `useAccountCreate`, `useAccountUpdate`, `useAccountDelete`
+   - **Category Hooks**: Update `useCategories`, `useCategory`, `useCategoryCreate`, `useCategoryUpdate`, `useCategoryDelete`
+   - **Transaction Hooks**: Update `useTransactions`, `useTransaction`, `useTransactionCreate`, `useTransactionUpdate`, `useTransactionDelete`
+
+3. **Parameter Name Standardization**:
+   ```typescript
+   // Legacy snake_case parameters
+   `/api/category/select/${category_name}`
+
+   // Modern camelCase parameters
+   `/api/category/${categoryName}`
+   ```
+
+4. **HTTP Method Standardization**:
+   ```typescript
+   // Legacy insert endpoints (POST /insert)
+   POST('/api/account/insert', accountData)
+
+   // Modern RESTful endpoints (POST /)
+   POST('/api/account', accountData)
+   ```
+
+#### **Phase 5C: Deprecation Period (Weeks 5-8)**
+
+1. **Gradual Deprecation**:
+   - Add deprecation warnings to legacy endpoints (HTTP headers + logging)
+   - Monitor usage metrics to ensure successful UI migration
+   - Provide grace period for any external consumers
+
+2. **Testing Validation**:
+   - Comprehensive testing of UI with modern endpoints
+   - Regression testing to ensure no functionality loss
+   - Performance testing to validate modern endpoint efficiency
+
+#### **Phase 5D: Legacy Endpoint Removal (Week 9-10)**
+
+1. **Elimination Priority Order**:
+   - **High Priority**: Simple CRUD controllers (Parameter, Description, Validation)
+   - **Medium Priority**: Complex controllers (Account, Category, Payment)
+   - **Low Priority**: High-complexity controllers (Transaction, Medical)
+
+2. **Removal Process per Controller**:
+   - Remove legacy endpoint mappings from controller
+   - Update OpenAPI documentation
+   - Remove legacy endpoint tests
+   - Clean up legacy method implementations
+
+### Expected Benefits
+
+#### **Code Quality Improvements**
+- **Reduced Complexity**: ~55 fewer endpoints across 11 controllers (5 legacy × 11 controllers)
+- **Consistent API Surface**: Single modern endpoint pattern across all controllers
+- **Simplified Maintenance**: No dual endpoint maintenance burden
+- **Cleaner Documentation**: Single API pattern in OpenAPI specs
+
+#### **Developer Experience**
+- **Predictable APIs**: Consistent RESTful patterns across all endpoints
+- **Reduced Confusion**: No choice between legacy vs modern endpoints
+- **Faster Development**: Single endpoint pattern to learn and use
+- **Better IDE Support**: Simplified autocomplete and IntelliSense
+
+#### **Performance Benefits**
+- **Reduced Bundle Size**: Fewer endpoint mappings and handlers
+- **Simplified Routing**: Cleaner Spring Boot request mapping
+- **Lower Memory Footprint**: Fewer method handlers loaded
+
+### Migration Risks and Mitigation
+
+#### **Risk: UI Breakage**
+- **Mitigation**: Comprehensive frontend testing during migration period
+- **Fallback**: Legacy endpoints preserved until UI migration validated
+
+#### **Risk: External API Consumers**
+- **Mitigation**: Deprecation period with clear migration guidance
+- **Detection**: Server log analysis to identify external usage patterns
+
+#### **Risk: Business Logic Dependencies**
+- **Mitigation**: Business endpoints explicitly preserved and documented
+- **Validation**: Comprehensive functional testing of business operations
+
+### Success Metrics
+
+#### **Elimination Targets**
+- ✅ **55 Legacy Endpoints Eliminated**: 5 CRUD endpoints × 11 standardized controllers
+- ✅ **API Consistency**: 100% RESTful patterns across all standardized controllers
+- ✅ **UI Migration**: 100% Next.js hooks converted to modern endpoints
+- ✅ **Zero Functionality Loss**: All business operations preserved
+
+#### **Quality Metrics**
+- **Code Reduction**: ~1,100 lines of legacy endpoint code eliminated
+- **Documentation Clarity**: Single endpoint pattern in all API docs
+- **Test Simplification**: Legacy endpoint tests removed, modern endpoint coverage maintained
+- **Performance**: Response time consistency across all CRUD operations
+
+This legacy endpoint elimination represents the final cleanup phase of the controller standardization project, delivering a truly consistent and maintainable API surface across the entire application.
+
 ## Risk Mitigation
 
 ### Testing Strategy
