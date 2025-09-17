@@ -20,6 +20,73 @@ class TransactionServiceAdditionalSpec extends BaseServiceSpec {
         transactionService.meterService = new MeterService(new io.micrometer.core.instrument.simple.SimpleMeterRegistry())
     }
 
+    def "calculateActiveTotalsByAccountNameOwner handles unexpected state gracefully"() {
+        given:
+        def owner = 'acct_b'
+        def rows = [
+                [BigDecimal.valueOf(1.00), 1, 'weird'] as Object[],
+                [BigDecimal.valueOf(2.00), 1, 'future'] as Object[]
+        ]
+
+        when:
+        def totals = transactionService.calculateActiveTotalsByAccountNameOwner(owner)
+
+        then:
+        1 * transactionRepositoryMock.sumTotalsForActiveTransactionsByAccountNameOwner(owner) >> rows
+        totals.totalsFuture == new BigDecimal('2.00')
+        totals.totalsCleared == BigDecimal.ZERO
+        totals.totalsOutstanding == BigDecimal.ZERO
+        totals.totals == new BigDecimal('2.00')
+    }
+
+    def "updateTransaction updates when existing found"() {
+        given:
+        def db = TransactionBuilder.builder().withGuid('guid-1').withAccountNameOwner('acct_a').build()
+        def incoming = TransactionBuilder.builder().withGuid('guid-1').withAccountNameOwner('acct_a').withCategory('cat1').withDescription('desc1').build()
+        def account = new Account(accountId: 42L, accountNameOwner: 'acct_a', accountType: db.accountType)
+
+        when:
+        def result = transactionService.updateTransaction(incoming)
+
+        then:
+        1 * validatorMock.validate(incoming) >> ([] as Set)
+        1 * transactionRepositoryMock.findByGuid('guid-1') >> Optional.of(db)
+        1 * accountServiceMock.account('acct_a') >> Optional.of(account)
+        1 * categoryServiceMock.category('cat1') >> Optional.of(new Category(categoryName: 'cat1'))
+        1 * descriptionRepositoryMock.findByDescriptionName('desc1') >> Optional.of(new Description(descriptionName: 'desc1'))
+        1 * transactionRepositoryMock.saveAndFlush({ Transaction t -> t.guid == 'guid-1' && t.accountId == 42L }) >> { it[0] }
+        result.guid == 'guid-1'
+    }
+
+    def "createFutureTransaction fortnightly adds 14 days"() {
+        given:
+        def tx = TransactionBuilder.builder()
+                .withTransactionDate(Date.valueOf('2024-01-01'))
+                .withReoccurringType(ReoccurringType.FortNightly)
+                .build()
+
+        when:
+        def fut = transactionService.createFutureTransaction(tx)
+
+        then:
+        fut.transactionState == TransactionState.Future
+        fut.transactionDate == Date.valueOf('2024-01-15')
+    }
+
+    def "createFutureTransaction debit with non-monthly throws"() {
+        given:
+        def tx = TransactionBuilder.builder()
+                .withAccountType(AccountType.Debit)
+                .withTransactionDate(Date.valueOf('2024-03-01'))
+                .withReoccurringType(ReoccurringType.Quarterly)
+                .build()
+
+        when:
+        transactionService.createFutureTransaction(tx)
+
+        then:
+        thrown(InvalidReoccurringTypeException)
+    }
     def "calculateActiveTotalsByAccountNameOwner aggregates by state"() {
         given:
         def owner = 'acct_a'
