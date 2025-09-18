@@ -4,6 +4,7 @@ import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 
 import java.sql.Date
+import java.sql.Timestamp
 
 class FamilyMemberBuilder {
 
@@ -16,6 +17,8 @@ class FamilyMemberBuilder {
     String ssnLastFour = '1234'
     String medicalRecordNumber = 'MRN789012'
     Boolean activeStatus = true
+    Timestamp dateAdded = new Timestamp(System.currentTimeMillis())
+    Timestamp dateUpdated = new Timestamp(System.currentTimeMillis())
 
     static FamilyMemberBuilder builder() {
         return new FamilyMemberBuilder()
@@ -32,6 +35,8 @@ class FamilyMemberBuilder {
             ssnLastFour = this.ssnLastFour
             medicalRecordNumber = this.medicalRecordNumber
             activeStatus = this.activeStatus
+            dateAdded = this.dateAdded
+            dateUpdated = this.dateUpdated
             return it
         }
         return member
@@ -79,6 +84,16 @@ class FamilyMemberBuilder {
 
     FamilyMemberBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
+        return this
+    }
+
+    FamilyMemberBuilder withDateAdded(Timestamp dateAdded) {
+        this.dateAdded = dateAdded
+        return this
+    }
+
+    FamilyMemberBuilder withDateUpdated(Timestamp dateUpdated) {
+        this.dateUpdated = dateUpdated
         return this
     }
 }

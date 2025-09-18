@@ -3,18 +3,12 @@ package finance.services
 import finance.domain.*
 import finance.repositories.TransactionRepository
 import io.micrometer.core.annotation.Timed
-import net.coobird.thumbnailator.Thumbnails
 import org.springframework.stereotype.Service
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Date
 import java.sql.Timestamp
 import java.util.*
-import javax.imageio.IIOException
-import javax.imageio.ImageIO
-import javax.imageio.ImageReader
 import jakarta.validation.ConstraintViolation
 import kotlin.system.measureTimeMillis
 
@@ -24,7 +18,9 @@ open class TransactionService(
     private var accountService: AccountService,
     private var categoryService: CategoryService,
     private var descriptionService: DescriptionService,
-    private var receiptImageService: ReceiptImageService
+    private var receiptImageService: ReceiptImageService,
+    private var imageProcessingService: ImageProcessingService,
+    private var calculationService: CalculationService
 ) : ITransactionService, BaseService() {
 
     @Timed
@@ -193,41 +189,7 @@ open class TransactionService(
 
     @Timed
     override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
-        val resultSet = executeWithResilienceSync(
-            operation = {
-                transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
-            },
-            operationName = "calculateActiveTotalsByAccountNameOwner-$accountNameOwner",
-            timeoutSeconds = 45
-        )
-
-        var totalsFuture = BigDecimal.ZERO
-        var totalsCleared = BigDecimal.ZERO
-        var totalsOutstanding = BigDecimal.ZERO
-
-
-        resultSet.forEach { row ->
-            val rowList = row as Array<*>
-            val totals = BigDecimal(rowList[0].toString())
-            when (val transactionState = rowList[2].toString()) {
-                "future" -> totalsFuture = totals.setScale(2, RoundingMode.HALF_UP)
-                "cleared" -> totalsCleared = totals.setScale(2, RoundingMode.HALF_UP)
-                "outstanding" -> totalsOutstanding = totals.setScale(2, RoundingMode.HALF_UP)
-                else -> {
-                    // Handle unexpected transaction states.  Log an error, throw an exception, or ignore.
-                    logger.warn("Unexpected transaction state: $transactionState")
-                }
-            }
-        }
-
-        val grandTotal = (totalsFuture + totalsCleared + totalsOutstanding).setScale(2, RoundingMode.HALF_UP)
-
-        return Totals(
-            totalsFuture = totalsFuture,
-            totalsCleared = totalsCleared,
-            totals = grandTotal,  // Correctly set the grand total
-            totalsOutstanding = totalsOutstanding
-        )
+        return calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
     }
 
     @Timed
@@ -288,8 +250,8 @@ open class TransactionService(
         val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
         //val rawImage = Base64Utils.decodeFromString(imageBase64String)
         val rawImage = Base64.getDecoder().decode(imageBase64String)
-        val imageFormatType = getImageFormatType(rawImage)
-        val thumbnail = createThumbnail(rawImage, imageFormatType)
+        val imageFormatType = imageProcessingService.getImageFormatType(rawImage)
+        val thumbnail = imageProcessingService.createThumbnail(rawImage, imageFormatType)
         val optionalTransaction = transactionRepository.findByGuid(guid)
         if (optionalTransaction.isPresent) {
             val transaction = optionalTransaction.get()
@@ -385,44 +347,12 @@ open class TransactionService(
 
     @Timed
     override fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
-        try {
-            val bufferedImage = ImageIO.read(ByteArrayInputStream(rawImage))
-
-            val thumbnail = Thumbnails.of(bufferedImage).size(100, 100).asBufferedImage()
-
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(thumbnail, imageFormatType.toString(), byteArrayOutputStream)
-            return byteArrayOutputStream.toByteArray()
-        } catch (iIOException: IIOException) {
-            logger.warn("IIOException, ${iIOException.message}")
-            //TODO: need to fix the cause of this exception
-            meterService.incrementExceptionCaughtCounter("IIOException")
-        }
-        return byteArrayOf()
+        return imageProcessingService.createThumbnail(rawImage, imageFormatType)
     }
 
     @Timed
     override fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
-        val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(rawImage))
-        val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
-        var format = ImageFormatType.Undefined
-
-        imageReaders.forEachRemaining { imageReader ->
-            format = when {
-                imageReader.formatName.lowercase() == "jpeg" -> {
-                    logger.info(imageReader.formatName)
-                    ImageFormatType.Jpeg
-                }
-                imageReader.formatName.lowercase() == "png" -> {
-                    logger.info(imageReader.formatName)
-                    ImageFormatType.Png
-                }
-                else -> {
-                    ImageFormatType.Undefined
-                }
-            }
-        }
-        return format
+        return imageProcessingService.getImageFormatType(rawImage)
     }
 
     @Timed

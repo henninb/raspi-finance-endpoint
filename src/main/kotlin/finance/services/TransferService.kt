@@ -9,7 +9,7 @@ import java.sql.Timestamp
 import java.util.*
 import jakarta.validation.ConstraintViolation
 
-@Service
+@Service("legacyTransferService")
 open class TransferService(
     private var transferRepository: TransferRepository,
     private var transactionService: TransactionService,

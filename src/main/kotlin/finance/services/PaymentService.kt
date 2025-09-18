@@ -10,7 +10,7 @@ import java.util.*
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 
-@Service
+@Service("legacyPaymentService")
 open class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,

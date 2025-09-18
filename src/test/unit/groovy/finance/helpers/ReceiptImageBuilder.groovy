@@ -5,6 +5,7 @@ import finance.domain.ReceiptImage
 
 // curl -k --header "Content-Type: application/json" 'https://localhost:8080/receipt/image/insert' -X POST -d '{"activeStatus":true,"transactionId": 23189, "image":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==" }'
 class ReceiptImageBuilder {
+    Long receiptImageId = 0L
     Long transactionId = 22530
     Boolean activeStatus = true
     ImageFormatType imageFormatType = ImageFormatType.Png
@@ -18,6 +19,7 @@ class ReceiptImageBuilder {
 
     ReceiptImage build() {
         ReceiptImage receiptImage = new ReceiptImage().with {
+            receiptImageId = this.receiptImageId
             transactionId = this.transactionId
             activeStatus = this.activeStatus
             imageFormatType = this.imageFormatType
@@ -50,6 +52,11 @@ class ReceiptImageBuilder {
 
     ReceiptImageBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
+        return this
+    }
+
+    ReceiptImageBuilder withReceiptImageId(Long receiptImageId) {
+        this.receiptImageId = receiptImageId
         return this
     }
 }

@@ -39,7 +39,19 @@ class BaseServiceSpec extends Specification {
     protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
     protected AccountService accountService = new AccountService(accountRepositoryMock)
     protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock)
-    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, descriptionService, receiptImageServiceMock)
+    protected ImageProcessingService imageProcessingService = new ImageProcessingService() {
+        {
+            validator = validatorMock
+            meterService = BaseServiceSpec.this.meterService
+        }
+    }
+    protected CalculationService calculationService = new CalculationService(transactionRepositoryMock) {
+        {
+            validator = validatorMock
+            meterService = BaseServiceSpec.this.meterService
+        }
+    }
+    protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, descriptionService, receiptImageServiceMock, imageProcessingService, calculationService)
     protected ParameterService parameterService = new ParameterService(parameterRepositoryMock)
     protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService)
     protected ValidationAmountService validationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock) {

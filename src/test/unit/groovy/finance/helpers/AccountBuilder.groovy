@@ -7,6 +7,7 @@ import java.sql.Timestamp
 
 class AccountBuilder {
 
+    Long accountId = 0L
     String accountNameOwner = 'foo_brian'
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
@@ -15,6 +16,8 @@ class AccountBuilder {
     BigDecimal outstanding = new BigDecimal(0)
     BigDecimal cleared = new BigDecimal(0)
     Timestamp dateClosed = new Timestamp(0)
+    Timestamp dateAdded = new Timestamp(System.currentTimeMillis())
+    Timestamp dateUpdated = new Timestamp(System.currentTimeMillis())
 
     static AccountBuilder builder() {
         return new AccountBuilder()
@@ -22,6 +25,7 @@ class AccountBuilder {
 
     Account build() {
         Account account = new Account().with {
+            accountId = this.accountId
             accountNameOwner = this.accountNameOwner
             accountType = this.accountType
             activeStatus = this.activeStatus
@@ -30,6 +34,8 @@ class AccountBuilder {
             outstanding = this.outstanding
             cleared = this.cleared
             dateClosed = this.dateClosed
+            dateAdded = this.dateAdded
+            dateUpdated = this.dateUpdated
             return it
         }
         return account
@@ -72,6 +78,21 @@ class AccountBuilder {
 
     AccountBuilder withCleared(BigDecimal cleared) {
         this.cleared = cleared
+        return this
+    }
+
+    AccountBuilder withAccountId(Long accountId) {
+        this.accountId = accountId
+        return this
+    }
+
+    AccountBuilder withDateAdded(Timestamp dateAdded) {
+        this.dateAdded = dateAdded
+        return this
+    }
+
+    AccountBuilder withDateUpdated(Timestamp dateUpdated) {
+        this.dateUpdated = dateUpdated
         return this
     }
 
