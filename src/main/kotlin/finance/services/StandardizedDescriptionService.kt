@@ -127,6 +127,13 @@ class StandardizedDescriptionService(
                 }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
+            is ServiceResult.BusinessError -> {
+                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
+                } else {
+                    throw RuntimeException("Business error: ${result.message}")
+                }
+            }
             else -> throw RuntimeException("Failed to insert description: ${result}")
         }
     }
@@ -136,6 +143,16 @@ class StandardizedDescriptionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw RuntimeException("Description not updated as the description does not exist: ${description.descriptionId}.")
+            is ServiceResult.BusinessError -> {
+                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
+                } else {
+                    throw RuntimeException("Business error: ${result.message}")
+                }
+            }
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ValidationException("Validation failed: ${result.errors}")
+            }
             else -> throw RuntimeException("Failed to update description: ${result}")
         }
     }
@@ -158,27 +175,38 @@ class StandardizedDescriptionService(
     }
 
     override fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
-        // Find target description by name
-        val targetDescription = descriptionRepository.findByDescriptionName(targetName).orElseThrow {
-            RuntimeException("Target description $targetName not found")
+        // Normalize target name (trim whitespace and convert to lowercase)
+        val normalizedTargetName = targetName.trim().lowercase()
+
+        // Find target description by normalized name
+        val targetDescription = descriptionRepository.findByDescriptionName(normalizedTargetName).orElseThrow {
+            RuntimeException("Target description $normalizedTargetName not found")
         }
 
-        logger.info("Merging descriptions: ${sourceNames.joinToString(", ")} into $targetName")
+        logger.info("Merging descriptions: ${sourceNames.joinToString(", ")} into $normalizedTargetName")
 
         var totalMergedCount = targetDescription.descriptionCount
 
-        // Process each source description
+        // Process each source description, with normalization for self-merge detection
         sourceNames.forEach { sourceName ->
+            val normalizedSourceName = sourceName.trim().lowercase()
+
+            // Skip self-merge when normalized source equals normalized target
+            if (normalizedSourceName == normalizedTargetName) {
+                logger.info("Skipping self-merge: $sourceName normalizes to same as target $normalizedTargetName")
+                return@forEach
+            }
+
             val sourceDescription = descriptionRepository.findByDescriptionName(sourceName).orElseThrow {
                 RuntimeException("Source description $sourceName not found")
             }
 
             // Reassign transactions from source to target
             val transactionsToUpdate = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(sourceName, true)
-            logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $sourceName to $targetName")
+            logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $sourceName to $normalizedTargetName")
 
             transactionsToUpdate.forEach { transaction ->
-                transaction.description = targetName
+                transaction.description = normalizedTargetName
                 transactionRepository.saveAndFlush(transaction)
             }
 
@@ -187,6 +215,7 @@ class StandardizedDescriptionService(
 
             // Mark source description as inactive
             sourceDescription.activeStatus = false
+            descriptionRepository.saveAndFlush(sourceDescription)
         }
 
         // Update target description with merged count
@@ -194,7 +223,7 @@ class StandardizedDescriptionService(
 
         // Save the updated target description
         val mergedDescription = descriptionRepository.saveAndFlush(targetDescription)
-        logger.info("Successfully merged descriptions ${sourceNames.joinToString(", ")} into $targetName")
+        logger.info("Successfully merged descriptions ${sourceNames.joinToString(", ")} into $normalizedTargetName")
 
         return mergedDescription
     }

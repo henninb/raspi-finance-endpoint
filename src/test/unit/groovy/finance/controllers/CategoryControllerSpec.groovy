@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Category
-import finance.services.CategoryService
+import finance.services.ICategoryService
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,7 +11,7 @@ import spock.lang.Subject
 
 class CategoryControllerSpec extends Specification {
 
-    CategoryService categoryService = GroovyMock(CategoryService)
+    ICategoryService categoryService = Mock(ICategoryService)
 
     @Subject
     CategoryController controller = new CategoryController(categoryService)

@@ -1,14 +1,14 @@
 package finance.controllers
 
 import finance.domain.Description
-import finance.services.DescriptionService
+import finance.services.IDescriptionService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class DescriptionControllerMoreSpec extends Specification {
 
-    def service = Mock(DescriptionService)
+    def service = Mock(IDescriptionService)
     def controller = new DescriptionController(service)
 
     void "findAllActive returns 200 with list (standardized)"() {

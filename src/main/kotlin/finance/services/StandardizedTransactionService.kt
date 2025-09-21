@@ -21,8 +21,8 @@ import java.util.*
 class StandardizedTransactionService(
     private val transactionRepository: TransactionRepository,
     private val accountService: AccountService,
-    private val categoryService: CategoryService,
-    private val descriptionService: DescriptionService,
+    private val categoryService: ICategoryService,
+    private val descriptionService: IDescriptionService,
     private val receiptImageService: ReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService

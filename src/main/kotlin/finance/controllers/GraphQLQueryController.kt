@@ -6,8 +6,8 @@ import finance.domain.Description
 import finance.domain.Payment
 import finance.domain.Transfer
 import finance.services.AccountService
-import finance.services.CategoryService
-import finance.services.DescriptionService
+import finance.services.ICategoryService
+import finance.services.IDescriptionService
 import finance.services.PaymentService
 import finance.services.TransferService
 import org.apache.logging.log4j.LogManager
@@ -19,8 +19,8 @@ import org.springframework.stereotype.Controller
 @Controller
 class GraphQLQueryController(
     private val accountService: AccountService,
-    private val categoryService: CategoryService,
-    private val descriptionService: DescriptionService,
+    private val categoryService: ICategoryService,
+    private val descriptionService: IDescriptionService,
     private val paymentService: PaymentService,
     private val transferService: TransferService
 ) {

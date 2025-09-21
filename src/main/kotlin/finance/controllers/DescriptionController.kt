@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.Description
 import finance.domain.MergeDescriptionsRequest
-import finance.services.DescriptionService
+import finance.services.IDescriptionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -13,7 +13,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/description")
-class DescriptionController(private val descriptionService: DescriptionService) :
+class DescriptionController(private val descriptionService: IDescriptionService) :
     StandardizedBaseController(), StandardRestController<Description, String> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
