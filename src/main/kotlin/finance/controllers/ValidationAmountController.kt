@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-import finance.services.ValidationAmountService
+import finance.services.IValidationAmountService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -13,7 +13,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/validation/amount")
-class ValidationAmountController(private var validationAmountService: ValidationAmountService) :
+class ValidationAmountController(private var validationAmountService: IValidationAmountService) :
     StandardizedBaseController(), StandardRestController<ValidationAmount, Long> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====

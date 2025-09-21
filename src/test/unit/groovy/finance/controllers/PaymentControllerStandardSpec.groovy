@@ -1,14 +1,14 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.PaymentService
+import finance.services.IPaymentService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class PaymentControllerStandardSpec extends Specification {
 
-    def service = Mock(PaymentService)
+    def service = Mock(IPaymentService)
     def controller = new PaymentController(service)
 
     void "standardized update returns 404 then 200"() {

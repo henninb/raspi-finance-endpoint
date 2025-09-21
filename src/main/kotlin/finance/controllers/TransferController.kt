@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Transfer
-import finance.services.TransferService
+import finance.services.ITransferService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +12,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/transfer")
-class TransferController(private var transferService: TransferService) :
+class TransferController(private var transferService: ITransferService) :
     StandardizedBaseController(), StandardRestController<Transfer, Long> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -121,7 +121,7 @@ class TransferController(private var transferService: TransferService) :
      * Maintains original behavior and return patterns
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertTransfer(@RequestBody transfer: Transfer): ResponseEntity<Transfer> {
+    fun insertTransfer(@Valid @RequestBody transfer: Transfer): ResponseEntity<Transfer> {
         return try {
             logger.info("Inserting transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount} (legacy endpoint)")
             val transferResponse = transferService.insertTransfer(transfer)

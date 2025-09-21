@@ -14,8 +14,8 @@ import java.util.Optional
 class StandardizedTransferServiceSpec extends BaseServiceSpec {
 
     def transferRepositoryMock = Mock(TransferRepository)
-    def transactionServiceMock = Mock(TransactionService)
-    def accountServiceMock = Mock(AccountService)
+    def transactionServiceMock = Mock(ITransactionService)
+    def accountServiceMock = Mock(IAccountService)
     def standardizedTransferService = new StandardizedTransferService(transferRepositoryMock, transactionServiceMock, accountServiceMock)
 
     void setup() {
@@ -331,7 +331,7 @@ class StandardizedTransferServiceSpec extends BaseServiceSpec {
         accountServiceMock.account(transfer.sourceAccount) >> Optional.of(mockAccount)
         accountServiceMock.account(transfer.destinationAccount) >> Optional.of(mockAccount)
         transactionServiceMock.insertTransaction(_) >> {}
-        transferRepositoryMock.saveAndFlush(transfer) >> savedTransfer
+        transferRepositoryMock.save(transfer) >> savedTransfer
         def result = standardizedTransferService.insertTransfer(transfer)
 
         then:

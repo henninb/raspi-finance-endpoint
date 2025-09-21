@@ -1,14 +1,14 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.PaymentService
+import finance.services.IPaymentService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class PaymentControllerMoreSpec extends Specification {
 
-    def service = Mock(PaymentService)
+    def service = Mock(IPaymentService)
     def controller = new PaymentController(service)
 
     void "selectAllPayments returns 200 and list"() {

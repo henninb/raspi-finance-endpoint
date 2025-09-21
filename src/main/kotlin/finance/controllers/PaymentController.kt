@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.PaymentService
+import finance.services.IPaymentService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +12,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/payment")
-class PaymentController(private val paymentService: PaymentService) :
+class PaymentController(private val paymentService: IPaymentService) :
     StandardizedBaseController(), StandardRestController<Payment, Long> {
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====

@@ -17,8 +17,8 @@ import java.util.*
 @org.springframework.context.annotation.Primary
 class StandardizedPaymentService(
     private val paymentRepository: PaymentRepository,
-    private val transactionService: TransactionService,
-    private val accountService: AccountService
+    private val transactionService: ITransactionService,
+    private val accountService: IAccountService
 ) : StandardizedBaseService<Payment, Long>(), IPaymentService {
 
     override fun getEntityName(): String = "Payment"
@@ -106,11 +106,6 @@ class StandardizedPaymentService(
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
 
-        val constraintViolations = validator.validate(payment)
-        if (constraintViolations.isNotEmpty()) {
-            throw jakarta.validation.ConstraintViolationException("Validation failed", constraintViolations)
-        }
-
         // Process destination account - create if missing
         processPaymentAccount(payment.destinationAccount)
 
@@ -133,12 +128,20 @@ class StandardizedPaymentService(
         transactionService.insertTransaction(transactionDebit)
         payment.guidDestination = transactionCredit.guid
         payment.guidSource = transactionDebit.guid
-        val timestamp = Timestamp(System.currentTimeMillis())
-        payment.dateUpdated = timestamp
-        payment.dateAdded = timestamp
-        val savedPayment = paymentRepository.saveAndFlush(payment)
-        logger.info("Successfully created payment with ID: ${savedPayment.paymentId}")
-        return savedPayment
+
+        // Use the standardized save method and handle ServiceResult
+        val result = save(payment)
+        return when (result) {
+            is ServiceResult.Success -> result.data
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
+            }
+            is ServiceResult.BusinessError -> {
+                // Handle data integrity violations (e.g., duplicate payments)
+                throw org.springframework.dao.DataIntegrityViolationException(result.message)
+            }
+            else -> throw RuntimeException("Failed to insert payment: ${result}")
+        }
     }
 
     override fun updatePayment(paymentId: Long, patch: Payment): Payment {

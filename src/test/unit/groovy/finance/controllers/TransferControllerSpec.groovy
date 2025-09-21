@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Transfer
-import finance.services.TransferService
+import finance.services.ITransferService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.server.ResponseStatusException
@@ -10,7 +10,7 @@ import spock.lang.Subject
 
 class TransferControllerSpec extends Specification {
 
-    TransferService transferService = GroovyMock(TransferService)
+    ITransferService transferService = GroovyMock(ITransferService)
 
     @Subject
     TransferController controller = new TransferController(transferService)

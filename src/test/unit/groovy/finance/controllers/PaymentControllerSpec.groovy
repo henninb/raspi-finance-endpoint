@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.PaymentService
+import finance.services.IPaymentService
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,7 +14,7 @@ import java.time.LocalDate
 
 class PaymentControllerSpec extends Specification {
 
-    PaymentService paymentService = GroovyMock(PaymentService)
+    IPaymentService paymentService = GroovyMock(IPaymentService)
 
     @Subject
     PaymentController controller = new PaymentController(paymentService)
