@@ -179,10 +179,10 @@ class PaymentServiceSpec extends BaseServiceSpec {
         Payment result = paymentService.insertPayment(payment)
 
         then:
-        1 * validatorMock.validate(payment) >> constraintViolations
         2 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(account)
         1 * accountServiceMock.account(payment.sourceAccount) >> Optional.of(account)
         2 * transactionServiceMock.insertTransaction(_ as Transaction)
+        1 * validatorMock.validate(payment) >> constraintViolations
         1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
         result.paymentId == payment.paymentId
     }
@@ -196,6 +196,9 @@ class PaymentServiceSpec extends BaseServiceSpec {
         paymentService.insertPayment(payment)
 
         then:
+        2 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(AccountBuilder.builder().withAccountType(AccountType.Credit).build())
+        1 * accountServiceMock.account(payment.sourceAccount) >> Optional.of(AccountBuilder.builder().withAccountType(AccountType.Credit).build())
+        2 * transactionServiceMock.insertTransaction(_ as Transaction)
         1 * validatorMock.validate(payment) >> constraintViolations
         thrown(ValidationException)
     }
@@ -210,10 +213,11 @@ class PaymentServiceSpec extends BaseServiceSpec {
         paymentService.insertPayment(payment)
 
         then:
-        1 * validatorMock.validate(payment) >> constraintViolations
-        2 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(account)
+        1 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(account)
         1 * accountServiceMock.account(payment.sourceAccount) >> Optional.of(account)
+        1 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(account)
         thrown(ValidationException)
+        0 * validatorMock.validate(_)
     }
 
     void 'test populateDebitTransaction - positive amount'() {

@@ -114,7 +114,6 @@ class PaymentServiceMoreSpec extends BaseServiceSpec {
         def result = paymentService.insertPayment(payment)
 
         then:
-        1 * validatorMock.validate(payment) >> ([] as Set)
         // destination account missing then created
         1 * accountServiceMock.account(payment.destinationAccount) >> Optional.empty()
         1 * accountServiceMock.insertAccount({ it.accountNameOwner == payment.destinationAccount && it.accountType == AccountType.Credit }) >> { Account a -> a }
@@ -124,8 +123,36 @@ class PaymentServiceMoreSpec extends BaseServiceSpec {
         // destination check again after creation
         1 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(AccountBuilder.builder().withAccountType(AccountType.Credit).build())
         2 * transactionServiceMock.insertTransaction(_ as Transaction)
+        1 * validatorMock.validate(payment) >> ([] as Set)
         1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
         result.is(payment)
+    }
+
+    void "insertPayment validates after GUIDs are assigned"() {
+        given:
+        // Build a payment like the API payload (blank GUIDs)
+        def p = new Payment()
+        p.sourceAccount = 'bcu-checking_brian'
+        p.destinationAccount = 'discoverit_brian'
+        p.transactionDate = java.sql.Date.valueOf('2025-10-01')
+        p.amount = new java.math.BigDecimal('60.00')
+
+        def credit = AccountBuilder.builder().withAccountType(AccountType.Credit).build()
+        def uuidRegex = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/
+
+        when:
+        def result = paymentService.insertPayment(p)
+
+        then:
+        1 * accountServiceMock.account(p.destinationAccount) >> Optional.of(credit)
+        1 * accountServiceMock.account(p.sourceAccount) >> Optional.of(credit)
+        1 * accountServiceMock.account(p.destinationAccount) >> Optional.of(credit)
+        2 * transactionServiceMock.insertTransaction(_ as Transaction)
+        1 * validatorMock.validate({ Payment pay ->
+            pay.guidSource ==~ uuidRegex && pay.guidDestination ==~ uuidRegex
+        }) >> ([] as Set)
+        1 * paymentRepositoryMock.saveAndFlush(p) >> p
+        result.is(p)
     }
 
     void "updatePayment amount change flips both transaction amounts negative when positive"() {
