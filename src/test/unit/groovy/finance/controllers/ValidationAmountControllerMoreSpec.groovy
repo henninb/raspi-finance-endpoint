@@ -2,14 +2,14 @@ package finance.controllers
 
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-import finance.services.ValidationAmountService
+import finance.services.IValidationAmountService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class ValidationAmountControllerMoreSpec extends Specification {
 
-    def service = Mock(ValidationAmountService)
+    def service = Mock(IValidationAmountService)
     def controller = new ValidationAmountController(service)
 
     void "findAllActive returns 200 with list (standardized)"() {

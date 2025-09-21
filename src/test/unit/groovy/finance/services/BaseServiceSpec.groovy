@@ -33,11 +33,11 @@ class BaseServiceSpec extends Specification {
 
     protected ReceiptImageService receiptImageServiceMock = GroovyMock(ReceiptImageService)
     protected ICategoryService categoryServiceMock = Mock(ICategoryService)
-    protected AccountService accountServiceMock = GroovyMock(AccountService)
+    protected IAccountService accountServiceMock = Mock(IAccountService)
 
     protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
     protected StandardizedDescriptionService descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
-    protected AccountService accountService = new AccountService(accountRepositoryMock)
+    protected StandardizedAccountService accountService = new StandardizedAccountService(accountRepositoryMock)
     protected StandardizedCategoryService categoryService = new StandardizedCategoryService(categoryRepositoryMock, transactionRepositoryMock)
     protected ImageProcessingService imageProcessingService = new ImageProcessingService() {
         {
@@ -53,13 +53,8 @@ class BaseServiceSpec extends Specification {
     }
     protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, descriptionService, receiptImageServiceMock, imageProcessingService, calculationService)
     protected StandardizedParameterService parameterService = new StandardizedParameterService(parameterRepositoryMock)
-    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService)
-    protected ValidationAmountService validationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock) {
-        {
-            validator = validatorMock
-            meterService = BaseServiceSpec.this.meterService
-        }
-    }
+    protected StandardizedPaymentService paymentService = new StandardizedPaymentService(paymentRepositoryMock, transactionService, accountService)
+    protected IValidationAmountService validationAmountServiceMock = Mock(IValidationAmountService)
 
     //TODO: turn this into a method
     protected Tag validationExceptionTag = Tag.of(EXCEPTION_NAME_TAG, 'ValidationException')

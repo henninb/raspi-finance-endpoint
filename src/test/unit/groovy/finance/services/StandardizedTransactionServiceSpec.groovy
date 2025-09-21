@@ -17,7 +17,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
 
     // Declare all required mocks at class level
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def accountServiceMock = Mock(AccountService)
+    def accountServiceMock = Mock(IAccountService)
     def categoryServiceMock = Mock(ICategoryService)
     def descriptionServiceMock = Mock(IDescriptionService)
     def receiptImageServiceMock = Mock(ReceiptImageService)

@@ -5,11 +5,11 @@ import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Payment
 import finance.domain.Transfer
-import finance.services.AccountService
+import finance.services.IAccountService
 import finance.services.ICategoryService
 import finance.services.IDescriptionService
-import finance.services.PaymentService
-import finance.services.TransferService
+import finance.services.IPaymentService
+import finance.services.ITransferService
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.graphql.data.method.annotation.Argument
@@ -18,11 +18,11 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class GraphQLQueryController(
-    private val accountService: AccountService,
+    private val accountService: IAccountService,
     private val categoryService: ICategoryService,
     private val descriptionService: IDescriptionService,
-    private val paymentService: PaymentService,
-    private val transferService: TransferService
+    private val paymentService: IPaymentService,
+    private val transferService: ITransferService
 ) {
 
     companion object {

@@ -22,11 +22,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
     void setup() {
         transactionService.validator = validatorMock
         descriptionService.validator = validatorMock
-        transactionService.accountService = accountServiceMock
-        transactionService.categoryService = categoryServiceMock
-        transactionService.descriptionService = descriptionService
-        transactionService.receiptImageService = receiptImageServiceMock
-        transactionService.transactionRepository = transactionRepositoryMock
 
         // Use a real SimpleMeterRegistry instead of a mock to handle Counter.Builder properly
         MeterRegistry realMeterRegistry = new SimpleMeterRegistry()

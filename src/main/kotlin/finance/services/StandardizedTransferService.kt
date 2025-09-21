@@ -17,8 +17,8 @@ import java.util.*
 @org.springframework.context.annotation.Primary
 class StandardizedTransferService(
     private val transferRepository: TransferRepository,
-    private val transactionService: TransactionService,
-    private val accountService: AccountService
+    private val transactionService: ITransactionService,
+    private val accountService: IAccountService
 ) : StandardizedBaseService<Transfer, Long>(), ITransferService {
 
     override fun getEntityName(): String = "Transfer"
@@ -103,12 +103,6 @@ class StandardizedTransferService(
         val transactionSource = Transaction()
         val transactionDestination = Transaction()
 
-        // Validate transfer
-        val constraintViolations = validator.validate(transfer)
-        if (constraintViolations.isNotEmpty()) {
-            throw jakarta.validation.ConstraintViolationException("Validation failed", constraintViolations)
-        }
-
         // Validate source account
         val optionalSourceAccount = accountService.account(transfer.sourceAccount)
         if (!optionalSourceAccount.isPresent) {
@@ -133,14 +127,20 @@ class StandardizedTransferService(
 
         transfer.guidSource = transactionSource.guid
         transfer.guidDestination = transactionDestination.guid
-        logger.info("Creating transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transfer.dateUpdated = timestamp
-        transfer.dateAdded = timestamp
 
-        val savedTransfer = transferRepository.saveAndFlush(transfer)
-        logger.info("Successfully created transfer with ID: ${savedTransfer.transferId}")
-        return savedTransfer
+        // Use the standardized save method and handle ServiceResult
+        val result = save(transfer)
+        return when (result) {
+            is ServiceResult.Success -> result.data
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
+            }
+            is ServiceResult.BusinessError -> {
+                // Handle data integrity violations (e.g., duplicate transfers)
+                throw org.springframework.dao.DataIntegrityViolationException(result.message)
+            }
+            else -> throw RuntimeException("Failed to insert transfer: ${result}")
+        }
     }
 
     override fun updateTransfer(transfer: Transfer): Transfer {
