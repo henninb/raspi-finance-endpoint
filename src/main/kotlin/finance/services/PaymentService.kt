@@ -15,7 +15,7 @@ open class PaymentService(
     private var paymentRepository: PaymentRepository,
     private var transactionService: TransactionService,
     private var accountService: AccountService,
-    private var parameterService: ParameterService
+    private var parameterService: IParameterService
 ) : IPaymentService, BaseService() {
 
     @Timed

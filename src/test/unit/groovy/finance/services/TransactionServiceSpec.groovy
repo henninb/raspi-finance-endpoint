@@ -27,7 +27,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transactionService.descriptionService = descriptionService
         transactionService.receiptImageService = receiptImageServiceMock
         transactionService.transactionRepository = transactionRepositoryMock
-        descriptionService.descriptionRepository = descriptionRepositoryMock
 
         // Use a real SimpleMeterRegistry instead of a mock to handle Counter.Builder properly
         MeterRegistry realMeterRegistry = new SimpleMeterRegistry()

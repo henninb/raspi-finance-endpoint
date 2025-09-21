@@ -339,15 +339,18 @@ class DescriptionControllerIsolatedSpec extends BaseControllerSpec {
         r1.statusCode == HttpStatus.CREATED
         r2.statusCode == HttpStatus.CREATED
 
+        and: 'create target description'
+        Description targetDesc = SmartDescriptionBuilder.builderForOwner(testOwner)
+                .withDescriptionName(target)
+                .buildAndValidate()
+        insertEndpoint(endpointName, targetDesc.toString())
+
         when: 'call merge endpoint'
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        String payload = """{
-                "sourceNames":["${src1}","${src2}"],
-                "targetName":"${target}"
-        }"""
-        HttpEntity entity = new HttpEntity<>(payload, headers)
+        def mergeRequest = new finance.domain.MergeDescriptionsRequest([src1, src2], target)
+        HttpEntity entity = new HttpEntity<>(mergeRequest.toString(), headers)
         ResponseEntity<String> mergeResponse = restTemplate.exchange(
                 createURLWithPort('/api/description/merge'), HttpMethod.POST, entity, String)
 
@@ -405,15 +408,18 @@ class DescriptionControllerIsolatedSpec extends BaseControllerSpec {
         then:
         r.statusCode == HttpStatus.CREATED
 
+        and: 'create target description with normalized name'
+        Description targetDescription = SmartDescriptionBuilder.builderForOwner(testOwner)
+                .withDescriptionName(target)
+                .buildAndValidate()
+        insertEndpoint(endpointName, targetDescription.toString())
+
         when: 'call merge with normalization'
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        String payload = """{
-                "sourceNames":["${srcSame}","${srcOther}"],
-                "targetName":"${targetRaw}"
-        }"""
-        HttpEntity entity = new HttpEntity<>(payload, headers)
+        def mergeRequest = new finance.domain.MergeDescriptionsRequest([srcSame, srcOther], targetRaw)
+        HttpEntity entity = new HttpEntity<>(mergeRequest.toString(), headers)
         ResponseEntity<String> mergeResponse = restTemplate.exchange(
                 createURLWithPort('/api/description/merge'), HttpMethod.POST, entity, String)
 

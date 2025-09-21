@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Description
-import finance.services.DescriptionService
+import finance.services.IDescriptionService
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -11,7 +11,7 @@ import spock.lang.Subject
 
 class DescriptionControllerSpec extends Specification {
 
-    DescriptionService descriptionService = GroovyMock(DescriptionService)
+    IDescriptionService descriptionService = Mock(IDescriptionService)
 
     @Subject
     DescriptionController controller = new DescriptionController(descriptionService)

@@ -17,7 +17,7 @@ import java.sql.Timestamp
 class PaymentServiceSpec extends BaseServiceSpec {
     // Define missing mocks used in setup
     protected TransactionService transactionServiceMock = GroovyMock(TransactionService)
-    protected ParameterService parameterServiceMock = GroovyMock(ParameterService)
+    protected IParameterService parameterServiceMock = GroovyMock(IParameterService)
 
     void setup() {
         paymentService.validator = validatorMock

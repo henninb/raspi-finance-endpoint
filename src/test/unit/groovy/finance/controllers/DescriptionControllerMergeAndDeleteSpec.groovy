@@ -2,14 +2,14 @@ package finance.controllers
 
 import finance.domain.Description
 import finance.domain.MergeDescriptionsRequest
-import finance.services.DescriptionService
+import finance.services.IDescriptionService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class DescriptionControllerMergeAndDeleteSpec extends Specification {
 
-    def service = Mock(DescriptionService)
+    def service = Mock(IDescriptionService)
     def controller = new DescriptionController(service)
 
     void "deleteByDescription legacy returns 404 then 200"() {

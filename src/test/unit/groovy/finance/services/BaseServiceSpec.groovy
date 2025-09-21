@@ -32,13 +32,13 @@ class BaseServiceSpec extends Specification {
 
 
     protected ReceiptImageService receiptImageServiceMock = GroovyMock(ReceiptImageService)
-    protected CategoryService categoryServiceMock = GroovyMock(CategoryService)
+    protected ICategoryService categoryServiceMock = Mock(ICategoryService)
     protected AccountService accountServiceMock = GroovyMock(AccountService)
 
     protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
-    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
+    protected StandardizedDescriptionService descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
     protected AccountService accountService = new AccountService(accountRepositoryMock)
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock)
+    protected StandardizedCategoryService categoryService = new StandardizedCategoryService(categoryRepositoryMock, transactionRepositoryMock)
     protected ImageProcessingService imageProcessingService = new ImageProcessingService() {
         {
             validator = validatorMock
@@ -52,7 +52,7 @@ class BaseServiceSpec extends Specification {
         }
     }
     protected TransactionService transactionService = new TransactionService(transactionRepositoryMock, accountServiceMock, categoryServiceMock, descriptionService, receiptImageServiceMock, imageProcessingService, calculationService)
-    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock)
+    protected StandardizedParameterService parameterService = new StandardizedParameterService(parameterRepositoryMock)
     protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionService, accountService, parameterService)
     protected ValidationAmountService validationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock) {
         {

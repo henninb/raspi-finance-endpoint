@@ -127,6 +127,13 @@ class StandardizedCategoryService(
                 }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
+            is ServiceResult.BusinessError -> {
+                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
+                } else {
+                    throw RuntimeException("Business error: ${result.message}")
+                }
+            }
             else -> throw RuntimeException("Failed to insert category: ${result}")
         }
     }
@@ -136,6 +143,17 @@ class StandardizedCategoryService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw RuntimeException("Category not updated as the category does not exist: ${category.categoryId}.")
+            is ServiceResult.BusinessError -> {
+                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
+                } else {
+                    throw RuntimeException("Business error: ${result.message}")
+                }
+            }
+            is ServiceResult.ValidationError -> {
+                // Convert to appropriate validation exception
+                throw jakarta.validation.ValidationException("Validation failed: ${result.errors}")
+            }
             else -> throw RuntimeException("Failed to update category: ${result}")
         }
     }

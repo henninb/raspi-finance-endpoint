@@ -6,7 +6,7 @@ import finance.domain.Transaction
 import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
 import finance.services.AccountService
-import finance.services.CategoryService
+import finance.services.ICategoryService
 import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -18,7 +18,7 @@ import spock.lang.Specification
 class DatabaseInsertSpec extends Specification {
 
     @Autowired
-    protected CategoryService categoryService
+    protected ICategoryService categoryService
 
     @Autowired
     protected AccountService accountService
