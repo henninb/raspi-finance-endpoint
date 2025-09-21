@@ -123,8 +123,7 @@ open class PaymentService(
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
 
-        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
-        handleConstraintViolations(constraintViolations, meterService)
+        // Defer validation until after we populate GUIDs and related fields
 
         // Process destination account - create if missing (like TransactionService does)
         processPaymentAccount(payment.destinationAccount)
@@ -152,6 +151,9 @@ open class PaymentService(
         val timestamp = Timestamp(System.currentTimeMillis())
         payment.dateUpdated = timestamp
         payment.dateAdded = timestamp
+        // Now perform bean validation so GUID pattern checks pass
+        val constraintViolations: Set<ConstraintViolation<Payment>> = validator.validate(payment)
+        handleConstraintViolations(constraintViolations, meterService)
         val savedPayment = paymentRepository.saveAndFlush(payment)
         logger.info("Successfully created payment with ID: ${savedPayment.paymentId}")
         return savedPayment
