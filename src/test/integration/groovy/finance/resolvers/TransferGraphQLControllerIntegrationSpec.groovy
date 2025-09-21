@@ -1,9 +1,8 @@
 package finance.resolvers
 
 import finance.BaseIntegrationSpec
-import finance.domain.Account
-import finance.domain.AccountType
 import finance.controllers.TransferGraphQLController
+import finance.domain.Account
 import finance.domain.Transfer
 import finance.repositories.AccountRepository
 import finance.repositories.TransferRepository
@@ -18,23 +17,22 @@ import spock.lang.Shared
 
 import java.math.BigDecimal
 import java.sql.Date
-import java.sql.Timestamp
 import java.util.UUID
 
 /**
  * MIGRATED INTEGRATION TEST - TransferGraphQL Controller with robust, isolated architecture
  *
- * This is the migrated version showing:
+ * This is the migrated version of TransferGraphQLControllerIntegrationSpec showing:
  * ✅ No hardcoded account names - all use testOwner for uniqueness
  * ✅ SmartBuilder pattern with constraint validation
  * ✅ Test isolation - each test gets its own test data
  * ✅ Proper FK relationship management with Account setup
- * ✅ GraphQL controller testing with proper patterns
+ * ✅ GraphQL controller testing with direct injection
  * ✅ Financial validation and consistency
  * ✅ Eliminated shared global state and cleanup issues
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
+class TransferGraphQLControllerIntegrationSpec extends BaseIntegrationSpec {
 
     @Shared
     @Autowired
@@ -56,6 +54,7 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
     @Autowired
     TransactionRepository transactionRepository
 
+    @Shared
     @Autowired
     TransferGraphQLController transferGraphQLController
 
@@ -75,14 +74,14 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
         repositoryContext = testFixtures.createRepositoryTestContext(testOwner)
 
         // Create test accounts using SmartBuilder
-        sourceAccountName = "transfersource_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
-        destinationAccountName = "transferdest_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
+        sourceAccountName = "checking_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
+        destinationAccountName = "savings_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
 
         // Source account (debit - checking)
         Account sourceAccount = SmartAccountBuilder.builderForOwner(testOwner)
-                .withUniqueAccountName("transfersource")
+                .withUniqueAccountName("checking")
                 .asDebit()
-                .withCleared(new BigDecimal("1000.00"))
+                .withCleared(new BigDecimal("3000.00"))
                 .buildAndValidate()
         Account savedSourceAccount = accountRepository.save(sourceAccount)
         sourceAccountId = savedSourceAccount.accountId
@@ -90,9 +89,9 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
 
         // Destination account (debit - savings)
         Account destinationAccount = SmartAccountBuilder.builderForOwner(testOwner)
-                .withUniqueAccountName("transferdest")
+                .withUniqueAccountName("savings")
                 .asDebit()
-                .withCleared(new BigDecimal("500.00"))
+                .withCleared(new BigDecimal("1000.00"))
                 .buildAndValidate()
         Account savedDestAccount = accountRepository.save(destinationAccount)
         destinationAccountId = savedDestAccount.accountId
@@ -102,16 +101,19 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
     def "should fetch all transfers via GraphQL controller with isolated test data"() {
         given: "existing transfers in the database"
         createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("100.00"))
-        createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("200.00"))
+        createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("250.00"))
 
         when: "transfers query is called"
+        if (transferGraphQLController == null) {
+            throw new AssertionError("TransferGraphQLController is null - not properly injected")
+        }
         def transfers = transferGraphQLController.transfers()
 
         then: "should return transfers from database with testOwner isolation"
         transfers.size() >= 2
         transfers.every { it instanceof Transfer }
         transfers.any { it.amount == new BigDecimal("100.00") && it.sourceAccount == sourceAccountName }
-        transfers.any { it.amount == new BigDecimal("200.00") && it.sourceAccount == sourceAccountName }
+        transfers.any { it.amount == new BigDecimal("250.00") && it.sourceAccount == sourceAccountName }
     }
 
     def "should fetch transfer by ID via GraphQL controller with isolated test data"() {
@@ -131,9 +133,9 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
 
     def "should handle transfer not found in database via GraphQL controller"() {
         given: "a non-existent transfer ID"
-        def nonExistentId = 999L
+        def nonExistentId = 999999L
 
-        when: "transfer query is called"
+        when: "transfer query is called with non-existent ID"
         def result = transferGraphQLController.transfer(nonExistentId)
 
         then: "should return null"
@@ -146,7 +148,7 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
             sourceAccount: sourceAccountName,
             destinationAccount: destinationAccountName,
             transactionDate: "2024-01-15",
-            amount: new BigDecimal("300.00")
+            amount: new BigDecimal("250.00")
         )
 
         when: "create transfer mutation is called"
@@ -157,7 +159,7 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
         result.transferId > 0
         result.sourceAccount == sourceAccountName
         result.destinationAccount == destinationAccountName
-        result.amount == new BigDecimal("300.00")
+        result.amount == new BigDecimal("250.00")
         result.transactionDate == Date.valueOf("2024-01-15")
         result.guidSource != null
         result.guidDestination != null
@@ -181,7 +183,7 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
             sourceAccount: "ab", // Invalid - too short (less than 3 characters)
             destinationAccount: destinationAccountName,
             transactionDate: "2024-01-15",
-            amount: new BigDecimal("300.00")
+            amount: new BigDecimal("100.00")
         )
 
         when: "create transfer mutation is called"
@@ -193,7 +195,7 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
 
     def "should delete transfer via GraphQL controller with isolated test data"() {
         given: "an existing transfer in the database"
-        def savedTransfer = createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("250.00"))
+        def savedTransfer = createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("75.00"))
 
         when: "delete transfer mutation is called"
         def result = transferGraphQLController.deleteTransfer(savedTransfer.transferId)
@@ -208,12 +210,17 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
 
     def "should handle delete non-existent transfer via GraphQL controller"() {
         given: "a non-existent transfer ID"
-        def nonExistentId = 999L
+        def nonExistentId = 999999L
+
+        and: "verify controller is injected"
+        if (transferGraphQLController == null) {
+            throw new AssertionError("TransferGraphQLController is null - not properly injected")
+        }
 
         when: "delete transfer mutation is called"
         def result = transferGraphQLController.deleteTransfer(nonExistentId)
 
-        then: "should return false"
+        then: "should return false for non-existent transfer"
         result == false
     }
 
@@ -265,12 +272,14 @@ class TransferGraphQLResolverIntegrationSpec extends BaseIntegrationSpec {
     }
 
     private Transfer createTestTransfer(String sourceAccount, String destinationAccount, BigDecimal amount) {
-        Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
-                .withSourceAccount(sourceAccount)
-                .withDestinationAccount(destinationAccount)
-                .withAmount(amount)
-                .withTransactionDate(Date.valueOf("2024-01-01"))
-                .buildAndValidate()
+        Transfer transfer = new Transfer()
+        transfer.sourceAccount = sourceAccount
+        transfer.destinationAccount = destinationAccount
+        transfer.transactionDate = Date.valueOf("2024-01-01")
+        transfer.amount = amount
+        transfer.guidSource = UUID.randomUUID().toString()
+        transfer.guidDestination = UUID.randomUUID().toString()
+        transfer.activeStatus = true
 
         return transferService.insertTransfer(transfer)
     }

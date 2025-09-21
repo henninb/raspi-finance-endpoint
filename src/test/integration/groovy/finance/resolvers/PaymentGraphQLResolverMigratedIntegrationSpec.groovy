@@ -1,6 +1,7 @@
 package finance.resolvers
 
 import finance.BaseIntegrationSpec
+import finance.controllers.PaymentGraphQLController
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Payment
@@ -54,8 +55,8 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
     @Autowired
     TransactionRepository transactionRepository
 
-    @Shared
-    PaymentGraphQLResolver paymentGraphQLResolver
+    @Autowired
+    PaymentGraphQLController paymentGraphQLController
 
     @Shared
     def repositoryContext
@@ -71,7 +72,6 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
 
     def setupSpec() {
         repositoryContext = testFixtures.createRepositoryTestContext(testOwner)
-        paymentGraphQLResolver = new PaymentGraphQLResolver(paymentService, meterRegistry)
 
         // Create test accounts using SmartBuilder
         sourceAccountName = "checking_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}"
@@ -103,9 +103,11 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("100.00"))
         createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("200.00"))
 
-        when: "payments data fetcher is called"
-        def dataFetcher = paymentGraphQLResolver.payments
-        def payments = dataFetcher.get(null)
+        when: "payments query is called"
+        if (paymentGraphQLController == null) {
+            throw new AssertionError("PaymentGraphQLController is null - not properly injected")
+        }
+        def payments = paymentGraphQLController.payments()
 
         then: "should return payments from database with testOwner isolation"
         payments.size() >= 2
@@ -118,12 +120,8 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         given: "an existing payment in the database"
         def savedPayment = createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("150.00"))
 
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> savedPayment.paymentId }] as graphql.schema.DataFetchingEnvironment
-
-        when: "payment data fetcher is called"
-        def dataFetcher = paymentGraphQLResolver.payment()
-        def result = dataFetcher.get(environment)
+        when: "payment query is called"
+        def result = paymentGraphQLController.payment(savedPayment.paymentId)
 
         then: "should return the specific payment with testOwner-based account names"
         result != null
@@ -135,19 +133,15 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
 
     def "should create payment via GraphQL resolver with SmartBuilder validation"() {
         given: "payment input data with testOwner-based account names"
-        def paymentInput = [
+        def paymentInput = new PaymentGraphQLController.PaymentInput(
             sourceAccount: sourceAccountName,
             destinationAccount: destinationAccountName,
             transactionDate: "2024-01-15",
             amount: new BigDecimal("250.00")
-        ]
-
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> paymentInput }] as graphql.schema.DataFetchingEnvironment
+        )
 
         when: "create payment mutation is called"
-        def dataFetcher = paymentGraphQLResolver.createPayment()
-        def result = dataFetcher.get(environment)
+        def result = paymentGraphQLController.createPayment(paymentInput)
 
         then: "should create and return payment with testOwner isolation"
         result != null
@@ -176,12 +170,8 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         given: "an existing payment in the database"
         def savedPayment = createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("75.00"))
 
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> savedPayment.paymentId }] as graphql.schema.DataFetchingEnvironment
-
         when: "delete payment mutation is called"
-        def dataFetcher = paymentGraphQLResolver.deletePayment()
-        def result = dataFetcher.get(environment)
+        def result = paymentGraphQLController.deletePayment(savedPayment.paymentId)
 
         then: "should successfully delete payment and return true"
         result == true
@@ -193,19 +183,15 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
 
     def "should handle validation errors for invalid payment creation with SmartBuilder constraints"() {
         given: "invalid payment input data (invalid sourceAccount too short)"
-        def paymentInput = [
+        def paymentInput = new PaymentGraphQLController.PaymentInput(
             sourceAccount: "ab", // Invalid - too short (less than 3 characters)
             destinationAccount: destinationAccountName,
             transactionDate: "2024-01-15",
             amount: new BigDecimal("100.00")
-        ]
-
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> paymentInput }] as graphql.schema.DataFetchingEnvironment
+        )
 
         when: "create payment mutation is called"
-        def dataFetcher = paymentGraphQLResolver.createPayment()
-        dataFetcher.get(environment)
+        paymentGraphQLController.createPayment(paymentInput)
 
         then: "should throw runtime exception for validation failure"
         thrown(RuntimeException)
@@ -221,19 +207,15 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         Account savedDebitAccount = accountRepository.save(anotherDebitAccount)
 
         and: "payment input data attempting to pay a debit account"
-        def paymentInput = [
+        def paymentInput = new PaymentGraphQLController.PaymentInput(
             sourceAccount: sourceAccountName,
             destinationAccount: savedDebitAccount.accountNameOwner, // This is a debit account
             transactionDate: "2024-01-15",
             amount: new BigDecimal("100.00")
-        ]
-
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> paymentInput }] as graphql.schema.DataFetchingEnvironment
+        )
 
         when: "create payment mutation is called"
-        def dataFetcher = paymentGraphQLResolver.createPayment()
-        dataFetcher.get(environment)
+        paymentGraphQLController.createPayment(paymentInput)
 
         then: "should throw validation exception for payment to debit account"
         thrown(RuntimeException)
@@ -243,9 +225,8 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         given: "an existing payment in the database"
         createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("50.00"))
 
-        when: "payments data fetcher is called"
-        def dataFetcher = paymentGraphQLResolver.payments
-        def payments = dataFetcher.get(null)
+        when: "payments query is called"
+        def payments = paymentGraphQLController.payments()
 
         then: "should execute successfully with testOwner-based accounts"
         payments != null
@@ -264,8 +245,7 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
         createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("300.25"))
 
         when: "querying all payments for this testOwner"
-        def dataFetcher = paymentGraphQLResolver.payments
-        def payments = dataFetcher.get(null)
+        def payments = paymentGraphQLController.payments()
         def testOwnerPayments = payments.findAll {
             it.sourceAccount.contains(testOwner.replaceAll(/[^a-z]/, ''))
         }

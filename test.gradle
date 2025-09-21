@@ -56,9 +56,15 @@ configurations {
 // Kotlin toolchain is configured in build.gradle for all Kotlin compile tasks.
 
 dependencies {
+    // Align test configurations with Spring Boot dependency management
+    testImplementation(platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}"))
+    integrationTestImplementation(platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}"))
+
     testImplementation("org.apache.groovy:groovy:${groovyVersion}")
     testImplementation("org.apache.groovy:groovy-json:${groovyVersion}")
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testImplementation("org.springframework.security:spring-security-test:${springSecurityVersion}")
+    testImplementation("org.springframework.graphql:spring-graphql-test")
     testImplementation("org.spockframework:spock-core:${spockFrameworkVersion}")
     testImplementation("org.spockframework:spock-spring:${spockFrameworkVersion}")
     testImplementation("org.testcontainers:spock:${testcontainersVersion}")

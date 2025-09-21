@@ -62,27 +62,54 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should reject registration with existing username'() {
-        given: "a user registration payload with existing username using SmartUserBuilder"
-        def user = SmartUserBuilder.builderForOwner(testOwner)
+    void 'should reject registration with existing username using generic error message'() {
+        given: "ensure user exists first by registering them"
+        def firstRegistrationUser = SmartUserBuilder.builderForOwner(testOwner)
             .withUsername(testUsername)
             .withPassword("ValidPass123!")
             .withFirstName("functional")
             .withLastName("test")
             .buildAndValidate()
 
-        String payload = user.toString()
-
-        when: "posting to register endpoint"
+        // First registration to ensure user exists
         headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity firstEntity = new HttpEntity<>(firstRegistrationUser.toString(), headers)
+        ResponseEntity<String> firstResponse = restTemplate.exchange(
+            createURLWithPort("/api/register"),
+            HttpMethod.POST, firstEntity, String)
+
+        // We don't care if this succeeds or fails, we just want to ensure the user exists
+
+        and: "a duplicate user registration payload using SmartUserBuilder"
+        def duplicateUser = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(testUsername)
+            .withPassword("DifferentPass123!")
+            .withFirstName("duplicate")
+            .withLastName("user")
+            .buildAndValidate()
+
+        String payload = duplicateUser.toString()
+
+        when: "posting duplicate registration to register endpoint"
         HttpEntity entity = new HttpEntity<>(payload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
             createURLWithPort("/api/register"),
             HttpMethod.POST, entity, String)
 
-        then: "response should be conflict"
-        response.statusCode == HttpStatus.CONFLICT
+        then: "response should be bad request with generic error message"
+        response.statusCode == HttpStatus.BAD_REQUEST
+        response.body != null
+
+        and: "should contain generic error message that doesn't reveal username existence"
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def jsonResponse = jsonSlurper.parseText(response.body)
+        jsonResponse.error == "Registration failed. Please verify your information and try again."
+
+        and: "should not contain specific information about username existence"
+        !response.body.contains("already exists")
+        !response.body.contains("Username")
+        !response.body.contains("conflict")
         0 * _
     }
 
@@ -270,10 +297,16 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should reject registration with missing required fields'() {
-        given: "registration payload with missing password"
+    void 'should reject registration with missing required fields using generic error message'() {
+        given: "registration payload with missing password field"
         String uniqueUsername = "test_user_no_password_${testOwner.split('_')[1]}"
-        String payload = "{\"username\": \"${uniqueUsername}\"}"
+        String payload = """{
+            "userId": 0,
+            "activeStatus": true,
+            "firstName": "test",
+            "lastName": "user",
+            "username": "${uniqueUsername}"
+        }"""
 
         when: "posting to register endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -283,8 +316,50 @@ class LoginControllerIsolatedSpec extends BaseControllerSpec {
             createURLWithPort("/api/register"),
             HttpMethod.POST, entity, String)
 
-        then: "response should be bad request"
+        then: "response should be bad request with JSON parsing error"
         response.statusCode == HttpStatus.BAD_REQUEST
+        response.body != null
+
+        and: "error message should contain BAD_REQUEST for missing required field"
+        response.body.contains("BAD_REQUEST")
+        response.body.contains("HttpMessageNotReadableException")
+        0 * _
+    }
+
+    void 'should return generic error message for weak password to prevent enumeration'() {
+        given: "registration with weak password pattern that passes entity validation but fails custom validation"
+        String uniqueUsername = "test_weak_pass_${System.currentTimeMillis()}_${testOwner.split('_')[1]}"
+        // Use password that passes entity validation (8+ chars) but fails custom validation (no uppercase/digit/special)
+        def weakPasswordUser = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(uniqueUsername)
+            .withPassword("weakpassword") // 12 chars, passes entity validation but fails custom validation
+            .withFirstName("test")
+            .withLastName("user")
+            .build()
+            .toString()
+
+        when: "posting registration with weak password"
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity entity = new HttpEntity<>(weakPasswordUser, headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            createURLWithPort("/api/register"),
+            HttpMethod.POST, entity, String)
+
+        then: "response should be bad request with generic error message"
+        response.statusCode == HttpStatus.BAD_REQUEST
+        response.body != null
+
+        and: "error message should be generic and not reveal specific validation details"
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def jsonResponse = jsonSlurper.parseText(response.body)
+        jsonResponse.error == "Registration failed. Please verify your information and try again."
+
+        and: "should not contain specific password requirements"
+        !response.body.contains("uppercase")
+        !response.body.contains("lowercase")
+        !response.body.contains("digit")
+        !response.body.contains("special character")
         0 * _
     }
 

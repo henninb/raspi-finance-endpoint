@@ -141,7 +141,9 @@ class LoginController(private val userService: UserService) : BaseController() {
         // Additional password validation for raw passwords (before encoding)
         if (!isValidRawPassword(newUser.password)) {
             logger.warn("Registration failed - invalid password format for username: ${newUser.username}")
-            return ResponseEntity.badRequest().body(mapOf("error" to "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"))
+            // Generic response prevents revealing specific validation requirements
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "Registration failed. Please verify your information and try again."))
         }
 
         logger.info("Register request received: ${newUser.username}")
@@ -149,11 +151,14 @@ class LoginController(private val userService: UserService) : BaseController() {
             // Register the new user
             userService.signUp(newUser)
         } catch (e: IllegalArgumentException) {
-            logger.warn("Registration failed - username already exists: ${newUser.username}")
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to "Username already exists"))
+            logger.warn("Registration failed for username: ${newUser.username} - reason: ${e.message}")
+            // Generic response prevents username enumeration
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "Registration failed. Please verify your information and try again."))
         } catch (e: Exception) {
-            logger.error("Registration error for username: ${newUser.username}")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Registration failed"))
+            logger.error("Registration error for username: ${newUser.username}", e)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "Registration failed. Please verify your information and try again."))
         }
 
         // Auto-login: generate a JWT token for the new user.
