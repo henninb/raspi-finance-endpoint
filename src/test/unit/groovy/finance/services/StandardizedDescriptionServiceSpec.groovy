@@ -329,6 +329,8 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         1 * descriptionRepositoryMock.findByDescriptionName("source2") >> Optional.of(sourceDescription2)
         1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc("source1", true) >> transactions1
         1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc("source2", true) >> transactions2
+        1 * descriptionRepositoryMock.saveAndFlush(sourceDescription1) >> sourceDescription1
+        1 * descriptionRepositoryMock.saveAndFlush(sourceDescription2) >> sourceDescription2
         1 * descriptionRepositoryMock.saveAndFlush(targetDescription) >> targetDescription
         result.descriptionName == "target"
         result.descriptionCount == 18L // 10 + 5 + 3
@@ -373,7 +375,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         standardizedDescriptionService.mergeDescriptions("missingTarget", ["source1"])
 
         then: "should throw RuntimeException"
-        1 * descriptionRepositoryMock.findByDescriptionName("missingTarget") >> Optional.empty()
+        1 * descriptionRepositoryMock.findByDescriptionName("missingtarget") >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }

@@ -7,8 +7,8 @@ import spock.lang.Specification
 class GraphQLQueryControllerSpec extends Specification {
 
     def accountService = Mock(AccountService)
-    def categoryService = Mock(CategoryService)
-    def descriptionService = Mock(DescriptionService)
+    def categoryService = Mock(ICategoryService)
+    def descriptionService = Mock(IDescriptionService)
     def paymentService = Mock(PaymentService)
     def transferService = Mock(TransferService)
 

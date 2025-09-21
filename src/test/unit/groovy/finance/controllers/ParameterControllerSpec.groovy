@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Parameter
-import finance.services.ParameterService
+import finance.services.IParameterService
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,7 +14,7 @@ import java.util.Optional
 
 class ParameterControllerSpec extends Specification {
 
-    ParameterService parameterServiceMock = GroovyMock(ParameterService)
+    IParameterService parameterServiceMock = Mock(IParameterService)
 
     @Subject
     ParameterController parameterController = new ParameterController(parameterServiceMock)

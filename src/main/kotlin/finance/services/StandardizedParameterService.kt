@@ -116,6 +116,10 @@ class StandardizedParameterService(
                 }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
+            is ServiceResult.BusinessError -> {
+                // Handle data integrity violations (e.g., duplicate parameters)
+                throw org.springframework.dao.DataIntegrityViolationException(result.message)
+            }
             else -> throw RuntimeException("Failed to insert parameter: ${result}")
         }
     }

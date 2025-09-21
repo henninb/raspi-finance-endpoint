@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Parameter
-import finance.services.ParameterService
+import finance.services.IParameterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,7 +11,7 @@ import jakarta.validation.Valid
 @CrossOrigin
 @RestController
 @RequestMapping("/api/parameter")
-class ParameterController(private val parameterService: ParameterService) :
+class ParameterController(private val parameterService: IParameterService) :
     StandardizedBaseController(), StandardRestController<Parameter, String> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====

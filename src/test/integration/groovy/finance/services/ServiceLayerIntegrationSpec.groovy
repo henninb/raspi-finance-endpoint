@@ -26,10 +26,10 @@ class ServiceLayerIntegrationSpec extends Specification {
     AccountService accountService
 
     @Autowired
-    CategoryService categoryService
+    ICategoryService categoryService
 
     @Autowired
-    DescriptionService descriptionService
+    IDescriptionService descriptionService
 
     @Autowired
     PaymentService paymentService

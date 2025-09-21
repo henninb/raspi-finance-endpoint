@@ -8,7 +8,7 @@ import finance.helpers.TransactionBuilder
 class PaymentServiceMoreSpec extends BaseServiceSpec {
 
     TransactionService transactionServiceMock = GroovyMock(TransactionService)
-    ParameterService parameterServiceMock = GroovyMock(ParameterService)
+    IParameterService parameterServiceMock = GroovyMock(IParameterService)
 
     void setup() {
         paymentService.validator = validatorMock

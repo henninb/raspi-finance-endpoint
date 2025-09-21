@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Category
-import finance.services.CategoryService
+import finance.services.ICategoryService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +12,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/category")
-class CategoryController(private val categoryService: CategoryService) :
+class CategoryController(private val categoryService: ICategoryService) :
     StandardizedBaseController(), StandardRestController<Category, String> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====

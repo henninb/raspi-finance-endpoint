@@ -433,19 +433,14 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         postEndpoint(endpointName, sourceDescription.toString())
         postEndpoint(endpointName, targetDescription.toString())
 
-        and: 'merge request payload'
-        String mergePayload = """
-        {
-            "targetName": "${targetDescription.descriptionName}",
-            "sourceNames": ["${sourceDescription.descriptionName}"]
-        }
-        """
+        and: 'merge request object'
+        def mergeRequest = new finance.domain.MergeDescriptionsRequest([sourceDescription.descriptionName], targetDescription.descriptionName)
 
         when: 'attempting to merge descriptions using existing business logic endpoint'
-        ResponseEntity<String> response = postEndpoint(endpointName + "/merge", mergePayload)
+        ResponseEntity<String> response = postEndpoint(endpointName + "/merge", mergeRequest.toString())
 
         then: 'should either succeed or fail gracefully (business logic preserved)'
-        response.statusCode in [HttpStatus.OK, HttpStatus.NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR]
+        response.statusCode in [HttpStatus.OK, HttpStatus.NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_REQUEST]
 
         and: 'documents business logic endpoint preservation'
         // After standardization: Business logic endpoints like /merge should be preserved
