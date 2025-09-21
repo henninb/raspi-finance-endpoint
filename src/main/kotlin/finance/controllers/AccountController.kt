@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.Account
 import finance.domain.TransactionState
-import finance.services.AccountService
+import finance.services.IAccountService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -22,7 +22,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/account")
-class AccountController(private val accountService: AccountService) :
+class AccountController(private val accountService: IAccountService) :
     StandardizedBaseController(), StandardRestController<Account, String> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====

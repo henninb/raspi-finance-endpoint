@@ -3,14 +3,14 @@ package finance.controllers
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.TransactionState
-import finance.services.AccountService
+import finance.services.IAccountService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class AccountControllerMoreSpec extends Specification {
 
-    def service = Mock(AccountService)
+    def service = Mock(IAccountService)
     def controller = new AccountController(service)
 
     void "findAllActive returns list and calls updateTotals"() {

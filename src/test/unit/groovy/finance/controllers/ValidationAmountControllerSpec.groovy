@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-import finance.services.ValidationAmountService
+import finance.services.IValidationAmountService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import spock.lang.Specification
@@ -10,7 +10,7 @@ import spock.lang.Subject
 
 class ValidationAmountControllerSpec extends Specification {
 
-    ValidationAmountService service = GroovyMock(ValidationAmountService)
+    IValidationAmountService service = GroovyMock(IValidationAmountService)
 
     @Subject
     ValidationAmountController controller = new ValidationAmountController(service)

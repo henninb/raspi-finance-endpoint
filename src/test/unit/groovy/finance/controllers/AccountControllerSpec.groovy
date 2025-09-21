@@ -3,7 +3,7 @@ package finance.controllers
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.TransactionState
-import finance.services.AccountService
+import finance.services.IAccountService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.server.ResponseStatusException
@@ -12,7 +12,7 @@ import spock.lang.Subject
 
 class AccountControllerSpec extends Specification {
 
-    AccountService accountService = GroovyMock(AccountService)
+    IAccountService accountService = GroovyMock(IAccountService)
 
     @Subject
     AccountController controller = new AccountController(accountService)

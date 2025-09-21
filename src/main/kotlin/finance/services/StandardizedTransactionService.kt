@@ -20,7 +20,7 @@ import java.util.*
 @Service
 class StandardizedTransactionService(
     private val transactionRepository: TransactionRepository,
-    private val accountService: AccountService,
+    private val accountService: IAccountService,
     private val categoryService: ICategoryService,
     private val descriptionService: IDescriptionService,
     private val receiptImageService: ReceiptImageService,

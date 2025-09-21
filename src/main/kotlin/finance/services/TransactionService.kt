@@ -15,7 +15,7 @@ import kotlin.system.measureTimeMillis
 @Service
 open class TransactionService(
     private var transactionRepository: TransactionRepository,
-    private var accountService: AccountService,
+    private var accountService: IAccountService,
     private var categoryService: ICategoryService,
     private var descriptionService: IDescriptionService,
     private var receiptImageService: ReceiptImageService,
