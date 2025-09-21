@@ -9,10 +9,10 @@ import jakarta.validation.constraints.NotBlank
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LoginRequest(
     @field:NotBlank(message = "Username cannot be blank")
-    @param:JsonProperty
+    @param:JsonProperty("username")
     val username: String = "",
 
     @field:NotBlank(message = "Password cannot be blank")
-    @param:JsonProperty
+    @param:JsonProperty("password")
     val password: String = ""
 )
