@@ -24,7 +24,7 @@ class StandardizedTransactionService(
     private val transactionRepository: TransactionRepository,
     private val accountService: IAccountService,
     private val categoryService: StandardizedCategoryService,
-    private val descriptionService: IDescriptionService,
+    private val descriptionService: StandardizedDescriptionService,
     private val receiptImageService: IReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService
@@ -489,12 +489,20 @@ class StandardizedTransactionService(
     override fun processDescription(transaction: Transaction) {
         when {
             transaction.description != "" -> {
-                val optionalDescription = descriptionService.description(transaction.description)
-                if (!optionalDescription.isPresent) {
-                    logger.info("Creating new description: ${transaction.description}")
-                    val description = createDefaultDescription(transaction.description)
-                    descriptionService.insertDescription(description)
-                    logger.info("Created new description: ${transaction.description}")
+                when (val findResult = descriptionService.findByDescriptionNameStandardized(transaction.description)) {
+                    is ServiceResult.Success -> {
+                        // Found existing description; nothing to do here
+                    }
+                    else -> {
+                        logger.info("Creating new description: ${transaction.description}")
+                        val description = createDefaultDescription(transaction.description)
+                        val saveResult = descriptionService.save(description)
+                        if (saveResult is ServiceResult.Success) {
+                            logger.info("Created new description: ${transaction.description}")
+                        } else {
+                            logger.warn("Failed to create description: ${transaction.description} -> $saveResult")
+                        }
+                    }
                 }
             }
         }

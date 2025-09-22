@@ -8,7 +8,7 @@ import finance.domain.ServiceResult
 import finance.domain.Transfer
 import finance.services.IAccountService
 import finance.services.StandardizedCategoryService
-import finance.services.IDescriptionService
+import finance.services.StandardizedDescriptionService
 import finance.services.IPaymentService
 import finance.services.ITransferService
 import org.apache.logging.log4j.LogManager
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Controller
 class GraphQLQueryController(
     private val accountService: IAccountService,
     private val categoryService: StandardizedCategoryService,
-    private val descriptionService: IDescriptionService,
+    private val descriptionService: StandardizedDescriptionService,
     private val paymentService: IPaymentService,
     private val transferService: ITransferService
 ) {
@@ -63,13 +63,19 @@ class GraphQLQueryController(
     @QueryMapping
     fun descriptions(): List<Description> {
         logger.info("GraphQL - Fetching all descriptions")
-        return descriptionService.fetchAllDescriptions()
+        return when (val result = descriptionService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
     fun description(@Argument descriptionName: String): Description? {
         logger.info("GraphQL - Fetching description: $descriptionName")
-        return descriptionService.findByDescriptionName(descriptionName).orElse(null)
+        return when (val result = descriptionService.findByDescriptionNameStandardized(descriptionName)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping
