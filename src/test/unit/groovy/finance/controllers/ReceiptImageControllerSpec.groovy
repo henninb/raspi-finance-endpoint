@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
-import finance.services.ReceiptImageService
+import finance.services.IReceiptImageService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
@@ -12,7 +12,7 @@ import spock.lang.Subject
 
 class ReceiptImageControllerSpec extends Specification {
 
-    ReceiptImageService receiptImageService = GroovyMock(ReceiptImageService)
+    IReceiptImageService receiptImageService = GroovyMock(IReceiptImageService)
 
     @Subject
     ReceiptImageController controller = new ReceiptImageController(receiptImageService)

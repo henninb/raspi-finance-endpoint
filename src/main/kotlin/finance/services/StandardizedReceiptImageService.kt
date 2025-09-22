@@ -113,7 +113,7 @@ open class StandardizedReceiptImageService(
             }
             is ServiceResult.BusinessError -> {
                 logger.error("Business error inserting receipt image: ${result.message}")
-                throw RuntimeException(result.message)
+                throw org.springframework.dao.DataIntegrityViolationException(result.message)
             }
             else -> {
                 val message = "Failed to insert receipt image: $result"

@@ -31,11 +31,11 @@ class BaseServiceSpec extends Specification {
     protected Counter counter = Mock(Counter)
 
 
-    protected ReceiptImageService receiptImageServiceMock = GroovyMock(ReceiptImageService)
+    protected IReceiptImageService receiptImageServiceMock = GroovyMock(IReceiptImageService)
     protected ICategoryService categoryServiceMock = Mock(ICategoryService)
     protected IAccountService accountServiceMock = Mock(IAccountService)
 
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
+    protected StandardizedReceiptImageService receiptImageService = new StandardizedReceiptImageService(receiptImageRepositoryMock)
     protected StandardizedDescriptionService descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
     protected StandardizedAccountService accountService = new StandardizedAccountService(accountRepositoryMock)
     protected StandardizedCategoryService categoryService = new StandardizedCategoryService(categoryRepositoryMock, transactionRepositoryMock)
