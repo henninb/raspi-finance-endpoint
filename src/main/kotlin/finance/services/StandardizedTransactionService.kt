@@ -23,7 +23,7 @@ class StandardizedTransactionService(
     private val accountService: IAccountService,
     private val categoryService: ICategoryService,
     private val descriptionService: IDescriptionService,
-    private val receiptImageService: ReceiptImageService,
+    private val receiptImageService: IReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService
 ) : StandardizedBaseService<Transaction, String>(), ITransactionService {

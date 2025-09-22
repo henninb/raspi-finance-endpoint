@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.ReceiptImage
-import finance.services.ReceiptImageService
+import finance.services.IReceiptImageService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,7 +14,7 @@ import org.springframework.validation.BindingResult
 @CrossOrigin
 @RestController
 @RequestMapping("/api/receipt/image")
-class ReceiptImageController(private var receiptImageService: ReceiptImageService) : BaseController() {
+class ReceiptImageController(private var receiptImageService: IReceiptImageService) : BaseController() {
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionId": 1, "image": "base64encodedimage"}' https://localhost:8443/receipt/image/insert
     @PostMapping("/insert", produces = ["application/json"])
