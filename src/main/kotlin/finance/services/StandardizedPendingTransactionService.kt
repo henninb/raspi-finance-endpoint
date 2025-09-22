@@ -19,7 +19,7 @@ import java.util.*
 @Primary
 class StandardizedPendingTransactionService(
     private val pendingTransactionRepository: PendingTransactionRepository
-) : StandardizedBaseService<PendingTransaction, Long>(), IPendingTransactionService {
+) : StandardizedBaseService<PendingTransaction, Long>() {
 
     override fun getEntityName(): String = "PendingTransaction"
 
@@ -98,7 +98,7 @@ class StandardizedPendingTransactionService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
+    fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
         val result = save(pendingTransaction)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -129,7 +129,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
-    override fun deletePendingTransaction(pendingTransactionId: Long): Boolean {
+    fun deletePendingTransaction(pendingTransactionId: Long): Boolean {
         val result = deleteById(pendingTransactionId)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -138,7 +138,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
-    override fun getAllPendingTransactions(): List<PendingTransaction> {
+    fun getAllPendingTransactions(): List<PendingTransaction> {
         val result = findAllActive()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -146,7 +146,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
-    override fun deleteAllPendingTransactions(): Boolean {
+    fun deleteAllPendingTransactions(): Boolean {
         val result = deleteAll()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -154,7 +154,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
-    override fun findByPendingTransactionId(pendingTransactionId: Long): Optional<PendingTransaction> {
+    fun findByPendingTransactionId(pendingTransactionId: Long): Optional<PendingTransaction> {
         val result = findById(pendingTransactionId)
         return when (result) {
             is ServiceResult.Success -> Optional.of(result.data)
@@ -162,7 +162,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
-    override fun updatePendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
+    fun updatePendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
         val result = update(pendingTransaction)
         return when (result) {
             is ServiceResult.Success -> result.data
