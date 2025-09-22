@@ -4,6 +4,7 @@ import finance.domain.*
 import finance.repositories.TransactionRepository
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
@@ -18,6 +19,7 @@ import java.util.*
  * Uses extracted services from Phase 1: ImageProcessingService and CalculationService
  */
 @Service
+@Primary
 class StandardizedTransactionService(
     private val transactionRepository: TransactionRepository,
     private val accountService: IAccountService,
