@@ -7,6 +7,7 @@ import finance.repositories.ValidationAmountRepository
 import finance.repositories.AccountRepository
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
@@ -16,6 +17,7 @@ import java.util.*
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
+@Primary
 class StandardizedValidationAmountService(
     private val validationAmountRepository: ValidationAmountRepository,
     private val accountRepository: AccountRepository

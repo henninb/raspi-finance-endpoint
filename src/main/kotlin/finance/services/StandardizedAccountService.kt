@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.InvalidDataAccessResourceUsageException
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -19,6 +20,7 @@ import java.util.*
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
+@Primary
 class StandardizedAccountService(
     private val accountRepository: AccountRepository
 ) : StandardizedBaseService<Account, String>(), IAccountService {

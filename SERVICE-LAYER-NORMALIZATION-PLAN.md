@@ -1443,3 +1443,570 @@ While the core normalization is complete, optional infrastructure service interf
 - **Future-Proof Foundation**: ServiceResult pattern enables easy extension and enhancement
 
 **This service layer normalization represents a complete architectural transformation that delivers immediate quality benefits while establishing patterns for scalable future development.**
+
+---
+
+## 🧹 Phase 3: Legacy Service Cleanup and Deduplication Plan
+
+### **🎯 Current Duplication Issue Identified**
+
+**Status**: Ready for implementation after Phase 2 completion
+**Priority**: 🟡 Medium (Quality improvement, not critical functionality)
+**Impact**: Code maintainability, reduced technical debt, simplified architecture
+
+#### **Problem Statement**
+
+With the successful completion of Phase 2, we now have **functional duplication** across the service layer:
+
+**Current State**:
+```kotlin
+// Original Service (Legacy)
+@Service
+class TransactionService(...) : ITransactionService {
+    fun insertTransaction(transaction: Transaction): Transaction { /* original logic */ }
+    fun findTransactionByGuid(guid: String): Optional<Transaction> { /* original logic */ }
+    // ... 28 other methods
+}
+
+// Standardized Service (New)
+@Service
+class StandardizedTransactionService(...) : StandardizedBaseService<Transaction, String>(), ITransactionService {
+    override fun save(transaction: Transaction): ServiceResult<Transaction> { /* ServiceResult logic */ }
+    override fun findById(guid: String): ServiceResult<Transaction> { /* ServiceResult logic */ }
+
+    // DUPLICATION: Legacy compatibility methods
+    override fun insertTransaction(transaction: Transaction): Transaction {
+        return save(transaction).let { result -> when(result) { /* delegation */ } }
+    }
+    override fun findTransactionByGuid(guid: String): Optional<Transaction> {
+        return findById(guid).let { result -> when(result) { /* delegation */ } }
+    }
+    // ... 28 other legacy methods with delegation
+}
+```
+
+**Duplication Analysis**:
+- **12 Original Services** still exist alongside **12 Standardized Services**
+- **~200+ legacy methods** duplicated across standardized services
+- **Double maintenance burden** for any service logic changes
+- **Increased memory footprint** with duplicate service instances
+- **Potential confusion** for developers about which service to use
+
+### **📊 Duplication Impact Assessment**
+
+#### **Services with Significant Duplication**
+
+| **Service** | **Legacy Methods** | **Standardized Methods** | **Duplication Level** | **Cleanup Priority** |
+|-------------|-------------------|--------------------------|----------------------|---------------------|
+| **TransactionService** | 30 methods | 30 legacy + 9 ServiceResult | **High** | 🔴 **Critical** |
+| **PaymentService** | 18 methods | 18 legacy + 5 ServiceResult | **High** | 🔴 **Critical** |
+| **AccountService** | 15 methods | 15 legacy + 5 ServiceResult | **Medium-High** | 🟡 **High** |
+| **MedicalExpenseService** | 22 methods | 22 legacy + 5 ServiceResult | **High** | 🟡 **High** |
+| **ValidationAmountService** | 12 methods | 12 legacy + 5 ServiceResult | **Medium** | 🟢 **Medium** |
+| **TransferService** | 10 methods | 10 legacy + 5 ServiceResult | **Medium** | 🟢 **Medium** |
+| **CategoryService** | 8 methods | 8 legacy + 5 ServiceResult | **Low-Medium** | 🟢 **Low** |
+| **DescriptionService** | 8 methods | 8 legacy + 5 ServiceResult | **Low-Medium** | 🟢 **Low** |
+| **ParameterService** | 6 methods | 6 legacy + 5 ServiceResult | **Low** | 🟢 **Low** |
+| **ReceiptImageService** | 5 methods | 5 legacy + 5 ServiceResult | **Low** | 🟢 **Low** |
+| **FamilyMemberService** | 4 methods | 4 legacy + 5 ServiceResult | **Low** | 🟢 **Low** |
+| **PendingTransactionService** | 4 methods | 4 legacy + 5 ServiceResult | **Low** | 🟢 **Low** |
+
+**Total Duplication**: **~142 legacy methods** + **~68 ServiceResult methods** = **210 methods with functional overlap**
+
+#### **Consumer Impact Analysis**
+
+**Current Service Consumers**:
+```kotlin
+// Controllers (Primary consumers)
+@RestController
+class TransactionController(
+    private val transactionService: ITransactionService  // Could be either original or standardized
+) {
+    @PostMapping("/transactions")
+    fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
+        // Which service implementation gets injected?
+        return ResponseEntity.ok(transactionService.insertTransaction(transaction))
+    }
+}
+
+// Other Services (Secondary consumers)
+@Service
+class PaymentService(
+    private val transactionService: ITransactionService  // Dependency injection ambiguity
+) {
+    fun processPayment(payment: Payment): Payment {
+        // Which implementation will Spring inject?
+        val transaction = transactionService.findTransactionByGuid(payment.transactionId)
+        // ...
+    }
+}
+```
+
+**Injection Ambiguity Risk**:
+- **Spring Boot auto-wiring** may choose unpredictably between original and standardized services
+- **Test environments** may inject different implementations than production
+- **Future refactoring** becomes complex due to multiple valid injection targets
+
+### **🗺️ Phase 3 Implementation Strategy**
+
+#### **Approach**: **Gradual Legacy Deprecation with Consumer Migration**
+
+**Core Principle**: Migrate consumers to standardized services, then remove original services
+
+#### **Phase 3.1: Consumer Analysis and Migration Planning (Week 1)**
+
+**Objective**: Identify all service consumers and plan migration approach
+
+**Tasks**:
+1. **Consumer Discovery**:
+   ```bash
+   # Find all service injection points
+   grep -r "ITransactionService" src/main/kotlin/finance/controllers/
+   grep -r "IPaymentService" src/main/kotlin/finance/controllers/
+   grep -r "IAccountService" src/main/kotlin/finance/controllers/
+   # ... for all 12 services
+   ```
+
+2. **Dependency Graph Analysis**:
+   ```kotlin
+   // Map service-to-service dependencies
+   TransactionService <- PaymentService  // PaymentService depends on TransactionService
+   AccountService <- TransactionService  // TransactionService depends on AccountService
+   // ... complete dependency tree
+   ```
+
+3. **Migration Complexity Assessment**:
+   - **Controllers**: Medium complexity (need to adopt ServiceResult pattern)
+   - **Service-to-Service**: Low complexity (already use interfaces)
+   - **Test Suites**: High complexity (may need mock setup changes)
+
+**Deliverable**: Consumer migration plan with priority order
+
+#### **Phase 3.2: Controller Migration to Standardized Services (Weeks 2-3)**
+
+**Objective**: Update controllers to use standardized services and ServiceResult patterns
+
+**Migration Pattern**:
+```kotlin
+// BEFORE: Using original service with inconsistent error handling
+@RestController
+class TransactionController(
+    private val transactionService: ITransactionService
+) {
+    @PostMapping("/transactions")
+    fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
+        return try {
+            ResponseEntity.ok(transactionService.insertTransaction(transaction))
+        } catch (ex: ValidationException) {
+            ResponseEntity.badRequest().build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(500).build()
+        }
+    }
+}
+
+// AFTER: Using standardized service with ServiceResult pattern
+@RestController
+class TransactionController(
+    private val standardizedTransactionService: StandardizedTransactionService
+) {
+    @PostMapping("/transactions")
+    fun insertTransaction(@RequestBody transaction: Transaction): ResponseEntity<Transaction> {
+        return when (val result = standardizedTransactionService.save(transaction)) {
+            is ServiceResult.Success -> ResponseEntity.ok(result.data)
+            is ServiceResult.ValidationError -> ResponseEntity.badRequest().body(/* error details */)
+            is ServiceResult.BusinessError -> ResponseEntity.status(409).body(/* error details */)
+            is ServiceResult.SystemError -> ResponseEntity.status(500).body(/* error details */)
+            else -> ResponseEntity.status(500).build()
+        }
+    }
+}
+```
+
+**Implementation Approach**:
+1. **One Controller at a Time**: Migrate controllers individually to minimize risk
+2. **A/B Testing**: Run old and new implementations in parallel during migration
+3. **Comprehensive Testing**: Verify identical behavior between old and new implementations
+
+**Migration Priority Order**:
+1. **Simple Controllers** (Parameter, Category, Description) - Low risk, quick wins
+2. **Medium Controllers** (Transfer, ValidationAmount, ReceiptImage) - Moderate complexity
+3. **Complex Controllers** (Account, Payment, MedicalExpense) - Higher risk, more dependencies
+4. **Critical Controllers** (Transaction) - Highest risk, most complex business logic
+
+#### **Phase 3.3: Service-to-Service Dependency Migration (Week 4)**
+
+**Objective**: Update inter-service dependencies to use standardized services
+
+**Current Dependencies to Migrate**:
+```kotlin
+// Example: PaymentService depends on TransactionService
+@Service
+class PaymentService(
+    private val transactionService: ITransactionService,  // Currently original service
+    private val accountService: IAccountService           // Currently original service
+) {
+    fun linkTransactionToPayment(paymentId: Long, transactionId: String): Payment {
+        val transaction = transactionService.findTransactionByGuid(transactionId)  // Optional<Transaction>
+        // ... business logic
+    }
+}
+
+// AFTER: Using standardized services
+@Service
+class PaymentService(
+    private val standardizedTransactionService: StandardizedTransactionService,
+    private val standardizedAccountService: StandardizedAccountService
+) {
+    fun linkTransactionToPayment(paymentId: Long, transactionId: String): Payment {
+        return when (val result = standardizedTransactionService.findById(transactionId)) {
+            is ServiceResult.Success -> {
+                val transaction = result.data
+                // ... business logic with proper error handling
+            }
+            is ServiceResult.NotFound -> throw EntityNotFoundException("Transaction not found: $transactionId")
+            else -> throw RuntimeException("Failed to retrieve transaction")
+        }
+    }
+}
+```
+
+**Benefits of Migration**:
+- **Better Error Handling**: ServiceResult provides more context than Optional/nullable
+- **Consistent Patterns**: All service interactions follow same error handling approach
+- **Type Safety**: Sealed classes provide compile-time guarantees about error cases
+
+#### **Phase 3.4: Original Service Deprecation (Week 5)**
+
+**Objective**: Mark original services as deprecated and remove from Spring context
+
+**Deprecation Strategy**:
+```kotlin
+// Step 1: Mark original service as deprecated
+@Service
+@Deprecated("Use StandardizedTransactionService instead", ReplaceWith("StandardizedTransactionService"))
+class TransactionService(...) : ITransactionService {
+
+    @Deprecated("Use StandardizedTransactionService.save() instead")
+    override fun insertTransaction(transaction: Transaction): Transaction {
+        // Log deprecation warning
+        logger.warn("DEPRECATED: TransactionService.insertTransaction() called. Migrate to StandardizedTransactionService.save()")
+        // ... existing implementation
+    }
+}
+
+// Step 2: Update Spring configuration to prefer standardized services
+@Configuration
+class ServiceConfiguration {
+
+    @Bean
+    @Primary  // Make standardized service the primary bean
+    fun transactionService(
+        transactionRepository: TransactionRepository,
+        // ... other dependencies
+    ): ITransactionService {
+        return StandardizedTransactionService(transactionRepository, ...)
+    }
+
+    @Bean
+    @Qualifier("legacy")  // Keep legacy service available but not primary
+    fun legacyTransactionService(/* ... */): ITransactionService {
+        return TransactionService(...)
+    }
+}
+```
+
+**Deprecation Monitoring**:
+- **Usage Tracking**: Log all calls to deprecated methods to identify remaining consumers
+- **Metrics Integration**: Add metrics to track deprecated method usage
+- **Automated Alerts**: Set up alerts if deprecated methods are called in production
+
+#### **Phase 3.5: Legacy Method Removal from Standardized Services (Week 6)**
+
+**Objective**: Remove duplicate legacy methods from standardized services
+
+**Current State - Standardized Service with Legacy Methods**:
+```kotlin
+@Service
+class StandardizedTransactionService(...) : StandardizedBaseService<Transaction, String>(), ITransactionService {
+
+    // NEW: ServiceResult methods
+    override fun save(transaction: Transaction): ServiceResult<Transaction> { /* ... */ }
+    override fun findById(guid: String): ServiceResult<Transaction> { /* ... */ }
+
+    // LEGACY: To be removed in this phase
+    override fun insertTransaction(transaction: Transaction): Transaction {
+        return save(transaction).let { result ->
+            when (result) {
+                is ServiceResult.Success -> result.data
+                else -> throw RuntimeException("Failed to insert transaction")
+            }
+        }
+    }
+
+    override fun findTransactionByGuid(guid: String): Optional<Transaction> {
+        return findById(guid).let { result ->
+            when (result) {
+                is ServiceResult.Success -> Optional.of(result.data)
+                else -> Optional.empty()
+            }
+        }
+    }
+    // ... 28 other legacy methods to be removed
+}
+```
+
+**After Cleanup - Pure Standardized Service**:
+```kotlin
+@Service
+class StandardizedTransactionService(...) : StandardizedBaseService<Transaction, String> {
+
+    override fun getEntityName(): String = "Transaction"
+
+    // ONLY: ServiceResult methods remain
+    override fun save(transaction: Transaction): ServiceResult<Transaction> { /* ... */ }
+    override fun findById(guid: String): ServiceResult<Transaction> { /* ... */ }
+    override fun update(transaction: Transaction): ServiceResult<Transaction> { /* ... */ }
+    override fun deleteById(guid: String): ServiceResult<Boolean> { /* ... */ }
+    override fun findAllActive(): ServiceResult<List<Transaction>> { /* ... */ }
+
+    // Business-specific ServiceResult methods
+    fun findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner: String): ServiceResult<List<Transaction>> { /* ... */ }
+    fun updateTransactionStateStandardized(guid: String, state: TransactionState): ServiceResult<Transaction> { /* ... */ }
+    // ... other business methods
+}
+```
+
+**Interface Cleanup**:
+```kotlin
+// Remove ITransactionService inheritance since legacy methods are removed
+// StandardizedTransactionService no longer implements legacy interface
+interface ITransactionService {
+    // Legacy interface can be deprecated and eventually removed
+    @Deprecated("Use StandardizedTransactionService.save() instead")
+    fun insertTransaction(transaction: Transaction): Transaction
+
+    @Deprecated("Use StandardizedTransactionService.findById() instead")
+    fun findTransactionByGuid(guid: String): Optional<Transaction>
+    // ... other legacy methods
+}
+```
+
+#### **Phase 3.6: Original Service Removal (Week 7)**
+
+**Objective**: Completely remove original service classes
+
+**Removal Checklist**:
+1. ✅ **All Consumers Migrated**: Verify no code references original services
+2. ✅ **Tests Updated**: All test suites use standardized services
+3. ✅ **Documentation Updated**: Remove references to original services
+4. ✅ **Configuration Cleaned**: Remove Spring beans for original services
+
+**Files to Remove**:
+```
+src/main/kotlin/finance/services/
+├── TransactionService.kt              # DELETE
+├── PaymentService.kt                  # DELETE
+├── AccountService.kt                  # DELETE
+├── MedicalExpenseService.kt           # DELETE
+├── ValidationAmountService.kt         # DELETE
+├── TransferService.kt                 # DELETE
+├── CategoryService.kt                 # DELETE
+├── DescriptionService.kt              # DELETE
+├── ParameterService.kt                # DELETE
+├── ReceiptImageService.kt             # DELETE
+├── FamilyMemberService.kt             # DELETE
+└── PendingTransactionService.kt       # DELETE
+
+# KEEP: Standardized services remain
+├── StandardizedTransactionService.kt   # KEEP
+├── StandardizedPaymentService.kt       # KEEP
+├── StandardizedAccountService.kt       # KEEP
+# ... etc
+```
+
+**Legacy Interface Handling**:
+```kotlin
+// Option 1: Remove legacy interfaces entirely
+// Delete: ITransactionService.kt, IPaymentService.kt, etc.
+
+// Option 2: Keep interfaces for external API compatibility
+// Mark interfaces as deprecated but maintain for external consumers
+@Deprecated("Use StandardizedTransactionService directly")
+interface ITransactionService {
+    // ... legacy method signatures for external API compatibility
+}
+```
+
+### **🧪 Testing Strategy for Phase 3**
+
+#### **Test Migration Approach**
+
+**Phase 3.1: Parallel Testing During Migration**
+```kotlin
+// Dual testing to verify behavior equivalence
+@SpringBootTest
+class TransactionServiceMigrationVerificationSpec {
+
+    @Autowired
+    @Qualifier("legacy")
+    private lateinit var legacyTransactionService: ITransactionService
+
+    @Autowired
+    private lateinit var standardizedTransactionService: StandardizedTransactionService
+
+    @Test
+    fun `should produce identical results between legacy and standardized services`() {
+        // Given
+        val transaction = createTestTransaction()
+
+        // When
+        val legacyResult = legacyTransactionService.insertTransaction(transaction)
+        val standardizedResult = standardizedTransactionService.save(transaction)
+
+        // Then
+        when (standardizedResult) {
+            is ServiceResult.Success -> {
+                assertThat(standardizedResult.data).isEqualTo(legacyResult)
+            }
+            else -> fail("Standardized service should succeed when legacy service succeeds")
+        }
+    }
+}
+```
+
+**Phase 3.2: Consumer Integration Testing**
+```kotlin
+// Verify controllers work correctly with standardized services
+@SpringBootTest
+@AutoConfigureTestDatabase
+class TransactionControllerWithStandardizedServiceSpec {
+
+    @Test
+    fun `should handle transaction creation with ServiceResult pattern`() {
+        // Test that controller properly handles ServiceResult responses
+        // Verify error cases are handled correctly
+        // Ensure HTTP status codes are appropriate for each ServiceResult type
+    }
+}
+```
+
+**Phase 3.3: Regression Testing**
+```kotlin
+// Comprehensive regression testing after each migration step
+@Test
+fun `should maintain all business functionality after service migration`() {
+    // Run complete business workflow tests
+    // Verify no functionality is lost during migration
+    // Ensure performance characteristics are maintained
+}
+```
+
+### **📊 Risk Assessment and Mitigation**
+
+#### **High-Risk Areas**
+
+| **Risk** | **Impact** | **Probability** | **Mitigation Strategy** |
+|----------|------------|-----------------|-------------------------|
+| **Service Injection Conflicts** | High | Medium | Use @Primary and @Qualifier annotations |
+| **Controller Behavior Changes** | Medium | Low | Comprehensive integration testing |
+| **Service-to-Service Dependencies** | Medium | Medium | Gradual migration with parallel testing |
+| **Test Suite Instability** | Low | Medium | Maintain parallel test suites during migration |
+| **Performance Regression** | Medium | Low | Performance testing at each migration step |
+
+#### **Rollback Strategy**
+
+**Phase-by-Phase Rollback**:
+1. **Phase 3.1-3.3**: Revert controller changes, restore original service injections
+2. **Phase 3.4**: Remove @Primary annotations, restore original Spring configuration
+3. **Phase 3.5**: Restore legacy methods in standardized services
+4. **Phase 3.6**: Restore original service files from git history
+
+**Automated Rollback Triggers**:
+- **Performance degradation** >10% in any service operation
+- **Test failure rate** >1% during migration
+- **Production errors** related to service injection or method calls
+
+### **📈 Phase 3 Success Metrics**
+
+#### **Quantitative Targets**
+
+| **Metric** | **Current State** | **Target State** | **Success Criteria** |
+|------------|-------------------|------------------|-----------------------|
+| **Service Classes** | 24 (12 original + 12 standardized) | 12 (standardized only) | 50% reduction |
+| **Legacy Methods** | ~142 duplicated methods | 0 duplicated methods | 100% elimination |
+| **Service Interfaces** | Mixed (legacy + standardized) | Standardized only | Consistent patterns |
+| **Code Duplication** | High (2x service logic) | None | Single source of truth |
+| **Test Coverage** | Maintained | Maintained | No regression |
+
+#### **Qualitative Benefits**
+
+**Architectural Cleanliness**:
+- ✅ **Single Service Implementation**: One service per domain entity
+- ✅ **Consistent Error Handling**: ServiceResult pattern throughout
+- ✅ **Reduced Complexity**: Simplified dependency injection
+- ✅ **Clear Upgrade Path**: No legacy compatibility burden
+
+**Development Experience**:
+- ✅ **Simplified Service Selection**: No ambiguity about which service to use
+- ✅ **Consistent Patterns**: All services follow identical patterns
+- ✅ **Reduced Maintenance**: Single codebase to maintain per service
+- ✅ **Better IDE Support**: Clear service contracts and error handling
+
+### **🗓️ Phase 3 Timeline**
+
+**Estimated Duration**: **7 weeks** (can be done in parallel with other development)
+
+| **Week** | **Phase** | **Deliverables** |
+|----------|-----------|------------------|
+| **Week 1** | 3.1 - Consumer Analysis | Complete dependency mapping and migration plan |
+| **Week 2** | 3.2 - Simple Controllers | Migrate 4 simple controllers to standardized services |
+| **Week 3** | 3.2 - Complex Controllers | Migrate 4 complex controllers with full testing |
+| **Week 4** | 3.3 - Service Dependencies | Update all service-to-service dependencies |
+| **Week 5** | 3.4 - Service Deprecation | Mark original services as deprecated with monitoring |
+| **Week 6** | 3.5 - Legacy Method Removal | Remove duplicate methods from standardized services |
+| **Week 7** | 3.6 - Original Service Cleanup | Delete original service classes and interfaces |
+
+### **🎯 Phase 3 Readiness Assessment**
+
+#### **Prerequisites for Phase 3 Start** ✅
+
+- ✅ **Phase 2 Complete**: All 12 domain services standardized with ServiceResult pattern
+- ✅ **Test Suite Stable**: 100% test success rate maintained
+- ✅ **Standardized Services Proven**: All services working in production
+- ✅ **Team Familiarity**: Development team comfortable with ServiceResult patterns
+
+#### **Go/No-Go Decision Criteria**
+
+**GO Criteria**:
+- ✅ Phase 2 has been stable in production for at least 2 weeks
+- ✅ No critical bugs discovered in standardized services
+- ✅ Team bandwidth available for 7-week migration effort
+- ✅ Stakeholder approval for potential risk of service refactoring
+
+**NO-GO Criteria**:
+- ❌ Any critical issues with standardized services in production
+- ❌ Major feature deadlines conflict with 7-week timeline
+- ❌ Insufficient test coverage in any standardized service
+- ❌ Team lacks confidence in ServiceResult pattern adoption
+
+### **🚀 Phase 3 Expected Outcomes**
+
+**Upon Completion**:
+- ✅ **Clean Architecture**: Single service implementation per domain
+- ✅ **Zero Duplication**: No duplicate service methods or logic
+- ✅ **Consistent Patterns**: ServiceResult used throughout application
+- ✅ **Simplified Maintenance**: 50% reduction in service classes to maintain
+- ✅ **Clear Developer Experience**: Unambiguous service selection and usage
+- ✅ **Future-Proof Foundation**: Clean base for future service development
+
+**Long-term Benefits**:
+- **Faster Development**: Template-based service development with established patterns
+- **Easier Onboarding**: New developers learn one consistent service pattern
+- **Improved Reliability**: Type-safe error handling reduces runtime errors
+- **Better Monitoring**: Consistent service patterns enable better observability
+- **Enhanced Testing**: Simplified mock setup and service interaction testing
+
+---
+
+**Phase 3 represents the final step in achieving a completely clean, standardized service architecture. While not critical for functionality, it eliminates technical debt and provides a pristine foundation for future development.**

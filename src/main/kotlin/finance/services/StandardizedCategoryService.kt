@@ -6,6 +6,7 @@ import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.*
@@ -15,6 +16,7 @@ import java.util.*
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
+@Primary
 class StandardizedCategoryService(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository

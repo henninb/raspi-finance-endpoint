@@ -4,6 +4,7 @@ import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
 import finance.repositories.PendingTransactionRepository
 import jakarta.validation.ValidationException
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
@@ -15,6 +16,7 @@ import java.util.*
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
+@Primary
 class StandardizedPendingTransactionService(
     private val pendingTransactionRepository: PendingTransactionRepository
 ) : StandardizedBaseService<PendingTransaction, Long>(), IPendingTransactionService {

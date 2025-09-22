@@ -5,6 +5,7 @@ import finance.domain.ServiceResult
 import finance.repositories.ParameterRepository
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
@@ -15,6 +16,7 @@ import java.util.*
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
+@Primary
 class StandardizedParameterService(
     private val parameterRepository: ParameterRepository
 ) : StandardizedBaseService<Parameter, Long>(), IParameterService {
