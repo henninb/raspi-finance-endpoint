@@ -32,7 +32,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     ICategoryService categoryService
 
     @Autowired
-    IDescriptionService descriptionService
+    StandardizedDescriptionService descriptionService
 
     @Autowired
     IPaymentService paymentService

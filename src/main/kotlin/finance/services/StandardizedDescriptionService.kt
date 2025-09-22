@@ -20,7 +20,7 @@ import java.util.*
 class StandardizedDescriptionService(
     private val descriptionRepository: DescriptionRepository,
     private val transactionRepository: TransactionRepository
-) : StandardizedBaseService<Description, Long>(), IDescriptionService {
+) : StandardizedBaseService<Description, Long>() {
 
     override fun getEntityName(): String = "Description"
 
@@ -121,7 +121,7 @@ class StandardizedDescriptionService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun fetchAllDescriptions(): List<Description> {
+    fun fetchAllDescriptions(): List<Description> {
         val result = findAllActive()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -129,7 +129,7 @@ class StandardizedDescriptionService(
         }
     }
 
-    override fun insertDescription(description: Description): Description {
+    fun insertDescription(description: Description): Description {
         val result = save(description)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -168,16 +168,16 @@ class StandardizedDescriptionService(
     }
 
 
-    override fun findByDescriptionName(descriptionName: String): Optional<Description> {
+    fun findByDescriptionName(descriptionName: String): Optional<Description> {
         return descriptionRepository.findByDescriptionName(descriptionName)
     }
 
-    override fun description(descriptionName: String): Optional<Description> {
+    fun description(descriptionName: String): Optional<Description> {
         return findByDescriptionName(descriptionName)
     }
 
 
-    override fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
+    fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
         // Normalize target name (trim whitespace and convert to lowercase)
         val normalizedTargetName = targetName.trim().lowercase()
 
