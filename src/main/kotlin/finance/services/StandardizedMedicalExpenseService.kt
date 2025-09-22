@@ -141,6 +141,10 @@ class StandardizedMedicalExpenseService(
                 logger.error(message)
                 throw IllegalArgumentException(message)
             }
+            is ServiceResult.BusinessError -> {
+                logger.error("Business error updating medical expense: ${result.message}")
+                throw org.springframework.dao.DataIntegrityViolationException(result.message)
+            }
             else -> {
                 val message = "Failed to update medical expense: $result"
                 logger.error(message)

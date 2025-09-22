@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
-import finance.services.MedicalExpenseService
+import finance.services.IMedicalExpenseService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import spock.lang.Specification
@@ -12,7 +12,7 @@ import java.sql.Timestamp
 
 class MedicalExpenseControllerSpec extends Specification {
 
-    MedicalExpenseService medicalExpenseService = Mock()
+    IMedicalExpenseService medicalExpenseService = Mock()
     MedicalExpenseController controller = new MedicalExpenseController(medicalExpenseService)
 
     def "should insert medical expense successfully via controller"() {
