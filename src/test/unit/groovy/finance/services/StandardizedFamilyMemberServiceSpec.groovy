@@ -65,7 +65,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def member = FamilyMemberBuilder.builder().withFamilyMemberId(1L).build()
 
         when: "finding by valid ID"
-        def result = standardizedFamilyMemberService.findById(1L)
+        def result = standardizedFamilyMemberService.findByIdServiceResult(1L)
 
         then: "should return Success with family member"
         1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
@@ -76,7 +76,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
 
     def "findById should return NotFound when family member does not exist"() {
         when: "finding by non-existent ID"
-        def result = standardizedFamilyMemberService.findById(999L)
+        def result = standardizedFamilyMemberService.findByIdServiceResult(999L)
 
         then: "should return NotFound result"
         1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
@@ -109,7 +109,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         given: "invalid family member"
         def member = FamilyMemberBuilder.builder().withOwner("").build()
         ConstraintViolation<FamilyMember> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "owner"
         violation.propertyPath >> mockPath
         violation.message >> "must not be blank"
