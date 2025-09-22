@@ -2,6 +2,7 @@ package finance.services
 
 import finance.domain.*
 import finance.repositories.TransactionRepository
+import finance.repositories.CategoryRepository
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validator
@@ -18,7 +19,10 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
     // Declare all required mocks at class level
     def transactionRepositoryMock = Mock(TransactionRepository)
     def accountServiceMock = Mock(IAccountService)
-    def categoryServiceMock = Mock(StandardizedCategoryService)
+    // Use a real StandardizedCategoryService wired with repository mocks
+    def categoryRepositoryMock = Mock(CategoryRepository)
+    def categoryTxRepositoryMock = Mock(TransactionRepository)
+    def categoryService = new StandardizedCategoryService(categoryRepositoryMock, categoryTxRepositoryMock)
     def descriptionServiceMock = Mock(IDescriptionService)
     def receiptImageServiceMock = Mock(IReceiptImageService)
     def imageProcessingServiceMock = Mock(ImageProcessingService)
@@ -31,7 +35,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         standardizedTransactionService = new StandardizedTransactionService(
             transactionRepositoryMock,
             accountServiceMock,
-            categoryServiceMock,
+            categoryService,
             descriptionServiceMock,
             receiptImageServiceMock,
             imageProcessingServiceMock,
@@ -39,6 +43,9 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         )
         standardizedTransactionService.validator = validatorMock
         standardizedTransactionService.meterService = meterService
+        // also wire shared test collaborators into the category service
+        categoryService.validator = validatorMock
+        categoryService.meterService = meterService
     }
 
     // ===== Test Data Builders =====
@@ -233,8 +240,9 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         and: "account processing occurs"
         1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
 
-        and: "category processing occurs"
-        1 * categoryServiceMock.category(transaction.category) >> Optional.of(category)
+        and: "category processing occurs via StandardizedCategoryService"
+        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
 
         and: "description processing occurs"
         1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
@@ -267,8 +275,9 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         and: "account processing occurs"
         1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
 
-        and: "category processing occurs"
-        1 * categoryServiceMock.category(transaction.category) >> Optional.of(category)
+        and: "category processing occurs via StandardizedCategoryService"
+        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
 
         and: "description processing occurs"
         1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
@@ -348,7 +357,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(updatedTransaction) >> Collections.emptySet()
 
         and: "masterTransactionUpdater business logic executes"
-        1 * categoryServiceMock.category(updatedTransaction.category) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * accountServiceMock.account(updatedTransaction.accountNameOwner) >> Optional.of(account)
         1 * descriptionServiceMock.description(updatedTransaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
@@ -622,7 +632,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
 
         and: "processing occurs"
         1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
-        1 * categoryServiceMock.category(transaction.category) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
 
         and: "repository saveAndFlush is called"
@@ -652,7 +663,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(existingTransaction)
 
         and: "masterTransactionUpdater is called with services"
-        1 * categoryServiceMock.category(transaction.category) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
         1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
@@ -739,7 +751,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(updatedTransaction) >> Collections.emptySet()
 
         and: "masterTransactionUpdater executes"
-        1 * categoryServiceMock.category(updatedTransaction.category) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * accountServiceMock.account(updatedTransaction.accountNameOwner) >> Optional.of(account)
         1 * descriptionServiceMock.description(updatedTransaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
