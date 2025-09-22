@@ -4,9 +4,10 @@ import finance.domain.Account
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Payment
+import finance.domain.ServiceResult
 import finance.domain.Transfer
 import finance.services.IAccountService
-import finance.services.ICategoryService
+import finance.services.StandardizedCategoryService
 import finance.services.IDescriptionService
 import finance.services.IPaymentService
 import finance.services.ITransferService
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Controller
 @Controller
 class GraphQLQueryController(
     private val accountService: IAccountService,
-    private val categoryService: ICategoryService,
+    private val categoryService: StandardizedCategoryService,
     private val descriptionService: IDescriptionService,
     private val paymentService: IPaymentService,
     private val transferService: ITransferService
@@ -44,13 +45,19 @@ class GraphQLQueryController(
     @QueryMapping
     fun categories(): List<Category> {
         logger.info("GraphQL - Fetching all categories")
-        return categoryService.categories()
+        return when (val result = categoryService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
     fun category(@Argument categoryName: String): Category? {
         logger.info("GraphQL - Fetching category: $categoryName")
-        return categoryService.findByCategoryName(categoryName).orElse(null)
+        return when (val result = categoryService.findByCategoryNameStandardized(categoryName)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping

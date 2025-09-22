@@ -274,11 +274,12 @@ class StandardizedParameterControllerSpec extends BaseControllerSpec {
         response.statusCode == HttpStatus.CONFLICT
 
         and: 'should contain standardized error message format'
-        response.body.contains("Duplicate")
+        response.body.contains("Data integrity violation") || response.body.contains("constraint")
 
         and: 'documents standardized exception handling'
-        // After standardization: DataIntegrityViolationException -> 409 CONFLICT
-        // Consistent error message format across all controllers
+        // After standardization: ServiceResult.BusinessError -> 409 CONFLICT
+        // Enhanced error message with detailed constraint violation information
+        // Consistent ServiceResult error format across all controllers
         true
     }
 

@@ -32,7 +32,7 @@ class BaseServiceSpec extends Specification {
 
 
     protected IReceiptImageService receiptImageServiceMock = GroovyMock(IReceiptImageService)
-    protected ICategoryService categoryServiceMock = Mock(ICategoryService)
+    protected StandardizedCategoryService categoryServiceMock = GroovyMock(StandardizedCategoryService)
     protected IAccountService accountServiceMock = Mock(IAccountService)
 
     protected StandardizedReceiptImageService receiptImageService = new StandardizedReceiptImageService(receiptImageRepositoryMock)
@@ -54,7 +54,6 @@ class BaseServiceSpec extends Specification {
     protected ITransactionService transactionServiceMock = Mock(ITransactionService)
     protected StandardizedParameterService parameterService = new StandardizedParameterService(parameterRepositoryMock)
     protected StandardizedPaymentService paymentService = new StandardizedPaymentService(paymentRepositoryMock, transactionServiceMock, accountService)
-    protected IValidationAmountService validationAmountServiceMock = Mock(IValidationAmountService)
 
     //TODO: turn this into a method
     protected Tag validationExceptionTag = Tag.of(EXCEPTION_NAME_TAG, 'ValidationException')

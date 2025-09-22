@@ -20,7 +20,7 @@ import java.util.*
 class StandardizedCategoryService(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository
-) : StandardizedBaseService<Category, Long>(), ICategoryService {
+) : StandardizedBaseService<Category, Long>() {
 
     override fun getEntityName(): String = "Category"
 
@@ -92,92 +92,34 @@ class StandardizedCategoryService(
         }
     }
 
-    // ===== Legacy Method Compatibility =====
-
-    override fun categories(): List<Category> {
-        val result = findAllActive()
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            else -> emptyList()
+    fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> {
+        return handleServiceOperation("findByCategoryName", null) {
+            val optionalCategory = categoryRepository.findByCategoryName(categoryName)
+            if (optionalCategory.isPresent) {
+                val category = optionalCategory.get()
+                val count = transactionRepository.countByCategoryName(category.categoryName)
+                category.categoryCount = count
+                category
+            } else {
+                throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
+            }
         }
     }
 
-    override fun insertCategory(category: Category): Category {
-        val result = save(category)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<Category> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): Category = category
-                        override fun getRootBeanClass(): Class<Category> = Category::class.java
-                        override fun getLeafBean(): Any = category
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                            }
-                        }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+    fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Boolean> {
+        return handleServiceOperation("deleteByCategoryName", null) {
+            val optionalCategory = categoryRepository.findByCategoryName(categoryName)
+            if (optionalCategory.isEmpty) {
+                throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
             }
-            is ServiceResult.BusinessError -> {
-                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                } else {
-                    throw RuntimeException("Business error: ${result.message}")
-                }
-            }
-            else -> throw RuntimeException("Failed to insert category: ${result}")
+            categoryRepository.delete(optionalCategory.get())
+            true
         }
     }
 
-    override fun updateCategory(category: Category): Category {
-        val result = update(category)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw RuntimeException("Category not updated as the category does not exist: ${category.categoryId}.")
-            is ServiceResult.BusinessError -> {
-                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                } else {
-                    throw RuntimeException("Business error: ${result.message}")
-                }
-            }
-            is ServiceResult.ValidationError -> {
-                // Convert to appropriate validation exception
-                throw jakarta.validation.ValidationException("Validation failed: ${result.errors}")
-            }
-            else -> throw RuntimeException("Failed to update category: ${result}")
-        }
-    }
+    // ===== Business Logic Methods =====
 
-    override fun findByCategoryName(categoryName: String): Optional<Category> {
-        return categoryRepository.findByCategoryName(categoryName)
-    }
-
-    override fun category(categoryName: String): Optional<Category> {
-        return findByCategoryName(categoryName)
-    }
-
-    override fun deleteCategory(categoryName: String): Boolean {
-        val optionalCategory = categoryRepository.findByCategoryName(categoryName)
-        if (optionalCategory.isEmpty) {
-            return false
-        }
-        categoryRepository.delete(optionalCategory.get())
-        return true
-    }
-
-    override fun mergeCategories(categoryName1: String, categoryName2: String): Category {
+    fun mergeCategories(categoryName1: String, categoryName2: String): Category {
         // Find both categories by name
         val category1 = categoryRepository.findByCategoryName(categoryName1).orElseThrow {
             RuntimeException("Category $categoryName1 not found")

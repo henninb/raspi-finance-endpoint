@@ -23,7 +23,7 @@ import java.util.*
 class StandardizedTransactionService(
     private val transactionRepository: TransactionRepository,
     private val accountService: IAccountService,
-    private val categoryService: ICategoryService,
+    private val categoryService: StandardizedCategoryService,
     private val descriptionService: IDescriptionService,
     private val receiptImageService: IReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
@@ -463,16 +463,24 @@ class StandardizedTransactionService(
     override fun processCategory(transaction: Transaction) {
         when {
             transaction.category != "" -> {
-                val optionalCategory = categoryService.category(transaction.category)
-                if (optionalCategory.isPresent) {
-                    transaction.categories.add(optionalCategory.get())
-                    logger.info("Using existing category: ${transaction.category}")
-                } else {
-                    logger.info("Creating new category: ${transaction.category}")
-                    val category = createDefaultCategory(transaction.category)
-                    val savedCategory = categoryService.insertCategory(category)
-                    logger.info("Created new category: ${transaction.category}")
-                    transaction.categories.add(savedCategory)
+                when (val result = categoryService.findByCategoryNameStandardized(transaction.category)) {
+                    is ServiceResult.Success -> {
+                        transaction.categories.add(result.data)
+                        logger.info("Using existing category: ${transaction.category}")
+                    }
+                    else -> {
+                        logger.info("Creating new category: ${transaction.category}")
+                        val category = createDefaultCategory(transaction.category)
+                        when (val saveResult = categoryService.save(category)) {
+                            is ServiceResult.Success -> {
+                                logger.info("Created new category: ${transaction.category}")
+                                transaction.categories.add(saveResult.data)
+                            }
+                            else -> {
+                                logger.error("Failed to create category: ${transaction.category}")
+                            }
+                        }
+                    }
                 }
             }
         }

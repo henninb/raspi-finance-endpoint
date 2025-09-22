@@ -211,103 +211,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
 
     // ===== TDD Tests for Legacy Method Support =====
 
-    def "categories should delegate to findAllActive and return data"() {
-        given: "existing categories"
-        def categories = [CategoryBuilder.builder().build()]
 
-        when: "calling legacy categories method"
-        def result = standardizedCategoryService.categories()
-
-        then: "should return category list"
-        1 * categoryRepositoryMock.findByActiveStatusOrderByCategoryName(true) >> categories
-        1 * transactionRepositoryMock.countByCategoryName("foo") >> 2L
-        result.size() == 1
-        result[0].categoryCount == 2L
-        0 * _
-    }
-
-    def "insertCategory should delegate to save and return data"() {
-        given: "valid category"
-        def category = CategoryBuilder.builder().build()
-        def savedCategory = CategoryBuilder.builder().withCategoryId(1L).build()
-        Set<ConstraintViolation<Category>> noViolations = [] as Set
-
-        when: "calling legacy insertCategory method"
-        def result = standardizedCategoryService.insertCategory(category)
-
-        then: "should return saved category"
-        1 * validatorMock.validate(category) >> noViolations
-        1 * categoryRepositoryMock.saveAndFlush(category) >> savedCategory
-        result.categoryId == 1L
-        0 * _
-    }
-
-    def "updateCategory should delegate to update and return data"() {
-        given: "existing category to update"
-        def existingCategory = CategoryBuilder.builder().withCategoryId(1L).withCategoryName("old").build()
-        def updatedCategory = CategoryBuilder.builder().withCategoryId(1L).withCategoryName("new").build()
-
-        when: "calling legacy updateCategory method"
-        def result = standardizedCategoryService.updateCategory(updatedCategory)
-
-        then: "should return updated category"
-        1 * categoryRepositoryMock.findByCategoryId(1L) >> Optional.of(existingCategory)
-        1 * categoryRepositoryMock.saveAndFlush(_ as Category) >> { Category cat -> return cat }
-        result.categoryName == "new"
-        0 * _
-    }
-
-    def "findByCategoryName should return category when found"() {
-        given: "existing category"
-        def category = CategoryBuilder.builder().withCategoryName("test").build()
-
-        when: "finding by category name"
-        def result = standardizedCategoryService.findByCategoryName("test")
-
-        then: "should return category optional"
-        1 * categoryRepositoryMock.findByCategoryName("test") >> Optional.of(category)
-        result.isPresent()
-        result.get().categoryName == "test"
-        0 * _
-    }
-
-    def "category should delegate to findByCategoryName"() {
-        given: "existing category"
-        def category = CategoryBuilder.builder().withCategoryName("test").build()
-
-        when: "calling legacy category method"
-        def result = standardizedCategoryService.category("test")
-
-        then: "should return category optional"
-        1 * categoryRepositoryMock.findByCategoryName("test") >> Optional.of(category)
-        result.isPresent()
-        result.get().categoryName == "test"
-        0 * _
-    }
-
-    def "deleteCategory should return true when category exists"() {
-        given: "existing category"
-        def category = CategoryBuilder.builder().withCategoryName("test").build()
-
-        when: "deleting by category name"
-        def result = standardizedCategoryService.deleteCategory("test")
-
-        then: "should return true"
-        1 * categoryRepositoryMock.findByCategoryName("test") >> Optional.of(category)
-        1 * categoryRepositoryMock.delete(category)
-        result == true
-        0 * _
-    }
-
-    def "deleteCategory should return false when category does not exist"() {
-        when: "deleting non-existent category"
-        def result = standardizedCategoryService.deleteCategory("missing")
-
-        then: "should return false"
-        1 * categoryRepositoryMock.findByCategoryName("missing") >> Optional.empty()
-        result == false
-        0 * _
-    }
 
     // ===== TDD Tests for mergeCategories() =====
 
@@ -331,36 +235,8 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    // ===== TDD Tests for Error Handling in Legacy Methods =====
+    // ===== TDD Tests for Error Handling in Business Methods =====
 
-    def "insertCategory should throw ValidationException for invalid category"() {
-        given: "invalid category"
-        def category = CategoryBuilder.builder().withCategoryName("").build()
-        ConstraintViolation<Category> violation = Mock(ConstraintViolation)
-        violation.invalidValue >> ""
-        violation.message >> "size must be between 1 and 50"
-        Set<ConstraintViolation<Category>> violations = [violation] as Set
-
-        when: "calling legacy insertCategory with invalid data"
-        standardizedCategoryService.insertCategory(category)
-
-        then: "should throw ValidationException"
-        1 * validatorMock.validate(category) >> { throw new ConstraintViolationException("Validation failed", violations) }
-        thrown(jakarta.validation.ValidationException)
-    }
-
-    def "updateCategory should throw RuntimeException when category not found"() {
-        given: "category with non-existent ID"
-        def category = CategoryBuilder.builder().withCategoryId(999L).build()
-
-        when: "calling legacy updateCategory with non-existent category"
-        standardizedCategoryService.updateCategory(category)
-
-        then: "should throw RuntimeException"
-        1 * categoryRepositoryMock.findByCategoryId(999L) >> Optional.empty()
-        thrown(RuntimeException)
-        0 * _
-    }
 
     def "mergeCategories should throw RuntimeException when first category not found"() {
         when: "merging with non-existent first category"
