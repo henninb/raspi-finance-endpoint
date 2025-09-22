@@ -201,118 +201,58 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    // ===== TDD Tests for Legacy Method Support =====
+    // ===== TDD Tests for findByParameterNameStandardized() =====
 
-    def "selectAll should delegate to findAllActive and return data"() {
-        given: "existing parameters"
-        def parameters = [ParameterBuilder.builder().build()]
-
-        when: "calling legacy selectAll method"
-        def result = standardizedParameterService.selectAll()
-
-        then: "should return parameter list"
-        1 * parameterRepositoryMock.findByActiveStatusIsTrue() >> parameters
-        result.size() == 1
-        0 * _
-    }
-
-    def "insertParameter should delegate to save and return data"() {
-        given: "valid parameter"
-        def parameter = ParameterBuilder.builder().build()
-        def savedParameter = ParameterBuilder.builder().withParameterId(1L).build()
-        Set<ConstraintViolation<Parameter>> noViolations = [] as Set
-
-        when: "calling legacy insertParameter method"
-        def result = standardizedParameterService.insertParameter(parameter)
-
-        then: "should return saved parameter"
-        1 * validatorMock.validate(parameter) >> noViolations
-        1 * parameterRepositoryMock.saveAndFlush(parameter) >> savedParameter
-        result.parameterId == 1L
-        0 * _
-    }
-
-    def "updateParameter should delegate to update and return data"() {
-        given: "existing parameter to update"
-        def existingParameter = ParameterBuilder.builder().withParameterId(1L).withParameterName("old").build()
-        def updatedParameter = ParameterBuilder.builder().withParameterId(1L).withParameterName("new").build()
-
-        when: "calling legacy updateParameter method"
-        def result = standardizedParameterService.updateParameter(updatedParameter)
-
-        then: "should return updated parameter"
-        1 * parameterRepositoryMock.findById(1L) >> Optional.of(existingParameter)
-        1 * parameterRepositoryMock.saveAndFlush(_ as Parameter) >> { Parameter param -> return param }
-        result.parameterName == "new"
-        0 * _
-    }
-
-    def "findByParameterName should return parameter when found"() {
+    def "findByParameterNameStandardized should return Success with parameter when found"() {
         given: "existing parameter"
         def parameter = ParameterBuilder.builder().withParameterName("test").build()
 
         when: "finding by parameter name"
-        def result = standardizedParameterService.findByParameterName("test")
+        def result = standardizedParameterService.findByParameterNameStandardized("test")
 
-        then: "should return parameter optional"
+        then: "should return Success with parameter"
         1 * parameterRepositoryMock.findByParameterName("test") >> Optional.of(parameter)
-        result.isPresent()
-        result.get().parameterName == "test"
+        result instanceof ServiceResult.Success
+        result.data.parameterName == "test"
         0 * _
     }
 
-    def "deleteByParameterName should return true when parameter exists"() {
+    def "findByParameterNameStandardized should return NotFound when parameter does not exist"() {
+        when: "finding by non-existent parameter name"
+        def result = standardizedParameterService.findByParameterNameStandardized("missing")
+
+        then: "should return NotFound result"
+        1 * parameterRepositoryMock.findByParameterName("missing") >> Optional.empty()
+        result instanceof ServiceResult.NotFound
+        result.message.contains("Parameter not found")
+        0 * _
+    }
+
+    // ===== TDD Tests for deleteByParameterNameStandardized() =====
+
+    def "deleteByParameterNameStandardized should return Success when parameter exists"() {
         given: "existing parameter"
         def parameter = ParameterBuilder.builder().withParameterName("test").build()
 
         when: "deleting by parameter name"
-        def result = standardizedParameterService.deleteByParameterName("test")
+        def result = standardizedParameterService.deleteByParameterNameStandardized("test")
 
-        then: "should return true"
+        then: "should return Success"
         1 * parameterRepositoryMock.findByParameterName("test") >> Optional.of(parameter)
         1 * parameterRepositoryMock.delete(parameter)
-        result == true
+        result instanceof ServiceResult.Success
+        result.data == true
         0 * _
     }
 
-    // ===== TDD Tests for Error Handling in Legacy Methods =====
-
-    def "insertParameter should throw ValidationException for invalid parameter"() {
-        given: "invalid parameter"
-        def parameter = ParameterBuilder.builder().withParameterName("").build()
-        ConstraintViolation<Parameter> violation = Mock(ConstraintViolation)
-        violation.invalidValue >> ""
-        violation.message >> "size must be between 1 and 50"
-        Set<ConstraintViolation<Parameter>> violations = [violation] as Set
-
-        when: "calling legacy insertParameter with invalid data"
-        standardizedParameterService.insertParameter(parameter)
-
-        then: "should throw ValidationException"
-        1 * validatorMock.validate(parameter) >> { throw new ConstraintViolationException("Validation failed", violations) }
-        thrown(jakarta.validation.ValidationException)
-    }
-
-    def "deleteByParameterName should throw ResponseStatusException when not found"() {
+    def "deleteByParameterNameStandardized should return NotFound when parameter does not exist"() {
         when: "deleting by non-existent parameter name"
-        standardizedParameterService.deleteByParameterName("missing")
+        def result = standardizedParameterService.deleteByParameterNameStandardized("missing")
 
-        then: "should throw ResponseStatusException"
+        then: "should return NotFound result"
         1 * parameterRepositoryMock.findByParameterName("missing") >> Optional.empty()
-        thrown(org.springframework.web.server.ResponseStatusException)
-        0 * _
-    }
-
-    def "updateParameter should throw RuntimeException when parameter not found"() {
-        given: "parameter with non-existent ID"
-        def parameter = ParameterBuilder.builder().withParameterId(999L).build()
-
-        when: "calling legacy updateParameter with non-existent parameter"
-        standardizedParameterService.updateParameter(parameter)
-
-        then: "should throw RuntimeException"
-        1 * parameterRepositoryMock.findById(999L) >> Optional.empty()
-        thrown(RuntimeException)
+        result instanceof ServiceResult.NotFound
+        result.message.contains("Parameter not found")
         0 * _
     }
 }

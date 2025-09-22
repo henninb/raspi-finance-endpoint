@@ -19,7 +19,7 @@ import java.util.*
 @Primary
 class StandardizedParameterService(
     private val parameterRepository: ParameterRepository
-) : StandardizedBaseService<Parameter, Long>(), IParameterService {
+) : StandardizedBaseService<Parameter, Long>() {
 
     override fun getEntityName(): String = "Parameter"
 
@@ -81,70 +81,32 @@ class StandardizedParameterService(
         }
     }
 
-    // ===== Legacy Method Compatibility =====
-
-    override fun selectAll(): List<Parameter> {
-        val result = findAllActive()
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            else -> emptyList()
-        }
-    }
-
-    override fun insertParameter(parameter: Parameter): Parameter {
-        val result = save(parameter)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<Parameter> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): Parameter = parameter
-                        override fun getRootBeanClass(): Class<Parameter> = Parameter::class.java
-                        override fun getLeafBean(): Any = parameter
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                            }
-                        }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+    /**
+     * ServiceResult version of findByParameterName for modern controller usage
+     */
+    fun findByParameterNameStandardized(parameterName: String): ServiceResult<Parameter> {
+        return handleServiceOperation("findByParameterName", null) {
+            val optionalParameter = parameterRepository.findByParameterName(parameterName)
+            if (optionalParameter.isPresent) {
+                optionalParameter.get()
+            } else {
+                throw jakarta.persistence.EntityNotFoundException("Parameter not found: $parameterName")
             }
-            is ServiceResult.BusinessError -> {
-                // Handle data integrity violations (e.g., duplicate parameters)
-                throw org.springframework.dao.DataIntegrityViolationException(result.message)
+        }
+    }
+
+    /**
+     * ServiceResult version of deleteByParameterName for modern controller usage
+     */
+    fun deleteByParameterNameStandardized(parameterName: String): ServiceResult<Boolean> {
+        return handleServiceOperation("deleteByParameterName", null) {
+            val optionalParameter = parameterRepository.findByParameterName(parameterName)
+            if (optionalParameter.isEmpty) {
+                throw jakarta.persistence.EntityNotFoundException("Parameter not found: $parameterName")
             }
-            else -> throw RuntimeException("Failed to insert parameter: ${result}")
+            parameterRepository.delete(optionalParameter.get())
+            true
         }
     }
 
-    override fun updateParameter(parameter: Parameter): Parameter {
-        val result = update(parameter)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw RuntimeException("Parameter not found: ${parameter.parameterId}")
-            else -> throw RuntimeException("Failed to update parameter: ${result}")
-        }
-    }
-
-    override fun findByParameterName(parameterName: String): Optional<Parameter> {
-        return parameterRepository.findByParameterName(parameterName)
-    }
-
-    override fun deleteByParameterName(parameterName: String): Boolean {
-        val optionalParameter = parameterRepository.findByParameterName(parameterName)
-        if (optionalParameter.isEmpty) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Parameter not found: $parameterName")
-        }
-        parameterRepository.delete(optionalParameter.get())
-        return true
-    }
 }

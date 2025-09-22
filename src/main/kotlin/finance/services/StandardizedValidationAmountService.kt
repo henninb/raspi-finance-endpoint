@@ -21,7 +21,7 @@ import java.util.*
 class StandardizedValidationAmountService(
     private val validationAmountRepository: ValidationAmountRepository,
     private val accountRepository: AccountRepository
-) : StandardizedBaseService<ValidationAmount, Long>(), IValidationAmountService {
+) : StandardizedBaseService<ValidationAmount, Long>() {
 
     override fun getEntityName(): String = "ValidationAmount"
 
@@ -91,69 +91,9 @@ class StandardizedValidationAmountService(
         }
     }
 
-    // ===== Legacy Method Compatibility =====
+    // ===== Legacy methods still needed by controller =====
 
-    override fun findAllActiveValidationAmounts(): List<ValidationAmount> {
-        val result = findAllActive()
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            else -> emptyList()
-        }
-    }
-
-    override fun insertValidationAmount(validationAmount: ValidationAmount): ValidationAmount {
-        val result = save(validationAmount)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<ValidationAmount> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): ValidationAmount = validationAmount
-                        override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
-                        override fun getLeafBean(): Any = validationAmount
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                            }
-                        }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
-            }
-            else -> throw RuntimeException("Failed to insert validation amount: ${result}")
-        }
-    }
-
-    override fun updateValidationAmount(validationAmount: ValidationAmount): ValidationAmount {
-        val result = update(validationAmount)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw RuntimeException("ValidationAmount not updated as the validation amount does not exist: ${validationAmount.validationId}.")
-            else -> throw RuntimeException("Failed to update validation amount: ${result}")
-        }
-    }
-
-    override fun findValidationAmountById(validationId: Long): Optional<ValidationAmount> {
-        return validationAmountRepository.findByValidationIdAndActiveStatusTrue(validationId)
-    }
-
-    override fun deleteValidationAmount(validationId: Long) {
-        val optionalValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(validationId)
-        if (optionalValidationAmount.isPresent) {
-            validationAmountRepository.delete(optionalValidationAmount.get())
-        }
-        // Silent failure for non-existent validation amounts (legacy behavior)
-    }
-
-    override fun findValidationAmountByAccountNameOwner(
+    fun findValidationAmountByAccountNameOwner(
         accountNameOwner: String,
         transactionState: TransactionState
     ): ValidationAmount {
@@ -170,9 +110,7 @@ class StandardizedValidationAmountService(
         return validationAmounts.first() // Return the first match (legacy behavior)
     }
 
-    // ===== Legacy method with account name parameter =====
-
-    override fun insertValidationAmount(
+    fun insertValidationAmount(
         accountNameOwner: String,
         validationAmount: ValidationAmount
     ): ValidationAmount {
@@ -206,7 +144,34 @@ class StandardizedValidationAmountService(
         // Set the resolved accountId
         validationAmount.accountId = resolvedAccountId
 
-        // Use the standard insert method
-        return insertValidationAmount(validationAmount)
+        // Use the standard save method and handle ServiceResult
+        val result = save(validationAmount)
+        return when (result) {
+            is ServiceResult.Success -> result.data
+            is ServiceResult.ValidationError -> {
+                val violations = result.errors.map { (field, message) ->
+                    object : jakarta.validation.ConstraintViolation<ValidationAmount> {
+                        override fun getMessage(): String = message
+                        override fun getMessageTemplate(): String = message
+                        override fun getRootBean(): ValidationAmount = validationAmount
+                        override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
+                        override fun getLeafBean(): Any = validationAmount
+                        override fun getExecutableParameters(): Array<Any> = emptyArray()
+                        override fun getExecutableReturnValue(): Any? = null
+                        override fun getPropertyPath(): jakarta.validation.Path {
+                            return object : jakarta.validation.Path {
+                                override fun toString(): String = field
+                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                            }
+                        }
+                        override fun getInvalidValue(): Any? = null
+                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
+                    }
+                }.toSet()
+                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+            }
+            else -> throw RuntimeException("Failed to insert validation amount: ${result}")
+        }
     }
 }
