@@ -3,6 +3,7 @@ package finance.controllers
 import finance.domain.*
 import finance.services.*
 import finance.repositories.CategoryRepository
+import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import spock.lang.Specification
 
@@ -13,7 +14,9 @@ class GraphQLQueryControllerSpec extends Specification {
     def categoryRepositoryMock = Mock(CategoryRepository)
     def categoryTxRepositoryMock = Mock(TransactionRepository)
     def categoryService = new StandardizedCategoryService(categoryRepositoryMock, categoryTxRepositoryMock)
-    def descriptionService = Mock(IDescriptionService)
+    def descriptionRepositoryMock = Mock(DescriptionRepository)
+    def descriptionTxRepositoryMock = Mock(TransactionRepository)
+    def descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, descriptionTxRepositoryMock)
     def paymentService = Mock(IPaymentService)
     def transferService = Mock(ITransferService)
 
@@ -61,7 +64,7 @@ class GraphQLQueryControllerSpec extends Specification {
         then:
         // Category service delegates to repository; empty should yield NotFound -> null from controller
         1 * categoryRepositoryMock.findByCategoryName('x') >> Optional.empty()
-        1 * descriptionService.findByDescriptionName('y') >> Optional.empty()
+        1 * descriptionRepositoryMock.findByDescriptionName('y') >> Optional.empty()
         c == null
         d == null
     }

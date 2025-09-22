@@ -23,7 +23,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
     def categoryRepositoryMock = Mock(CategoryRepository)
     def categoryTxRepositoryMock = Mock(TransactionRepository)
     def categoryService = new StandardizedCategoryService(categoryRepositoryMock, categoryTxRepositoryMock)
-    def descriptionServiceMock = Mock(IDescriptionService)
+    // Use a real StandardizedDescriptionService wired with repository mocks
+    def descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
     def receiptImageServiceMock = Mock(IReceiptImageService)
     def imageProcessingServiceMock = Mock(ImageProcessingService)
     def calculationServiceMock = Mock(CalculationService)
@@ -36,16 +37,18 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
             transactionRepositoryMock,
             accountServiceMock,
             categoryService,
-            descriptionServiceMock,
+            descriptionService,
             receiptImageServiceMock,
             imageProcessingServiceMock,
             calculationServiceMock
         )
         standardizedTransactionService.validator = validatorMock
         standardizedTransactionService.meterService = meterService
-        // also wire shared test collaborators into the category service
+        // also wire shared test collaborators into the category and description services
         categoryService.validator = validatorMock
         categoryService.meterService = meterService
+        descriptionService.validator = validatorMock
+        descriptionService.meterService = meterService
     }
 
     // ===== Test Data Builders =====
@@ -244,8 +247,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
 
-        and: "description processing occurs"
-        1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
+        and: "description processing occurs via StandardizedDescriptionService"
+        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
@@ -279,8 +282,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
 
-        and: "description processing occurs"
-        1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
+        and: "description processing occurs via StandardizedDescriptionService"
+        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
@@ -360,7 +363,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * accountServiceMock.account(updatedTransaction.accountNameOwner) >> Optional.of(account)
-        1 * descriptionServiceMock.description(updatedTransaction.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByDescriptionName(updatedTransaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
 
         and: "result is Success"
@@ -634,7 +637,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
@@ -666,7 +669,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
-        1 * descriptionServiceMock.description(transaction.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
 
         and: "result is the updated transaction"
@@ -754,7 +757,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * accountServiceMock.account(updatedTransaction.accountNameOwner) >> Optional.of(account)
-        1 * descriptionServiceMock.description(updatedTransaction.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByDescriptionName(updatedTransaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
 
         and: "result is the updated transaction"
