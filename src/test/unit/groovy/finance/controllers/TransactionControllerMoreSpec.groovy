@@ -3,14 +3,14 @@ package finance.controllers
 import finance.domain.Totals
 import finance.domain.Transaction
 import finance.services.MeterService
-import finance.services.TransactionService
+import finance.services.ITransactionService
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 class TransactionControllerMoreSpec extends Specification {
 
-    def service = Mock(TransactionService)
+    def service = Mock(ITransactionService)
     def meter = GroovyMock(MeterService)
     def controller = new TransactionController(service, meter)
 
