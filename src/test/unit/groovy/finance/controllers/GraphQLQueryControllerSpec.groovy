@@ -2,12 +2,17 @@ package finance.controllers
 
 import finance.domain.*
 import finance.services.*
+import finance.repositories.CategoryRepository
+import finance.repositories.TransactionRepository
 import spock.lang.Specification
 
 class GraphQLQueryControllerSpec extends Specification {
 
     def accountService = Mock(IAccountService)
-    def categoryService = Mock(ICategoryService)
+    // Use a real StandardizedCategoryService with repository mocks (final Kotlin class)
+    def categoryRepositoryMock = Mock(CategoryRepository)
+    def categoryTxRepositoryMock = Mock(TransactionRepository)
+    def categoryService = new StandardizedCategoryService(categoryRepositoryMock, categoryTxRepositoryMock)
     def descriptionService = Mock(IDescriptionService)
     def paymentService = Mock(IPaymentService)
     def transferService = Mock(ITransferService)
@@ -54,7 +59,8 @@ class GraphQLQueryControllerSpec extends Specification {
         def d = controller.description('y')
 
         then:
-        1 * categoryService.findByCategoryName('x') >> Optional.empty()
+        // Category service delegates to repository; empty should yield NotFound -> null from controller
+        1 * categoryRepositoryMock.findByCategoryName('x') >> Optional.empty()
         1 * descriptionService.findByDescriptionName('y') >> Optional.empty()
         c == null
         d == null
