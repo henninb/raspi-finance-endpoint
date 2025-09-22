@@ -251,8 +251,8 @@ class StandardizedFamilyMemberService(
     override fun softDelete(id: Long): Boolean {
         logger.info("Soft deleting family member with ID: $id")
         return try {
-            // Check if family member exists first
-            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+            // Check if family member exists first (regardless of active status)
+            val existingMember = familyMemberRepository.findById(id).orElse(null)
             if (existingMember == null) {
                 return false
             }

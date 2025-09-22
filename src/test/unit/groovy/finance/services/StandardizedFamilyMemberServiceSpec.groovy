@@ -386,7 +386,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.softDelete(1L)
 
         then: "should return boolean result"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
+        1 * familyMemberRepositoryMock.findById(1L) >> Optional.of(member)
         1 * familyMemberRepositoryMock.softDeleteByFamilyMemberId(1L) >> 1
         result == true
         0 * _
@@ -397,7 +397,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.softDelete(999L)
 
         then: "should return false"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
+        1 * familyMemberRepositoryMock.findById(999L) >> Optional.empty()
         result == false
         0 * _
     }
