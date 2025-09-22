@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.*
 import finance.services.MeterService
-import finance.services.TransactionService
+import finance.services.ITransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,7 +15,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/transaction")
-class TransactionController(private val transactionService: TransactionService, private val meterService: MeterService) :
+class TransactionController(private val transactionService: ITransactionService, private val meterService: MeterService) :
     StandardizedBaseController(), StandardRestController<Transaction, String> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====

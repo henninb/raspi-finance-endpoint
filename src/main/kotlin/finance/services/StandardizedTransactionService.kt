@@ -272,6 +272,7 @@ class StandardizedTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> false
+            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
             else -> throw RuntimeException("Failed to delete transaction: $result")
         }
     }
@@ -345,6 +346,7 @@ class StandardizedTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw TransactionValidationException("cannot update a transaction without a valid guid.")
+            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
             else -> throw RuntimeException("Failed to update transaction: $result")
         }
     }
@@ -368,6 +370,7 @@ class StandardizedTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw TransactionNotFoundException("Cannot save a image for a transaction that does not exist with guid = '$guid'.")
+            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
             else -> throw RuntimeException("Failed to update receipt image: $result")
         }
     }
@@ -386,6 +389,7 @@ class StandardizedTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw AccountValidationException("Cannot change accountNameOwner for a transaction that does not exist, guid='$guid'.")
+            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
             else -> throw RuntimeException("Failed to change account name owner: $result")
         }
     }
@@ -395,6 +399,7 @@ class StandardizedTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw TransactionNotFoundException("Cannot update transaction - the transaction is not found with guid = '$guid'")
+            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
             else -> throw RuntimeException("Failed to update transaction state: $result")
         }
     }
@@ -411,6 +416,7 @@ class StandardizedTransactionService(
         val result = createFutureTransactionStandardized(transaction)
         return when (result) {
             is ServiceResult.Success -> result.data
+            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
             else -> throw RuntimeException("Failed to create future transaction: $result")
         }
     }
