@@ -9,7 +9,7 @@ interface IValidationAmountService {
     fun insertValidationAmount(accountNameOwner: String, validationAmount: ValidationAmount): ValidationAmount
     fun findValidationAmountByAccountNameOwner(
         accountNameOwner: String,
-        traansactionState: TransactionState
+        transactionState: TransactionState
     ): ValidationAmount
 
     // Standardized CRUD methods
