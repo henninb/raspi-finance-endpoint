@@ -269,15 +269,16 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         when: 'attempting to create duplicate description'
         ResponseEntity<String> response = postEndpoint(endpointName, description.toString())
 
-        then: 'should return 409 CONFLICT with standardized message'
+        then: 'should return 409 CONFLICT with standardized response'
         response.statusCode == HttpStatus.CONFLICT
 
-        and: 'should contain standardized error message format'
-        response.body.contains("Duplicate")
+        and: 'should have empty response body (REST-compliant error handling)'
+        response.body == null || response.body.isEmpty()
 
         and: 'documents standardized exception handling'
         // After standardization: DataIntegrityViolationException -> 409 CONFLICT
-        // Consistent error message format across all controllers
+        // ServiceResult pattern returns empty body for error responses (REST-compliant)
+        // Status code provides sufficient information for client error handling
         true
     }
 

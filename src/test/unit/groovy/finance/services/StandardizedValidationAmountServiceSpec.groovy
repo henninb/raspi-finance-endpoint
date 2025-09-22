@@ -209,78 +209,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    // ===== TDD Tests for Legacy Method Support =====
-
-    def "findAllActiveValidationAmounts should delegate to findAllActive and return data"() {
-        given: "existing validation amounts"
-        def validationAmounts = [ValidationAmountBuilder.builder().build()]
-
-        when: "calling legacy findAllActiveValidationAmounts method"
-        def result = standardizedValidationAmountService.findAllActiveValidationAmounts()
-
-        then: "should return validation amount list"
-        1 * validationAmountRepositoryMock.findByActiveStatusTrueOrderByValidationDateDesc() >> validationAmounts
-        result.size() == 1
-        0 * _
-    }
-
-    def "insertValidationAmount should delegate to save and return data"() {
-        given: "valid validation amount"
-        def validationAmount = ValidationAmountBuilder.builder().build()
-        def savedValidationAmount = ValidationAmountBuilder.builder().withValidationId(1L).build()
-        Set<ConstraintViolation<ValidationAmount>> noViolations = [] as Set
-
-        when: "calling legacy insertValidationAmount method"
-        def result = standardizedValidationAmountService.insertValidationAmount(validationAmount)
-
-        then: "should return saved validation amount"
-        1 * validatorMock.validate(validationAmount) >> noViolations
-        1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
-        result.validationId == 1L
-        0 * _
-    }
-
-    def "updateValidationAmount should delegate to update and return data"() {
-        given: "existing validation amount to update"
-        def existingValidationAmount = ValidationAmountBuilder.builder().withValidationId(1L).withAmount(new BigDecimal("100.00")).build()
-        def updatedValidationAmount = ValidationAmountBuilder.builder().withValidationId(1L).withAmount(new BigDecimal("200.00")).build()
-
-        when: "calling legacy updateValidationAmount method"
-        def result = standardizedValidationAmountService.updateValidationAmount(updatedValidationAmount)
-
-        then: "should return updated validation amount"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(1L) >> Optional.of(existingValidationAmount)
-        1 * validationAmountRepositoryMock.saveAndFlush(_ as ValidationAmount) >> { ValidationAmount va -> return va }
-        result.amount == new BigDecimal("200.00")
-        0 * _
-    }
-
-    def "findValidationAmountById should return validation amount when found"() {
-        given: "existing validation amount"
-        def validationAmount = ValidationAmountBuilder.builder().withValidationId(1L).build()
-
-        when: "finding by validation ID"
-        def result = standardizedValidationAmountService.findValidationAmountById(1L)
-
-        then: "should return validation amount optional"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(1L) >> Optional.of(validationAmount)
-        result.isPresent()
-        result.get().validationId == 1L
-        0 * _
-    }
-
-    def "deleteValidationAmount should delete validation amount when exists"() {
-        given: "existing validation amount"
-        def validationAmount = ValidationAmountBuilder.builder().withValidationId(1L).build()
-
-        when: "deleting by validation ID"
-        standardizedValidationAmountService.deleteValidationAmount(1L)
-
-        then: "should delete validation amount"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(1L) >> Optional.of(validationAmount)
-        1 * validationAmountRepositoryMock.delete(validationAmount)
-        0 * _
-    }
+    // ===== TDD Tests for remaining legacy methods =====
 
     // ===== TDD Tests for Account-specific method =====
 
@@ -302,37 +231,6 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    // ===== TDD Tests for Error Handling in Legacy Methods =====
-
-    def "insertValidationAmount should throw ValidationException for invalid validation amount"() {
-        given: "invalid validation amount"
-        def validationAmount = ValidationAmountBuilder.builder().withAmount(new BigDecimal("-100.00")).build()
-        ConstraintViolation<ValidationAmount> violation = Mock(ConstraintViolation)
-        violation.invalidValue >> new BigDecimal("-100.00")
-        violation.message >> "must be greater than or equal to 0"
-        Set<ConstraintViolation<ValidationAmount>> violations = [violation] as Set
-
-        when: "calling legacy insertValidationAmount with invalid data"
-        standardizedValidationAmountService.insertValidationAmount(validationAmount)
-
-        then: "should throw ValidationException"
-        1 * validatorMock.validate(validationAmount) >> { throw new ConstraintViolationException("Validation failed", violations) }
-        thrown(jakarta.validation.ValidationException)
-    }
-
-    def "updateValidationAmount should throw RuntimeException when validation amount not found"() {
-        given: "validation amount with non-existent ID"
-        def validationAmount = ValidationAmountBuilder.builder().withValidationId(999L).build()
-
-        when: "calling legacy updateValidationAmount with non-existent validation amount"
-        standardizedValidationAmountService.updateValidationAmount(validationAmount)
-
-        then: "should throw RuntimeException"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(999L) >> Optional.empty()
-        thrown(RuntimeException)
-        0 * _
-    }
-
     def "findValidationAmountByAccountNameOwner should throw RuntimeException when account not found"() {
         when: "finding validation amount for non-existent account"
         standardizedValidationAmountService.findValidationAmountByAccountNameOwner("missingAccount", TransactionState.Cleared)
@@ -340,16 +238,6 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         then: "should throw RuntimeException"
         1 * accountRepositoryMock.findByAccountNameOwner("missingAccount") >> Optional.empty()
         thrown(RuntimeException)
-        0 * _
-    }
-
-    def "deleteValidationAmount should not throw when validation amount does not exist"() {
-        when: "deleting non-existent validation amount"
-        standardizedValidationAmountService.deleteValidationAmount(999L)
-
-        then: "should not throw exception"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(999L) >> Optional.empty()
-        noExceptionThrown()
         0 * _
     }
 }

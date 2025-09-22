@@ -242,20 +242,6 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "updateDescription should delegate to update and return data"() {
-        given: "existing description to update"
-        def existingDescription = DescriptionBuilder.builder().withDescriptionId(1L).withDescriptionName("old").build()
-        def updatedDescription = DescriptionBuilder.builder().withDescriptionId(1L).withDescriptionName("new").build()
-
-        when: "calling legacy updateDescription method"
-        def result = standardizedDescriptionService.updateDescription(updatedDescription)
-
-        then: "should return updated description"
-        1 * descriptionRepositoryMock.findByDescriptionId(1L) >> Optional.of(existingDescription)
-        1 * descriptionRepositoryMock.saveAndFlush(_ as Description) >> { Description desc -> return desc }
-        result.descriptionName == "new"
-        0 * _
-    }
 
     def "findByDescriptionName should return description when found"() {
         given: "existing description"
@@ -285,29 +271,6 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "deleteByDescriptionName should return true when description exists"() {
-        given: "existing description"
-        def description = DescriptionBuilder.builder().withDescriptionName("test").build()
-
-        when: "deleting by description name"
-        def result = standardizedDescriptionService.deleteByDescriptionName("test")
-
-        then: "should return true"
-        1 * descriptionRepositoryMock.findByDescriptionName("test") >> Optional.of(description)
-        1 * descriptionRepositoryMock.delete(description)
-        result == true
-        0 * _
-    }
-
-    def "deleteByDescriptionName should return false when description does not exist"() {
-        when: "deleting non-existent description"
-        def result = standardizedDescriptionService.deleteByDescriptionName("missing")
-
-        then: "should return false"
-        1 * descriptionRepositoryMock.findByDescriptionName("missing") >> Optional.empty()
-        result == false
-        0 * _
-    }
 
     // ===== TDD Tests for mergeDescriptions() =====
 
@@ -357,18 +320,6 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         thrown(jakarta.validation.ValidationException)
     }
 
-    def "updateDescription should throw RuntimeException when description not found"() {
-        given: "description with non-existent ID"
-        def description = DescriptionBuilder.builder().withDescriptionId(999L).build()
-
-        when: "calling legacy updateDescription with non-existent description"
-        standardizedDescriptionService.updateDescription(description)
-
-        then: "should throw RuntimeException"
-        1 * descriptionRepositoryMock.findByDescriptionId(999L) >> Optional.empty()
-        thrown(RuntimeException)
-        0 * _
-    }
 
     def "mergeDescriptions should throw RuntimeException when target description not found"() {
         when: "merging with non-existent target description"

@@ -92,6 +92,33 @@ class StandardizedDescriptionService(
         }
     }
 
+    // ===== ServiceResult Business Methods for Controller =====
+
+    fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> {
+        return handleServiceOperation("findByDescriptionName", null) {
+            val optionalDescription = descriptionRepository.findByDescriptionName(descriptionName)
+            if (optionalDescription.isPresent) {
+                val description = optionalDescription.get()
+                val count = transactionRepository.countByDescriptionName(description.descriptionName)
+                description.descriptionCount = count
+                description
+            } else {
+                throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
+            }
+        }
+    }
+
+    fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Boolean> {
+        return handleServiceOperation("deleteByDescriptionName", null) {
+            val optionalDescription = descriptionRepository.findByDescriptionName(descriptionName)
+            if (optionalDescription.isEmpty) {
+                throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
+            }
+            descriptionRepository.delete(optionalDescription.get())
+            true
+        }
+    }
+
     // ===== Legacy Method Compatibility =====
 
     override fun fetchAllDescriptions(): List<Description> {
@@ -140,24 +167,6 @@ class StandardizedDescriptionService(
         }
     }
 
-    override fun updateDescription(description: Description): Description {
-        val result = update(description)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw RuntimeException("Description not updated as the description does not exist: ${description.descriptionId}.")
-            is ServiceResult.BusinessError -> {
-                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                } else {
-                    throw RuntimeException("Business error: ${result.message}")
-                }
-            }
-            is ServiceResult.ValidationError -> {
-                throw jakarta.validation.ValidationException("Validation failed: ${result.errors}")
-            }
-            else -> throw RuntimeException("Failed to update description: ${result}")
-        }
-    }
 
     override fun findByDescriptionName(descriptionName: String): Optional<Description> {
         return descriptionRepository.findByDescriptionName(descriptionName)
@@ -167,14 +176,6 @@ class StandardizedDescriptionService(
         return findByDescriptionName(descriptionName)
     }
 
-    override fun deleteByDescriptionName(descriptionName: String): Boolean {
-        val optionalDescription = descriptionRepository.findByDescriptionName(descriptionName)
-        if (optionalDescription.isEmpty) {
-            return false
-        }
-        descriptionRepository.delete(optionalDescription.get())
-        return true
-    }
 
     override fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
         // Normalize target name (trim whitespace and convert to lowercase)
