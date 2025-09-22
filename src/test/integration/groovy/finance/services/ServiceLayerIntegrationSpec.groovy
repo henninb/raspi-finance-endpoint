@@ -41,7 +41,7 @@ class ServiceLayerIntegrationSpec extends Specification {
     IValidationAmountService validationAmountService
 
     @Autowired
-    ReceiptImageService receiptImageService
+    IReceiptImageService receiptImageService
 
     @Autowired
     AccountRepository accountRepository

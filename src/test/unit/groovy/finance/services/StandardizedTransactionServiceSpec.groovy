@@ -20,7 +20,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
     def accountServiceMock = Mock(IAccountService)
     def categoryServiceMock = Mock(ICategoryService)
     def descriptionServiceMock = Mock(IDescriptionService)
-    def receiptImageServiceMock = Mock(ReceiptImageService)
+    def receiptImageServiceMock = Mock(IReceiptImageService)
     def imageProcessingServiceMock = Mock(ImageProcessingService)
     def calculationServiceMock = Mock(CalculationService)
 
