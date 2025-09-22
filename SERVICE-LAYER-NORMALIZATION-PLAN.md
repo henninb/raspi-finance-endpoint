@@ -3023,4 +3023,21 @@ fun `should maintain all business functionality after service migration`() {
 
 ---
 
-**Phase 3 represents the final step in achieving a completely clean, standardized service architecture. While not critical for functionality, it eliminates technical debt and provides a pristine foundation for future development.**
+
+
+** Phase 4 **:
+controller depends on the concrete Standardized* class and the corresponding I*Service interface file is deleted,” even if the plan marks a service “complete”
+
+- Not fully migrated (interface still present and/or controller wired to interfa
+ce/legacy):
+  - TransactionService → `TransactionController` uses `ITransactionService`
+  - MedicalExpenseService → `MedicalExpenseController` uses `IMedicalExpenseServ
+ice`
+  - PaymentService → `PaymentController` uses `IPaymentService`
+  - AccountService → `AccountController` uses `IAccountService`
+  - TransferService → `TransferController` uses `ITransferService`
+  - FamilyMemberService → `FamilyMemberController` uses `IFamilyMemberService`
+  - ReceiptImageService → `ReceiptImageController` uses `IReceiptImageService`
+  - PendingTransactionService → `PendingTransactionController` uses legacy `Pend
+ingTransactionService`; `IPendingTransactionService` still exists alongside `Sta
+ndardizedPendingTransactionService` (@Primary)

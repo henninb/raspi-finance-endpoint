@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.PendingTransaction
-import finance.services.PendingTransactionService
+import finance.services.StandardizedPendingTransactionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,7 +11,7 @@ import jakarta.validation.Valid
 @CrossOrigin
 @RestController
 @RequestMapping("/api/pending/transaction")
-class PendingTransactionController(private val pendingTransactionService: PendingTransactionService) :
+class PendingTransactionController(private val pendingTransactionService: StandardizedPendingTransactionService) :
     StandardizedBaseController(), StandardRestController<PendingTransaction, Long> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -164,6 +164,11 @@ class PendingTransactionController(private val pendingTransactionService: Pendin
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to delete pending transaction with ID: $id")
             }
         } catch (ex: ResponseStatusException) {
+            // Preserve legacy behavior: map NOT_FOUND to INTERNAL_SERVER_ERROR for this endpoint
+            if (ex.statusCode == HttpStatus.NOT_FOUND) {
+                logger.warn("Pending transaction not found: $id (mapping 404 to 500 for legacy contract)")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "PendingTransaction not found: $id")
+            }
             throw ex
         } catch (ex: Exception) {
             logger.error("Failed to delete pending transaction $id: ${ex.message}", ex)
