@@ -26,7 +26,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     // GraphQL graphQL
 
     @Autowired
-    IAccountService accountService
+    StandardizedAccountService accountService
 
     @Autowired
     ICategoryService categoryService

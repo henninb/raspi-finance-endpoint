@@ -17,7 +17,7 @@ import java.util.*
 @org.springframework.context.annotation.Primary
 open class StandardizedReceiptImageService(
     private val receiptImageRepository: ReceiptImageRepository
-) : StandardizedBaseService<ReceiptImage, Long>(), IReceiptImageService {
+) : StandardizedBaseService<ReceiptImage, Long>() {
 
     override fun getEntityName(): String = "ReceiptImage"
 
@@ -94,57 +94,4 @@ open class StandardizedReceiptImageService(
         }
     }
 
-    // ===== Legacy Method Compatibility =====
-
-    @Timed
-    override fun insertReceiptImage(receiptImage: ReceiptImage): ReceiptImage {
-        logger.info("Inserting receipt image for transaction ID: ${receiptImage.transactionId}")
-
-        val result = save(receiptImage)
-        return when (result) {
-            is ServiceResult.Success -> {
-                logger.info("Successfully inserted receipt image with ID: ${result.data.receiptImageId}")
-                result.data
-            }
-            is ServiceResult.ValidationError -> {
-                val message = "Validation failed: ${result.errors}"
-                logger.error(message)
-                throw jakarta.validation.ValidationException(message)
-            }
-            is ServiceResult.BusinessError -> {
-                logger.error("Business error inserting receipt image: ${result.message}")
-                throw org.springframework.dao.DataIntegrityViolationException(result.message)
-            }
-            else -> {
-                val message = "Failed to insert receipt image: $result"
-                logger.error(message)
-                throw RuntimeException(message)
-            }
-        }
-    }
-
-    @Timed
-    override fun findByReceiptImageId(receiptImageId: Long): Optional<ReceiptImage> {
-        logger.info("Finding receipt image by ID: $receiptImageId")
-        val optionalReceiptImage = receiptImageRepository.findById(receiptImageId)
-        if (optionalReceiptImage.isPresent) {
-            logger.info("Found receipt image with ID: $receiptImageId")
-        } else {
-            logger.warn("Receipt image not found with ID: $receiptImageId")
-        }
-        return optionalReceiptImage
-    }
-
-    @Timed
-    override fun deleteReceiptImage(receiptImage: ReceiptImage): Boolean {
-        logger.info("Deleting receipt image with ID: ${receiptImage.receiptImageId}")
-        return try {
-            receiptImageRepository.deleteById(receiptImage.receiptImageId)
-            logger.info("Successfully deleted receipt image with ID: ${receiptImage.receiptImageId}")
-            true
-        } catch (e: Exception) {
-            logger.warn("Exception occurred while deleting receipt image ${receiptImage.receiptImageId}, but returning true per legacy contract: ${e.message}")
-            true
-        }
-    }
 }

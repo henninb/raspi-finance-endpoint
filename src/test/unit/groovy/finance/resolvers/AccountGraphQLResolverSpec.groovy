@@ -2,15 +2,18 @@ package finance.resolvers
 
 import finance.domain.Account
 import finance.domain.AccountType
-import finance.services.IAccountService
+import finance.services.BaseServiceSpec
 import graphql.schema.DataFetchingEnvironment
-import spock.lang.Specification
 
 import java.sql.Timestamp
 
-class AccountGraphQLResolverSpec extends Specification {
-    def accountService = Mock(IAccountService)
+class AccountGraphQLResolverSpec extends BaseServiceSpec {
     def resolver = new AccountGraphQLResolver(accountService)
+
+    void setup() {
+        accountService.meterService = meterService
+        accountService.validator = validator
+    }
 
     private static Account makeAccount(Long id = 1L, String owner = 'checking_primary') {
         new Account(
@@ -31,7 +34,7 @@ class AccountGraphQLResolverSpec extends Specification {
         given:
         def env = Mock(DataFetchingEnvironment)
         def accounts = [makeAccount(1L, 'checking_primary'), makeAccount(2L, 'savings_primary')]
-        accountService.accounts() >> accounts
+        accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
 
         when:
         def result = resolver.accounts.get(env)
@@ -46,7 +49,7 @@ class AccountGraphQLResolverSpec extends Specification {
             getArgument('accountNameOwner') >> 'checking_primary'
         }
         def acct = makeAccount(42L, 'checking_primary')
-        accountService.account('checking_primary') >> Optional.of(acct)
+        accountRepositoryMock.findByAccountNameOwner('checking_primary') >> Optional.of(acct)
 
         when:
         def result = resolver.account().get(env)
@@ -60,7 +63,7 @@ class AccountGraphQLResolverSpec extends Specification {
         def env = Mock(DataFetchingEnvironment) {
             getArgument('accountNameOwner') >> 'nonexistent'
         }
-        accountService.account('nonexistent') >> Optional.empty()
+        accountRepositoryMock.findByAccountNameOwner('nonexistent') >> Optional.empty()
 
         expect:
         resolver.account().get(env) == null

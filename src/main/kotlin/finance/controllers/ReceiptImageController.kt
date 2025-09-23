@@ -1,7 +1,8 @@
 package finance.controllers
 
 import finance.domain.ReceiptImage
-import finance.services.IReceiptImageService
+import finance.services.StandardizedReceiptImageService
+import finance.domain.ServiceResult
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,7 +15,7 @@ import org.springframework.validation.BindingResult
 @CrossOrigin
 @RestController
 @RequestMapping("/api/receipt/image")
-class ReceiptImageController(private var receiptImageService: IReceiptImageService) : BaseController() {
+class ReceiptImageController(private var standardizedReceiptImageService: StandardizedReceiptImageService) : BaseController() {
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionId": 1, "image": "base64encodedimage"}' https://localhost:8443/receipt/image/insert
     @PostMapping("/insert", produces = ["application/json"])
@@ -29,12 +30,27 @@ class ReceiptImageController(private var receiptImageService: IReceiptImageServi
             return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
         }
 
-        try {
-            val insertedReceiptImage = receiptImageService.insertReceiptImage(receiptImage)
-            return ResponseEntity.ok(mapOf("message" to "Receipt image inserted", "id" to insertedReceiptImage.receiptImageId.toString()))
-        } catch (e: Exception) {
-            logger.error("Failed to insert receipt image")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to insert receipt image"))
+        return when (val result = standardizedReceiptImageService.save(receiptImage)) {
+            is ServiceResult.Success -> {
+                logger.info("Receipt image created successfully: ${result.data.receiptImageId}")
+                ResponseEntity.ok(mapOf("message" to "Receipt image inserted", "id" to result.data.receiptImageId.toString()))
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error creating receipt image: ${result.errors}")
+                ResponseEntity.badRequest().body(mapOf("errors" to result.errors.toString()))
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error creating receipt image: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to result.message))
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error creating receipt image: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to insert receipt image"))
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Failed to insert receipt image"))
+            }
         }
     }
 
@@ -43,18 +59,26 @@ class ReceiptImageController(private var receiptImageService: IReceiptImageServi
     fun selectReceiptImage(
         @PathVariable("receipt_image_id") @Positive(message = "Receipt image ID must be positive") receiptImageId: Long
     ): ResponseEntity<Map<String, Any>> {
-        try {
-            val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)
-            if (receiptImageOptional.isPresent) {
-                return ResponseEntity.ok(mapOf(
-                    "receiptImage" to receiptImageOptional.get(),
+        return when (val result = standardizedReceiptImageService.findById(receiptImageId)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved receipt image: $receiptImageId")
+                ResponseEntity.ok(mapOf(
+                    "receiptImage" to result.data,
                     "message" to "Receipt image found"
                 ))
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Receipt image not found"))
-        } catch (e: Exception) {
-            logger.error("Error retrieving receipt image with ID: $receiptImageId")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Error retrieving receipt image"))
+            is ServiceResult.NotFound -> {
+                logger.warn("Receipt image not found: $receiptImageId")
+                ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to result.message))
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving receipt image $receiptImageId: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Error retrieving receipt image"))
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Error retrieving receipt image"))
+            }
         }
     }
 }

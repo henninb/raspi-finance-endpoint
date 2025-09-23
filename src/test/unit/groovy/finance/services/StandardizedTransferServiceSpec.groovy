@@ -15,8 +15,8 @@ class StandardizedTransferServiceSpec extends BaseServiceSpec {
 
     def transferRepositoryMock = Mock(TransferRepository)
     def transactionServiceMock = Mock(ITransactionService)
-    def accountServiceMock = Mock(IAccountService)
-    def standardizedTransferService = new StandardizedTransferService(transferRepositoryMock, transactionServiceMock, accountServiceMock)
+    // Note: accountService is inherited from BaseServiceSpec (real StandardizedAccountService with accountRepositoryMock)
+    def standardizedTransferService = new StandardizedTransferService(transferRepositoryMock, transactionServiceMock, accountService)
 
     void setup() {
         standardizedTransferService.meterService = meterService
@@ -328,8 +328,8 @@ class StandardizedTransferServiceSpec extends BaseServiceSpec {
         def mockAccount = GroovyMock(finance.domain.Account)
 
         when:
-        accountServiceMock.account(transfer.sourceAccount) >> Optional.of(mockAccount)
-        accountServiceMock.account(transfer.destinationAccount) >> Optional.of(mockAccount)
+        accountRepositoryMock.findByAccountNameOwner(transfer.sourceAccount) >> Optional.of(mockAccount)
+        accountRepositoryMock.findByAccountNameOwner(transfer.destinationAccount) >> Optional.of(mockAccount)
         transactionServiceMock.insertTransaction(_) >> {}
         transferRepositoryMock.save(transfer) >> savedTransfer
         def result = standardizedTransferService.insertTransfer(transfer)

@@ -311,7 +311,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
     // ===== Legacy Method Compatibility Tests =====
 
-    def "insertReceiptImage should return receipt image on ServiceResult.Success"() {
+    def "save should return ServiceResult.Success with receipt image"() {
         given:
         def image = ReceiptImageBuilder.builder().withTransactionId(123L).build()
         def savedImage = ReceiptImageBuilder.builder().withTransactionId(123L).build()
@@ -319,14 +319,15 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
         when:
         receiptImageRepositoryMock.saveAndFlush(image) >> savedImage
-        def result = standardizedReceiptImageService.insertReceiptImage(image)
+        def result = standardizedReceiptImageService.save(image)
 
         then:
-        result == savedImage
-        result.receiptImageId == 1L
+        result instanceof ServiceResult.Success
+        result.data == savedImage
+        result.data.receiptImageId == 1L
     }
 
-    def "insertReceiptImage should throw ValidationException on ServiceResult.ValidationError"() {
+    def "save should return ServiceResult.ValidationError on validation failure"() {
         given:
         def image = ReceiptImageBuilder.builder()
                 .withTransactionId(-1L)
@@ -343,25 +344,27 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         when:
         standardizedReceiptImageService.validator = validatorMock
         validatorMock.validate(image) >> violations
-        standardizedReceiptImageService.insertReceiptImage(image)
+        def result = standardizedReceiptImageService.save(image)
 
         then:
-        thrown(jakarta.validation.ValidationException)
+        result instanceof ServiceResult.ValidationError
+        result.errors.transactionId == "must be greater than or equal to 0"
     }
 
-    def "insertReceiptImage should throw RuntimeException on ServiceResult failure"() {
+    def "save should return ServiceResult.SystemError on repository exception"() {
         given:
         def image = ReceiptImageBuilder.builder().build()
         receiptImageRepositoryMock.saveAndFlush(image) >> { throw new RuntimeException("Save failed") }
 
         when:
-        standardizedReceiptImageService.insertReceiptImage(image)
+        def result = standardizedReceiptImageService.save(image)
 
         then:
-        thrown(RuntimeException)
+        result instanceof ServiceResult.SystemError
+        result.exception.message == "Save failed"
     }
 
-    def "findByReceiptImageId should return Optional.of(image) when found"() {
+    def "findById should return ServiceResult.Success when image found"() {
         given:
         def imageId = 1L
         def image = ReceiptImageBuilder.builder().build()
@@ -369,48 +372,55 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
         when:
         receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
-        def result = standardizedReceiptImageService.findByReceiptImageId(imageId)
+        def result = standardizedReceiptImageService.findById(imageId)
 
         then:
-        result.isPresent()
-        result.get() == image
+        result instanceof ServiceResult.Success
+        result.data == image
     }
 
-    def "findByReceiptImageId should return Optional.empty() when not found"() {
+    def "findById should return ServiceResult.NotFound when image not found"() {
         given:
         def imageId = 999L
 
         when:
         receiptImageRepositoryMock.findById(imageId) >> Optional.empty()
-        def result = standardizedReceiptImageService.findByReceiptImageId(imageId)
+        def result = standardizedReceiptImageService.findById(imageId)
 
         then:
-        result.isEmpty()
+        result instanceof ServiceResult.NotFound
+        result.message.contains("ReceiptImage not found: 999")
     }
 
-    def "deleteReceiptImage should return true when deleting receipt image"() {
+    def "deleteById should return ServiceResult.Success when deleting receipt image"() {
         given:
+        def imageId = 1L
         def image = ReceiptImageBuilder.builder().build()
-        image.receiptImageId = 1L
+        image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.deleteById(1L) >> {}
-        def result = standardizedReceiptImageService.deleteReceiptImage(image)
+        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.deleteById(imageId) >> {}
+        def result = standardizedReceiptImageService.deleteById(imageId)
 
         then:
-        result == true
+        result instanceof ServiceResult.Success
+        result.data == true
     }
 
-    def "deleteReceiptImage should always return true even on exception"() {
+    def "deleteById should return ServiceResult.SystemError on exception"() {
         given:
+        def imageId = 1L
         def image = ReceiptImageBuilder.builder().build()
-        image.receiptImageId = 1L
+        image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.deleteById(1L) >> { throw new RuntimeException("Delete failed") }
-        def result = standardizedReceiptImageService.deleteReceiptImage(image)
+        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.deleteById(imageId) >> { throw new RuntimeException("Delete failed") }
+        def result = standardizedReceiptImageService.deleteById(imageId)
 
         then:
-        result == true
+        result instanceof ServiceResult.SystemError
+        result.exception.message == "Delete failed"
     }
 }

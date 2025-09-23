@@ -1,7 +1,7 @@
 package finance.resolvers
 
 import finance.domain.Account
-import finance.services.IAccountService
+import finance.services.StandardizedAccountService
 import graphql.schema.DataFetcher
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 
 @Component
 open class AccountGraphQLResolver(
-    private val accountService: IAccountService,
+    private val accountService: StandardizedAccountService,
 ) {
 
     val accounts: DataFetcher<List<Account>>

@@ -31,9 +31,9 @@ class BaseServiceSpec extends Specification {
     protected Counter counter = Mock(Counter)
 
 
-    protected IReceiptImageService receiptImageServiceMock = GroovyMock(IReceiptImageService)
+    protected StandardizedReceiptImageService standardizedReceiptImageServiceMock = GroovyMock(StandardizedReceiptImageService)
     protected StandardizedCategoryService categoryServiceMock = GroovyMock(StandardizedCategoryService)
-    protected IAccountService accountServiceMock = Mock(IAccountService)
+    protected StandardizedAccountService accountServiceMock = GroovyMock(StandardizedAccountService)
 
     protected StandardizedReceiptImageService receiptImageService = new StandardizedReceiptImageService(receiptImageRepositoryMock)
     protected StandardizedDescriptionService descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
