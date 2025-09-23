@@ -23,7 +23,7 @@ class ServiceLayerIntegrationSpec extends Specification {
     ITransactionService transactionService
 
     @Autowired
-    IAccountService accountService
+    StandardizedAccountService accountService
 
     @Autowired
     StandardizedCategoryService categoryService
@@ -41,7 +41,7 @@ class ServiceLayerIntegrationSpec extends Specification {
     StandardizedValidationAmountService validationAmountService
 
     @Autowired
-    IReceiptImageService receiptImageService
+    StandardizedReceiptImageService receiptImageService
 
     @Autowired
     AccountRepository accountRepository

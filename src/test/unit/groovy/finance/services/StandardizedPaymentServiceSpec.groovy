@@ -21,8 +21,7 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
 
     def paymentRepositoryMock = Mock(PaymentRepository)
     def transactionServiceMock = Mock(ITransactionService)
-    def accountServiceMock = Mock(IAccountService)
-    def standardizedPaymentService = new StandardizedPaymentService(paymentRepositoryMock, transactionServiceMock, accountServiceMock)
+    def standardizedPaymentService = new StandardizedPaymentService(paymentRepositoryMock, transactionServiceMock, accountService)
 
     void setup() {
         standardizedPaymentService.meterService = meterService
@@ -240,8 +239,8 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
 
         then: "should return saved payment"
         1 * validatorMock.validate(payment) >> noViolations
-        2 * accountServiceMock.account(payment.destinationAccount) >> Optional.of(mockDestAccount)
-        1 * accountServiceMock.account(payment.sourceAccount) >> Optional.of(mockSourceAccount)
+        2 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(mockDestAccount)
+        1 * accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(mockSourceAccount)
         2 * transactionServiceMock.insertTransaction(_)
         1 * paymentRepositoryMock.saveAndFlush(payment) >> savedPayment
         result.paymentId == 1L
@@ -314,8 +313,8 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         and: "account service returns existing accounts"
         def existingAccount = GroovyMock(Account)
         existingAccount.accountType >> AccountType.Credit
-        accountServiceMock.account(payment.destinationAccount) >> Optional.of(existingAccount)
-        accountServiceMock.account(payment.sourceAccount) >> Optional.of(existingAccount)
+        accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(existingAccount)
+        accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(existingAccount)
 
         when: "calling legacy insertPayment with invalid data"
         standardizedPaymentService.insertPayment(payment)

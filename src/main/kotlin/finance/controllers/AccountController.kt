@@ -2,7 +2,8 @@ package finance.controllers
 
 import finance.domain.Account
 import finance.domain.TransactionState
-import finance.services.IAccountService
+import finance.services.StandardizedAccountService
+import finance.domain.ServiceResult
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -22,7 +23,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/account")
-class AccountController(private val accountService: IAccountService) :
+class AccountController(private val standardizedAccountService: StandardizedAccountService) :
     StandardizedBaseController(), StandardRestController<Account, String> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -33,12 +34,24 @@ class AccountController(private val accountService: IAccountService) :
      */
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Account>> {
-        return handleCrudOperation("Find all active accounts", null) {
-            logger.debug("Retrieving all active accounts (standardized)")
-            accountService.updateTotalsForAllAccounts()
-            val accounts: List<Account> = accountService.accounts()
-            logger.info("Retrieved ${accounts.size} active accounts (standardized)")
-            accounts
+        standardizedAccountService.updateTotalsForAllAccounts()
+        return when (val result = standardizedAccountService.findAllActive()) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved ${result.data.size} active accounts (standardized)")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.info("No active accounts found (standardized)")
+                ResponseEntity.ok(emptyList())
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving active accounts: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -48,15 +61,23 @@ class AccountController(private val accountService: IAccountService) :
      */
     @GetMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun findById(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        return handleCrudOperation("Find account by name", accountNameOwner) {
-            logger.debug("Retrieving account: $accountNameOwner (standardized)")
-            val account = accountService.account(accountNameOwner)
-                .orElseThrow {
-                    logger.warn("Account not found: $accountNameOwner (standardized)")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
-                }
-            logger.info("Retrieved account: $accountNameOwner (standardized)")
-            account
+        return when (val result = standardizedAccountService.findById(accountNameOwner)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved account: $accountNameOwner (standardized)")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found: $accountNameOwner (standardized)")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving account $accountNameOwner: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -66,11 +87,27 @@ class AccountController(private val accountService: IAccountService) :
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(@Valid @RequestBody account: Account): ResponseEntity<Account> {
-        return handleCreateOperation("Account", account.accountNameOwner) {
-            logger.info("Creating account: ${account.accountNameOwner} (standardized)")
-            val result = accountService.insertAccount(account)
-            logger.info("Account created successfully: ${result.accountNameOwner} (standardized)")
-            result
+        return when (val result = standardizedAccountService.save(account)) {
+            is ServiceResult.Success -> {
+                logger.info("Account created successfully: ${account.accountNameOwner} (standardized)")
+                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error creating account: ${result.errors}")
+                ResponseEntity.badRequest().build<Account>()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error creating account: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<Account>()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error creating account: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
+            }
         }
     }
 
@@ -80,17 +117,31 @@ class AccountController(private val accountService: IAccountService) :
      */
     @PutMapping("/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(@PathVariable accountNameOwner: String, @Valid @RequestBody account: Account): ResponseEntity<Account> {
-        return handleCrudOperation("Update account", accountNameOwner) {
-            logger.info("Updating account: $accountNameOwner (standardized)")
-            // Validate account exists first
-            accountService.account(accountNameOwner)
-                .orElseThrow {
-                    logger.warn("Account not found for update: $accountNameOwner (standardized)")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
-                }
-            val result = accountService.updateAccount(account)
-            logger.info("Account updated successfully: $accountNameOwner (standardized)")
-            result
+        return when (val result = standardizedAccountService.update(account)) {
+            is ServiceResult.Success -> {
+                logger.info("Account updated successfully: $accountNameOwner (standardized)")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found for update: $accountNameOwner (standardized)")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error updating account: ${result.errors}")
+                ResponseEntity.badRequest().build<Account>()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error updating account: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<Account>()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error updating account: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
+            }
         }
     }
 
@@ -100,12 +151,31 @@ class AccountController(private val accountService: IAccountService) :
      */
     @DeleteMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun deleteById(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        return handleDeleteOperation(
-            "Account",
-            accountNameOwner,
-            { accountService.account(accountNameOwner) },
-            { accountService.deleteAccount(accountNameOwner) }
-        )
+        // First get the account to return it
+        val accountResult = standardizedAccountService.findById(accountNameOwner)
+        if (accountResult !is ServiceResult.Success) {
+            logger.warn("Account not found for deletion: $accountNameOwner")
+            return ResponseEntity.notFound().build()
+        }
+
+        return when (val result = standardizedAccountService.deleteById(accountNameOwner)) {
+            is ServiceResult.Success -> {
+                logger.info("Account deleted successfully: $accountNameOwner")
+                ResponseEntity.ok(accountResult.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found for deletion: $accountNameOwner")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting account: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
+            }
+        }
     }
 
     // ===== BUSINESS LOGIC ENDPOINTS (SPECIALIZED) =====
@@ -126,9 +196,9 @@ class AccountController(private val accountService: IAccountService) :
             logger.debug("Computing account totals")
             val response: MutableMap<String, String> = HashMap()
             //TODO: 6/27/2021 - need to modify to 1 call from 3
-            val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
-            val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
-            val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
+            val totalsCleared = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
+            val totalsFuture = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
+            val totalsOutstanding = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
 
             logger.debug("Account totals computed - Outstanding: $totalsOutstanding, Cleared: $totalsCleared, Future: $totalsFuture")
 
@@ -148,7 +218,7 @@ class AccountController(private val accountService: IAccountService) :
     fun selectPaymentRequired(): ResponseEntity<List<Account>> {
         return try {
             logger.debug("Finding accounts that require payment")
-            val accountNameOwners = accountService.findAccountsThatRequirePayment()
+            val accountNameOwners = standardizedAccountService.findAccountsThatRequirePayment()
             if (accountNameOwners.isEmpty()) {
                 logger.info("No accounts requiring payment found")
             } else {
@@ -181,8 +251,8 @@ class AccountController(private val accountService: IAccountService) :
         return try {
             logger.debug("Retrieving active accounts")
             //TODO: create a separate endpoint for the totals
-            accountService.updateTotalsForAllAccounts()
-            val accounts: List<Account> = accountService.accounts()
+            standardizedAccountService.updateTotalsForAllAccounts()
+            val accounts: List<Account> = standardizedAccountService.accounts()
             if (accounts.isEmpty()) {
                 logger.warn("No active accounts found")
                 throw ResponseStatusException(HttpStatus.NOT_FOUND, "No active accounts found")
@@ -205,7 +275,7 @@ class AccountController(private val accountService: IAccountService) :
     fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         return try {
             logger.debug("Retrieving account: $accountNameOwner")
-            val account = accountService.account(accountNameOwner)
+            val account = standardizedAccountService.account(accountNameOwner)
                 .orElseThrow {
                     logger.warn("Account not found: $accountNameOwner")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
@@ -228,7 +298,7 @@ class AccountController(private val accountService: IAccountService) :
     fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
         return try {
             logger.info("Inserting account: ${account.accountNameOwner}")
-            val accountResponse = accountService.insertAccount(account)
+            val accountResponse = standardizedAccountService.insertAccount(account)
             logger.info("Account inserted successfully: ${accountResponse.accountNameOwner}")
             ResponseEntity(accountResponse, HttpStatus.CREATED)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -254,13 +324,13 @@ class AccountController(private val accountService: IAccountService) :
     fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         return try {
             logger.info("Attempting to delete account: $accountNameOwner")
-            val account = accountService.account(accountNameOwner)
+            val account = standardizedAccountService.account(accountNameOwner)
                 .orElseThrow {
                     logger.warn("Account not found for deletion: $accountNameOwner")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
                 }
 
-            accountService.deleteAccount(accountNameOwner)
+            standardizedAccountService.deleteAccount(accountNameOwner)
             logger.info("Account deleted successfully: $accountNameOwner")
             ResponseEntity.ok(account)
         } catch (ex: ResponseStatusException) {
@@ -283,7 +353,7 @@ class AccountController(private val accountService: IAccountService) :
         return try {
             logger.info("Updating account: $accountNameOwner")
             val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
-            val accountResponse = accountService.updateAccount(accountToBeUpdated)
+            val accountResponse = standardizedAccountService.updateAccount(accountToBeUpdated)
             logger.info("Account updated successfully: $accountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: Exception) {
@@ -300,7 +370,7 @@ class AccountController(private val accountService: IAccountService) :
     ): ResponseEntity<Account> {
         return try {
             logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
-            val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
+            val accountResponse = standardizedAccountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
             logger.info("Account renamed successfully from $oldAccountNameOwner to $newAccountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -317,7 +387,7 @@ class AccountController(private val accountService: IAccountService) :
     fun deactivateAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         return try {
             logger.info("Deactivating account: $accountNameOwner")
-            val accountResponse = accountService.deactivateAccount(accountNameOwner)
+            val accountResponse = standardizedAccountService.deactivateAccount(accountNameOwner)
             logger.info("Account deactivated successfully: $accountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: jakarta.persistence.EntityNotFoundException) {
@@ -344,7 +414,7 @@ class AccountController(private val accountService: IAccountService) :
     fun activateAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
         return try {
             logger.info("Activating account: $accountNameOwner")
-            val accountResponse = accountService.activateAccount(accountNameOwner)
+            val accountResponse = standardizedAccountService.activateAccount(accountNameOwner)
             logger.info("Account activated successfully: $accountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: jakarta.persistence.EntityNotFoundException) {

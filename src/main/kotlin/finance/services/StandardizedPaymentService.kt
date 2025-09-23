@@ -18,7 +18,7 @@ import java.util.*
 class StandardizedPaymentService(
     private val paymentRepository: PaymentRepository,
     private val transactionService: ITransactionService,
-    private val accountService: IAccountService
+    private val accountService: StandardizedAccountService
 ) : StandardizedBaseService<Payment, Long>(), IPaymentService {
 
     override fun getEntityName(): String = "Payment"
