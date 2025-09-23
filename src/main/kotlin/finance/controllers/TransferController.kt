@@ -1,7 +1,8 @@
 package finance.controllers
 
 import finance.domain.Transfer
-import finance.services.ITransferService
+import finance.domain.ServiceResult
+import finance.services.StandardizedTransferService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +13,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/transfer")
-class TransferController(private var transferService: ITransferService) :
+class TransferController(private var standardizedTransferService: StandardizedTransferService) :
     StandardizedBaseController(), StandardRestController<Transfer, Long> {
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -23,11 +24,23 @@ class TransferController(private var transferService: ITransferService) :
      */
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Transfer>> {
-        return handleCrudOperation("Find all active transfers", null) {
-            logger.debug("Retrieving all active transfers")
-            val transfers: List<Transfer> = transferService.findAllTransfers()
-            logger.info("Retrieved ${transfers.size} active transfers")
-            transfers
+        return when (val result = standardizedTransferService.findAllActive()) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved ${result.data.size} active transfers")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("No transfers found")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transfers: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -37,15 +50,23 @@ class TransferController(private var transferService: ITransferService) :
      */
     @GetMapping("/{transferId}", produces = ["application/json"])
     override fun findById(@PathVariable transferId: Long): ResponseEntity<Transfer> {
-        return handleCrudOperation("Find transfer by ID", transferId) {
-            logger.debug("Retrieving transfer: $transferId")
-            val transfer = transferService.findByTransferId(transferId)
-                .orElseThrow {
-                    logger.warn("Transfer not found: $transferId")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Transfer not found: $transferId")
-                }
-            logger.info("Retrieved transfer: $transferId")
-            transfer
+        return when (val result = standardizedTransferService.findById(transferId)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved transfer: $transferId")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Transfer not found: $transferId")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transfer $transferId: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -55,11 +76,27 @@ class TransferController(private var transferService: ITransferService) :
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(@Valid @RequestBody transfer: Transfer): ResponseEntity<Transfer> {
-        return handleCreateOperation("Transfer", transfer.transferId) {
-            logger.info("Creating transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
-            val result = transferService.insertTransfer(transfer)
-            logger.info("Transfer created successfully: ${result.transferId}")
-            result
+        return when (val result = standardizedTransferService.save(transfer)) {
+            is ServiceResult.Success -> {
+                logger.info("Transfer created successfully: ${result.data.transferId}")
+                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error creating transfer: ${result.errors}")
+                ResponseEntity.badRequest().build()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error creating transfer: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error creating transfer: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -69,17 +106,34 @@ class TransferController(private var transferService: ITransferService) :
      */
     @PutMapping("/{transferId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(@PathVariable transferId: Long, @Valid @RequestBody transfer: Transfer): ResponseEntity<Transfer> {
-        return handleCrudOperation("Update transfer", transferId) {
-            logger.info("Updating transfer: $transferId")
-            // Validate transfer exists first
-            transferService.findByTransferId(transferId)
-                .orElseThrow {
-                    logger.warn("Transfer not found for update: $transferId")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Transfer not found: $transferId")
-                }
-            val result = transferService.updateTransfer(transfer)
-            logger.info("Transfer updated successfully: $transferId")
-            result
+        // Ensure the path ID matches the entity ID
+        transfer.transferId = transferId
+
+        return when (val result = standardizedTransferService.update(transfer)) {
+            is ServiceResult.Success -> {
+                logger.info("Transfer updated successfully: $transferId")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Transfer not found for update: $transferId")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error updating transfer: ${result.errors}")
+                ResponseEntity.badRequest().build()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error updating transfer: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error updating transfer $transferId: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -89,12 +143,38 @@ class TransferController(private var transferService: ITransferService) :
      */
     @DeleteMapping("/{transferId}", produces = ["application/json"])
     override fun deleteById(@PathVariable transferId: Long): ResponseEntity<Transfer> {
-        return handleDeleteOperation(
-            "Transfer",
-            transferId,
-            { transferService.findByTransferId(transferId) },
-            { transferService.deleteByTransferId(transferId) }
-        )
+        // First, retrieve the transfer to return it
+        val transferToDelete = when (val findResult = standardizedTransferService.findById(transferId)) {
+            is ServiceResult.Success -> findResult.data
+            is ServiceResult.NotFound -> {
+                logger.warn("Transfer not found for deletion: $transferId")
+                return ResponseEntity.notFound().build()
+            }
+            else -> {
+                logger.error("Error retrieving transfer for deletion: $transferId")
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+
+        // Then delete it
+        return when (val deleteResult = standardizedTransferService.deleteById(transferId)) {
+            is ServiceResult.Success -> {
+                logger.info("Transfer deleted successfully: $transferId")
+                ResponseEntity.ok(transferToDelete)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Transfer not found for deletion: $transferId")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting transfer $transferId: ${deleteResult.exception.message}", deleteResult.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $deleteResult")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
     }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
@@ -105,14 +185,15 @@ class TransferController(private var transferService: ITransferService) :
      */
     @GetMapping("/select", produces = ["application/json"])
     fun selectAllTransfers(): ResponseEntity<List<Transfer>> {
-        return try {
-            logger.debug("Retrieving all transfers (legacy endpoint)")
-            val transfers = transferService.findAllTransfers()
-            logger.info("Retrieved ${transfers.size} transfers")
-            ResponseEntity.ok(transfers)
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve transfers: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transfers: ${ex.message}", ex)
+        return when (val result = standardizedTransferService.findAllActive()) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved ${result.data.size} transfers (legacy endpoint)")
+                ResponseEntity.ok(result.data)
+            }
+            else -> {
+                logger.error("Failed to retrieve transfers: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transfers")
+            }
         }
     }
 
@@ -122,9 +203,11 @@ class TransferController(private var transferService: ITransferService) :
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertTransfer(@Valid @RequestBody transfer: Transfer): ResponseEntity<Transfer> {
+        logger.info("Inserting transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount} (legacy endpoint)")
+
+        // Use legacy method for complex business logic (account validation, transaction creation)
         return try {
-            logger.info("Inserting transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount} (legacy endpoint)")
-            val transferResponse = transferService.insertTransfer(transfer)
+            val transferResponse = standardizedTransferService.insertTransfer(transfer)
             logger.info("Transfer inserted successfully: ${transferResponse.transferId}")
             ResponseEntity.ok(transferResponse)  // Legacy returns 200 OK, not 201 CREATED
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -152,12 +235,12 @@ class TransferController(private var transferService: ITransferService) :
     fun deleteByTransferId(@PathVariable transferId: Long): ResponseEntity<Transfer> {
         return try {
             logger.info("Attempting to delete transfer: $transferId (legacy endpoint)")
-            val transferOptional: Optional<Transfer> = transferService.findByTransferId(transferId)
+            val transferOptional: Optional<Transfer> = standardizedTransferService.findByTransferId(transferId)
 
             if (transferOptional.isPresent) {
                 val transfer: Transfer = transferOptional.get()
                 logger.info("transfer deleted: ${transfer.transferId}")
-                transferService.deleteByTransferId(transferId)
+                standardizedTransferService.deleteByTransferId(transferId)
                 ResponseEntity.ok(transfer)
             } else {
                 logger.warn("Transfer not found for deletion: $transferId")

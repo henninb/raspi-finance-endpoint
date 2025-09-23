@@ -19,7 +19,7 @@ class StandardizedTransferService(
     private val transferRepository: TransferRepository,
     private val transactionService: ITransactionService,
     private val accountService: StandardizedAccountService
-) : StandardizedBaseService<Transfer, Long>(), ITransferService {
+) : StandardizedBaseService<Transfer, Long>() {
 
     override fun getEntityName(): String = "Transfer"
 
@@ -90,7 +90,7 @@ class StandardizedTransferService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun findAllTransfers(): List<Transfer> {
+    fun findAllTransfers(): List<Transfer> {
         val result = findAllActive()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -98,7 +98,7 @@ class StandardizedTransferService(
         }
     }
 
-    override fun insertTransfer(transfer: Transfer): Transfer {
+    fun insertTransfer(transfer: Transfer): Transfer {
         logger.info("Inserting new transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
         val transactionSource = Transaction()
         val transactionDestination = Transaction()
@@ -143,7 +143,7 @@ class StandardizedTransferService(
         }
     }
 
-    override fun updateTransfer(transfer: Transfer): Transfer {
+    fun updateTransfer(transfer: Transfer): Transfer {
         val result = update(transfer)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -152,11 +152,11 @@ class StandardizedTransferService(
         }
     }
 
-    override fun findByTransferId(transferId: Long): Optional<Transfer> {
+    fun findByTransferId(transferId: Long): Optional<Transfer> {
         return transferRepository.findByTransferId(transferId)
     }
 
-    override fun deleteByTransferId(transferId: Long): Boolean {
+    fun deleteByTransferId(transferId: Long): Boolean {
         val optionalTransfer = transferRepository.findByTransferId(transferId)
         if (optionalTransfer.isPresent) {
             transferRepository.delete(optionalTransfer.get())

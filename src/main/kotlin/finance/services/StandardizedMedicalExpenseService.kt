@@ -19,7 +19,7 @@ import java.sql.Date
 @org.springframework.context.annotation.Primary
 class StandardizedMedicalExpenseService(
     private val medicalExpenseRepository: MedicalExpenseRepository
-) : StandardizedBaseService<MedicalExpense, Long>(), IMedicalExpenseService {
+) : StandardizedBaseService<MedicalExpense, Long>() {
 
     override fun getEntityName(): String = "MedicalExpense"
 
@@ -80,7 +80,7 @@ class StandardizedMedicalExpenseService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun findAllMedicalExpenses(): List<MedicalExpense> {
+    fun findAllMedicalExpenses(): List<MedicalExpense> {
         val result = findAllActive()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -91,7 +91,7 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun insertMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
+    fun insertMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
         logger.info("Inserting medical expense for transaction ID: ${medicalExpense.transactionId}")
 
         // Check for duplicates if transactionId is provided
@@ -127,7 +127,7 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun updateMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
+    fun updateMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
         logger.info("Updating medical expense with ID: ${medicalExpense.medicalExpenseId}")
 
         val result = update(medicalExpense)
@@ -153,27 +153,27 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun findMedicalExpenseById(medicalExpenseId: Long): MedicalExpense? {
+    fun findMedicalExpenseById(medicalExpenseId: Long): MedicalExpense? {
         logger.debug("Finding medical expense by ID: $medicalExpenseId")
         return medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
     }
 
-    override fun findMedicalExpenseByTransactionId(transactionId: Long): MedicalExpense? {
+    fun findMedicalExpenseByTransactionId(transactionId: Long): MedicalExpense? {
         logger.debug("Finding medical expense by transaction ID: $transactionId")
         return medicalExpenseRepository.findByTransactionId(transactionId)
     }
 
-    override fun findMedicalExpensesByAccountId(accountId: Long): List<MedicalExpense> {
+    fun findMedicalExpensesByAccountId(accountId: Long): List<MedicalExpense> {
         logger.debug("Finding medical expenses by account ID: $accountId")
         return medicalExpenseRepository.findByAccountId(accountId)
     }
 
-    override fun findMedicalExpensesByServiceDateRange(startDate: Date, endDate: Date): List<MedicalExpense> {
+    fun findMedicalExpensesByServiceDateRange(startDate: Date, endDate: Date): List<MedicalExpense> {
         logger.debug("Finding medical expenses by service date range: $startDate to $endDate")
         return medicalExpenseRepository.findByServiceDateBetweenAndActiveStatusTrue(startDate, endDate)
     }
 
-    override fun findMedicalExpensesByAccountIdAndDateRange(
+    fun findMedicalExpensesByAccountIdAndDateRange(
         accountId: Long,
         startDate: Date,
         endDate: Date
@@ -182,17 +182,17 @@ class StandardizedMedicalExpenseService(
         return medicalExpenseRepository.findByAccountIdAndServiceDateBetween(accountId, startDate, endDate)
     }
 
-    override fun findMedicalExpensesByProviderId(providerId: Long): List<MedicalExpense> {
+    fun findMedicalExpensesByProviderId(providerId: Long): List<MedicalExpense> {
         logger.debug("Finding medical expenses by provider ID: $providerId")
         return medicalExpenseRepository.findByProviderIdAndActiveStatusTrue(providerId)
     }
 
-    override fun findMedicalExpensesByFamilyMemberId(familyMemberId: Long): List<MedicalExpense> {
+    fun findMedicalExpensesByFamilyMemberId(familyMemberId: Long): List<MedicalExpense> {
         logger.debug("Finding medical expenses by family member ID: $familyMemberId")
         return medicalExpenseRepository.findByFamilyMemberIdAndActiveStatusTrue(familyMemberId)
     }
 
-    override fun findMedicalExpensesByFamilyMemberAndDateRange(
+    fun findMedicalExpensesByFamilyMemberAndDateRange(
         familyMemberId: Long,
         startDate: Date,
         endDate: Date
@@ -201,27 +201,27 @@ class StandardizedMedicalExpenseService(
         return medicalExpenseRepository.findByFamilyMemberIdAndServiceDateBetween(familyMemberId, startDate, endDate)
     }
 
-    override fun findMedicalExpensesByClaimStatus(claimStatus: ClaimStatus): List<MedicalExpense> {
+    fun findMedicalExpensesByClaimStatus(claimStatus: ClaimStatus): List<MedicalExpense> {
         logger.debug("Finding medical expenses by claim status: $claimStatus")
         return medicalExpenseRepository.findByClaimStatusAndActiveStatusTrue(claimStatus)
     }
 
-    override fun findOutOfNetworkExpenses(): List<MedicalExpense> {
+    fun findOutOfNetworkExpenses(): List<MedicalExpense> {
         logger.debug("Finding out-of-network medical expenses")
         return medicalExpenseRepository.findByIsOutOfNetworkAndActiveStatusTrue(true)
     }
 
-    override fun findOutstandingPatientBalances(): List<MedicalExpense> {
+    fun findOutstandingPatientBalances(): List<MedicalExpense> {
         logger.debug("Finding outstanding patient balances")
         return medicalExpenseRepository.findOutstandingPatientBalances()
     }
 
-    override fun findActiveOpenClaims(): List<MedicalExpense> {
+    fun findActiveOpenClaims(): List<MedicalExpense> {
         logger.debug("Finding active open claims")
         return medicalExpenseRepository.findActiveOpenClaims()
     }
 
-    override fun updateClaimStatus(medicalExpenseId: Long, claimStatus: ClaimStatus): Boolean {
+    fun updateClaimStatus(medicalExpenseId: Long, claimStatus: ClaimStatus): Boolean {
         logger.info("Updating claim status for medical expense ID: $medicalExpenseId to: $claimStatus")
 
         return try {
@@ -239,7 +239,7 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun softDeleteMedicalExpense(medicalExpenseId: Long): Boolean {
+    fun softDeleteMedicalExpense(medicalExpenseId: Long): Boolean {
         logger.info("Soft deleting medical expense with ID: $medicalExpenseId")
 
         return try {
@@ -257,22 +257,22 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun getTotalBilledAmountByYear(year: Int): BigDecimal {
+    fun getTotalBilledAmountByYear(year: Int): BigDecimal {
         logger.debug("Getting total billed amount for year: $year")
         return medicalExpenseRepository.getTotalBilledAmountByYear(year) ?: BigDecimal.ZERO
     }
 
-    override fun getTotalPatientResponsibilityByYear(year: Int): BigDecimal {
+    fun getTotalPatientResponsibilityByYear(year: Int): BigDecimal {
         logger.debug("Getting total patient responsibility for year: $year")
         return medicalExpenseRepository.getTotalPatientResponsibilityByYear(year) ?: BigDecimal.ZERO
     }
 
-    override fun getTotalInsurancePaidByYear(year: Int): BigDecimal {
+    fun getTotalInsurancePaidByYear(year: Int): BigDecimal {
         logger.debug("Getting total insurance paid for year: $year")
         return medicalExpenseRepository.getTotalInsurancePaidByYear(year) ?: BigDecimal.ZERO
     }
 
-    override fun getClaimStatusCounts(): Map<ClaimStatus, Long> {
+    fun getClaimStatusCounts(): Map<ClaimStatus, Long> {
         logger.debug("Getting claim status counts")
 
         return ClaimStatus.values().associateWith { status ->
@@ -280,18 +280,18 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun findMedicalExpensesByProcedureCode(procedureCode: String): List<MedicalExpense> {
+    fun findMedicalExpensesByProcedureCode(procedureCode: String): List<MedicalExpense> {
         logger.debug("Finding medical expenses by procedure code: $procedureCode")
         return medicalExpenseRepository.findByProcedureCodeAndActiveStatusTrue(procedureCode)
     }
 
-    override fun findMedicalExpensesByDiagnosisCode(diagnosisCode: String): List<MedicalExpense> {
+    fun findMedicalExpensesByDiagnosisCode(diagnosisCode: String): List<MedicalExpense> {
         logger.debug("Finding medical expenses by diagnosis code: $diagnosisCode")
         return medicalExpenseRepository.findByDiagnosisCodeAndActiveStatusTrue(diagnosisCode)
     }
 
     // New payment-related methods for Phase 2.5
-    override fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense {
+    fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense {
         logger.info("Linking payment transaction $transactionId to medical expense $medicalExpenseId")
 
         val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
@@ -316,7 +316,7 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense {
+    fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense {
         logger.info("Unlinking payment transaction from medical expense $medicalExpenseId")
 
         val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
@@ -334,7 +334,7 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
+    fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
         logger.info("Updating paid amount for medical expense $medicalExpenseId")
 
         val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
@@ -360,37 +360,37 @@ class StandardizedMedicalExpenseService(
         }
     }
 
-    override fun findUnpaidMedicalExpenses(): List<MedicalExpense> {
+    fun findUnpaidMedicalExpenses(): List<MedicalExpense> {
         logger.debug("Finding unpaid medical expenses")
         return medicalExpenseRepository.findUnpaidMedicalExpenses()
     }
 
-    override fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense> {
+    fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense> {
         logger.debug("Finding partially paid medical expenses")
         return medicalExpenseRepository.findPartiallyPaidMedicalExpenses()
     }
 
-    override fun findFullyPaidMedicalExpenses(): List<MedicalExpense> {
+    fun findFullyPaidMedicalExpenses(): List<MedicalExpense> {
         logger.debug("Finding fully paid medical expenses")
         return medicalExpenseRepository.findFullyPaidMedicalExpenses()
     }
 
-    override fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense> {
+    fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense> {
         logger.debug("Finding medical expenses without linked transactions")
         return medicalExpenseRepository.findMedicalExpensesWithoutTransaction()
     }
 
-    override fun findOverpaidMedicalExpenses(): List<MedicalExpense> {
+    fun findOverpaidMedicalExpenses(): List<MedicalExpense> {
         logger.debug("Finding overpaid medical expenses")
         return medicalExpenseRepository.findOverpaidMedicalExpenses()
     }
 
-    override fun getTotalPaidAmountByYear(year: Int): BigDecimal {
+    fun getTotalPaidAmountByYear(year: Int): BigDecimal {
         logger.debug("Getting total paid amount for year: $year")
         return medicalExpenseRepository.getTotalPaidAmountByYear(year) ?: BigDecimal.ZERO
     }
 
-    override fun getTotalUnpaidBalance(): BigDecimal {
+    fun getTotalUnpaidBalance(): BigDecimal {
         logger.debug("Getting total unpaid balance")
         return medicalExpenseRepository.getTotalUnpaidBalance() ?: BigDecimal.ZERO
     }

@@ -1,7 +1,7 @@
 package finance.resolvers
 
 import finance.domain.Transfer
-import finance.services.ITransferService
+import finance.services.StandardizedTransferService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micrometer.core.instrument.Counter
@@ -15,7 +15,13 @@ import java.util.*
 
 class TransferGraphQLResolverSpec extends Specification {
 
-    ITransferService transferService = Mock()
+    // Real service with mocked collaborators to avoid mocking final Kotlin classes
+    finance.repositories.TransferRepository transferRepository = Mock()
+    finance.services.ITransactionService transactionService = Mock()
+    finance.repositories.AccountRepository accountRepository = Mock()
+    finance.services.StandardizedAccountService accountService = new finance.services.StandardizedAccountService(accountRepository)
+
+    StandardizedTransferService transferService = new StandardizedTransferService(transferRepository, transactionService, accountService)
     MeterRegistry meterRegistry = Mock()
     Counter counter = Mock()
 
@@ -23,6 +29,17 @@ class TransferGraphQLResolverSpec extends Specification {
     TransferGraphQLResolver transferGraphQLResolver = new TransferGraphQLResolver(transferService, meterRegistry)
 
     def setup() {
+        // Wire required service dependencies
+        def validator = Mock(jakarta.validation.Validator) {
+            validate(_ as Object) >> ([] as Set)
+        }
+        transferService.validator = validator
+        accountService.validator = validator
+
+        def meterService = new finance.services.MeterService(meterRegistry)
+        transferService.meterService = meterService
+        accountService.meterService = meterService
+
         // Default mock behavior for all counter calls
         meterRegistry.counter(_ as String) >> counter
     }
@@ -33,8 +50,8 @@ class TransferGraphQLResolverSpec extends Specification {
         def transfer2 = createTestTransfer(2L, "account_a", "account_b", new BigDecimal("250.00"))
         def transfers = [transfer1, transfer2]
 
-        and: "transfer service returns transfers"
-        transferService.findAllTransfers() >> transfers
+        and: "repository returns transfers"
+        transferRepository.findAll() >> transfers
 
         when: "transfers data fetcher is called"
         DataFetcher<List<Transfer>> dataFetcher = transferGraphQLResolver.transfers
@@ -59,8 +76,8 @@ class TransferGraphQLResolverSpec extends Specification {
         def transferId = 1L
         def transfer = createTestTransfer(transferId, "source_account", "dest_account", new BigDecimal("100.00"))
 
-        and: "transfer service returns the transfer"
-        transferService.findByTransferId(transferId) >> Optional.of(transfer)
+        and: "repository returns the transfer"
+        transferRepository.findByTransferId(transferId) >> Optional.of(transfer)
 
         and: "data fetching environment with transfer ID argument"
         DataFetchingEnvironment environment = Mock()
@@ -81,8 +98,8 @@ class TransferGraphQLResolverSpec extends Specification {
         given: "a non-existent transfer ID"
         def transferId = 999L
 
-        and: "transfer service returns empty optional"
-        transferService.findByTransferId(transferId) >> Optional.empty()
+        and: "repository returns empty optional"
+        transferRepository.findByTransferId(transferId) >> Optional.empty()
 
         and: "data fetching environment with transfer ID argument"
         DataFetchingEnvironment environment = Mock()
@@ -113,21 +130,17 @@ class TransferGraphQLResolverSpec extends Specification {
         DataFetchingEnvironment environment = Mock()
         environment.getArgument("transfer") >> transferInput
 
+        and: "account lookups succeed and repository saves"
+        accountRepository.findByAccountNameOwner("source_account") >> Optional.of(new finance.domain.Account(accountNameOwner: "source_account"))
+        accountRepository.findByAccountNameOwner("dest_account") >> Optional.of(new finance.domain.Account(accountNameOwner: "dest_account"))
+        transactionService.insertTransaction(_ as finance.domain.Transaction) >> { finance.domain.Transaction t -> t }
+        transferRepository.save(_ as Transfer) >> { Transfer t -> t.transferId = 1L; return t }
+
         when: "create transfer mutation is called"
         DataFetcher<Transfer> dataFetcher = transferGraphQLResolver.createTransfer()
         Transfer result = dataFetcher.get(environment)
 
-        then: "should call transfer service with proper transfer object and return created transfer"
-        1 * transferService.insertTransfer({ Transfer transfer ->
-            transfer.sourceAccount == "source_account" &&
-            transfer.destinationAccount == "dest_account" &&
-            transfer.amount == new BigDecimal("150.00") &&
-            transfer.transactionDate == Date.valueOf("2023-12-01") &&
-            transfer.guidSource != null &&
-            transfer.guidDestination != null
-        }) >> createdTransfer
-
-        and: "should return created transfer"
+        then: "should return created transfer"
         result.transferId == 1L
         result.sourceAccount == "source_account"
         result.destinationAccount == "dest_account"
@@ -144,10 +157,8 @@ class TransferGraphQLResolverSpec extends Specification {
             amount: new BigDecimal("-100.00") // Invalid negative amount
         ]
 
-        and: "transfer service throws validation exception"
-        transferService.insertTransfer(_ as Transfer) >> {
-            throw new RuntimeException("Validation failed: Source account cannot be empty")
-        }
+        and: "account lookup fails to trigger error path"
+        accountRepository.findByAccountNameOwner("") >> Optional.empty()
 
         and: "data fetching environment with invalid transfer input"
         DataFetchingEnvironment environment = Mock()
@@ -164,7 +175,7 @@ class TransferGraphQLResolverSpec extends Specification {
     def "should increment metrics counters on successful operations"() {
         given: "a list of transfers"
         def transfers = [createTestTransfer(1L, "source_account", "dest_account", new BigDecimal("100.00"))]
-        transferService.findAllTransfers() >> transfers
+        transferRepository.findAll() >> transfers
 
         when: "transfers data fetcher is called"
         DataFetcher<List<Transfer>> dataFetcher = transferGraphQLResolver.transfers
@@ -177,8 +188,8 @@ class TransferGraphQLResolverSpec extends Specification {
     }
 
     def "should increment metrics counters on failed operations"() {
-        given: "transfer service throws exception"
-        transferService.findAllTransfers() >> { throw new RuntimeException("Database error") }
+        given: "repository throws exception"
+        transferRepository.findAll() >> { throw new RuntimeException("Database error") }
 
         when: "transfers data fetcher is called"
         DataFetcher<List<Transfer>> dataFetcher = transferGraphQLResolver.transfers

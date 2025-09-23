@@ -19,7 +19,7 @@ class StandardizedPaymentService(
     private val paymentRepository: PaymentRepository,
     private val transactionService: ITransactionService,
     private val accountService: StandardizedAccountService
-) : StandardizedBaseService<Payment, Long>(), IPaymentService {
+) : StandardizedBaseService<Payment, Long>() {
 
     override fun getEntityName(): String = "Payment"
 
@@ -93,7 +93,7 @@ class StandardizedPaymentService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun findAllPayments(): List<Payment> {
+    fun findAllPayments(): List<Payment> {
         val result = findAllActive()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -101,7 +101,7 @@ class StandardizedPaymentService(
         }
     }
 
-    override fun insertPayment(payment: Payment): Payment {
+    fun insertPayment(payment: Payment): Payment {
         logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
         val transactionCredit = Transaction()
         val transactionDebit = Transaction()
@@ -144,7 +144,7 @@ class StandardizedPaymentService(
         }
     }
 
-    override fun updatePayment(paymentId: Long, patch: Payment): Payment {
+    fun updatePayment(paymentId: Long, patch: Payment): Payment {
         // Set the ID for the update operation
         patch.paymentId = paymentId
         val result = update(patch)
@@ -155,11 +155,11 @@ class StandardizedPaymentService(
         }
     }
 
-    override fun findByPaymentId(paymentId: Long): Optional<Payment> {
+    fun findByPaymentId(paymentId: Long): Optional<Payment> {
         return paymentRepository.findByPaymentId(paymentId)
     }
 
-    override fun deleteByPaymentId(paymentId: Long): Boolean {
+    fun deleteByPaymentId(paymentId: Long): Boolean {
         val optionalPayment = paymentRepository.findByPaymentId(paymentId)
         if (optionalPayment.isPresent) {
             paymentRepository.delete(optionalPayment.get())
@@ -200,7 +200,7 @@ class StandardizedPaymentService(
 
     // ===== Transaction Population Methods =====
 
-    override fun populateDebitTransaction(
+    fun populateDebitTransaction(
         transactionDebit: finance.domain.Transaction,
         payment: Payment,
         paymentAccountNameOwner: String
@@ -224,7 +224,7 @@ class StandardizedPaymentService(
         transactionDebit.dateAdded = timestamp
     }
 
-    override fun populateCreditTransaction(
+    fun populateCreditTransaction(
         transactionCredit: finance.domain.Transaction,
         payment: Payment,
         paymentAccountNameOwner: String

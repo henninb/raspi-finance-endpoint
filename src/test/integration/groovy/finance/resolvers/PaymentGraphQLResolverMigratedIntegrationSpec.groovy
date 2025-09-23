@@ -7,7 +7,7 @@ import finance.domain.Payment
 import finance.repositories.AccountRepository
 import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
-import finance.services.IPaymentService
+import finance.services.StandardizedPaymentService
 import finance.helpers.SmartAccountBuilder
 import finance.helpers.SmartPaymentBuilder
 import io.micrometer.core.instrument.MeterRegistry
@@ -36,7 +36,7 @@ class PaymentGraphQLResolverMigratedIntegrationSpec extends BaseIntegrationSpec 
 
     @Shared
     @Autowired
-    IPaymentService paymentService
+    StandardizedPaymentService paymentService
 
     @Shared
     @Autowired
