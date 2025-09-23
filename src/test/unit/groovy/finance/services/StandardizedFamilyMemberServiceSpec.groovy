@@ -207,72 +207,67 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
 
     // ===== TDD Tests for Business Logic Methods =====
 
-    def "findByOwnerServiceResult should return Success with family members when found"() {
+    def "findByOwner should return family members when found"() {
         given: "existing family members for owner"
         def members = [FamilyMemberBuilder.builder().withOwner("test_owner").build()]
 
-        when: "finding by owner using ServiceResult"
-        def result = standardizedFamilyMemberService.findByOwnerServiceResult("test_owner")
+        when: "finding by owner"
+        def result = standardizedFamilyMemberService.findByOwner("test_owner")
 
-        then: "should return Success with family members"
+        then: "should return family members"
         1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue("test_owner") >> members
-        result instanceof ServiceResult.Success
-        result.data.size() == 1
-        result.data[0].owner == "test_owner"
+        result.size() == 1
+        result[0].owner == "test_owner"
         0 * _
     }
 
-    def "findByOwnerServiceResult should return Success with empty list when no family members found"() {
-        when: "finding by owner with no family members using ServiceResult"
-        def result = standardizedFamilyMemberService.findByOwnerServiceResult("unknown_owner")
+    def "findByOwner should return empty list when no family members found"() {
+        when: "finding by owner with no family members"
+        def result = standardizedFamilyMemberService.findByOwner("unknown_owner")
 
-        then: "should return Success with empty list"
+        then: "should return empty list"
         1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue("unknown_owner") >> []
-        result instanceof ServiceResult.Success
-        result.data.isEmpty()
+        result.isEmpty()
         0 * _
     }
 
-    def "findByOwnerAndRelationshipServiceResult should return Success with family members when found"() {
+    def "findByOwnerAndRelationship should return family members when found"() {
         given: "existing family members for owner and relationship"
         def members = [
             FamilyMemberBuilder.builder().withOwner("test_owner").withRelationship(FamilyRelationship.Spouse).build()
         ]
 
-        when: "finding by owner and relationship using ServiceResult"
-        def result = standardizedFamilyMemberService.findByOwnerAndRelationshipServiceResult("test_owner", FamilyRelationship.Spouse)
+        when: "finding by owner and relationship"
+        def result = standardizedFamilyMemberService.findByOwnerAndRelationship("test_owner", FamilyRelationship.Spouse)
 
-        then: "should return Success with family members"
+        then: "should return family members"
         1 * familyMemberRepositoryMock.findByOwnerAndRelationshipAndActiveStatusTrue("test_owner", FamilyRelationship.Spouse) >> members
-        result instanceof ServiceResult.Success
-        result.data.size() == 1
-        result.data[0].relationship == FamilyRelationship.Spouse
+        result.size() == 1
+        result[0].relationship == FamilyRelationship.Spouse
         0 * _
     }
 
-    def "updateActiveStatusServiceResult should return Success when family member exists"() {
+    def "updateActiveStatus should return true when family member exists"() {
         given: "existing family member"
         def member = FamilyMemberBuilder.builder().withFamilyMemberId(1L).build()
 
-        when: "updating active status using ServiceResult"
-        def result = standardizedFamilyMemberService.updateActiveStatusServiceResult(1L, false)
+        when: "updating active status"
+        def result = standardizedFamilyMemberService.updateActiveStatus(1L, false)
 
-        then: "should return Success"
+        then: "should return true"
         1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
         1 * familyMemberRepositoryMock.updateActiveStatus(1L, false) >> 1
-        result instanceof ServiceResult.Success
-        result.data == true
+        result == true
         0 * _
     }
 
-    def "updateActiveStatusServiceResult should return NotFound when family member does not exist"() {
-        when: "updating active status for non-existent family member using ServiceResult"
-        def result = standardizedFamilyMemberService.updateActiveStatusServiceResult(999L, false)
+    def "updateActiveStatus should return false when family member does not exist"() {
+        when: "updating active status for non-existent family member"
+        def result = standardizedFamilyMemberService.updateActiveStatus(999L, false)
 
-        then: "should return NotFound result"
+        then: "should return false"
         1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
-        result instanceof ServiceResult.NotFound
-        result.message.contains("FamilyMember not found: 999")
+        result == false
         0 * _
     }
 
@@ -291,12 +286,12 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "findByIdLegacy method should delegate to findById and return data"() {
+    def "findById method should return family member when found"() {
         given: "existing family member"
         def member = FamilyMemberBuilder.builder().withFamilyMemberId(1L).build()
 
-        when: "calling legacy findByIdLegacy method"
-        def result = standardizedFamilyMemberService.findByIdLegacy(1L)
+        when: "calling findById method"
+        def result = standardizedFamilyMemberService.findById(1L)
 
         then: "should return family member"
         1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
