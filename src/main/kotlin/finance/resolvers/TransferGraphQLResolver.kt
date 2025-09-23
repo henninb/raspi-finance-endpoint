@@ -2,7 +2,7 @@ package finance.resolvers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Transfer
-import finance.services.ITransferService
+import finance.services.StandardizedTransferService
 import graphql.schema.DataFetcher
 import io.micrometer.core.instrument.MeterRegistry
 import org.apache.logging.log4j.LogManager
@@ -14,7 +14,7 @@ import java.util.*
 
 @Component
 open class TransferGraphQLResolver(
-    private val transferService: ITransferService,
+    private val transferService: StandardizedTransferService,
     private val meterRegistry: MeterRegistry
 ) {
 

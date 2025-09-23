@@ -1,12 +1,11 @@
 package finance.services
 
 import finance.domain.*
-import java.math.BigDecimal
 import java.util.*
 
 interface ITransactionService {
     fun deleteTransactionByGuid(guid: String): Boolean
-    fun deleteReceiptImage(transaction: Transaction) : Boolean
+    fun deleteReceiptImage(transaction: Transaction): Boolean
     fun insertTransaction(transaction: Transaction): Transaction
     fun processAccount(transaction: Transaction)
     fun processCategory(transaction: Transaction)
@@ -28,3 +27,4 @@ interface ITransactionService {
     fun findTransactionsByCategory(categoryName: String): List<Transaction>
     fun findTransactionsByDescription(descriptionName: String): List<Transaction>
 }
+

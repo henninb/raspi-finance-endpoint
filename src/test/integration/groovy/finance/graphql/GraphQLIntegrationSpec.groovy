@@ -29,13 +29,13 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     StandardizedAccountService accountService
 
     @Autowired
-    ICategoryService categoryService
+    StandardizedCategoryService categoryService
 
     @Autowired
     StandardizedDescriptionService descriptionService
 
     @Autowired
-    IPaymentService paymentService
+    StandardizedPaymentService paymentService
 
     @Autowired
     AccountRepository accountRepository
@@ -175,7 +175,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     void 'test service layer integration for GraphQL data fetchers'() {
         when:
         List<Account> accounts = accountService.accounts()
-        List<Category> categories = categoryService.categories()
+        List<Category> categories = categoryService.findAllCategories()
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
         List<Payment> payments = paymentService.findAllPayments()
 
@@ -194,7 +194,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     void 'test GraphQL data fetcher service integration'() {
         when:
         List<Account> accounts = accountService.accounts()
-        List<Category> categories = categoryService.categories()
+        List<Category> categories = categoryService.findAllCategories()
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
 
         then:
@@ -205,7 +205,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test GraphQL mutation service integration'() {
         when:
-        List<Category> categories = categoryService.categories()
+        List<Category> categories = categoryService.findAllCategories()
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
 
         then:
