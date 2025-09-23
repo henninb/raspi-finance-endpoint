@@ -12,17 +12,17 @@ import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
 /**
- * Standardized FamilyMember Service implementing IFamilyMemberService interface
- * Provides legacy compatibility methods for the FamilyMember entity
+ * Standardized FamilyMember Service with ServiceResult patterns
+ * Provides enhanced error handling and standardized CRUD operations
  */
 @Service
 @org.springframework.context.annotation.Primary
 class StandardizedFamilyMemberService(
     private val familyMemberRepository: FamilyMemberRepository
-) : BaseService(), IFamilyMemberService {
+) : BaseService() {
 
 
-    // ===== Additional ServiceResult Methods for Tests =====
+    // ===== ServiceResult Methods =====
 
     fun findAllActive(): ServiceResult<List<FamilyMember>> {
         return try {
@@ -116,49 +116,10 @@ class StandardizedFamilyMemberService(
         }
     }
 
-    fun findByOwnerServiceResult(owner: String): ServiceResult<List<FamilyMember>> {
-        return try {
-            val members = familyMemberRepository.findByOwnerAndActiveStatusTrue(owner)
-            ServiceResult.Success(members)
-        } catch (e: Exception) {
-            logger.error("Error retrieving family members by owner: $owner", e)
-            ServiceResult.SystemError(e)
-        }
-    }
 
-    fun findByOwnerAndRelationshipServiceResult(owner: String, relationship: FamilyRelationship): ServiceResult<List<FamilyMember>> {
-        return try {
-            val members = familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
-            ServiceResult.Success(members)
-        } catch (e: Exception) {
-            logger.error("Error retrieving family members by owner and relationship", e)
-            ServiceResult.SystemError(e)
-        }
-    }
+    // ===== Legacy Methods for Backward Compatibility =====
 
-    fun updateActiveStatusServiceResult(id: Long, active: Boolean): ServiceResult<Boolean> {
-        return try {
-            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
-            if (existingMember == null) {
-                return ServiceResult.NotFound("FamilyMember not found: $id")
-            }
-
-            val updatedRows = familyMemberRepository.updateActiveStatus(id, active)
-            ServiceResult.Success(updatedRows > 0)
-        } catch (e: Exception) {
-            logger.error("Error updating active status for family member ID: $id", e)
-            ServiceResult.SystemError(e)
-        }
-    }
-
-    fun findByIdLegacy(id: Long): FamilyMember? {
-        logger.debug("Finding family member by ID: $id")
-        return familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
-    }
-
-    // ===== Legacy Interface Methods =====
-
-    override fun insertFamilyMember(member: FamilyMember): FamilyMember {
+    fun insertFamilyMember(member: FamilyMember): FamilyMember {
         logger.info("Inserting family member for owner: ${member.owner}")
 
         val result = save(member)
@@ -184,7 +145,7 @@ class StandardizedFamilyMemberService(
         }
     }
 
-    override fun updateFamilyMember(member: FamilyMember): FamilyMember {
+    fun updateFamilyMember(member: FamilyMember): FamilyMember {
         logger.info("Updating family member with ID: ${member.familyMemberId}")
 
         val result = update(member)
@@ -210,28 +171,27 @@ class StandardizedFamilyMemberService(
         }
     }
 
-    // Override IFamilyMemberService.findById method
-    override fun findById(id: Long): FamilyMember? {
+    fun findById(id: Long): FamilyMember? {
         logger.debug("Finding family member by ID: $id")
         return familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
     }
 
-    override fun findByOwner(owner: String): List<FamilyMember> {
+    fun findByOwner(owner: String): List<FamilyMember> {
         logger.debug("Finding family members by owner: $owner")
         return familyMemberRepository.findByOwnerAndActiveStatusTrue(owner)
     }
 
-    override fun findByOwnerAndRelationship(owner: String, relationship: FamilyRelationship): List<FamilyMember> {
+    fun findByOwnerAndRelationship(owner: String, relationship: FamilyRelationship): List<FamilyMember> {
         logger.debug("Finding family members by owner: $owner and relationship: $relationship")
         return familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
     }
 
-    override fun findAll(): List<FamilyMember> {
+    fun findAll(): List<FamilyMember> {
         logger.debug("Finding all active family members")
         return familyMemberRepository.findByActiveStatusTrue()
     }
 
-    override fun updateActiveStatus(id: Long, active: Boolean): Boolean {
+    fun updateActiveStatus(id: Long, active: Boolean): Boolean {
         logger.info("Updating active status for family member ID: $id to: $active")
         return try {
             // Check if family member exists first
@@ -248,7 +208,7 @@ class StandardizedFamilyMemberService(
         }
     }
 
-    override fun softDelete(id: Long): Boolean {
+    fun softDelete(id: Long): Boolean {
         logger.info("Soft deleting family member with ID: $id")
         return try {
             // Check if family member exists first (regardless of active status)

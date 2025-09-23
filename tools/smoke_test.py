@@ -54,6 +54,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--timeout", type=int, default=15, help="Request timeout in seconds")
     parser.add_argument("--show-bytes", type=int, default=400, help="Show first N bytes of response bodies")
+    parser.add_argument("--account", default=None, help="Account name owner to query transactions for (optional)")
     return parser.parse_args()
 
 
@@ -100,6 +101,16 @@ def show_get(session: Session, url: str, verify, timeout: int, show_bytes: int) 
         print(f"REQUEST ERROR: {e}")
 
 
+def get_json(session: Session, url: str, verify, timeout: int):
+    try:
+        r = session.get(url, headers={"Accept": "application/json"}, verify=verify, timeout=timeout)
+        if r.headers.get("content-type", "").startswith("application/json"):
+            return r.status_code, r.json()
+        return r.status_code, None
+    except requests.RequestException:
+        return None, None
+
+
 def main() -> int:
     args = parse_args()
 
@@ -126,9 +137,6 @@ def main() -> int:
         "/api/account/totals",
         "/api/account/payment/required",
 
-        # Transactions
-        "/api/transaction/active",
-
         # Payments
         "/api/payment/active",
         "/api/payment/select",
@@ -154,11 +162,50 @@ def main() -> int:
         if token:
             session.headers.update({"Authorization": f"Bearer {token}"})
             print("Authorization header set (Bearer token)")
+            # Force include token cookie via header as well (some endpoints only read cookies)
+            session.headers.update({"Cookie": f"token={token}"})
+            print("Cookie header set with JWT token")
 
         # 2) Perform only GET requests
         for ep in endpoints:
             url = f"{args.base_url.rstrip('/')}{ep}"
             show_get(session, url, verify, args.timeout, args.show_bytes)
+
+        # 3) Fetch non-empty transaction lists (dynamic or overridden via --account)
+        account_name = args.account
+        if not account_name:
+            acct_url = f"{args.base_url.rstrip('/')}/api/account/active"
+            code, data = get_json(session, acct_url, verify, args.timeout)
+            if code == 200 and isinstance(data, list) and data:
+                first = data[0]
+                account_name = first.get("accountNameOwner") or first.get("account_name_owner") or None
+
+        if account_name:
+            # Transactions by account
+            tx_list_url = f"{args.base_url.rstrip('/')}/api/transaction/account/select/{account_name}"
+            print(f"\n[transactions] account={account_name}")
+            code2, txs = get_json(session, tx_list_url, verify, args.timeout)
+            show_get(session, tx_list_url, verify, args.timeout, args.show_bytes)
+            if code2 == 200 and isinstance(txs, list):
+                print(f"Transactions count: {len(txs)}")
+
+            # Totals by account
+            totals_url = f"{args.base_url.rstrip('/')}/api/transaction/account/totals/{account_name}"
+            show_get(session, totals_url, verify, args.timeout, args.show_bytes)
+
+            # If we got transactions, fetch a detail by guid
+            if code2 == 200 and isinstance(txs, list) and txs:
+                guid = None
+                for t in txs:
+                    g = t.get("guid") or t.get("transactionGuid") or t.get("transaction_guid")
+                    if g:
+                        guid = g
+                        break
+                if guid:
+                    tx_detail_url = f"{args.base_url.rstrip('/')}/api/transaction/select/{guid}"
+                    show_get(session, tx_detail_url, verify, args.timeout, args.show_bytes)
+        else:
+            print("No account discovered; skipping transaction detail queries.")
 
     return 0
 
