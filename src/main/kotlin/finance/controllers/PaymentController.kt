@@ -1,7 +1,8 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.IPaymentService
+import finance.services.StandardizedPaymentService
+import finance.domain.ServiceResult
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -12,7 +13,7 @@ import java.util.*
 @CrossOrigin
 @RestController
 @RequestMapping("/api/payment")
-class PaymentController(private val paymentService: IPaymentService) :
+class PaymentController(private val standardizedPaymentService: StandardizedPaymentService) :
     StandardizedBaseController(), StandardRestController<Payment, Long> {
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
@@ -26,7 +27,7 @@ class PaymentController(private val paymentService: IPaymentService) :
     fun selectAllPayments(): ResponseEntity<List<Payment>> {
         return try {
             logger.debug("Retrieving all payments")
-            val payments = paymentService.findAllPayments()
+            val payments = standardizedPaymentService.findAllPayments()
             logger.info("Retrieved ${payments.size} payments")
             ResponseEntity.ok(payments)
         } catch (ex: Exception) {
@@ -47,7 +48,7 @@ class PaymentController(private val paymentService: IPaymentService) :
     ): ResponseEntity<Payment> {
         return try {
             logger.info("Updating payment: $paymentId")
-            val response = paymentService.updatePayment(paymentId, patch)
+            val response = standardizedPaymentService.updatePayment(paymentId, patch)
             logger.info("Payment updated successfully: $paymentId")
             ResponseEntity.ok(response)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -75,7 +76,7 @@ class PaymentController(private val paymentService: IPaymentService) :
     fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {
         return try {
             logger.info("Inserting payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
-            val paymentResponse = paymentService.insertPayment(payment)
+            val paymentResponse = standardizedPaymentService.insertPayment(payment)
             logger.info("Payment inserted successfully: ${paymentResponse.paymentId}")
             ResponseEntity.status(HttpStatus.CREATED).body(paymentResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -104,13 +105,13 @@ class PaymentController(private val paymentService: IPaymentService) :
     fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<Payment> {
         return try {
             logger.info("Attempting to delete payment: $paymentId")
-            val payment = paymentService.findByPaymentId(paymentId)
+            val payment = standardizedPaymentService.findByPaymentId(paymentId)
                 .orElseThrow {
                     logger.warn("Payment not found for deletion: $paymentId")
                     ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
                 }
 
-            paymentService.deleteByPaymentId(paymentId)
+            standardizedPaymentService.deleteByPaymentId(paymentId)
             logger.info("Payment deleted successfully: $paymentId")
             ResponseEntity.ok(payment)
         } catch (ex: ResponseStatusException) {
@@ -129,11 +130,23 @@ class PaymentController(private val paymentService: IPaymentService) :
      */
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Payment>> {
-        return handleCrudOperation("Find all active payments", null) {
-            logger.debug("Retrieving all active payments")
-            val payments: List<Payment> = paymentService.findAllPayments()
-            logger.info("Retrieved ${payments.size} active payments")
-            payments
+        return when (val result = standardizedPaymentService.findAllActive()) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved ${result.data.size} active payments (standardized)")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.info("No active payments found (standardized)")
+                ResponseEntity.ok(emptyList())
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving active payments: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -143,15 +156,23 @@ class PaymentController(private val paymentService: IPaymentService) :
      */
     @GetMapping("/{paymentId}", produces = ["application/json"])
     override fun findById(@PathVariable paymentId: Long): ResponseEntity<Payment> {
-        return handleCrudOperation("Find payment by ID", paymentId) {
-            logger.debug("Retrieving payment: $paymentId")
-            val payment = paymentService.findByPaymentId(paymentId)
-                .orElseThrow {
-                    logger.warn("Payment not found: $paymentId")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
-                }
-            logger.info("Retrieved payment: $paymentId")
-            payment
+        return when (val result = standardizedPaymentService.findById(paymentId)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved payment: $paymentId (standardized)")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Payment not found: $paymentId (standardized)")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving payment $paymentId: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
     }
 
@@ -161,11 +182,27 @@ class PaymentController(private val paymentService: IPaymentService) :
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(@Valid @RequestBody payment: Payment): ResponseEntity<Payment> {
-        return handleCreateOperation("Payment", "${payment.sourceAccount} -> ${payment.destinationAccount}") {
-            logger.info("Creating payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
-            val result = paymentService.insertPayment(payment)
-            logger.info("Payment created successfully: ${result.paymentId}")
-            result
+        return when (val result = standardizedPaymentService.save(payment)) {
+            is ServiceResult.Success -> {
+                logger.info("Payment created successfully: ${payment.sourceAccount} -> ${payment.destinationAccount} (standardized)")
+                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error creating payment: ${result.errors}")
+                ResponseEntity.badRequest().build<Payment>()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error creating payment: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<Payment>()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error creating payment: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
+            }
         }
     }
 
@@ -175,17 +212,31 @@ class PaymentController(private val paymentService: IPaymentService) :
      */
     @PutMapping("/{paymentId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(@PathVariable paymentId: Long, @Valid @RequestBody payment: Payment): ResponseEntity<Payment> {
-        return handleCrudOperation("Update payment", paymentId) {
-            logger.info("Updating payment: $paymentId")
-            // Validate payment exists first
-            paymentService.findByPaymentId(paymentId)
-                .orElseThrow {
-                    logger.warn("Payment not found for update: $paymentId")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
-                }
-            val result = paymentService.updatePayment(paymentId, payment)
-            logger.info("Payment updated successfully: $paymentId")
-            result
+        return when (val result = standardizedPaymentService.update(payment)) {
+            is ServiceResult.Success -> {
+                logger.info("Payment updated successfully: $paymentId (standardized)")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Payment not found for update: $paymentId (standardized)")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error updating payment: ${result.errors}")
+                ResponseEntity.badRequest().build<Payment>()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error updating payment: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<Payment>()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error updating payment: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
+            }
         }
     }
 
@@ -195,11 +246,30 @@ class PaymentController(private val paymentService: IPaymentService) :
      */
     @DeleteMapping("/{paymentId}", produces = ["application/json"])
     override fun deleteById(@PathVariable paymentId: Long): ResponseEntity<Payment> {
-        return handleDeleteOperation(
-            "Payment",
-            paymentId,
-            { paymentService.findByPaymentId(paymentId) },
-            { paymentService.deleteByPaymentId(paymentId) }
-        )
+        // First get the payment to return it
+        val paymentResult = standardizedPaymentService.findById(paymentId)
+        if (paymentResult !is ServiceResult.Success) {
+            logger.warn("Payment not found for deletion: $paymentId")
+            return ResponseEntity.notFound().build()
+        }
+
+        return when (val result = standardizedPaymentService.deleteById(paymentId)) {
+            is ServiceResult.Success -> {
+                logger.info("Payment deleted successfully: $paymentId")
+                ResponseEntity.ok(paymentResult.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Payment not found for deletion: $paymentId")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting payment: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
+            }
+        }
     }
 }

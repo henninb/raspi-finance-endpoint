@@ -32,10 +32,10 @@ class ServiceLayerIntegrationSpec extends Specification {
     StandardizedDescriptionService descriptionService
 
     @Autowired
-    IPaymentService paymentService
+    StandardizedPaymentService paymentService
 
     @Autowired
-    ITransferService transferService
+    StandardizedTransferService transferService
 
     @Autowired
     StandardizedValidationAmountService validationAmountService

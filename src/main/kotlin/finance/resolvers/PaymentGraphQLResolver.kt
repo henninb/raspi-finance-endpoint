@@ -2,7 +2,7 @@ package finance.resolvers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.Payment
-import finance.services.IPaymentService
+import finance.services.StandardizedPaymentService
 import graphql.schema.DataFetcher
 import io.micrometer.core.instrument.MeterRegistry
 import org.apache.logging.log4j.LogManager
@@ -14,7 +14,7 @@ import java.util.*
 
 @Component
 open class PaymentGraphQLResolver(
-    private val paymentService: IPaymentService,
+    private val paymentService: StandardizedPaymentService,
     private val meterRegistry: MeterRegistry
 ) {
 
