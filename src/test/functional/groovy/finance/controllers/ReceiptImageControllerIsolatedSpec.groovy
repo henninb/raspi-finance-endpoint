@@ -47,7 +47,8 @@ class ReceiptImageControllerIsolatedSpec extends BaseControllerSpec {
         ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
+        response.body.contains('"error":"Data integrity violation in save for ReceiptImage')
         0 * _
     }
 

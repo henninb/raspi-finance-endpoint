@@ -18,7 +18,7 @@ import java.util.*
 class StandardizedTransferService(
     private val transferRepository: TransferRepository,
     private val transactionService: ITransactionService,
-    private val accountService: IAccountService
+    private val accountService: StandardizedAccountService
 ) : StandardizedBaseService<Transfer, Long>(), ITransferService {
 
     override fun getEntityName(): String = "Transfer"

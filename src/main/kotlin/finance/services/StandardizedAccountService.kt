@@ -23,7 +23,7 @@ import java.util.*
 @Primary
 class StandardizedAccountService(
     private val accountRepository: AccountRepository
-) : StandardizedBaseService<Account, String>(), IAccountService {
+) : StandardizedBaseService<Account, String>() {
 
     override fun getEntityName(): String = "Account"
 
@@ -104,11 +104,11 @@ class StandardizedAccountService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun account(accountNameOwner: String): Optional<Account> {
+    fun account(accountNameOwner: String): Optional<Account> {
         return accountRepository.findByAccountNameOwner(accountNameOwner)
     }
 
-    override fun accounts(): List<Account> {
+    fun accounts(): List<Account> {
         val result = findAllActive()
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -116,17 +116,17 @@ class StandardizedAccountService(
         }
     }
 
-    override fun findAccountsThatRequirePayment(): List<Account> {
+    fun findAccountsThatRequirePayment(): List<Account> {
         updateTotalsForAllAccounts()
         return accountRepository.findAccountsThatRequirePayment()
     }
 
-    override fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal {
+    fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal {
         val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionState(transactionState.toString())
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
-    override fun insertAccount(account: Account): Account {
+    fun insertAccount(account: Account): Account {
         val result = save(account)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -164,7 +164,7 @@ class StandardizedAccountService(
         }
     }
 
-    override fun deleteAccount(accountNameOwner: String): Boolean {
+    fun deleteAccount(accountNameOwner: String): Boolean {
         val result = deleteById(accountNameOwner)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -173,7 +173,7 @@ class StandardizedAccountService(
         }
     }
 
-    override fun updateTotalsForAllAccounts(): Boolean {
+    fun updateTotalsForAllAccounts(): Boolean {
         try {
             accountRepository.updateTotalsForAllAccounts()
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
@@ -183,7 +183,7 @@ class StandardizedAccountService(
         return true
     }
 
-    override fun updateAccount(account: Account): Account {
+    fun updateAccount(account: Account): Account {
         val result = update(account)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -192,7 +192,7 @@ class StandardizedAccountService(
         }
     }
 
-    override fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account {
+    fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account {
         val oldAccount = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
             .orElseThrow { EntityNotFoundException("Account not found") }
 
@@ -204,7 +204,7 @@ class StandardizedAccountService(
         return renamedAccount
     }
 
-    override fun deactivateAccount(accountNameOwner: String): Account {
+    fun deactivateAccount(accountNameOwner: String): Account {
         val account = accountRepository.findByAccountNameOwner(accountNameOwner)
             .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
@@ -216,7 +216,7 @@ class StandardizedAccountService(
         return updatedAccount
     }
 
-    override fun activateAccount(accountNameOwner: String): Account {
+    fun activateAccount(accountNameOwner: String): Account {
         val account = accountRepository.findByAccountNameOwner(accountNameOwner)
             .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 

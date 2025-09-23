@@ -18,14 +18,14 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
 
     // Declare all required mocks at class level
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def accountServiceMock = Mock(IAccountService)
+    // Note: accountService is inherited from BaseServiceSpec (real StandardizedAccountService with accountRepositoryMock)
     // Use a real StandardizedCategoryService wired with repository mocks
     def categoryRepositoryMock = Mock(CategoryRepository)
     def categoryTxRepositoryMock = Mock(TransactionRepository)
     def categoryService = new StandardizedCategoryService(categoryRepositoryMock, categoryTxRepositoryMock)
     // Use a real StandardizedDescriptionService wired with repository mocks
     def descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
-    def receiptImageServiceMock = Mock(IReceiptImageService)
+    def standardizedReceiptImageServiceMock = Mock(StandardizedReceiptImageService)
     def imageProcessingServiceMock = Mock(ImageProcessingService)
     def calculationServiceMock = Mock(CalculationService)
 
@@ -35,10 +35,10 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
     def setup() {
         standardizedTransactionService = new StandardizedTransactionService(
             transactionRepositoryMock,
-            accountServiceMock,
+            accountService,
             categoryService,
             descriptionService,
-            receiptImageServiceMock,
+            standardizedReceiptImageServiceMock,
             imageProcessingServiceMock,
             calculationServiceMock
         )
@@ -241,7 +241,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
 
         and: "account processing occurs"
-        1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
 
         and: "category processing occurs via StandardizedCategoryService"
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
@@ -276,7 +276,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
 
         and: "account processing occurs"
-        1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
 
         and: "category processing occurs via StandardizedCategoryService"
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
@@ -362,7 +362,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         and: "masterTransactionUpdater business logic executes"
         1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * accountServiceMock.account(updatedTransaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(updatedTransaction.accountNameOwner) >> Optional.of(account)
         1 * descriptionRepositoryMock.findByDescriptionName(updatedTransaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
 
@@ -541,7 +541,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.changeAccountNameOwnerStandardized(accountNameOwner, guid)
 
         then: "services are called"
-        1 * accountServiceMock.account(accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
 
@@ -634,7 +634,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
 
         and: "processing occurs"
-        1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
         1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
@@ -668,7 +668,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         and: "masterTransactionUpdater is called with services"
         1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * accountServiceMock.account(transaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
         1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
 
@@ -756,7 +756,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         and: "masterTransactionUpdater executes"
         1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
         1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * accountServiceMock.account(updatedTransaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(updatedTransaction.accountNameOwner) >> Optional.of(account)
         1 * descriptionRepositoryMock.findByDescriptionName(updatedTransaction.description) >> Optional.of(description)
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
 
@@ -792,7 +792,7 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.changeAccountNameOwner(map)
 
         then: "services are called"
-        1 * accountServiceMock.account(accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
 

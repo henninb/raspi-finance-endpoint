@@ -22,10 +22,10 @@ import java.util.*
 @Primary
 class StandardizedTransactionService(
     private val transactionRepository: TransactionRepository,
-    private val accountService: IAccountService,
+    private val accountService: StandardizedAccountService,
     private val categoryService: StandardizedCategoryService,
     private val descriptionService: StandardizedDescriptionService,
-    private val receiptImageService: IReceiptImageService,
+    private val standardizedReceiptImageService: StandardizedReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService
 ) : StandardizedBaseService<Transaction, String>(), ITransactionService {
@@ -203,15 +203,21 @@ class StandardizedTransactionService(
             val transaction = optionalTransaction.get()
 
             if (transaction.receiptImageId != null) {
-                val receiptImageOptional = receiptImageService.findByReceiptImageId(transaction.receiptImageId!!)
-                if (receiptImageOptional.isPresent) {
-                    val existingReceiptImage = receiptImageOptional.get()
-                    existingReceiptImage.thumbnail = thumbnail
-                    existingReceiptImage.image = rawImage
-                    existingReceiptImage.imageFormatType = imageFormatType
-                    return@handleServiceOperation receiptImageService.insertReceiptImage(existingReceiptImage)
+                val receiptImageResult = standardizedReceiptImageService.findById(transaction.receiptImageId!!)
+                when (receiptImageResult) {
+                    is ServiceResult.Success -> {
+                        val existingReceiptImage = receiptImageResult.data
+                        existingReceiptImage.thumbnail = thumbnail
+                        existingReceiptImage.image = rawImage
+                        existingReceiptImage.imageFormatType = imageFormatType
+                        val updateResult = standardizedReceiptImageService.save(existingReceiptImage)
+                        return@handleServiceOperation when (updateResult) {
+                            is ServiceResult.Success -> updateResult.data
+                            else -> throw ReceiptImageException("Failed to update receipt image for transaction ${transaction.guid}: $updateResult")
+                        }
+                    }
+                    else -> throw ReceiptImageException("Failed to find receipt image for transaction ${transaction.guid}: $receiptImageResult")
                 }
-                throw ReceiptImageException("Failed to update receipt image for transaction ${transaction.guid}")
             }
 
             val receiptImage = ReceiptImage()
@@ -219,7 +225,11 @@ class StandardizedTransactionService(
             receiptImage.image = rawImage
             receiptImage.thumbnail = thumbnail
             receiptImage.imageFormatType = imageFormatType
-            val response = receiptImageService.insertReceiptImage(receiptImage)
+            val insertResult = standardizedReceiptImageService.save(receiptImage)
+            val response = when (insertResult) {
+                is ServiceResult.Success -> insertResult.data
+                else -> throw ReceiptImageException("Failed to insert receipt image for transaction ${transaction.guid}: $insertResult")
+            }
             transaction.receiptImageId = response.receiptImageId
             transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             transactionRepository.saveAndFlush(transaction)
@@ -286,15 +296,27 @@ class StandardizedTransactionService(
             return false
         }
         logger.info("Deleting receipt image with ID: $receiptImageId for transaction GUID: ${transaction.guid}")
-        val receiptImageOptional = receiptImageService.findByReceiptImageId(receiptImageId)
-        if (receiptImageOptional.isPresent) {
-            receiptImageService.deleteReceiptImage(receiptImageOptional.get())
-            meterService.incrementExceptionThrownCounter("ReceiptImageDeleted")
-            logger.info("Successfully deleted receipt image for transaction GUID: ${transaction.guid}")
-            return true
+        val receiptImageResult = standardizedReceiptImageService.findById(receiptImageId)
+        when (receiptImageResult) {
+            is ServiceResult.Success -> {
+                val deleteResult = standardizedReceiptImageService.deleteById(receiptImageId)
+                when (deleteResult) {
+                    is ServiceResult.Success -> {
+                        meterService.incrementExceptionThrownCounter("ReceiptImageDeleted")
+                        logger.info("Successfully deleted receipt image for transaction GUID: ${transaction.guid}")
+                        return true
+                    }
+                    else -> {
+                        logger.warn("Failed to delete receipt image with ID: $receiptImageId: $deleteResult")
+                        return false
+                    }
+                }
+            }
+            else -> {
+                logger.warn("Receipt image not found with ID: $receiptImageId: $receiptImageResult")
+                return false
+            }
         }
-        logger.warn("Receipt image not found with ID: $receiptImageId")
-        return false
     }
 
     override fun insertTransaction(transaction: Transaction): Transaction {
