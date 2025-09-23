@@ -218,14 +218,16 @@ class ValidationAmountController(private var standardizedValidationAmountService
         @PathVariable("transactionStateValue") transactionStateValue: String
     ): ResponseEntity<ValidationAmount> {
 
-        val newTransactionStateValue = transactionStateValue.lowercase()
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-        val validationAmount = standardizedValidationAmountService.findValidationAmountByAccountNameOwner(
-            accountNameOwner,
-            TransactionState.valueOf(newTransactionStateValue)
-        )
-        logger.info(mapper.writeValueAsString(validationAmount))
-        return ResponseEntity.ok(validationAmount)
+        return handleCrudOperation("selectValidationAmountByAccountId", "$accountNameOwner/$transactionStateValue") {
+            val newTransactionStateValue = transactionStateValue.lowercase()
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            val validationAmount = standardizedValidationAmountService.findValidationAmountByAccountNameOwner(
+                accountNameOwner,
+                TransactionState.valueOf(newTransactionStateValue)
+            )
+            logger.info(mapper.writeValueAsString(validationAmount))
+            validationAmount
+        }
     }
 
 

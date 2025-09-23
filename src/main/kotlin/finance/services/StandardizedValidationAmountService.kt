@@ -99,13 +99,13 @@ class StandardizedValidationAmountService(
     ): ValidationAmount {
         // Find account by name owner
         val account = accountRepository.findByAccountNameOwner(accountNameOwner).orElseThrow {
-            RuntimeException("Account not found: $accountNameOwner")
+            jakarta.persistence.EntityNotFoundException("Account not found: $accountNameOwner")
         }
 
         // Find validation amount by account ID and transaction state
         val validationAmounts = validationAmountRepository.findByTransactionStateAndAccountId(transactionState, account.accountId)
         if (validationAmounts.isEmpty()) {
-            throw RuntimeException("ValidationAmount not found for account: $accountNameOwner and transaction state: $transactionState")
+            throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found for account: $accountNameOwner and transaction state: $transactionState")
         }
         return validationAmounts.first() // Return the first match (legacy behavior)
     }
