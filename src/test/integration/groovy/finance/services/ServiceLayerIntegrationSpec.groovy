@@ -20,7 +20,7 @@ import java.sql.Timestamp
 class ServiceLayerIntegrationSpec extends Specification {
 
     @Autowired
-    ITransactionService transactionService
+    StandardizedTransactionService transactionService
 
     @Autowired
     StandardizedAccountService accountService

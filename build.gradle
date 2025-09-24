@@ -15,6 +15,8 @@ plugins {
     id 'nu.studer.jooq' version "${jooqPluginVersion}"
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
+    // Open Spring-annotated Kotlin classes (e.g., @Service) so Spock can mock them
+    id "org.jetbrains.kotlin.plugin.spring" version "${kotlinVersion}"
     id "org.flywaydb.flyway" version "${flywayVersion}"
     id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
 }

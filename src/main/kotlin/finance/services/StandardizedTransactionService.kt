@@ -28,7 +28,7 @@ class StandardizedTransactionService(
     private val standardizedReceiptImageService: StandardizedReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService
-) : StandardizedBaseService<Transaction, String>(), ITransactionService {
+) : StandardizedBaseService<Transaction, String>() {
 
     override fun getEntityName(): String = "Transaction"
 
@@ -279,7 +279,7 @@ class StandardizedTransactionService(
 
     // ===== Legacy Method Compatibility =====
 
-    override fun deleteTransactionByGuid(guid: String): Boolean {
+    fun deleteTransactionByGuid(guid: String): Boolean {
         val result = deleteById(guid)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -289,7 +289,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun deleteReceiptImage(transaction: Transaction): Boolean {
+    fun deleteReceiptImage(transaction: Transaction): Boolean {
         val receiptImageId = transaction.receiptImageId
         if (receiptImageId == null) {
             logger.warn("No receipt image ID found for transaction GUID: ${transaction.guid}")
@@ -319,7 +319,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun insertTransaction(transaction: Transaction): Transaction {
+    fun insertTransaction(transaction: Transaction): Transaction {
         // Validate the transaction first
         val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
         handleConstraintViolations(constraintViolations, meterService)
@@ -345,7 +345,7 @@ class StandardizedTransactionService(
         return response
     }
 
-    override fun findTransactionByGuid(guid: String): Optional<Transaction> {
+    fun findTransactionByGuid(guid: String): Optional<Transaction> {
         val result = findById(guid)
         return when (result) {
             is ServiceResult.Success -> Optional.of(result.data)
@@ -353,11 +353,11 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
+    fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
         return calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
     }
 
-    override fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
+    fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val result = findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -365,7 +365,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun updateTransaction(transaction: Transaction): Transaction {
+    fun updateTransaction(transaction: Transaction): Transaction {
         val result = update(transaction)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -375,7 +375,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Transaction {
+    fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Transaction {
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
             val account = accountService.account(transaction.accountNameOwner).get()
@@ -389,7 +389,7 @@ class StandardizedTransactionService(
         throw TransactionValidationException("guid did not match any database records to update ${transaction.guid}.")
     }
 
-    override fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
+    fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
         val result = updateTransactionReceiptImageByGuidStandardized(guid, imageBase64Payload)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -399,7 +399,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun changeAccountNameOwner(map: Map<String, String>): Transaction {
+    fun changeAccountNameOwner(map: Map<String, String>): Transaction {
         val accountNameOwner = map["accountNameOwner"]
         val guid = map["guid"]
 
@@ -418,7 +418,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun updateTransactionState(guid: String, transactionState: TransactionState): Transaction {
+    fun updateTransactionState(guid: String, transactionState: TransactionState): Transaction {
         val result = updateTransactionStateStandardized(guid, transactionState)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -428,15 +428,15 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
+    fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
         return imageProcessingService.createThumbnail(rawImage, imageFormatType)
     }
 
-    override fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
+    fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
         return imageProcessingService.getImageFormatType(rawImage)
     }
 
-    override fun createFutureTransaction(transaction: Transaction): Transaction {
+    fun createFutureTransaction(transaction: Transaction): Transaction {
         val result = createFutureTransactionStandardized(transaction)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -445,7 +445,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun findTransactionsByCategory(categoryName: String): List<Transaction> {
+    fun findTransactionsByCategory(categoryName: String): List<Transaction> {
         val result = findTransactionsByCategoryStandardized(categoryName)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -453,7 +453,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun findTransactionsByDescription(descriptionName: String): List<Transaction> {
+    fun findTransactionsByDescription(descriptionName: String): List<Transaction> {
         val result = findTransactionsByDescriptionStandardized(descriptionName)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -463,7 +463,7 @@ class StandardizedTransactionService(
 
     // ===== Preserved Business Logic Methods =====
 
-    override fun processAccount(transaction: Transaction) {
+    fun processAccount(transaction: Transaction) {
         var accountOptional = accountService.account(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
             val existingAccount = accountOptional.get()
@@ -482,7 +482,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun processCategory(transaction: Transaction) {
+    fun processCategory(transaction: Transaction) {
         when {
             transaction.category != "" -> {
                 when (val result = categoryService.findByCategoryNameStandardized(transaction.category)) {
@@ -508,7 +508,7 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun processDescription(transaction: Transaction) {
+    fun processDescription(transaction: Transaction) {
         when {
             transaction.description != "" -> {
                 when (val findResult = descriptionService.findByDescriptionNameStandardized(transaction.description)) {
@@ -530,19 +530,19 @@ class StandardizedTransactionService(
         }
     }
 
-    override fun createDefaultCategory(categoryName: String): Category {
+    fun createDefaultCategory(categoryName: String): Category {
         val category = Category()
         category.categoryName = categoryName
         return category
     }
 
-    override fun createDefaultDescription(descriptionName: String): Description {
+    fun createDefaultDescription(descriptionName: String): Description {
         val description = Description()
         description.descriptionName = descriptionName
         return description
     }
 
-    override fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
+    fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
         val account = Account()
         account.accountNameOwner = accountNameOwner
         account.moniker = "0000"
