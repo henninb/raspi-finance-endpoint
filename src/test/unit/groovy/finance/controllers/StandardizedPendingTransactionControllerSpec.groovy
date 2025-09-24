@@ -49,7 +49,7 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         response.body[0].accountNameOwner == "acct_one"
     }
 
-    def "findAllActive returns 200 empty on service error"() {
+    def "findAllActive returns 500 on service error"() {
         given:
         pendingRepo.findAll() >> { throw new RuntimeException("db") }
 
@@ -57,8 +57,7 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         ResponseEntity<List<PendingTransaction>> response = controller.findAllActive()
 
         then:
-        response.statusCode == HttpStatus.OK
-        response.body.isEmpty()
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "findById returns entity when found"() {
@@ -76,32 +75,30 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         response.body.pendingTransactionId == id
     }
 
-    def "findById throws 404 when not found"() {
+    def "findById returns 404 when not found"() {
         given:
         long id = 404L
         and:
         pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.empty()
 
         when:
-        controller.findById(id)
+        ResponseEntity<PendingTransaction> response = controller.findById(id)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.NOT_FOUND
     }
 
-    def "findById throws 404 on service error"() {
+    def "findById returns 500 on service error"() {
         given:
         long id = 500L
         and:
         pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> { throw new RuntimeException("boom") }
 
         when:
-        controller.findById(id)
+        ResponseEntity<PendingTransaction> response = controller.findById(id)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "save creates pending transaction and returns 201"() {
@@ -118,7 +115,7 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         response.body.pendingTransactionId == 99L
     }
 
-    def "save throws 400 on validation error"() {
+    def "save returns 400 on validation error"() {
         given:
         PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-04-01"), description: "bad", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: null)
         and:
@@ -128,25 +125,23 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         pendingService.validator = violatingValidator
 
         when:
-        controller.save(input)
+        ResponseEntity<PendingTransaction> response = controller.save(input)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.BAD_REQUEST
     }
 
-    def "save throws 500 on system error"() {
+    def "save returns 500 on system error"() {
         given:
         PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-04-01"), description: "created", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: null)
         and:
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:
-        controller.save(input)
+        ResponseEntity<PendingTransaction> response = controller.save(input)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "update modifies existing pending transaction and returns 200"() {
@@ -155,7 +150,7 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-01-01"), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: null)
         PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-05-05"), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null)
         and:
-        2 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
+        1 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { PendingTransaction p -> p }
 
         when:
@@ -166,35 +161,33 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         response.body.description == "new"
     }
 
-    def "update throws 404 when not found"() {
+    def "update returns 404 when not found"() {
         given:
         long id = 23L
         and:
         pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.empty()
 
         when:
-        controller.update(id, new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-05-05"), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null))
+        ResponseEntity<PendingTransaction> response = controller.update(id, new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-05-05"), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null))
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.NOT_FOUND
     }
 
-    def "update throws 500 on system error"() {
+    def "update returns 500 on system error"() {
         given:
         long id = 24L
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-01-01"), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: null)
         PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: Date.valueOf("2024-05-05"), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null)
         and:
-        2 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
+        1 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:
-        controller.update(id, patch)
+        ResponseEntity<PendingTransaction> response = controller.update(id, patch)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "deleteById returns 200 with deleted entity when found"() {
@@ -220,11 +213,10 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.empty()
 
         when:
-        controller.deleteById(id)
+        ResponseEntity<PendingTransaction> response = controller.deleteById(id)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.NOT_FOUND
     }
 
     def "deleteById throws 500 when delete fails"() {
@@ -236,11 +228,10 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         pendingRepo.delete(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:
-        controller.deleteById(id)
+        ResponseEntity<PendingTransaction> response = controller.deleteById(id)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     // ===== LEGACY ENDPOINTS =====
@@ -271,7 +262,7 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
         ex.statusCode == HttpStatus.NOT_FOUND
     }
 
-    def "legacy getAllPendingTransactions throws 404 on error"() {
+    def "legacy getAllPendingTransactions throws 500 on error"() {
         given:
         pendingRepo.findAll() >> { throw new RuntimeException("db") }
 
@@ -280,7 +271,7 @@ class StandardizedPendingTransactionControllerSpec extends Specification {
 
         then:
         def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
+        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "legacy insertPendingTransaction returns 201"() {
