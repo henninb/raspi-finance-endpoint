@@ -51,7 +51,7 @@ class BaseServiceSpec extends Specification {
             meterService = BaseServiceSpec.this.meterService
         }
     }
-    protected ITransactionService transactionServiceMock = Mock(ITransactionService)
+    protected StandardizedTransactionService transactionServiceMock = Mock(StandardizedTransactionService)
     protected StandardizedParameterService parameterService = new StandardizedParameterService(parameterRepositoryMock)
     protected StandardizedPaymentService paymentService = new StandardizedPaymentService(paymentRepositoryMock, transactionServiceMock, accountService)
 

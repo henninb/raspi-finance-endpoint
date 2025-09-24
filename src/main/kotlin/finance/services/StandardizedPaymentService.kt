@@ -17,7 +17,7 @@ import java.util.*
 @org.springframework.context.annotation.Primary
 class StandardizedPaymentService(
     private val paymentRepository: PaymentRepository,
-    private val transactionService: ITransactionService,
+    private val transactionService: StandardizedTransactionService,
     private val accountService: StandardizedAccountService
 ) : StandardizedBaseService<Payment, Long>() {
 
@@ -124,10 +124,38 @@ class StandardizedPaymentService(
         populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
 
         logger.info("Creating debit and credit transactions for payment")
-        transactionService.insertTransaction(transactionCredit)
-        transactionService.insertTransaction(transactionDebit)
-        payment.guidDestination = transactionCredit.guid
-        payment.guidSource = transactionDebit.guid
+
+        // Create credit transaction using ServiceResult pattern
+        val creditResult = transactionService.save(transactionCredit)
+        when (creditResult) {
+            is ServiceResult.Success -> {
+                payment.guidDestination = creditResult.data.guid
+                logger.debug("Credit transaction created successfully: ${creditResult.data.guid}")
+            }
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ConstraintViolationException("Credit transaction validation failed: ${creditResult.errors}", emptySet())
+            }
+            is ServiceResult.BusinessError -> {
+                throw org.springframework.dao.DataIntegrityViolationException("Credit transaction business error: ${creditResult.message}")
+            }
+            else -> throw RuntimeException("Failed to create credit transaction: $creditResult")
+        }
+
+        // Create debit transaction using ServiceResult pattern
+        val debitResult = transactionService.save(transactionDebit)
+        when (debitResult) {
+            is ServiceResult.Success -> {
+                payment.guidSource = debitResult.data.guid
+                logger.debug("Debit transaction created successfully: ${debitResult.data.guid}")
+            }
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ConstraintViolationException("Debit transaction validation failed: ${debitResult.errors}", emptySet())
+            }
+            is ServiceResult.BusinessError -> {
+                throw org.springframework.dao.DataIntegrityViolationException("Debit transaction business error: ${debitResult.message}")
+            }
+            else -> throw RuntimeException("Failed to create debit transaction: $debitResult")
+        }
 
         // Use the standardized save method and handle ServiceResult
         val result = save(payment)

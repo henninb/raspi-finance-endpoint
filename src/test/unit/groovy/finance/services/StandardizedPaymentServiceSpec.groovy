@@ -6,6 +6,7 @@ import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.helpers.PaymentBuilder
 import finance.repositories.PaymentRepository
+import finance.services.StandardizedTransactionService
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
@@ -20,7 +21,7 @@ import java.sql.Date
 class StandardizedPaymentServiceSpec extends BaseServiceSpec {
 
     def paymentRepositoryMock = Mock(PaymentRepository)
-    def transactionServiceMock = Mock(ITransactionService)
+    def transactionServiceMock = Mock(StandardizedTransactionService)
     def standardizedPaymentService = new StandardizedPaymentService(paymentRepositoryMock, transactionServiceMock, accountService)
 
     void setup() {
@@ -241,7 +242,7 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(payment) >> noViolations
         2 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(mockDestAccount)
         1 * accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(mockSourceAccount)
-        2 * transactionServiceMock.insertTransaction(_)
+        2 * transactionServiceMock.save(_) >> { new ServiceResult.Success(GroovyMock(finance.domain.Transaction) { getGuid() >> "test-guid" }) }
         1 * paymentRepositoryMock.saveAndFlush(payment) >> savedPayment
         result.paymentId == 1L
     }
@@ -320,7 +321,7 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         standardizedPaymentService.insertPayment(payment)
 
         then: "should mock transaction service calls and repository save"
-        2 * transactionServiceMock.insertTransaction(_)
+        2 * transactionServiceMock.save(_) >> { new ServiceResult.Success(GroovyMock(finance.domain.Transaction) { getGuid() >> "test-guid" }) }
         and: "should throw ConstraintViolationException from save method"
         1 * validatorMock.validate(payment) >> violations
         thrown(ConstraintViolationException)

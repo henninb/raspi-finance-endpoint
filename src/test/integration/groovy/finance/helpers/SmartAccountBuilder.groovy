@@ -125,12 +125,14 @@ class SmartAccountBuilder {
             ownerPart = "test"
         }
 
-        String baseName = "${cleanPrefix}_${ownerPart}"
+        // Add unique suffix using UUID to ensure true uniqueness
+        String uuid = UUID.randomUUID().toString().replaceAll(/[^a-z]/, '').take(4)
+        String baseName = "${cleanPrefix}${uuid}_${ownerPart}"
 
         // Ensure length constraints (3-40 chars)
         if (baseName.length() > 40) {
             String shortOwner = ownerPart.length() > 8 ? ownerPart[0..7] : ownerPart
-            baseName = "${cleanPrefix}_${shortOwner}"
+            baseName = "${cleanPrefix}${uuid}_${shortOwner}"
         }
 
         if (baseName.length() < 3) {

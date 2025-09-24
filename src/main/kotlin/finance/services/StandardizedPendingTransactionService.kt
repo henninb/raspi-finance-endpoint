@@ -96,8 +96,9 @@ class StandardizedPendingTransactionService(
         }
     }
 
-    // ===== Legacy Method Compatibility =====
+    // ===== Legacy Method Compatibility (Deprecated - Use ServiceResult methods instead) =====
 
+    @Deprecated("Use save() with ServiceResult instead", ReplaceWith("save(pendingTransaction)"))
     fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
         val result = save(pendingTransaction)
         return when (result) {
@@ -129,6 +130,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
+    @Deprecated("Use deleteById() with ServiceResult instead", ReplaceWith("deleteById(pendingTransactionId)"))
     fun deletePendingTransaction(pendingTransactionId: Long): Boolean {
         val result = deleteById(pendingTransactionId)
         return when (result) {
@@ -138,6 +140,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
+    @Deprecated("Use findAllActive() with ServiceResult instead", ReplaceWith("findAllActive()"))
     fun getAllPendingTransactions(): List<PendingTransaction> {
         val result = findAllActive()
         return when (result) {
@@ -146,6 +149,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
+    @Deprecated("Use deleteAll() with ServiceResult instead", ReplaceWith("deleteAll()"))
     fun deleteAllPendingTransactions(): Boolean {
         val result = deleteAll()
         return when (result) {
@@ -154,6 +158,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
+    @Deprecated("Use findById() with ServiceResult instead", ReplaceWith("findById(pendingTransactionId)"))
     fun findByPendingTransactionId(pendingTransactionId: Long): Optional<PendingTransaction> {
         val result = findById(pendingTransactionId)
         return when (result) {
@@ -162,6 +167,7 @@ class StandardizedPendingTransactionService(
         }
     }
 
+    @Deprecated("Use update() with ServiceResult instead", ReplaceWith("update(pendingTransaction)"))
     fun updatePendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
         val result = update(pendingTransaction)
         return when (result) {

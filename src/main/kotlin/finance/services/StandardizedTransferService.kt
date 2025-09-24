@@ -17,7 +17,7 @@ import java.util.*
 @org.springframework.context.annotation.Primary
 class StandardizedTransferService(
     private val transferRepository: TransferRepository,
-    private val transactionService: ITransactionService,
+    private val transactionService: StandardizedTransactionService,
     private val accountService: StandardizedAccountService
 ) : StandardizedBaseService<Transfer, Long>() {
 
@@ -121,12 +121,39 @@ class StandardizedTransferService(
         populateSourceTransaction(transactionSource, transfer, transfer.sourceAccount)
         populateDestinationTransaction(transactionDestination, transfer, transfer.destinationAccount)
 
-        // Save transactions and transfer
-        transactionService.insertTransaction(transactionSource)
-        transactionService.insertTransaction(transactionDestination)
+        logger.info("Creating source and destination transactions for transfer")
 
-        transfer.guidSource = transactionSource.guid
-        transfer.guidDestination = transactionDestination.guid
+        // Create source transaction using ServiceResult pattern
+        val sourceResult = transactionService.save(transactionSource)
+        when (sourceResult) {
+            is ServiceResult.Success -> {
+                transfer.guidSource = sourceResult.data.guid
+                logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
+            }
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
+            }
+            is ServiceResult.BusinessError -> {
+                throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
+            }
+            else -> throw RuntimeException("Failed to create source transaction: $sourceResult")
+        }
+
+        // Create destination transaction using ServiceResult pattern
+        val destinationResult = transactionService.save(transactionDestination)
+        when (destinationResult) {
+            is ServiceResult.Success -> {
+                transfer.guidDestination = destinationResult.data.guid
+                logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
+            }
+            is ServiceResult.ValidationError -> {
+                throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
+            }
+            is ServiceResult.BusinessError -> {
+                throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
+            }
+            else -> throw RuntimeException("Failed to create destination transaction: $destinationResult")
+        }
 
         // Use the standardized save method and handle ServiceResult
         val result = save(transfer)
