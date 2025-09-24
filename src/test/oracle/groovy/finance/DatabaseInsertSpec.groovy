@@ -7,7 +7,7 @@ import finance.helpers.AccountBuilder
 import finance.helpers.TransactionBuilder
 import finance.services.AccountService
 import finance.services.ICategoryService
-import finance.services.ITransactionService
+import finance.services.StandardizedTransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -24,7 +24,7 @@ class DatabaseInsertSpec extends Specification {
     protected AccountService accountService
 
     @Autowired
-    protected ITransactionService transactionService
+    protected StandardizedTransactionService transactionService
 
     void 'test category - valid insert'() {
         given:
