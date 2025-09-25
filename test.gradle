@@ -59,6 +59,12 @@ dependencies {
     testImplementation("org.apache.groovy:groovy:${groovyVersion}")
     testImplementation("org.apache.groovy:groovy-json:${groovyVersion}")
     testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    // WebFlux for WebClient/WebTestClient in integration + functional tests only
+    integrationTestImplementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
+    functionalTestImplementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
+    // RestClient support for selected test suites
+    integrationTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
+    functionalTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
     testImplementation("org.spockframework:spock-core:${spockFrameworkVersion}")
     testImplementation("org.spockframework:spock-spring:${spockFrameworkVersion}")
     testImplementation("org.testcontainers:spock:${testcontainersVersion}")

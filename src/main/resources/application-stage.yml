@@ -17,6 +17,11 @@ server:
 spring:
   graphql:
     path: /graphql
+    graphiql:
+      enabled: false
+    schema:
+      printer:
+        enabled: false
   security:
     user:
       name: ${API_USERNAME}

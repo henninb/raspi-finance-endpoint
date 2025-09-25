@@ -28,7 +28,7 @@ class MedicalProviderBuilder {
     Boolean activeStatus = true
 
     static MedicalProviderBuilder builder() {
-        return new MedicalProviderBuilder()
+        new MedicalProviderBuilder()
     }
 
     MedicalProvider build() {
@@ -53,108 +53,108 @@ class MedicalProviderBuilder {
             billingName = this.billingName
             notes = this.notes
             activeStatus = this.activeStatus
-            return it
+            it
         }
-        return provider
+        provider
     }
 
     MedicalProviderBuilder withProviderId(Long providerId) {
         this.providerId = providerId
-        return this
+        this
     }
 
     MedicalProviderBuilder withProviderName(String providerName) {
         this.providerName = providerName
-        return this
+        this
     }
 
     MedicalProviderBuilder withProviderType(MedicalProviderType providerType) {
         this.providerType = providerType
-        return this
+        this
     }
 
     MedicalProviderBuilder withSpecialty(String specialty) {
         this.specialty = specialty
-        return this
+        this
     }
 
     MedicalProviderBuilder withNpi(String npi) {
         this.npi = npi
-        return this
+        this
     }
 
     MedicalProviderBuilder withTaxId(String taxId) {
         this.taxId = taxId
-        return this
+        this
     }
 
     MedicalProviderBuilder withAddressLine1(String addressLine1) {
         this.addressLine1 = addressLine1
-        return this
+        this
     }
 
     MedicalProviderBuilder withAddressLine2(String addressLine2) {
         this.addressLine2 = addressLine2
-        return this
+        this
     }
 
     MedicalProviderBuilder withCity(String city) {
         this.city = city
-        return this
+        this
     }
 
     MedicalProviderBuilder withState(String state) {
         this.state = state
-        return this
+        this
     }
 
     MedicalProviderBuilder withZipCode(String zipCode) {
         this.zipCode = zipCode
-        return this
+        this
     }
 
     MedicalProviderBuilder withCountry(String country) {
         this.country = country
-        return this
+        this
     }
 
     MedicalProviderBuilder withPhone(String phone) {
         this.phone = phone
-        return this
+        this
     }
 
     MedicalProviderBuilder withFax(String fax) {
         this.fax = fax
-        return this
+        this
     }
 
     MedicalProviderBuilder withEmail(String email) {
         this.email = email
-        return this
+        this
     }
 
     MedicalProviderBuilder withWebsite(String website) {
         this.website = website
-        return this
+        this
     }
 
     MedicalProviderBuilder withNetworkStatus(NetworkStatus networkStatus) {
         this.networkStatus = networkStatus
-        return this
+        this
     }
 
     MedicalProviderBuilder withBillingName(String billingName) {
         this.billingName = billingName
-        return this
+        this
     }
 
     MedicalProviderBuilder withNotes(String notes) {
         this.notes = notes
-        return this
+        this
     }
 
     MedicalProviderBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 }

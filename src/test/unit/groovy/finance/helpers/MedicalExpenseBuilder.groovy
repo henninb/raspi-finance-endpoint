@@ -10,6 +10,8 @@ import java.util.*
 
 class MedicalExpenseBuilder {
 
+    private static final String AMOUNT_25 = "25.00"
+
     Long medicalExpenseId = 0L
     Long transactionId = null
     Long providerId = 1L
@@ -19,9 +21,9 @@ class MedicalExpenseBuilder {
     String procedureCode = 'PROC123'
     String diagnosisCode = 'DIAG456'
     BigDecimal billedAmount = new BigDecimal("150.00")
-    BigDecimal insuranceDiscount = new BigDecimal("25.00")
+    BigDecimal insuranceDiscount = new BigDecimal(AMOUNT_25)
     BigDecimal insurancePaid = new BigDecimal("100.00")
-    BigDecimal patientResponsibility = new BigDecimal("25.00")
+    BigDecimal patientResponsibility = new BigDecimal(AMOUNT_25)
     Date paidDate = null
     Boolean isOutOfNetwork = false
     String claimNumber = 'CLAIM-2024-001'
@@ -32,7 +34,7 @@ class MedicalExpenseBuilder {
     BigDecimal paidAmount = new BigDecimal("0.00")
 
     static MedicalExpenseBuilder builder() {
-        return new MedicalExpenseBuilder()
+        new MedicalExpenseBuilder()
     }
 
     MedicalExpense build() {
@@ -57,113 +59,113 @@ class MedicalExpenseBuilder {
             dateAdded = this.dateAdded
             dateUpdated = this.dateUpdated
             paidAmount = this.paidAmount
-            return it
+            it
         }
-        return expense
+        expense
     }
 
     MedicalExpenseBuilder withMedicalExpenseId(Long medicalExpenseId) {
         this.medicalExpenseId = medicalExpenseId
-        return this
+        this
     }
 
     MedicalExpenseBuilder withTransactionId(Long transactionId) {
         this.transactionId = transactionId
-        return this
+        this
     }
 
     MedicalExpenseBuilder withProviderId(Long providerId) {
         this.providerId = providerId
-        return this
+        this
     }
 
     MedicalExpenseBuilder withFamilyMemberId(Long familyMemberId) {
         this.familyMemberId = familyMemberId
-        return this
+        this
     }
 
     MedicalExpenseBuilder withServiceDate(Date serviceDate) {
         this.serviceDate = serviceDate
-        return this
+        this
     }
 
     MedicalExpenseBuilder withServiceDescription(String serviceDescription) {
         this.serviceDescription = serviceDescription
-        return this
+        this
     }
 
     MedicalExpenseBuilder withProcedureCode(String procedureCode) {
         this.procedureCode = procedureCode
-        return this
+        this
     }
 
     MedicalExpenseBuilder withDiagnosisCode(String diagnosisCode) {
         this.diagnosisCode = diagnosisCode
-        return this
+        this
     }
 
     MedicalExpenseBuilder withBilledAmount(BigDecimal billedAmount) {
         this.billedAmount = billedAmount
-        return this
+        this
     }
 
     MedicalExpenseBuilder withAmount(BigDecimal amount) {
         this.billedAmount = amount
-        return this
+        this
     }
 
     MedicalExpenseBuilder withInsuranceDiscount(BigDecimal insuranceDiscount) {
         this.insuranceDiscount = insuranceDiscount
-        return this
+        this
     }
 
     MedicalExpenseBuilder withInsurancePaid(BigDecimal insurancePaid) {
         this.insurancePaid = insurancePaid
-        return this
+        this
     }
 
     MedicalExpenseBuilder withPatientResponsibility(BigDecimal patientResponsibility) {
         this.patientResponsibility = patientResponsibility
-        return this
+        this
     }
 
     MedicalExpenseBuilder withPaidDate(Date paidDate) {
         this.paidDate = paidDate
-        return this
+        this
     }
 
     MedicalExpenseBuilder withIsOutOfNetwork(Boolean isOutOfNetwork) {
         this.isOutOfNetwork = isOutOfNetwork
-        return this
+        this
     }
 
     MedicalExpenseBuilder withClaimNumber(String claimNumber) {
         this.claimNumber = claimNumber
-        return this
+        this
     }
 
     MedicalExpenseBuilder withClaimStatus(ClaimStatus claimStatus) {
         this.claimStatus = claimStatus
-        return this
+        this
     }
 
     MedicalExpenseBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     MedicalExpenseBuilder withDateAdded(Timestamp dateAdded) {
         this.dateAdded = dateAdded
-        return this
+        this
     }
 
     MedicalExpenseBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 
     MedicalExpenseBuilder withPaidAmount(BigDecimal paidAmount) {
         this.paidAmount = paidAmount
-        return this
+        this
     }
 }

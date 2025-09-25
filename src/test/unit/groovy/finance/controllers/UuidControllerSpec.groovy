@@ -125,7 +125,7 @@ class UuidControllerSpec extends Specification {
 
     def "generated UUIDs should be unique across multiple calls"() {
         given:
-        Set<String> allUuids = new HashSet<>()
+        Set<String> allUuids = [] as Set
 
         when: "generate multiple UUIDs"
         10.times {
@@ -139,7 +139,7 @@ class UuidControllerSpec extends Specification {
 
     def "batch generated UUIDs should be unique across multiple calls"() {
         given:
-        Set<String> allUuids = new HashSet<>()
+        Set<String> allUuids = [] as Set
 
         when: "generate multiple batches"
         5.times {

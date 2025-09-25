@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.domain.Account
+import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Payment
@@ -30,11 +31,15 @@ class GraphQLQueryController(
         val logger: Logger = LogManager.getLogger()
     }
 
-    @QueryMapping
-    fun accounts(): List<Account> {
-        logger.info("GraphQL - Fetching all accounts")
-        return accountService.accounts()
-    }
+    @QueryMapping(name = "accounts")
+    fun accounts(@Argument accountType: AccountType?): List<Account> =
+        if (accountType == null) {
+            logger.info("GraphQL - Fetching all accounts (unfiltered)")
+            accountService.accounts()
+        } else {
+            logger.info("GraphQL - Fetching accounts filtered by type: {}", accountType)
+            accountService.accountsByType(accountType)
+        }
 
     @QueryMapping
     fun account(@Argument accountNameOwner: String): Account? {

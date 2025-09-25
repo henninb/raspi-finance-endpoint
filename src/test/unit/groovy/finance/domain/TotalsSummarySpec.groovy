@@ -71,7 +71,7 @@ class TotalsSummarySpec extends Specification {
         TotalsSummary summary = new TotalsSummary(123.45, 10L, TransactionState.Outstanding)
 
         when:
-        String result = summary.toString()
+        String result = (String)(summary)
 
         then:
         result != null

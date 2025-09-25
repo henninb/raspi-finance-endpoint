@@ -32,8 +32,8 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
 
     def setupSpec() {
         // Create test image data
-        validJpegImage = createTestJpegImage()
-        validPngImage = createTestPngImage()
+        validJpegImage = makeTestJpegImage()
+        validPngImage = makeTestPngImage()
         invalidImageData = "invalid image data".getBytes()
     }
 
@@ -197,7 +197,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
 
     // ===== Test Data Helper Methods =====
 
-    private byte[] createTestJpegImage() {
+    private byte[] makeTestJpegImage() {
         // Create a simple JPEG image for testing
         BufferedImage image = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB)
 
@@ -214,7 +214,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         return baos.toByteArray()
     }
 
-    private byte[] createTestPngImage() {
+    private byte[] makeTestPngImage() {
         // Create a simple PNG image for testing
         BufferedImage image = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB)
 

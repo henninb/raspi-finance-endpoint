@@ -33,7 +33,7 @@ class TotalsSpec extends Specification {
         )
 
         when:
-        String jsonString = totals.toString()
+        String jsonString = (String)(totals)
 
         then:
         jsonString != null

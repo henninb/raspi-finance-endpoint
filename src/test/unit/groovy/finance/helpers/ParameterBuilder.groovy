@@ -13,7 +13,7 @@ class ParameterBuilder {
     Timestamp dateUpdated = new Timestamp(Calendar.getInstance().time.time)
 
     static ParameterBuilder builder() {
-        return new ParameterBuilder()
+        new ParameterBuilder()
     }
 
     Parameter build() {
@@ -23,33 +23,33 @@ class ParameterBuilder {
             parameterValue = this.parameterValue
             activeStatus = this.activeStatus
             dateUpdated = this.dateUpdated
-            return it
+            it
         }
-        return parameter
+        parameter
     }
 
     ParameterBuilder withParameterId(Long parameterId) {
         this.parameterId = parameterId
-        return this
+        this
     }
 
     ParameterBuilder withParameterName(String parameterName) {
         this.parameterName = parameterName
-        return this
+        this
     }
 
     ParameterBuilder withParameterValue(String parameterValue) {
         this.parameterValue = parameterValue
-        return this
+        this
     }
 
     ParameterBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     ParameterBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 }

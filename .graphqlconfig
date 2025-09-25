@@ -4,7 +4,7 @@
   "extensions": {
     "endpoints": {
       "Default GraphQL Endpoint": {
-        "url": "http://hornsup:8443/graphql",
+        "url": "https://localhost:8443/graphql",
         "headers": {
           "user-agent": "JS GraphQL"
         },

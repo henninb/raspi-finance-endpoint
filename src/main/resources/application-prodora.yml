@@ -17,6 +17,11 @@ server:
 spring:
   graphql:
     path: /graphql
+    graphiql:
+      enabled: false
+    schema:
+      printer:
+        enabled: false
   application:
     name: raspi-finance-endpoint
   #  profiles:

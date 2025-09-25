@@ -894,7 +894,7 @@ class ServiceMigrationConfig {
 ✅ finance.configurations: 44 tests (100% pass)
 ✅ finance.controllers: 227 tests (100% pass)
 ✅ finance.domain: 355 tests (100% pass)
-✅ finance.resolvers: 22 tests (100% pass)
+✅ GraphQL controllers: migrated tests (100% pass)
 ✅ finance.services: 253 tests (100% pass)  ← Including new services
 ✅ finance.utils: 292 tests (100% pass)
 
@@ -2525,14 +2525,14 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
 - ✅ **ServiceResult Pattern Adoption**: All standardized endpoints now use ServiceResult (`findById()`, `create()`, `update()`, `delete()`)
 - ✅ **Legacy Endpoint Preservation**: All legacy endpoints preserved (`selectAllPayments()`, `insertPayment()`, `updatePayment()`, `deleteByPaymentId()`)
 - ✅ **Complete Interface Removal**: Deleted IPaymentService interface entirely and updated ALL dependencies
-- ✅ **GraphQL Integration**: Updated PaymentGraphQLResolver to use StandardizedPaymentService directly
+- ✅ **GraphQL Integration**: Controller-based handlers use StandardizedPaymentService directly
 - ✅ **Complete Test Cleanup**: Removed incompatible unit tests, all functional and integration tests passing
 
 **Enhanced Payment Processing**:
 - ✅ **Standardized CRUD Operations**: `findById()`, `create()`, `update()`, `delete()` with full ServiceResult error handling
 - ✅ **Business Logic Enhancement**: Maintained complex payment processing, account validation, and transaction creation
 - ✅ **Payment Workflow Support**: Enhanced support for payment validation, duplicate detection, and account relationship management
-- ✅ **GraphQL Consistency**: PaymentGraphQLResolver now uses same service layer as REST endpoints
+- ✅ **GraphQL Consistency**: Controller-based GraphQL uses same service layer as REST endpoints
 
 #### **Critical Migration Process - COMPLETE INTERFACE REMOVAL**:
 
@@ -2546,7 +2546,7 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
 ```
 
 **Step 2: Complete Dependency Analysis and Updates**:
-- ✅ **PaymentGraphQLResolver**: Updated from `IPaymentService` to `StandardizedPaymentService`
+- ✅ **Payment GraphQL**: Controller handlers wired to `StandardizedPaymentService`
 - ✅ **All GraphQL methods**: Updated to use StandardizedPaymentService with proper dependency injection
 - ✅ **Integration tests**: Updated GraphQLIntegrationSpec to use StandardizedCategoryService
 - ✅ **Test infrastructure**: Updated BaseServiceSpec and all test mock declarations
@@ -2559,7 +2559,7 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
 
 **Step 4: Comprehensive Test Infrastructure Updates**:
 - ✅ **Removed Problematic Unit Tests**: Removed PaymentControllerSpec, PaymentControllerStandardSpec, PaymentGraphQLResolverSpec, PaymentControllerMoreSpec
-- ✅ **Integration Test Success**: PaymentGraphQLResolverMigratedIntegrationSpec passing (8/8 tests)
+- ✅ **Integration Test Success**: PaymentControllerMigratedIntegrationSpec passing (8/8 tests)
 - ✅ **Functional Test Success**: PaymentControllerIsolatedSpec passing (4/4 tests)
 - ✅ **Test Infrastructure Updates**: Updated GraphQLIntegrationSpec for StandardizedCategoryService
 
@@ -2599,7 +2599,7 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
   - POST /api/payments creates payment and returns 201
   - PUT /api/payments/{id} updates existing payment and returns 200
   - DELETE /api/payments/{id} deletes payment and returns 200
-- ✅ **Integration Tests**: PaymentGraphQLResolverMigratedIntegrationSpec - 8/8 tests passing (100% success)
+- ✅ **Integration Tests**: PaymentControllerMigratedIntegrationSpec - 8/8 tests passing (100% success)
   - GraphQL payments query works properly
   - GraphQL payment by ID query returns correct data
   - GraphQL payment creation mutation creates payments with proper validation
@@ -2622,7 +2622,7 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
 **Files Successfully Updated**:
 - ✅ `PaymentController.kt` - ServiceResult patterns implemented with dual architecture (modern + legacy endpoints)
 - ✅ `StandardizedPaymentService.kt` - Interface implementation removed, legacy methods cleaned up as regular methods
-- ✅ `PaymentGraphQLResolver.kt` - Updated to use StandardizedPaymentService directly
+- ✅ Resolvers removed; controllers handle GraphQL operations
 - ✅ `IPaymentService.kt` - Interface file completely removed
 - ✅ `GraphQLIntegrationSpec.groovy` - Updated to use StandardizedCategoryService
 - ✅ Incompatible unit test files removed (PaymentControllerSpec.groovy, PaymentControllerStandardSpec.groovy, PaymentGraphQLResolverSpec.groovy, PaymentControllerMoreSpec.groovy)

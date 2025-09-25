@@ -125,7 +125,7 @@ class FamilyMemberSpec extends BaseDomainSpec {
                 .build()
 
         when:
-        String json = member.toString()
+        String json = (String)(member)
         FamilyMember parsed = mapper.readValue(json, FamilyMember)
 
         then:

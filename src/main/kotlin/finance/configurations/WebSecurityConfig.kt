@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.boot.web.servlet.FilterRegistrationBean
+import java.time.Duration
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -52,6 +53,7 @@ open class WebSecurityConfig(
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/login", "/api/register").permitAll()
+                auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
                 auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
                 auth.anyRequest().permitAll()
@@ -124,8 +126,10 @@ open class WebSecurityConfig(
                 "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With")
+            allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key")
             allowCredentials = true
+            // Spring Framework version here expects seconds as Long
+            maxAge = 3600L
         }
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)

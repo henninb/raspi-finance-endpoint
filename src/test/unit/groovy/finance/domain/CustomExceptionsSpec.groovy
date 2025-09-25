@@ -130,7 +130,7 @@ class CustomExceptionsSpec extends Specification {
         throw exceptionClass.newInstance("Test exception")
 
         then:
-        RuntimeException ex = thrown()
+        def ex = thrown(RuntimeException)
         ex.getClass() == exceptionClass
         ex.message == "Test exception"
 
@@ -163,7 +163,7 @@ class CustomExceptionsSpec extends Specification {
         RuntimeException exception = exceptionClass.newInstance(message)
 
         when:
-        String result = exception.toString()
+        String result = (String) (exception)
 
         then:
         result.contains(message)

@@ -1,6 +1,8 @@
-package finance.resolvers
+package finance.graphql
 
 import finance.Application
+import finance.controllers.GraphQLMutationController
+import finance.controllers.GraphQLQueryController
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Transfer
@@ -11,6 +13,9 @@ import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
@@ -23,7 +28,7 @@ import java.util.UUID
 @ActiveProfiles("int")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = Application)
-class TransferGraphQLResolverIntegrationSpec extends Specification {
+class TransferControllerIntegrationSpec extends Specification {
 
     @Autowired
     StandardizedTransferService transferService
@@ -40,10 +45,13 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
     @Autowired
     TransactionRepository transactionRepository
 
-    TransferGraphQLResolver transferGraphQLResolver
+    @Autowired
+    GraphQLMutationController mutationController
+
+    @Autowired
+    GraphQLQueryController queryController
 
     void setup() {
-        transferGraphQLResolver = new TransferGraphQLResolver(transferService, meterRegistry)
         cleanup()
     }
 
@@ -80,7 +88,7 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
         accountRepository.save(destinationAccount)
     }
 
-    def "should fetch all transfers via GraphQL resolver with database integration"() {
+    def "should fetch all transfers via controller with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
 
@@ -88,9 +96,8 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
         createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("100.00"))
         createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("200.00"))
 
-        when: "transfers data fetcher is called"
-        def dataFetcher = transferGraphQLResolver.transfers
-        def transfers = dataFetcher.get(null)
+        when: "controller query is called"
+        def transfers = queryController.transfers()
 
         then: "should return all transfers from database"
         transfers.size() == 2
@@ -99,19 +106,15 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
         transfers.any { it.amount == new BigDecimal("200.00") }
     }
 
-    def "should fetch transfer by ID via GraphQL resolver with database integration"() {
+    def "should fetch transfer by ID via controller with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
 
         and: "an existing transfer in the database"
         def savedTransfer = createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("150.00"))
 
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> savedTransfer.transferId }] as graphql.schema.DataFetchingEnvironment
-
-        when: "transfer data fetcher is called"
-        def dataFetcher = transferGraphQLResolver.transfer()
-        def result = dataFetcher.get(environment)
+        when: "controller query is called"
+        def result = queryController.transfer(savedTransfer.transferId)
 
         then: "should return the specific transfer from database"
         result != null
@@ -121,20 +124,17 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
         result.amount == new BigDecimal("150.00")
     }
 
-    def "should handle transfer not found in database via GraphQL resolver"() {
+    def "should handle transfer not found in database via controller"() {
         given: "a non-existent transfer ID"
         def nonExistentId = 999L
-        def environment = [getArgument: { String arg -> nonExistentId }] as graphql.schema.DataFetchingEnvironment
-
-        when: "transfer data fetcher is called"
-        def dataFetcher = transferGraphQLResolver.transfer()
-        def result = dataFetcher.get(environment)
+        when: "controller query is called"
+        def result = queryController.transfer(nonExistentId)
 
         then: "should return null"
         result == null
     }
 
-    def "should create transfer via GraphQL resolver with database integration"() {
+    def "should create transfer via controller with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
 
@@ -146,12 +146,12 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
             amount: new BigDecimal("300.00")
         ]
 
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> transferInput }] as graphql.schema.DataFetchingEnvironment
+        and: "authenticated user"
+        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
+        SecurityContextHolder.getContext().setAuthentication(auth)
 
         when: "create transfer mutation is called"
-        def dataFetcher = transferGraphQLResolver.createTransfer()
-        def result = dataFetcher.get(environment)
+        def result = mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "transfersource_brian", "transferdest_brian", Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
 
         then: "should create and return transfer from database"
         result != null
@@ -182,30 +182,30 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
             amount: new BigDecimal("300.00")
         ]
 
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> transferInput }] as graphql.schema.DataFetchingEnvironment
+        and: "authenticated user"
+        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
+        SecurityContextHolder.getContext().setAuthentication(auth)
 
         when: "create transfer mutation is called"
-        def dataFetcher = transferGraphQLResolver.createTransfer()
-        dataFetcher.get(environment)
+        mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "nonexistent_brian", "transferdest_brian", Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
 
         then: "should throw runtime exception"
         thrown(RuntimeException)
     }
 
-    def "should delete transfer via GraphQL resolver with database integration"() {
+    def "should delete transfer via controller with database integration"() {
         given: "test accounts are created"
         setupTestAccounts()
 
         and: "an existing transfer in the database"
         def savedTransfer = createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("250.00"))
 
-        and: "mocked data fetching environment"
-        def environment = [getArgument: { String arg -> savedTransfer.transferId }] as graphql.schema.DataFetchingEnvironment
+        and: "authenticated user"
+        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
+        SecurityContextHolder.getContext().setAuthentication(auth)
 
         when: "delete transfer mutation is called"
-        def dataFetcher = transferGraphQLResolver.deleteTransfer()
-        def result = dataFetcher.get(environment)
+        def result = mutationController.deleteTransfer(savedTransfer.transferId)
 
         then: "should successfully delete transfer and return true"
         result == true
@@ -215,14 +215,15 @@ class TransferGraphQLResolverIntegrationSpec extends Specification {
         !deletedTransfer.isPresent()
     }
 
-    def "should handle delete non-existent transfer via GraphQL resolver"() {
+    def "should handle delete non-existent transfer via controller"() {
         given: "a non-existent transfer ID"
         def nonExistentId = 999L
-        def environment = [getArgument: { String arg -> nonExistentId }] as graphql.schema.DataFetchingEnvironment
+        and: "authenticated user"
+        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
+        SecurityContextHolder.getContext().setAuthentication(auth)
 
         when: "delete transfer mutation is called"
-        def dataFetcher = transferGraphQLResolver.deleteTransfer()
-        def result = dataFetcher.get(environment)
+        def result = mutationController.deleteTransfer(nonExistentId)
 
         then: "should return false"
         result == false

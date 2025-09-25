@@ -3,14 +3,21 @@ package finance.helpers
 import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 
-// curl -k --header "Content-Type: application/json" 'https://localhost:8080/receipt/image/insert' -X POST -d '{"activeStatus":true,"transactionId": 23189, "image":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==" }'
+/*
+ Multi-line example curl for reference:
+ curl -k --header "Content-Type: application/json" \
+   'https://localhost:8080/receipt/image/insert' \
+   -X POST \
+   -d '{"activeStatus":true,"transactionId":23189,"image":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="}'
+*/
 class ReceiptImageBuilder {
+    private static final String SAMPLE_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
     Long receiptImageId = 0L
     Long transactionId = 22530
     Boolean activeStatus = true
     ImageFormatType imageFormatType = ImageFormatType.Png
-    String thumbnail = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
-    String image =     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
+    String thumbnail = SAMPLE_BASE64
+    String image =     SAMPLE_BASE64
     //String image = "/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k="
 
     static ReceiptImageBuilder builder() {
@@ -25,38 +32,38 @@ class ReceiptImageBuilder {
             imageFormatType = this.imageFormatType
             thumbnail = Base64.getDecoder().decode(this.thumbnail)
             image = Base64.getDecoder().decode(this.image)
-            return it
+            it
         }
-        return receiptImage
+        receiptImage
     }
 
     ReceiptImageBuilder withImage(String image) {
         this.image = image
-        return this
+        this
     }
 
     ReceiptImageBuilder withThumbnail(String thumbnail) {
         this.thumbnail = thumbnail
-        return this
+        this
     }
 
     ReceiptImageBuilder withImageFormatType(ImageFormatType imageFormatType) {
         this.imageFormatType = imageFormatType
-        return this
+        this
     }
 
     ReceiptImageBuilder withTransactionId(Long transactionId) {
         this.transactionId = transactionId
-        return this
+        this
     }
 
     ReceiptImageBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     ReceiptImageBuilder withReceiptImageId(Long receiptImageId) {
         this.receiptImageId = receiptImageId
-        return this
+        this
     }
 }

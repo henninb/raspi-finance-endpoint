@@ -45,47 +45,47 @@ type Query {
     categories : [Category]
     category(categoryName: String!) : Category
     account(accountNameOwner: String!) : Account
-    #    accounts(accountType: AccountType) : [Account]
-    accounts : [Account]
+    accounts(accountType: AccountType) : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
-    transaction(transactionId: Long!) : Transaction
+    transaction(transactionId: ID!) : Transaction
     payments : [Payment]
-    payment(paymentId: Long!) : Payment
+    payment(paymentId: ID!) : Payment
     transfers : [Transfer]
-    transfer(transferId: Long!) : Transfer
+    transfer(transferId: ID!) : Transfer
     parameters : [Parameter]
-    parameter(parameterId: Long!) : Parameter
+    parameter(parameterId: ID!) : Parameter
     validationAmounts : [ValidationAmount]
-    validationAmount(validationId: Long!) : ValidationAmount
+    validationAmount(validationId: ID!) : ValidationAmount
     receiptImages : [ReceiptImage]
-    receiptImage(receiptImageId: Long!) : ReceiptImage
+    receiptImage(receiptImageId: ID!) : ReceiptImage
     #mutation: Mutation
 }
 
 type Mutation {
-    createDescription( description: String) : Description
-    createCategory( category: String) : Category
-    createAccount( account: AccountInput ) : Account
-    updateAccount( account: AccountInput ) : Account
-    deleteAccount( accountId: Long! ) : Boolean
-    createTransaction( transaction: TransactionInput ) : Transaction
-    updateTransaction( transaction: TransactionInput ) : Transaction
-    deleteTransaction( transactionId: Long! ) : Boolean
     createPayment( payment: PaymentInput ) : Payment
-    deletePayment( paymentId: Long! ) : Boolean
+    deletePayment( paymentId: ID! ) : Boolean
     createTransfer( transfer: TransferInput ) : Transfer
-    deleteTransfer( transferId: Long! ) : Boolean
-    createParameter( parameter: ParameterInput ) : Parameter
-    updateParameter( parameter: ParameterInput ) : Parameter
-    deleteParameter( parameterId: Long! ) : Boolean
-    createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
-    updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
-    deleteValidationAmount( validationId: Long! ) : Boolean
+    deleteTransfer( transferId: ID! ) : Boolean
+    # Unimplemented mutations removed to match implementation
+    # createDescription( description: String) : Description
+    # createCategory( category: String) : Category
+    # createAccount( account: AccountInput ) : Account
+    # updateAccount( account: AccountInput ) : Account
+    # deleteAccount( accountId: Long! ) : Boolean
+    # createTransaction( transaction: TransactionInput ) : Transaction
+    # updateTransaction( transaction: TransactionInput ) : Transaction
+    # deleteTransaction( transactionId: Long! ) : Boolean
+    # createParameter( parameter: ParameterInput ) : Parameter
+    # updateParameter( parameter: ParameterInput ) : Parameter
+    # deleteParameter( parameterId: Long! ) : Boolean
+    # createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
+    # updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
+    # deleteValidationAmount( validationId: Long! ) : Boolean
 }
 
 # complete 7/17/2021
 type Account {
-    accountId: Long
+    accountId: ID
     activeStatus: Boolean!
     accountNameOwner: String!
     accountType: AccountType!
@@ -101,7 +101,7 @@ type Account {
 
 # complete 7/17/2021
 type Category {
-    categoryId: Long
+    categoryId: ID
     activeStatus: Boolean!
     categoryName: String!
     categoryCount: Long
@@ -111,7 +111,7 @@ type Category {
 
 # complete 7/17/2021
 type Description {
-    descriptionId: Long
+    descriptionId: ID
     activeStatus: Boolean!
     descriptionName: String!
     descriptionCount: Long
@@ -121,9 +121,9 @@ type Description {
 
 # complete 7/17/2021
 type Transaction {
-    transactionId: Long
+    transactionId: ID
     guid: String!
-    accountId: Long
+    accountId: ID
     accountType: AccountType!
     transactionType: TransactionType!
     activeStatus: Boolean!
@@ -136,7 +136,7 @@ type Transaction {
     reoccurringType: ReoccurringType!
     notes: String!
     dueDate: Date
-    receiptImageId: Long
+    receiptImageId: ID
     receiptImage: ReceiptImage
     dateAdded: Timestamp
     dateUpdated: Timestamp
@@ -144,7 +144,7 @@ type Transaction {
 
 # complete 7/17/2021
 type Payment {
-    paymentId: Long
+    paymentId: ID
     sourceAccount: String!
     destinationAccount: String!
     activeStatus: Boolean!
@@ -157,7 +157,7 @@ type Payment {
 }
 
 input PaymentInput {
-    paymentId: Long
+    paymentId: ID
     sourceAccount: String!
     destinationAccount: String!
     transactionDate: Date!
@@ -167,7 +167,7 @@ input PaymentInput {
 
 # complete 7/17/2021
 type Transfer {
-    transferId: Long
+    transferId: ID
     sourceAccount: String!
     destinationAccount: String!
     transactionDate: Date!
@@ -188,7 +188,7 @@ input TransferInput {
 }
 
 input AccountInput {
-    accountId: Long
+    accountId: ID
     accountNameOwner: String!
     accountType: AccountType!
     activeStatus: Boolean
@@ -201,9 +201,9 @@ input AccountInput {
 }
 
 input TransactionInput {
-    transactionId: Long
+    transactionId: ID
     guid: String
-    accountId: Long
+    accountId: ID
     accountType: AccountType!
     transactionType: TransactionType!
     accountNameOwner: String!
@@ -216,19 +216,19 @@ input TransactionInput {
     reoccurringType: ReoccurringType
     notes: String
     dueDate: Date
-    receiptImageId: Long
+    receiptImageId: ID
 }
 
 input ParameterInput {
-    parameterId: Long
+    parameterId: ID
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean
 }
 
 input ValidationAmountInput {
-    validationId: Long
-    accountId: Long!
+    validationId: ID
+    accountId: ID!
     validationDate: Timestamp!
     activeStatus: Boolean
     transactionState: TransactionState!
@@ -236,8 +236,8 @@ input ValidationAmountInput {
 }
 
 type ReceiptImage {
-    receiptImageId: Long
-    transactionId: Long
+    receiptImageId: ID
+    transactionId: ID
     activeStatus: Boolean!
     imageFormatType: ImageFormatType!
     image: String!
@@ -246,7 +246,7 @@ type ReceiptImage {
 
 # complete 7/17/2021
 type Parameter {
-    parameterId: Long
+    parameterId: ID
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean!

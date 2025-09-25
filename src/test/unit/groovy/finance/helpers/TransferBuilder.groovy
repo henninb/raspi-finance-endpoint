@@ -19,7 +19,7 @@ class TransferBuilder {
     Timestamp dateUpdated = new Timestamp(System.currentTimeMillis())
 
     static TransferBuilder builder() {
-        return new TransferBuilder()
+        new TransferBuilder()
     }
 
     Transfer build() {
@@ -34,58 +34,58 @@ class TransferBuilder {
             activeStatus = this.activeStatus
             dateAdded = this.dateAdded
             dateUpdated = this.dateUpdated
-            return it
+            it
         }
-        return transfer
+        transfer
     }
 
     TransferBuilder withTransferId(Long transferId) {
         this.transferId = transferId
-        return this
+        this
     }
 
     TransferBuilder withSourceAccount(String sourceAccount) {
         this.sourceAccount = sourceAccount
-        return this
+        this
     }
 
     TransferBuilder withDestinationAccount(String destinationAccount) {
         this.destinationAccount = destinationAccount
-        return this
+        this
     }
 
     TransferBuilder withAmount(BigDecimal amount) {
         this.amount = amount
-        return this
+        this
     }
 
     TransferBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
-        return this
+        this
     }
 
     TransferBuilder withGuidSource(String guidSource) {
         this.guidSource = guidSource
-        return this
+        this
     }
 
     TransferBuilder withGuidDestination(String guidDestination) {
         this.guidDestination = guidDestination
-        return this
+        this
     }
 
     TransferBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     TransferBuilder withDateAdded(Timestamp dateAdded) {
         this.dateAdded = dateAdded
-        return this
+        this
     }
 
     TransferBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 }

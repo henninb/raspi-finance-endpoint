@@ -399,20 +399,17 @@ Based on research findings:
 
 **Current State Analysis:**
 ```kotlin
-// CURRENT: All legacy GraphQL provider code is commented out
-// src/main/kotlin/finance/configurations/GraphqlProvider.kt - DISABLED
+// CURRENT: All legacy GraphQL provider code removed
+// src/main/kotlin/finance/configurations/GraphqlProvider.kt - DELETED
 // GraphQL endpoint: UNAVAILABLE (404 responses)
 // GraphiQL endpoint: UNAVAILABLE (404 responses)
 ```
 
 #### **3. Working Components vs Broken Endpoint**
-**✅ Still Functional:**
+**✅ Still Functional (post-migration):**
 - GraphQL schema file: `src/main/resources/graphql/schema.graphqls` - Complete and valid
-- GraphQL resolvers: All resolver classes exist and compile successfully:
-  - `AccountGraphQLResolver.kt`
-  - `PaymentGraphQLResolver.kt`
-  - `TransferGraphQLResolver.kt`
-- RuntimeWiring configuration: `GraphQLWiringConfig.kt` - Properly configured for Spring Boot 4.0
+- Annotation-based GraphQL controllers in `finance.controllers` using `@QueryMapping` and `@MutationMapping`
+- Runtime wiring for scalars: `GraphQLWiringConfig.kt` (scalars only)
 
 **❌ Broken/Missing:**
 - HTTP endpoint registration: `/graphql` returns 404
@@ -439,11 +436,11 @@ void 'test GraphQL endpoint accessibility'() {
    - Configure GraphQL HTTP transport through Spring Boot auto-configuration
 
 2. **Update GraphQL Configuration**
-   - Verify `GraphQLWiringConfig` integration with Spring Boot 4.0 GraphQL transport
-   - Ensure proper registration of custom scalars and resolvers
+   - Verify `GraphQLWiringConfig` integration with Spring for GraphQL (scalars only)
+   - Ensure proper registration of custom scalars and controllers
    - Test GraphQL introspection and query execution
 
-3. **Restore GraphiQL Interface**
+3. **Restore GraphiQL Interface (dev only)**
    - Enable GraphiQL web interface for development/testing
    - Configure proper endpoint paths for Spring Boot 4.0
 
@@ -460,8 +457,8 @@ void 'test GraphQL endpoint accessibility'() {
 - Verify schema loading and basic query execution
 
 **Phase 2: Full Feature Restoration**
-- Restore GraphiQL interface at `/graphiql`
-- Verify all custom resolvers work correctly
+- Enable GraphiQL at `/graphiql` in dev/test profiles only
+- Verify all controller-based GraphQL handlers work correctly
 - Test complex queries, mutations, and introspection
 
 **Phase 3: Integration Testing**

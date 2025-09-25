@@ -48,7 +48,7 @@ class NetworkStatusSpec extends BaseDomainSpec {
     @Unroll
     void 'test toString returns lowercase name for #networkStatus'() {
         when:
-        String result = networkStatus.toString()
+        String result = (String)(networkStatus)
 
         then:
         result == expectedString

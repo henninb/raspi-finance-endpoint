@@ -11,7 +11,7 @@ plugins {
     // id 'maven'
     id 'java-library'
     id 'jacoco'
-    // id 'codenarc'
+    id 'codenarc'
     id 'nu.studer.jooq' version "${jooqPluginVersion}"
     id "org.springframework.boot" version "${springBootVersion}"
     id "org.jetbrains.kotlin.jvm" version "${kotlinVersion}"
@@ -64,9 +64,44 @@ configurations.configureEach {
     }
 }
 
-// codenarc {
-    // toolVersion = "$codenarcPluginVersion"
-// }
+// CodeNarc configuration (analyzes Groovy sources; ignore failures to keep build green initially)
+codenarc {
+    toolVersion = "${codenarcVersion}"
+}
+
+tasks.withType(org.gradle.api.plugins.quality.CodeNarc).configureEach {
+    configFile = rootProject.file('config/codenarc/ruleset.groovy')
+    ignoreFailures = true
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Apply stricter rules only for main sources
+tasks.named('codenarcMain') {
+    configFile = rootProject.file('config/codenarc/ruleset-main.groovy')
+}
+
+// Add a ratchet task that fails only on a narrow set of rules for main
+tasks.register('codenarcMainRatchet', org.gradle.api.plugins.quality.CodeNarc) {
+    description = 'Ratchet: fail main on critical rules only'
+    group = 'verification'
+    configFile = rootProject.file('config/codenarc/ruleset-ratchet.groovy')
+    source = sourceSets.main.groovy
+    // Fail the build on these violations
+    ignoreFailures = false
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Wire ratchet into the lifecycle so CI fails only on the narrow ruleset
+tasks.named('check') { dependsOn 'codenarcMainRatchet' }
+
+// The CodeNarc plugin automatically creates tasks for each Groovy source set
+// (including custom ones from test.gradle) and wires them into 'check'.
 
 // Use toolchains for Gradle 9 compatibility
 java {
@@ -110,8 +145,7 @@ dependencies {
     //Scala
     implementation("org.scala-lang:scala-library:${scalaVersion}")
 
-    // Codenarc
-    // implementation("org.codenarc:CodeNarc:${codenarcPluginVersion}")
+    // CodeNarc is applied via Gradle plugin; no direct dependency needed
 
     //Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
@@ -120,10 +154,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
 
     // Spring Boot 4.0 test dependencies
-    integrationTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
-    functionalTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
+    // moved to test.gradle to centralize test deps
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")
-    implementation("org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}")
     //Added on 2020-12-01
@@ -137,7 +169,6 @@ dependencies {
 
 
     // GraphQL (Spring for GraphQL)
-    implementation("org.springframework.boot:spring-boot-starter-graphql")
     implementation("com.graphql-java:graphql-java-extended-scalars:${graphqlExtendedScalarsVersion}")
     implementation "com.google.guava:guava:${guavaVersion}"
 
