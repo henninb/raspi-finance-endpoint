@@ -8,10 +8,6 @@ spring:
       enabled: true
       path: /graphiql
     path: /graphql
-    cors:
-      allowed-origins: "*"
-      allowed-methods: GET,POST
-      allowed-headers: "*"
     schema:
       printer:
         enabled: true

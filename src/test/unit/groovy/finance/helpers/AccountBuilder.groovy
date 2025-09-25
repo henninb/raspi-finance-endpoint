@@ -20,7 +20,7 @@ class AccountBuilder {
     Timestamp dateUpdated = new Timestamp(System.currentTimeMillis())
 
     static AccountBuilder builder() {
-        return new AccountBuilder()
+        new AccountBuilder()
     }
 
     Account build() {
@@ -36,64 +36,64 @@ class AccountBuilder {
             dateClosed = this.dateClosed
             dateAdded = this.dateAdded
             dateUpdated = this.dateUpdated
-            return it
+            it
         }
-        return account
+        account
     }
 
     AccountBuilder withAccountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
-        return this
+        this
     }
 
     AccountBuilder withAccountType(AccountType accountType) {
         this.accountType = accountType
-        return this
+        this
     }
 
     AccountBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     AccountBuilder withMoniker(String moniker) {
         this.moniker = moniker
-        return this
+        this
     }
 
     AccountBuilder withDateClosed(Timestamp dateClosed) {
         this.dateClosed = dateClosed
-        return this
+        this
     }
 
     AccountBuilder withFuture(BigDecimal future) {
         this.future = future
-        return this
+        this
     }
 
     AccountBuilder withOutstanding(BigDecimal outstanding) {
         this.outstanding = outstanding
-        return this
+        this
     }
 
     AccountBuilder withCleared(BigDecimal cleared) {
         this.cleared = cleared
-        return this
+        this
     }
 
     AccountBuilder withAccountId(Long accountId) {
         this.accountId = accountId
-        return this
+        this
     }
 
     AccountBuilder withDateAdded(Timestamp dateAdded) {
         this.dateAdded = dateAdded
-        return this
+        this
     }
 
     AccountBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 
 }

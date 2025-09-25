@@ -13,76 +13,76 @@ class AccountTypeConverterSpec extends Specification {
 
         where:
         accountType                    | expectedString
-        AccountType.Credit             | "credit"
-        AccountType.Debit              | "debit"
-        AccountType.Undefined          | "undefined"
-        AccountType.Checking           | "checking"
-        AccountType.Savings            | "savings"
-        AccountType.CreditCard         | "credit_card"
-        AccountType.HSA                | "hsa"
-        AccountType.FSA                | "fsa"
-        AccountType.MedicalSavings     | "medical_savings"
-        AccountType.Brokerage          | "brokerage"
-        AccountType.Mortgage           | "mortgage"
-        AccountType.BusinessChecking   | "business_checking"
-        AccountType.Cash               | "cash"
+        AccountType.Credit             | 'credit'
+        AccountType.Debit              | 'debit'
+        AccountType.Undefined          | 'undefined'
+        AccountType.Checking           | 'checking'
+        AccountType.Savings            | 'savings'
+        AccountType.CreditCard         | 'credit_card'
+        AccountType.HSA                | 'hsa'
+        AccountType.FSA                | 'fsa'
+        AccountType.MedicalSavings     | 'medical_savings'
+        AccountType.Brokerage          | 'brokerage'
+        AccountType.Mortgage           | 'mortgage'
+        AccountType.BusinessChecking   | 'business_checking'
+        AccountType.Cash               | 'cash'
     }
 
-    def "convertToEntityAttribute converts string to AccountType enum"() {
+    void "convertToEntityAttribute converts string to AccountType enum"() {
         expect:
         converter.convertToEntityAttribute(inputString) == expectedAccountType
 
         where:
         inputString          | expectedAccountType
-        "credit"             | AccountType.Credit
-        "debit"              | AccountType.Debit
-        "undefined"          | AccountType.Undefined
-        "checking"           | AccountType.Checking
-        "savings"            | AccountType.Savings
-        "credit_card"        | AccountType.CreditCard
-        "hsa"                | AccountType.HSA
-        "fsa"                | AccountType.FSA
-        "medical_savings"    | AccountType.MedicalSavings
-        "brokerage"          | AccountType.Brokerage
-        "mortgage"           | AccountType.Mortgage
-        "business_checking"  | AccountType.BusinessChecking
-        "cash"               | AccountType.Cash
+        'credit'             | AccountType.Credit
+        'debit'              | AccountType.Debit
+        'undefined'          | AccountType.Undefined
+        'checking'           | AccountType.Checking
+        'savings'            | AccountType.Savings
+        'credit_card'        | AccountType.CreditCard
+        'hsa'                | AccountType.HSA
+        'fsa'                | AccountType.FSA
+        'medical_savings'    | AccountType.MedicalSavings
+        'brokerage'          | AccountType.Brokerage
+        'mortgage'           | AccountType.Mortgage
+        'business_checking'  | AccountType.BusinessChecking
+        'cash'               | AccountType.Cash
     }
 
-    def "convertToEntityAttribute handles case insensitive input"() {
+    void "convertToEntityAttribute handles case insensitive input"() {
         expect:
         converter.convertToEntityAttribute(inputString) == expectedAccountType
 
         where:
         inputString          | expectedAccountType
-        "CREDIT"             | AccountType.Credit
-        "Credit"             | AccountType.Credit
-        "DEBIT"              | AccountType.Debit
-        "Debit"              | AccountType.Debit
-        "UNDEFINED"          | AccountType.Undefined
-        "Undefined"          | AccountType.Undefined
-        "CHECKING"           | AccountType.Checking
-        "Checking"           | AccountType.Checking
-        "SAVINGS"            | AccountType.Savings
-        "Savings"            | AccountType.Savings
-        "HSA"                | AccountType.HSA
-        "Hsa"                | AccountType.HSA
-        "MEDICAL_SAVINGS"    | AccountType.MedicalSavings
-        "Medical_Savings"    | AccountType.MedicalSavings
+        'CREDIT'             | AccountType.Credit
+        'Credit'             | AccountType.Credit
+        'DEBIT'              | AccountType.Debit
+        'Debit'              | AccountType.Debit
+        'UNDEFINED'          | AccountType.Undefined
+        'Undefined'          | AccountType.Undefined
+        'CHECKING'           | AccountType.Checking
+        'Checking'           | AccountType.Checking
+        'SAVINGS'            | AccountType.Savings
+        'Savings'            | AccountType.Savings
+        'HSA'                | AccountType.HSA
+        'Hsa'                | AccountType.HSA
+        'MEDICAL_SAVINGS'    | AccountType.MedicalSavings
+        'Medical_Savings'    | AccountType.MedicalSavings
     }
 
-    def "convertToEntityAttribute handles whitespace"() {
+    void "convertToEntityAttribute handles whitespace"() {
         expect:
         converter.convertToEntityAttribute(inputString) == expectedAccountType
 
         where:
         inputString             | expectedAccountType
-        " credit "              | AccountType.Credit
-        "  debit  "             | AccountType.Debit
+        ' credit '              | AccountType.Credit
+        '  debit  '             | AccountType.Debit
         "\tundefined\t"         | AccountType.Undefined
         "\ncredit\n"            | AccountType.Credit
-        " checking "            | AccountType.Checking
-        "  hsa  "               | AccountType.HSA
+        ' checking '            | AccountType.Checking
+        '  hsa  '               | AccountType.HSA
         "\tmedical_savings\t"   | AccountType.MedicalSavings
     }
 
@@ -91,16 +91,16 @@ class AccountTypeConverterSpec extends Specification {
         converter.convertToEntityAttribute(invalidInput)
 
         then:
-        RuntimeException ex = thrown()
+        def ex = thrown(RuntimeException)
         ex.message == "Unknown account type attribute: ${invalidInput}"
 
         where:
-        invalidInput << ["invalid_type", "not_valid", "xyz", "", " ", "null", "unknown_account"]
+        invalidInput << ['invalid_type', 'not_valid', 'xyz', '', ' ', 'null', 'unknown_account']
     }
 
     def "convertToEntityAttribute handles mixed case and whitespace with unknown values"() {
         when:
-        converter.convertToEntityAttribute("  Invalid_Type  ")
+        converter.convertToEntityAttribute('  Invalid_Type  ')
 
         then:
         RuntimeException ex = thrown()

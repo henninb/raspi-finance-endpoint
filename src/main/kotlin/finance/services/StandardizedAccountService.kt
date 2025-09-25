@@ -1,6 +1,7 @@
 package finance.services
 
 import finance.domain.Account
+import finance.domain.AccountType
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.repositories.AccountRepository
@@ -114,6 +115,10 @@ class StandardizedAccountService(
             is ServiceResult.Success -> result.data
             else -> emptyList()
         }
+    }
+
+    fun accountsByType(accountType: AccountType): List<Account> {
+        return accountRepository.findByActiveStatusAndAccountType(true, accountType)
     }
 
     fun findAccountsThatRequirePayment(): List<Account> {

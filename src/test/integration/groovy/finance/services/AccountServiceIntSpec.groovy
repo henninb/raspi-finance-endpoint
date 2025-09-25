@@ -19,14 +19,20 @@ class AccountServiceIntSpec extends Specification {
     @Autowired
     StandardizedAccountService accountService
 
-    @Ignore
     void 'computeTheGrandTotalForAllTransactions'() {
         when:
-        accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
+        def totalCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
+        def totalFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
+        def totalOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
 
         then:
         noExceptionThrown()
-        0 * _
+        totalCleared != null
+        totalFuture != null
+        totalOutstanding != null
+        totalCleared.scale() == 2
+        totalFuture.scale() == 2
+        totalOutstanding.scale() == 2
     }
 
     void 'computeTheGrandTotalForAllClearedTransactions'() {

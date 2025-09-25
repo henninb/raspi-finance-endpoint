@@ -12,7 +12,7 @@ class CategoryBuilder {
     Long categoryCount = 0L
 
     static CategoryBuilder builder() {
-        return new CategoryBuilder()
+        new CategoryBuilder()
     }
 
     Category build() {
@@ -22,38 +22,38 @@ class CategoryBuilder {
             activeStatus = this.activeStatus
             dateUpdated = this.dateUpdated
             categoryCount = this.categoryCount
-            return it
+            it
         }
-        return category
+        category
     }
 
     CategoryBuilder withCategoryId(Long categoryId) {
         this.categoryId = categoryId
-        return this
+        this
     }
 
     CategoryBuilder withCategory(String category) {
         this.categoryName = category
-        return this
+        this
     }
 
     CategoryBuilder withCategoryName(String categoryName) {
         this.categoryName = categoryName
-        return this
+        this
     }
 
     CategoryBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     CategoryBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 
     CategoryBuilder withCategoryCount(Long categoryCount) {
         this.categoryCount = categoryCount
-        return this
+        this
     }
 }

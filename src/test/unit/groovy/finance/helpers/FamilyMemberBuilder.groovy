@@ -21,7 +21,7 @@ class FamilyMemberBuilder {
     Timestamp dateUpdated = new Timestamp(System.currentTimeMillis())
 
     static FamilyMemberBuilder builder() {
-        return new FamilyMemberBuilder()
+        new FamilyMemberBuilder()
     }
 
     FamilyMember build() {
@@ -37,63 +37,63 @@ class FamilyMemberBuilder {
             activeStatus = this.activeStatus
             dateAdded = this.dateAdded
             dateUpdated = this.dateUpdated
-            return it
+            it
         }
-        return member
+        member
     }
 
     FamilyMemberBuilder withFamilyMemberId(Long familyMemberId) {
         this.familyMemberId = familyMemberId
-        return this
+        this
     }
 
     FamilyMemberBuilder withOwner(String owner) {
         this.owner = owner
-        return this
+        this
     }
 
     FamilyMemberBuilder withMemberName(String memberName) {
         this.memberName = memberName
-        return this
+        this
     }
 
     FamilyMemberBuilder withRelationship(FamilyRelationship relationship) {
         this.relationship = relationship
-        return this
+        this
     }
 
     FamilyMemberBuilder withDateOfBirth(Date dateOfBirth) {
         this.dateOfBirth = dateOfBirth
-        return this
+        this
     }
 
     FamilyMemberBuilder withInsuranceMemberId(String insuranceMemberId) {
         this.insuranceMemberId = insuranceMemberId
-        return this
+        this
     }
 
     FamilyMemberBuilder withSsnLastFour(String ssnLastFour) {
         this.ssnLastFour = ssnLastFour
-        return this
+        this
     }
 
     FamilyMemberBuilder withMedicalRecordNumber(String medicalRecordNumber) {
         this.medicalRecordNumber = medicalRecordNumber
-        return this
+        this
     }
 
     FamilyMemberBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     FamilyMemberBuilder withDateAdded(Timestamp dateAdded) {
         this.dateAdded = dateAdded
-        return this
+        this
     }
 
     FamilyMemberBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 }

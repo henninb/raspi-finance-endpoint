@@ -84,7 +84,7 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - `finance.services/` - Business logic layer with interfaces
 - `finance.repositories/` - JPA repositories using Spring Data
 - `finance.configurations/` - Spring configuration classes including GraphQL setup
-- `finance.resolvers/` - GraphQL resolvers and data fetchers
+- `finance.graphql/` - GraphQL controllers (`@QueryMapping`, `@MutationMapping`); legacy resolvers removed
 - `finance.utils/` - Utility classes, validators, and converters
 - `finance.converters/` - Custom type converters for JPA entities
 - `finance.exceptions/` - Custom exception classes
@@ -494,6 +494,7 @@ SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest
 - **FUNCTIONAL_TEST_MIGRATION_GUIDE.md**: Functional test migration patterns
 - **INTEGRATION_TEST_MIGRATION_GUIDE.md**: Integration test updates
 - **SECURITY_MIGRATION_GUIDE.md**: Spring Security 7.0 migration
+- **GRAPHQL.md**: GraphQL architecture recommendations and security best practices
 - **MEDICAL_EXPENSE_PLAN.md**: Medical expense feature implementation
 - **MEDICAL_CLAIMS_INSERT.md**: Medical claims processing guide
 - **DESCRIPTION_DETAILS.md**: Transaction description management

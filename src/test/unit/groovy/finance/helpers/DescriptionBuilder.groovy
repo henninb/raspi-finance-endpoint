@@ -14,7 +14,7 @@ class DescriptionBuilder {
     Long descriptionCount = 0L
 
     static DescriptionBuilder builder() {
-        return new DescriptionBuilder()
+        new DescriptionBuilder()
     }
 
     Description build() {
@@ -25,43 +25,43 @@ class DescriptionBuilder {
             dateAdded = this.dateAdded
             dateUpdated = this.dateUpdated
             descriptionCount = this.descriptionCount
-            return it
+            it
         }
-        return description
+        description
     }
 
     DescriptionBuilder withDescriptionId(Long descriptionId) {
         this.descriptionId = descriptionId
-        return this
+        this
     }
 
     DescriptionBuilder withDescription(String description) {
         this.descriptionName = description
-        return this
+        this
     }
 
     DescriptionBuilder withDescriptionName(String descriptionName) {
         this.descriptionName = descriptionName
-        return this
+        this
     }
 
     DescriptionBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     DescriptionBuilder withDateAdded(Timestamp dateAdded) {
         this.dateAdded = dateAdded
-        return this
+        this
     }
 
     DescriptionBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 
     DescriptionBuilder withDescriptionCount(Long descriptionCount) {
         this.descriptionCount = descriptionCount
-        return this
+        this
     }
 }

@@ -298,7 +298,7 @@ class MedicalExpenseSpec extends Specification {
         )
 
         when: "converting to string"
-        String result = medicalExpense.toString()
+        String result = (String)(medicalExpense)
 
         then: "should contain key information in JSON form"
         def json = new groovy.json.JsonSlurper().parseText(result)
