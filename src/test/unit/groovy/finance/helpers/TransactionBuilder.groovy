@@ -22,11 +22,11 @@ class TransactionBuilder {
     ReceiptImage receiptImage = null
 
     static TransactionBuilder builder() {
-        return new TransactionBuilder()
+        new TransactionBuilder()
     }
 
     Transaction build() {
-        return new Transaction().with {
+        new Transaction().with {
             guid = this.guid
             accountId = this.accountId
             accountType = this.accountType
@@ -44,87 +44,87 @@ class TransactionBuilder {
             receiptImageId = this.receiptImageId
             receiptImage = this.receiptImage
 
-            return it
+            it
         }
     }
 
     TransactionBuilder withGuid(String guid) {
         this.guid = guid
-        return this
+        this
     }
 
     TransactionBuilder withAccountId(Long accountId) {
         this.accountId = accountId
-        return this
+        this
     }
 
     TransactionBuilder withAccountType(AccountType accountType) {
         this.accountType = accountType
-        return this
+        this
     }
 
     TransactionBuilder withTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType
-        return this
+        this
     }
 
     TransactionBuilder withAccountNameOwner(String accountNameOwner) {
         this.accountNameOwner = accountNameOwner
-        return this
+        this
     }
 
     TransactionBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
-        return this
+        this
     }
 
     TransactionBuilder withDueDate(Date dueDate) {
         this.dueDate = dueDate
-        return this
+        this
     }
 
     TransactionBuilder withDescription(String description) {
         this.description = description
-        return this
+        this
     }
 
     TransactionBuilder withCategory(String category) {
         this.category = category
-        return this
+        this
     }
 
     TransactionBuilder withAmount(BigDecimal amount) {
         this.amount = amount
-        return this
+        this
     }
 
     TransactionBuilder withTransactionState(TransactionState transactionState) {
         this.transactionState = transactionState
-        return this
+        this
     }
 
     TransactionBuilder withReoccurringType(ReoccurringType reoccurringType) {
         this.reoccurringType = reoccurringType
-        return this
+        this
     }
 
     TransactionBuilder withNotes(String notes) {
         this.notes = notes
-        return this
+        this
     }
 
     TransactionBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     TransactionBuilder withReceiptImageId(Long receiptImageId) {
         this.receiptImageId = receiptImageId
-        return this
+        this
     }
 
     TransactionBuilder withImage() {
         this.receiptImage = ReceiptImageBuilder.builder().build()
-        return this
+        this
     }
 }

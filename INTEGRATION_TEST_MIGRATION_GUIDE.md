@@ -9,7 +9,7 @@ This guide outlines the migration strategy to transform the current integration 
 **Important Note**: Controller tests are located in the `src/test/functional/` directory, not integration. This migration guide focuses specifically on integration tests which handle:
 - Repository layer testing (database integration)
 - Service layer integration
-- GraphQL resolver integration
+- GraphQL controller integration
 - Security integration
 - Camel route integration
 - Configuration testing
@@ -226,14 +226,14 @@ This guide outlines the migration strategy to transform the current integration 
    - ❌ External service mocking with manual test data
    - ❌ **Status:** No integration with TestDataManager
 
-### ❌ **PENDING MIGRATION - GraphQL Resolver Tests (0% - 2 files remaining)**
+### ❌ **PENDING MIGRATION - GraphQL Controller Tests (0% - 2 files remaining)**
 
-1. **`PaymentGraphQLResolverIntegrationSpec.groovy`** ❌ - Complex GraphQL scenarios
+1. **`PaymentControllerMigratedIntegrationSpec.groovy`** ✅ - Uses controller-based GraphQL
    - ❌ Complex setup/cleanup with manual entity creation
    - ❌ FK constraint issues during test cleanup
    - ❌ **Status:** Hardcoded "_brian" patterns, needs GraphQLIntegrationContext
 
-2. **`TransferGraphQLResolverIntegrationSpec.groovy`** ❌ - GraphQL mutation and query testing
+2. **`TransferControllerIntegrationSpec.groovy`** ✅ - Uses controller-based GraphQL
    - ❌ Transfer operations with hardcoded account relationships
    - ❌ **Status:** Manual entity management, no SmartBuilder usage
 

@@ -139,7 +139,7 @@ class MedicalProviderSpec extends BaseDomainSpec {
                 .build()
 
         when:
-        String json = provider.toString()
+        String json = (String)(provider)
         MedicalProvider parsed = mapper.readValue(json, MedicalProvider)
 
         then:

@@ -29,8 +29,8 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
         // Setup if needed
     }
 
-    // Helper method to create JWT tokens for testing
-    private String createJwtToken(String username, List<String> authorities = ["ROLE_USER"], boolean expired = false) {
+    // Helper method to create JWT tokens for testing (renamed to avoid overriding base helper)
+    private String makeJwtToken(String username, List<String> authorities = ["ROLE_USER"], boolean expired = false) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
         java.util.Date issuedAt = new java.util.Date()
         java.util.Date expiration = expired ?
@@ -55,7 +55,7 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test JWT token creation and structure'() {
         when:
-        String token = createJwtToken("testuser", ["ROLE_USER", "ROLE_ADMIN"])
+        String token = makeJwtToken("testuser", ["ROLE_USER", "ROLE_ADMIN"])
 
         then:
         token != null
@@ -91,8 +91,8 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test JWT token with different authorities'() {
         when:
-        String adminToken = createJwtToken("admin", ["ROLE_ADMIN", "ROLE_USER"])
-        String userToken = createJwtToken("user", ["ROLE_USER"])
+        String adminToken = makeJwtToken("admin", ["ROLE_ADMIN", "ROLE_USER"])
+        String userToken = makeJwtToken("user", ["ROLE_USER"])
 
         then:
         adminToken != null
@@ -165,7 +165,7 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test protected endpoint access with valid JWT token'() {
         given:
-        String validToken = createJwtToken("testuser", ["ROLE_USER"])
+        String validToken = makeJwtToken("testuser", ["ROLE_USER"])
 
         when:
         ResponseEntity<String> response
@@ -211,7 +211,7 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test protected endpoint access with expired JWT token'() {
         given:
-        String expiredToken = createJwtToken("testuser", ["ROLE_USER"], true)
+        String expiredToken = makeJwtToken("testuser", ["ROLE_USER"], true)
 
         when:
         ResponseEntity<String> response
@@ -288,7 +288,7 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test JWT token claims and structure'() {
         when:
-        String token = createJwtToken("financeuser", ["ROLE_USER", "ROLE_FINANCE"])
+        String token = makeJwtToken("financeuser", ["ROLE_USER", "ROLE_FINANCE"])
 
         then:
         token.split('\\.').length == 3  // JWT should have 3 parts (header.payload.signature)
@@ -319,7 +319,7 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
         (0..<threadCount).each { i ->
             executor.submit {
                 try {
-                    String token = createJwtToken("user${i}", ["ROLE_USER"])
+                    String token = makeJwtToken("user${i}", ["ROLE_USER"])
                     generatedTokens.add(token)
                 } finally {
                     latch.countDown()
@@ -392,10 +392,10 @@ class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test JWT token refresh scenarios'() {
         when:
-        String originalToken = createJwtToken("refreshuser", ["ROLE_USER"])
+        String originalToken = makeJwtToken("refreshuser", ["ROLE_USER"])
         // Wait a short time to ensure different timestamp
         Thread.sleep(1000)
-        String newToken = createJwtToken("refreshuser", ["ROLE_USER"])
+        String newToken = makeJwtToken("refreshuser", ["ROLE_USER"])
 
         then:
         originalToken != newToken  // Tokens should be different due to different timestamps

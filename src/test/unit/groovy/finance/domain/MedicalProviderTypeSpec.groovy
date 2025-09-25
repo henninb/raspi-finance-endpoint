@@ -55,7 +55,7 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
     @Unroll
     void 'test toString returns lowercase name for #providerType'() {
         when:
-        String result = providerType.toString()
+        String result = (String)(providerType)
 
         then:
         result == expectedString

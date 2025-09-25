@@ -83,7 +83,7 @@ class LoginResponseSpec extends Specification {
         LoginResponse response = new LoginResponse("test-token", "test-error")
 
         when:
-        String result = response.toString()
+        String result = (String)(response)
 
         then:
         result != null

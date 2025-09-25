@@ -28,7 +28,7 @@ class CalculationServiceSpec extends BaseServiceSpec {
 
     def setupSpec() {
         // Create test transactions for calculation testing
-        testTransactions = createTestTransactions()
+        testTransactions = makeTestTransactions()
     }
 
     // ===== TDD Tests for calculateActiveTotalsByAccountNameOwner() =====
@@ -101,10 +101,10 @@ class CalculationServiceSpec extends BaseServiceSpec {
     def "should calculate totals from transaction list correctly"() {
         given: "a list of transactions with different states"
         List<Transaction> transactions = [
-            createTransaction(TransactionState.Future, new BigDecimal("50.00")),
-            createTransaction(TransactionState.Future, new BigDecimal("25.00")),
-            createTransaction(TransactionState.Cleared, new BigDecimal("100.00")),
-            createTransaction(TransactionState.Outstanding, new BigDecimal("-30.00"))
+            makeTransaction(TransactionState.Future, new BigDecimal("50.00")),
+            makeTransaction(TransactionState.Future, new BigDecimal("25.00")),
+            makeTransaction(TransactionState.Cleared, new BigDecimal("100.00")),
+            makeTransaction(TransactionState.Outstanding, new BigDecimal("-30.00"))
         ]
 
         when: "calculating totals from transactions"
@@ -222,15 +222,15 @@ class CalculationServiceSpec extends BaseServiceSpec {
 
     // ===== Test Data Helper Methods =====
 
-    private List<Transaction> createTestTransactions() {
+    private List<Transaction> makeTestTransactions() {
         return [
-            createTransaction(TransactionState.Future, new BigDecimal("100.00")),
-            createTransaction(TransactionState.Cleared, new BigDecimal("200.00")),
-            createTransaction(TransactionState.Outstanding, new BigDecimal("-50.00"))
+            makeTransaction(TransactionState.Future, new BigDecimal("100.00")),
+            makeTransaction(TransactionState.Cleared, new BigDecimal("200.00")),
+            makeTransaction(TransactionState.Outstanding, new BigDecimal("-50.00"))
         ]
     }
 
-    private Transaction createTransaction(TransactionState state, BigDecimal amount) {
+    private Transaction makeTransaction(TransactionState state, BigDecimal amount) {
         return TransactionBuilder.builder()
             .withTransactionState(state)
             .withAmount(amount)

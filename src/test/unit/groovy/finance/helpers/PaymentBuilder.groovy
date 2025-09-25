@@ -13,14 +13,14 @@ class PaymentBuilder {
     String destinationAccount = 'dest_brian'
     BigDecimal amount = new BigDecimal("100.00")
     Date transactionDate = Date.valueOf('2020-12-11')
-    String guidSource = UUID.randomUUID().toString()
-    String guidDestination = UUID.randomUUID().toString()
+    String guidSource = UUID.randomUUID()
+    String guidDestination = UUID.randomUUID()
     Boolean activeStatus = true
     Timestamp dateAdded = new Timestamp(Calendar.getInstance().time.time)
     Timestamp dateUpdated = new Timestamp(Calendar.getInstance().time.time)
 
     static PaymentBuilder builder() {
-        return new PaymentBuilder()
+        new PaymentBuilder()
     }
 
     Payment build() {
@@ -35,59 +35,59 @@ class PaymentBuilder {
             activeStatus = this.activeStatus
             dateAdded = this.dateAdded
             dateUpdated = this.dateUpdated
-            return it
+            it
         }
-        return payment
+        payment
     }
 
 
     PaymentBuilder withAmount(BigDecimal amount) {
         this.amount = amount
-        return this
+        this
     }
 
     PaymentBuilder withTransactionDate(Date transactionDate) {
         this.transactionDate = transactionDate
-        return this
+        this
     }
 
     PaymentBuilder withGuidSource(String guidSource) {
         this.guidSource = guidSource
-        return this
+        this
     }
 
     PaymentBuilder withGuidDestination(String guidDestination) {
         this.guidDestination = guidDestination
-        return this
+        this
     }
 
     PaymentBuilder withSourceAccount(String sourceAccount) {
         this.sourceAccount = sourceAccount
-        return this
+        this
     }
 
     PaymentBuilder withDestinationAccount(String destinationAccount) {
         this.destinationAccount = destinationAccount
-        return this
+        this
     }
 
     PaymentBuilder withActiveStatus(Boolean activeStatus) {
         this.activeStatus = activeStatus
-        return this
+        this
     }
 
     PaymentBuilder withPaymentId(Long paymentId) {
         this.paymentId = paymentId
-        return this
+        this
     }
 
     PaymentBuilder withDateAdded(Timestamp dateAdded) {
         this.dateAdded = dateAdded
-        return this
+        this
     }
 
     PaymentBuilder withDateUpdated(Timestamp dateUpdated) {
         this.dateUpdated = dateUpdated
-        return this
+        this
     }
 }

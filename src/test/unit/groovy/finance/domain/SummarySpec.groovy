@@ -44,7 +44,7 @@ class SummarySpec extends Specification {
         )
 
         when:
-        String jsonString = summary.toString()
+        String jsonString = (String)(summary)
 
         then:
         jsonString != null

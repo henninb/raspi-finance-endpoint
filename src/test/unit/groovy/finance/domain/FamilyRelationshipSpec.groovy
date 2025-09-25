@@ -47,7 +47,7 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
     @Unroll
     void 'test toString returns lowercase name for #familyRelationship'() {
         when:
-        String result = familyRelationship.toString()
+        String result = (String)(familyRelationship)
 
         then:
         result == expectedString
