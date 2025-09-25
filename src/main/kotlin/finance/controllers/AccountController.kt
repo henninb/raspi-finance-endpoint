@@ -248,22 +248,30 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     ])
     @GetMapping("/select/active", produces = ["application/json"])
     fun accounts(): ResponseEntity<List<Account>> {
-        return try {
-            logger.debug("Retrieving active accounts")
-            //TODO: create a separate endpoint for the totals
-            standardizedAccountService.updateTotalsForAllAccounts()
-            val accounts: List<Account> = standardizedAccountService.accounts()
-            if (accounts.isEmpty()) {
+        logger.debug("Retrieving active accounts (legacy endpoint)")
+        //TODO: create a separate endpoint for the totals
+        standardizedAccountService.updateTotalsForAllAccounts()
+        return when (val result = standardizedAccountService.findAllActive()) {
+            is ServiceResult.Success -> {
+                if (result.data.isEmpty()) {
+                    logger.warn("No active accounts found")
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "No active accounts found")
+                }
+                logger.info("Retrieved ${result.data.size} active accounts")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
                 logger.warn("No active accounts found")
                 throw ResponseStatusException(HttpStatus.NOT_FOUND, "No active accounts found")
             }
-            logger.info("Retrieved ${accounts.size} active accounts")
-            ResponseEntity.ok(accounts)
-        } catch (ex: ResponseStatusException) {
-            throw ex
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve active accounts: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve active accounts: ${ex.message}", ex)
+            is ServiceResult.SystemError -> {
+                logger.error("Failed to retrieve active accounts: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve active accounts: ${result.exception.message}", result.exception)
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+            }
         }
     }
 
@@ -273,20 +281,24 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
     fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        return try {
-            logger.debug("Retrieving account: $accountNameOwner")
-            val account = standardizedAccountService.account(accountNameOwner)
-                .orElseThrow {
-                    logger.warn("Account not found: $accountNameOwner")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
-                }
-            logger.info("Retrieved account: $accountNameOwner")
-            ResponseEntity.ok(account)
-        } catch (ex: ResponseStatusException) {
-            throw ex
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve account $accountNameOwner: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve account: ${ex.message}", ex)
+        logger.debug("Retrieving account: $accountNameOwner (legacy endpoint)")
+        return when (val result = standardizedAccountService.findById(accountNameOwner)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved account: $accountNameOwner")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found: $accountNameOwner")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("Failed to retrieve account $accountNameOwner: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve account: ${result.exception.message}", result.exception)
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+            }
         }
     }
 
@@ -296,23 +308,28 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
-        return try {
-            logger.info("Inserting account: ${account.accountNameOwner}")
-            val accountResponse = standardizedAccountService.insertAccount(account)
-            logger.info("Account inserted successfully: ${accountResponse.accountNameOwner}")
-            ResponseEntity(accountResponse, HttpStatus.CREATED)
-        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
-            logger.error("Failed to insert account due to data integrity violation: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate account found.")
-        } catch (ex: jakarta.validation.ValidationException) {
-            logger.error("Validation error inserting account ${account.accountNameOwner}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}", ex)
-        } catch (ex: IllegalArgumentException) {
-            logger.error("Invalid input inserting account ${account.accountNameOwner}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}", ex)
-        } catch (ex: Exception) {
-            logger.error("Unexpected error inserting account ${account.accountNameOwner}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
+        logger.info("Inserting account: ${account.accountNameOwner} (legacy endpoint)")
+        return when (val result = standardizedAccountService.save(account)) {
+            is ServiceResult.Success -> {
+                logger.info("Account inserted successfully: ${account.accountNameOwner}")
+                ResponseEntity(result.data, HttpStatus.CREATED)
+            }
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error inserting account ${account.accountNameOwner}: ${result.errors}")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.error("Failed to insert account due to data integrity violation: ${result.message}")
+                throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate account found.")
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("Unexpected error inserting account ${account.accountNameOwner}: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${result.exception.message}", result.exception)
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+            }
         }
     }
 
@@ -322,22 +339,43 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
     fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
-        return try {
-            logger.info("Attempting to delete account: $accountNameOwner")
-            val account = standardizedAccountService.account(accountNameOwner)
-                .orElseThrow {
-                    logger.warn("Account not found for deletion: $accountNameOwner")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
-                }
+        logger.info("Attempting to delete account: $accountNameOwner (legacy endpoint)")
 
-            standardizedAccountService.deleteAccount(accountNameOwner)
-            logger.info("Account deleted successfully: $accountNameOwner")
-            ResponseEntity.ok(account)
-        } catch (ex: ResponseStatusException) {
-            throw ex
-        } catch (ex: Exception) {
-            logger.error("Failed to delete account $accountNameOwner: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete account: ${ex.message}", ex)
+        // First get the account to return it
+        val accountResult = standardizedAccountService.findById(accountNameOwner)
+        val accountToReturn = when (accountResult) {
+            is ServiceResult.Success -> accountResult.data
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found for deletion: $accountNameOwner")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("Failed to retrieve account for deletion $accountNameOwner: ${accountResult.exception.message}", accountResult.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve account: ${accountResult.exception.message}", accountResult.exception)
+            }
+            else -> {
+                logger.error("Unexpected result type: $accountResult")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+            }
+        }
+
+        return when (val result = standardizedAccountService.deleteById(accountNameOwner)) {
+            is ServiceResult.Success -> {
+                logger.info("Account deleted successfully: $accountNameOwner")
+                ResponseEntity.ok(accountToReturn)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found for deletion: $accountNameOwner")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("Failed to delete account $accountNameOwner: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete account: ${result.exception.message}", result.exception)
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+            }
         }
     }
 
@@ -350,15 +388,33 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
         @PathVariable("accountNameOwner") accountNameOwner: String,
         @RequestBody account: Map<String, Any>
     ): ResponseEntity<Account> {
-        return try {
-            logger.info("Updating account: $accountNameOwner")
-            val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
-            val accountResponse = standardizedAccountService.updateAccount(accountToBeUpdated)
-            logger.info("Account updated successfully: $accountNameOwner")
-            ResponseEntity.ok(accountResponse)
-        } catch (ex: Exception) {
-            logger.error("Failed to update account $accountNameOwner: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account: ${ex.message}", ex)
+        logger.info("Updating account: $accountNameOwner (legacy endpoint)")
+        val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
+        return when (val result = standardizedAccountService.update(accountToBeUpdated)) {
+            is ServiceResult.Success -> {
+                logger.info("Account updated successfully: $accountNameOwner")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Account not found for update: $accountNameOwner")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+            }
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error updating account $accountNameOwner: ${result.errors}")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.error("Business error updating account $accountNameOwner: ${result.message}")
+                throw ResponseStatusException(HttpStatus.CONFLICT, result.message)
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("Failed to update account $accountNameOwner: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account: ${result.exception.message}", result.exception)
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+            }
         }
     }
 

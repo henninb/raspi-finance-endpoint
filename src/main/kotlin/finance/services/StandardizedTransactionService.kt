@@ -279,15 +279,6 @@ class StandardizedTransactionService(
 
     // ===== Legacy Method Compatibility =====
 
-    fun deleteTransactionByGuid(guid: String): Boolean {
-        val result = deleteById(guid)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> false
-            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
-            else -> throw RuntimeException("Failed to delete transaction: $result")
-        }
-    }
 
     fun deleteReceiptImage(transaction: Transaction): Boolean {
         val receiptImageId = transaction.receiptImageId
@@ -319,39 +310,7 @@ class StandardizedTransactionService(
         }
     }
 
-    fun insertTransaction(transaction: Transaction): Transaction {
-        // Validate the transaction first
-        val constraintViolations: Set<ConstraintViolation<Transaction>> = validator.validate(transaction)
-        handleConstraintViolations(constraintViolations, meterService)
 
-        // Check if transaction already exists by GUID
-        val transactionOptional = findTransactionByGuid(transaction.guid)
-        if (transactionOptional.isPresent) {
-            val transactionFromDatabase = transactionOptional.get()
-            meterService.incrementTransactionAlreadyExistsCounter(transactionFromDatabase.accountNameOwner)
-            return masterTransactionUpdater(transactionFromDatabase, transaction)
-        }
-
-        // Create new transaction
-        processAccount(transaction)
-        processCategory(transaction)
-        processDescription(transaction)
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transaction.dateUpdated = timestamp
-        transaction.dateAdded = timestamp
-        val response: Transaction = transactionRepository.saveAndFlush(transaction)
-        meterService.incrementTransactionSuccessfullyInsertedCounter(transaction.accountNameOwner)
-        logger.info("Inserted transaction into the database successfully, guid = ${transaction.guid}")
-        return response
-    }
-
-    fun findTransactionByGuid(guid: String): Optional<Transaction> {
-        val result = findById(guid)
-        return when (result) {
-            is ServiceResult.Success -> Optional.of(result.data)
-            else -> Optional.empty()
-        }
-    }
 
     fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
         return calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
@@ -365,15 +324,6 @@ class StandardizedTransactionService(
         }
     }
 
-    fun updateTransaction(transaction: Transaction): Transaction {
-        val result = update(transaction)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw TransactionValidationException("cannot update a transaction without a valid guid.")
-            is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
-            else -> throw RuntimeException("Failed to update transaction: $result")
-        }
-    }
 
     fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Transaction {
         if (transactionFromDatabase.guid == transaction.guid) {

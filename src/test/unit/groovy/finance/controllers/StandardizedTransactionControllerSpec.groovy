@@ -420,7 +420,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         String guid = "legacy-find-guid"
         Transaction transaction = createValidTransaction(guid, "legacy_account")
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.of(transaction)
+        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(transaction)
 
         when:
         ResponseEntity<Transaction> response = controller.findTransaction(guid)
@@ -435,7 +435,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         given:
         String guid = "legacy-not-found"
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.empty()
+        standardizedTransactionService.findById(guid) >> ServiceResult.NotFound.of("Transaction not found: ${guid}")
 
         when:
         controller.findTransaction(guid)
@@ -454,11 +454,11 @@ class StandardizedTransactionControllerSpec extends Specification {
         Transaction update = createValidTransaction("different-guid", "new_account")
         Transaction result = createValidTransaction(guid, "new_account")
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.of(existing)
-        standardizedTransactionService.updateTransaction(_ as Transaction) >> { Transaction t ->
+        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(existing)
+        standardizedTransactionService.update(_ as Transaction) >> { Transaction t ->
             assert t.guid == guid
             assert t.transactionId == existing.transactionId
-            result
+            ServiceResult.Success.of(result)
         }
 
         when:
@@ -475,7 +475,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         String guid = "legacy-update-not-found"
         Transaction update = createValidTransaction("any-guid", "any_account")
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.empty()
+        standardizedTransactionService.findById(guid) >> ServiceResult.NotFound.of("Transaction not found: ${guid}")
 
         when:
         controller.updateTransaction(guid, update)
@@ -492,8 +492,8 @@ class StandardizedTransactionControllerSpec extends Specification {
         Transaction existing = createValidTransaction(guid, "existing_account")
         Transaction update = createValidTransaction("any-guid", "updated_account")
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.of(existing)
-        standardizedTransactionService.updateTransaction(_ as Transaction) >> { throw new RuntimeException("Update failed") }
+        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(existing)
+        standardizedTransactionService.update(_ as Transaction) >> ServiceResult.SystemError.of(new RuntimeException("Update failed"))
 
         when:
         controller.updateTransaction(guid, update)
@@ -577,7 +577,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         Transaction result = createValidTransaction("insert-guid", "insert_account")
         result.transactionId = 999L
         and:
-        standardizedTransactionService.insertTransaction(input) >> result
+        standardizedTransactionService.save(input) >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<Transaction> response = controller.insertTransaction(input)
@@ -592,9 +592,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         given:
         Transaction duplicate = createValidTransaction("duplicate-insert", "dup_account")
         and:
-        standardizedTransactionService.insertTransaction(duplicate) >> {
-            throw new org.springframework.dao.DataIntegrityViolationException("Duplicate transaction")
-        }
+        standardizedTransactionService.save(duplicate) >> ServiceResult.BusinessError.of("Duplicate transaction", "DUPLICATE_ENTITY")
 
         when:
         controller.insertTransaction(duplicate)
@@ -609,9 +607,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         given:
         Transaction invalid = createValidTransaction("validation-insert", "invalid_account")
         and:
-        standardizedTransactionService.insertTransaction(invalid) >> {
-            throw new jakarta.validation.ValidationException("Invalid amount")
-        }
+        standardizedTransactionService.save(invalid) >> ServiceResult.ValidationError.of(["amount": "Invalid amount"])
 
         when:
         controller.insertTransaction(invalid)
@@ -619,16 +615,14 @@ class StandardizedTransactionControllerSpec extends Specification {
         then:
         def ex = thrown(org.springframework.web.server.ResponseStatusException)
         ex.statusCode == HttpStatus.BAD_REQUEST
-        ex.reason.contains("Validation error: Invalid amount")
+        ex.reason.contains("Validation error: {amount=Invalid amount}")
     }
 
     def "insertTransaction throws 400 on illegal argument"() {
         given:
         Transaction invalid = createValidTransaction("illegal-insert", "illegal_account")
         and:
-        standardizedTransactionService.insertTransaction(invalid) >> {
-            throw new IllegalArgumentException("Invalid input data")
-        }
+        standardizedTransactionService.save(invalid) >> ServiceResult.ValidationError.of(["input": "Invalid input data"])
 
         when:
         controller.insertTransaction(invalid)
@@ -636,16 +630,14 @@ class StandardizedTransactionControllerSpec extends Specification {
         then:
         def ex = thrown(org.springframework.web.server.ResponseStatusException)
         ex.statusCode == HttpStatus.BAD_REQUEST
-        ex.reason.contains("Invalid input: Invalid input data")
+        ex.reason.contains("Validation error: {input=Invalid input data}")
     }
 
     def "insertTransaction throws 500 on unexpected error"() {
         given:
         Transaction input = createValidTransaction("error-insert", "error_account")
         and:
-        standardizedTransactionService.insertTransaction(input) >> {
-            throw new RuntimeException("Unexpected database error")
-        }
+        standardizedTransactionService.save(input) >> ServiceResult.SystemError.of(new RuntimeException("Unexpected database error"))
 
         when:
         controller.insertTransaction(input)
@@ -665,7 +657,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         result.transactionId = 888L
         and:
         standardizedTransactionService.createFutureTransaction(input) >> futureTransaction
-        standardizedTransactionService.insertTransaction(futureTransaction) >> result
+        standardizedTransactionService.save(futureTransaction) >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<Transaction> response = controller.insertFutureTransaction(input)
@@ -682,9 +674,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         Transaction futureTransaction = createValidTransaction("future-dup", "future_dup_account")
         and:
         standardizedTransactionService.createFutureTransaction(input) >> futureTransaction
-        standardizedTransactionService.insertTransaction(futureTransaction) >> {
-            throw new org.springframework.dao.DataIntegrityViolationException("Duplicate future transaction")
-        }
+        standardizedTransactionService.save(futureTransaction) >> ServiceResult.BusinessError.of("Duplicate future transaction", "DUPLICATE_ENTITY")
 
         when:
         controller.insertFutureTransaction(input)
@@ -701,9 +691,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         Transaction futureTransaction = createValidTransaction("future-validation", "future_validation_account")
         and:
         standardizedTransactionService.createFutureTransaction(input) >> futureTransaction
-        standardizedTransactionService.insertTransaction(futureTransaction) >> {
-            throw new jakarta.validation.ValidationException("Future transaction validation failed")
-        }
+        standardizedTransactionService.save(futureTransaction) >> ServiceResult.ValidationError.of(["future": "Future transaction validation failed"])
 
         when:
         controller.insertFutureTransaction(input)
@@ -711,7 +699,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         then:
         def ex = thrown(org.springframework.web.server.ResponseStatusException)
         ex.statusCode == HttpStatus.BAD_REQUEST
-        ex.reason.contains("Validation error: Future transaction validation failed")
+        ex.reason.contains("Validation error: {future=Future transaction validation failed}")
     }
 
     def "insertFutureTransaction throws 500 on unexpected error"() {
@@ -726,9 +714,8 @@ class StandardizedTransactionControllerSpec extends Specification {
         controller.insertFutureTransaction(input)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        ex.reason.contains("Unexpected error: Future transaction creation failed")
+        def ex = thrown(RuntimeException)
+        ex.message == "Future transaction creation failed"
     }
 
     def "changeTransactionAccountNameOwner updates account successfully"() {
@@ -852,8 +839,8 @@ class StandardizedTransactionControllerSpec extends Specification {
         String guid = "delete-legacy-guid"
         Transaction existing = createValidTransaction(guid, "delete_legacy_account")
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.of(existing)
-        standardizedTransactionService.deleteTransactionByGuid(guid) >> true
+        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(existing)
+        standardizedTransactionService.deleteById(guid) >> ServiceResult.Success.of(true)
 
         when:
         ResponseEntity<Transaction> response = controller.deleteTransaction(guid)
@@ -868,7 +855,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         given:
         String guid = "delete-not-found-guid"
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.empty()
+        standardizedTransactionService.findById(guid) >> ServiceResult.NotFound.of("Transaction not found: ${guid}")
 
         when:
         controller.deleteTransaction(guid)
@@ -884,8 +871,8 @@ class StandardizedTransactionControllerSpec extends Specification {
         String guid = "delete-fail-guid"
         Transaction existing = createValidTransaction(guid, "delete_fail_account")
         and:
-        standardizedTransactionService.findTransactionByGuid(guid) >> Optional.of(existing)
-        standardizedTransactionService.deleteTransactionByGuid(guid) >> false
+        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(existing)
+        standardizedTransactionService.deleteById(guid) >> ServiceResult.NotFound.of("Transaction not found: ${guid}")
 
         when:
         controller.deleteTransaction(guid)
@@ -893,7 +880,7 @@ class StandardizedTransactionControllerSpec extends Specification {
         then:
         def ex = thrown(org.springframework.web.server.ResponseStatusException)
         ex.statusCode == HttpStatus.NOT_FOUND
-        ex.reason.contains("Transaction not deleted: $guid")
+        ex.reason.contains("Transaction not found: $guid")
     }
 
     def "selectTransactionsByCategory returns transactions for category"() {

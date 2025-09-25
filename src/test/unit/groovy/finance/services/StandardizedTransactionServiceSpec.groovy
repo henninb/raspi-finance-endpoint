@@ -582,129 +582,11 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         result.exception instanceof InvalidReoccurringTypeException
     }
 
-    // ===== Legacy Method Compatibility Tests =====
+    // ===== Legacy Method Compatibility Tests (REMOVED) =====
 
-    def "deleteTransactionByGuid should delegate to deleteById and return boolean"() {
-        given: "an existing transaction"
-        def guid = "test-guid-123"
-        def transaction = createTestTransaction()
 
-        when: "deleteTransactionByGuid is called"
-        def result = standardizedTransactionService.deleteTransactionByGuid(guid)
 
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
 
-        and: "repository delete is called"
-        1 * transactionRepositoryMock.delete(transaction)
-
-        and: "result is true"
-        result == true
-    }
-
-    def "deleteTransactionByGuid should return false when transaction not found"() {
-        given: "a non-existent transaction"
-        def guid = "non-existent-guid"
-
-        when: "deleteTransactionByGuid is called"
-        def result = standardizedTransactionService.deleteTransactionByGuid(guid)
-
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-
-        and: "result is false"
-        result == false
-    }
-
-    def "insertTransaction should delegate to save and return transaction"() {
-        given: "a valid new transaction"
-        def transaction = createTestTransactionWithoutId()
-        def account = createTestAccount()
-        def category = createTestCategory()
-        def description = createTestDescription()
-        def savedTransaction = createTestTransaction()
-
-        when: "insertTransaction is called"
-        def result = standardizedTransactionService.insertTransaction(transaction)
-
-        then: "validation is successful"
-        1 * validatorMock.validate(transaction) >> Collections.emptySet()
-
-        and: "transaction doesn't exist"
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
-
-        and: "processing occurs"
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
-        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
-        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
-
-        and: "repository saveAndFlush is called"
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
-
-        and: "result is the saved transaction"
-        result == savedTransaction
-    }
-
-    def "insertTransaction should handle duplicate transaction by updating"() {
-        given: "a transaction that already exists"
-        def transaction = createTestTransactionWithoutId()
-        def existingTransaction = createTestTransaction()
-        // Make them duplicates by having the same GUID
-        transaction.guid = existingTransaction.guid
-        def account = createTestAccount()
-        def category = createTestCategory()
-        def description = createTestDescription()
-
-        when: "insertTransaction is called"
-        def result = standardizedTransactionService.insertTransaction(transaction)
-
-        then: "validation is successful"
-        1 * validatorMock.validate(transaction) >> Collections.emptySet()
-
-        and: "transaction already exists - findByGuid is called once"
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(existingTransaction)
-
-        and: "masterTransactionUpdater is called with services"
-        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
-        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
-        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-
-        and: "result is the updated transaction"
-        result == transaction
-    }
-
-    def "findTransactionByGuid should delegate to findById and return Optional"() {
-        given: "an existing transaction"
-        def guid = "test-guid-123"
-        def transaction = createTestTransaction()
-
-        when: "findTransactionByGuid is called"
-        def result = standardizedTransactionService.findTransactionByGuid(guid)
-
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
-
-        and: "result is Optional with transaction"
-        result.isPresent()
-        result.get() == transaction
-    }
-
-    def "findTransactionByGuid should return empty Optional when transaction not found"() {
-        given: "a non-existent transaction"
-        def guid = "non-existent-guid"
-
-        when: "findTransactionByGuid is called"
-        def result = standardizedTransactionService.findTransactionByGuid(guid)
-
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
-
-        and: "result is empty Optional"
-        result.isEmpty()
-    }
 
     def "calculateActiveTotalsByAccountNameOwner should delegate to calculationService"() {
         given: "an account name owner"
@@ -736,48 +618,6 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         result == transactions
     }
 
-    def "updateTransaction should delegate to update and return transaction"() {
-        given: "an existing transaction and updated data"
-        def existingTransaction = createTestTransaction()
-        def updatedTransaction = createTestTransaction()
-        def account = createTestAccount()
-        def category = createTestCategory()
-        def description = createTestDescription()
-
-        when: "updateTransaction is called"
-        def result = standardizedTransactionService.updateTransaction(updatedTransaction)
-
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(updatedTransaction.guid) >> Optional.of(existingTransaction)
-
-        and: "validation is successful"
-        1 * validatorMock.validate(updatedTransaction) >> Collections.emptySet()
-
-        and: "masterTransactionUpdater executes"
-        1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
-        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * accountRepositoryMock.findByAccountNameOwner(updatedTransaction.accountNameOwner) >> Optional.of(account)
-        1 * descriptionRepositoryMock.findByDescriptionName(updatedTransaction.description) >> Optional.of(description)
-        1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
-
-        and: "result is the updated transaction"
-        result == updatedTransaction
-    }
-
-    def "updateTransaction should throw ValidationException when transaction not found"() {
-        given: "a non-existent transaction"
-        def transaction = createTestTransaction()
-        transaction.guid = "non-existent-guid"
-
-        when: "updateTransaction is called"
-        standardizedTransactionService.updateTransaction(transaction)
-
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid("non-existent-guid") >> Optional.empty()
-
-        and: "TransactionValidationException is thrown"
-        thrown(TransactionValidationException)
-    }
 
     def "changeAccountNameOwner should delegate to standardized method and return transaction"() {
         given: "valid parameters"
