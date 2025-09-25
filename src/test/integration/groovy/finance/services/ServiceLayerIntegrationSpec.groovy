@@ -13,6 +13,7 @@ import spock.lang.Specification
 
 import java.sql.Date
 import java.sql.Timestamp
+import java.util.Optional
 
 @ActiveProfiles("int")
 @SpringBootTest
@@ -94,6 +95,14 @@ class ServiceLayerIntegrationSpec extends Specification {
         }
     }
 
+    private static <T> T unwrapSuccess(def result) {
+        try {
+            return result?.data
+        } catch (Throwable ignored) {
+            return null
+        }
+    }
+
     void 'test transaction service integration with database operations'() {
         given:
         Transaction testTransaction = new Transaction(
@@ -113,7 +122,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
 
         when:
-        Transaction savedTransaction = transactionService.insertTransaction(testTransaction)
+        Transaction savedTransaction = unwrapSuccess(transactionService.save(testTransaction))
 
         then:
         savedTransaction != null
@@ -122,7 +131,8 @@ class ServiceLayerIntegrationSpec extends Specification {
         savedTransaction.description == "service_integration_test_transaction"
 
         when:
-        Optional<Transaction> retrievedTransaction = transactionService.findTransactionByGuid(savedTransaction.guid)
+        def findResult = transactionService.findById(savedTransaction.guid)
+        Optional<Transaction> retrievedTransaction = Optional.ofNullable(unwrapSuccess(findResult))
 
         then:
         retrievedTransaction.isPresent()
@@ -141,7 +151,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
 
         when:
-        Category savedCategory = categoryService.insertCategory(testCategory)
+        Category savedCategory = unwrapSuccess(categoryService.save(testCategory))
 
         then:
         savedCategory != null
@@ -164,7 +174,7 @@ class ServiceLayerIntegrationSpec extends Specification {
             dateUpdated: new Timestamp(System.currentTimeMillis()),
             dateAdded: new Timestamp(System.currentTimeMillis())
         )
-        transactionService.insertTransaction(categoryTransaction)
+        unwrapSuccess(transactionService.save(categoryTransaction))
 
         List<Transaction> categoryTransactions = transactionService.findTransactionsByCategory(savedCategory.categoryName)
 
@@ -206,7 +216,7 @@ class ServiceLayerIntegrationSpec extends Specification {
             dateUpdated: new Timestamp(System.currentTimeMillis()),
             dateAdded: new Timestamp(System.currentTimeMillis())
         )
-        transactionService.insertTransaction(descriptionTransaction)
+        unwrapSuccess(transactionService.save(descriptionTransaction))
 
         List<Transaction> descriptionTransactions = transactionService.findTransactionsByDescription(savedDescription.descriptionName)
 
@@ -330,7 +340,7 @@ class ServiceLayerIntegrationSpec extends Specification {
             dateUpdated: new Timestamp(System.currentTimeMillis()),
             dateAdded: new Timestamp(System.currentTimeMillis())
         )
-        Transaction savedTransaction = transactionService.insertTransaction(testTransaction)
+        Transaction savedTransaction = unwrapSuccess(transactionService.save(testTransaction))
 
         ReceiptImage testReceiptImage = new ReceiptImage(
             receiptImageId: 0L,
@@ -380,7 +390,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
 
         when:
-        transactionService.insertTransaction(largeTransaction)
+        unwrapSuccess(transactionService.save(largeTransaction))
         List<Transaction> accountTransactions = transactionService.findByAccountNameOwnerOrderByTransactionDate("checking_brian")
 
         then:
@@ -413,7 +423,7 @@ class ServiceLayerIntegrationSpec extends Specification {
 
         when:
         try {
-            transactionService.insertTransaction(validTransaction)
+            unwrapSuccess(transactionService.save(validTransaction))
             // Simulate a failure after successful insert
             throw new RuntimeException("Simulated failure for rollback test")
         } catch (RuntimeException e) {
@@ -452,7 +462,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         when:
         long startTime = System.currentTimeMillis()
         bulkTransactions.each { transaction ->
-            transactionService.insertTransaction(transaction)
+            unwrapSuccess(transactionService.save(transaction))
         }
         long endTime = System.currentTimeMillis()
 

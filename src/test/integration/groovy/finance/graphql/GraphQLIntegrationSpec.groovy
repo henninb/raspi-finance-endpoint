@@ -95,6 +95,14 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
 
 
+    private static <T> List<T> unwrapList(def result) {
+        try {
+            return result?.data ?: []
+        } catch (Throwable ignored) {
+            return []
+        }
+    }
+
     void 'graphql POST endpoint serves introspection'() {
         given:
         def introspectionQuery = """
@@ -105,10 +113,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
         Map<String, Object> body = [query: introspectionQuery]
 
         when:
-        HttpHeaders headers = new HttpHeaders()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity<Object> entity = new HttpEntity<>(body, headers)
-        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
+        ResponseEntity<String> response = postWithRetry("/graphql", body)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -118,7 +123,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'graphiql UI is enabled for integration profile'() {
         when:
-        ResponseEntity<String> response = restTemplate.getForEntity(baseUrl + "/graphiql", String)
+        ResponseEntity<String> response = getWithRetry("/graphiql")
 
         then:
         response.statusCode in [HttpStatus.OK]
@@ -160,10 +165,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
         Map<String, Object> body = [query: introspectionQuery]
 
         when:
-        HttpHeaders headers = new HttpHeaders()
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity<Object> entity = new HttpEntity<>(body, headers)
-        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/graphql", entity, String)
+        ResponseEntity<String> response = postWithRetry("/graphql", body)
 
         then:
         response.statusCode == HttpStatus.OK
@@ -175,7 +177,8 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     void 'test service layer integration for GraphQL data fetchers'() {
         when:
         List<Account> accounts = accountService.accounts()
-        List<Category> categories = categoryService.findAllCategories()
+        def categoriesResult = categoryService.findAllActive()
+        List<Category> categories = unwrapList(categoriesResult)
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
         List<Payment> payments = paymentService.findAllPayments()
 
@@ -194,7 +197,8 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
     void 'test GraphQL data fetcher service integration'() {
         when:
         List<Account> accounts = accountService.accounts()
-        List<Category> categories = categoryService.findAllCategories()
+        def categoriesResult = categoryService.findAllActive()
+        List<Category> categories = unwrapList(categoriesResult)
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
 
         then:
@@ -205,7 +209,8 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test GraphQL mutation service integration'() {
         when:
-        List<Category> categories = categoryService.findAllCategories()
+        def categoriesResult = categoryService.findAllActive()
+        List<Category> categories = unwrapList(categoriesResult)
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
 
         then:
