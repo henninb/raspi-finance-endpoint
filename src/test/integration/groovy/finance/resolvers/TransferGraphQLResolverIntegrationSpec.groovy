@@ -7,7 +7,7 @@ import finance.domain.Transfer
 import finance.repositories.AccountRepository
 import finance.repositories.TransferRepository
 import finance.repositories.TransactionRepository
-import finance.services.ITransferService
+import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,7 +26,7 @@ import java.util.UUID
 class TransferGraphQLResolverIntegrationSpec extends Specification {
 
     @Autowired
-    ITransferService transferService
+    StandardizedTransferService transferService
 
     @Autowired
     MeterRegistry meterRegistry

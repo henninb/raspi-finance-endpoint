@@ -6,6 +6,7 @@ import finance.resolvers.AccountGraphQLResolver
 import finance.resolvers.PaymentGraphQLResolver
 import finance.resolvers.TransferGraphQLResolver
 import graphql.scalars.ExtendedScalars
+import graphql.schema.DataFetcher
 import graphql.schema.idl.RuntimeWiring
 import org.apache.logging.log4j.LogManager
 import org.springframework.context.annotation.Bean
@@ -32,11 +33,24 @@ open class GraphQLWiringConfig(
                 .type("Mutation") { typeBuilder ->
                     typeBuilder
                         // Payment mutations
-                        .dataFetcher("createPayment", paymentGraphQLResolver.createPayment())
-                        .dataFetcher("deletePayment", paymentGraphQLResolver.deletePayment())
+                        // Wrap resolver factory calls so they execute at request time
+                        .dataFetcher(
+                            "createPayment",
+                            DataFetcher { env -> paymentGraphQLResolver.createPayment().get(env) }
+                        )
+                        .dataFetcher(
+                            "deletePayment",
+                            DataFetcher { env -> paymentGraphQLResolver.deletePayment().get(env) }
+                        )
                         // Transfer mutations
-                        .dataFetcher("createTransfer", transferGraphQLResolver.createTransfer())
-                        .dataFetcher("deleteTransfer", transferGraphQLResolver.deleteTransfer())
+                        .dataFetcher(
+                            "createTransfer",
+                            DataFetcher { env -> transferGraphQLResolver.createTransfer().get(env) }
+                        )
+                        .dataFetcher(
+                            "deleteTransfer",
+                            DataFetcher { env -> transferGraphQLResolver.deleteTransfer().get(env) }
+                        )
                 }
         }
     }
