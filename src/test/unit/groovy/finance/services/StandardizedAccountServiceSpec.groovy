@@ -254,44 +254,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "updateAccount should delegate to update and return data"() {
-        given: "existing account to update"
-        def existingAccount = AccountBuilder.builder().withAccountId(1L).withAccountNameOwner("test_account").build()
-        def updatedAccount = AccountBuilder.builder().withAccountId(1L).withAccountNameOwner("test_account").withActiveStatus(false).build()
 
-        when: "calling legacy updateAccount method"
-        def result = standardizedAccountService.updateAccount(updatedAccount)
-
-        then: "should return updated account"
-        1 * accountRepositoryMock.findByAccountId(1L) >> Optional.of(existingAccount)
-        1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account account -> return account }
-        result.activeStatus == false
-        0 * _
-    }
-
-    def "deleteAccount should delegate to deleteById and return boolean"() {
-        given: "existing account"
-        def account = AccountBuilder.builder().withAccountNameOwner("test_account").build()
-
-        when: "calling legacy deleteAccount method"
-        def result = standardizedAccountService.deleteAccount("test_account")
-
-        then: "should delete account and return true"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
-        1 * accountRepositoryMock.delete(account)
-        result == true
-        0 * _
-    }
-
-    def "deleteAccount should return false when account does not exist"() {
-        when: "deleting non-existent account"
-        def result = standardizedAccountService.deleteAccount("non_existent")
-
-        then: "should return false"
-        1 * accountRepositoryMock.findByAccountNameOwner("non_existent") >> Optional.empty()
-        result == false
-        0 * _
-    }
 
     // ===== TDD Tests for Complex Business Operations =====
 
@@ -451,16 +414,4 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         thrown(jakarta.validation.ValidationException)
     }
 
-    def "updateAccount should throw RuntimeException when account not found"() {
-        given: "account with non-existent ID"
-        def account = AccountBuilder.builder().withAccountId(999L).build()
-
-        when: "calling legacy updateAccount with non-existent account"
-        standardizedAccountService.updateAccount(account)
-
-        then: "should throw RuntimeException"
-        1 * accountRepositoryMock.findByAccountId(999L) >> Optional.empty()
-        thrown(RuntimeException)
-        0 * _
-    }
 }

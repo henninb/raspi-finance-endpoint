@@ -164,14 +164,6 @@ class StandardizedAccountService(
         }
     }
 
-    fun deleteAccount(accountNameOwner: String): Boolean {
-        val result = deleteById(accountNameOwner)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> false
-            else -> false
-        }
-    }
 
     fun updateTotalsForAllAccounts(): Boolean {
         try {
@@ -183,14 +175,6 @@ class StandardizedAccountService(
         return true
     }
 
-    fun updateAccount(account: Account): Account {
-        val result = update(account)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw RuntimeException("Account not updated as the account does not exist: ${account.accountNameOwner}.")
-            else -> throw RuntimeException("Failed to update account: ${result}")
-        }
-    }
 
     fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account {
         val oldAccount = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
