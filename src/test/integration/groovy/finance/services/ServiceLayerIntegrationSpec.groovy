@@ -352,7 +352,7 @@ class ServiceLayerIntegrationSpec extends Specification {
         )
 
         when:
-        ReceiptImage savedReceiptImage = receiptImageService.insertReceiptImage(testReceiptImage)
+        ReceiptImage savedReceiptImage = unwrapSuccess(receiptImageService.save(testReceiptImage))
 
         then:
         savedReceiptImage != null
@@ -361,7 +361,8 @@ class ServiceLayerIntegrationSpec extends Specification {
         savedReceiptImage.imageFormatType == ImageFormatType.Jpeg
 
         when:
-        Optional<ReceiptImage> foundReceiptImage = receiptImageService.findByReceiptImageId(savedReceiptImage.receiptImageId)
+        def findResultRI = receiptImageService.findById(savedReceiptImage.receiptImageId)
+        Optional<ReceiptImage> foundReceiptImage = Optional.ofNullable(unwrapSuccess(findResultRI))
 
         then:
         foundReceiptImage.isPresent()
