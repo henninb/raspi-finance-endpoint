@@ -9,8 +9,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import jakarta.validation.Valid
+import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
 import java.util.*
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Page
+import org.springframework.format.annotation.DateTimeFormat
 
 @CrossOrigin
 @RestController
@@ -165,6 +169,33 @@ class TransactionController(private val standardizedTransactionService: Standard
     }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
+
+    /**
+     * New business endpoint - GET /api/transaction/date-range
+     * Returns a paged list of transactions across all accounts filtered by transactionDate
+     * Query params: startDate=yyyy-MM-dd, endDate=yyyy-MM-dd, plus standard Spring Data page params
+     */
+    @GetMapping("/date-range", produces = ["application/json"])
+    fun findByDateRange(
+        @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd") start: java.util.Date,
+        @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd") end: java.util.Date,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<Page<Transaction>> {
+        val pageable: Pageable = org.springframework.data.domain.PageRequest.of(
+            page,
+            size,
+            org.springframework.data.domain.Sort.by("transactionDate").descending()
+        )
+        val startDate = java.sql.Date(start.time)
+        val endDate = java.sql.Date(end.time)
+        return when (val result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)) {
+            is ServiceResult.Success -> ResponseEntity.ok(result.data)
+            is ServiceResult.BusinessError -> ResponseEntity.badRequest().build()
+            is ServiceResult.SystemError -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            else -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
 
     /**
      * Legacy business logic endpoint - GET /api/transaction/account/select/{accountNameOwner}

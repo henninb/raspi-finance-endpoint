@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
@@ -142,6 +144,19 @@ class StandardizedTransactionService(
         return handleServiceOperation("findTransactionsByDescription", descriptionName) {
             val transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName)
             transactions.ifEmpty { emptyList() }
+        }
+    }
+
+    fun findTransactionsByDateRangeStandardized(
+        startDate: Date,
+        endDate: Date,
+        pageable: Pageable
+    ): ServiceResult<Page<Transaction>> {
+        return handleServiceOperation("findTransactionsByDateRange", null) {
+            if (startDate.after(endDate)) {
+                throw IllegalStateException("startDate must be before or equal to endDate")
+            }
+            transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable)
         }
     }
 
@@ -408,6 +423,18 @@ class StandardizedTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             else -> emptyList()
+        }
+    }
+
+    fun findTransactionsByDateRange(
+        startDate: Date,
+        endDate: Date,
+        pageable: Pageable
+    ): Page<Transaction> {
+        val result = findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
+        return when (result) {
+            is ServiceResult.Success -> result.data
+            else -> org.springframework.data.domain.Page.empty(pageable)
         }
     }
 
