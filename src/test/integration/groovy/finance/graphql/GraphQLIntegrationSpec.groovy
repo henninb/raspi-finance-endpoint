@@ -67,8 +67,10 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
     void setupTestData() {
         // Create test account using no-arg constructor and property setting
+        String cleanOwner = testOwner?.replaceAll(/[^a-z]/, '')?.toLowerCase() ?: "testowner"
+        String accountName = "graphqltestchecking_${cleanOwner}"
         Account testAccount = new Account()
-        testAccount.accountNameOwner = "graphqltestchecking_brian"
+        testAccount.accountNameOwner = accountName
         testAccount.accountType = AccountType.Debit
         testAccount.activeStatus = true
         testAccount.moniker = "2000"
@@ -93,7 +95,7 @@ class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
 
         // Create test payment using no-arg constructor and property setting
         Payment testPayment = new Payment()
-        testPayment.accountNameOwner = "graphqltestchecking_brian"
+        testPayment.accountNameOwner = accountName
         testPayment.sourceAccount = "source_account_test"
         testPayment.destinationAccount = "destination_account_test"
         testPayment.transactionDate = Date.valueOf("2023-05-20")

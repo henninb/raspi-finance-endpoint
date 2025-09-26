@@ -7,9 +7,6 @@ import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.execution.GraphQlSource
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.TestPropertySource
 import groovy.json.JsonSlurper
 import spock.lang.Requires
@@ -54,12 +51,7 @@ class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
     def "GraphQL returns ID-typed fields as strings"() {
         given:
         // Ensure @PreAuthorize(USER) passes for mutation
-        def auth = new UsernamePasswordAuthenticationToken(
-                "test-user",
-                "N/A",
-                [new SimpleGrantedAuthority("USER")]
-        )
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole()
         // Account names must match ^[a-z-]*_[a-z]*$ and 3-40 chars
         // Use a deterministic a-f suffix to avoid rare short UUID letter runs
         def suffix = safeSuffix(5)

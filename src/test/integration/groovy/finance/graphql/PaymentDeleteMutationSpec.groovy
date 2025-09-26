@@ -6,9 +6,6 @@ import finance.controllers.dto.PaymentInputDto
 import finance.helpers.GraphQLIntegrationContext
 import finance.helpers.PaymentTestScenario
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 
 import java.math.BigDecimal
 import java.sql.Date
@@ -37,18 +34,10 @@ class PaymentDeleteMutationSpec extends BaseIntegrationSpec {
         testDataManager.createAccountFor(testOwner, "dest", "credit", true)
     }
 
-    private static void withUserAuthority() {
-        def auth = new UsernamePasswordAuthenticationToken(
-                "test-user",
-                "N/A",
-                [new SimpleGrantedAuthority("USER")]
-        )
-        SecurityContextHolder.getContext().setAuthentication(auth)
-    }
 
     def "deletePayment mutation returns true for existing payment"() {
         given:
-        withUserAuthority()
+        withUserRole()
         def createDto = new PaymentInputDto(
                 null,
                 srcName,
@@ -68,7 +57,7 @@ class PaymentDeleteMutationSpec extends BaseIntegrationSpec {
 
     def "deletePayment mutation returns false for missing payment id"() {
         given:
-        withUserAuthority()
+        withUserRole()
 
         expect:
         mutationController.deletePayment(-9999L) == false

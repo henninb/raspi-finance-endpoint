@@ -12,9 +12,6 @@ import finance.repositories.TransactionRepository
 import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Shared
 
 import java.math.BigDecimal
@@ -113,8 +110,7 @@ class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
 
     def "should create transfer via controller with isolated test data"() {
         given: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
 
         when: "create transfer mutation is called"
         def result = mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, sourceAccountName, destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
@@ -137,8 +133,7 @@ class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
 
     def "should handle validation errors during transfer creation with isolated data"() {
         given: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
 
         when: "create transfer mutation with non-existent source account"
         mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "nonexistent_${UUID.randomUUID().toString().take(8)}", destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
@@ -152,8 +147,7 @@ class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
         def saved = createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("250.00"))
 
         and: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
 
         when: "delete transfer mutation is called"
         def result = mutationController.deleteTransfer(saved.transferId)
@@ -168,8 +162,7 @@ class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
 
     def "should handle delete non-existent transfer via controller"() {
         given: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
 
         expect: "returns false for missing transfer"
         !mutationController.deleteTransfer(999L)
