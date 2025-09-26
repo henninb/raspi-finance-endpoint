@@ -14,8 +14,12 @@ import org.springframework.beans.factory.annotation.Value
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import javax.crypto.SecretKey
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Shared
+import spock.lang.AutoCleanup
 
 @Slf4j
 @ActiveProfiles("int")
@@ -26,6 +30,9 @@ import spock.lang.Shared
     "management.server.port=0"
 ])
 class BaseRestTemplateIntegrationSpec extends Specification {
+
+    @AutoCleanup
+    finance.helpers.SecurityContextCleaner securityContextCleaner = new finance.helpers.SecurityContextCleaner()
 
     @Autowired
     protected Environment environment
@@ -206,5 +213,14 @@ class BaseRestTemplateIntegrationSpec extends Specification {
             }
         }
         throw lastException
+    }
+
+    /**
+     * Helper to set an authenticated security context with USER role.
+     */
+    protected void withUserRole(String username = 'test-user', List<String> roles = ['USER']) {
+        def authorities = roles.collect { role -> new SimpleGrantedAuthority(role) }
+        def auth = new UsernamePasswordAuthenticationToken(username, 'N/A', authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
     }
 }

@@ -9,7 +9,11 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.spockframework.spring.EnableSharedInjection
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -20,6 +24,9 @@ import spock.lang.Specification
 @EnableSharedInjection
 @Transactional
 class BaseIntegrationSpec extends Specification {
+
+    @AutoCleanup
+    finance.helpers.SecurityContextCleaner securityContextCleaner = new finance.helpers.SecurityContextCleaner()
 
     @Shared
     @Autowired
@@ -58,5 +65,14 @@ class BaseIntegrationSpec extends Specification {
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         if (cleanOwner.isEmpty()) cleanOwner = "testowner"
         return "test_category_${cleanOwner}"
+    }
+
+    /**
+     * Helper to set an authenticated security context with USER role.
+     */
+    protected void withUserRole(String username = "test-user", List<String> roles = ["USER"]) {
+        def authorities = roles.collect { new SimpleGrantedAuthority(it) }
+        def auth = new UsernamePasswordAuthenticationToken(username, "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
     }
 }

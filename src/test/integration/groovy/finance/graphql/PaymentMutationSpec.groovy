@@ -6,9 +6,6 @@ import finance.controllers.dto.PaymentInputDto
 import finance.helpers.GraphQLIntegrationContext
 import finance.helpers.PaymentTestScenario
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 
 import java.math.BigDecimal
 import java.sql.Date
@@ -19,14 +16,6 @@ class PaymentMutationSpec extends BaseIntegrationSpec {
     @Autowired
     GraphQLMutationController mutationController
 
-    private static void withUserAuthority() {
-        def auth = new UsernamePasswordAuthenticationToken(
-                "test-user",
-                "N/A",
-                [new SimpleGrantedAuthority("USER")]
-        )
-        SecurityContextHolder.getContext().setAuthentication(auth)
-    }
 
     @spock.lang.Shared
     GraphQLIntegrationContext gqlCtx
@@ -49,7 +38,7 @@ class PaymentMutationSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation succeeds with valid input"() {
         given:
-        withUserAuthority()
+        withUserRole()
         def dto = new PaymentInputDto(
                 null,
                 srcName,
@@ -74,7 +63,7 @@ class PaymentMutationSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation fails validation for negative amount"() {
         given:
-        withUserAuthority()
+        withUserRole()
         def dto = new PaymentInputDto(
                 null,
                 srcName,

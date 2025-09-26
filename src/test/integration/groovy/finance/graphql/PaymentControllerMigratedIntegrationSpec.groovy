@@ -15,9 +15,6 @@ import finance.helpers.SmartPaymentBuilder
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Shared
 
 import java.math.BigDecimal
@@ -147,8 +144,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         ]
 
         and: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
         when:
         def result = mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, sourceAccountName, destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("250.00"), null))
 
@@ -180,8 +176,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         def savedPayment = createTestPayment(sourceAccountName, destinationAccountName, new BigDecimal("75.00"))
 
         and: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
         when:
         def result = mutationController.deletePayment(savedPayment.paymentId)
 
@@ -203,8 +198,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         ]
 
         and: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
         when:
         mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, "ab", destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("100.00"), null))
 
@@ -230,8 +224,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         ]
 
         and: "authenticated user"
-        def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
-        SecurityContextHolder.getContext().setAuthentication(auth)
+        withUserRole("test", ["USER"])
         when:
         mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, sourceAccountName, savedDebitAccount.accountNameOwner, Date.valueOf("2024-01-15"), new BigDecimal("100.00"), null))
 

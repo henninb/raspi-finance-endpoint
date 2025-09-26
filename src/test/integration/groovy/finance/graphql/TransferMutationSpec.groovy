@@ -6,9 +6,6 @@ import finance.helpers.GraphQLIntegrationContext
 import finance.helpers.TransferTestScenario
 import finance.domain.Transfer
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 
 import java.math.BigDecimal
 import java.sql.Date
@@ -38,18 +35,10 @@ class TransferMutationSpec extends BaseIntegrationSpec {
         testDataManager.createAccountFor(testOwner, "dest", "debit", true)
     }
 
-    private static void withUserAuthority() {
-        def auth = new UsernamePasswordAuthenticationToken(
-                "test-user",
-                "N/A",
-                [new SimpleGrantedAuthority("USER")]
-        )
-        SecurityContextHolder.getContext().setAuthentication(auth)
-    }
 
     def "createTransfer mutation succeeds with valid input"() {
         given:
-        withUserAuthority()
+        withUserRole()
 
         when:
         def result = mutationController.createTransfer(
@@ -75,7 +64,7 @@ class TransferMutationSpec extends BaseIntegrationSpec {
 
     def "createTransfer mutation fails validation for negative amount"() {
         given:
-        withUserAuthority()
+        withUserRole()
 
         when:
         mutationController.createTransfer(
@@ -95,7 +84,7 @@ class TransferMutationSpec extends BaseIntegrationSpec {
 
     def "deleteTransfer mutation returns true for existing transfer"() {
         given:
-        withUserAuthority()
+        withUserRole()
         def created = mutationController.createTransfer(
                 new finance.controllers.dto.TransferInputDto(
                         null,
@@ -116,7 +105,7 @@ class TransferMutationSpec extends BaseIntegrationSpec {
 
     def "deleteTransfer mutation returns false for missing id"() {
         given:
-        withUserAuthority()
+        withUserRole()
 
         expect:
         mutationController.deleteTransfer(-9999L) == false
