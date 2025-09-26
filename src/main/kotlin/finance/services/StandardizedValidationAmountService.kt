@@ -107,7 +107,9 @@ class StandardizedValidationAmountService(
         if (validationAmounts.isEmpty()) {
             throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found for account: $accountNameOwner and transaction state: $transactionState")
         }
-        return validationAmounts.first() // Return the first match (legacy behavior)
+        // Return the LATEST validation amount by date (newest first)
+        return validationAmounts.maxByOrNull { it.validationDate }
+            ?: throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found for account: $accountNameOwner and transaction state: $transactionState")
     }
 
     fun insertValidationAmount(

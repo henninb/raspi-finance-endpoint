@@ -240,4 +240,54 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         thrown(RuntimeException)
         0 * _
     }
+
+    // ===== TDD Test for Latest Clear Amount Bug =====
+
+    def "findValidationAmountByAccountNameOwner should return LATEST validation amount by date when multiple exist"() {
+        given: "account with multiple validation amounts at different dates"
+        def account = new finance.domain.Account()
+        account.accountId = 1L
+        account.accountNameOwner = "testAccount"
+
+        // Create validation amounts with different dates - oldest first, newest last
+        def oldestDate = new java.sql.Timestamp(System.currentTimeMillis() - 86400000L * 2) // 2 days ago
+        def middleDate = new java.sql.Timestamp(System.currentTimeMillis() - 86400000L) // 1 day ago
+        def newestDate = new java.sql.Timestamp(System.currentTimeMillis()) // now
+
+        def oldestValidationAmount = ValidationAmountBuilder.builder()
+            .withAccountId(1L)
+            .withTransactionState(TransactionState.Cleared)
+            .withValidationDate(oldestDate)
+            .withAmount(new BigDecimal("100.00"))
+            .build()
+
+        def middleValidationAmount = ValidationAmountBuilder.builder()
+            .withAccountId(1L)
+            .withTransactionState(TransactionState.Cleared)
+            .withValidationDate(middleDate)
+            .withAmount(new BigDecimal("200.00"))
+            .build()
+
+        def newestValidationAmount = ValidationAmountBuilder.builder()
+            .withAccountId(1L)
+            .withTransactionState(TransactionState.Cleared)
+            .withValidationDate(newestDate)
+            .withAmount(new BigDecimal("300.00"))
+            .build()
+
+        when: "finding validation amount by account name owner"
+        def result = standardizedValidationAmountService.findValidationAmountByAccountNameOwner("testAccount", TransactionState.Cleared)
+
+        then: "should return the LATEST validation amount by date (not the first one)"
+        1 * accountRepositoryMock.findByAccountNameOwner("testAccount") >> Optional.of(account)
+        // Repository returns in database order (oldest first) - this simulates the current behavior
+        1 * validationAmountRepositoryMock.findByTransactionStateAndAccountId(TransactionState.Cleared, 1L) >>
+            [oldestValidationAmount, middleValidationAmount, newestValidationAmount]
+
+        // This test will FAIL initially because current code returns .first() which is the oldest
+        // After fix, it should return the newest validation amount (300.00)
+        result.amount == new BigDecimal("300.00")
+        result.validationDate == newestDate
+        0 * _
+    }
 }
