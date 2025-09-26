@@ -13,6 +13,10 @@ import spock.lang.Subject
 import java.math.BigDecimal
 import java.sql.Date
 import java.sql.Timestamp
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 
 class StandardizedTransactionServiceSpec extends BaseServiceSpec {
 
@@ -743,5 +747,58 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
 
         and: "result is the list of transactions"
         result == transactions
+    }
+
+    // ===== findTransactionsByDateRange Tests =====
+
+    def "findTransactionsByDateRangeStandardized should return Success with page of transactions"() {
+        given: "a valid date range and pageable"
+        Date startDate = Date.valueOf("2023-01-01")
+        Date endDate = Date.valueOf("2023-12-31")
+        Pageable pageable = PageRequest.of(0, 10)
+        def transactions = [createTestTransaction()]
+        Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size())
+
+        when: "findTransactionsByDateRangeStandardized is called"
+        def result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
+
+        then: "repository method is called with date range and pageable"
+        1 * transactionRepositoryMock.findByTransactionDateBetween(startDate, endDate, pageable) >> page
+
+        and: "result is Success with page"
+        result instanceof ServiceResult.Success
+        result.data == page
+    }
+
+    def "findTransactionsByDateRangeStandardized should return BusinessError when startDate after endDate"() {
+        given: "an invalid date range"
+        Date startDate = Date.valueOf("2023-12-31")
+        Date endDate = Date.valueOf("2023-01-01")
+        Pageable pageable = PageRequest.of(0, 10)
+
+        when: "findTransactionsByDateRangeStandardized is called"
+        def result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
+
+        then: "no repository interaction and BusinessError returned"
+        0 * transactionRepositoryMock._
+        result instanceof ServiceResult.BusinessError
+        result.message.toLowerCase().contains("startdate")
+        result.message.toLowerCase().contains("before or equal to enddate")
+    }
+
+    def "findTransactionsByDateRange should delegate and return page"() {
+        given: "a valid date range and pageable"
+        Date startDate = Date.valueOf("2023-01-01")
+        Date endDate = Date.valueOf("2023-12-31")
+        Pageable pageable = PageRequest.of(0, 10)
+        def transactions = [createTestTransaction()]
+        Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size())
+
+        when: "findTransactionsByDateRange is called"
+        def result = standardizedTransactionService.findTransactionsByDateRange(startDate, endDate, pageable)
+
+        then: "repository method is called and page returned"
+        1 * transactionRepositoryMock.findByTransactionDateBetween(startDate, endDate, pageable) >> page
+        result == page
     }
 }
