@@ -3,6 +3,8 @@ package finance.graphql
 import finance.BaseRestTemplateIntegrationSpec
 import finance.controllers.GraphQLMutationController
 import finance.controllers.dto.PaymentInputDto
+import finance.helpers.SmartAccountBuilder
+import finance.repositories.AccountRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.execution.GraphQlSource
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -27,6 +29,9 @@ class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     GraphQLMutationController mutationController
+
+    @Autowired
+    AccountRepository accountRepository
 
     private static String safeSuffix(int len = 5) {
         def rnd = new Random()
@@ -60,6 +65,20 @@ class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
         def suffix = safeSuffix(5)
         def src = "srcuser_${suffix}"
         def dest = "destuser_${suffix}"
+        // Ensure accounts exist and satisfy constraints (debit src, credit dest)
+        def srcAccount = SmartAccountBuilder.builderForOwner("graphqlid")
+                .withAccountNameOwner(src)
+                .asDebit()
+                .withCleared(new BigDecimal("1000.00"))
+                .buildAndValidate()
+        accountRepository.save(srcAccount)
+
+        def destAccount = SmartAccountBuilder.builderForOwner("graphqlid")
+                .withAccountNameOwner(dest)
+                .asCredit()
+                .withCleared(new BigDecimal("-200.00"))
+                .buildAndValidate()
+        accountRepository.save(destAccount)
         def created = mutationController.createPayment(paymentDto(src, dest))
 
         and:
