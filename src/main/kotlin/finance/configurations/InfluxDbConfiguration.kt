@@ -74,8 +74,8 @@ open class InfluxDbConfiguration {
             return Duration.parse("PT$timeoutString")
         }
 
-        override fun bucket(): String? {
-            return environment.getProperty("management.metrics.export.influx.bucket")
+        override fun bucket(): String {
+            return environment.getProperty("management.metrics.export.influx.bucket", "")
         }
 
         override fun org(): String? {
