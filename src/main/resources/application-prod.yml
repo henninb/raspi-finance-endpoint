@@ -18,7 +18,8 @@ spring:
   graphql:
     path: /graphql
     graphiql:
-      enabled: false
+      enabled: true
+      path: /graphiql
     schema:
       printer:
         enabled: false
