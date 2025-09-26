@@ -7,8 +7,6 @@ plugins {
     id 'java'
     id 'groovy'
     id 'idea'
-    id 'scala'
-    // id 'maven'
     id 'java-library'
     id 'jacoco'
     id 'codenarc'
@@ -34,19 +32,8 @@ jacocoTestReport {
 
 repositories {
     mavenCentral()
-//    maven {
-//        url "https://www.oracle.com/content/secure/maven/content"
-//        credentials {
-//            username ""
-//            password ""
-//        }
-//    }
 
-    //maven {url "https://maven.xwiki.org/externals/"}
     google()
-//    flatDir {
-//        dirs "libs"
-//    }
 
 }
 
@@ -139,11 +126,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
 
     //Groovy
-    //implementation("org.codehaus.groovy:groovy-all:${groovyVersion}")
     implementation("org.apache.groovy:groovy:${groovyVersion}")
 
-    //Scala
-    implementation("org.scala-lang:scala-library:${scalaVersion}")
 
     // CodeNarc is applied via Gradle plugin; no direct dependency needed
 
@@ -165,7 +149,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
-    implementation("com.google.code.gson:gson:${gsonVersion}")
 
 
     // GraphQL (Spring for GraphQL)
@@ -184,7 +167,6 @@ dependencies {
 
     // Oracle database
     runtimeOnly fileTree(dir: 'libs', include: 'ojdbc8.jar')
-    //runtimeOnly("com.oracle.jdbc:ojdbc8:${oracleVersion}")
     implementation("org.apache.tomcat:tomcat-jdbc:${apacheTomcatJdbcVersion}")
 
     //Flyway
@@ -204,17 +186,14 @@ dependencies {
 
     //Validation
     implementation("javax.validation:validation-api:${javaxValidationVersion}")
-    //implementation "org.hibernate:hibernate-validator-annotation-processor:${hibernateVersion}"
 
     //logstash
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}")
 
     //Used for transactional
-    // implementation("org.aspectj:aspectjweaver:1.9.6")
 
     // added 7/16/2021
     //Security
-    //implementation("org.springframework.security:spring-security-core:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-web:${springSecurityVersion}")
     implementation("org.springframework.security:spring-security-config:${springSecurityVersion}")
     implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
@@ -229,34 +208,20 @@ dependencies {
 
     //Hibernate
     implementation("org.hibernate:hibernate-core:${hibernateVersion}")
-    //implementation("org.hibernate.javax.persistence:hibernate-jpa-2.1-api:${hibernateJpaVersion}")  //spring boot 2.x
-    //implementation("jakarta.persistence:jakarta.persistence-api:3.1.0") //spring boot 3.x
 
     //Jakarta
     compileOnly("jakarta.platform:jakarta.jakartaee-api:${jakartaVersion}")
 
     //Logging
     implementation("ch.qos.logback:logback-classic:${logbackClassicVersion}")
-    //implementation 'org.slf4j:slf4j-log4j12:2.0.0'
 
-    //implementation group: 'org.slf4j', name: 'jul-to-slf4j', version: '2.0.1'
-    //implementation group: 'org.slf4j', name: 'log4j-over-slf4j', version: '2.0.1'
 
-//    implementation 'org.slf4j:slf4j-api:2.0.0'
-//    implementation 'org.slf4j:slf4j-simple:2.0.0'
 
     implementation("org.apache.logging.log4j:log4j-core:${apacheLoggingVersion}")
 
 }
 
-//tasks.withType(bootRun) {
-//    options.encoding = 'UTF-8'
-//}
 
-// tasks.withType(CodeNarc).configureEach {
-    // configFile = rootProject.file 'config/codenarc/codenarcMain.groovy'
-    // ignoreFailures = true
-// }
 
 
 jooq {
@@ -264,93 +229,4 @@ jooq {
     edition = JooqEdition.OSS  // the default (can be omitted)
 }
 
-//jooq {
-//    version = '3.15.0'  // the default (can be omitted)
-//    edition = JooqEdition.OSS  // the default (can be omitted)
-//
-//    configurations {
-//        main {  // name of the jOOQ configuration
-//            generateSchemaSourceOnCompilation = true  // default (can be omitted)
-//
-//            generationTool {
-//                jdbc {
-//                    driver = 'org.postgresql.Driver'
-//                    url = 'jdbc:postgresql://localhost:5432/finance_test_db'
-//                    user = 'henninb'
-//                    password = 'monday1'
-//                }
-//                generator {
-//                    name = 'org.jooq.codegen.DefaultGenerator'
-//                    database {
-//                        name = 'org.jooq.meta.postgres.PostgresDatabase'
-//                        inputSchema = 'public'
-////                        forcedTypes {
-////                            forcedType {
-////                                name = 'varchar'
-////                                includeExpression = '.*'
-////                                includeTypes = 'JSONB?'
-////                            }
-////                            forcedType {
-////                                name = 'varchar'
-////                                includeExpression = '.*'
-////                                includeTypes = 'INET'
-////                            }
-////                        }
-//                    }
-//                    generate {
-//                        deprecated = false
-//                        records = true
-//                        immutablePojos = true
-//                        fluentSetters = true
-//                    }
-////                    target {
-////                        packageName = 'nu.studer.sample'
-////                        directory = 'build/generated-src/jooq/main'  // default (can be omitted)
-////                    }
-//                    strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
-//                }
-//            }
-//        }
-//    }
-//
-//}
 
-//jooq {
-//    version.set("3.14.7")  // default (can be omitted)
-//    edition.set(nu.studer.gradle.jooq.JooqEdition.OSS)  // default (can be omitted)
-//
-//    configurations {
-//        create("main") {  // name of the jOOQ configuration
-//            generateSchemaSourceOnCompilation.set(false)  // default (can be omitted)
-//
-//            jooqConfiguration.apply {
-//                logging = org.jooq.meta.jaxb.Logging.WARN
-//                jdbc.apply {
-//                    driver = "org.postgresql.Driver"
-//                    url = "jdbc:postgresql://localhost:5432/finance_db"
-//                    user = "henninb"
-//                    password = "monday1"
-//                }
-//                generator.apply {
-//                    name = "org.jooq.codegen.DefaultGenerator"
-//
-//                    database.apply {
-//                        name = "org.jooq.meta.postgres.PostgresDatabase"
-//                        inputSchema = "public"
-//                        includes = "goods"
-//                        excludes = ""
-//                    }
-//
-//                    generate.apply {
-//                        isRelations = true
-//                        isDeprecated = false
-//                        isRecords = true
-//                        isImmutablePojos = true
-//                        isFluentSetters = true
-//                    }
-//                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
-//                }
-//            }
-//        }
-//    }
-//}
