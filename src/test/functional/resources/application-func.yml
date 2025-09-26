@@ -1,6 +1,13 @@
 spring:
   application:
     name: raspi-finance-endpoint
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+      path: /graphiql
+  main:
+    web-application-type: servlet
 
   # ===============================
   # = Jackson Settings
