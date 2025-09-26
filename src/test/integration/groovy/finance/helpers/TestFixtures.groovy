@@ -280,15 +280,17 @@ class GraphQLIntegrationContext {
     TestDataManager testDataManager
 
     PaymentTestScenario createPaymentScenario() {
-        Long sourceAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "source", "debit")
-        Long destAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "dest", "credit")
-        return new PaymentTestScenario(sourceAccountId, destAccountId, testDataManager, testOwner)
+        // Create accounts by name to avoid ID lookup flakiness; IDs are unused by the scenario
+        testDataManager.createAccountFor(testOwner, "source", "debit", true)
+        testDataManager.createAccountFor(testOwner, "dest", "credit", true)
+        return new PaymentTestScenario(null, null, testDataManager, testOwner)
     }
 
     TransferTestScenario createTransferScenario() {
-        Long sourceAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "source", "debit")
-        Long destAccountId = testDataManager.createAccountForIntegrationTest(testOwner, "dest", "debit")
-        return new TransferTestScenario(sourceAccountId, destAccountId, testDataManager, testOwner)
+        // Create accounts by name to avoid ID lookup flakiness; IDs are unused by the scenario
+        testDataManager.createAccountFor(testOwner, "source", "debit", true)
+        testDataManager.createAccountFor(testOwner, "dest", "debit", true)
+        return new TransferTestScenario(null, null, testDataManager, testOwner)
     }
 
     void cleanup() {
@@ -381,4 +383,3 @@ class SecurityIntegrationContext {
         testDataManager.cleanupIntegrationTestsFor(testOwner)
     }
 }
-

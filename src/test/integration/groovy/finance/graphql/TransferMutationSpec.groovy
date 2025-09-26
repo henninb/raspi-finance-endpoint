@@ -2,11 +2,9 @@ package finance.graphql
 
 import finance.BaseIntegrationSpec
 import finance.controllers.GraphQLMutationController
-import finance.controllers.dto.PaymentInputDto
-import finance.domain.Account
+import finance.helpers.GraphQLIntegrationContext
+import finance.helpers.TransferTestScenario
 import finance.domain.Transfer
-import finance.helpers.SmartAccountBuilder
-import finance.repositories.AccountRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -19,31 +17,25 @@ import jakarta.validation.ConstraintViolationException
 class TransferMutationSpec extends BaseIntegrationSpec {
 
     @Autowired
-    AccountRepository accountRepository
-
-    @Autowired
     GraphQLMutationController mutationController
 
-    def setup() {
-        def existingSource = accountRepository.findByAccountNameOwner(primaryAccountName)
-        if (existingSource.isEmpty()) {
-            Account source = SmartAccountBuilder.builderForOwner(testOwner)
-                    .withAccountNameOwner(primaryAccountName)
-                    .asDebit()
-                    .withCleared(new BigDecimal("1000.00"))
-                    .buildAndValidate()
-            accountRepository.save(source)
-        }
+    @spock.lang.Shared
+    GraphQLIntegrationContext gqlCtx
+    @spock.lang.Shared
+    TransferTestScenario transferScenario
 
-        def existingDest = accountRepository.findByAccountNameOwner(secondaryAccountName)
-        if (existingDest.isEmpty()) {
-            Account dest = SmartAccountBuilder.builderForOwner(testOwner)
-                    .withAccountNameOwner(secondaryAccountName)
-                    .asCredit()
-                    .withCleared(new BigDecimal("-200.00"))
-                    .buildAndValidate()
-            accountRepository.save(dest)
-        }
+    def setupSpec() {
+        gqlCtx = testFixtures.createGraphQLIntegrationContext(testOwner)
+        transferScenario = gqlCtx.createTransferScenario()
+    }
+
+    private String getSrcName() { transferScenario.sourceAccountName }
+    private String getDestName() { transferScenario.destinationAccountName }
+
+    def setup() {
+        // Ensure accounts exist inside the test transaction
+        testDataManager.createAccountFor(testOwner, "source", "debit", true)
+        testDataManager.createAccountFor(testOwner, "dest", "debit", true)
     }
 
     private static void withUserAuthority() {
@@ -63,8 +55,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
         def result = mutationController.createTransfer(
                 new finance.controllers.dto.TransferInputDto(
                         null,
-                        primaryAccountName,
-                        secondaryAccountName,
+                        srcName,
+                        destName,
                         Date.valueOf("2024-02-01"),
                         new BigDecimal("300.00"),
                         null
@@ -74,8 +66,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
         then:
         result != null
         result.transferId > 0
-        result.sourceAccount == primaryAccountName
-        result.destinationAccount == secondaryAccountName
+        result.sourceAccount == srcName
+        result.destinationAccount == destName
         result.amount == new BigDecimal("300.00")
         result.transactionDate == Date.valueOf("2024-02-01")
         result.activeStatus == true
@@ -89,8 +81,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
         mutationController.createTransfer(
                 new finance.controllers.dto.TransferInputDto(
                         null,
-                        primaryAccountName,
-                        secondaryAccountName,
+                        srcName,
+                        destName,
                         Date.valueOf("2024-02-01"),
                         new BigDecimal("-1.00"),
                         null
@@ -107,8 +99,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
         def created = mutationController.createTransfer(
                 new finance.controllers.dto.TransferInputDto(
                         null,
-                        primaryAccountName,
-                        secondaryAccountName,
+                        srcName,
+                        destName,
                         Date.valueOf("2024-02-02"),
                         new BigDecimal("25.00"),
                         null
