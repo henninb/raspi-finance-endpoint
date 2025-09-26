@@ -459,6 +459,42 @@ class StandardizedTransactionControllerSpec extends BaseControllerSpec {
         true
     }
 
+    // ===== NEW: DATE RANGE ENDPOINT TESTS =====
+
+    void 'should return paged transactions for given date range'() {
+        given: 'a transaction with a known date within range'
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueGuid()
+                .withUniqueDescription('date_range_ok')
+                .withTransactionDate(java.sql.Date.valueOf('2023-06-15'))
+                .buildAndValidate()
+        ResponseEntity<String> insertResponse = postEndpoint("/${endpointName}", transaction.toString())
+        insertResponse.statusCode == HttpStatus.CREATED
+
+        when: 'requesting transactions by date range with pagination'
+        String path = "/${endpointName}/date-range?startDate=2023-01-01&endDate=2023-12-31&page=0&size=10"
+        ResponseEntity<String> response = getEndpoint(path)
+
+        then: 'should return 200 OK with Page response'
+        response.statusCode == HttpStatus.OK
+        def json = new JsonSlurper().parseText(response.body)
+        json.containsKey('content')
+        json.content instanceof List
+
+        and: 'the created transaction is present in the page content'
+        json.content.find { it.guid == transaction.guid } != null
+    }
+
+    void 'should return 400 BAD_REQUEST when startDate is after endDate'() {
+        when: 'requesting transactions with invalid date range'
+        String path = "/${endpointName}/date-range?startDate=2023-12-31&endDate=2023-01-01&page=0&size=10"
+        ResponseEntity<String> response = getEndpoint(path)
+
+        then: 'should return standardized bad request response'
+        response.statusCode == HttpStatus.BAD_REQUEST
+        response.body == null || response.body.toLowerCase().contains('invalid input') || response.body.toLowerCase().contains('startdate')
+    }
+
     // ===== STANDARDIZED REQUEST/RESPONSE BODY TESTS =====
 
     void 'should use Transaction entity type directly instead of Map for request bodies'() {
