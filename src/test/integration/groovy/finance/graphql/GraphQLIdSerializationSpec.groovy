@@ -28,6 +28,12 @@ class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
     @Autowired
     GraphQLMutationController mutationController
 
+    private static String safeSuffix(int len = 5) {
+        def rnd = new Random()
+        def alphabet = ['a','b','c','d','e','f']
+        (1..len).collect { alphabet[rnd.nextInt(alphabet.size())] }.join()
+    }
+
     private static PaymentInputDto paymentDto(String src, String dest) {
         new PaymentInputDto(
                 null,
@@ -50,7 +56,8 @@ class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
         )
         SecurityContextHolder.getContext().setAuthentication(auth)
         // Account names must match ^[a-z-]*_[a-z]*$ and 3-40 chars
-        def suffix = UUID.randomUUID().toString().replaceAll("[^a-z]", "").substring(0, 5)
+        // Use a deterministic a-f suffix to avoid rare short UUID letter runs
+        def suffix = safeSuffix(5)
         def src = "srcuser_${suffix}"
         def dest = "destuser_${suffix}"
         def created = mutationController.createPayment(paymentDto(src, dest))
