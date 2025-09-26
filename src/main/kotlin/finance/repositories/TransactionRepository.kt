@@ -2,6 +2,9 @@ package finance.repositories
 
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import java.sql.Date
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -56,4 +59,11 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         activeStatus: Boolean = true,
         transactionStates: List<TransactionState>
     ): List<Transaction>
+
+    // Date range across all accounts with pagination
+    fun findByTransactionDateBetween(
+        startDate: Date,
+        endDate: Date,
+        pageable: Pageable
+    ): Page<Transaction>
 }
