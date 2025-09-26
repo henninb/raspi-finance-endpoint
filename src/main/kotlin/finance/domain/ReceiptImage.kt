@@ -53,12 +53,6 @@ data class ReceiptImage(
         return Base64.getEncoder().encodeToString(this.image)
     }
 
-//    //TODO: 2021-01-09, temporary method
-//    private fun ByteArray.toHexString(): String {
-//        return this.joinToString("") {
-//            String.format("%02x", it)
-//        }
-//    }
 
     @JsonProperty
     @Column(name = "image_format_type", nullable = false)

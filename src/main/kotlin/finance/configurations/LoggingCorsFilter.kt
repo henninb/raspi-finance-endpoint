@@ -7,7 +7,6 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpStatus
 
 @Configuration
 open class LoggingCorsFilter(
@@ -36,13 +35,4 @@ open class LoggingCorsFilter(
     }
 
 
-    private fun getHeadersInfo(request: HttpServletRequest): Map<String, String> {
-        val headers = mutableMapOf<String, String>()
-        val headerNames = request.headerNames
-        while (headerNames.hasMoreElements()) {
-            val headerName = headerNames.nextElement()
-            headers[headerName] = request.getHeader(headerName)
-        }
-        return headers
-    }
 }
