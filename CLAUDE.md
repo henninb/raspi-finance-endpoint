@@ -57,23 +57,23 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 ## Architecture Overview
 
 ### Technology Stack
-- **Primary Language**: Kotlin 2.2.0
+- **Primary Language**: Kotlin 2.2.20
 - **Test Language**: Groovy 4.0.25 with Spock 2.3 framework
-- **Framework**: Spring Boot 4.0.0-M2
+- **Framework**: Spring Boot 4.0.0-M3
 - **Security**: Spring Security 7.0.0-M2 with JWT
 - **Database**: PostgreSQL 42.7.7 (prod/stage) or Oracle (prodora), H2 2.3.232 (test)
-- **Build Tool**: Gradle 8.14.3
+- **Build Tool**: Gradle 9.0.0
 - **Java/Kotlin Toolchain**: Java 21 (JVM toolchain)
 - **Metrics**: Micrometer 1.14.8 with InfluxDB
-- **GraphQL**: Spring Boot Starter GraphQL with GraphQL Extended Scalars 19.1
+- **GraphQL**: Spring Boot Starter GraphQL with GraphQL Extended Scalars 24.0
 - **Resilience**: Resilience4j 2.3.0 for circuit breakers, retry logic, and time limiters
 - **Migration**: Flyway 11.12.0
 - **Data Access**: Hibernate 7.1.0.Final, JOOQ 3.20.6
-- **Testing**: Testcontainers 1.21.3, Spock Framework 2.3
+- **Testing**: Testcontainers 1.21.3, Spock Framework 2.3, CodeNarc 3.4.0
 - **JSON Processing**: Jackson 2.19.1
 - **File Processing**: Apache POI 5.4.1 for Excel files
 - **Image Processing**: Thumbnailator 0.4.20
-- **Logging**: Logback 1.5.15, Apache Log4j 2.20.0
+- **Logging**: Logback 1.5.15, Apache Log4j 2.20.0, Logstash Logback Encoder 8.1
 - **Jakarta EE**: Jakarta Platform 11.0.0
 
 ### Application Structure
@@ -84,7 +84,7 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - `finance.services/` - Business logic layer with interfaces
 - `finance.repositories/` - JPA repositories using Spring Data
 - `finance.configurations/` - Spring configuration classes including GraphQL setup
-- `finance.graphql/` - GraphQL controllers (`@QueryMapping`, `@MutationMapping`); legacy resolvers removed
+- `finance.controllers/` - GraphQL controllers (GraphQLQueryController, GraphQLMutationController, TransactionGraphQLBatchController)
 - `finance.utils/` - Utility classes, validators, and converters
 - `finance.converters/` - Custom type converters for JPA entities
 - `finance.exceptions/` - Custom exception classes
@@ -97,7 +97,7 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - **Rate Limiting**: Configurable request rate limiting for API protection
 - **File Processing**: Excel file upload with POI integration
 - **Image Management**: Receipt image storage, validation, and thumbnail generation
-- **GraphQL API**: Modern GraphQL endpoint with GraphiQL interface
+- **GraphQL API**: Modern GraphQL endpoint with GraphiQL interface and Spring Boot 4.0 integration
 - **Resilience Patterns**: Circuit breakers, retry logic, and timeouts via Resilience4j
 - **Metrics and Monitoring**: InfluxDB integration with detailed application metrics
 
@@ -214,6 +214,12 @@ Transaction files are processed through:
 - **Profile-specific configs**: Dedicated Spring profiles for each test environment
 - **Testcontainers**: Integration tests with real database containers where needed
 
+### Code Quality Assurance
+- **CodeNarc 3.4.0**: Automated static analysis for Groovy code
+- **Ratcheting Rules**: Progressive code quality improvement with strict main source analysis
+- **Configurable Rule Sets**: Different rule configurations for main vs test sources
+- **CI Integration**: CodeNarc ratchet rules integrated into build pipeline for quality gates
+
 ## Git Commit Quality Reviewer
 
 ### Usage
@@ -294,7 +300,7 @@ spring:
       file-extensions: .graphqls,.gqls
 ```
 
-#### Java 21 Toolchain Configuration
+#### Java 21 Toolchain Configuration with Gradle 9.0
 ```gradle
 java {
     toolchain {
@@ -304,7 +310,22 @@ java {
 
 kotlin {
     jvmToolchain(21)
+
+    // Gradle 9 preparation: explicit compilation configurations
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+    }
 }
+```
+
+#### Gradle 9.0 Performance Optimizations
+```gradle
+# gradle.properties
+org.gradle.jvmargs=-Xmx4096M
+org.gradle.daemon=true
+org.gradle.parallel=true
+org.gradle.configuration-cache=true
+org.gradle.configuration-cache.problems=warn
 ```
 
 ### Profile Configuration Management
@@ -411,11 +432,14 @@ This approach ensures configuration consistency without compromising test reliab
 - **Unit**: Minimal configuration for fast test execution
 
 **✅ Spring Boot 4.0 Migration Benefits:**
-- **Modern GraphQL**: New Spring GraphQL starter with improved performance
+- **Modern GraphQL**: New Spring GraphQL starter with improved performance and Extended Scalars 24.0
 - **Jakarta EE 11**: Latest enterprise Java standards
 - **Java 21 Features**: Virtual threads and pattern matching support
 - **Enhanced Security**: Spring Security 7.0 with modern authentication patterns
 - **Improved Metrics**: Better Micrometer integration and monitoring
+- **Gradle 9.0**: Latest build system with configuration cache and parallel builds
+- **Kotlin 2.2.20**: Latest Kotlin with enhanced Spring Boot integration
+- **Code Quality**: Advanced CodeNarc ratcheting for continuous quality improvement
 
 ## Environment Configuration
 
@@ -501,11 +525,14 @@ SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest
 - **TODO.md**: Current development tasks and priorities
 
 ### Spring Boot 4.0 Migration Status
-- **✅ Core Framework**: Migrated to Spring Boot 4.0.0-M2
-- **✅ Java 21**: Full toolchain migration completed
+- **✅ Core Framework**: Migrated to Spring Boot 4.0.0-M3
+- **✅ Java 21**: Full toolchain migration completed with Gradle 9.0.0
+- **✅ Kotlin**: Updated to Kotlin 2.2.20 with enhanced Spring support
 - **✅ Security**: Spring Security 7.0.0-M2 integration
-- **✅ GraphQL**: New Spring Boot GraphQL starter
-- **✅ Testing**: All test profiles updated and validated
+- **✅ GraphQL**: New Spring Boot GraphQL starter with Extended Scalars 24.0
+- **✅ Testing**: All test profiles updated and validated with CodeNarc 3.4.0
+- **✅ Code Quality**: Enhanced with CodeNarc ratcheting and strict main source rules
+- **✅ Configuration Cache**: Gradle configuration cache enabled for better performance
 - **⚠️ Performance**: Optimization and benchmarking in progress
 - **⚠️ Documentation**: Final documentation updates needed
 
@@ -530,6 +557,9 @@ SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controller
 - **whitespace-remove.sh**: Removes trailing whitespace from all source files
 - **cleanup-orphaned-descriptions.sh**: Database cleanup for orphaned transaction descriptions
 - **git-commit-review.sh**: Automated commit quality validation with build verification
+- **CodeNarc Integration**: Automated Groovy code quality analysis with ratcheting rules
+- **Configuration Cache**: Gradle configuration cache enabled for faster builds
+- **Parallel Builds**: Gradle parallel execution enabled for improved build performance
 
 ### Certificate and Security Management
 - **cert-install.sh**: SSL certificate installation and configuration
