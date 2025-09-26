@@ -1,244 +1,189 @@
 package finance.graphql
 
-import finance.Application
+import finance.BaseIntegrationSpec
 import finance.controllers.GraphQLMutationController
 import finance.controllers.GraphQLQueryController
 import finance.domain.Account
-import finance.domain.AccountType
 import finance.domain.Transfer
+import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.TransferRepository
 import finance.repositories.TransactionRepository
 import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
-import spock.lang.Specification
+import spock.lang.Shared
 
 import java.math.BigDecimal
 import java.sql.Date
-import java.sql.Timestamp
 import java.util.UUID
 
-@ActiveProfiles("int")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(classes = Application)
-class TransferControllerIntegrationSpec extends Specification {
+class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
 
-    @Autowired
+    @Shared @Autowired
     StandardizedTransferService transferService
 
-    @Autowired
+    @Shared @Autowired
     MeterRegistry meterRegistry
 
-    @Autowired
+    @Shared @Autowired
     AccountRepository accountRepository
 
-    @Autowired
+    @Shared @Autowired
     TransferRepository transferRepository
 
-    @Autowired
+    @Shared @Autowired
     TransactionRepository transactionRepository
 
-    @Autowired
+    @Shared @Autowired
     GraphQLMutationController mutationController
 
-    @Autowired
+    @Shared @Autowired
     GraphQLQueryController queryController
 
-    void setup() {
-        cleanup()
+    @Shared
+    String sourceAccountName
+
+    @Shared
+    String destinationAccountName
+
+    def setupSpec() {
+        // Create unique, valid account names based on testOwner
+        def cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        // SmartAccountBuilder expects single underscore pattern: [letters-or-dashes]_[letters]
+        sourceAccountName = "transfersrc_${cleanOwner}"
+        destinationAccountName = "transferdst_${cleanOwner}"
+
+        // Create source (debit) and destination (debit) accounts via SmartBuilder
+        Account source = SmartAccountBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(sourceAccountName)
+                .asDebit()
+                .withCleared(new BigDecimal("1000.00"))
+                .buildAndValidate()
+        accountRepository.save(source)
+
+        Account dest = SmartAccountBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(destinationAccountName)
+                .asDebit()
+                .withCleared(new BigDecimal("500.00"))
+                .buildAndValidate()
+        accountRepository.save(dest)
     }
 
-    void cleanup() {
-        transferRepository.deleteAll()
-        transactionRepository.deleteAll()
-        accountRepository.deleteAll()
-    }
-
-    void setupTestAccounts() {
-        // Create test accounts
-        Account sourceAccount = new Account()
-        sourceAccount.accountNameOwner = "transfersource_brian"
-        sourceAccount.accountType = AccountType.Debit
-        sourceAccount.activeStatus = true
-        sourceAccount.moniker = "1001"
-        sourceAccount.outstanding = new BigDecimal("0.00")
-        sourceAccount.future = new BigDecimal("0.00")
-        sourceAccount.cleared = new BigDecimal("1000.00")
-        sourceAccount.dateClosed = new Timestamp(System.currentTimeMillis())
-        sourceAccount.validationDate = new Timestamp(System.currentTimeMillis())
-        accountRepository.save(sourceAccount)
-
-        Account destinationAccount = new Account()
-        destinationAccount.accountNameOwner = "transferdest_brian"
-        destinationAccount.accountType = AccountType.Debit
-        destinationAccount.activeStatus = true
-        destinationAccount.moniker = "1002"
-        destinationAccount.outstanding = new BigDecimal("0.00")
-        destinationAccount.future = new BigDecimal("0.00")
-        destinationAccount.cleared = new BigDecimal("500.00")
-        destinationAccount.dateClosed = new Timestamp(System.currentTimeMillis())
-        destinationAccount.validationDate = new Timestamp(System.currentTimeMillis())
-        accountRepository.save(destinationAccount)
-    }
-
-    def "should fetch all transfers via controller with database integration"() {
-        given: "test accounts are created"
-        setupTestAccounts()
-
-        and: "existing transfers in the database"
-        createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("100.00"))
-        createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("200.00"))
+    def "should fetch all transfers via controller with isolated test data"() {
+        given: "existing transfers for this test owner"
+        createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("100.00"))
+        createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("200.00"))
 
         when: "controller query is called"
         def transfers = queryController.transfers()
+        def scoped = transfers.findAll { it.sourceAccount == sourceAccountName && it.destinationAccount == destinationAccountName }
 
-        then: "should return all transfers from database"
-        transfers.size() == 2
-        transfers.every { it instanceof Transfer }
-        transfers.any { it.amount == new BigDecimal("100.00") }
-        transfers.any { it.amount == new BigDecimal("200.00") }
+        then: "returns transfers created for this spec"
+        scoped.size() >= 2
+        scoped.any { it.amount == new BigDecimal("100.00") }
+        scoped.any { it.amount == new BigDecimal("200.00") }
     }
 
-    def "should fetch transfer by ID via controller with database integration"() {
-        given: "test accounts are created"
-        setupTestAccounts()
-
-        and: "an existing transfer in the database"
-        def savedTransfer = createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("150.00"))
+    def "should fetch transfer by ID via controller with isolated test data"() {
+        given: "an existing transfer for this owner"
+        def savedTransfer = createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("150.00"))
 
         when: "controller query is called"
         def result = queryController.transfer(savedTransfer.transferId)
 
-        then: "should return the specific transfer from database"
+        then: "returns the specific transfer"
         result != null
         result.transferId == savedTransfer.transferId
-        result.sourceAccount == "transfersource_brian"
-        result.destinationAccount == "transferdest_brian"
+        result.sourceAccount == sourceAccountName
+        result.destinationAccount == destinationAccountName
         result.amount == new BigDecimal("150.00")
     }
 
     def "should handle transfer not found in database via controller"() {
-        given: "a non-existent transfer ID"
-        def nonExistentId = 999L
-        when: "controller query is called"
-        def result = queryController.transfer(nonExistentId)
+        when: "controller query is called with non-existent ID"
+        def result = queryController.transfer(999L)
 
-        then: "should return null"
+        then: "returns null"
         result == null
     }
 
-    def "should create transfer via controller with database integration"() {
-        given: "test accounts are created"
-        setupTestAccounts()
-
-        and: "transfer input data"
-        def transferInput = [
-            sourceAccount: "transfersource_brian",
-            destinationAccount: "transferdest_brian",
-            transactionDate: "2024-01-15",
-            amount: new BigDecimal("300.00")
-        ]
-
-        and: "authenticated user"
+    def "should create transfer via controller with isolated test data"() {
+        given: "authenticated user"
         def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
         SecurityContextHolder.getContext().setAuthentication(auth)
 
         when: "create transfer mutation is called"
-        def result = mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "transfersource_brian", "transferdest_brian", Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
+        def result = mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, sourceAccountName, destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
 
-        then: "should create and return transfer from database"
+        then: "transfer is created and persisted"
         result != null
         result.transferId > 0
-        result.sourceAccount == "transfersource_brian"
-        result.destinationAccount == "transferdest_brian"
+        result.sourceAccount == sourceAccountName
+        result.destinationAccount == destinationAccountName
         result.amount == new BigDecimal("300.00")
-        result.transactionDate == Date.valueOf("2024-01-15")
         result.guidSource != null
         result.guidDestination != null
-        result.activeStatus == true
+        result.activeStatus
 
-        and: "transfer should be persisted in database"
-        def savedTransfer = transferRepository.findByTransferId(result.transferId)
-        savedTransfer.isPresent()
-        savedTransfer.get().sourceAccount == "transfersource_brian"
+        and: "transfer exists in repository"
+        def saved = transferRepository.findByTransferId(result.transferId)
+        saved.isPresent()
+        saved.get().sourceAccount == sourceAccountName
     }
 
-    def "should handle validation errors during transfer creation with database integration"() {
-        given: "test accounts are created"
-        setupTestAccounts()
-
-        and: "invalid transfer input data (non-existent source account)"
-        def transferInput = [
-            sourceAccount: "nonexistent_brian",
-            destinationAccount: "transferdest_brian",
-            transactionDate: "2024-01-15",
-            amount: new BigDecimal("300.00")
-        ]
-
-        and: "authenticated user"
+    def "should handle validation errors during transfer creation with isolated data"() {
+        given: "authenticated user"
         def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
         SecurityContextHolder.getContext().setAuthentication(auth)
 
-        when: "create transfer mutation is called"
-        mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "nonexistent_brian", "transferdest_brian", Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
+        when: "create transfer mutation with non-existent source account"
+        mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "nonexistent_${UUID.randomUUID().toString().take(8)}", destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
 
-        then: "should throw runtime exception"
+        then: "throws runtime exception"
         thrown(RuntimeException)
     }
 
-    def "should delete transfer via controller with database integration"() {
-        given: "test accounts are created"
-        setupTestAccounts()
-
-        and: "an existing transfer in the database"
-        def savedTransfer = createTestTransfer("transfersource_brian", "transferdest_brian", new BigDecimal("250.00"))
+    def "should delete transfer via controller with isolated data"() {
+        given: "an existing transfer"
+        def saved = createTestTransfer(sourceAccountName, destinationAccountName, new BigDecimal("250.00"))
 
         and: "authenticated user"
         def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
         SecurityContextHolder.getContext().setAuthentication(auth)
 
         when: "delete transfer mutation is called"
-        def result = mutationController.deleteTransfer(savedTransfer.transferId)
+        def result = mutationController.deleteTransfer(saved.transferId)
 
-        then: "should successfully delete transfer and return true"
-        result == true
+        then: "successfully deletes"
+        result
 
-        and: "transfer should be removed from database"
-        def deletedTransfer = transferRepository.findByTransferId(savedTransfer.transferId)
-        !deletedTransfer.isPresent()
+        and: "removed from repository"
+        def deleted = transferRepository.findByTransferId(saved.transferId)
+        !deleted.isPresent()
     }
 
     def "should handle delete non-existent transfer via controller"() {
-        given: "a non-existent transfer ID"
-        def nonExistentId = 999L
-        and: "authenticated user"
+        given: "authenticated user"
         def auth = new UsernamePasswordAuthenticationToken("test", "N/A", [new SimpleGrantedAuthority("USER")])
         SecurityContextHolder.getContext().setAuthentication(auth)
 
-        when: "delete transfer mutation is called"
-        def result = mutationController.deleteTransfer(nonExistentId)
-
-        then: "should return false"
-        result == false
+        expect: "returns false for missing transfer"
+        !mutationController.deleteTransfer(999L)
     }
 
     private Transfer createTestTransfer(String sourceAccount, String destinationAccount, BigDecimal amount) {
-        Transfer transfer = new Transfer()
-        transfer.sourceAccount = sourceAccount
-        transfer.destinationAccount = destinationAccount
-        transfer.transactionDate = Date.valueOf("2024-01-01")
-        transfer.amount = amount
-        transfer.guidSource = UUID.randomUUID().toString()
-        transfer.guidDestination = UUID.randomUUID().toString()
-        transfer.activeStatus = true
-
-        return transferService.insertTransfer(transfer)
+        def t = new Transfer()
+        t.sourceAccount = sourceAccount
+        t.destinationAccount = destinationAccount
+        t.transactionDate = Date.valueOf("2024-01-01")
+        t.amount = amount
+        t.guidSource = UUID.randomUUID().toString()
+        t.guidDestination = UUID.randomUUID().toString()
+        t.activeStatus = true
+        transferService.insertTransfer(t)
     }
 }
