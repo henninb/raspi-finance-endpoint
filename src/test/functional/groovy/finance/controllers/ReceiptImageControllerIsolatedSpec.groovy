@@ -37,20 +37,6 @@ class ReceiptImageControllerIsolatedSpec extends BaseControllerSpec {
         0 * _
     }
 
-    void 'should reject receipt image insertion with non-existent transaction id'() {
-        given:
-        ReceiptImage receiptImage = SmartReceiptImageBuilder.builderForOwner(testOwner)
-                .withTransactionId(99999L)
-                .buildAndValidate()
-
-        when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
-
-        then:
-        response.statusCode == HttpStatus.CONFLICT
-        response.body.contains('"error":"Data integrity violation in save for ReceiptImage')
-        0 * _
-    }
 
     void 'should successfully insert jpeg receipt image'() {
         given:

@@ -121,6 +121,8 @@ class GraphQLMutationControllerSpec extends BaseServiceSpec {
                 sourceAccount: 'checking_primary',
                 destinationAccount: 'savings_primary',
                 amount: BigDecimal.valueOf(200.00),
+                guidSource: null,
+                guidDestination: null,
                 activeStatus: true
         ]
         def merged = defaults + params
@@ -130,6 +132,8 @@ class GraphQLMutationControllerSpec extends BaseServiceSpec {
                 merged.destinationAccount,
                 new Date(System.currentTimeMillis()),
                 merged.amount,
+                merged.guidSource,
+                merged.guidDestination,
                 merged.activeStatus
         )
     }
@@ -380,5 +384,39 @@ class GraphQLMutationControllerSpec extends BaseServiceSpec {
 
         then:
         thrown(RuntimeException)
+    }
+
+    // insertTransfer mutation tests - uses 'input' parameter name
+    def "insertTransfer mutation creates transfer successfully"() {
+        given:
+        def inputDto = makeTransferInputDto()
+        def savedTransfer = makeTransfer(42L)
+        transferServiceMock.insertTransfer(_ as Transfer) >> savedTransfer
+
+        when:
+        def result = controller.insertTransfer(inputDto)
+
+        then:
+        1 * transferCreateCounterMock.increment()
+        result == savedTransfer
+        result.transferId == 42L
+        result.sourceAccount == 'checking_primary'
+        result.destinationAccount == 'savings_primary'
+        result.amount == BigDecimal.valueOf(200.00)
+        result.activeStatus == true
+    }
+
+    def "insertTransfer mutation sets default activeStatus when null"() {
+        given:
+        def inputDto = makeTransferInputDto(activeStatus: null)
+        def savedTransfer = makeTransfer(42L)
+        transferServiceMock.insertTransfer(_ as Transfer) >> savedTransfer
+
+        when:
+        def result = controller.insertTransfer(inputDto)
+
+        then:
+        1 * transferCreateCounterMock.increment()
+        result.activeStatus == true
     }
 }

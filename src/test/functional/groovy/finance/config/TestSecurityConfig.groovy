@@ -33,6 +33,7 @@ class TestSecurityConfig {
             .anonymous { it.disable() }
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/login", "/api/register").permitAll()
+                auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
                 auth.anyRequest().permitAll()
             }
