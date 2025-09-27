@@ -56,4 +56,45 @@ interface AccountRepository : JpaRepository<Account, Long> {
         @Param("accountType") accountType: AccountType = AccountType.Credit
     ): List<Account>
 
+    // Update validation_date for a single account from the newest t_validation_amount row
+    @Modifying
+    @Transactional
+    @Query(
+        value = """
+            UPDATE t_account a
+            SET validation_date = sub.max_validation_date,
+                date_updated = now()
+            FROM (
+                SELECT va.account_id, MAX(va.validation_date) AS max_validation_date
+                FROM t_validation_amount va
+                WHERE va.active_status = TRUE
+                GROUP BY va.account_id
+            ) sub
+            WHERE a.account_id = sub.account_id
+            AND a.account_id = :accountId
+        """,
+        nativeQuery = true
+    )
+    fun updateValidationDateForAccount(@Param("accountId") accountId: Long): Int
+
+    // Bulk refresh of validation_date for all accounts from newest ValidationAmount
+    @Modifying
+    @Transactional
+    @Query(
+        value = """
+            UPDATE t_account a
+            SET validation_date = sub.max_validation_date,
+                date_updated = now()
+            FROM (
+                SELECT va.account_id, MAX(va.validation_date) AS max_validation_date
+                FROM t_validation_amount va
+                WHERE va.active_status = TRUE
+                GROUP BY va.account_id
+            ) sub
+            WHERE a.account_id = sub.account_id
+        """,
+        nativeQuery = true
+    )
+    fun updateValidationDateForAllAccounts()
+
 }

@@ -48,6 +48,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
                         destName,
                         Date.valueOf("2024-02-01"),
                         new BigDecimal("300.00"),
+                        null,
+                        null,
                         null
                 )
         )
@@ -74,6 +76,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
                         destName,
                         Date.valueOf("2024-02-01"),
                         new BigDecimal("-1.00"),
+                        null,
+                        null,
                         null
                 )
         )
@@ -92,6 +96,8 @@ class TransferMutationSpec extends BaseIntegrationSpec {
                         destName,
                         Date.valueOf("2024-02-02"),
                         new BigDecimal("25.00"),
+                        null,
+                        null,
                         null
                 )
         )

@@ -56,7 +56,14 @@ class StandardizedValidationAmountService(
             entity.dateAdded = timestamp
             entity.dateUpdated = timestamp
 
-            validationAmountRepository.saveAndFlush(entity)
+            val saved = validationAmountRepository.saveAndFlush(entity)
+            // Keep Account.validationDate in sync with newest ValidationAmount row
+            try {
+                accountRepository.updateValidationDateForAccount(saved.accountId)
+            } catch (ex: Exception) {
+                logger.warn("Failed to refresh account.validation_date for accountId=${saved.accountId}: ${ex.message}")
+            }
+            saved
         }
     }
 
@@ -76,7 +83,14 @@ class StandardizedValidationAmountService(
             validationAmountToUpdate.activeStatus = entity.activeStatus
             validationAmountToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
 
-            validationAmountRepository.saveAndFlush(validationAmountToUpdate)
+            val updated = validationAmountRepository.saveAndFlush(validationAmountToUpdate)
+            // Refresh Account.validationDate projection
+            try {
+                accountRepository.updateValidationDateForAccount(updated.accountId)
+            } catch (ex: Exception) {
+                logger.warn("Failed to refresh account.validation_date for accountId=${updated.accountId}: ${ex.message}")
+            }
+            updated
         }
     }
 

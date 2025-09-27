@@ -486,4 +486,24 @@ class StandardizedAccountControllerSpec extends Specification {
         response.statusCode == HttpStatus.OK
         response.body.activeStatus
     }
+
+    // ===== validation/refresh endpoint =====
+    def "refreshValidationDates returns 204 on success"() {
+        when:
+        ResponseEntity<Void> response = controller.refreshValidationDates()
+
+        then:
+        response.statusCode == HttpStatus.NO_CONTENT
+    }
+
+    def "refreshValidationDates returns 500 on failure"() {
+        given:
+        accountRepository.updateValidationDateForAllAccounts() >> { throw new RuntimeException("boom") }
+
+        when:
+        ResponseEntity<Void> response = controller.refreshValidationDates()
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+    }
 }
