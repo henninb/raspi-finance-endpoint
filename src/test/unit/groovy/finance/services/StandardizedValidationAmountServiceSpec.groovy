@@ -102,6 +102,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         then: "should return Success with saved validation amount"
         1 * validatorMock.validate(validationAmount) >> noViolations
         1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
+        1 * accountRepositoryMock.updateValidationDateForAccount(_ as Long) >> 1
         result instanceof ServiceResult.Success
         result.data.validationId == 1L
         0 * _
@@ -162,6 +163,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
             assert va.amount == new BigDecimal("200.00")
             return va
         }
+        1 * accountRepositoryMock.updateValidationDateForAccount(_ as Long) >> 1
         result instanceof ServiceResult.Success
         result.data.amount == new BigDecimal("200.00")
         0 * _

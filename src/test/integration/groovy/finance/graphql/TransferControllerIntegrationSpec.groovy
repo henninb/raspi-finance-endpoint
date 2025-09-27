@@ -113,7 +113,16 @@ class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
         withUserRole("test", ["USER"])
 
         when: "create transfer mutation is called"
-        def result = mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, sourceAccountName, destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
+        def result = mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(
+                null,
+                sourceAccountName,
+                destinationAccountName,
+                Date.valueOf("2024-01-15"),
+                new BigDecimal("300.00"),
+                null,
+                null,
+                null
+        ))
 
         then: "transfer is created and persisted"
         result != null
@@ -136,7 +145,16 @@ class TransferControllerIntegrationSpec extends BaseIntegrationSpec {
         withUserRole("test", ["USER"])
 
         when: "create transfer mutation with non-existent source account"
-        mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(null, "nonexistent_${UUID.randomUUID().toString().take(8)}", destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("300.00"), null))
+        mutationController.createTransfer(new finance.controllers.dto.TransferInputDto(
+                null,
+                "nonexistent_${UUID.randomUUID().toString().take(8)}",
+                destinationAccountName,
+                Date.valueOf("2024-01-15"),
+                new BigDecimal("300.00"),
+                null,
+                null,
+                null
+        ))
 
         then: "throws runtime exception"
         thrown(RuntimeException)

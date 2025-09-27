@@ -213,6 +213,20 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
         }
     }
 
+    // GET /api/account/validation/refresh
+    // Triggers a bulk refresh of account.validation_date from t_validation_amount
+    @GetMapping("/validation/refresh")
+    fun refreshValidationDates(): ResponseEntity<Void> {
+        return try {
+            logger.info("Refreshing validation dates for all accounts from latest ValidationAmount rows")
+            standardizedAccountService.updateValidationDatesForAllAccounts()
+            ResponseEntity.noContent().build()
+        } catch (ex: Exception) {
+            logger.error("Failed to refresh validation dates: ${ex.message}", ex)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
     // curl -k https://localhost:8443/account/payment/required
     @GetMapping("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): ResponseEntity<List<Account>> {

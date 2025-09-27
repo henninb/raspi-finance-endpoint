@@ -281,6 +281,8 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
 
         then: "should return accounts"
         1 * accountRepositoryMock.updateTotalsForAllAccounts()
+        // New behavior: refresh validation dates prior to computing payment required list
+        1 * accountRepositoryMock.updateValidationDateForAllAccounts()
         1 * accountRepositoryMock.findAccountsThatRequirePayment(_, _) >> accounts
         result.size() == 1
         0 * _

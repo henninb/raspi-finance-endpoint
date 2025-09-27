@@ -123,6 +123,7 @@ class StandardizedAccountService(
 
     fun findAccountsThatRequirePayment(): List<Account> {
         updateTotalsForAllAccounts()
+        updateValidationDatesForAllAccounts()
         return accountRepository.findAccountsThatRequirePayment()
     }
 
@@ -173,6 +174,16 @@ class StandardizedAccountService(
     fun updateTotalsForAllAccounts(): Boolean {
         try {
             accountRepository.updateTotalsForAllAccounts()
+        } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
+            meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
+            logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
+        }
+        return true
+    }
+
+    fun updateValidationDatesForAllAccounts(): Boolean {
+        try {
+            accountRepository.updateValidationDateForAllAccounts()
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
             meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
             logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
