@@ -66,6 +66,7 @@ type Mutation {
     deletePayment( paymentId: ID! ) : Boolean
     createTransfer( transfer: TransferInput ) : Transfer
     deleteTransfer( transferId: ID! ) : Boolean
+    insertTransfer( input: TransferInput ) : Transfer
     # Unimplemented mutations removed to match implementation
     # createDescription( description: String) : Description
     # createCategory( category: String) : Category
@@ -184,6 +185,8 @@ input TransferInput {
     destinationAccount: String!
     transactionDate: Date!
     amount: BigDecimal!
+    guidSource: String
+    guidDestination: String
     activeStatus: Boolean
 }
 

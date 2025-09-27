@@ -38,7 +38,7 @@ import java.util.Date
 @ContextConfiguration(classes = Application)
 @EnableSharedInjection
 @Transactional
-@Import(TestSecurityConfig)
+@Import([TestSecurityConfig])
 class BaseControllerSpec extends Specification {
     @Autowired
     protected WebTestClient webTestClient

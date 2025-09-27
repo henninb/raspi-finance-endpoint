@@ -6,6 +6,11 @@ spring:
     graphiql:
       enabled: true
       path: /graphiql
+    schema:
+      printer:
+        enabled: true
+      locations: classpath:graphql/
+      file-extensions: .graphqls,.gqls
   main:
     web-application-type: servlet
 
