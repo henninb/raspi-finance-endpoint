@@ -63,8 +63,9 @@ type Query {
 
 type Mutation {
     createPayment( payment: PaymentInput ) : Payment
+    insertPayment( input: PaymentInput ) : Payment
     deletePayment( paymentId: ID! ) : Boolean
-    createTransfer( transfer: TransferInput ) : Transfer
+    createTransfer( transfer: TransferInput ) : Transfer @deprecated(reason: "Use insertTransfer instead. This method will be removed in a future version.")
     deleteTransfer( transferId: ID! ) : Boolean
     insertTransfer( input: TransferInput ) : Transfer
     # Unimplemented mutations removed to match implementation
@@ -163,6 +164,8 @@ input PaymentInput {
     destinationAccount: String!
     transactionDate: Date!
     amount: BigDecimal!
+    guidSource: String
+    guidDestination: String
     activeStatus: Boolean
 }
 
