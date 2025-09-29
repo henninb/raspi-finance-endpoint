@@ -18,7 +18,7 @@ import java.util.Optional
 @ActiveProfiles("int")
 @SpringBootTest
 @ContextConfiguration(classes = Application)
-class ServiceLayerIntegrationSpec extends Specification {
+class ServiceLayerIntSpec extends Specification {
 
     @Autowired
     StandardizedTransactionService transactionService

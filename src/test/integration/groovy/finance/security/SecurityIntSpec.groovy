@@ -17,7 +17,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
 @Transactional
-class SecurityIntegrationSpec extends BaseRestTemplateIntegrationSpec {
+class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     UserRepository userRepository

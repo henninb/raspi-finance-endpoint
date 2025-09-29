@@ -25,7 +25,7 @@ import java.util.Optional
  * ✅ Financial validation and consistency
  * ✅ Eliminated shared global state (testAccountId)
  */
-class TransactionRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
+class TransactionRepositorySimpleIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     TransactionRepository transactionRepository
