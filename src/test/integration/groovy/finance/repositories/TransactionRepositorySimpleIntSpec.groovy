@@ -13,6 +13,8 @@ import spock.lang.Shared
 import java.math.BigDecimal
 import java.sql.Date
 import java.util.Optional
+import jakarta.validation.ConstraintViolationException
+import org.springframework.dao.DataIntegrityViolationException
 
 /**
  * MIGRATED INTEGRATION TEST - Transaction Repository Simple with robust, isolated architecture
@@ -176,6 +178,107 @@ class TransactionRepositorySimpleIntSpec extends BaseIntegrationSpec {
         then:
         categoryCount >= 3
         descriptionCount >= 3
+    }
+
+    def "test duplicate GUID insert throws a persistence/constraint exception"() {
+        given:
+        String duplicateGuid = "11111111-2222-3333-4444-555555555555"
+        def t1 = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-02-01"))
+                .withDescription("dup-guid-1")
+                .withCategory(repositoryContext.categoryName)
+                .withAmount(new BigDecimal("10.00"))
+                .withGuid(duplicateGuid)
+                .buildAndValidate()
+        transactionRepository.save(t1)
+
+        def t2 = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-02-02"))
+                .withDescription("dup-guid-2")
+                .withCategory(repositoryContext.categoryName)
+                .withAmount(new BigDecimal("12.00"))
+                .withGuid(duplicateGuid)
+                .buildAndValidate()
+
+        when:
+        transactionRepository.save(t2)
+        transactionRepository.flush()
+
+        then:
+        thrown(Exception) // DataIntegrityViolationException or similar
+    }
+
+    def "test category length constraint violation on save"() {
+        given:
+        def tooLongCategory = "x" * 60
+        def t = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-03-01"))
+                .withDescription("too-long-cat")
+                .withCategory(tooLongCategory)
+                .build() // bypass builder validation to allow entity validation to trigger
+
+        when:
+        transactionRepository.save(t)
+        transactionRepository.flush()
+
+        then:
+        thrown(ConstraintViolationException)
+    }
+
+    def "test invalid GUID format constraint violation on save"() {
+        given:
+        def t = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-03-02"))
+                .withDescription("bad-guid")
+                .withCategory(repositoryContext.categoryName)
+                .withGuid("123")
+                .build() // bypass builder validation
+
+        when:
+        transactionRepository.save(t)
+        transactionRepository.flush()
+
+        then:
+        thrown(ConstraintViolationException)
+    }
+
+    def "test delete transaction removes it from repository"() {
+        given:
+        def t = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-04-01"))
+                .withDescription("to-delete")
+                .withCategory(repositoryContext.categoryName)
+                .withAmount(new BigDecimal("5.00"))
+                .asCleared()
+                .buildAndValidate()
+        def saved = transactionRepository.save(t)
+
+        when:
+        transactionRepository.delete(saved)
+        def found = transactionRepository.findByGuid(saved.guid)
+
+        then:
+        !found.isPresent()
     }
 
     def "test sum totals for active transactions by account name owner"() {

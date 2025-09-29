@@ -81,10 +81,11 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 #### Core Packages
 - `finance.domain/` - JPA entities and enums (Account, Transaction, Category, MedicalExpense, etc.)
 - `finance.controllers/` - REST API endpoints with Spring Web MVC
+- `finance.controllers.dto/` - Data Transfer Objects with Jakarta validation (PaymentInputDto, TransferInputDto, AccountInputDto, DescriptionInputDto)
 - `finance.services/` - Business logic layer with interfaces
 - `finance.repositories/` - JPA repositories using Spring Data
 - `finance.configurations/` - Spring configuration classes including GraphQL setup
-- `finance.controllers/` - GraphQL controllers (GraphQLQueryController, GraphQLMutationController, TransactionGraphQLBatchController)
+- `finance.controllers/` - GraphQL controllers (GraphQLQueryController, GraphQLMutationController, TransactionGraphQLBatchController, GraphQLExceptionHandler)
 - `finance.utils/` - Utility classes, validators, and converters
 - `finance.converters/` - Custom type converters for JPA entities
 - `finance.exceptions/` - Custom exception classes
@@ -97,7 +98,8 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - **Rate Limiting**: Configurable request rate limiting for API protection
 - **File Processing**: Excel file upload with POI integration
 - **Image Management**: Receipt image storage, validation, and thumbnail generation
-- **GraphQL API**: Modern GraphQL endpoint with GraphiQL interface and Spring Boot 4.0 integration
+- **GraphQL API**: Modern GraphQL endpoint with GraphiQL interface and Spring Boot 4.0 integration using centralized controller architecture
+- **DTO Architecture**: Complete Data Transfer Object layer with Jakarta validation for all GraphQL input types
 - **Resilience Patterns**: Circuit breakers, retry logic, and timeouts via Resilience4j
 - **Metrics and Monitoring**: InfluxDB integration with detailed application metrics
 
@@ -110,7 +112,9 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 
 ### Test Strategy
 - **Unit Tests**: Spock specs in `src/test/unit/groovy/`
+  - **DTO Unit Tests**: Comprehensive validation testing in `src/test/unit/groovy/finance/controllers/dto/`
 - **Integration Tests**: Database integration in `src/test/integration/groovy/`
+  - **GraphQL Integration Tests**: Function-focused tests (PaymentMutationIntSpec, PaymentQueryIntSpec, etc.)
 - **Functional Tests**: Full application tests in `src/test/functional/groovy/`
 - **Performance Tests**: Load testing in `src/test/performance/groovy/`
 - **Oracle Tests**: Oracle-specific tests in `src/test/oracle/groovy/`
@@ -127,6 +131,7 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - Spock framework specifications
 - Given-When-Then structure
 - Builder pattern for test data construction
+- **Groovy-Kotlin Interop**: When calling Kotlin data class constructors from Groovy tests, provide ALL constructor parameters in correct order (cannot use partial parameter construction)
 
 ### Package Organization
 - Group imports by package, alphabetically sorted
@@ -157,6 +162,9 @@ Transaction files are processed through:
 ### API Endpoints
 - **REST API**: Domain-specific controllers for all financial entities
 - **GraphQL Endpoint**: `/graphql` with interactive GraphiQL at `/graphiql`
+  - **Centralized Architecture**: All queries via `GraphQLQueryController`, all mutations via `GraphQLMutationController`
+  - **Batch Operations**: `TransactionGraphQLBatchController` for bulk operations
+  - **Error Handling**: `GraphQLExceptionHandler` for consistent error responses
 - **Health Checks**: Spring Boot Actuator at `/actuator/health` with detailed info
 - **Metrics**: Full metrics exposure at `/actuator/*` endpoints
 - **H2 Console**: Available in test profiles at `/h2-console` for debugging
@@ -188,6 +196,38 @@ Transaction files are processed through:
 - **✅ Input Validation**: Jakarta validation throughout the application
 - **⚠️ Token Rotation**: JWT rotation strategy needs documentation
 - **⚠️ DDoS Protection**: Advanced DDoS mitigation needs review
+
+## Data Transfer Objects (DTOs)
+
+### Complete DTO Architecture
+The application implements a comprehensive DTO layer for GraphQL input validation:
+
+#### Available DTOs
+- **PaymentInputDto**: Payment creation with amount, account, and date validation
+- **TransferInputDto**: Account transfers with source/destination validation
+- **AccountInputDto**: Account creation with type and naming validation
+- **DescriptionInputDto**: Transaction description management with length validation
+
+#### DTO Validation Features
+- **Jakarta Validation**: `@NotBlank`, `@NotNull`, `@Size`, `@Pattern`, `@DecimalMin`, `@Digits`
+- **GUID Validation**: Custom UUID pattern validation for source/destination GUIDs
+- **Account Name Patterns**: Enforced naming conventions with alphanumeric and underscore patterns
+- **Amount Validation**: Decimal precision and minimum value constraints
+- **Date Constraints**: Required transaction date validation
+
+#### DTO Testing Strategy
+- **Comprehensive Unit Tests**: All DTOs have complete test coverage in `src/test/unit/groovy/finance/controllers/dto/`
+- **Validation Testing**: Both positive and negative validation scenarios covered
+- **Groovy-Kotlin Interop**: Tests demonstrate proper constructor calling patterns
+- **Edge Case Coverage**: Boundary value testing for amounts, lengths, and patterns
+
+### DTO vs Domain Classes
+**Why DTOs are maintained separately from domain classes:**
+- **Validation Separation**: Different validation rules for input vs database entities
+- **API Stability**: GraphQL schema changes don't affect domain model
+- **Security**: Input filtering and sanitization before domain object creation
+- **JPA Independence**: DTOs don't carry JPA annotations or persistence concerns
+- **Version Management**: API versioning without domain model changes
 
 ## Code Quality Standards
 
@@ -506,10 +546,43 @@ SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest
 
 **Multi-Environment Testing:**
 - **Unit Tests**: Fast, isolated component testing
+  - **DTO Unit Tests**: Complete validation testing for all input DTOs
+  - **Domain Unit Tests**: Entity and business logic validation
 - **Integration Tests**: Database and service layer validation
+  - **GraphQL Integration Tests**: Function-focused testing (PaymentMutationIntSpec, TransferQueryIntSpec)
+  - **Repository Integration**: Database constraint and relationship testing
 - **Functional Tests**: Full application stack testing
+  - **Controller Functional Tests**: End-to-end REST API testing
+  - **GraphQL Functional Tests**: Complete GraphQL workflow testing
 - **Performance Tests**: Load testing with realistic data volumes
 - **Oracle Tests**: Database-specific compatibility validation
+
+### Groovy-Kotlin Interoperability Best Practices
+
+#### Constructor Calling Patterns
+**CRITICAL**: When calling Kotlin data class constructors from Groovy tests:
+```groovy
+// ✅ CORRECT - Provide ALL parameters in order
+def dto = new PaymentInputDto(
+    null,                           // paymentId
+    "checking_primary",             // sourceAccount
+    "bills_payable",               // destinationAccount
+    Date.valueOf("2024-01-15"),     // transactionDate
+    new BigDecimal("100.00"),       // amount
+    null,                           // guidSource
+    null,                           // guidDestination
+    null                            // activeStatus
+)
+
+// ❌ INCORRECT - Partial parameters cause GroovyRuntimeException
+def dto = new PaymentInputDto("checking_primary", "bills_payable", amount)
+```
+
+#### Test Data Patterns
+- **Consistent Naming**: Use realistic account names like "checking_primary", "savings_primary"
+- **Valid UUIDs**: Use proper UUID format for GUID fields when testing
+- **Realistic Amounts**: Use decimal values with proper precision (e.g., "100.00")
+- **Date Handling**: Use `Date.valueOf("YYYY-MM-DD")` for SQL date creation
 
 ## Migration and Documentation
 
@@ -531,15 +604,31 @@ SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest
 - **✅ Security**: Spring Security 7.0.0-M2 integration
 - **✅ GraphQL**: New Spring Boot GraphQL starter with Extended Scalars 24.0
 - **✅ Testing**: All test profiles updated and validated with CodeNarc 3.4.0
+  - **✅ DTO Testing**: Complete unit test coverage for all Data Transfer Objects
+  - **✅ GraphQL Testing**: Reorganized integration tests with function-focused naming
 - **✅ Code Quality**: Enhanced with CodeNarc ratcheting and strict main source rules
+- **✅ DTO Architecture**: Complete input validation layer with Jakarta annotations
+  - **✅ Architecture Validation**: Confirmed DTO value vs domain class approach
+  - **✅ Test Organization**: Complete unit test coverage with proper Groovy-Kotlin interop
+  - **✅ GraphQL Integration**: DTOs properly integrated with centralized GraphQL controllers
 - **✅ Configuration Cache**: Gradle configuration cache enabled for better performance
 - **⚠️ Performance**: Optimization and benchmarking in progress
 - **⚠️ Documentation**: Final documentation updates needed
 
 ### Test Execution Examples
 ```bash
+# DTO unit tests (all DTOs)
+./gradlew test --tests "finance.controllers.dto.*Spec"
+
+# Single DTO validation testing
+./gradlew test --tests "finance.controllers.dto.PaymentInputDtoSpec"
+
+# GraphQL integration tests (function-focused)
+SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "finance.graphql.*MutationIntSpec" --continue
+SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "finance.graphql.*QueryIntSpec" --continue
+
 # Functional tests with Spring Boot 4.0
-SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*IsolatedSpec" --continue
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*FunctionalSpec" --continue
 
 # Integration tests with Java 21 features
 SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "*IntSpec" --continue
@@ -548,7 +637,48 @@ SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "*IntSpec" --contin
 SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "*MedicalExpense*" --continue
 
 # Circuit breaker and resilience testing
-SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.*ControllerIsolatedSpec" --continue
+SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controllers.*ControllerFunctionalSpec" --continue
+
+# Complete DTO and GraphQL test suite
+./gradlew test --tests "*.dto.*" && SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "*.graphql.*" --continue
+```
+
+## GraphQL Architecture
+
+### Centralized Controller Design
+The application uses a centralized GraphQL controller architecture for better maintainability:
+
+#### Controller Responsibilities
+- **GraphQLQueryController**: All GraphQL queries (payments, transfers, accounts, etc.)
+- **GraphQLMutationController**: All GraphQL mutations (create, update, delete operations)
+- **TransactionGraphQLBatchController**: Batch operations for transaction processing
+- **GraphQLExceptionHandler**: Centralized error handling and response formatting
+
+#### Benefits of Centralized Architecture
+- **Consistency**: Uniform error handling and response patterns
+- **Maintainability**: Single point of control for GraphQL operations
+- **Testing**: Focused integration tests per operation type
+- **Security**: Centralized authentication and authorization
+- **Monitoring**: Unified metrics and logging for all GraphQL operations
+
+#### GraphQL Schema Organization
+- **Input Types**: Correspond to DTO classes (PaymentInput → PaymentInputDto)
+- **Output Types**: Map to domain entities with GraphQL-specific serialization
+- **Schema Location**: `src/main/resources/graphql/` with `.graphqls` extensions
+- **Extended Scalars**: UUID, BigDecimal, Date types via GraphQL Extended Scalars 24.0
+
+#### Testing Strategy by Layer
+```groovy
+// Integration tests focus on specific operations
+class PaymentMutationIntSpec extends BaseIntegrationSpec {
+    // Test GraphQLMutationController.createPayment
+    // Test GraphQLMutationController.deletePayment
+}
+
+class PaymentQueryIntSpec extends BaseIntegrationSpec {
+    // Test GraphQLQueryController.payments
+    // Test GraphQLQueryController.payment(id)
+}
 ```
 
 ## Utility Scripts and Tools
@@ -576,3 +706,46 @@ SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --tests "finance.controller
 - **run-docker-backup.sh**: Dockerized database backup
 
 These utilities support the complete development lifecycle from code quality to production deployment.
+
+## Recent Architecture Validation (2024)
+
+### DTO Architecture Completion
+**Status**: ✅ COMPLETE
+- All required DTOs implemented: PaymentInputDto, TransferInputDto, AccountInputDto, DescriptionInputDto
+- Comprehensive unit test coverage in `src/test/unit/groovy/finance/controllers/dto/`
+- Jakarta validation patterns established for all input types
+- Groovy-Kotlin constructor interop patterns documented and tested
+
+### GraphQL Architecture Validation
+**Status**: ✅ VALIDATED
+- Confirmed centralized controller architecture (no separate Payment/Transfer controllers)
+- Integration tests reorganized with function-focused naming conventions
+- Removed misleading test filenames that suggested non-existent controller separation
+- Established clear testing patterns for mutations vs queries
+
+### Test Organization Improvements
+**Status**: ✅ IMPROVED
+- DTO unit tests properly organized in dedicated package structure
+- Integration tests use focused naming: `PaymentMutationIntSpec`, `PaymentQueryIntSpec`
+- Fixed Groovy-Kotlin constructor interop issues across entire test suite
+- Established consistent test data patterns for financial entities
+
+### Key Architectural Decisions Confirmed
+1. **DTOs Retained**: DTOs provide value through validation separation, API stability, and security
+2. **Centralized GraphQL**: Single mutation/query controllers prevent code duplication
+3. **Function-Focused Testing**: Tests organized by operation type rather than entity type
+4. **Complete Validation**: All input paths protected by Jakarta validation annotations
+
+## Critical Testing Patterns
+
+### Groovy-Kotlin Interoperability
+- ALWAYS provide ALL constructor parameters when calling Kotlin data classes from Groovy tests
+- DTO unit tests must be in `src/test/unit/groovy/finance/controllers/dto/` package
+- Use realistic financial data patterns ("checking_primary", "100.00", proper UUIDs)
+- Profile-specific test commands ensure proper isolation (SPRING_PROFILES_ACTIVE=func/int)
+
+### Test Data Standards
+- **Account Names**: Use patterns like "checking_primary", "savings_primary" (single underscore)
+- **Amounts**: Use precise decimals like "100.00", "250.50" with proper BigDecimal construction
+- **Dates**: Use `Date.valueOf("YYYY-MM-DD")` for SQL date compatibility
+- **UUIDs**: Use proper UUID format "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" for GUID validation testing
