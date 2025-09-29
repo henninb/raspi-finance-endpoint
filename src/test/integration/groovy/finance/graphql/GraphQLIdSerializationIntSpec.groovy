@@ -19,7 +19,7 @@ import java.sql.Date
     'spring.graphql.path=/graphql',
     'spring.main.web-application-type=servlet'
 ])
-class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
+class GraphQLIdSerializationIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired(required = false)
     GraphQlSource graphQlSource

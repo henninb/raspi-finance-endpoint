@@ -3,7 +3,7 @@ package finance
 import spock.lang.Shared
 import org.springframework.http.*
 
-class HealthEndpointSpec extends BaseRestTemplateIntegrationSpec {
+class HealthEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Shared
     protected HttpHeaders headers = new HttpHeaders()
