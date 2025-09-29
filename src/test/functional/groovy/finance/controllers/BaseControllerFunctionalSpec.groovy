@@ -39,7 +39,7 @@ import java.util.Date
 @EnableSharedInjection
 @Transactional
 @Import([TestSecurityConfig])
-class BaseControllerSpec extends Specification {
+class BaseControllerFunctionalSpec extends Specification {
     @Autowired
     protected WebTestClient webTestClient
 

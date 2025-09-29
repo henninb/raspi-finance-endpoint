@@ -12,7 +12,7 @@ import spock.lang.Unroll
  * DO NOT MODIFY - This serves as the authoritative inconsistency reference.
  */
 @ActiveProfiles("func")
-class ControllerInconsistencyDocumentationSpec extends Specification {
+class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
 
     // Empty Result Behavior Inconsistencies
 

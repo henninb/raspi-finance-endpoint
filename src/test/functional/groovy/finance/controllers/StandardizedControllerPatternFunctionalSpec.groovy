@@ -12,7 +12,7 @@ import spock.lang.Unroll
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("func")
-class StandardizedControllerPatternSpec extends Specification {
+class StandardizedControllerPatternFunctionalSpec extends Specification {
 
     // STANDARDIZATION REQUIREMENT TESTS
 

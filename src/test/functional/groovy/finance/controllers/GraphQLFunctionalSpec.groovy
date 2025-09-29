@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("func")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class GraphqlSpec extends BaseControllerSpec {
+class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     MockMvc mockMvc

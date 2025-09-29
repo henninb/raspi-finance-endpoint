@@ -9,7 +9,7 @@ import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 
 @ActiveProfiles("func")
-class MedicalExpenseControllerExtendedIsolatedSpec extends BaseControllerSpec {
+class MedicalExpenseControllerExtendedFunctionalSpec extends BaseControllerFunctionalSpec {
 
     private static final String ENDPOINT = 'medical-expenses'
 

@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 
 @ActiveProfiles("func")
-class UuidControllerIsolatedSpec extends BaseControllerSpec {
+class UuidControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'uuid'

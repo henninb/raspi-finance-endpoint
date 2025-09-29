@@ -15,7 +15,7 @@ import spock.lang.Stepwise
 
 @Stepwise
 @ActiveProfiles("func")
-class SecurityAuditSpec extends BaseControllerSpec {
+class SecurityAuditFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     ListAppender<ILoggingEvent> securityLogAppender

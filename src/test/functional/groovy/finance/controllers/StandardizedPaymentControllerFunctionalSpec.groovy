@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.controllers.BaseControllerSpec
+import finance.controllers.BaseControllerFunctionalSpec
 import finance.helpers.SmartPaymentBuilder
 import finance.helpers.TestFixtures
 import groovy.json.JsonSlurper
@@ -24,7 +24,7 @@ import spock.lang.Unroll
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedPaymentControllerSpec extends BaseControllerSpec {
+class StandardizedPaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     TestFixtures testFixtures

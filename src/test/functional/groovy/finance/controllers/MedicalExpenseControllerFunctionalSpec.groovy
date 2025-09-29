@@ -10,7 +10,7 @@ import java.math.BigDecimal
 import java.sql.Date
 
 @ActiveProfiles("func")
-class MedicalExpenseControllerIsolatedSpec extends BaseControllerSpec {
+class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'medical-expenses'

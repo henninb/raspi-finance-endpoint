@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 
 @ActiveProfiles("func")
-class ValidationAmountControllerIsolatedSpec extends BaseControllerSpec {
+class ValidationAmountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     protected JdbcTemplate jdbcTemplate

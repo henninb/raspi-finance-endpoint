@@ -11,7 +11,7 @@ import spock.lang.Shared
 import java.sql.Date
 
 @ActiveProfiles("func")
-class PaymentControllerIsolatedSpec extends BaseControllerSpec {
+class PaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'payment'

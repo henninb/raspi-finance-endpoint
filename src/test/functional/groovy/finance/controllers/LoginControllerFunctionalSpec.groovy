@@ -12,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 
 @ActiveProfiles("func")
-class LoginControllerIsolatedSpec extends BaseControllerSpec {
+class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'login'

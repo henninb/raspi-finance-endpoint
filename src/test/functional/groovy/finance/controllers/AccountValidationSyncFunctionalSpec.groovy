@@ -30,7 +30,7 @@ import java.util.Date
  */
 @Slf4j
 @ActiveProfiles("func")
-class AccountValidationSyncSpec extends BaseControllerSpec {
+class AccountValidationSyncFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     private final String accountEndpoint = "account"

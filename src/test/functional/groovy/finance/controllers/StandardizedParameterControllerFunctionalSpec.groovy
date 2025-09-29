@@ -1,7 +1,7 @@
 package finance.controllers
 
 import finance.domain.Parameter
-import finance.controllers.BaseControllerSpec
+import finance.controllers.BaseControllerFunctionalSpec
 import finance.helpers.SmartParameterBuilder
 import finance.helpers.TestFixtures
 import finance.helpers.ParameterTestContext
@@ -25,7 +25,7 @@ import spock.lang.Unroll
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedParameterControllerSpec extends BaseControllerSpec {
+class StandardizedParameterControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     TestFixtures testFixtures

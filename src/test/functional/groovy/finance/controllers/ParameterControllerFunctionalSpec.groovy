@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 
 @ActiveProfiles("func")
-class ParameterControllerIsolatedSpec extends BaseControllerSpec {
+class ParameterControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'parameter'  // Updated to match new controller mapping

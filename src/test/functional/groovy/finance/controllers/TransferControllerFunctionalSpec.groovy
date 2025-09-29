@@ -11,7 +11,7 @@ import spock.lang.Shared
 import java.sql.Date
 
 @ActiveProfiles("func")
-class TransferControllerIsolatedSpec extends BaseControllerSpec {
+class TransferControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'transfer'

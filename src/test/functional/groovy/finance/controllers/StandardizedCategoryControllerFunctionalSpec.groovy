@@ -1,10 +1,10 @@
 package finance.controllers
 
-import finance.domain.Description
-import finance.controllers.BaseControllerSpec
-import finance.helpers.SmartDescriptionBuilder
+import finance.domain.Category
+import finance.controllers.BaseControllerFunctionalSpec
+import finance.helpers.SmartCategoryBuilder
 import finance.helpers.TestFixtures
-import finance.helpers.DescriptionTestContext
+import finance.helpers.CategoryTestContext
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,162 +19,162 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 /**
- * TDD specification for standardized DescriptionController implementation.
- * This follows the proven template from CategoryController standardization.
+ * TDD specification for standardized CategoryController implementation.
+ * This follows the proven template from ParameterController standardization.
  * Tests define the expected behavior after applying standardization patterns.
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
+class StandardizedCategoryControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     TestFixtures testFixtures
 
     @Shared
-    private final String endpointName = "/description"
+    private final String endpointName = "/category"
 
     @Shared
-    DescriptionTestContext descriptionTestContext
+    CategoryTestContext categoryTestContext
 
     // STANDARDIZED METHOD NAMING TESTS
 
-    void 'should implement standardized method name: findAllActive instead of selectAllDescriptions'() {
-        when: 'requesting active descriptions with standardized endpoint'
+    void 'should implement standardized method name: findAllActive instead of categories'() {
+        when: 'requesting active categories with standardized endpoint'
         ResponseEntity<String> response = getEndpoint(endpointName + "/active")
 
         then: 'should return successful response'
         response.statusCode == HttpStatus.OK
 
-        and: 'should return list of descriptions (may be empty)'
+        and: 'should return list of categories (may be empty)'
         def jsonResponse = new JsonSlurper().parseText(response.body)
         jsonResponse instanceof List
 
         and: 'documents expected standardization'
-        // After standardization: GET /api/description/active
-        // Method name: findAllActive() instead of selectAllDescriptions()
+        // After standardization: GET /api/category/active
+        // Method name: findAllActive() instead of categories()
         // Endpoint: /active instead of /select/active
         // Behavior: Always returns list, never throws 404
         true
     }
 
-    void 'should implement standardized method name: findById instead of selectDescriptionName'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should implement standardized method name: findById instead of category'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'a test description exists'
-        Description description = descriptionTestContext.createUniqueDescription("test_description")
+        and: 'a test category exists'
+        Category category = categoryTestContext.createUniqueCategory("test_category")
 
-        ResponseEntity<String> insertResponse = postEndpoint(endpointName, description.toString())
+        ResponseEntity<String> insertResponse = postEndpoint(endpointName, category.toString())
         insertResponse.statusCode == HttpStatus.CREATED
 
-        when: 'requesting single description with standardized endpoint'
-        ResponseEntity<String> response = getEndpoint(endpointName + "/${description.descriptionName}")
+        when: 'requesting single category with standardized endpoint'
+        ResponseEntity<String> response = getEndpoint(endpointName + "/${category.categoryName}")
 
         then: 'should return successful response'
         response.statusCode == HttpStatus.OK
 
-        and: 'should return description object'
+        and: 'should return category object'
         def jsonResponse = new JsonSlurper().parseText(response.body)
-        jsonResponse.descriptionName == description.descriptionName
+        jsonResponse.categoryName == category.categoryName
 
         and: 'documents expected standardization'
-        // After standardization: GET /api/description/{descriptionName}
-        // Method name: findById(descriptionName) instead of selectDescriptionName(descriptionName)
+        // After standardization: GET /api/category/{categoryName}
+        // Method name: findById(categoryName) instead of category(categoryName)
         // Endpoint: /{id} instead of /select/{id}
         // Behavior: Returns entity or throws 404
         true
     }
 
-    void 'should implement standardized method name: save instead of insertDescription'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should implement standardized method name: save instead of insertCategory'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'a new description to create'
-        Description description = descriptionTestContext.createUniqueDescription("create_description")
+        and: 'a new category to create'
+        Category category = categoryTestContext.createUniqueCategory("create_category")
 
-        when: 'creating description with standardized endpoint'
-        ResponseEntity<String> response = postEndpoint(endpointName, description.toString())
+        when: 'creating category with standardized endpoint'
+        ResponseEntity<String> response = postEndpoint(endpointName, category.toString())
 
         then: 'should return 201 CREATED'
         response.statusCode == HttpStatus.CREATED
 
-        and: 'should return created description'
+        and: 'should return created category'
         def jsonResponse = new JsonSlurper().parseText(response.body)
-        jsonResponse.descriptionName == description.descriptionName
+        jsonResponse.categoryName == category.categoryName
 
         and: 'documents expected standardization'
-        // After standardization: POST /api/description
-        // Method name: save(description) instead of insertDescription(description)
+        // After standardization: POST /api/category
+        // Method name: save(category) instead of insertCategory(category)
         // Endpoint: / instead of /insert
         // Behavior: Returns 201 CREATED with entity
         true
     }
 
-    void 'should implement standardized method name: update instead of updateDescription'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should implement standardized method name: update instead of updateCategory'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'an existing description'
-        Description description = descriptionTestContext.createUniqueDescription("update_description")
+        and: 'an existing category'
+        Category category = categoryTestContext.createUniqueCategory("update_category")
 
-        ResponseEntity<String> insertResponse = postEndpoint(endpointName, description.toString())
+        ResponseEntity<String> insertResponse = postEndpoint(endpointName, category.toString())
         insertResponse.statusCode == HttpStatus.CREATED
 
-        and: 'get the created description with actual database ID'
-        def createdDescription = new JsonSlurper().parseText(insertResponse.body)
-        description.descriptionId = createdDescription.descriptionId
+        and: 'get the created category with actual database ID'
+        def createdCategory = new JsonSlurper().parseText(insertResponse.body)
+        category.categoryId = createdCategory.categoryId
 
-        // Store the original description name for the URL
-        String originalDescriptionName = description.descriptionName
+        // Store the original category name for the URL
+        String originalCategoryName = category.categoryName
 
-        and: 'updated description data with unique name'
+        and: 'updated category data with unique name'
         // Generate unique updated name to avoid constraint violations
-        String uniqueUpdatedName = SmartDescriptionBuilder.builderForOwner(testOwner)
-                .withUniqueDescriptionName("updated")
-                .build().descriptionName
-        description.descriptionName = uniqueUpdatedName
+        String uniqueUpdatedName = SmartCategoryBuilder.builderForOwner(testOwner)
+                .withUniqueCategoryName("updated")
+                .build().categoryName
+        category.categoryName = uniqueUpdatedName
 
-        when: 'updating description with standardized endpoint using original name in URL'
-        ResponseEntity<String> response = putEndpoint(endpointName + "/${originalDescriptionName}", description.toString())
+        when: 'updating category with standardized endpoint using original name in URL'
+        ResponseEntity<String> response = putEndpoint(endpointName + "/${originalCategoryName}", category.toString())
 
         then: 'should return 200 OK'
         response.statusCode == HttpStatus.OK
 
-        and: 'should return updated description'
+        and: 'should return updated category'
         def jsonResponse = new JsonSlurper().parseText(response.body)
-        jsonResponse.descriptionName == uniqueUpdatedName
+        jsonResponse.categoryName == uniqueUpdatedName
 
         and: 'documents expected standardization'
-        // After standardization: PUT /api/description/{descriptionName}
-        // Method name: update(descriptionName, description) instead of updateDescription(descriptionName, description)
+        // After standardization: PUT /api/category/{categoryName}
+        // Method name: update(categoryName, category) instead of updateCategory(categoryName, category)
         // Endpoint: /{id} instead of /update/{id}
         // Behavior: Returns 200 OK with entity
         true
     }
 
-    void 'should implement standardized method name: deleteById instead of deleteByDescription'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should implement standardized method name: deleteById instead of deleteCategory'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'an existing description'
-        Description description = descriptionTestContext.createUniqueDescription("delete_description")
+        and: 'an existing category'
+        Category category = categoryTestContext.createUniqueCategory("delete_category")
 
-        ResponseEntity<String> insertResponse = postEndpoint(endpointName, description.toString())
+        ResponseEntity<String> insertResponse = postEndpoint(endpointName, category.toString())
         insertResponse.statusCode == HttpStatus.CREATED
 
-        when: 'deleting description with standardized endpoint'
-        ResponseEntity<String> response = deleteEndpoint(endpointName + "/${description.descriptionName}")
+        when: 'deleting category with standardized endpoint'
+        ResponseEntity<String> response = deleteEndpoint(endpointName + "/${category.categoryName}")
 
         then: 'should return 200 OK with deleted entity'
         response.statusCode == HttpStatus.OK
 
-        and: 'should return deleted description'
+        and: 'should return deleted category'
         def jsonResponse = new JsonSlurper().parseText(response.body)
-        jsonResponse.descriptionName == description.descriptionName
+        jsonResponse.categoryName == category.categoryName
 
         and: 'documents expected standardization'
-        // After standardization: DELETE /api/description/{descriptionName}
-        // Method name: deleteById(descriptionName) instead of deleteByDescription(descriptionName)
+        // After standardization: DELETE /api/category/{categoryName}
+        // Method name: deleteById(categoryName) instead of deleteCategory(categoryName)
         // Endpoint: /{id} instead of /delete/{id}
         // Behavior: Returns 200 OK with deleted entity
         true
@@ -183,25 +183,25 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
     // STANDARDIZED PARAMETER NAMING TESTS
 
     void 'should use camelCase parameter names without @PathVariable annotations'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'a test description'
-        Description description = descriptionTestContext.createUniqueDescription("camelcase_description")
+        and: 'a test category'
+        Category category = categoryTestContext.createUniqueCategory("camelcase_category")
 
-        postEndpoint(endpointName, description.toString())
+        postEndpoint(endpointName, category.toString())
 
-        when: 'accessing description by ID with camelCase parameter'
-        ResponseEntity<String> response = getEndpoint(endpointName + "/${description.descriptionName}")
+        when: 'accessing category by ID with camelCase parameter'
+        ResponseEntity<String> response = getEndpoint(endpointName + "/${category.categoryName}")
 
         then: 'should handle camelCase parameter correctly'
         response.statusCode == HttpStatus.OK
 
         and: 'documents parameter naming standardization'
         // After standardization:
-        // fun findById(descriptionName: String) - no @PathVariable annotation
-        // URL: /api/description/{descriptionName} - camelCase in URL
-        // No snake_case annotations like @PathVariable("description_name")
+        // fun findById(categoryName: String) - no @PathVariable annotation
+        // URL: /api/category/{categoryName} - camelCase in URL
+        // No snake_case annotations like @PathVariable("category_name")
         true
     }
 
@@ -212,14 +212,14 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         // Create a new unique test owner for this test to ensure complete isolation
         String isolatedTestOwner = "emptytest_${UUID.randomUUID().toString().substring(0, 8)}"
 
-        and: 'a test description context for the isolated owner'
-        DescriptionTestContext isolatedDescriptionContext = testFixtures.createDescriptionTestContext(isolatedTestOwner)
+        and: 'a test category context for the isolated owner'
+        CategoryTestContext isolatedCategoryContext = testFixtures.createCategoryTestContext(isolatedTestOwner)
 
-        and: 'ensure no descriptions exist for this isolated test owner'
-        // The TestDataManager creates descriptions, but we'll verify empty state first
+        and: 'ensure no categories exist for this isolated test owner'
+        // The TestDataManager creates categories, but we'll verify empty state first
         // by checking that our isolated endpoint returns empty results
 
-        when: 'requesting all active descriptions for our isolated test context'
+        when: 'requesting all active categories for our isolated test context'
         ResponseEntity<String> response = getEndpoint(endpointName + "/active")
 
         then: 'should return 200 OK with consistent response'
@@ -228,7 +228,7 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         and: 'should return a list (may not be empty due to other test data, but validates structure)'
         def jsonResponse = new JsonSlurper().parseText(response.body)
         jsonResponse instanceof List
-        // Note: List may contain descriptions from other tests, which is expected
+        // Note: List may contain categories from other tests, which is expected
         // The key test is that we get a list response, not a 404
 
         and: 'documents empty result standardization behavior'
@@ -238,12 +238,12 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         true
 
         cleanup: 'clean up isolated test data'
-        isolatedDescriptionContext?.cleanup()
+        isolatedCategoryContext?.cleanup()
     }
 
     void 'should throw 404 for findById when entity not found'() {
-        when: 'requesting non-existent description'
-        ResponseEntity<String> response = getEndpoint(endpointName + "/non_existent_description")
+        when: 'requesting non-existent category'
+        ResponseEntity<String> response = getEndpoint(endpointName + "/non_existent_category")
 
         then: 'should return 404 NOT_FOUND'
         response.statusCode == HttpStatus.NOT_FOUND
@@ -256,29 +256,28 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
 
     // STANDARDIZED EXCEPTION HANDLING TESTS
 
-    void 'should handle duplicate description creation with standardized exception response'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should handle duplicate category creation with standardized exception response'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'an existing description'
-        Description description = descriptionTestContext.createUniqueDescription("duplicate_description")
+        and: 'an existing category'
+        Category category = categoryTestContext.createUniqueCategory("duplicate_category")
 
-        ResponseEntity<String> firstInsert = postEndpoint(endpointName, description.toString())
+        ResponseEntity<String> firstInsert = postEndpoint(endpointName, category.toString())
         firstInsert.statusCode == HttpStatus.CREATED
 
-        when: 'attempting to create duplicate description'
-        ResponseEntity<String> response = postEndpoint(endpointName, description.toString())
+        when: 'attempting to create duplicate category'
+        ResponseEntity<String> response = postEndpoint(endpointName, category.toString())
 
-        then: 'should return 409 CONFLICT with standardized response'
+        then: 'should return 409 CONFLICT with standardized message'
         response.statusCode == HttpStatus.CONFLICT
 
-        and: 'should have empty response body (REST-compliant error handling)'
-        response.body == null || response.body.isEmpty()
+        and: 'should contain standardized error message format'
+        response.body.contains("Duplicate")
 
         and: 'documents standardized exception handling'
         // After standardization: DataIntegrityViolationException -> 409 CONFLICT
-        // ServiceResult pattern returns empty body for error responses (REST-compliant)
-        // Status code provides sufficient information for client error handling
+        // Consistent error message format across all controllers
         true
     }
 
@@ -302,9 +301,9 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
 
         where:
         scenario | invalidData
-        'Invalid description format' | '{"invalid": "data"}'
+        'Invalid category format' | '{"invalid": "data"}'
         'Missing required fields' | '{}'
-        'Constraint violations' | '{"descriptionName": "", "activeStatus": true}'
+        'Constraint violations' | '{"categoryName": "", "activeStatus": true}'
     }
 
     // STANDARDIZED ENDPOINT PATTERN TESTS
@@ -314,96 +313,96 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         expect: 'All endpoints should follow RESTful patterns'
 
         // After standardization:
-        // GET /api/description/active - collection retrieval
-        // GET /api/description/{descriptionName} - single entity retrieval
-        // POST /api/description - entity creation
-        // PUT /api/description/{descriptionName} - entity update
-        // DELETE /api/description/{descriptionName} - entity deletion
+        // GET /api/category/active - collection retrieval
+        // GET /api/category/{categoryName} - single entity retrieval
+        // POST /api/category - entity creation
+        // PUT /api/category/{categoryName} - entity update
+        // DELETE /api/category/{categoryName} - entity deletion
         true
 
         where:
         operation | endpoint
-        'findAllActive' | 'GET /api/description/active'
-        'findById' | 'GET /api/description/{descriptionName}'
-        'save' | 'POST /api/description'
-        'update' | 'PUT /api/description/{descriptionName}'
-        'deleteById' | 'DELETE /api/description/{descriptionName}'
+        'findAllActive' | 'GET /api/category/active'
+        'findById' | 'GET /api/category/{categoryName}'
+        'save' | 'POST /api/category'
+        'update' | 'PUT /api/category/{categoryName}'
+        'deleteById' | 'DELETE /api/category/{categoryName}'
     }
 
     // STANDARDIZED REQUEST/RESPONSE BODY TESTS
 
-    void 'should use Description entity type for all request bodies'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should use Category entity type for all request bodies'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'a description entity'
-        Description description = descriptionTestContext.createUniqueDescription("entity_description")
+        and: 'a category entity'
+        Category category = categoryTestContext.createUniqueCategory("entity_category")
 
-        when: 'creating description with entity body'
-        ResponseEntity<String> response = postEndpoint(endpointName, description.toString())
+        when: 'creating category with entity body'
+        ResponseEntity<String> response = postEndpoint(endpointName, category.toString())
 
-        then: 'should accept Description entity type'
+        then: 'should accept Category entity type'
         response.statusCode == HttpStatus.CREATED
 
         and: 'documents standardized request body handling'
-        // After standardization: save(description: Description)
+        // After standardization: save(category: Category)
         // No Map<String, Any> usage like AccountController
         // All request bodies should use entity types directly
         true
     }
 
-    void 'should return Description entity type for all response bodies'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+    void 'should return Category entity type for all response bodies'() {
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'a test description'
-        Description description = descriptionTestContext.createUniqueDescription("response_description")
+        and: 'a test category'
+        Category category = categoryTestContext.createUniqueCategory("response_category")
 
-        postEndpoint(endpointName, description.toString())
+        postEndpoint(endpointName, category.toString())
 
-        when: 'retrieving description'
-        ResponseEntity<String> response = getEndpoint(endpointName + "/${description.descriptionName}")
+        when: 'retrieving category'
+        ResponseEntity<String> response = getEndpoint(endpointName + "/${category.categoryName}")
 
-        then: 'should return Description entity'
+        then: 'should return Category entity'
         response.statusCode == HttpStatus.OK
 
         def jsonResponse = new JsonSlurper().parseText(response.body)
-        jsonResponse.descriptionName == description.descriptionName
-        jsonResponse.activeStatus == description.activeStatus
+        jsonResponse.categoryName == category.categoryName
+        jsonResponse.activeStatus == category.activeStatus
 
         and: 'documents standardized response body handling'
-        // After standardization: ResponseEntity<Description>
+        // After standardization: ResponseEntity<Category>
         // Entity objects for all CRUD operations
-        // List<Description> for collection operations
+        // List<Category> for collection operations
         true
     }
 
     // STANDARDIZED LOGGING TESTS
 
     void 'should implement standardized logging patterns'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'a test description for logging verification'
-        Description description = descriptionTestContext.createUniqueDescription("log_description")
+        and: 'a test category for logging verification'
+        Category category = categoryTestContext.createUniqueCategory("log_category")
 
         when: 'performing CRUD operations'
-        ResponseEntity<String> createResponse = postEndpoint(endpointName, description.toString())
-        ResponseEntity<String> readResponse = getEndpoint(endpointName + "/${description.descriptionName}")
+        ResponseEntity<String> createResponse = postEndpoint(endpointName, category.toString())
+        ResponseEntity<String> readResponse = getEndpoint(endpointName + "/${category.categoryName}")
 
         and: 'update with correct database ID and unique name'
-        def createdDescription = new JsonSlurper().parseText(createResponse.body)
-        description.descriptionId = createdDescription.descriptionId
+        def createdCategory = new JsonSlurper().parseText(createResponse.body)
+        category.categoryId = createdCategory.categoryId
 
-        // Store the original description name for the URL
-        String originalDescriptionName = description.descriptionName
+        // Store the original category name for the URL
+        String originalCategoryName = category.categoryName
 
         // Generate unique updated name for logging test
-        String uniqueLogName = SmartDescriptionBuilder.builderForOwner(testOwner)
-                .withUniqueDescriptionName("logupdate")
-                .build().descriptionName
-        description.descriptionName = uniqueLogName
-        ResponseEntity<String> updateResponse = putEndpoint(endpointName + "/${originalDescriptionName}", description.toString())
+        String uniqueLogName = SmartCategoryBuilder.builderForOwner(testOwner)
+                .withUniqueCategoryName("logupdate")
+                .build().categoryName
+        category.categoryName = uniqueLogName
+        ResponseEntity<String> updateResponse = putEndpoint(endpointName + "/${originalCategoryName}", category.toString())
         ResponseEntity<String> deleteResponse = deleteEndpoint(endpointName + "/${uniqueLogName}")
 
         then: 'all operations should complete successfully'
@@ -424,39 +423,37 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
     // BUSINESS LOGIC ENDPOINT PRESERVATION
 
     void 'should preserve merge endpoint as business logic (not standardized)'() {
-        given: 'a test description context'
-        descriptionTestContext = testFixtures.createDescriptionTestContext(testOwner)
+        given: 'a test category context'
+        categoryTestContext = testFixtures.createCategoryTestContext(testOwner)
 
-        and: 'two descriptions for merging'
-        Description sourceDescription = descriptionTestContext.createUniqueDescription("source_description")
-        Description targetDescription = descriptionTestContext.createUniqueDescription("target_description")
+        and: 'two categories for merging'
+        Category oldCategory = categoryTestContext.createUniqueCategory("old_category")
+        Category newCategory = categoryTestContext.createUniqueCategory("new_category")
 
-        postEndpoint(endpointName, sourceDescription.toString())
-        postEndpoint(endpointName, targetDescription.toString())
+        postEndpoint(endpointName, oldCategory.toString())
+        postEndpoint(endpointName, newCategory.toString())
 
-        and: 'merge request object'
-        def mergeRequest = new finance.domain.MergeDescriptionsRequest([sourceDescription.descriptionName], targetDescription.descriptionName)
-
-        when: 'attempting to merge descriptions using existing business logic endpoint'
-        ResponseEntity<String> response = postEndpoint(endpointName + "/merge", mergeRequest.toString())
+        when: 'attempting to merge categories using existing business logic endpoint'
+        String mergeUrl = endpointName + "/merge?old=${oldCategory.categoryName}&new=${newCategory.categoryName}"
+        ResponseEntity<String> response = putEndpoint(mergeUrl, "")
 
         then: 'should either succeed or fail gracefully (business logic preserved)'
-        response.statusCode in [HttpStatus.OK, HttpStatus.NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.BAD_REQUEST]
+        response.statusCode in [HttpStatus.OK, HttpStatus.NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR]
 
         and: 'documents business logic endpoint preservation'
         // After standardization: Business logic endpoints like /merge should be preserved
         // Only CRUD operations get standardized, not specialized business operations
-        // /merge endpoint remains as POST /api/description/merge with JSON body
+        // /merge endpoint remains as PUT /api/category/merge?old=A&new=B
         true
     }
 
     // TEMPLATE COMPLETENESS VERIFICATION
 
     void 'should serve as complete standardization template for next controller migrations'() {
-        expect: 'DescriptionController standardization covers all required patterns'
+        expect: 'CategoryController standardization covers all required patterns'
 
         def standardizationAspects = [
-                'Method naming standardization (selectAllDescriptions -> findAllActive)',
+                'Method naming standardization (categories -> findAllActive)',
                 'Parameter naming standardization (camelCase)',
                 'Empty result handling standardization (404 -> empty list)',
                 'HTTP status code standardization',
@@ -469,14 +466,15 @@ class StandardizedDescriptionControllerSpec extends BaseControllerSpec {
         ]
 
         // This template should be applied next to:
-        // 1. PaymentController (moderate complexity)
-        // 2. AccountController (high complexity - business logic separation)
-        // 3. PendingTransactionController (unique patterns)
-        // 4. TransactionController (most complex - hierarchical endpoints)
+        // 1. DescriptionController (similar complexity)
+        // 2. PaymentController (moderate complexity)
+        // 3. AccountController (high complexity - business logic separation)
+        // 4. PendingTransactionController (unique patterns)
+        // 5. TransactionController (most complex - hierarchical endpoints)
 
         standardizationAspects.size() == 10
 
-        and: 'provides clear migration guidance for PaymentController'
+        and: 'provides clear migration guidance for DescriptionController'
         true
     }
 

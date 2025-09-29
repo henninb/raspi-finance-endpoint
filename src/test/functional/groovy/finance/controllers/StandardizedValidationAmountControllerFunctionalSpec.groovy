@@ -10,7 +10,7 @@ import groovy.util.logging.Slf4j
 
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedValidationAmountControllerSpec extends BaseControllerSpec {
+class StandardizedValidationAmountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     protected JdbcTemplate jdbcTemplate
