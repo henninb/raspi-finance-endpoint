@@ -146,7 +146,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         and: "authenticated user"
         withUserRole("test", ["USER"])
         when:
-        def result = mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, sourceAccountName, destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("250.00"), null))
+        def result = mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, sourceAccountName, destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("250.00"), null, null, null))
 
         then: "should create and return payment with testOwner isolation"
         result != null
@@ -200,7 +200,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         and: "authenticated user"
         withUserRole("test", ["USER"])
         when:
-        mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, "ab", destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("100.00"), null))
+        mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, "ab", destinationAccountName, Date.valueOf("2024-01-15"), new BigDecimal("100.00"), null, null, null))
 
         then: "should throw runtime exception for validation failure"
         thrown(RuntimeException)
@@ -226,7 +226,7 @@ class PaymentControllerMigratedIntegrationSpec extends BaseIntegrationSpec {
         and: "authenticated user"
         withUserRole("test", ["USER"])
         when:
-        mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, sourceAccountName, savedDebitAccount.accountNameOwner, Date.valueOf("2024-01-15"), new BigDecimal("100.00"), null))
+        mutationController.createPayment(new finance.controllers.dto.PaymentInputDto(null, sourceAccountName, savedDebitAccount.accountNameOwner, Date.valueOf("2024-01-15"), new BigDecimal("100.00"), null, null, null))
 
         then: "should throw validation exception for payment to debit account"
         thrown(RuntimeException)
