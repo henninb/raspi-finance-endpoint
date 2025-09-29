@@ -3,7 +3,7 @@ package finance.guards
 import spock.lang.Ignore
 import spock.lang.Specification
 
-class LegacyFixtureGuardSpec extends Specification {
+class LegacyFixtureGuardFunctionalSpec extends Specification {
 
     def "no legacy data.sql or schema.sql in functional resources"() {
         given:
@@ -34,4 +34,3 @@ class LegacyFixtureGuardSpec extends Specification {
         !text.contains("spring.sql.init.data-locations")
     }
 }
-
