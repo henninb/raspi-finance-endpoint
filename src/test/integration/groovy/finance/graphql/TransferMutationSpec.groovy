@@ -86,6 +86,28 @@ class TransferMutationSpec extends BaseIntegrationSpec {
         thrown(ConstraintViolationException)
     }
 
+    def "createTransfer mutation fails when source account missing"() {
+        given:
+        withUserRole()
+
+        when:
+        mutationController.createTransfer(
+                new finance.controllers.dto.TransferInputDto(
+                        null,
+                        "nonexistent_${java.util.UUID.randomUUID().toString().take(8)}",
+                        destName,
+                        Date.valueOf("2024-02-01"),
+                        new BigDecimal("300.00"),
+                        null,
+                        null,
+                        null
+                )
+        )
+
+        then:
+        thrown(RuntimeException)
+    }
+
     def "deleteTransfer mutation returns true for existing transfer"() {
         given:
         withUserRole()
