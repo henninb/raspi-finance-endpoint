@@ -14,7 +14,7 @@ import java.math.BigDecimal
 import java.sql.Date
 import java.util.UUID
 
-class PaymentQuerySpec extends BaseIntegrationSpec {
+class PaymentQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
     StandardizedPaymentService paymentService
@@ -98,4 +98,3 @@ class PaymentQuerySpec extends BaseIntegrationSpec {
         paymentService.insertPayment(payment)
     }
 }
-

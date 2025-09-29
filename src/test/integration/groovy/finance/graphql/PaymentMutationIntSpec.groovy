@@ -11,7 +11,7 @@ import java.math.BigDecimal
 import java.sql.Date
 import jakarta.validation.ConstraintViolationException
 
-class PaymentMutationSpec extends BaseIntegrationSpec {
+class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     GraphQLMutationController mutationController
