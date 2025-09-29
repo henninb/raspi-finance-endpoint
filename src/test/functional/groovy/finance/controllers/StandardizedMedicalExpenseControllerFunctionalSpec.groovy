@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 
 @Slf4j
-class StandardizedMedicalExpenseControllerSpec extends BaseControllerSpec {
+class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     String endpointName = 'medical-expenses'

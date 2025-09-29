@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 
 @ActiveProfiles("func")
-class DescriptionControllerIsolatedSpec extends BaseControllerSpec {
+class DescriptionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'description'

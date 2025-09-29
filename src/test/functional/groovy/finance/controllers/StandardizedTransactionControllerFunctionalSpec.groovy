@@ -21,7 +21,7 @@ import spock.lang.Shared
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedTransactionControllerSpec extends BaseControllerSpec {
+class StandardizedTransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     private final String endpointName = "transaction"

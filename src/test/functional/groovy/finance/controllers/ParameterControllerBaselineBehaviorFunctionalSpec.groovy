@@ -14,7 +14,7 @@ import spock.lang.Shared
  */
 @Slf4j
 @ActiveProfiles("func")
-class ParameterControllerBaselineBehaviorSpec extends BaseControllerSpec {
+class ParameterControllerBaselineBehaviorFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     protected String endpointName = 'parameter'
