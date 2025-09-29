@@ -40,12 +40,14 @@ class PaymentMutationSpec extends BaseIntegrationSpec {
         given:
         withUserRole()
         def dto = new PaymentInputDto(
-                null,
-                srcName,
-                destName,
-                Date.valueOf("2024-01-15"),
-                new BigDecimal("123.45"),
-                null
+                null,                           // paymentId
+                srcName,                        // sourceAccount
+                destName,                       // destinationAccount
+                Date.valueOf("2024-01-15"),     // transactionDate
+                new BigDecimal("123.45"),       // amount
+                null,                           // guidSource
+                null,                           // guidDestination
+                null                            // activeStatus
         )
 
         when:
@@ -65,12 +67,14 @@ class PaymentMutationSpec extends BaseIntegrationSpec {
         given:
         withUserRole()
         def dto = new PaymentInputDto(
-                null,
-                srcName,
-                destName,
-                Date.valueOf("2024-01-15"),
-                new BigDecimal("-5.00"),
-                null
+                null,                           // paymentId
+                srcName,                        // sourceAccount
+                destName,                       // destinationAccount
+                Date.valueOf("2024-01-15"),     // transactionDate
+                new BigDecimal("-5.00"),        // amount
+                null,                           // guidSource
+                null,                           // guidDestination
+                null                            // activeStatus
         )
 
         when:

@@ -38,12 +38,14 @@ class GraphQLIdSerializationSpec extends BaseRestTemplateIntegrationSpec {
 
     private static PaymentInputDto paymentDto(String src, String dest) {
         new PaymentInputDto(
-                null,
-                src,
-                dest,
-                Date.valueOf("2024-01-15"),
-                new BigDecimal("12.34"),
-                null
+                null,                           // paymentId
+                src,                            // sourceAccount
+                dest,                           // destinationAccount
+                Date.valueOf("2024-01-15"),     // transactionDate
+                new BigDecimal("12.34"),        // amount
+                null,                           // guidSource
+                null,                           // guidDestination
+                null                            // activeStatus
         )
     }
 
