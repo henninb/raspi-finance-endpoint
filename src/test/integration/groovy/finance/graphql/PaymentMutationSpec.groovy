@@ -83,4 +83,78 @@ class PaymentMutationSpec extends BaseIntegrationSpec {
         then:
         thrown(ConstraintViolationException)
     }
+
+    def "createPayment mutation fails when source account invalid format"() {
+        given:
+        withUserRole()
+        def dto = new PaymentInputDto(
+                null,
+                "ab",                         // invalid: too short / non-existent
+                destName,
+                Date.valueOf("2024-01-15"),
+                new BigDecimal("100.00"),
+                null,
+                null,
+                null
+        )
+
+        when:
+        mutationController.createPayment(dto)
+
+        then:
+        thrown(RuntimeException)
+    }
+
+    def "createPayment mutation fails when destination is debit account"() {
+        given:
+        withUserRole()
+        // Create an extra debit account to use as invalid destination
+        String debitDest = testDataManager.createAccountFor(testOwner, "savings", "debit", true)
+        def dto = new PaymentInputDto(
+                null,
+                srcName,
+                debitDest,                      // invalid destination: debit account
+                Date.valueOf("2024-01-15"),
+                new BigDecimal("100.00"),
+                null,
+                null,
+                null
+        )
+
+        when:
+        mutationController.createPayment(dto)
+
+        then:
+        thrown(RuntimeException)
+    }
+
+    def "deletePayment mutation returns true for existing payment"() {
+        given:
+        withUserRole()
+        def createDto = new PaymentInputDto(
+                null,                           // paymentId
+                srcName,                        // sourceAccount
+                destName,                       // destinationAccount
+                Date.valueOf("2024-01-15"),     // transactionDate
+                new BigDecimal("55.00"),        // amount
+                null,                           // guidSource
+                null,                           // guidDestination
+                null                            // activeStatus
+        )
+        def created = mutationController.createPayment(createDto)
+
+        when:
+        def deleted = mutationController.deletePayment(created.paymentId)
+
+        then:
+        deleted == true
+    }
+
+    def "deletePayment mutation returns false for missing payment id"() {
+        given:
+        withUserRole()
+
+        expect:
+        mutationController.deletePayment(-9999L) == false
+    }
 }
