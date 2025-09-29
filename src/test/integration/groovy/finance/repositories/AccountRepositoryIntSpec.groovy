@@ -6,6 +6,7 @@ import finance.domain.AccountType
 import finance.helpers.SmartAccountBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
+import jakarta.validation.ConstraintViolationException
 
 import java.sql.Timestamp
 import java.math.BigDecimal
@@ -252,6 +253,44 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
         then:
         !deletedAccount.isPresent()
+    }
+
+    void 'test invalid moniker is rejected on save'() {
+        given:
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("invalidmoniker")
+            .asDebit()
+            .withMoniker("1000")
+            .withBalances(new BigDecimal("100.00"))
+            .buildAndValidate()
+        // Bypass builder validation to simulate bad input
+        account.moniker = "invalid" // violates numeric/pattern constraints
+
+        when:
+        accountRepository.save(account)
+        accountRepository.flush()
+
+        then:
+        thrown(ConstraintViolationException)
+    }
+
+    void 'test invalid accountNameOwner pattern is rejected on save'() {
+        given:
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("badname")
+            .asDebit()
+            .withMoniker("1000")
+            .withBalances(new BigDecimal("100.00"))
+            .buildAndValidate()
+        // Bypass builder and set an invalid name that violates pattern/length
+        account.accountNameOwner = "invalid" // too short or wrong pattern
+
+        when:
+        accountRepository.save(account)
+        accountRepository.flush()
+
+        then:
+        thrown(ConstraintViolationException)
     }
 
 }

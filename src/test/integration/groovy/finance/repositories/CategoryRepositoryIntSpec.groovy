@@ -5,6 +5,7 @@ import finance.domain.Category
 import finance.helpers.SmartCategoryBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
+import jakarta.validation.ConstraintViolationException
 import spock.lang.Shared
 
 /**
@@ -207,6 +208,22 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         refetchedCategory.isPresent()
         refetchedCategory.get().activeStatus == false
         refetchedCategory.get().categoryName == savedCategory.categoryName
+    }
+
+    void 'invalid category insert via repository triggers constraint violation'() {
+        given:
+        // Bypass builder validation by building then overriding to an invalid uppercase name
+        Category category = SmartCategoryBuilder.builderForOwner(testOwner)
+                .withUniqueCategoryName("invalidupper")
+                .build() // no validation here
+        category.categoryName = "UPPERCASE" // violates lowercase/pattern constraints
+
+        when:
+        categoryRepository.save(category)
+        categoryRepository.flush()
+
+        then:
+        thrown(ConstraintViolationException)
     }
 
     void 'test category deletion'() {

@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Shared
 import java.sql.Date
 import java.math.BigDecimal
+import jakarta.validation.ConstraintViolationException
 
 /**
  * INTEGRATION TEST - PendingTransactionRepository using non-brittle, resilient architecture
@@ -251,6 +252,26 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         !foreignKeyResults.isEmpty()
         foreignKeyResults.every { it == "orphan-allowed" || it == "orphan-blocked" }
         // Non-brittle: either behavior is acceptable depending on DB configuration
+    }
+
+    void 'test pending transaction delete record'() {
+        given:
+        String accountName = createPrimaryAccount()
+        PendingTransaction pendingTx = SmartPendingTransactionBuilder.builderForOwner(testOwner)
+                .withAccountNameOwner(accountName)
+                .withAmount(new BigDecimal("99.99"))
+                .withTransactionDate(Date.valueOf("2024-08-20"))
+                .withUniqueDescription("delete me")
+                .asPending()
+                .buildAndValidate()
+        PendingTransaction saved = pendingTransactionRepository.save(pendingTx)
+
+        when:
+        pendingTransactionRepository.delete(saved)
+        def found = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(saved.pendingTransactionId)
+
+        then:
+        !found.isPresent()
     }
 
     void 'test pending transaction update operations and lifecycle'() {
