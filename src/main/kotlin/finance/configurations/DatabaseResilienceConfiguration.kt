@@ -9,9 +9,6 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig
 import io.micrometer.core.instrument.MeterRegistry
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-// TODO: HealthIndicator imports may have changed in Spring Boot 4.0.0-M1
-// import org.springframework.boot.actuate.health.HealthIndicator
-// import org.springframework.boot.actuate.health.Status
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.dao.DataAccessResourceFailureException
@@ -26,34 +23,40 @@ import javax.sql.DataSource
 @Configuration
 @org.springframework.context.annotation.Profile("!func")
 open class DatabaseResilienceConfiguration {
-
+    // TODO: HealthIndicator imports may have changed in Spring Boot 4.0.0-M1
+    // import org.springframework.boot.actuate.health.HealthIndicator
+    // import org.springframework.boot.actuate.health.Status
     companion object {
         private val logger: Logger = LogManager.getLogger(DatabaseResilienceConfiguration::class.java)
     }
 
     @Bean
     open fun databaseCircuitBreaker(): CircuitBreaker {
-        val config = CircuitBreakerConfig.custom()
-            .failureRateThreshold(50.0f)
-            .waitDurationInOpenState(Duration.ofSeconds(60))
-            .slidingWindowSize(10)
-            .minimumNumberOfCalls(5)
-            .permittedNumberOfCallsInHalfOpenState(3)
-            .slowCallRateThreshold(50.0f)
-            .slowCallDurationThreshold(Duration.ofSeconds(30))
-            .recordExceptions(
-                SQLException::class.java,
-                DataAccessResourceFailureException::class.java,
-                CannotGetJdbcConnectionException::class.java
-            )
-            .build()
+        val config =
+            CircuitBreakerConfig.custom()
+                .failureRateThreshold(50.0f)
+                .waitDurationInOpenState(Duration.ofSeconds(60))
+                .slidingWindowSize(10)
+                .minimumNumberOfCalls(5)
+                .permittedNumberOfCallsInHalfOpenState(3)
+                .slowCallRateThreshold(50.0f)
+                .slowCallDurationThreshold(Duration.ofSeconds(30))
+                .recordExceptions(
+                    SQLException::class.java,
+                    DataAccessResourceFailureException::class.java,
+                    CannotGetJdbcConnectionException::class.java,
+                )
+                .build()
 
         val circuitBreaker = CircuitBreaker.of("database", config)
 
         circuitBreaker.eventPublisher
             .onStateTransition { event ->
-                logger.warn("Circuit breaker state transition: {} -> {}",
-                    event.stateTransition.fromState, event.stateTransition.toState)
+                logger.warn(
+                    "Circuit breaker state transition: {} -> {}",
+                    event.stateTransition.fromState,
+                    event.stateTransition.toState,
+                )
             }
             .onFailureRateExceeded { event ->
                 logger.error("Circuit breaker failure rate exceeded: {}%", event.failureRate)
@@ -67,26 +70,30 @@ open class DatabaseResilienceConfiguration {
 
     @Bean
     open fun databaseRetry(): Retry {
-        val config = RetryConfig.custom<Any>()
-            .maxAttempts(3)
-            .waitDuration(Duration.ofSeconds(1))
-            .retryExceptions(
-                SQLException::class.java,
-                DataAccessResourceFailureException::class.java,
-                CannotGetJdbcConnectionException::class.java
-            )
-            .ignoreExceptions(
-                jakarta.validation.ValidationException::class.java,
-                IllegalArgumentException::class.java
-            )
-            .build()
+        val config =
+            RetryConfig.custom<Any>()
+                .maxAttempts(3)
+                .waitDuration(Duration.ofSeconds(1))
+                .retryExceptions(
+                    SQLException::class.java,
+                    DataAccessResourceFailureException::class.java,
+                    CannotGetJdbcConnectionException::class.java,
+                )
+                .ignoreExceptions(
+                    jakarta.validation.ValidationException::class.java,
+                    IllegalArgumentException::class.java,
+                )
+                .build()
 
         val retry = Retry.of("database", config)
 
         retry.eventPublisher
             .onRetry { event ->
-                logger.warn("Database operation retry attempt: {}, exception: {}",
-                    event.numberOfRetryAttempts, event.lastThrowable?.message)
+                logger.warn(
+                    "Database operation retry attempt: {}, exception: {}",
+                    event.numberOfRetryAttempts,
+                    event.lastThrowable?.message,
+                )
             }
 
         return retry
@@ -94,10 +101,11 @@ open class DatabaseResilienceConfiguration {
 
     @Bean
     open fun databaseTimeLimiter(): TimeLimiter {
-        val config = TimeLimiterConfig.custom()
-            .timeoutDuration(Duration.ofSeconds(30))
-            .cancelRunningFuture(true)
-            .build()
+        val config =
+            TimeLimiterConfig.custom()
+                .timeoutDuration(Duration.ofSeconds(30))
+                .cancelRunningFuture(true)
+                .build()
 
         val timeLimiter = TimeLimiter.of("database", config)
 
@@ -146,7 +154,10 @@ open class DatabaseResilienceConfiguration {
     // }
 
     @Bean
-    open fun connectionPoolMetrics(meterRegistry: MeterRegistry, dataSource: DataSource): String {
+    open fun connectionPoolMetrics(
+        meterRegistry: MeterRegistry,
+        dataSource: DataSource,
+    ): String {
         // Register custom metrics for connection pool monitoring
         if (dataSource is com.zaxxer.hikari.HikariDataSource) {
             val hikariDataSource = dataSource
@@ -178,11 +189,12 @@ open class DatabaseResilienceConfiguration {
         circuitBreaker: CircuitBreaker = databaseCircuitBreaker(),
         retry: Retry = databaseRetry(),
         timeLimiter: TimeLimiter = databaseTimeLimiter(),
-        executor: ScheduledExecutorService = scheduledExecutorService()
+        executor: ScheduledExecutorService = scheduledExecutorService(),
     ): CompletableFuture<T> {
-        val decoratedOperation = CircuitBreaker.decorateSupplier(circuitBreaker) {
-            Retry.decorateSupplier(retry, operation).get()
-        }
+        val decoratedOperation =
+            CircuitBreaker.decorateSupplier(circuitBreaker) {
+                Retry.decorateSupplier(retry, operation).get()
+            }
 
         val futureOperation = CompletableFuture.supplyAsync(decoratedOperation, executor)
 
@@ -193,11 +205,12 @@ open class DatabaseResilienceConfiguration {
      * Overloaded method for Groovy/Java Supplier compatibility
      */
     open fun <T> executeWithResilience(
-        operation: java.util.function.Supplier<T>
+        operation: java.util.function.Supplier<T>,
     ): CompletableFuture<T> {
-        val decoratedOperation = CircuitBreaker.decorateSupplier(databaseCircuitBreaker()) {
-            Retry.decorateSupplier(databaseRetry(), operation).get()
-        }
+        val decoratedOperation =
+            CircuitBreaker.decorateSupplier(databaseCircuitBreaker()) {
+                Retry.decorateSupplier(databaseRetry(), operation).get()
+            }
 
         val futureOperation = CompletableFuture.supplyAsync(decoratedOperation, scheduledExecutorService())
 

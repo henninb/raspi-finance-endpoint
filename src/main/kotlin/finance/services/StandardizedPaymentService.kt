@@ -1,13 +1,20 @@
 package finance.services
 
-import finance.domain.*
+import finance.domain.Account
+import finance.domain.AccountType
+import finance.domain.Payment
+import finance.domain.ReoccurringType
+import finance.domain.ServiceResult
+import finance.domain.Transaction
+import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.sql.Timestamp
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 
 /**
  * Standardized Payment Service implementing ServiceResult pattern
@@ -18,9 +25,8 @@ import java.util.*
 class StandardizedPaymentService(
     private val paymentRepository: PaymentRepository,
     private val transactionService: StandardizedTransactionService,
-    private val accountService: StandardizedAccountService
+    private val accountService: StandardizedAccountService,
 ) : StandardizedBaseService<Payment, Long>() {
-
     override fun getEntityName(): String = "Payment"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -168,18 +174,21 @@ class StandardizedPaymentService(
                 // Handle data integrity violations (e.g., duplicate payments)
                 throw org.springframework.dao.DataIntegrityViolationException(result.message)
             }
-            else -> throw RuntimeException("Failed to insert payment: ${result}")
+            else -> throw RuntimeException("Failed to insert payment: $result")
         }
     }
 
-    fun updatePayment(paymentId: Long, patch: Payment): Payment {
+    fun updatePayment(
+        paymentId: Long,
+        patch: Payment,
+    ): Payment {
         // Set the ID for the update operation
         patch.paymentId = paymentId
         val result = update(patch)
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw RuntimeException("Payment not updated as the payment does not exist: $paymentId.")
-            else -> throw RuntimeException("Failed to update payment: ${result}")
+            else -> throw RuntimeException("Failed to update payment: $result")
         }
     }
 
@@ -217,7 +226,10 @@ class StandardizedPaymentService(
     /**
      * Create a default account (similar to TransactionService.createDefaultAccount)
      */
-    private fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
+    private fun createDefaultAccount(
+        accountNameOwner: String,
+        accountType: AccountType,
+    ): Account {
         val account = Account()
         account.accountNameOwner = accountNameOwner
         account.moniker = "0000"
@@ -231,7 +243,7 @@ class StandardizedPaymentService(
     fun populateDebitTransaction(
         transactionDebit: finance.domain.Transaction,
         payment: Payment,
-        paymentAccountNameOwner: String
+        paymentAccountNameOwner: String,
     ) {
         transactionDebit.guid = UUID.randomUUID().toString()
         transactionDebit.transactionDate = payment.transactionDate
@@ -255,7 +267,7 @@ class StandardizedPaymentService(
     fun populateCreditTransaction(
         transactionCredit: finance.domain.Transaction,
         payment: Payment,
-        paymentAccountNameOwner: String
+        paymentAccountNameOwner: String,
     ) {
         transactionCredit.guid = UUID.randomUUID().toString()
         transactionCredit.transactionDate = payment.transactionDate

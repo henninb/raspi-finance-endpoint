@@ -11,5 +11,5 @@ import kotlin.reflect.KClass
 annotation class ValidDate(
     val message: String = "date must be greater than 1/1/2000.",
     val groups: Array<KClass<*>> = [],
-    val payload: Array<KClass<out Payload>> = []
+    val payload: Array<KClass<out Payload>> = [],
 )

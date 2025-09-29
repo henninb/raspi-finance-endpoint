@@ -3,11 +3,8 @@ package finance.services
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.repositories.ReceiptImageRepository
-import io.micrometer.core.annotation.Timed
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
-import java.util.*
 
 /**
  * Standardized Receipt Image Service implementing ServiceResult pattern
@@ -16,9 +13,8 @@ import java.util.*
 @Service
 @org.springframework.context.annotation.Primary
 open class StandardizedReceiptImageService(
-    private val receiptImageRepository: ReceiptImageRepository
+    private val receiptImageRepository: ReceiptImageRepository,
 ) : StandardizedBaseService<ReceiptImage, Long>() {
-
     override fun getEntityName(): String = "ReceiptImage"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -93,5 +89,4 @@ open class StandardizedReceiptImageService(
             }
         }
     }
-
 }

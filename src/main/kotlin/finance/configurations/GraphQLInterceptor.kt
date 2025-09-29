@@ -1,6 +1,5 @@
 package finance.configurations
 
-import graphql.ExecutionResult
 import org.apache.logging.log4j.LogManager
 import org.springframework.graphql.server.WebGraphQlInterceptor
 import org.springframework.graphql.server.WebGraphQlRequest
@@ -10,12 +9,14 @@ import reactor.core.publisher.Mono
 
 @Component
 class GraphQLInterceptor : WebGraphQlInterceptor {
-
     companion object {
         private val logger = LogManager.getLogger(GraphQLInterceptor::class.java)
     }
 
-    override fun intercept(request: WebGraphQlRequest, chain: WebGraphQlInterceptor.Chain): Mono<WebGraphQlResponse> {
+    override fun intercept(
+        request: WebGraphQlRequest,
+        chain: WebGraphQlInterceptor.Chain,
+    ): Mono<WebGraphQlResponse> {
         return chain.next(request)
             .doOnNext { response ->
                 try {
@@ -69,7 +70,6 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
                     } else {
                         logger.error("GraphQL: Response data is null - this indicates a serious problem")
                     }
-
                 } catch (e: Exception) {
                     logger.error("Error in GraphQL response interceptor", e)
                 }

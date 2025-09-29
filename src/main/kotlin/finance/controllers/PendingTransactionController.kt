@@ -3,18 +3,25 @@ package finance.controllers
 import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
 import finance.services.StandardizedPendingTransactionService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/pending/transaction")
 class PendingTransactionController(private val pendingTransactionService: StandardizedPendingTransactionService) :
     StandardizedBaseController(), StandardRestController<PendingTransaction, Long> {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -48,7 +55,9 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{pendingTransactionId}", produces = ["application/json"])
-    override fun findById(@PathVariable pendingTransactionId: Long): ResponseEntity<PendingTransaction> {
+    override fun findById(
+        @PathVariable pendingTransactionId: Long,
+    ): ResponseEntity<PendingTransaction> {
         return when (val result = pendingTransactionService.findById(pendingTransactionId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved pending transaction: $pendingTransactionId")
@@ -74,7 +83,9 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    override fun save(@Valid @RequestBody pendingTransaction: PendingTransaction): ResponseEntity<PendingTransaction> {
+    override fun save(
+        @Valid @RequestBody pendingTransaction: PendingTransaction,
+    ): ResponseEntity<PendingTransaction> {
         return when (val result = pendingTransactionService.save(pendingTransaction)) {
             is ServiceResult.Success -> {
                 logger.info("Pending transaction created successfully: ${result.data.pendingTransactionId}")
@@ -104,7 +115,10 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/{pendingTransactionId}", consumes = ["application/json"], produces = ["application/json"])
-    override fun update(@PathVariable pendingTransactionId: Long, @Valid @RequestBody pendingTransaction: PendingTransaction): ResponseEntity<PendingTransaction> {
+    override fun update(
+        @PathVariable pendingTransactionId: Long,
+        @Valid @RequestBody pendingTransaction: PendingTransaction,
+    ): ResponseEntity<PendingTransaction> {
         // Ensure the ID in the path matches the entity
         pendingTransaction.pendingTransactionId = pendingTransactionId
 
@@ -141,7 +155,9 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Returns 200 OK with deleted entity (instead of 204 NO_CONTENT)
      */
     @DeleteMapping("/{pendingTransactionId}", produces = ["application/json"])
-    override fun deleteById(@PathVariable pendingTransactionId: Long): ResponseEntity<PendingTransaction> {
+    override fun deleteById(
+        @PathVariable pendingTransactionId: Long,
+    ): ResponseEntity<PendingTransaction> {
         // First get the entity to return it
         val entityResult = pendingTransactionService.findById(pendingTransactionId)
         if (entityResult !is ServiceResult.Success) {
@@ -220,7 +236,9 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Maintains original behavior
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertPendingTransaction(@RequestBody pendingTransaction: PendingTransaction): ResponseEntity<PendingTransaction> {
+    fun insertPendingTransaction(
+        @RequestBody pendingTransaction: PendingTransaction,
+    ): ResponseEntity<PendingTransaction> {
         logger.info("Inserting pending transaction: ${pendingTransaction.description} (legacy endpoint)")
         return when (val result = pendingTransactionService.save(pendingTransaction)) {
             is ServiceResult.Success -> {
@@ -251,7 +269,9 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Returns 204 NO_CONTENT for backward compatibility
      */
     @DeleteMapping("/delete/{id}")
-    fun deletePendingTransaction(@PathVariable id: Long): ResponseEntity<Void> {
+    fun deletePendingTransaction(
+        @PathVariable id: Long,
+    ): ResponseEntity<Void> {
         logger.info("Attempting to delete pending transaction: $id (legacy endpoint)")
         return when (val result = pendingTransactionService.deleteById(id)) {
             is ServiceResult.Success -> {
@@ -274,7 +294,6 @@ class PendingTransactionController(private val pendingTransactionService: Standa
         }
     }
 
-
     /**
      * Legacy endpoint - DELETE /api/pending/transaction/delete/all
      * Bulk delete operation - remains as-is for backward compatibility
@@ -292,14 +311,14 @@ class PendingTransactionController(private val pendingTransactionService: Standa
                 throw ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Failed to delete all pending transactions: ${result.exception.message}",
-                    result.exception
+                    result.exception,
                 )
             }
             else -> {
                 logger.error("Unexpected result type: $result")
                 throw ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Failed to delete all pending transactions: Unexpected error"
+                    "Failed to delete all pending transactions: Unexpected error",
                 )
             }
         }

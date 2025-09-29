@@ -1,4 +1,4 @@
-package finance.controllers
+package finance.controllers.graphql
 
 import finance.domain.Account
 import finance.domain.AccountType
@@ -24,15 +24,16 @@ class GraphQLQueryController(
     private val categoryService: StandardizedCategoryService,
     private val descriptionService: StandardizedDescriptionService,
     private val paymentService: StandardizedPaymentService,
-    private val transferService: StandardizedTransferService
+    private val transferService: StandardizedTransferService,
 ) {
-
     companion object {
         val logger: Logger = LogManager.getLogger()
     }
 
     @QueryMapping(name = "accounts")
-    fun accounts(@Argument accountType: AccountType?): List<Account> =
+    fun accounts(
+        @Argument accountType: AccountType?,
+    ): List<Account> =
         if (accountType == null) {
             logger.info("GraphQL - Fetching all accounts (unfiltered)")
             accountService.accounts()
@@ -42,7 +43,9 @@ class GraphQLQueryController(
         }
 
     @QueryMapping
-    fun account(@Argument accountNameOwner: String): Account? {
+    fun account(
+        @Argument accountNameOwner: String,
+    ): Account? {
         logger.info("GraphQL - Fetching account: $accountNameOwner")
         return accountService.account(accountNameOwner).orElse(null)
     }
@@ -57,7 +60,9 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun category(@Argument categoryName: String): Category? {
+    fun category(
+        @Argument categoryName: String,
+    ): Category? {
         logger.info("GraphQL - Fetching category: $categoryName")
         return when (val result = categoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> result.data
@@ -75,7 +80,9 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun description(@Argument descriptionName: String): Description? {
+    fun description(
+        @Argument descriptionName: String,
+    ): Description? {
         logger.info("GraphQL - Fetching description: $descriptionName")
         return when (val result = descriptionService.findByDescriptionNameStandardized(descriptionName)) {
             is ServiceResult.Success -> result.data
@@ -90,7 +97,9 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun payment(@Argument paymentId: Long): Payment? {
+    fun payment(
+        @Argument paymentId: Long,
+    ): Payment? {
         logger.info("GraphQL - Fetching payment: $paymentId")
         return paymentService.findByPaymentId(paymentId).orElse(null)
     }
@@ -102,20 +111,26 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun transfer(@Argument transferId: Long): Transfer? {
+    fun transfer(
+        @Argument transferId: Long,
+    ): Transfer? {
         logger.info("GraphQL - Fetching transfer: $transferId")
         return transferService.findByTransferId(transferId).orElse(null)
     }
 
     // Stub queries for remaining schema fields
     @QueryMapping
-    fun transactions(@Argument accountNameOwner: String): List<Any> {
+    fun transactions(
+        @Argument accountNameOwner: String,
+    ): List<Any> {
         logger.info("GraphQL - Fetching transactions for account: $accountNameOwner (stub)")
         return emptyList()
     }
 
     @QueryMapping
-    fun transaction(@Argument transactionId: Long): Any? {
+    fun transaction(
+        @Argument transactionId: Long,
+    ): Any? {
         logger.info("GraphQL - Fetching transaction: $transactionId (stub)")
         return null
     }
@@ -127,7 +142,9 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun parameter(@Argument parameterId: Long): Any? {
+    fun parameter(
+        @Argument parameterId: Long,
+    ): Any? {
         logger.info("GraphQL - Fetching parameter: $parameterId (stub)")
         return null
     }
@@ -139,7 +156,9 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun validationAmount(@Argument validationId: Long): Any? {
+    fun validationAmount(
+        @Argument validationId: Long,
+    ): Any? {
         logger.info("GraphQL - Fetching validation amount: $validationId (stub)")
         return null
     }
@@ -151,7 +170,9 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun receiptImage(@Argument receiptImageId: Long): Any? {
+    fun receiptImage(
+        @Argument receiptImageId: Long,
+    ): Any? {
         logger.info("GraphQL - Fetching receipt image: $receiptImageId (stub)")
         return null
     }

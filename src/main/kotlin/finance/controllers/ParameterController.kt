@@ -3,18 +3,25 @@ package finance.controllers
 import finance.domain.Parameter
 import finance.domain.ServiceResult
 import finance.services.StandardizedParameterService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/parameter")
 class ParameterController(private val standardizedParameterService: StandardizedParameterService) :
     StandardizedBaseController() {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -31,7 +38,7 @@ class ParameterController(private val standardizedParameterService: Standardized
             }
             is ServiceResult.NotFound -> {
                 logger.warn("No parameters found")
-                ResponseEntity.ok(emptyList<Parameter>())  // Standardized: return empty list, not 404
+                ResponseEntity.ok(emptyList<Parameter>()) // Standardized: return empty list, not 404
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameters: ${result.exception.message}", result.exception)
@@ -51,7 +58,9 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Uses camelCase parameter and ServiceResult pattern for enhanced error handling
      */
     @GetMapping("/{parameterName}", produces = ["application/json"])
-    fun findById(@PathVariable parameterName: String): ResponseEntity<*> {
+    fun findById(
+        @PathVariable parameterName: String,
+    ): ResponseEntity<*> {
         return when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved parameter: $parameterName")
@@ -80,7 +89,9 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Returns 201 CREATED with ServiceResult pattern for enhanced error handling
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    fun save(@Valid @RequestBody parameter: Parameter): ResponseEntity<*> {
+    fun save(
+        @Valid @RequestBody parameter: Parameter,
+    ): ResponseEntity<*> {
         return when (val result = standardizedParameterService.save(parameter)) {
             is ServiceResult.Success -> {
                 logger.info("Parameter created successfully: ${parameter.parameterName}")
@@ -114,18 +125,22 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Uses camelCase parameter and ServiceResult pattern for enhanced error handling
      */
     @PutMapping("/{parameterName}", consumes = ["application/json"], produces = ["application/json"])
-    fun update(@PathVariable parameterName: String, @Valid @RequestBody parameter: Parameter): ResponseEntity<*> {
+    fun update(
+        @PathVariable parameterName: String,
+        @Valid @RequestBody parameter: Parameter,
+    ): ResponseEntity<*> {
         // First check if parameter exists
         return when (val existsResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 // Parameter exists, proceed with update
                 val existingParameter = existsResult.data
-                val updatedParameter = Parameter(
-                    parameterId = existingParameter.parameterId,
-                    parameterName = parameterName,
-                    parameterValue = parameter.parameterValue,
-                    activeStatus = parameter.activeStatus
-                )
+                val updatedParameter =
+                    Parameter(
+                        parameterId = existingParameter.parameterId,
+                        parameterName = parameterName,
+                        parameterValue = parameter.parameterValue,
+                        activeStatus = parameter.activeStatus,
+                    )
 
                 when (val updateResult = standardizedParameterService.update(updatedParameter)) {
                     is ServiceResult.Success -> {
@@ -177,7 +192,9 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Returns 200 OK with deleted entity using ServiceResult pattern
      */
     @DeleteMapping("/{parameterName}", produces = ["application/json"])
-    fun deleteById(@PathVariable parameterName: String): ResponseEntity<*> {
+    fun deleteById(
+        @PathVariable parameterName: String,
+    ): ResponseEntity<*> {
         // First get the parameter to return it after deletion
         return when (val findResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
@@ -254,7 +271,9 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Legacy endpoint - GET /api/parameter/select/{parameterName}
      */
     @GetMapping("/select/{parameterName}", produces = ["application/json"])
-    fun selectParameter(@PathVariable parameterName: String): ResponseEntity<Parameter> {
+    fun selectParameter(
+        @PathVariable parameterName: String,
+    ): ResponseEntity<Parameter> {
         return when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved parameter: $parameterName")
@@ -279,7 +298,9 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Legacy endpoint - POST /api/parameter/insert
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertParameter(@RequestBody parameter: Parameter): ResponseEntity<Parameter> {
+    fun insertParameter(
+        @RequestBody parameter: Parameter,
+    ): ResponseEntity<Parameter> {
         return when (val result = standardizedParameterService.save(parameter)) {
             is ServiceResult.Success -> {
                 logger.info("Parameter inserted successfully: ${parameter.parameterName}")
@@ -311,19 +332,20 @@ class ParameterController(private val standardizedParameterService: Standardized
     @PutMapping("/update/{parameter_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateParameter(
         @PathVariable("parameter_name") parameterName: String,
-        @RequestBody toBePatchedParameter: Parameter
+        @RequestBody toBePatchedParameter: Parameter,
     ): ResponseEntity<Parameter> {
         // First check if parameter exists
         return when (val existsResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 // Parameter exists, proceed with update
                 val existingParameter = existsResult.data
-                val updatedParameter = Parameter(
-                    parameterId = existingParameter.parameterId,
-                    parameterName = parameterName,
-                    parameterValue = toBePatchedParameter.parameterValue,
-                    activeStatus = toBePatchedParameter.activeStatus
-                )
+                val updatedParameter =
+                    Parameter(
+                        parameterId = existingParameter.parameterId,
+                        parameterName = parameterName,
+                        parameterValue = toBePatchedParameter.parameterValue,
+                        activeStatus = toBePatchedParameter.activeStatus,
+                    )
 
                 when (val updateResult = standardizedParameterService.update(updatedParameter)) {
                     is ServiceResult.Success -> {
@@ -367,7 +389,9 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Legacy endpoint - DELETE /api/parameter/delete/{parameterName}
      */
     @DeleteMapping("/delete/{parameterName}", produces = ["application/json"])
-    fun deleteByParameterName(@PathVariable parameterName: String): ResponseEntity<Parameter> {
+    fun deleteByParameterName(
+        @PathVariable parameterName: String,
+    ): ResponseEntity<Parameter> {
         // First get the parameter to return it after deletion
         return when (val findResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {

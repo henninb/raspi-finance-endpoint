@@ -1,28 +1,35 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.services.StandardizedPaymentService
 import finance.domain.ServiceResult
+import finance.services.StandardizedPaymentService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
-import java.util.*
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/payment")
 class PaymentController(private val standardizedPaymentService: StandardizedPaymentService) :
     StandardizedBaseController(), StandardRestController<Payment, Long> {
-
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
+
+    // curl -k https://localhost:8443/payment/select
 
     /**
      * Legacy endpoint - GET /api/payment/select
      * Maintains original behavior
      */
-    // curl -k https://localhost:8443/payment/select
     @GetMapping("/select", produces = ["application/json"])
     fun selectAllPayments(): ResponseEntity<List<Payment>> {
         return try {
@@ -36,15 +43,16 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
         }
     }
 
+    // curl -k --header "Content-Type: application/json" --request PUT --data '{"transactionDate":"2025-08-15","amount": 123.45}' https://localhost:8443/payment/update/1001
+
     /**
      * Legacy endpoint - PUT /api/payment/update/{paymentId}
      * Maintains original behavior
      */
-    // curl -k --header "Content-Type: application/json" --request PUT --data '{"transactionDate":"2025-08-15","amount": 123.45}' https://localhost:8443/payment/update/1001
     @PutMapping("/update/{paymentId}", consumes = ["application/json"], produces = ["application/json"])
     fun updatePayment(
         @PathVariable paymentId: Long,
-        @RequestBody patch: Payment
+        @RequestBody patch: Payment,
     ): ResponseEntity<Payment> {
         return try {
             logger.info("Updating payment: $paymentId")
@@ -68,12 +76,15 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
         }
     }
 
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"sourceAccount":"checking_brian", "destinationAccount":"visa_brian", "amount": 100.00, "activeStatus": true}' https://localhost:8443/payment/insert
+
     /**
      * Legacy endpoint - POST /api/payment/insert
      */
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"sourceAccount":"checking_brian", "destinationAccount":"visa_brian", "amount": 100.00, "activeStatus": true}' https://localhost:8443/payment/insert
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertPayment(@RequestBody payment: Payment): ResponseEntity<Payment> {
+    fun insertPayment(
+        @RequestBody payment: Payment,
+    ): ResponseEntity<Payment> {
         return try {
             logger.info("Inserting payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
             val paymentResponse = standardizedPaymentService.insertPayment(payment)
@@ -97,19 +108,23 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
         }
     }
 
+    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/payment/delete/1001
+
     /**
      * Legacy endpoint - DELETE /api/payment/delete/{paymentId}
      */
-    // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/payment/delete/1001
     @DeleteMapping("/delete/{paymentId}", produces = ["application/json"])
-    fun deleteByPaymentId(@PathVariable paymentId: Long): ResponseEntity<Payment> {
+    fun deleteByPaymentId(
+        @PathVariable paymentId: Long,
+    ): ResponseEntity<Payment> {
         return try {
             logger.info("Attempting to delete payment: $paymentId")
-            val payment = standardizedPaymentService.findByPaymentId(paymentId)
-                .orElseThrow {
-                    logger.warn("Payment not found for deletion: $paymentId")
-                    ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
-                }
+            val payment =
+                standardizedPaymentService.findByPaymentId(paymentId)
+                    .orElseThrow {
+                        logger.warn("Payment not found for deletion: $paymentId")
+                        ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
+                    }
 
             standardizedPaymentService.deleteByPaymentId(paymentId)
             logger.info("Payment deleted successfully: $paymentId")
@@ -155,7 +170,9 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{paymentId}", produces = ["application/json"])
-    override fun findById(@PathVariable paymentId: Long): ResponseEntity<Payment> {
+    override fun findById(
+        @PathVariable paymentId: Long,
+    ): ResponseEntity<Payment> {
         return when (val result = standardizedPaymentService.findById(paymentId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved payment: $paymentId (standardized)")
@@ -181,7 +198,9 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    override fun save(@Valid @RequestBody payment: Payment): ResponseEntity<Payment> {
+    override fun save(
+        @Valid @RequestBody payment: Payment,
+    ): ResponseEntity<Payment> {
         return when (val result = standardizedPaymentService.save(payment)) {
             is ServiceResult.Success -> {
                 logger.info("Payment created successfully: ${payment.sourceAccount} -> ${payment.destinationAccount} (standardized)")
@@ -211,7 +230,10 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/{paymentId}", consumes = ["application/json"], produces = ["application/json"])
-    override fun update(@PathVariable paymentId: Long, @Valid @RequestBody payment: Payment): ResponseEntity<Payment> {
+    override fun update(
+        @PathVariable paymentId: Long,
+        @Valid @RequestBody payment: Payment,
+    ): ResponseEntity<Payment> {
         return when (val result = standardizedPaymentService.update(payment)) {
             is ServiceResult.Success -> {
                 logger.info("Payment updated successfully: $paymentId (standardized)")
@@ -245,7 +267,9 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      * Returns 200 OK with deleted entity
      */
     @DeleteMapping("/{paymentId}", produces = ["application/json"])
-    override fun deleteById(@PathVariable paymentId: Long): ResponseEntity<Payment> {
+    override fun deleteById(
+        @PathVariable paymentId: Long,
+    ): ResponseEntity<Payment> {
         // First get the payment to return it
         val paymentResult = standardizedPaymentService.findById(paymentId)
         if (paymentResult !is ServiceResult.Success) {

@@ -1,8 +1,13 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonGetter
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSetter
 import com.fasterxml.jackson.databind.ObjectMapper
-import finance.utils.*
+import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.ASCII_PATTERN
@@ -11,30 +16,47 @@ import finance.utils.Constants.FIELD_MUST_BE_ASCII_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
-import finance.utils.Constants.UUID_PATTERN
-import finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE
-import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
-import org.apache.logging.log4j.LogManager
-import org.springframework.data.annotation.Immutable
-import java.math.BigDecimal
-import java.sql.Date
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
-import java.util.*
-import jakarta.persistence.*
+import finance.utils.Constants.UUID_PATTERN
+import finance.utils.LowerCaseConverter
+import finance.utils.ReoccurringTypeConverter
+import finance.utils.TransactionStateConverter
+import finance.utils.TransactionTypeConverter
+import finance.utils.ValidDate
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Convert
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToOne
+import jakarta.persistence.SequenceGenerator
+import jakarta.persistence.Table
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import org.apache.logging.log4j.LogManager
+import java.math.BigDecimal
+import java.sql.Date
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 @Entity
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-//does not fix the issue
-//@Immutable //The [account] property of the [finance.domain.Transaction] entity was modified, but it won't be updated because the property is immutable.
+// does not fix the issue
+// @Immutable //The [account] property of the [finance.domain.Transaction] entity was modified, but it won't be updated because the property is immutable.
 data class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,83 +65,69 @@ data class Transaction(
     @param:JsonProperty
     @Column(name = "transaction_id")
     var transactionId: Long,
-
     @param:JsonProperty
     @Column(name = "guid", unique = true, nullable = false)
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String,
-
     @param:JsonProperty
     @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
-
     @param:JsonProperty
     @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType,
-
     @param:JsonProperty
     @Column(name = "transaction_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = TransactionTypeConverter::class)
     var transactionType: TransactionType,
-
     @param:JsonProperty
     @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
     @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var accountNameOwner: String,
-
     @param:JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     var transactionDate: Date,
-
     @param:JsonProperty
     @field:Size(min = 1, max = 75, message = FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE)
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var description: String,
-
     @param:JsonProperty
     @field:Size(max = 50, message = FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE)
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @Column(name = "category", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var category: String,
-
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal,
-
     @param:JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
     var transactionState: TransactionState,
-
     @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
-
     @param:JsonProperty
     @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @field:Convert(converter = ReoccurringTypeConverter::class)
     var reoccurringType: ReoccurringType = ReoccurringType.Undefined,
-
     @param:JsonProperty
     @field:Size(max = 100)
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "notes", nullable = false)
-    var notes: String = ""
+    var notes: String = "",
 ) {
-
     constructor() : this(
-        0L, "", 0, AccountType.Undefined, TransactionType.Undefined,"", Date(0),
-        "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, ""
+        0L, "", 0, AccountType.Undefined, TransactionType.Undefined, "", Date(0),
+        "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, "",
     )
 
     @JsonGetter("transactionDate")
@@ -170,27 +178,27 @@ data class Transaction(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    //TODO: 11/19/2020 - cannot reference a transaction that does not exist
-    //TODO: 11/19/2020 - Probably need to change to a OneToMany relationship
-    //Foreign key constraint (one transaction can have many receiptImages)
-    //@OneToOne(mappedBy = "receiptImageId", cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
+    // TODO: 11/19/2020 - cannot reference a transaction that does not exist
+    // TODO: 11/19/2020 - Probably need to change to a OneToMany relationship
+    // Foreign key constraint (one transaction can have many receiptImages)
+    // @OneToOne(mappedBy = "receiptImageId", cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
     @JsonProperty
     var receiptImage: ReceiptImage? = null
 
-    //Foreign key constraint (many transactions can have one account)
+    // Foreign key constraint (many transactions can have one account)
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
 
-    //Foreign key constraint (many transactions can have many categories)
+    // Foreign key constraint (many transactions can have many categories)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "t_transaction_categories",
         joinColumns = [JoinColumn(name = "transaction_id")],
-        inverseJoinColumns = [JoinColumn(name = "category_id")]
+        inverseJoinColumns = [JoinColumn(name = "category_id")],
     )
     @JsonIgnore
     var categories = mutableListOf<Category>()

@@ -24,9 +24,11 @@ enum class ReoccurringType(val label: String) {
     Onetime("onetime"),
 
     @JsonProperty("undefined")
-    Undefined("undefined");
+    Undefined("undefined"),
+    ;
 
     fun value(): String = label
+
     override fun toString(): String = name.lowercase()
 
     companion object {

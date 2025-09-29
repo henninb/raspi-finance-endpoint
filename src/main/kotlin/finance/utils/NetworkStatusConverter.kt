@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter
 class NetworkStatusConverter : AttributeConverter<NetworkStatus, String> {
-
     override fun convertToDatabaseColumn(attribute: NetworkStatus): String {
         return attribute.label
     }

@@ -1,6 +1,6 @@
 package finance.graphql
 
-import finance.controllers.GraphQLMutationController
+import finance.controllers.graphql.GraphQLMutationController
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransferInputDto
 import finance.domain.Account

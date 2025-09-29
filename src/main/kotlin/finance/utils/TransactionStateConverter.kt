@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter
 class TransactionStateConverter : AttributeConverter<TransactionState, String> {
-
     override fun convertToDatabaseColumn(attribute: TransactionState): String {
         return when (attribute) {
             TransactionState.Outstanding -> "outstanding"

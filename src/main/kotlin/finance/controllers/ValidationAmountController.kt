@@ -1,22 +1,29 @@
 package finance.controllers
 
+import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-import finance.domain.ServiceResult
 import finance.services.StandardizedValidationAmountService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
-import java.util.*
+import java.util.Locale
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/validation/amount")
 class ValidationAmountController(private var standardizedValidationAmountService: StandardizedValidationAmountService) :
     StandardizedBaseController(), StandardRestController<ValidationAmount, Long> {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -50,7 +57,9 @@ class ValidationAmountController(private var standardizedValidationAmountService
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{validationId}", produces = ["application/json"])
-    override fun findById(@PathVariable validationId: Long): ResponseEntity<ValidationAmount> {
+    override fun findById(
+        @PathVariable validationId: Long,
+    ): ResponseEntity<ValidationAmount> {
         return when (val result = standardizedValidationAmountService.findById(validationId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved validation amount: $validationId")
@@ -76,7 +85,9 @@ class ValidationAmountController(private var standardizedValidationAmountService
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    override fun save(@Valid @RequestBody validationAmount: ValidationAmount): ResponseEntity<ValidationAmount> {
+    override fun save(
+        @Valid @RequestBody validationAmount: ValidationAmount,
+    ): ResponseEntity<ValidationAmount> {
         return when (val result = standardizedValidationAmountService.save(validationAmount)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount created successfully: ${result.data.validationId}")
@@ -106,7 +117,10 @@ class ValidationAmountController(private var standardizedValidationAmountService
      * Uses entity type instead of Map<String, Any>
      */
     @PutMapping("/{validationId}", consumes = ["application/json"], produces = ["application/json"])
-    override fun update(@PathVariable validationId: Long, @Valid @RequestBody validationAmount: ValidationAmount): ResponseEntity<ValidationAmount> {
+    override fun update(
+        @PathVariable validationId: Long,
+        @Valid @RequestBody validationAmount: ValidationAmount,
+    ): ResponseEntity<ValidationAmount> {
         // Ensure the validationId in the path matches the entity
         validationAmount.validationId = validationId
 
@@ -143,7 +157,9 @@ class ValidationAmountController(private var standardizedValidationAmountService
      * Returns 200 OK with deleted entity
      */
     @DeleteMapping("/{validationId}", produces = ["application/json"])
-    override fun deleteById(@PathVariable validationId: Long): ResponseEntity<ValidationAmount> {
+    override fun deleteById(
+        @PathVariable validationId: Long,
+    ): ResponseEntity<ValidationAmount> {
         // First check if the validation amount exists
         val findResult = standardizedValidationAmountService.findById(validationId)
         if (findResult !is ServiceResult.Success) {
@@ -182,7 +198,7 @@ class ValidationAmountController(private var standardizedValidationAmountService
     @PostMapping("/insert/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
     fun insertValidationAmount(
         @RequestBody validationAmount: ValidationAmount,
-        @PathVariable("accountNameOwner") accountNameOwner: String
+        @PathVariable("accountNameOwner") accountNameOwner: String,
     ): ResponseEntity<*> {
         return try {
             val validationAmountResponse =
@@ -215,20 +231,19 @@ class ValidationAmountController(private var standardizedValidationAmountService
     @GetMapping("/select/{accountNameOwner}/{transactionStateValue}")
     fun selectValidationAmountByAccountId(
         @PathVariable("accountNameOwner") accountNameOwner: String,
-        @PathVariable("transactionStateValue") transactionStateValue: String
+        @PathVariable("transactionStateValue") transactionStateValue: String,
     ): ResponseEntity<ValidationAmount> {
-
         return handleCrudOperation("selectValidationAmountByAccountId", "$accountNameOwner/$transactionStateValue") {
-            val newTransactionStateValue = transactionStateValue.lowercase()
-                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-            val validationAmount = standardizedValidationAmountService.findValidationAmountByAccountNameOwner(
-                accountNameOwner,
-                TransactionState.valueOf(newTransactionStateValue)
-            )
+            val newTransactionStateValue =
+                transactionStateValue.lowercase()
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            val validationAmount =
+                standardizedValidationAmountService.findValidationAmountByAccountNameOwner(
+                    accountNameOwner,
+                    TransactionState.valueOf(newTransactionStateValue),
+                )
             logger.info(mapper.writeValueAsString(validationAmount))
             validationAmount
         }
     }
-
-
 }

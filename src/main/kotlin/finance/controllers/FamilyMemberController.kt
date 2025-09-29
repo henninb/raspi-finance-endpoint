@@ -4,19 +4,26 @@ import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.domain.ServiceResult
 import finance.services.StandardizedFamilyMemberService
+import jakarta.validation.Valid
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/family-members")
 open class FamilyMemberController(private val standardizedFamilyMemberService: StandardizedFamilyMemberService) :
     StandardizedBaseController() {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -50,7 +57,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/std/{familyMemberId}", produces = ["application/json"])
-    fun findById(@PathVariable familyMemberId: Long): ResponseEntity<FamilyMember> {
+    fun findById(
+        @PathVariable familyMemberId: Long,
+    ): ResponseEntity<FamilyMember> {
         return when (val result = standardizedFamilyMemberService.findByIdServiceResult(familyMemberId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved family member: $familyMemberId")
@@ -76,7 +85,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    fun save(@Valid @RequestBody member: FamilyMember): ResponseEntity<*> {
+    fun save(
+        @Valid @RequestBody member: FamilyMember,
+    ): ResponseEntity<*> {
         return when (val result = standardizedFamilyMemberService.save(member)) {
             is ServiceResult.Success -> {
                 logger.info("Family member created successfully: ${member.memberName} for owner: ${member.owner}")
@@ -88,11 +99,12 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
             }
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating family member: ${result.message}")
-                val userMessage = if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    "Duplicate family member found"
-                } else {
-                    result.message
-                }
+                val userMessage =
+                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                        "Duplicate family member found"
+                    } else {
+                        result.message
+                    }
                 ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to userMessage))
             }
             is ServiceResult.SystemError -> {
@@ -111,7 +123,10 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/std/{familyMemberId}", consumes = ["application/json"], produces = ["application/json"])
-    fun update(@PathVariable familyMemberId: Long, @Valid @RequestBody member: FamilyMember): ResponseEntity<*> {
+    fun update(
+        @PathVariable familyMemberId: Long,
+        @Valid @RequestBody member: FamilyMember,
+    ): ResponseEntity<*> {
         member.familyMemberId = familyMemberId
         return when (val result = standardizedFamilyMemberService.update(member)) {
             is ServiceResult.Success -> {
@@ -146,7 +161,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Returns 200 OK with success message
      */
     @DeleteMapping("/std/{familyMemberId}", produces = ["application/json"])
-    fun deleteById(@PathVariable familyMemberId: Long): ResponseEntity<*> {
+    fun deleteById(
+        @PathVariable familyMemberId: Long,
+    ): ResponseEntity<*> {
         return when (val result = standardizedFamilyMemberService.deleteById(familyMemberId)) {
             is ServiceResult.Success -> {
                 logger.info("Family member deleted successfully: $familyMemberId")
@@ -190,7 +207,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Maintains original behavior
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insert(@RequestBody member: FamilyMember): ResponseEntity<FamilyMember> {
+    fun insert(
+        @RequestBody member: FamilyMember,
+    ): ResponseEntity<FamilyMember> {
         return try {
             logger.info("Inserting family member: ${member.memberName} for owner: ${member.owner} (legacy endpoint)")
             val result = standardizedFamilyMemberService.insertFamilyMember(member)
@@ -211,11 +230,14 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Spring will resolve this based on order and specificity
      */
     @GetMapping("/{id}", produces = ["application/json"])
-    fun getById(@PathVariable id: Long): ResponseEntity<FamilyMember> {
+    fun getById(
+        @PathVariable id: Long,
+    ): ResponseEntity<FamilyMember> {
         return try {
             logger.debug("Retrieving family member: $id (legacy endpoint)")
-            val member = standardizedFamilyMemberService.findById(id)
-                ?: return ResponseEntity.notFound().build<FamilyMember>()
+            val member =
+                standardizedFamilyMemberService.findById(id)
+                    ?: return ResponseEntity.notFound().build<FamilyMember>()
             logger.info("Retrieved family member: $id")
             ResponseEntity.ok(member)
         } catch (ex: Exception) {
@@ -231,7 +253,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Preserved as-is, not part of standardization
      */
     @GetMapping("/owner/{owner}", produces = ["application/json"])
-    fun byOwner(@PathVariable owner: String): ResponseEntity<List<FamilyMember>> =
+    fun byOwner(
+        @PathVariable owner: String,
+    ): ResponseEntity<List<FamilyMember>> =
         ResponseEntity.ok(standardizedFamilyMemberService.findByOwner(owner))
 
     /**
@@ -241,7 +265,7 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @GetMapping("/owner/{owner}/relationship/{relationship}", produces = ["application/json"])
     fun byOwnerAndRelationship(
         @PathVariable owner: String,
-        @PathVariable relationship: FamilyRelationship
+        @PathVariable relationship: FamilyRelationship,
     ): ResponseEntity<List<FamilyMember>> =
         ResponseEntity.ok(standardizedFamilyMemberService.findByOwnerAndRelationship(owner, relationship))
 
@@ -250,7 +274,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Preserved as-is, not part of standardization
      */
     @PutMapping("/{id}/activate")
-    fun activateMember(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
+    fun activateMember(
+        @PathVariable id: Long,
+    ): ResponseEntity<Map<String, String>> {
         return try {
             logger.info("Activating family member: $id")
             val ok = standardizedFamilyMemberService.updateActiveStatus(id, true)
@@ -272,7 +298,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Preserved as-is, not part of standardization
      */
     @PutMapping("/{id}/deactivate")
-    fun deactivateMember(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
+    fun deactivateMember(
+        @PathVariable id: Long,
+    ): ResponseEntity<Map<String, String>> {
         return try {
             logger.info("Deactivating family member: $id")
             val ok = standardizedFamilyMemberService.updateActiveStatus(id, false)
@@ -295,7 +323,9 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Note: This conflicts with standardized deleteById - Spring will handle resolution
      */
     @DeleteMapping("/{id}")
-    fun softDelete(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
+    fun softDelete(
+        @PathVariable id: Long,
+    ): ResponseEntity<Map<String, String>> {
         return try {
             logger.info("Soft deleting family member: $id")
             val ok = standardizedFamilyMemberService.softDelete(id)
@@ -312,4 +342,3 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
         }
     }
 }
-

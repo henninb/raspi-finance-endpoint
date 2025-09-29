@@ -1,6 +1,6 @@
 package finance.graphql
 
-import finance.controllers.GraphQLQueryController
+import finance.controllers.graphql.GraphQLQueryController
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category

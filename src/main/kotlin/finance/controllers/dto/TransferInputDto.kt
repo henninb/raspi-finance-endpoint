@@ -24,6 +24,5 @@ data class TransferInputDto(
     val guidSource: String? = null,
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     val guidDestination: String? = null,
-    val activeStatus: Boolean? = null
+    val activeStatus: Boolean? = null,
 )
-

@@ -1,9 +1,9 @@
 package finance.configurations
 
-import graphql.execution.instrumentation.ChainedInstrumentation
-import graphql.execution.instrumentation.Instrumentation
 import graphql.analysis.MaxQueryComplexityInstrumentation
 import graphql.analysis.MaxQueryDepthInstrumentation
+import graphql.execution.instrumentation.ChainedInstrumentation
+import graphql.execution.instrumentation.Instrumentation
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -13,15 +13,18 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 open class GraphQLGuardrailsConfig {
-
     /**
      * Factory method exposed for unit testing and reuse.
      */
-    open fun createGuardrailInstrumentation(maxDepth: Int, maxComplexity: Int): Instrumentation {
-        val instrumentations = listOf(
-            MaxQueryDepthInstrumentation(maxDepth),
-            MaxQueryComplexityInstrumentation(maxComplexity)
-        )
+    open fun createGuardrailInstrumentation(
+        maxDepth: Int,
+        maxComplexity: Int,
+    ): Instrumentation {
+        val instrumentations =
+            listOf(
+                MaxQueryDepthInstrumentation(maxDepth),
+                MaxQueryComplexityInstrumentation(maxComplexity),
+            )
         return ChainedInstrumentation(instrumentations)
     }
 

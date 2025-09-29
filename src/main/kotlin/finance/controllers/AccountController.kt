@@ -1,23 +1,29 @@
 package finance.controllers
 
 import finance.domain.Account
+import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.services.StandardizedAccountService
-import finance.domain.ServiceResult
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.beans.factory.annotation.Autowired
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
-import java.util.*
 
 @Tag(name = "Account Management", description = "Operations for managing financial accounts")
 @CrossOrigin
@@ -25,7 +31,6 @@ import java.util.*
 @RequestMapping("/api/account")
 class AccountController(private val standardizedAccountService: StandardizedAccountService) :
     StandardizedBaseController(), StandardRestController<Account, String> {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -60,7 +65,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{accountNameOwner}", produces = ["application/json"])
-    override fun findById(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+    override fun findById(
+        @PathVariable accountNameOwner: String,
+    ): ResponseEntity<Account> {
         return when (val result = standardizedAccountService.findById(accountNameOwner)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved account: $accountNameOwner (standardized)")
@@ -86,7 +93,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    override fun save(@Valid @RequestBody account: Account): ResponseEntity<Account> {
+    override fun save(
+        @Valid @RequestBody account: Account,
+    ): ResponseEntity<Account> {
         return when (val result = standardizedAccountService.save(account)) {
             is ServiceResult.Success -> {
                 logger.info("Account created successfully: ${account.accountNameOwner} (standardized)")
@@ -116,7 +125,10 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Uses entity type instead of Map<String, Any>
      */
     @PutMapping("/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
-    override fun update(@PathVariable accountNameOwner: String, @Valid @RequestBody account: Account): ResponseEntity<Account> {
+    override fun update(
+        @PathVariable accountNameOwner: String,
+        @Valid @RequestBody account: Account,
+    ): ResponseEntity<Account> {
         return when (val result = standardizedAccountService.update(account)) {
             is ServiceResult.Success -> {
                 logger.info("Account updated successfully: $accountNameOwner (standardized)")
@@ -150,7 +162,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Returns 200 OK with deleted entity
      */
     @DeleteMapping("/{accountNameOwner}", produces = ["application/json"])
-    override fun deleteById(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+    override fun deleteById(
+        @PathVariable accountNameOwner: String,
+    ): ResponseEntity<Account> {
         // First get the account to return it
         val accountResult = standardizedAccountService.findById(accountNameOwner)
         if (accountResult !is ServiceResult.Success) {
@@ -182,20 +196,29 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
 
     @Operation(
         summary = "Get account totals",
-        description = "Computes the total amounts for all accounts by transaction state (cleared, outstanding, future)"
+        description = "Computes the total amounts for all accounts by transaction state (cleared, outstanding, future)",
     )
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Account totals computed successfully",
-            content = [Content(mediaType = "application/json",
-            schema = Schema(implementation = Map::class))]),
-        ApiResponse(responseCode = "500", description = "Internal server error")
-    ])
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Account totals computed successfully",
+                content = [
+                    Content(
+                        mediaType = "application/json",
+                        schema = Schema(implementation = Map::class),
+                    ),
+                ],
+            ),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("totals", produces = ["application/json"])
     fun computeAccountTotals(): ResponseEntity<Map<String, String>> {
         return try {
             logger.debug("Computing account totals")
             val response: MutableMap<String, String> = HashMap()
-            //TODO: 6/27/2021 - need to modify to 1 call from 3
+            // TODO: 6/27/2021 - need to modify to 1 call from 3
             val totalsCleared = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
             val totalsFuture = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
             val totalsOutstanding = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
@@ -253,17 +276,19 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @Operation(
         summary = "Get active accounts",
-        description = "Retrieves all active financial accounts with updated totals"
+        description = "Retrieves all active financial accounts with updated totals",
     )
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Active accounts retrieved successfully"),
-        ApiResponse(responseCode = "404", description = "No active accounts found"),
-        ApiResponse(responseCode = "500", description = "Internal server error")
-    ])
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active accounts retrieved successfully"),
+            ApiResponse(responseCode = "404", description = "No active accounts found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/select/active", produces = ["application/json"])
     fun accounts(): ResponseEntity<List<Account>> {
         logger.debug("Retrieving active accounts (legacy endpoint)")
-        //TODO: create a separate endpoint for the totals
+        // TODO: create a separate endpoint for the totals
         standardizedAccountService.updateTotalsForAllAccounts()
         return when (val result = standardizedAccountService.findAllActive()) {
             is ServiceResult.Success -> {
@@ -294,7 +319,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Maintains original behavior
      */
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
-    fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+    fun account(
+        @PathVariable accountNameOwner: String,
+    ): ResponseEntity<Account> {
         logger.debug("Retrieving account: $accountNameOwner (legacy endpoint)")
         return when (val result = standardizedAccountService.findById(accountNameOwner)) {
             is ServiceResult.Success -> {
@@ -321,7 +348,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Maintains original behavior
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertAccount(@RequestBody account: Account): ResponseEntity<Account> {
+    fun insertAccount(
+        @RequestBody account: Account,
+    ): ResponseEntity<Account> {
         logger.info("Inserting account: ${account.accountNameOwner} (legacy endpoint)")
         return when (val result = standardizedAccountService.save(account)) {
             is ServiceResult.Success -> {
@@ -352,26 +381,29 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      * Maintains original behavior
      */
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
-    fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+    fun deleteAccount(
+        @PathVariable accountNameOwner: String,
+    ): ResponseEntity<Account> {
         logger.info("Attempting to delete account: $accountNameOwner (legacy endpoint)")
 
         // First get the account to return it
         val accountResult = standardizedAccountService.findById(accountNameOwner)
-        val accountToReturn = when (accountResult) {
-            is ServiceResult.Success -> accountResult.data
-            is ServiceResult.NotFound -> {
-                logger.warn("Account not found for deletion: $accountNameOwner")
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+        val accountToReturn =
+            when (accountResult) {
+                is ServiceResult.Success -> accountResult.data
+                is ServiceResult.NotFound -> {
+                    logger.warn("Account not found for deletion: $accountNameOwner")
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found: $accountNameOwner")
+                }
+                is ServiceResult.SystemError -> {
+                    logger.error("Failed to retrieve account for deletion $accountNameOwner: ${accountResult.exception.message}", accountResult.exception)
+                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve account: ${accountResult.exception.message}", accountResult.exception)
+                }
+                else -> {
+                    logger.error("Unexpected result type: $accountResult")
+                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
+                }
             }
-            is ServiceResult.SystemError -> {
-                logger.error("Failed to retrieve account for deletion $accountNameOwner: ${accountResult.exception.message}", accountResult.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve account: ${accountResult.exception.message}", accountResult.exception)
-            }
-            else -> {
-                logger.error("Unexpected result type: $accountResult")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
-            }
-        }
 
         return when (val result = standardizedAccountService.deleteById(accountNameOwner)) {
             is ServiceResult.Success -> {
@@ -400,7 +432,7 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     @PutMapping("/update/{accountNameOwner}", produces = ["application/json"])
     fun updateAccount(
         @PathVariable("accountNameOwner") accountNameOwner: String,
-        @RequestBody account: Map<String, Any>
+        @RequestBody account: Map<String, Any>,
     ): ResponseEntity<Account> {
         logger.info("Updating account: $accountNameOwner (legacy endpoint)")
         val accountToBeUpdated = mapper.convertValue(account, Account::class.java)
@@ -436,7 +468,7 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     @PutMapping("/rename", produces = ["application/json"])
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,
-        @RequestParam("new") newAccountNameOwner: String
+        @RequestParam("new") newAccountNameOwner: String,
     ): ResponseEntity<Account> {
         return try {
             logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
@@ -454,7 +486,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/deactivate/test_brian
     @PutMapping("/deactivate/{accountNameOwner}", produces = ["application/json"])
-    fun deactivateAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+    fun deactivateAccount(
+        @PathVariable accountNameOwner: String,
+    ): ResponseEntity<Account> {
         return try {
             logger.info("Deactivating account: $accountNameOwner")
             val accountResponse = standardizedAccountService.deactivateAccount(accountNameOwner)
@@ -481,7 +515,9 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/activate/test_brian
     @PutMapping("/activate/{accountNameOwner}", produces = ["application/json"])
-    fun activateAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account> {
+    fun activateAccount(
+        @PathVariable accountNameOwner: String,
+    ): ResponseEntity<Account> {
         return try {
             logger.info("Activating account: $accountNameOwner")
             val accountResponse = standardizedAccountService.activateAccount(accountNameOwner)

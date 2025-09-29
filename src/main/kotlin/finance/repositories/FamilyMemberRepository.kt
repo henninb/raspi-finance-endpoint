@@ -11,16 +11,21 @@ import org.springframework.transaction.annotation.Transactional
 
 @Repository
 interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
-
     fun findByFamilyMemberIdAndActiveStatusTrue(familyMemberId: Long): FamilyMember?
 
     fun findByOwnerAndActiveStatusTrue(owner: String): List<FamilyMember>
 
-    fun findByOwnerAndRelationshipAndActiveStatusTrue(owner: String, relationship: FamilyRelationship): List<FamilyMember>
+    fun findByOwnerAndRelationshipAndActiveStatusTrue(
+        owner: String,
+        relationship: FamilyRelationship,
+    ): List<FamilyMember>
 
     fun findByActiveStatusTrue(): List<FamilyMember>
 
-    fun findByOwnerAndMemberName(owner: String, memberName: String): FamilyMember?
+    fun findByOwnerAndMemberName(
+        owner: String,
+        memberName: String,
+    ): FamilyMember?
 
     @Modifying(clearAutomatically = true)
     @Transactional
@@ -29,9 +34,11 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
         UPDATE FamilyMember f
         SET f.activeStatus = false, f.dateUpdated = CURRENT_TIMESTAMP
         WHERE f.familyMemberId = :familyMemberId
-        """
+        """,
     )
-    fun softDeleteByFamilyMemberId(@Param("familyMemberId") familyMemberId: Long): Int
+    fun softDeleteByFamilyMemberId(
+        @Param("familyMemberId") familyMemberId: Long,
+    ): Int
 
     @Modifying(clearAutomatically = true)
     @Transactional
@@ -40,11 +47,10 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
         UPDATE FamilyMember f
         SET f.activeStatus = :active, f.dateUpdated = CURRENT_TIMESTAMP
         WHERE f.familyMemberId = :familyMemberId
-        """
+        """,
     )
     fun updateActiveStatus(
         @Param("familyMemberId") familyMemberId: Long,
-        @Param("active") active: Boolean
+        @Param("active") active: Boolean,
     ): Int
 }
-

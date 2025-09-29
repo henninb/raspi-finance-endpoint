@@ -5,11 +5,10 @@ import finance.domain.ServiceResult
 import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import jakarta.validation.ValidationException
-import jakarta.validation.Validator
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
-import java.util.*
+import java.util.Optional
 
 /**
  * Standardized Description Service implementing ServiceResult pattern
@@ -19,9 +18,8 @@ import java.util.*
 @Primary
 class StandardizedDescriptionService(
     private val descriptionRepository: DescriptionRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
 ) : StandardizedBaseService<Description, Long>() {
-
     override fun getEntityName(): String = "Description"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -134,26 +132,38 @@ class StandardizedDescriptionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<Description> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): Description = description
-                        override fun getRootBeanClass(): Class<Description> = Description::class.java
-                        override fun getLeafBean(): Any = description
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                val violations =
+                    result.errors.map { (field, message) ->
+                        object : jakarta.validation.ConstraintViolation<Description> {
+                            override fun getMessage(): String = message
+
+                            override fun getMessageTemplate(): String = message
+
+                            override fun getRootBean(): Description = description
+
+                            override fun getRootBeanClass(): Class<Description> = Description::class.java
+
+                            override fun getLeafBean(): Any = description
+
+                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+
+                            override fun getExecutableReturnValue(): Any? = null
+
+                            override fun getPropertyPath(): jakarta.validation.Path {
+                                return object : jakarta.validation.Path {
+                                    override fun toString(): String = field
+
+                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                }
                             }
+
+                            override fun getInvalidValue(): Any? = null
+
+                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                         }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
+                    }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
             is ServiceResult.BusinessError -> {
@@ -163,10 +173,9 @@ class StandardizedDescriptionService(
                     throw RuntimeException("Business error: ${result.message}")
                 }
             }
-            else -> throw RuntimeException("Failed to insert description: ${result}")
+            else -> throw RuntimeException("Failed to insert description: $result")
         }
     }
-
 
     fun findByDescriptionName(descriptionName: String): Optional<Description> {
         return descriptionRepository.findByDescriptionName(descriptionName)
@@ -176,15 +185,18 @@ class StandardizedDescriptionService(
         return findByDescriptionName(descriptionName)
     }
 
-
-    fun mergeDescriptions(targetName: String, sourceNames: List<String>): Description {
+    fun mergeDescriptions(
+        targetName: String,
+        sourceNames: List<String>,
+    ): Description {
         // Normalize target name (trim whitespace and convert to lowercase)
         val normalizedTargetName = targetName.trim().lowercase()
 
         // Find target description by normalized name
-        val targetDescription = descriptionRepository.findByDescriptionName(normalizedTargetName).orElseThrow {
-            RuntimeException("Target description $normalizedTargetName not found")
-        }
+        val targetDescription =
+            descriptionRepository.findByDescriptionName(normalizedTargetName).orElseThrow {
+                RuntimeException("Target description $normalizedTargetName not found")
+            }
 
         logger.info("Merging descriptions: ${sourceNames.joinToString(", ")} into $normalizedTargetName")
 
@@ -200,9 +212,10 @@ class StandardizedDescriptionService(
                 return@forEach
             }
 
-            val sourceDescription = descriptionRepository.findByDescriptionName(sourceName).orElseThrow {
-                RuntimeException("Source description $sourceName not found")
-            }
+            val sourceDescription =
+                descriptionRepository.findByDescriptionName(sourceName).orElseThrow {
+                    RuntimeException("Source description $sourceName not found")
+                }
 
             // Reassign transactions from source to target
             val transactionsToUpdate = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(sourceName, true)

@@ -9,7 +9,8 @@ enum class ClaimStatus(val label: String) {
     Approved("approved"),
     Denied("denied"),
     Paid("paid"),
-    Closed("closed");
+    Closed("closed"),
+    ;
 
     @JsonValue
     fun toValue(): String = label

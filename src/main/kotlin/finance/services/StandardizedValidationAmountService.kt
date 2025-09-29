@@ -1,16 +1,14 @@
 package finance.services
 
-import finance.domain.ValidationAmount
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
-import finance.repositories.ValidationAmountRepository
+import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
+import finance.repositories.ValidationAmountRepository
 import jakarta.validation.ValidationException
-import jakarta.validation.Validator
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
-import java.util.*
 
 /**
  * Standardized ValidationAmount Service implementing ServiceResult pattern
@@ -20,9 +18,8 @@ import java.util.*
 @Primary
 class StandardizedValidationAmountService(
     private val validationAmountRepository: ValidationAmountRepository,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
 ) : StandardizedBaseService<ValidationAmount, Long>() {
-
     override fun getEntityName(): String = "ValidationAmount"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -109,12 +106,13 @@ class StandardizedValidationAmountService(
 
     fun findValidationAmountByAccountNameOwner(
         accountNameOwner: String,
-        transactionState: TransactionState
+        transactionState: TransactionState,
     ): ValidationAmount {
         // Find account by name owner
-        val account = accountRepository.findByAccountNameOwner(accountNameOwner).orElseThrow {
-            jakarta.persistence.EntityNotFoundException("Account not found: $accountNameOwner")
-        }
+        val account =
+            accountRepository.findByAccountNameOwner(accountNameOwner).orElseThrow {
+                jakarta.persistence.EntityNotFoundException("Account not found: $accountNameOwner")
+            }
 
         // Find validation amount by account ID and transaction state
         val validationAmounts = validationAmountRepository.findByTransactionStateAndAccountId(transactionState, account.accountId)
@@ -128,32 +126,33 @@ class StandardizedValidationAmountService(
 
     fun insertValidationAmount(
         accountNameOwner: String,
-        validationAmount: ValidationAmount
+        validationAmount: ValidationAmount,
     ): ValidationAmount {
         logger.info("Inserting validation amount for account: $accountNameOwner")
 
         // Determine the target accountId using request payload first, then fallback to path variable
         val providedAccountId = validationAmount.accountId
-        val resolvedAccountId: Long = when {
-            providedAccountId > 0L -> {
-                // Prefer explicit accountId from payload when valid
-                providedAccountId
-            }
-            else -> {
-                val byOwner = accountRepository.findByAccountNameOwner(accountNameOwner)
-                if (byOwner.isPresent) {
-                    byOwner.get().accountId
-                } else {
-                    logger.warn("Account not found by owner: $accountNameOwner and no valid accountId provided in payload")
-                    0L
+        val resolvedAccountId: Long =
+            when {
+                providedAccountId > 0L -> {
+                    // Prefer explicit accountId from payload when valid
+                    providedAccountId
+                }
+                else -> {
+                    val byOwner = accountRepository.findByAccountNameOwner(accountNameOwner)
+                    if (byOwner.isPresent) {
+                        byOwner.get().accountId
+                    } else {
+                        logger.warn("Account not found by owner: $accountNameOwner and no valid accountId provided in payload")
+                        0L
+                    }
                 }
             }
-        }
 
         if (resolvedAccountId <= 0L) {
             throw org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.BAD_REQUEST,
-                "Unable to resolve account for validation amount"
+                "Unable to resolve account for validation amount",
             )
         }
 
@@ -165,29 +164,41 @@ class StandardizedValidationAmountService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<ValidationAmount> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): ValidationAmount = validationAmount
-                        override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
-                        override fun getLeafBean(): Any = validationAmount
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                val violations =
+                    result.errors.map { (field, message) ->
+                        object : jakarta.validation.ConstraintViolation<ValidationAmount> {
+                            override fun getMessage(): String = message
+
+                            override fun getMessageTemplate(): String = message
+
+                            override fun getRootBean(): ValidationAmount = validationAmount
+
+                            override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
+
+                            override fun getLeafBean(): Any = validationAmount
+
+                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+
+                            override fun getExecutableReturnValue(): Any? = null
+
+                            override fun getPropertyPath(): jakarta.validation.Path {
+                                return object : jakarta.validation.Path {
+                                    override fun toString(): String = field
+
+                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                }
                             }
+
+                            override fun getInvalidValue(): Any? = null
+
+                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                         }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
+                    }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
-            else -> throw RuntimeException("Failed to insert validation amount: ${result}")
+            else -> throw RuntimeException("Failed to insert validation amount: $result")
         }
     }
 }

@@ -1,27 +1,30 @@
 package finance.controllers
 
 import finance.domain.ReceiptImage
-import finance.services.StandardizedReceiptImageService
 import finance.domain.ServiceResult
+import finance.services.StandardizedReceiptImageService
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Positive
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
-import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.Positive
 import org.springframework.validation.BindingResult
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/receipt/image")
 class ReceiptImageController(private var standardizedReceiptImageService: StandardizedReceiptImageService) : BaseController() {
-
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionId": 1, "image": "base64encodedimage"}' https://localhost:8443/receipt/image/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertReceiptImage(
         @Valid @RequestBody receiptImage: ReceiptImage,
-        bindingResult: BindingResult
+        bindingResult: BindingResult,
     ): ResponseEntity<Map<String, String>> {
         // Check for validation errors
         if (bindingResult.hasErrors()) {
@@ -57,15 +60,17 @@ class ReceiptImageController(private var standardizedReceiptImageService: Standa
     // curl -k https://localhost:8443/receipt/image/select/1
     @GetMapping("/select/{receipt_image_id}")
     fun selectReceiptImage(
-        @PathVariable("receipt_image_id") @Positive(message = "Receipt image ID must be positive") receiptImageId: Long
+        @PathVariable("receipt_image_id") @Positive(message = "Receipt image ID must be positive") receiptImageId: Long,
     ): ResponseEntity<Map<String, Any>> {
         return when (val result = standardizedReceiptImageService.findById(receiptImageId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved receipt image: $receiptImageId")
-                ResponseEntity.ok(mapOf(
-                    "receiptImage" to result.data,
-                    "message" to "Receipt image found"
-                ))
+                ResponseEntity.ok(
+                    mapOf(
+                        "receiptImage" to result.data,
+                        "message" to "Receipt image found",
+                    ),
+                )
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Receipt image not found: $receiptImageId")

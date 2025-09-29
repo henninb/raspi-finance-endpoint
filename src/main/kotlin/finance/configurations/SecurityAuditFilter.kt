@@ -1,7 +1,7 @@
 package finance.configurations
 
-import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -11,20 +11,22 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 
 class SecurityAuditFilter(
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
 ) : OncePerRequestFilter() {
-
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.finance.controllers.AccountController")
-        private val SENSITIVE_ENDPOINTS = setOf(
-            "/select/active", "/select/totals", "/payment/required"
-        )
+        private val SENSITIVE_ENDPOINTS =
+            setOf(
+                "/select/active",
+                "/select/totals",
+                "/payment/required",
+            )
     }
 
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val startTime = System.currentTimeMillis()
         val requestUri = request.requestURI
@@ -49,12 +51,14 @@ class SecurityAuditFilter(
                 // Increment security audit counter
                 Counter.builder("security.audit.endpoint.access")
                     .description("Security audit events for sensitive endpoint access")
-                    .tags(listOf(
-                        Tag.of("endpoint", sanitizeEndpoint(requestUri)),
-                        Tag.of("method", method),
-                        Tag.of("status", response.status.toString()),
-                        Tag.of("authenticated", SecurityContextHolder.getContext().authentication?.isAuthenticated.toString())
-                    ))
+                    .tags(
+                        listOf(
+                            Tag.of("endpoint", sanitizeEndpoint(requestUri)),
+                            Tag.of("method", method),
+                            Tag.of("status", response.status.toString()),
+                            Tag.of("authenticated", SecurityContextHolder.getContext().authentication?.isAuthenticated.toString()),
+                        ),
+                    )
                     .register(meterRegistry)
                     .increment()
             }
@@ -67,24 +71,34 @@ class SecurityAuditFilter(
 
                 securityLogger.info(
                     "SECURITY_HTTP_4XX status={} method={} endpoint={} user={} ip={} responseTime={}ms",
-                    response.status, method, requestUri, username, clientIp, responseTime
+                    response.status,
+                    method,
+                    requestUri,
+                    username,
+                    clientIp,
+                    responseTime,
                 )
 
                 Counter.builder("security.audit.http.4xx")
                     .description("Count of 4xx responses observed by security audit filter")
-                    .tags(listOf(
-                        Tag.of("status", response.status.toString()),
-                        Tag.of("method", method),
-                        Tag.of("endpoint", sanitizeEndpoint(requestUri)),
-                        Tag.of("authenticated", isAuthenticated.toString())
-                    ))
+                    .tags(
+                        listOf(
+                            Tag.of("status", response.status.toString()),
+                            Tag.of("method", method),
+                            Tag.of("endpoint", sanitizeEndpoint(requestUri)),
+                            Tag.of("authenticated", isAuthenticated.toString()),
+                        ),
+                    )
                     .register(meterRegistry)
                     .increment()
             }
         }
     }
 
-    private fun logSecurityAuditEvent(request: HttpServletRequest, phase: String) {
+    private fun logSecurityAuditEvent(
+        request: HttpServletRequest,
+        phase: String,
+    ) {
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
         val username = if (isAuthenticated) authentication?.name ?: "unknown" else "anonymous"
@@ -95,7 +109,13 @@ class SecurityAuditFilter(
 
         securityLogger.info(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} userAgent='{}'",
-            auditType, phase, username, request.requestURI, request.method, clientIp, userAgent ?: "unknown"
+            auditType,
+            phase,
+            username,
+            request.requestURI,
+            request.method,
+            clientIp,
+            userAgent ?: "unknown",
         )
     }
 
@@ -103,7 +123,7 @@ class SecurityAuditFilter(
         request: HttpServletRequest,
         response: HttpServletResponse,
         phase: String,
-        responseTime: Long
+        responseTime: Long,
     ) {
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
@@ -111,26 +131,33 @@ class SecurityAuditFilter(
         val clientIp = getClientIpAddress(request)
         val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
 
-        val auditType = if (response.status == 200 && isAuthenticated) {
-            "AUTHORIZED_ACCESS"
-        } else {
-            "UNAUTHORIZED_ACCESS"
-        }
+        val auditType =
+            if (response.status == 200 && isAuthenticated) {
+                "AUTHORIZED_ACCESS"
+            } else {
+                "UNAUTHORIZED_ACCESS"
+            }
 
         // Log security violations for non-API routes
         if (request.requestURI.contains("/select/active") &&
             !request.requestURI.startsWith("/api/") &&
-            (response.status == 403 || response.status == 401)) {
+            (response.status == 403 || response.status == 401)
+        ) {
             securityLogger.warn(
                 "SECURITY_VIOLATION type=NON_API_ROUTE_ACCESS user={} endpoint={} method={} ip={} status={} responseTime={}ms",
-                username, request.requestURI, request.method, clientIp, response.status, responseTime
+                username,
+                request.requestURI,
+                request.method,
+                clientIp,
+                response.status,
+                responseTime,
             )
         }
 
         securityLogger.info(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} status={} responseTime={}ms userAgent='{}'",
             auditType, phase, username, request.requestURI, request.method, clientIp,
-            response.status, responseTime, userAgent ?: "unknown"
+            response.status, responseTime, userAgent ?: "unknown",
         )
     }
 

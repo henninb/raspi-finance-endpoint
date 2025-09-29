@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter
 class ImageFormatTypeConverter : AttributeConverter<ImageFormatType, String> {
-
     override fun convertToDatabaseColumn(attribute: ImageFormatType): String {
         return when (attribute) {
             ImageFormatType.Jpeg -> "jpeg"

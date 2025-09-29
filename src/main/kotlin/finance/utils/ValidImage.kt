@@ -11,5 +11,5 @@ import kotlin.reflect.KClass
 annotation class ValidImage(
     val message: String = "image must be a jpeg or png file.",
     val groups: Array<KClass<*>> = [],
-    val payload: Array<KClass<out Payload>> = []
+    val payload: Array<KClass<out Payload>> = [],
 )

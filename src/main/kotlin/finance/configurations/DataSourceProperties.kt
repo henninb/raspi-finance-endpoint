@@ -8,5 +8,5 @@ import org.springframework.context.annotation.Configuration
 open class DataSourceProperties(
     var url: String = "",
     var username: String = "",
-    var password: String = ""
+    var password: String = "",
 )

@@ -9,15 +9,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
+import java.net.InetAddress
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import java.net.InetAddress
 
 class RateLimitingFilter : OncePerRequestFilter() {
-
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${RateLimitingFilter::class.java.simpleName}")
         private const val DEFAULT_RATE_LIMIT = 500
@@ -39,14 +37,15 @@ class RateLimitingFilter : OncePerRequestFilter() {
 
     init {
         // Scheduled cleanup of old entries every 5 minutes
-        val executor = Executors.newScheduledThreadPool(1) { r ->
-            Thread(r, "rate-limit-cleanup").apply { isDaemon = true }
-        }
+        val executor =
+            Executors.newScheduledThreadPool(1) { r ->
+                Thread(r, "rate-limit-cleanup").apply { isDaemon = true }
+            }
         executor.scheduleWithFixedDelay(
             ::cleanupOldEntries,
             CLEANUP_INTERVAL_MINUTES,
             CLEANUP_INTERVAL_MINUTES,
-            TimeUnit.MINUTES
+            TimeUnit.MINUTES,
         )
     }
 
@@ -54,7 +53,7 @@ class RateLimitingFilter : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         if (!rateLimitingEnabled) {
             filterChain.doFilter(request, response)
@@ -64,14 +63,15 @@ class RateLimitingFilter : OncePerRequestFilter() {
         val clientIp = getClientIpAddress(request)
 
         // Log suspicious activity if proxy headers were ignored
-        val hasProxyHeaders = !request.getHeader("X-Forwarded-For").isNullOrBlank() ||
-                             !request.getHeader("X-Real-IP").isNullOrBlank()
+        val hasProxyHeaders =
+            !request.getHeader("X-Forwarded-For").isNullOrBlank() ||
+                !request.getHeader("X-Real-IP").isNullOrBlank()
         if (hasProxyHeaders && !isFromTrustedProxy(request.remoteAddr ?: "unknown")) {
             securityLogger.warn(
                 "Proxy headers ignored from untrusted source: {} - X-Forwarded-For: {}, X-Real-IP: {}",
                 request.remoteAddr,
                 request.getHeader("X-Forwarded-For"),
-                request.getHeader("X-Real-IP")
+                request.getHeader("X-Real-IP"),
             )
         }
         val currentTime = System.currentTimeMillis()
@@ -83,14 +83,19 @@ class RateLimitingFilter : OncePerRequestFilter() {
         if (counter.isRateLimitExceeded(windowStart, rateLimitPerMinute)) {
             securityLogger.warn(
                 "Rate limit exceeded for IP: {} - {} requests in {} minutes (limit: {})",
-                clientIp, counter.getRequestCount(windowStart), windowSizeMinutes, rateLimitPerMinute
+                clientIp,
+                counter.getRequestCount(windowStart),
+                windowSizeMinutes,
+                rateLimitPerMinute,
             )
 
             response.status = HttpStatus.TOO_MANY_REQUESTS.value()
             response.setHeader("X-RateLimit-Limit", rateLimitPerMinute.toString())
             response.setHeader("X-RateLimit-Remaining", "0")
-            response.setHeader("X-RateLimit-Reset",
-                ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString())
+            response.setHeader(
+                "X-RateLimit-Reset",
+                ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString(),
+            )
             response.contentType = "application/json"
             response.writer.write("""{"error":"Rate limit exceeded","message":"Too many requests"}""")
             return
@@ -103,8 +108,10 @@ class RateLimitingFilter : OncePerRequestFilter() {
         val remainingRequests = maxOf(0, rateLimitPerMinute - counter.getRequestCount(windowStart))
         response.setHeader("X-RateLimit-Limit", rateLimitPerMinute.toString())
         response.setHeader("X-RateLimit-Remaining", remainingRequests.toString())
-        response.setHeader("X-RateLimit-Reset",
-            ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString())
+        response.setHeader(
+            "X-RateLimit-Reset",
+            ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString(),
+        )
 
         filterChain.doFilter(request, response)
     }
@@ -137,12 +144,17 @@ class RateLimitingFilter : OncePerRequestFilter() {
     private fun isFromTrustedProxy(clientIp: String): Boolean {
         if (clientIp == "unknown") return false
 
-        val trustedNetworks = listOf(
-            "10.0.0.0/8",       // Private Class A
-            "172.16.0.0/12",    // Private Class B
-            "192.168.0.0/16",   // Private Class C
-            "127.0.0.0/8"       // Loopback
-        )
+        val trustedNetworks =
+            listOf(
+                // Private Class A
+                "10.0.0.0/8",
+                // Private Class B
+                "172.16.0.0/12",
+                // Private Class C
+                "192.168.0.0/16",
+                // Loopback
+                "127.0.0.0/8",
+            )
 
         return try {
             trustedNetworks.any { network -> isIpInNetwork(clientIp, network) }
@@ -152,7 +164,10 @@ class RateLimitingFilter : OncePerRequestFilter() {
         }
     }
 
-    private fun isIpInNetwork(ip: String, network: String): Boolean {
+    private fun isIpInNetwork(
+        ip: String,
+        network: String,
+    ): Boolean {
         try {
             val parts = network.split("/")
             val networkAddress = parts[0]
@@ -194,7 +209,7 @@ class RateLimitingFilter : OncePerRequestFilter() {
             InetAddress.getByName(ip)
             // Basic validation - reject obvious spoofing attempts
             ip.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$".toRegex()) ||
-            ip.matches("^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$".toRegex()) // Basic IPv6
+                ip.matches("^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$".toRegex()) // Basic IPv6
         } catch (e: Exception) {
             false
         }
@@ -234,7 +249,10 @@ class RateLimitingFilter : OncePerRequestFilter() {
             }
         }
 
-        fun isRateLimitExceeded(windowStart: Long, limit: Int): Boolean {
+        fun isRateLimitExceeded(
+            windowStart: Long,
+            limit: Int,
+        ): Boolean {
             return getRequestCount(windowStart) >= limit
         }
 

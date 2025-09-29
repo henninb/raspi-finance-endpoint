@@ -15,13 +15,16 @@ enum class TransactionState(val label: String) {
     Future("future"),
 
     @JsonProperty("undefined")
-    Undefined("undefined");
+    Undefined("undefined"),
+    ;
 
     fun value(): String = label
+
     override fun toString(): String = name.lowercase()
 
     companion object {
         private val VALUES = values()
+
         fun getByValue(label: String) = VALUES.firstOrNull { it.label == label }
     }
 }

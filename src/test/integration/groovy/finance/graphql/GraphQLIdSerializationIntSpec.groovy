@@ -1,7 +1,7 @@
 package finance.graphql
 
 import finance.BaseRestTemplateIntegrationSpec
-import finance.controllers.GraphQLMutationController
+import finance.controllers.graphql.GraphQLMutationController
 import finance.controllers.dto.PaymentInputDto
 import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository

@@ -2,7 +2,6 @@ package finance.services
 
 import finance.domain.ServiceResult
 import jakarta.persistence.EntityNotFoundException
-import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 
@@ -14,7 +13,6 @@ import org.springframework.dao.DataIntegrityViolationException
  * @param ID The entity identifier type
  */
 abstract class StandardizedBaseService<T, ID> : BaseService(), StandardServiceInterface<T, ID> {
-
     /**
      * Abstract method to get entity name for logging and error messages
      * @return The entity name (e.g., "Account", "Transaction", "Parameter")
@@ -33,7 +31,7 @@ abstract class StandardizedBaseService<T, ID> : BaseService(), StandardServiceIn
     protected fun <R> handleServiceOperation(
         operation: String,
         entityId: ID?,
-        block: () -> R
+        block: () -> R,
     ): ServiceResult<R> {
         return try {
             logger.debug("$operation ${getEntityName()}: $entityId")
@@ -84,11 +82,12 @@ abstract class StandardizedBaseService<T, ID> : BaseService(), StandardServiceIn
 
         try {
             ex.constraintViolations?.forEach { violation ->
-                val fieldName = try {
-                    violation.propertyPath?.toString() ?: "unknown"
-                } catch (e: Exception) {
-                    "unknown"
-                }
+                val fieldName =
+                    try {
+                        violation.propertyPath?.toString() ?: "unknown"
+                    } catch (e: Exception) {
+                        "unknown"
+                    }
                 val errorMessage = violation.message ?: "Validation failed"
                 errors[fieldName] = errorMessage
             }

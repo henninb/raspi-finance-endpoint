@@ -8,52 +8,64 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.math.BigDecimal
-import java.util.*
-//import javax.transaction.Transactional
+import java.util.Optional
+// import javax.transaction.Transactional
 
 interface AccountRepository : JpaRepository<Account, Long> {
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
+
     fun findByAccountId(accountId: Long): Optional<Account>
+
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
+
     fun findByActiveStatus(activeStatus: Boolean): List<Account>
+
     fun findByAccountType(accountType: AccountType): List<Account>
-    fun findByActiveStatusAndAccountType(activeStatus: Boolean, accountType: AccountType): List<Account>
+
+    fun findByActiveStatusAndAccountType(
+        activeStatus: Boolean,
+        accountType: AccountType,
+    ): List<Account>
 
     @Modifying
     @Transactional
     @Query(
         "UPDATE t_account SET cleared = x.cleared, outstanding = x.outstanding, future = x.future, date_updated = now() FROM " +
-                "(SELECT account_name_owner, SUM(case when transaction_state='cleared' THEN amount ELSE 0 END) AS cleared, sum(case when transaction_state='outstanding' THEN amount ELSE 0 END) AS outstanding, sum(CASE WHEN transaction_state='future' THEN amount ELSE 0 END) AS future FROM t_transaction WHERE active_status = true group by account_name_owner) " +
-                "AS x WHERE t_account.account_name_owner = x.account_name_owner", nativeQuery = true
+            "(SELECT account_name_owner, SUM(case when transaction_state='cleared' THEN amount ELSE 0 END) AS cleared, sum(case when transaction_state='outstanding' THEN amount ELSE 0 END) AS outstanding, sum(CASE WHEN transaction_state='future' THEN amount ELSE 0 END) AS future FROM t_transaction WHERE active_status = true group by account_name_owner) " +
+            "AS x WHERE t_account.account_name_owner = x.account_name_owner",
+        nativeQuery = true,
     )
     fun updateTotalsForAllAccounts()
 
     @Query(
         value = "SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND transaction_state = :transactionState AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and transaction_state = :transactionState AND active_status = true) B",
-        nativeQuery = true
+        nativeQuery = true,
     )
-    fun sumOfAllTransactionsByTransactionState(@Param("transactionState") transactionState: String): BigDecimal
-
+    fun sumOfAllTransactionsByTransactionState(
+        @Param("transactionState") transactionState: String,
+    ): BigDecimal
 
     @Query(
         """SELECT COALESCE(SUM(CASE WHEN t.accountType = 'debit' THEN t.amount ELSE 0 END), 0) -
               COALESCE(SUM(CASE WHEN t.accountType = 'credit' THEN t.amount ELSE 0 END), 0)
        FROM Transaction t
        WHERE t.transactionState = :transactionState
-       AND t.activeStatus = true"""
+       AND t.activeStatus = true""",
     )
-    fun sumOfAllTransactionsByTransactionStateJpql(@Param("transactionState") transactionState: String): BigDecimal
+    fun sumOfAllTransactionsByTransactionStateJpql(
+        @Param("transactionState") transactionState: String,
+    ): BigDecimal
 
     @Query(
         """SELECT a FROM Account a
        WHERE a.activeStatus = :activeStatus
        AND a.accountType = :accountType
        AND (a.outstanding > 0 OR a.future > 0 OR a.cleared > 0)
-       ORDER BY a.accountNameOwner"""
+       ORDER BY a.accountNameOwner""",
     )
     fun findAccountsThatRequirePayment(
         @Param("activeStatus") activeStatus: Boolean = true,
-        @Param("accountType") accountType: AccountType = AccountType.Credit
+        @Param("accountType") accountType: AccountType = AccountType.Credit,
     ): List<Account>
 
     // Update validation_date for a single account from the newest t_validation_amount row
@@ -73,9 +85,11 @@ interface AccountRepository : JpaRepository<Account, Long> {
             WHERE a.account_id = sub.account_id
             AND a.account_id = :accountId
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
-    fun updateValidationDateForAccount(@Param("accountId") accountId: Long): Int
+    fun updateValidationDateForAccount(
+        @Param("accountId") accountId: Long,
+    ): Int
 
     // Bulk refresh of validation_date for all accounts from newest ValidationAmount
     @Modifying
@@ -93,8 +107,7 @@ interface AccountRepository : JpaRepository<Account, Long> {
             ) sub
             WHERE a.account_id = sub.account_id
         """,
-        nativeQuery = true
+        nativeQuery = true,
     )
     fun updateValidationDateForAllAccounts()
-
 }

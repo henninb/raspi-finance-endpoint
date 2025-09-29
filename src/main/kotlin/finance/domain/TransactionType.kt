@@ -15,9 +15,10 @@ enum class TransactionType(val label: String) {
     Transfer("transfer"),
 
     @JsonProperty("undefined")
-    Undefined("undefined");
+    Undefined("undefined"),
+    ;
 
-    //fun value() : String = type
+    // fun value() : String = type
     override fun toString(): String = name.lowercase()
 
     companion object

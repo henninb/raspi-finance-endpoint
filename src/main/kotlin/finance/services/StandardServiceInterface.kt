@@ -10,7 +10,6 @@ import finance.domain.ServiceResult
  * @param ID The entity identifier type
  */
 interface StandardServiceInterface<T, ID> {
-
     /**
      * Finds all active entities
      * @return ServiceResult containing list of active entities, or appropriate error

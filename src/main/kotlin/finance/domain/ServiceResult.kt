@@ -5,7 +5,6 @@ package finance.domain
  * Provides a type-safe way to handle service operation results with comprehensive error information
  */
 sealed class ServiceResult<T> {
-
     /**
      * Represents a successful operation with data
      */
@@ -42,7 +41,10 @@ sealed class ServiceResult<T> {
     data class BusinessError<T>(val message: String, val errorCode: String) : ServiceResult<T>() {
         companion object {
             @JvmStatic
-            fun <T> of(message: String, errorCode: String): BusinessError<T> = BusinessError(message, errorCode)
+            fun <T> of(
+                message: String,
+                errorCode: String,
+            ): BusinessError<T> = BusinessError(message, errorCode)
         }
     }
 
@@ -99,16 +101,18 @@ sealed class ServiceResult<T> {
     /**
      * Returns the data if successful, null otherwise
      */
-    fun getDataOrNull(): T? = when (this) {
-        is Success -> data
-        else -> null
-    }
+    fun getDataOrNull(): T? =
+        when (this) {
+            is Success -> data
+            else -> null
+        }
 
     /**
      * Returns the data if successful, default value otherwise
      */
-    fun getDataOrDefault(defaultValue: T): T = when (this) {
-        is Success -> data
-        else -> defaultValue
-    }
+    fun getDataOrDefault(defaultValue: T): T =
+        when (this) {
+            is Success -> data
+            else -> defaultValue
+        }
 }

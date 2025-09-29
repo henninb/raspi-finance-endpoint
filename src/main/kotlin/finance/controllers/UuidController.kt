@@ -2,13 +2,11 @@ package finance.controllers
 
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.*
 import java.time.Instant
+import java.util.UUID
 
 /**
  * Controller for secure UUID generation
@@ -17,7 +15,6 @@ import java.time.Instant
 @RestController
 @RequestMapping("/api/uuid")
 class UuidController : BaseController() {
-
     /**
      * Generate a secure UUID on the server side
      *
@@ -25,7 +22,7 @@ class UuidController : BaseController() {
      */
     @PostMapping(
         value = ["/generate"],
-        produces = [MediaType.APPLICATION_JSON_VALUE]
+        produces = [MediaType.APPLICATION_JSON_VALUE],
     )
     fun generateUuid(): ResponseEntity<Map<String, Any>> {
         logger.info("UUID generation requested")
@@ -34,15 +31,15 @@ class UuidController : BaseController() {
             val uuid = UUID.randomUUID().toString()
             val timestamp = Instant.now().toEpochMilli()
 
-            val response = mapOf(
-                "uuid" to uuid,
-                "timestamp" to timestamp,
-                "source" to "server"
-            )
+            val response =
+                mapOf(
+                    "uuid" to uuid,
+                    "timestamp" to timestamp,
+                    "source" to "server",
+                )
 
             logger.debug("Generated UUID: {}", uuid)
             return ResponseEntity.ok(response)
-
         } catch (e: Exception) {
             logger.error("Error generating UUID", e)
             return ResponseEntity.internalServerError()
@@ -59,7 +56,7 @@ class UuidController : BaseController() {
      */
     @PostMapping(
         value = ["/generate/batch"],
-        produces = [MediaType.APPLICATION_JSON_VALUE]
+        produces = [MediaType.APPLICATION_JSON_VALUE],
     )
     fun generateBatchUuids(count: Int = 1): ResponseEntity<Map<String, Any>> {
         logger.info("Batch UUID generation requested for {} UUIDs", count)
@@ -74,16 +71,16 @@ class UuidController : BaseController() {
             val uuids = (1..count).map { UUID.randomUUID().toString() }
             val timestamp = Instant.now().toEpochMilli()
 
-            val response = mapOf(
-                "uuids" to uuids,
-                "count" to uuids.size,
-                "timestamp" to timestamp,
-                "source" to "server"
-            )
+            val response =
+                mapOf(
+                    "uuids" to uuids,
+                    "count" to uuids.size,
+                    "timestamp" to timestamp,
+                    "source" to "server",
+                )
 
             logger.debug("Generated {} UUIDs", uuids.size)
             return ResponseEntity.ok(response)
-
         } catch (e: Exception) {
             logger.error("Error generating batch UUIDs", e)
             return ResponseEntity.internalServerError()
@@ -98,13 +95,15 @@ class UuidController : BaseController() {
      */
     @PostMapping(
         value = ["/health"],
-        produces = [MediaType.APPLICATION_JSON_VALUE]
+        produces = [MediaType.APPLICATION_JSON_VALUE],
     )
     fun healthCheck(): ResponseEntity<Map<String, Any>> {
-        return ResponseEntity.ok(mapOf(
-            "status" to "healthy",
-            "service" to "uuid-generation",
-            "timestamp" to Instant.now().toEpochMilli()
-        ))
+        return ResponseEntity.ok(
+            mapOf(
+                "status" to "healthy",
+                "service" to "uuid-generation",
+                "timestamp" to Instant.now().toEpochMilli(),
+            ),
+        )
     }
 }

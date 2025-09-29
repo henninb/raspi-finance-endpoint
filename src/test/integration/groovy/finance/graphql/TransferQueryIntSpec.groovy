@@ -1,7 +1,7 @@
 package finance.graphql
 
 import finance.BaseIntegrationSpec
-import finance.controllers.GraphQLQueryController
+import finance.controllers.graphql.GraphQLQueryController
 import finance.domain.Account
 import finance.domain.Transfer
 import finance.helpers.SmartAccountBuilder

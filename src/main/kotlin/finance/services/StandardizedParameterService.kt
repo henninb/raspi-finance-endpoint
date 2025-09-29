@@ -3,13 +3,8 @@ package finance.services
 import finance.domain.Parameter
 import finance.domain.ServiceResult
 import finance.repositories.ParameterRepository
-import jakarta.validation.ValidationException
-import jakarta.validation.Validator
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
-import org.springframework.http.HttpStatus
-import java.util.*
 
 /**
  * Standardized Parameter Service implementing ServiceResult pattern
@@ -18,9 +13,8 @@ import java.util.*
 @Service
 @Primary
 class StandardizedParameterService(
-    private val parameterRepository: ParameterRepository
+    private val parameterRepository: ParameterRepository,
 ) : StandardizedBaseService<Parameter, Long>() {
-
     override fun getEntityName(): String = "Parameter"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -108,5 +102,4 @@ class StandardizedParameterService(
             true
         }
     }
-
 }

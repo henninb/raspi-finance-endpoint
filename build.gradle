@@ -17,6 +17,8 @@ plugins {
     id "org.jetbrains.kotlin.plugin.spring" version "${kotlinVersion}"
     id "org.flywaydb.flyway" version "${flywayVersion}"
     id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
+    // Kotlin linter/formatter
+    id "org.jlleitschuh.gradle.ktlint" version "12.1.0"
 }
 
 apply from: 'test.gradle'
@@ -89,6 +91,12 @@ tasks.named('check') { dependsOn 'codenarcMainRatchet' }
 
 // The CodeNarc plugin automatically creates tasks for each Groovy source set
 // (including custom ones from test.gradle) and wires them into 'check'.
+
+// KtLint configuration: enforce rules for main sources
+ktlint {
+    // Fail the build on style violations now that codebase is cleaned
+    ignoreFailures.set(false)
+}
 
 // Use toolchains for Gradle 9 compatibility
 java {
@@ -228,5 +236,3 @@ jooq {
     version = "${jooqVersion}"  // the default (can be omitted)
     edition = JooqEdition.OSS  // the default (can be omitted)
 }
-
-

@@ -1,4 +1,4 @@
-package finance.controllers
+package finance.resolvers
 
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
@@ -14,10 +14,9 @@ import org.springframework.stereotype.Controller
  * Demonstrates efficient batched resolution of ReceiptImage for Transactions.
  */
 @Controller
-class TransactionGraphQLBatchController(
-    private val receiptImageService: StandardizedReceiptImageService
+class TransactionBatchResolver(
+    private val receiptImageService: StandardizedReceiptImageService,
 ) {
-
     companion object {
         val logger: Logger = LogManager.getLogger()
     }
@@ -32,18 +31,18 @@ class TransactionGraphQLBatchController(
         val resultMap = LinkedHashMap<Transaction, ReceiptImage?>(transactions.size)
         transactions.forEach { tx ->
             val txId = tx.transactionId
-            val resolved = try {
-                when (val sr = receiptImageService.findByTransactionId(txId)) {
-                    is ServiceResult.Success -> sr.data
-                    else -> null
+            val resolved =
+                try {
+                    when (val sr = receiptImageService.findByTransactionId(txId)) {
+                        is ServiceResult.Success -> sr.data
+                        else -> null
+                    }
+                } catch (ex: Exception) {
+                    logger.warn("Failed resolving receipt image for transactionId={}: {}", txId, ex.message)
+                    null
                 }
-            } catch (ex: Exception) {
-                logger.warn("Failed resolving receipt image for transactionId={}: {}", txId, ex.message)
-                null
-            }
             resultMap[tx] = resolved
         }
         return resultMap
     }
 }
-

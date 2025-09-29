@@ -7,11 +7,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 open class BeanConfig {
-
-
     @Bean
     open fun timedAspect(meterRegistry: MeterRegistry): TimedAspect {
         return TimedAspect(meterRegistry)
     }
-
 }

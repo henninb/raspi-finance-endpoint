@@ -12,7 +12,8 @@ enum class NetworkStatus(val label: String) {
     OutOfNetwork("out_of_network"),
 
     @JsonProperty("unknown")
-    Unknown("unknown");
+    Unknown("unknown"),
+    ;
 
     override fun toString(): String = name.lowercase()
 

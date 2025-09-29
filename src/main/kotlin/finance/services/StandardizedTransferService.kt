@@ -1,13 +1,17 @@
 package finance.services
 
-import finance.domain.*
+import finance.domain.AccountType
+import finance.domain.ReoccurringType
+import finance.domain.ServiceResult
+import finance.domain.Transaction
+import finance.domain.TransactionState
+import finance.domain.Transfer
 import finance.repositories.TransferRepository
-import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.sql.Timestamp
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 
 /**
  * Standardized Transfer Service implementing ServiceResult pattern
@@ -18,9 +22,8 @@ import java.util.*
 class StandardizedTransferService(
     private val transferRepository: TransferRepository,
     private val transactionService: StandardizedTransactionService,
-    private val accountService: StandardizedAccountService
+    private val accountService: StandardizedAccountService,
 ) : StandardizedBaseService<Transfer, Long>() {
-
     override fun getEntityName(): String = "Transfer"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -166,7 +169,7 @@ class StandardizedTransferService(
                 // Handle data integrity violations (e.g., duplicate transfers)
                 throw org.springframework.dao.DataIntegrityViolationException(result.message)
             }
-            else -> throw RuntimeException("Failed to insert transfer: ${result}")
+            else -> throw RuntimeException("Failed to insert transfer: $result")
         }
     }
 
@@ -175,7 +178,7 @@ class StandardizedTransferService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw RuntimeException("Transfer not updated as the transfer does not exist: ${transfer.transferId}.")
-            else -> throw RuntimeException("Failed to update transfer: ${result}")
+            else -> throw RuntimeException("Failed to update transfer: $result")
         }
     }
 
@@ -197,7 +200,7 @@ class StandardizedTransferService(
     private fun populateSourceTransaction(
         transaction: Transaction,
         transfer: Transfer,
-        accountName: String
+        accountName: String,
     ) {
         transaction.guid = UUID.randomUUID().toString()
         transaction.transactionDate = transfer.transactionDate
@@ -217,7 +220,7 @@ class StandardizedTransferService(
     private fun populateDestinationTransaction(
         transaction: Transaction,
         transfer: Transfer,
-        accountName: String
+        accountName: String,
     ) {
         transaction.guid = UUID.randomUUID().toString()
         transaction.transactionDate = transfer.transactionDate
