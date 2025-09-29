@@ -1,5 +1,6 @@
 package finance.controllers
 
+import jakarta.validation.ValidationException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.core.annotation.Order
@@ -8,12 +9,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
-import jakarta.validation.ValidationException
 
 @ControllerAdvice(assignableTypes = [CategoryController::class])
 @Order(1)
 class CategoryControllerAdvice {
-
     companion object {
         private val logger: Logger = LogManager.getLogger()
     }

@@ -10,17 +10,17 @@ import java.nio.charset.StandardCharsets
 
 @Component
 open class RequestLoggingFilter : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
-        val wrappedRequest = if (request is ContentCachingRequestWrapper) {
-            request
-        } else {
-            ContentCachingRequestWrapper(request, 1024)
-        }
+        val wrappedRequest =
+            if (request is ContentCachingRequestWrapper) {
+                request
+            } else {
+                ContentCachingRequestWrapper(request, 1024)
+            }
 
         try {
             filterChain.doFilter(wrappedRequest, response)

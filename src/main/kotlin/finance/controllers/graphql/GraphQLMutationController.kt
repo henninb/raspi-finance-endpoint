@@ -1,12 +1,13 @@
-package finance.controllers
+package finance.controllers.graphql
 
 import finance.controllers.dto.PaymentInputDto
+import finance.controllers.dto.TransferInputDto
 import finance.domain.Payment
 import finance.domain.Transfer
-import finance.controllers.dto.TransferInputDto
-import finance.services.StandardizedTransferService
 import finance.services.StandardizedPaymentService
+import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.MeterRegistry
+import jakarta.validation.Valid
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.graphql.data.method.annotation.Argument
@@ -14,35 +15,36 @@ import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.validation.annotation.Validated
-import jakarta.validation.Valid
-import java.util.*
+import java.util.UUID
 
 @Controller
 @Validated
 class GraphQLMutationController(
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
 ) {
-
     companion object {
         val logger: Logger = LogManager.getLogger()
     }
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    fun createPayment(@Argument("payment") @Valid payment: PaymentInputDto): Payment {
+    fun createPayment(
+        @Argument("payment") @Valid payment: PaymentInputDto,
+    ): Payment {
         logger.info("GraphQL - Creating payment via @MutationMapping")
 
-        val domain = Payment().apply {
-            this.sourceAccount = payment.sourceAccount
-            this.destinationAccount = payment.destinationAccount
-            this.transactionDate = payment.transactionDate
-            this.amount = payment.amount
-            this.guidSource = UUID.randomUUID().toString()
-            this.guidDestination = UUID.randomUUID().toString()
-            this.activeStatus = payment.activeStatus ?: true
-        }
+        val domain =
+            Payment().apply {
+                this.sourceAccount = payment.sourceAccount
+                this.destinationAccount = payment.destinationAccount
+                this.transactionDate = payment.transactionDate
+                this.amount = payment.amount
+                this.guidSource = UUID.randomUUID().toString()
+                this.guidDestination = UUID.randomUUID().toString()
+                this.activeStatus = payment.activeStatus ?: true
+            }
 
         val saved = paymentService.insertPayment(domain)
         meterRegistry.counter("graphql.payment.create.success").increment()
@@ -52,17 +54,20 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    fun insertPayment(@Argument("input") @Valid input: PaymentInputDto): Payment {
+    fun insertPayment(
+        @Argument("input") @Valid input: PaymentInputDto,
+    ): Payment {
         logger.info("GraphQL - Creating payment via insertPayment")
-        val domain = Payment().apply {
-            this.sourceAccount = input.sourceAccount
-            this.destinationAccount = input.destinationAccount
-            this.transactionDate = input.transactionDate
-            this.amount = input.amount
-            this.guidSource = input.guidSource ?: UUID.randomUUID().toString()
-            this.guidDestination = input.guidDestination ?: UUID.randomUUID().toString()
-            this.activeStatus = input.activeStatus ?: true
-        }
+        val domain =
+            Payment().apply {
+                this.sourceAccount = input.sourceAccount
+                this.destinationAccount = input.destinationAccount
+                this.transactionDate = input.transactionDate
+                this.amount = input.amount
+                this.guidSource = input.guidSource ?: UUID.randomUUID().toString()
+                this.guidDestination = input.guidDestination ?: UUID.randomUUID().toString()
+                this.activeStatus = input.activeStatus ?: true
+            }
         val saved = paymentService.insertPayment(domain)
         meterRegistry.counter("graphql.payment.create.success").increment()
         logger.info("GraphQL - Created payment via insertPayment id={} with guidSource={}", saved.paymentId, saved.guidSource)
@@ -71,7 +76,9 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    fun deletePayment(@Argument paymentId: Long): Boolean {
+    fun deletePayment(
+        @Argument paymentId: Long,
+    ): Boolean {
         logger.info("GraphQL - Deleting payment id={}", paymentId)
         return paymentService.deleteByPaymentId(paymentId)
     }
@@ -79,17 +86,20 @@ class GraphQLMutationController(
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     @Deprecated("Use insertTransfer instead. This method will be removed in a future version.")
-    fun createTransfer(@Argument("transfer") @Valid transfer: TransferInputDto): Transfer {
+    fun createTransfer(
+        @Argument("transfer") @Valid transfer: TransferInputDto,
+    ): Transfer {
         logger.warn("GraphQL - DEPRECATED: createTransfer used. Please migrate to insertTransfer.")
-        val domain = Transfer().apply {
-            this.sourceAccount = transfer.sourceAccount
-            this.destinationAccount = transfer.destinationAccount
-            this.transactionDate = transfer.transactionDate
-            this.amount = transfer.amount
-            this.guidSource = UUID.randomUUID().toString()
-            this.guidDestination = UUID.randomUUID().toString()
-            this.activeStatus = transfer.activeStatus ?: true
-        }
+        val domain =
+            Transfer().apply {
+                this.sourceAccount = transfer.sourceAccount
+                this.destinationAccount = transfer.destinationAccount
+                this.transactionDate = transfer.transactionDate
+                this.amount = transfer.amount
+                this.guidSource = UUID.randomUUID().toString()
+                this.guidDestination = UUID.randomUUID().toString()
+                this.activeStatus = transfer.activeStatus ?: true
+            }
         val saved = transferService.insertTransfer(domain)
         meterRegistry.counter("graphql.transfer.create.success").increment()
         logger.info("GraphQL - Created transfer id={}", saved.transferId)
@@ -98,24 +108,29 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    fun deleteTransfer(@Argument transferId: Long): Boolean {
+    fun deleteTransfer(
+        @Argument transferId: Long,
+    ): Boolean {
         logger.info("GraphQL - Deleting transfer id={}", transferId)
         return transferService.deleteByTransferId(transferId)
     }
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    fun insertTransfer(@Argument("input") @Valid input: TransferInputDto): Transfer {
+    fun insertTransfer(
+        @Argument("input") @Valid input: TransferInputDto,
+    ): Transfer {
         logger.info("GraphQL - Creating transfer via insertTransfer")
-        val domain = Transfer().apply {
-            this.sourceAccount = input.sourceAccount
-            this.destinationAccount = input.destinationAccount
-            this.transactionDate = input.transactionDate
-            this.amount = input.amount
-            this.guidSource = input.guidSource ?: UUID.randomUUID().toString()
-            this.guidDestination = input.guidDestination ?: UUID.randomUUID().toString()
-            this.activeStatus = input.activeStatus ?: true
-        }
+        val domain =
+            Transfer().apply {
+                this.sourceAccount = input.sourceAccount
+                this.destinationAccount = input.destinationAccount
+                this.transactionDate = input.transactionDate
+                this.amount = input.amount
+                this.guidSource = input.guidSource ?: UUID.randomUUID().toString()
+                this.guidDestination = input.guidDestination ?: UUID.randomUUID().toString()
+                this.activeStatus = input.activeStatus ?: true
+            }
         val saved = transferService.insertTransfer(domain)
         meterRegistry.counter("graphql.transfer.create.success").increment()
         logger.info("GraphQL - Created transfer via insertTransfer id={} with guidSource={}", saved.transferId, saved.guidSource)

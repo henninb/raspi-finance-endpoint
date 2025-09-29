@@ -18,9 +18,8 @@ import java.sql.Date
 @Service
 @org.springframework.context.annotation.Primary
 class StandardizedMedicalExpenseService(
-    private val medicalExpenseRepository: MedicalExpenseRepository
+    private val medicalExpenseRepository: MedicalExpenseRepository,
 ) : StandardizedBaseService<MedicalExpense, Long>() {
-
     override fun getEntityName(): String = "MedicalExpense"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -61,8 +60,9 @@ class StandardizedMedicalExpenseService(
 
     override fun update(entity: MedicalExpense): ServiceResult<MedicalExpense> {
         return handleServiceOperation("update", entity.medicalExpenseId) {
-            val existingExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(entity.medicalExpenseId!!)
-                ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: ${entity.medicalExpenseId}")
+            val existingExpense =
+                medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(entity.medicalExpenseId!!)
+                    ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: ${entity.medicalExpenseId}")
 
             medicalExpenseRepository.save(entity)
         }
@@ -168,7 +168,10 @@ class StandardizedMedicalExpenseService(
         return medicalExpenseRepository.findByAccountId(accountId)
     }
 
-    fun findMedicalExpensesByServiceDateRange(startDate: Date, endDate: Date): List<MedicalExpense> {
+    fun findMedicalExpensesByServiceDateRange(
+        startDate: Date,
+        endDate: Date,
+    ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by service date range: $startDate to $endDate")
         return medicalExpenseRepository.findByServiceDateBetweenAndActiveStatusTrue(startDate, endDate)
     }
@@ -176,7 +179,7 @@ class StandardizedMedicalExpenseService(
     fun findMedicalExpensesByAccountIdAndDateRange(
         accountId: Long,
         startDate: Date,
-        endDate: Date
+        endDate: Date,
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by account ID: $accountId and date range: $startDate to $endDate")
         return medicalExpenseRepository.findByAccountIdAndServiceDateBetween(accountId, startDate, endDate)
@@ -195,7 +198,7 @@ class StandardizedMedicalExpenseService(
     fun findMedicalExpensesByFamilyMemberAndDateRange(
         familyMemberId: Long,
         startDate: Date,
-        endDate: Date
+        endDate: Date,
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by family member ID: $familyMemberId and date range: $startDate to $endDate")
         return medicalExpenseRepository.findByFamilyMemberIdAndServiceDateBetween(familyMemberId, startDate, endDate)
@@ -221,7 +224,10 @@ class StandardizedMedicalExpenseService(
         return medicalExpenseRepository.findActiveOpenClaims()
     }
 
-    fun updateClaimStatus(medicalExpenseId: Long, claimStatus: ClaimStatus): Boolean {
+    fun updateClaimStatus(
+        medicalExpenseId: Long,
+        claimStatus: ClaimStatus,
+    ): Boolean {
         logger.info("Updating claim status for medical expense ID: $medicalExpenseId to: $claimStatus")
 
         return try {
@@ -291,11 +297,15 @@ class StandardizedMedicalExpenseService(
     }
 
     // New payment-related methods for Phase 2.5
-    fun linkPaymentTransaction(medicalExpenseId: Long, transactionId: Long): MedicalExpense {
+    fun linkPaymentTransaction(
+        medicalExpenseId: Long,
+        transactionId: Long,
+    ): MedicalExpense {
         logger.info("Linking payment transaction $transactionId to medical expense $medicalExpenseId")
 
-        val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
-            ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
+        val medicalExpense =
+            medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+                ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
 
         // Check if transaction already linked to another medical expense
         val existingExpense = medicalExpenseRepository.findByTransactionId(transactionId)
@@ -319,8 +329,9 @@ class StandardizedMedicalExpenseService(
     fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense {
         logger.info("Unlinking payment transaction from medical expense $medicalExpenseId")
 
-        val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
-            ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
+        val medicalExpense =
+            medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+                ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
 
         try {
             medicalExpense.transactionId = null
@@ -337,8 +348,9 @@ class StandardizedMedicalExpenseService(
     fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
         logger.info("Updating paid amount for medical expense $medicalExpenseId")
 
-        val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
-            ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
+        val medicalExpense =
+            medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+                ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
 
         try {
             medicalExpense.transactionId?.let { transactionId ->

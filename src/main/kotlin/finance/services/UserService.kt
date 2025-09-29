@@ -1,27 +1,27 @@
 package finance.services
 
-
 import finance.domain.User
 import finance.repositories.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import java.util.*
-
+import java.util.Optional
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
 ) : BaseService() {
-
     fun signIn(user: User): Optional<User> {
         // Retrieve the user by username
         val userOptional = userRepository.findByUsername(user.username)
 
         // Always perform password check to prevent timing attacks
-        val dbUser = userOptional.orElse(User().apply {
-            password = "\$2a\$12\$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing"
-        })
+        val dbUser =
+            userOptional.orElse(
+                User().apply {
+                    password = "\$2a\$12\$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing"
+                },
+            )
 
         // Always perform password check regardless of user existence
         val passwordMatches = passwordEncoder.matches(user.password, dbUser.password)
@@ -44,7 +44,6 @@ class UserService(
         user.password = hashedPassword ?: throw IllegalStateException("Password encoding failed")
         return userRepository.saveAndFlush(user)
     }
-
 
     fun findUserByUsername(username: String): User? =
         userRepository.findByUsername(username)

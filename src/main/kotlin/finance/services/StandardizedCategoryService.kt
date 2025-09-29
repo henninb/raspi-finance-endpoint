@@ -4,12 +4,9 @@ import finance.domain.Category
 import finance.domain.ServiceResult
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
-import jakarta.validation.ValidationException
-import jakarta.validation.Validator
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
-import java.util.*
 
 /**
  * Standardized Category Service implementing ServiceResult pattern
@@ -19,9 +16,8 @@ import java.util.*
 @Primary
 class StandardizedCategoryService(
     private val categoryRepository: CategoryRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
 ) : StandardizedBaseService<Category, Long>() {
-
     override fun getEntityName(): String = "Category"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -119,14 +115,19 @@ class StandardizedCategoryService(
 
     // ===== Business Logic Methods =====
 
-    fun mergeCategories(categoryName1: String, categoryName2: String): Category {
+    fun mergeCategories(
+        categoryName1: String,
+        categoryName2: String,
+    ): Category {
         // Find both categories by name
-        val category1 = categoryRepository.findByCategoryName(categoryName1).orElseThrow {
-            RuntimeException("Category $categoryName1 not found")
-        }
-        val category2 = categoryRepository.findByCategoryName(categoryName2).orElseThrow {
-            RuntimeException("Category $categoryName2 not found")
-        }
+        val category1 =
+            categoryRepository.findByCategoryName(categoryName1).orElseThrow {
+                RuntimeException("Category $categoryName1 not found")
+            }
+        val category2 =
+            categoryRepository.findByCategoryName(categoryName2).orElseThrow {
+                RuntimeException("Category $categoryName2 not found")
+            }
 
         logger.info("Merging categories: $categoryName2 into $categoryName1")
 

@@ -5,11 +5,12 @@ import finance.domain.ServiceResult
 import finance.repositories.PendingTransactionRepository
 import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import org.springframework.http.HttpStatus
 import java.sql.Timestamp
-import java.util.*
+import java.util.Calendar
+import java.util.Optional
 
 /**
  * Standardized PendingTransaction Service implementing ServiceResult pattern
@@ -18,9 +19,8 @@ import java.util.*
 @Service
 @Primary
 class StandardizedPendingTransactionService(
-    private val pendingTransactionRepository: PendingTransactionRepository
+    private val pendingTransactionRepository: PendingTransactionRepository,
 ) : StandardizedBaseService<PendingTransaction, Long>() {
-
     override fun getEntityName(): String = "PendingTransaction"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -104,29 +104,41 @@ class StandardizedPendingTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<PendingTransaction> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): PendingTransaction = pendingTransaction
-                        override fun getRootBeanClass(): Class<PendingTransaction> = PendingTransaction::class.java
-                        override fun getLeafBean(): Any = pendingTransaction
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                val violations =
+                    result.errors.map { (field, message) ->
+                        object : jakarta.validation.ConstraintViolation<PendingTransaction> {
+                            override fun getMessage(): String = message
+
+                            override fun getMessageTemplate(): String = message
+
+                            override fun getRootBean(): PendingTransaction = pendingTransaction
+
+                            override fun getRootBeanClass(): Class<PendingTransaction> = PendingTransaction::class.java
+
+                            override fun getLeafBean(): Any = pendingTransaction
+
+                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+
+                            override fun getExecutableReturnValue(): Any? = null
+
+                            override fun getPropertyPath(): jakarta.validation.Path {
+                                return object : jakarta.validation.Path {
+                                    override fun toString(): String = field
+
+                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                }
                             }
+
+                            override fun getInvalidValue(): Any? = null
+
+                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                         }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
+                    }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
-            else -> throw RuntimeException("Failed to insert pending transaction: ${result}")
+            else -> throw RuntimeException("Failed to insert pending transaction: $result")
         }
     }
 
@@ -136,7 +148,7 @@ class StandardizedPendingTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw ResponseStatusException(HttpStatus.NOT_FOUND, "PendingTransaction not found: $pendingTransactionId")
-            else -> throw RuntimeException("Failed to delete pending transaction: ${result}")
+            else -> throw RuntimeException("Failed to delete pending transaction: $result")
         }
     }
 
@@ -154,7 +166,7 @@ class StandardizedPendingTransactionService(
         val result = deleteAll()
         return when (result) {
             is ServiceResult.Success -> result.data
-            else -> throw RuntimeException("Failed to delete all pending transactions: ${result}")
+            else -> throw RuntimeException("Failed to delete all pending transactions: $result")
         }
     }
 
@@ -173,7 +185,7 @@ class StandardizedPendingTransactionService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.NotFound -> throw RuntimeException("PendingTransaction not found: ${pendingTransaction.pendingTransactionId}")
-            else -> throw RuntimeException("Failed to update pending transaction: ${result}")
+            else -> throw RuntimeException("Failed to update pending transaction: $result")
         }
     }
 }

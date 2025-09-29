@@ -5,8 +5,6 @@ import finance.domain.FamilyRelationship
 import finance.domain.ServiceResult
 import finance.repositories.FamilyMemberRepository
 import jakarta.validation.ValidationException
-import jakarta.validation.Validator
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
@@ -18,10 +16,8 @@ import java.sql.Timestamp
 @Service
 @org.springframework.context.annotation.Primary
 class StandardizedFamilyMemberService(
-    private val familyMemberRepository: FamilyMemberRepository
+    private val familyMemberRepository: FamilyMemberRepository,
 ) : BaseService() {
-
-
     // ===== ServiceResult Methods =====
 
     fun findAllActive(): ServiceResult<List<FamilyMember>> {
@@ -59,9 +55,10 @@ class StandardizedFamilyMemberService(
             // Validate entity
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
-                val errorMap = violations.associate {
-                    (it.propertyPath?.toString() ?: "unknown") to it.message
-                }
+                val errorMap =
+                    violations.associate {
+                        (it.propertyPath?.toString() ?: "unknown") to it.message
+                    }
                 return ServiceResult.ValidationError(errorMap)
             }
 
@@ -73,9 +70,10 @@ class StandardizedFamilyMemberService(
             val savedEntity = familyMemberRepository.save(entity)
             ServiceResult.Success(savedEntity)
         } catch (e: jakarta.validation.ConstraintViolationException) {
-            val errorMap = e.constraintViolations.associate {
-                (it.propertyPath?.toString() ?: "unknown") to it.message
-            }
+            val errorMap =
+                e.constraintViolations.associate {
+                    (it.propertyPath?.toString() ?: "unknown") to it.message
+                }
             ServiceResult.ValidationError(errorMap)
         } catch (e: Exception) {
             logger.error("Error saving family member", e)
@@ -115,7 +113,6 @@ class StandardizedFamilyMemberService(
             ServiceResult.SystemError(e)
         }
     }
-
 
     // ===== Legacy Methods for Backward Compatibility =====
 
@@ -181,7 +178,10 @@ class StandardizedFamilyMemberService(
         return familyMemberRepository.findByOwnerAndActiveStatusTrue(owner)
     }
 
-    fun findByOwnerAndRelationship(owner: String, relationship: FamilyRelationship): List<FamilyMember> {
+    fun findByOwnerAndRelationship(
+        owner: String,
+        relationship: FamilyRelationship,
+    ): List<FamilyMember> {
         logger.debug("Finding family members by owner: $owner and relationship: $relationship")
         return familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
     }
@@ -191,7 +191,10 @@ class StandardizedFamilyMemberService(
         return familyMemberRepository.findByActiveStatusTrue()
     }
 
-    fun updateActiveStatus(id: Long, active: Boolean): Boolean {
+    fun updateActiveStatus(
+        id: Long,
+        active: Boolean,
+    ): Boolean {
         logger.info("Updating active status for family member ID: $id to: $active")
         return try {
             // Check if family member exists first

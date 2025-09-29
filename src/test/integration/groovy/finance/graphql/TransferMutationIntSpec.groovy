@@ -1,7 +1,7 @@
 package finance.graphql
 
 import finance.BaseIntegrationSpec
-import finance.controllers.GraphQLMutationController
+import finance.controllers.graphql.GraphQLMutationController
 import finance.helpers.GraphQLIntegrationContext
 import finance.helpers.TransferTestScenario
 import finance.domain.Transfer

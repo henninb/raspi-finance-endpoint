@@ -1,19 +1,18 @@
 package finance.configurations
 
+import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.info.License
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
-import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.servers.Server
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 open class OpenApiConfig {
-
     @Bean
     open fun customOpenAPI(): OpenAPI {
         return OpenAPI()
@@ -26,23 +25,23 @@ open class OpenApiConfig {
                         Contact()
                             .name("Brian Henning")
                             .email("henninb@msn.com")
-                            .url("https://github.com/henninb/raspi-finance-endpoint")
+                            .url("https://github.com/henninb/raspi-finance-endpoint"),
                     )
                     .license(
                         License()
                             .name("MIT License")
-                            .url("https://opensource.org/licenses/MIT")
-                    )
+                            .url("https://opensource.org/licenses/MIT"),
+                    ),
             )
             .addServersItem(
                 Server()
                     .url("https://finance.bhenning.com")
-                    .description("Production server")
+                    .description("Production server"),
             )
             .addServersItem(
                 Server()
                     .url("http://localhost:8080")
-                    .description("Development server")
+                    .description("Development server"),
             )
             .components(
                 Components()
@@ -52,11 +51,11 @@ open class OpenApiConfig {
                             .type(SecurityScheme.Type.HTTP)
                             .scheme("bearer")
                             .bearerFormat("JWT")
-                            .description("JWT Bearer Token Authentication")
-                    )
+                            .description("JWT Bearer Token Authentication"),
+                    ),
             )
             .addSecurityItem(
-                SecurityRequirement().addList("bearerAuth")
+                SecurityRequirement().addList("bearerAuth"),
             )
     }
 }

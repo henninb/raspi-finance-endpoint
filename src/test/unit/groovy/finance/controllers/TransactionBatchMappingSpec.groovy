@@ -7,12 +7,13 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.domain.TransactionType
 import finance.services.StandardizedReceiptImageService
+import finance.resolvers.TransactionBatchResolver
 import spock.lang.Specification
 
 class TransactionBatchMappingSpec extends Specification {
 
     def receiptImageService = Mock(StandardizedReceiptImageService)
-    def controller = new TransactionGraphQLBatchController(receiptImageService)
+    def controller = new TransactionBatchResolver(receiptImageService)
 
     private static Transaction txWithId(Long id) {
         def tx = new Transaction()
@@ -52,4 +53,3 @@ class TransactionBatchMappingSpec extends Specification {
         result.get(t2) == null
     }
 }
-

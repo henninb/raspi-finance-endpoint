@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter
 class AccountTypeConverter : AttributeConverter<AccountType, String> {
-
     override fun convertToDatabaseColumn(attribute: AccountType): String {
         return attribute.label
     }

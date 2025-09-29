@@ -4,19 +4,25 @@ import finance.domain.Description
 import finance.domain.MergeDescriptionsRequest
 import finance.domain.ServiceResult
 import finance.services.StandardizedDescriptionService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
-import java.util.*
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/description")
 class DescriptionController(private val standardizedDescriptionService: StandardizedDescriptionService) :
     StandardizedBaseController(), StandardRestController<Description, String> {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -50,7 +56,9 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{descriptionName}", produces = ["application/json"])
-    override fun findById(@PathVariable descriptionName: String): ResponseEntity<Description> {
+    override fun findById(
+        @PathVariable descriptionName: String,
+    ): ResponseEntity<Description> {
         return when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved description: $descriptionName")
@@ -76,7 +84,9 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    override fun save(@Valid @RequestBody description: Description): ResponseEntity<Description> {
+    override fun save(
+        @Valid @RequestBody description: Description,
+    ): ResponseEntity<Description> {
         return when (val result = standardizedDescriptionService.save(description)) {
             is ServiceResult.Success -> {
                 logger.info("Description created successfully: ${description.descriptionName}")
@@ -106,7 +116,10 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/{descriptionName}", consumes = ["application/json"], produces = ["application/json"])
-    override fun update(@PathVariable descriptionName: String, @Valid @RequestBody description: Description): ResponseEntity<Description> {
+    override fun update(
+        @PathVariable descriptionName: String,
+        @Valid @RequestBody description: Description,
+    ): ResponseEntity<Description> {
         return when (val result = standardizedDescriptionService.update(description)) {
             is ServiceResult.Success -> {
                 logger.info("Description updated successfully: $descriptionName")
@@ -140,7 +153,9 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Returns 200 OK with deleted entity
      */
     @DeleteMapping("/{descriptionName}", produces = ["application/json"])
-    override fun deleteById(@PathVariable descriptionName: String): ResponseEntity<Description> {
+    override fun deleteById(
+        @PathVariable descriptionName: String,
+    ): ResponseEntity<Description> {
         // First find the description to return it
         return when (val findResult = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
             is ServiceResult.Success -> {
@@ -210,7 +225,7 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     @PutMapping("/update/{description_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateDescription(
         @PathVariable("description_name") descriptionName: String,
-        @RequestBody toBePatchedDescription: Description
+        @RequestBody toBePatchedDescription: Description,
     ): ResponseEntity<Description> {
         // First check if description exists using ServiceResult
         when (val findResult = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
@@ -263,7 +278,9 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Maintains snake_case @PathVariable annotation for backward compatibility
      */
     @GetMapping("/select/{description_name}")
-    fun selectDescriptionName(@PathVariable("description_name") descriptionName: String): ResponseEntity<Description> {
+    fun selectDescriptionName(
+        @PathVariable("description_name") descriptionName: String,
+    ): ResponseEntity<Description> {
         return when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved description: $descriptionName (legacy endpoint)")
@@ -288,7 +305,9 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Legacy endpoint - POST /api/description/insert
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertDescription(@RequestBody description: Description): ResponseEntity<Description> {
+    fun insertDescription(
+        @RequestBody description: Description,
+    ): ResponseEntity<Description> {
         return when (val result = standardizedDescriptionService.save(description)) {
             is ServiceResult.Success -> {
                 logger.info("Description inserted successfully: ${description.descriptionName} (legacy endpoint)")
@@ -321,7 +340,9 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Legacy endpoint - DELETE /api/description/delete/{descriptionName}
      */
     @DeleteMapping("/delete/{descriptionName}", produces = ["application/json"])
-    fun deleteByDescription(@PathVariable descriptionName: String): ResponseEntity<Description> {
+    fun deleteByDescription(
+        @PathVariable descriptionName: String,
+    ): ResponseEntity<Description> {
         // First find the description to return it
         return when (val findResult = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
             is ServiceResult.Success -> {
@@ -362,13 +383,14 @@ class DescriptionController(private val standardizedDescriptionService: Standard
 
     // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
 
-
     /**
      * Business logic endpoint - POST /api/description/merge
      * Preserved as-is, not part of standardization
      */
     @PostMapping("/merge", consumes = ["application/json"], produces = ["application/json"])
-    fun mergeDescriptions(@RequestBody request: MergeDescriptionsRequest): ResponseEntity<Description> {
+    fun mergeDescriptions(
+        @RequestBody request: MergeDescriptionsRequest,
+    ): ResponseEntity<Description> {
         return try {
             if (request.targetName.isBlank() || request.sourceNames.isEmpty()) {
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetName and sourceNames are required")

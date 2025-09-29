@@ -13,16 +13,21 @@ import java.sql.Date
 
 @Repository
 interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
-
     fun findByActiveStatusTrueOrderByServiceDateDesc(): List<MedicalExpense>
 
     fun findByTransactionId(transactionId: Long): MedicalExpense?
 
     fun findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId: Long): MedicalExpense?
 
-    fun findByServiceDateBetween(startDate: Date, endDate: Date): List<MedicalExpense>
+    fun findByServiceDateBetween(
+        startDate: Date,
+        endDate: Date,
+    ): List<MedicalExpense>
 
-    fun findByServiceDateBetweenAndActiveStatusTrue(startDate: Date, endDate: Date): List<MedicalExpense>
+    fun findByServiceDateBetweenAndActiveStatusTrue(
+        startDate: Date,
+        endDate: Date,
+    ): List<MedicalExpense>
 
     fun findByProviderId(providerId: Long?): List<MedicalExpense>
 
@@ -52,9 +57,11 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         )
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
-    fun findByAccountId(@Param("accountId") accountId: Long): List<MedicalExpense>
+    fun findByAccountId(
+        @Param("accountId") accountId: Long,
+    ): List<MedicalExpense>
 
     @Query(
         """
@@ -65,12 +72,12 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         AND me.serviceDate BETWEEN :startDate AND :endDate
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findByAccountIdAndServiceDateBetween(
         @Param("accountId") accountId: Long,
         @Param("startDate") startDate: Date,
-        @Param("endDate") endDate: Date
+        @Param("endDate") endDate: Date,
     ): List<MedicalExpense>
 
     @Query(
@@ -78,27 +85,33 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         SELECT SUM(me.billedAmount) FROM MedicalExpense me
         WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
-        """
+        """,
     )
-    fun getTotalBilledAmountByYear(@Param("year") year: Int): BigDecimal?
+    fun getTotalBilledAmountByYear(
+        @Param("year") year: Int,
+    ): BigDecimal?
 
     @Query(
         """
         SELECT SUM(me.patientResponsibility) FROM MedicalExpense me
         WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
-        """
+        """,
     )
-    fun getTotalPatientResponsibilityByYear(@Param("year") year: Int): BigDecimal?
+    fun getTotalPatientResponsibilityByYear(
+        @Param("year") year: Int,
+    ): BigDecimal?
 
     @Query(
         """
         SELECT SUM(me.insurancePaid) FROM MedicalExpense me
         WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
-        """
+        """,
     )
-    fun getTotalInsurancePaidByYear(@Param("year") year: Int): BigDecimal?
+    fun getTotalInsurancePaidByYear(
+        @Param("year") year: Int,
+    ): BigDecimal?
 
     @Query(
         """
@@ -107,12 +120,12 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         AND me.serviceDate BETWEEN :startDate AND :endDate
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findByFamilyMemberIdAndServiceDateBetween(
         @Param("familyMemberId") familyMemberId: Long?,
         @Param("startDate") startDate: Date,
-        @Param("endDate") endDate: Date
+        @Param("endDate") endDate: Date,
     ): List<MedicalExpense>
 
     @Query(
@@ -120,9 +133,11 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         SELECT COUNT(*) FROM MedicalExpense me
         WHERE me.claimStatus = :claimStatus
         AND me.activeStatus = true
-        """
+        """,
     )
-    fun countByClaimStatusAndActiveStatusTrue(@Param("claimStatus") claimStatus: ClaimStatus): Long
+    fun countByClaimStatusAndActiveStatusTrue(
+        @Param("claimStatus") claimStatus: ClaimStatus,
+    ): Long
 
     @Query(
         """
@@ -131,7 +146,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         AND me.paidDate IS NULL
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findOutstandingPatientBalances(): List<MedicalExpense>
 
@@ -141,7 +156,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.claimStatus NOT IN ('paid', 'closed', 'denied')
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findActiveOpenClaims(): List<MedicalExpense>
 
@@ -152,9 +167,11 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         UPDATE MedicalExpense me
         SET me.activeStatus = false, me.dateUpdated = CURRENT_TIMESTAMP
         WHERE me.medicalExpenseId = :medicalExpenseId
-        """
+        """,
     )
-    fun softDeleteByMedicalExpenseId(@Param("medicalExpenseId") medicalExpenseId: Long): Int
+    fun softDeleteByMedicalExpenseId(
+        @Param("medicalExpenseId") medicalExpenseId: Long,
+    ): Int
 
     @Modifying(clearAutomatically = true)
     @Transactional
@@ -163,11 +180,11 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         UPDATE MedicalExpense me
         SET me.claimStatus = :claimStatus, me.dateUpdated = CURRENT_TIMESTAMP
         WHERE me.medicalExpenseId = :medicalExpenseId
-        """
+        """,
     )
     fun updateClaimStatus(
         @Param("medicalExpenseId") medicalExpenseId: Long,
-        @Param("claimStatus") claimStatus: ClaimStatus
+        @Param("claimStatus") claimStatus: ClaimStatus,
     ): Int
 
     @Query(
@@ -176,9 +193,11 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.procedureCode = :procedureCode
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
-    fun findByProcedureCodeAndActiveStatusTrue(@Param("procedureCode") procedureCode: String): List<MedicalExpense>
+    fun findByProcedureCodeAndActiveStatusTrue(
+        @Param("procedureCode") procedureCode: String,
+    ): List<MedicalExpense>
 
     @Query(
         """
@@ -186,9 +205,11 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.diagnosisCode = :diagnosisCode
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
-    fun findByDiagnosisCodeAndActiveStatusTrue(@Param("diagnosisCode") diagnosisCode: String): List<MedicalExpense>
+    fun findByDiagnosisCodeAndActiveStatusTrue(
+        @Param("diagnosisCode") diagnosisCode: String,
+    ): List<MedicalExpense>
 
     // New payment-related queries for Phase 2.5
     @Query(
@@ -197,7 +218,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.paidAmount = 0
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findUnpaidMedicalExpenses(): List<MedicalExpense>
 
@@ -208,7 +229,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         AND me.paidAmount < me.patientResponsibility
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense>
 
@@ -218,7 +239,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.paidAmount >= me.patientResponsibility
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findFullyPaidMedicalExpenses(): List<MedicalExpense>
 
@@ -228,7 +249,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.transactionId IS NULL
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense>
 
@@ -238,7 +259,7 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         WHERE me.paidAmount > me.patientResponsibility
         AND me.activeStatus = true
         ORDER BY me.serviceDate DESC
-        """
+        """,
     )
     fun findOverpaidMedicalExpenses(): List<MedicalExpense>
 
@@ -247,16 +268,18 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         SELECT SUM(me.paidAmount) FROM MedicalExpense me
         WHERE EXTRACT(YEAR FROM me.serviceDate) = :year
         AND me.activeStatus = true
-        """
+        """,
     )
-    fun getTotalPaidAmountByYear(@Param("year") year: Int): BigDecimal?
+    fun getTotalPaidAmountByYear(
+        @Param("year") year: Int,
+    ): BigDecimal?
 
     @Query(
         """
         SELECT SUM(me.patientResponsibility - me.paidAmount) FROM MedicalExpense me
         WHERE me.paidAmount < me.patientResponsibility
         AND me.activeStatus = true
-        """
+        """,
     )
     fun getTotalUnpaidBalance(): BigDecimal?
 
@@ -267,10 +290,10 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
         UPDATE MedicalExpense me
         SET me.paidAmount = :paidAmount, me.dateUpdated = CURRENT_TIMESTAMP
         WHERE me.medicalExpenseId = :medicalExpenseId
-        """
+        """,
     )
     fun updatePaidAmount(
         @Param("medicalExpenseId") medicalExpenseId: Long,
-        @Param("paidAmount") paidAmount: BigDecimal
+        @Param("paidAmount") paidAmount: BigDecimal,
     ): Int
 }

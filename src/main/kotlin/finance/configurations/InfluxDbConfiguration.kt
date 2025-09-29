@@ -14,7 +14,6 @@ import java.time.Duration
 // @ConditionalOnEnabledMetricsExport("influx")
 @ConditionalOnProperty(name = ["management.metrics.export.influx.enabled"], havingValue = "true")
 open class InfluxDbConfiguration {
-
     @Bean
     open fun influxConfig(environment: Environment): InfluxConfig {
         return CustomInfluxConfig(environment)

@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter(autoApply = true)
 class FamilyRelationshipConverter : AttributeConverter<FamilyRelationship, String> {
-
     override fun convertToDatabaseColumn(attribute: FamilyRelationship): String {
         return attribute.label
     }

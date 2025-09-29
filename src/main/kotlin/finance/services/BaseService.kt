@@ -5,15 +5,15 @@ import finance.configurations.DatabaseResilienceConfiguration
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.timelimiter.TimeLimiter
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
 import org.springframework.jdbc.CannotGetJdbcConnectionException
 import org.springframework.stereotype.Service
-import jakarta.validation.ConstraintViolation
-import jakarta.validation.ValidationException
-import jakarta.validation.Validator
 import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ScheduledExecutorService
@@ -32,33 +32,46 @@ open class BaseService {
     private var _databaseResilienceConfig: DatabaseResilienceConfiguration? = null
     open var databaseResilienceConfig: DatabaseResilienceConfiguration?
         get() = _databaseResilienceConfig
-        set(value) { _databaseResilienceConfig = value }
+        set(value) {
+            _databaseResilienceConfig = value
+        }
 
     @Autowired(required = false)
     private var _circuitBreaker: CircuitBreaker? = null
     open var circuitBreaker: CircuitBreaker?
         get() = _circuitBreaker
-        set(value) { _circuitBreaker = value }
+        set(value) {
+            _circuitBreaker = value
+        }
 
     @Autowired(required = false)
     private var _retry: Retry? = null
     open var retry: Retry?
         get() = _retry
-        set(value) { _retry = value }
+        set(value) {
+            _retry = value
+        }
 
     @Autowired(required = false)
     private var _timeLimiter: TimeLimiter? = null
     open var timeLimiter: TimeLimiter?
         get() = _timeLimiter
-        set(value) { _timeLimiter = value }
+        set(value) {
+            _timeLimiter = value
+        }
 
     @Autowired(required = false)
     private var _scheduledExecutorService: ScheduledExecutorService? = null
     open var scheduledExecutorService: ScheduledExecutorService?
         get() = _scheduledExecutorService
-        set(value) { _scheduledExecutorService = value }
+        set(value) {
+            _scheduledExecutorService = value
+        }
 
-    open fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>, meterService: MeterService) {
+    open fun handleConstraintViolations(
+        constraintViolations: Set<ConstraintViolation<*>>,
+        meterService: MeterService,
+    ) {
         if (constraintViolations.isNotEmpty()) {
             var details = ""
             constraintViolations.forEach { constraintViolation ->
@@ -79,11 +92,12 @@ open class BaseService {
      */
     protected fun <T> executeWithResilience(
         operation: () -> T,
-        operationName: String = "database-operation"
+        operationName: String = "database-operation",
     ): CompletableFuture<T> {
         // If resilience components are not available (e.g., in test environment), execute directly
         if (databaseResilienceConfig == null || circuitBreaker == null || retry == null ||
-            timeLimiter == null || scheduledExecutorService == null) {
+            timeLimiter == null || scheduledExecutorService == null
+        ) {
             logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
             return CompletableFuture.completedFuture(executeDirectly(operation, operationName))
         }
@@ -93,9 +107,10 @@ open class BaseService {
         return try {
             databaseResilienceConfig!!.executeWithResilience(
                 operation = {
-                    val duration = measureTimeMillis {
-                        operation()
-                    }
+                    val duration =
+                        measureTimeMillis {
+                            operation()
+                        }
                     if (duration > 100) {
                         logger.warn("Slow query detected for {}: {} ms", operationName, duration)
                         meterService.incrementExceptionThrownCounter("SlowQuery")
@@ -105,12 +120,16 @@ open class BaseService {
                 circuitBreaker = circuitBreaker!!,
                 retry = retry!!,
                 timeLimiter = timeLimiter!!,
-                executor = scheduledExecutorService!!
+                executor = scheduledExecutorService!!,
             ).whenComplete { result, throwable ->
                 val totalDuration = System.currentTimeMillis() - startTime
                 if (throwable != null) {
-                    logger.error("Database operation {} failed after {} ms: {}",
-                        operationName, totalDuration, throwable.message)
+                    logger.error(
+                        "Database operation {} failed after {} ms: {}",
+                        operationName,
+                        totalDuration,
+                        throwable.message,
+                    )
                     when (throwable.cause) {
                         is SQLException -> meterService.incrementExceptionThrownCounter("SQLException")
                         is DataAccessResourceFailureException -> meterService.incrementExceptionThrownCounter("DataAccessResourceFailureException")
@@ -122,8 +141,12 @@ open class BaseService {
                 }
             }
         } catch (ex: Exception) {
-            logger.error("Failed to execute database operation {} with resilience patterns: {}",
-                operationName, ex.message, ex)
+            logger.error(
+                "Failed to execute database operation {} with resilience patterns: {}",
+                operationName,
+                ex.message,
+                ex,
+            )
             meterService.incrementExceptionThrownCounter("ResiliencePatternException")
             CompletableFuture.failedFuture(ex)
         }
@@ -139,11 +162,12 @@ open class BaseService {
     protected fun <T> executeWithResilienceSync(
         operation: () -> T,
         operationName: String = "database-operation",
-        timeoutSeconds: Long = 30
+        timeoutSeconds: Long = 30,
     ): T {
         // If resilience components are not available, execute directly
         if (databaseResilienceConfig == null || circuitBreaker == null || retry == null ||
-            timeLimiter == null || scheduledExecutorService == null) {
+            timeLimiter == null || scheduledExecutorService == null
+        ) {
             logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
             return executeDirectly(operation, operationName)
         }
@@ -174,13 +198,17 @@ open class BaseService {
      * Execute database operations directly without resilience patterns
      * Used as fallback when resilience components are not available
      */
-    private fun <T> executeDirectly(operation: () -> T, operationName: String): T {
+    private fun <T> executeDirectly(
+        operation: () -> T,
+        operationName: String,
+    ): T {
         val startTime = System.currentTimeMillis()
         return try {
             val result: T
-            val duration = measureTimeMillis {
-                result = operation()
-            }
+            val duration =
+                measureTimeMillis {
+                    result = operation()
+                }
             if (duration > 100) {
                 logger.warn("Slow query detected for {}: {} ms", operationName, duration)
                 meterService.incrementExceptionThrownCounter("SlowQuery")

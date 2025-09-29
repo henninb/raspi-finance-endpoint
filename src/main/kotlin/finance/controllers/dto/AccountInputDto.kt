@@ -32,5 +32,5 @@ data class AccountInputDto(
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     val future: BigDecimal? = null,
     val dateClosed: Timestamp? = null,
-    val validationDate: Timestamp? = null
+    val validationDate: Timestamp? = null,
 )

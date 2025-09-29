@@ -3,19 +3,26 @@ package finance.controllers
 import finance.domain.Category
 import finance.domain.ServiceResult
 import finance.services.StandardizedCategoryService
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.Valid
-import java.util.*
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api/category")
 class CategoryController(private val standardizedCategoryService: StandardizedCategoryService) :
     StandardizedBaseController() {
-
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -49,7 +56,9 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{categoryName}", produces = ["application/json"])
-    fun findById(@PathVariable categoryName: String): ResponseEntity<*> {
+    fun findById(
+        @PathVariable categoryName: String,
+    ): ResponseEntity<*> {
         return when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved category: $categoryName")
@@ -75,7 +84,9 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    fun save(@Valid @RequestBody category: Category): ResponseEntity<*> {
+    fun save(
+        @Valid @RequestBody category: Category,
+    ): ResponseEntity<*> {
         return when (val result = standardizedCategoryService.save(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category created successfully: ${category.categoryName}")
@@ -88,11 +99,12 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating category: ${result.message}")
                 // Provide user-friendly message for duplicate key violations
-                val userMessage = if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    "Duplicate category found"
-                } else {
-                    result.message
-                }
+                val userMessage =
+                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                        "Duplicate category found"
+                    } else {
+                        result.message
+                    }
                 ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to userMessage))
             }
             is ServiceResult.SystemError -> {
@@ -111,7 +123,10 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/{categoryName}", consumes = ["application/json"], produces = ["application/json"])
-    fun update(@PathVariable categoryName: String, @Valid @RequestBody category: Category): ResponseEntity<*> {
+    fun update(
+        @PathVariable categoryName: String,
+        @Valid @RequestBody category: Category,
+    ): ResponseEntity<*> {
         return when (val result = standardizedCategoryService.update(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category updated successfully: $categoryName")
@@ -128,11 +143,12 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating category: ${result.message}")
                 // Provide user-friendly message for duplicate key violations
-                val userMessage = if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    "Duplicate category found"
-                } else {
-                    result.message
-                }
+                val userMessage =
+                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                        "Duplicate category found"
+                    } else {
+                        result.message
+                    }
                 ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to userMessage))
             }
             is ServiceResult.SystemError -> {
@@ -151,7 +167,9 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Returns 200 OK with deleted entity
      */
     @DeleteMapping("/{categoryName}", produces = ["application/json"])
-    fun deleteById(@PathVariable categoryName: String): ResponseEntity<*> {
+    fun deleteById(
+        @PathVariable categoryName: String,
+    ): ResponseEntity<*> {
         // First get the category to return it after deletion
         return when (val findResult = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
@@ -222,7 +240,9 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Maintains snake_case @PathVariable annotation for backward compatibility
      */
     @GetMapping("/select/{category_name}")
-    fun category(@PathVariable("category_name") categoryName: String): ResponseEntity<Category> {
+    fun category(
+        @PathVariable("category_name") categoryName: String,
+    ): ResponseEntity<Category> {
         return when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved category: ${result.data.categoryName}")
@@ -247,7 +267,9 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Legacy endpoint - POST /api/category/insert
      */
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertCategory(@RequestBody category: Category): ResponseEntity<Category> {
+    fun insertCategory(
+        @RequestBody category: Category,
+    ): ResponseEntity<Category> {
         return when (val result = standardizedCategoryService.save(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category inserted successfully: ${result.data.categoryName}")
@@ -279,7 +301,7 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     @PutMapping("/update/{category_name}", consumes = ["application/json"], produces = ["application/json"])
     fun updateCategory(
         @PathVariable("category_name") categoryName: String,
-        @RequestBody toBePatchedCategory: Category
+        @RequestBody toBePatchedCategory: Category,
     ): ResponseEntity<Category> {
         return when (val result = standardizedCategoryService.update(toBePatchedCategory)) {
             is ServiceResult.Success -> {
@@ -313,7 +335,9 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Legacy endpoint - DELETE /api/category/delete/{categoryName}
      */
     @DeleteMapping("/delete/{categoryName}", produces = ["application/json"])
-    fun deleteCategory(@PathVariable categoryName: String): ResponseEntity<Category> {
+    fun deleteCategory(
+        @PathVariable categoryName: String,
+    ): ResponseEntity<Category> {
         // First get the category to return it after deletion
         return when (val findResult = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
@@ -360,7 +384,7 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     @PutMapping("/merge", produces = ["application/json"])
     fun mergeCategories(
         @RequestParam(value = "new") categoryName1: String,
-        @RequestParam("old") categoryName2: String
+        @RequestParam("old") categoryName2: String,
     ): ResponseEntity<Category> {
         return try {
             logger.info("Merging categories: $categoryName2 into $categoryName1")

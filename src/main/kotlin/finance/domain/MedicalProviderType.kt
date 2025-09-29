@@ -42,7 +42,8 @@ enum class MedicalProviderType(val label: String) {
     PhysicalTherapy("physical_therapy"),
 
     @JsonProperty("other")
-    Other("other");
+    Other("other"),
+    ;
 
     override fun toString(): String = name.lowercase()
 

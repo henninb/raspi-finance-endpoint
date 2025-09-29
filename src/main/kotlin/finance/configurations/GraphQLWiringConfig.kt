@@ -8,7 +8,6 @@ import org.springframework.graphql.execution.RuntimeWiringConfigurer
 
 @Configuration
 open class GraphQLWiringConfig {
-
     @Bean
     open fun runtimeWiringConfigurer(): RuntimeWiringConfigurer {
         return RuntimeWiringConfigurer { builder: RuntimeWiring.Builder ->
@@ -20,5 +19,4 @@ open class GraphQLWiringConfig {
                 .scalar(TimestampScalar.INSTANCE)
         }
     }
-
 }

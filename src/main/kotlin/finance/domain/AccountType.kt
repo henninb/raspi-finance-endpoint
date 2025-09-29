@@ -101,15 +101,20 @@ enum class AccountType(val label: String, val category: String) {
     Escrow("escrow", "asset"),
 
     @JsonProperty("trust")
-    Trust("trust", "asset");
+    Trust("trust", "asset"),
+    ;
 
     override fun toString(): String = name.lowercase()
 
     companion object {
         fun getAssetTypes(): List<AccountType> = values().filter { it.category == "asset" }
+
         fun getLiabilityTypes(): List<AccountType> = values().filter { it.category == "liability" }
+
         fun getMedicalTypes(): List<AccountType> = listOf(HSA, FSA, MedicalSavings)
+
         fun getInvestmentTypes(): List<AccountType> = listOf(Brokerage, Retirement401k, RetirementIRA, RetirementRoth, Pension)
+
         fun getBusinessTypes(): List<AccountType> = listOf(BusinessChecking, BusinessSavings, BusinessCredit)
     }
 }

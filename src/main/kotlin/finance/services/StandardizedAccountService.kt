@@ -7,14 +7,14 @@ import finance.domain.TransactionState
 import finance.repositories.AccountRepository
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
+import org.springframework.context.annotation.Primary
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.InvalidDataAccessResourceUsageException
-import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.sql.Timestamp
-import java.util.*
+import java.util.Optional
 
 /**
  * Standardized Account Service implementing ServiceResult pattern
@@ -23,9 +23,8 @@ import java.util.*
 @Service
 @Primary
 class StandardizedAccountService(
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
 ) : StandardizedBaseService<Account, String>() {
-
     override fun getEntityName(): String = "Account"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -137,39 +136,50 @@ class StandardizedAccountService(
         return when (result) {
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
-                val violations = result.errors.map { (field, message) ->
-                    object : jakarta.validation.ConstraintViolation<Account> {
-                        override fun getMessage(): String = message
-                        override fun getMessageTemplate(): String = message
-                        override fun getRootBean(): Account = account
-                        override fun getRootBeanClass(): Class<Account> = Account::class.java
-                        override fun getLeafBean(): Any = account
-                        override fun getExecutableParameters(): Array<Any> = emptyArray()
-                        override fun getExecutableReturnValue(): Any? = null
-                        override fun getPropertyPath(): jakarta.validation.Path {
-                            return object : jakarta.validation.Path {
-                                override fun toString(): String = field
-                                override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                val violations =
+                    result.errors.map { (field, message) ->
+                        object : jakarta.validation.ConstraintViolation<Account> {
+                            override fun getMessage(): String = message
+
+                            override fun getMessageTemplate(): String = message
+
+                            override fun getRootBean(): Account = account
+
+                            override fun getRootBeanClass(): Class<Account> = Account::class.java
+
+                            override fun getLeafBean(): Any = account
+
+                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+
+                            override fun getExecutableReturnValue(): Any? = null
+
+                            override fun getPropertyPath(): jakarta.validation.Path {
+                                return object : jakarta.validation.Path {
+                                    override fun toString(): String = field
+
+                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                }
                             }
+
+                            override fun getInvalidValue(): Any? = null
+
+                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                         }
-                        override fun getInvalidValue(): Any? = null
-                        override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-                        override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                    }
-                }.toSet()
+                    }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
             is ServiceResult.BusinessError -> {
                 if (result.message.contains("already exists")) {
                     throw DataIntegrityViolationException("Account not inserted as the account already exists ${account.accountNameOwner}.")
                 } else {
-                    throw RuntimeException("Failed to insert account: ${result}")
+                    throw RuntimeException("Failed to insert account: $result")
                 }
             }
-            else -> throw RuntimeException("Failed to insert account: ${result}")
+            else -> throw RuntimeException("Failed to insert account: $result")
         }
     }
-
 
     fun updateTotalsForAllAccounts(): Boolean {
         try {
@@ -191,10 +201,13 @@ class StandardizedAccountService(
         return true
     }
 
-
-    fun renameAccountNameOwner(oldAccountNameOwner: String, newAccountNameOwner: String): Account {
-        val oldAccount = accountRepository.findByAccountNameOwner(oldAccountNameOwner)
-            .orElseThrow { EntityNotFoundException("Account not found") }
+    fun renameAccountNameOwner(
+        oldAccountNameOwner: String,
+        newAccountNameOwner: String,
+    ): Account {
+        val oldAccount =
+            accountRepository.findByAccountNameOwner(oldAccountNameOwner)
+                .orElseThrow { EntityNotFoundException("Account not found") }
 
         logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
         oldAccount.accountNameOwner = newAccountNameOwner
@@ -205,8 +218,9 @@ class StandardizedAccountService(
     }
 
     fun deactivateAccount(accountNameOwner: String): Account {
-        val account = accountRepository.findByAccountNameOwner(accountNameOwner)
-            .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
+        val account =
+            accountRepository.findByAccountNameOwner(accountNameOwner)
+                .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Deactivating account: $accountNameOwner")
         account.activeStatus = false
@@ -217,8 +231,9 @@ class StandardizedAccountService(
     }
 
     fun activateAccount(accountNameOwner: String): Account {
-        val account = accountRepository.findByAccountNameOwner(accountNameOwner)
-            .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
+        val account =
+            accountRepository.findByAccountNameOwner(accountNameOwner)
+                .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Activating account: $accountNameOwner")
         account.activeStatus = true
