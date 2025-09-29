@@ -103,16 +103,20 @@ class GraphQLMutationControllerSpec extends BaseServiceSpec {
                 sourceAccount: 'checking_primary',
                 destinationAccount: 'bills_payable',
                 amount: BigDecimal.valueOf(100.00),
+                guidSource: null,
+                guidDestination: null,
                 activeStatus: true
         ]
         def merged = defaults + params
         new PaymentInputDto(
-                null,
-                merged.sourceAccount,
-                merged.destinationAccount,
-                new Date(System.currentTimeMillis()),
-                merged.amount,
-                merged.activeStatus
+                null,                               // paymentId
+                merged.sourceAccount,               // sourceAccount
+                merged.destinationAccount,          // destinationAccount
+                new Date(System.currentTimeMillis()), // transactionDate
+                merged.amount,                      // amount
+                merged.guidSource,                  // guidSource
+                merged.guidDestination,             // guidDestination
+                merged.activeStatus                 // activeStatus
         )
     }
 

@@ -39,12 +39,14 @@ class PaymentDeleteMutationSpec extends BaseIntegrationSpec {
         given:
         withUserRole()
         def createDto = new PaymentInputDto(
-                null,
-                srcName,
-                destName,
-                Date.valueOf("2024-01-15"),
-                new BigDecimal("55.00"),
-                null
+                null,                           // paymentId
+                srcName,                        // sourceAccount
+                destName,                       // destinationAccount
+                Date.valueOf("2024-01-15"),     // transactionDate
+                new BigDecimal("55.00"),        // amount
+                null,                           // guidSource
+                null,                           // guidDestination
+                null                            // activeStatus
         )
         def created = mutationController.createPayment(createDto)
 
