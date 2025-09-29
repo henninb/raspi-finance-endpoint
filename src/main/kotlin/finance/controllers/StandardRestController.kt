@@ -3,7 +3,7 @@ package finance.controllers
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.server.ResponseStatusException
-import java.util.*
+import java.util.Optional
 
 /**
  * Standardized REST controller patterns and conventions.
@@ -22,7 +22,6 @@ import java.util.*
  * 10. Endpoint Patterns: RESTful /api/{entity}/[collection operations] and /api/{entity}/{id}/[single entity operations]
  */
 interface StandardRestController<T : Any, ID : Any> {
-
     /**
      * Standard collection retrieval - never throws 404, always returns list (may be empty)
      * GET /api/{entity}/active
@@ -45,7 +44,10 @@ interface StandardRestController<T : Any, ID : Any> {
      * Standard entity update - returns 200 OK
      * PUT /api/{entity}/{id}
      */
-    fun update(id: ID, entity: T): ResponseEntity<T>
+    fun update(
+        id: ID,
+        entity: T,
+    ): ResponseEntity<T>
 
     /**
      * Standard entity deletion - returns 200 OK with deleted entity
@@ -59,7 +61,6 @@ interface StandardRestController<T : Any, ID : Any> {
  * Provides consistent error responses and logging.
  */
 abstract class StandardizedBaseController : BaseController() {
-
     /**
      * Standard CRUD exception handler with comprehensive coverage.
      * All controllers should use this pattern for consistent error handling.
@@ -67,7 +68,7 @@ abstract class StandardizedBaseController : BaseController() {
     protected fun <T : Any> handleCrudOperation(
         operationName: String,
         entityId: Any?,
-        operation: () -> T
+        operation: () -> T,
     ): ResponseEntity<T> {
         return try {
             val result = operation()
@@ -113,7 +114,7 @@ abstract class StandardizedBaseController : BaseController() {
     protected fun <T : Any> handleCreateOperation(
         entityType: String,
         entityId: Any?,
-        operation: () -> T
+        operation: () -> T,
     ): ResponseEntity<T> {
         return try {
             val result = operation()
@@ -144,14 +145,15 @@ abstract class StandardizedBaseController : BaseController() {
         entityType: String,
         entityId: Any?,
         findOperation: () -> Optional<T>,
-        deleteOperation: () -> Unit
+        deleteOperation: () -> Unit,
     ): ResponseEntity<T> {
         return try {
             logger.info("Attempting to delete $entityType: $entityId")
-            val entity = findOperation().orElseThrow {
-                logger.warn("$entityType not found for deletion: $entityId")
-                ResponseStatusException(HttpStatus.NOT_FOUND, "$entityType not found: $entityId")
-            }
+            val entity =
+                findOperation().orElseThrow {
+                    logger.warn("$entityType not found for deletion: $entityId")
+                    ResponseStatusException(HttpStatus.NOT_FOUND, "$entityType not found: $entityId")
+                }
 
             deleteOperation()
             logger.info("$entityType deleted successfully: $entityId")
@@ -164,11 +166,19 @@ abstract class StandardizedBaseController : BaseController() {
         }
     }
 
-    private fun logSuccessfulOperation(operation: String, entityId: Any?) {
+    private fun logSuccessfulOperation(
+        operation: String,
+        entityId: Any?,
+    ) {
         logger.info("$operation completed successfully: $entityId")
     }
 
-    private fun logOperationError(operation: String, entityId: Any?, errorType: String, ex: Exception) {
+    private fun logOperationError(
+        operation: String,
+        entityId: Any?,
+        errorType: String,
+        ex: Exception,
+    ) {
         logger.error("$operation failed for $entityId - $errorType: ${ex.message}", ex)
     }
 }

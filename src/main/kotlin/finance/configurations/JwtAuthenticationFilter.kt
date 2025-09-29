@@ -1,27 +1,27 @@
 package finance.configurations
 
 import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.JwtException
+import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import javax.crypto.SecretKey
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Counter
-import io.micrometer.core.instrument.Tag
-import org.slf4j.LoggerFactory
+import javax.crypto.SecretKey
 
 class JwtAuthenticationFilter(
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
 ) : OncePerRequestFilter() {
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
@@ -34,15 +34,16 @@ class JwtAuthenticationFilter(
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
-        var token: String? = run {
-            request.cookies?.firstOrNull { it.name == "token" }?.value
-                ?: request.getHeader("Cookie")?.split(';')
-                    ?.map { it.trim() }
-                    ?.firstOrNull { it.startsWith("token=") }
-                    ?.substringAfter("token=")
-        }
+        var token: String? =
+            run {
+                request.cookies?.firstOrNull { it.name == "token" }?.value
+                    ?: request.getHeader("Cookie")?.split(';')
+                        ?.map { it.trim() }
+                        ?.firstOrNull { it.startsWith("token=") }
+                        ?.substringAfter("token=")
+            }
 
         if (token.isNullOrBlank()) {
             val authHeader = request.getHeader("Authorization")
@@ -54,17 +55,19 @@ class JwtAuthenticationFilter(
         if (!token.isNullOrBlank()) {
             try {
                 val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
-                val claims: Claims = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .payload
+                val claims: Claims =
+                    Jwts.parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(token)
+                        .payload
 
                 val username = claims.get("username", String::class.java)
-                val authorities = listOf(
-                    SimpleGrantedAuthority("ROLE_USER"),
-                    SimpleGrantedAuthority("USER")
-                )
+                val authorities =
+                    listOf(
+                        SimpleGrantedAuthority("ROLE_USER"),
+                        SimpleGrantedAuthority("USER"),
+                    )
                 val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
                 SecurityContextHolder.getContext().authentication = auth
 
@@ -74,18 +77,19 @@ class JwtAuthenticationFilter(
                     .tags(
                         listOfNotNull(
                             Tag.of("username", username ?: "unknown"),
-                            Tag.of("ip_address", getClientIpAddress(request))
-                        )
+                            Tag.of("ip_address", getClientIpAddress(request)),
+                        ),
                     )
                     .register(meterRegistry)
                     .increment()
-
             } catch (ex: JwtException) {
                 val clientIp = getClientIpAddress(request)
                 val userAgent = request.getHeader("User-Agent") ?: "unknown"
                 securityLogger.warn(
                     "JWT authentication failed from IP: {} with User-Agent: {}. Reason: {}",
-                    clientIp, userAgent, ex.message
+                    clientIp,
+                    userAgent,
+                    ex.message,
                 )
                 Counter.builder("authentication.failure")
                     .description("Number of failed authentication attempts")
@@ -93,8 +97,8 @@ class JwtAuthenticationFilter(
                         listOfNotNull(
                             Tag.of("reason", ex.javaClass.simpleName),
                             Tag.of("ip_address", clientIp),
-                            Tag.of("user_agent", userAgent.take(100))
-                        )
+                            Tag.of("user_agent", userAgent.take(100)),
+                        ),
                     )
                     .register(meterRegistry)
                     .increment()

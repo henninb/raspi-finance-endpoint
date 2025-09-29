@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter
 class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
-
     override fun convertToDatabaseColumn(attribute: ReoccurringType): String {
         return when (attribute) {
             ReoccurringType.Annually -> "annually"

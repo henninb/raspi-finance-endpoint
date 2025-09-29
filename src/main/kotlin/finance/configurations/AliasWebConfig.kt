@@ -8,7 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 open class AliasWebConfig : WebMvcConfigurer {
-
     @Autowired
     lateinit var requestLoggingInterceptor: RequestLoggingInterceptor
 

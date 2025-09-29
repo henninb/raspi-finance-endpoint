@@ -31,9 +31,9 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
 
     // Also use controllers directly to avoid brittle endpoint assumptions
     @Autowired
-    GraphQLQueryController queryController
+    finance.controllers.graphql.GraphQLQueryController queryController
     @Autowired
-    GraphQLMutationController mutationController
+    finance.controllers.graphql.GraphQLMutationController mutationController
 
     private void withUserRole(String name = "test-user", List<String> roles = ["USER"]) {
         def authorities = roles.collect { new SimpleGrantedAuthority(it) }

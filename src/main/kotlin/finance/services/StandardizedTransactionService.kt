@@ -1,19 +1,32 @@
 package finance.services
 
-import finance.domain.*
+import finance.domain.Account
+import finance.domain.AccountType
+import finance.domain.AccountValidationException
+import finance.domain.Category
+import finance.domain.Description
+import finance.domain.ImageFormatType
+import finance.domain.InvalidReoccurringTypeException
+import finance.domain.InvalidTransactionStateException
+import finance.domain.ReceiptImage
+import finance.domain.ReceiptImageException
+import finance.domain.ReoccurringType
+import finance.domain.ServiceResult
+import finance.domain.Totals
+import finance.domain.Transaction
+import finance.domain.TransactionNotFoundException
+import finance.domain.TransactionState
+import finance.domain.TransactionValidationException
 import finance.repositories.TransactionRepository
-import jakarta.validation.ConstraintViolation
-import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
-import org.springframework.http.HttpStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import java.math.BigDecimal
+import org.springframework.stereotype.Service
 import java.sql.Date
 import java.sql.Timestamp
-import java.util.*
+import java.util.Base64
+import java.util.Calendar
+import java.util.UUID
 
 /**
  * Standardized Transaction Service implementing ServiceResult pattern
@@ -29,9 +42,8 @@ class StandardizedTransactionService(
     private val descriptionService: StandardizedDescriptionService,
     private val standardizedReceiptImageService: StandardizedReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
-    private val calculationService: CalculationService
+    private val calculationService: CalculationService,
 ) : StandardizedBaseService<Transaction, String>() {
-
     override fun getEntityName(): String = "Transaction"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -112,13 +124,14 @@ class StandardizedTransactionService(
 
     fun findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner: String): ServiceResult<List<Transaction>> {
         return handleServiceOperation("findByAccountNameOwnerOrderByTransactionDate", accountNameOwner) {
-            val transactions = executeWithResilienceSync(
-                operation = {
-                    transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
-                },
-                operationName = "findByAccountNameOwnerOrderByTransactionDate-$accountNameOwner",
-                timeoutSeconds = 60
-            )
+            val transactions =
+                executeWithResilienceSync(
+                    operation = {
+                        transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+                    },
+                    operationName = "findByAccountNameOwnerOrderByTransactionDate-$accountNameOwner",
+                    timeoutSeconds = 60,
+                )
 
             if (transactions.isEmpty()) {
                 logger.error("No active transactions found for account owner: $accountNameOwner")
@@ -128,7 +141,7 @@ class StandardizedTransactionService(
 
             transactions.sortedWith(
                 compareByDescending<Transaction> { it.transactionState }
-                    .thenByDescending { it.transactionDate }
+                    .thenByDescending { it.transactionDate },
             )
         }
     }
@@ -150,7 +163,7 @@ class StandardizedTransactionService(
     fun findTransactionsByDateRangeStandardized(
         startDate: Date,
         endDate: Date,
-        pageable: Pageable
+        pageable: Pageable,
     ): ServiceResult<Page<Transaction>> {
         return handleServiceOperation("findTransactionsByDateRange", null) {
             if (startDate.after(endDate)) {
@@ -160,7 +173,10 @@ class StandardizedTransactionService(
         }
     }
 
-    fun updateTransactionStateStandardized(guid: String, transactionState: TransactionState): ServiceResult<Transaction> {
+    fun updateTransactionStateStandardized(
+        guid: String,
+        transactionState: TransactionState,
+    ): ServiceResult<Transaction> {
         return handleServiceOperation("updateTransactionState", guid) {
             val transactionOptional = transactionRepository.findByGuid(guid)
             if (transactionOptional.isEmpty) {
@@ -185,7 +201,10 @@ class StandardizedTransactionService(
         }
     }
 
-    fun changeAccountNameOwnerStandardized(accountNameOwner: String, guid: String): ServiceResult<Transaction> {
+    fun changeAccountNameOwnerStandardized(
+        accountNameOwner: String,
+        guid: String,
+    ): ServiceResult<Transaction> {
         return handleServiceOperation("changeAccountNameOwner", guid) {
             val accountOptional = accountService.account(accountNameOwner)
             val transactionOptional = transactionRepository.findByGuid(guid)
@@ -203,7 +222,10 @@ class StandardizedTransactionService(
         }
     }
 
-    fun updateTransactionReceiptImageByGuidStandardized(guid: String, imageBase64Payload: String): ServiceResult<ReceiptImage> {
+    fun updateTransactionReceiptImageByGuidStandardized(
+        guid: String,
+        imageBase64Payload: String,
+    ): ServiceResult<ReceiptImage> {
         return handleServiceOperation("updateTransactionReceiptImage", guid) {
             val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
             val rawImage = Base64.getDecoder().decode(imageBase64String)
@@ -241,10 +263,11 @@ class StandardizedTransactionService(
             receiptImage.thumbnail = thumbnail
             receiptImage.imageFormatType = imageFormatType
             val insertResult = standardizedReceiptImageService.save(receiptImage)
-            val response = when (insertResult) {
-                is ServiceResult.Success -> insertResult.data
-                else -> throw ReceiptImageException("Failed to insert receipt image for transaction ${transaction.guid}: $insertResult")
-            }
+            val response =
+                when (insertResult) {
+                    is ServiceResult.Success -> insertResult.data
+                    else -> throw ReceiptImageException("Failed to insert receipt image for transaction ${transaction.guid}: $insertResult")
+                }
             transaction.receiptImageId = response.receiptImageId
             transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             transactionRepository.saveAndFlush(transaction)
@@ -294,7 +317,6 @@ class StandardizedTransactionService(
 
     // ===== Legacy Method Compatibility =====
 
-
     fun deleteReceiptImage(transaction: Transaction): Boolean {
         val receiptImageId = transaction.receiptImageId
         if (receiptImageId == null) {
@@ -325,8 +347,6 @@ class StandardizedTransactionService(
         }
     }
 
-
-
     fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
         return calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
     }
@@ -339,8 +359,10 @@ class StandardizedTransactionService(
         }
     }
 
-
-    fun masterTransactionUpdater(transactionFromDatabase: Transaction, transaction: Transaction): Transaction {
+    fun masterTransactionUpdater(
+        transactionFromDatabase: Transaction,
+        transaction: Transaction,
+    ): Transaction {
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
             val account = accountService.account(transaction.accountNameOwner).get()
@@ -354,7 +376,10 @@ class StandardizedTransactionService(
         throw TransactionValidationException("guid did not match any database records to update ${transaction.guid}.")
     }
 
-    fun updateTransactionReceiptImageByGuid(guid: String, imageBase64Payload: String): ReceiptImage {
+    fun updateTransactionReceiptImageByGuid(
+        guid: String,
+        imageBase64Payload: String,
+    ): ReceiptImage {
         val result = updateTransactionReceiptImageByGuidStandardized(guid, imageBase64Payload)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -383,7 +408,10 @@ class StandardizedTransactionService(
         }
     }
 
-    fun updateTransactionState(guid: String, transactionState: TransactionState): Transaction {
+    fun updateTransactionState(
+        guid: String,
+        transactionState: TransactionState,
+    ): Transaction {
         val result = updateTransactionStateStandardized(guid, transactionState)
         return when (result) {
             is ServiceResult.Success -> result.data
@@ -393,7 +421,10 @@ class StandardizedTransactionService(
         }
     }
 
-    fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
+    fun createThumbnail(
+        rawImage: ByteArray,
+        imageFormatType: ImageFormatType,
+    ): ByteArray {
         return imageProcessingService.createThumbnail(rawImage, imageFormatType)
     }
 
@@ -429,7 +460,7 @@ class StandardizedTransactionService(
     fun findTransactionsByDateRange(
         startDate: Date,
         endDate: Date,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Transaction> {
         val result = findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
         return when (result) {
@@ -519,7 +550,10 @@ class StandardizedTransactionService(
         return description
     }
 
-    fun createDefaultAccount(accountNameOwner: String, accountType: AccountType): Account {
+    fun createDefaultAccount(
+        accountNameOwner: String,
+        accountType: AccountType,
+    ): Account {
         val account = Account()
         account.accountNameOwner = accountNameOwner
         account.moniker = "0000"
@@ -530,7 +564,10 @@ class StandardizedTransactionService(
 
     // ===== Private Helper Methods =====
 
-    private fun calculateFutureDate(transaction: Transaction, calendar: Calendar) {
+    private fun calculateFutureDate(
+        transaction: Transaction,
+        calendar: Calendar,
+    ) {
         if (transaction.reoccurringType == ReoccurringType.FortNightly) {
             calendar.add(Calendar.DATE, 14)
         } else {

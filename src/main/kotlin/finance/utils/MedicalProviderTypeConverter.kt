@@ -6,7 +6,6 @@ import jakarta.persistence.Converter
 
 @Converter
 class MedicalProviderTypeConverter : AttributeConverter<MedicalProviderType, String> {
-
     override fun convertToDatabaseColumn(attribute: MedicalProviderType): String {
         return attribute.label
     }

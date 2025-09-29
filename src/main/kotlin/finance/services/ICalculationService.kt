@@ -10,7 +10,6 @@ import java.math.BigDecimal
  * Handles financial calculations and totals computation
  */
 interface ICalculationService {
-
     /**
      * Calculates active totals by account name owner using repository aggregation
      * @param accountNameOwner The account name to calculate totals for
@@ -43,7 +42,7 @@ interface ICalculationService {
     fun createTotals(
         totalsFuture: BigDecimal,
         totalsCleared: BigDecimal,
-        totalsOutstanding: BigDecimal
+        totalsOutstanding: BigDecimal,
     ): Totals
 
     /**

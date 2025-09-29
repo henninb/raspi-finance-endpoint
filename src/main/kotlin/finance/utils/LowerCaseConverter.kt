@@ -1,12 +1,11 @@
 package finance.utils
 
-import org.apache.logging.log4j.LogManager
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
+import org.apache.logging.log4j.LogManager
 
 @Converter
 class LowerCaseConverter : AttributeConverter<String, String> {
-
     override fun convertToDatabaseColumn(attribute: String?): String {
         if (attribute == null) {
             return ""

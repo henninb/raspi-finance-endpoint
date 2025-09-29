@@ -1,7 +1,7 @@
 package finance.configurations
 
-import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -11,28 +11,29 @@ import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.util.ContentCachingResponseWrapper
 
 class HttpErrorLoggingFilter(
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
 ) : OncePerRequestFilter() {
-
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${HttpErrorLoggingFilter::class.java.simpleName}")
         private val httpLogger = LoggerFactory.getLogger("HTTP.${HttpErrorLoggingFilter::class.java.simpleName}")
 
-        private val SENSITIVE_HEADERS = setOf(
-            "authorization", "cookie", "set-cookie", "x-auth-token",
-            "token", "jwt", "api-key", "x-api-key", "password"
-        )
+        private val SENSITIVE_HEADERS =
+            setOf(
+                "authorization", "cookie", "set-cookie", "x-auth-token",
+                "token", "jwt", "api-key", "x-api-key", "password",
+            )
 
-        private val SENSITIVE_PARAMS = setOf(
-            "password", "token", "jwt", "secret", "key", "auth",
-            "credential", "ssn", "credit", "account"
-        )
+        private val SENSITIVE_PARAMS =
+            setOf(
+                "password", "token", "jwt", "secret", "key", "auth",
+                "credential", "ssn", "credit", "account",
+            )
     }
 
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val cachingResponse = ContentCachingResponseWrapper(response)
         val startTime = System.currentTimeMillis()
@@ -49,7 +50,7 @@ class HttpErrorLoggingFilter(
     private fun logHttpResponse(
         request: HttpServletRequest,
         response: ContentCachingResponseWrapper,
-        responseTime: Long
+        responseTime: Long,
     ) {
         val status = response.status
 
@@ -61,13 +62,14 @@ class HttpErrorLoggingFilter(
             val queryString = sanitizeQueryString(request.queryString)
             val referer = sanitizeHeader(request.getHeader("Referer"))
 
-            val logMessage = buildString {
-                append("HTTP_ERROR status=$status method=$method uri=$uri")
-                if (!queryString.isNullOrBlank()) append(" query=$queryString")
-                append(" ip=$clientIp responseTime=${responseTime}ms")
-                if (!userAgent.isNullOrBlank()) append(" userAgent='$userAgent'")
-                if (!referer.isNullOrBlank()) append(" referer='$referer'")
-            }
+            val logMessage =
+                buildString {
+                    append("HTTP_ERROR status=$status method=$method uri=$uri")
+                    if (!queryString.isNullOrBlank()) append(" query=$queryString")
+                    append(" ip=$clientIp responseTime=${responseTime}ms")
+                    if (!userAgent.isNullOrBlank()) append(" userAgent='$userAgent'")
+                    if (!referer.isNullOrBlank()) append(" referer='$referer'")
+                }
 
             when {
                 status >= 500 -> {
@@ -94,15 +96,22 @@ class HttpErrorLoggingFilter(
         }
     }
 
-    private fun incrementErrorCounter(category: String, status: Int, method: String, uri: String) {
+    private fun incrementErrorCounter(
+        category: String,
+        status: Int,
+        method: String,
+        uri: String,
+    ) {
         Counter.builder("http.error.responses")
             .description("HTTP error responses by status code and endpoint")
-            .tags(listOf(
-                Tag.of("category", category),
-                Tag.of("status", status.toString()),
-                Tag.of("method", method),
-                Tag.of("endpoint", sanitizeEndpointForMetrics(uri))
-            ))
+            .tags(
+                listOf(
+                    Tag.of("category", category),
+                    Tag.of("status", status.toString()),
+                    Tag.of("method", method),
+                    Tag.of("endpoint", sanitizeEndpointForMetrics(uri)),
+                ),
+            )
             .register(meterRegistry)
             .increment()
     }

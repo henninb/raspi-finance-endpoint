@@ -1,5 +1,8 @@
 package finance.configurations
 
+import io.micrometer.core.instrument.MeterRegistry
+import org.slf4j.LoggerFactory
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -10,24 +13,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.slf4j.LoggerFactory
-import finance.configurations.RateLimitingFilter
-import finance.configurations.SecurityAuditFilter
-import finance.configurations.HttpErrorLoggingFilter
-import finance.configurations.LoggingCorsFilter
-import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import org.springframework.boot.web.servlet.FilterRegistrationBean
-import java.time.Duration
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 open class WebSecurityConfig(
-    private val environment: Environment
+    private val environment: Environment,
 ) {
-
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${WebSecurityConfig::class.java.simpleName}")
     }
@@ -40,7 +34,7 @@ open class WebSecurityConfig(
         httpErrorLoggingFilter: HttpErrorLoggingFilter,
         rateLimitingFilter: RateLimitingFilter,
         securityAuditFilter: SecurityAuditFilter,
-        jwtAuthenticationFilter: JwtAuthenticationFilter
+        jwtAuthenticationFilter: JwtAuthenticationFilter,
     ): SecurityFilterChain {
         val activeProfiles = environment.activeProfiles.joinToString(",").ifBlank { "default" }
         securityLogger.info("SECURITY_CONFIG building main chain profiles={} stateless=true jwtFilter=true", activeProfiles)
@@ -65,7 +59,6 @@ open class WebSecurityConfig(
         securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register']")
         return chain
     }
-
 
     @Bean
     open fun rateLimitingFilter(): RateLimitingFilter = RateLimitingFilter()
@@ -103,34 +96,35 @@ open class WebSecurityConfig(
     open fun loggingCorsFilterRegistration(loggingCorsFilter: LoggingCorsFilter): FilterRegistrationBean<LoggingCorsFilter> =
         FilterRegistrationBean<LoggingCorsFilter>(loggingCorsFilter).apply { isEnabled = false }
 
-
     @Bean
     open fun corsConfigurationSource(): CorsConfigurationSource {
-        val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf(
-                "http://localhost:3000",
-                "https://www.bhenning.com",
-                "https://www.brianhenning.com",
-                "https://vercel.bhenning.com",
-                "https://vercel.brianhenning.com",
-                "https://pages.brianhenning.com",
-                "https://pages.bhenning.com",
-                "https://amplify.bhenning.com",
-                "https://amplify.brianhenning.com",
-                "https://netlify.bhenning.com",
-                "https://netlify.brianhenning.com",
-                "https://finance.bhenning.com",
-                "https://finance.brianhenning.com",
-                "http://dev.finance.bhenning.com:3000",
-                "http://dev.finance.bhenning.com:3001",
-                "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc"
-            )
-            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key")
-            allowCredentials = true
-            // Spring Framework version here expects seconds as Long
-            maxAge = 3600L
-        }
+        val configuration =
+            CorsConfiguration().apply {
+                allowedOrigins =
+                    listOf(
+                        "http://localhost:3000",
+                        "https://www.bhenning.com",
+                        "https://www.brianhenning.com",
+                        "https://vercel.bhenning.com",
+                        "https://vercel.brianhenning.com",
+                        "https://pages.brianhenning.com",
+                        "https://pages.bhenning.com",
+                        "https://amplify.bhenning.com",
+                        "https://amplify.brianhenning.com",
+                        "https://netlify.bhenning.com",
+                        "https://netlify.brianhenning.com",
+                        "https://finance.bhenning.com",
+                        "https://finance.brianhenning.com",
+                        "http://dev.finance.bhenning.com:3000",
+                        "http://dev.finance.bhenning.com:3001",
+                        "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc",
+                    )
+                allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key")
+                allowCredentials = true
+                // Spring Framework version here expects seconds as Long
+                maxAge = 3600L
+            }
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source

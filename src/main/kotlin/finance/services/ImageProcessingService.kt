@@ -15,13 +15,15 @@ import javax.imageio.ImageReader
  */
 @Service
 open class ImageProcessingService : IImageProcessingService, BaseService() {
-
     companion object {
         private const val THUMBNAIL_SIZE = 100
         private const val MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
     }
 
-    override fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray {
+    override fun createThumbnail(
+        rawImage: ByteArray,
+        imageFormatType: ImageFormatType,
+    ): ByteArray {
         return try {
             logger.debug("Creating thumbnail for image of size: ${rawImage.size} bytes, format: $imageFormatType")
 
@@ -33,9 +35,10 @@ open class ImageProcessingService : IImageProcessingService, BaseService() {
                 return byteArrayOf()
             }
 
-            val thumbnail = Thumbnails.of(bufferedImage)
-                .size(THUMBNAIL_SIZE, THUMBNAIL_SIZE)
-                .asBufferedImage()
+            val thumbnail =
+                Thumbnails.of(bufferedImage)
+                    .size(THUMBNAIL_SIZE, THUMBNAIL_SIZE)
+                    .asBufferedImage()
 
             val byteArrayOutputStream = ByteArrayOutputStream()
             ImageIO.write(thumbnail, imageFormatType.toString(), byteArrayOutputStream)
@@ -65,20 +68,21 @@ open class ImageProcessingService : IImageProcessingService, BaseService() {
             var format = ImageFormatType.Undefined
 
             imageReaders.forEachRemaining { imageReader ->
-                format = when {
-                    imageReader.formatName.lowercase() == "jpeg" -> {
-                        logger.info("Detected image format: ${imageReader.formatName}")
-                        ImageFormatType.Jpeg
+                format =
+                    when {
+                        imageReader.formatName.lowercase() == "jpeg" -> {
+                            logger.info("Detected image format: ${imageReader.formatName}")
+                            ImageFormatType.Jpeg
+                        }
+                        imageReader.formatName.lowercase() == "png" -> {
+                            logger.info("Detected image format: ${imageReader.formatName}")
+                            ImageFormatType.Png
+                        }
+                        else -> {
+                            logger.debug("Unsupported image format: ${imageReader.formatName}")
+                            ImageFormatType.Undefined
+                        }
                     }
-                    imageReader.formatName.lowercase() == "png" -> {
-                        logger.info("Detected image format: ${imageReader.formatName}")
-                        ImageFormatType.Png
-                    }
-                    else -> {
-                        logger.debug("Unsupported image format: ${imageReader.formatName}")
-                        ImageFormatType.Undefined
-                    }
-                }
             }
 
             logger.debug("Final detected format: $format")
@@ -126,20 +130,22 @@ open class ImageProcessingService : IImageProcessingService, BaseService() {
             val isValid = validateImageSize(rawImage) && format != ImageFormatType.Undefined
 
             // Step 3: Create thumbnail (attempt even if validation failed for consistency)
-            val thumbnail = if (isValid) {
-                createThumbnail(rawImage, format)
-            } else {
-                logger.debug("Skipping thumbnail creation due to validation failure")
-                byteArrayOf()
-            }
+            val thumbnail =
+                if (isValid) {
+                    createThumbnail(rawImage, format)
+                } else {
+                    logger.debug("Skipping thumbnail creation due to validation failure")
+                    byteArrayOf()
+                }
 
-            val result = ImageProcessingResult(
-                format = format,
-                thumbnail = thumbnail,
-                isValid = isValid,
-                originalSize = rawImage.size,
-                thumbnailSize = thumbnail.size
-            )
+            val result =
+                ImageProcessingResult(
+                    format = format,
+                    thumbnail = thumbnail,
+                    isValid = isValid,
+                    originalSize = rawImage.size,
+                    thumbnailSize = thumbnail.size,
+                )
 
             logger.info("Image processing completed: format=$format, valid=$isValid, original=${result.originalSize}, thumbnail=${result.thumbnailSize}")
             meterService.incrementExceptionThrownCounter("ImageProcessingCompleted")
@@ -154,7 +160,7 @@ open class ImageProcessingService : IImageProcessingService, BaseService() {
                 thumbnail = byteArrayOf(),
                 isValid = false,
                 originalSize = rawImage.size,
-                thumbnailSize = 0
+                thumbnailSize = 0,
             )
         }
     }

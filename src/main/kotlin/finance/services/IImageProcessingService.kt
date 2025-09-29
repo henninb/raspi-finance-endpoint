@@ -7,14 +7,16 @@ import finance.domain.ImageFormatType
  * Handles receipt image processing in a focused, testable service
  */
 interface IImageProcessingService {
-
     /**
      * Creates a thumbnail from raw image data
      * @param rawImage The raw image bytes
      * @param imageFormatType The format of the image (JPEG, PNG, etc.)
      * @return Thumbnail image as byte array (100x100 pixels)
      */
-    fun createThumbnail(rawImage: ByteArray, imageFormatType: ImageFormatType): ByteArray
+    fun createThumbnail(
+        rawImage: ByteArray,
+        imageFormatType: ImageFormatType,
+    ): ByteArray
 
     /**
      * Determines the image format type from raw image data
@@ -47,7 +49,7 @@ data class ImageProcessingResult(
     val thumbnail: ByteArray,
     val isValid: Boolean,
     val originalSize: Int,
-    val thumbnailSize: Int
+    val thumbnailSize: Int,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

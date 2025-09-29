@@ -1,34 +1,33 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.ConstraintViolationException
+import jakarta.validation.ValidationException
 import org.apache.catalina.connector.ClientAbortException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.security.core.AuthenticationException
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.web.HttpMediaTypeNotSupportedException
-import org.springframework.web.bind.annotation.ExceptionHandler
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.bind.MethodArgumentNotValidException
-import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.validation.ConstraintViolationException
-import jakarta.validation.ValidationException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.server.ResponseStatusException
 
 open class BaseController {
-
     @ExceptionHandler(
-        value = [ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
+        value = [
+            ConstraintViolationException::class, NumberFormatException::class, EmptyResultDataAccessException::class,
             MethodArgumentTypeMismatchException::class, HttpMessageNotReadableException::class, HttpMediaTypeNotSupportedException::class,
-            IllegalArgumentException::class, MethodArgumentNotValidException::class]
+            IllegalArgumentException::class, MethodArgumentNotValidException::class,
+        ],
     )
     fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, String>> {
         logSecureError("BAD_REQUEST", throwable, HttpStatus.BAD_REQUEST)
@@ -73,7 +72,11 @@ open class BaseController {
         return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
-    private fun logSecureError(errorType: String, throwable: Throwable, statusCode: HttpStatus) {
+    private fun logSecureError(
+        errorType: String,
+        throwable: Throwable,
+        statusCode: HttpStatus,
+    ) {
         val request = getCurrentHttpRequest()
         val clientIp = getClientIpAddress(request)
         val method = request?.method ?: "unknown"
@@ -81,13 +84,14 @@ open class BaseController {
         val userAgent = sanitizeHeader(request?.getHeader("User-Agent"))
         val exMsg = sanitizeHeader(throwable.message)?.take(180)
 
-        val logMessage = buildString {
-            append("CONTROLLER_ERROR type=$errorType status=${statusCode.value()} ")
-            append("method=$method uri=$uri ip=$clientIp ")
-            append("exception=${throwable.javaClass.simpleName}")
-            if (!exMsg.isNullOrBlank()) append(" msg='${exMsg}'")
-            if (!userAgent.isNullOrBlank()) append(" userAgent='$userAgent'")
-        }
+        val logMessage =
+            buildString {
+                append("CONTROLLER_ERROR type=$errorType status=${statusCode.value()} ")
+                append("method=$method uri=$uri ip=$clientIp ")
+                append("exception=${throwable.javaClass.simpleName}")
+                if (!exMsg.isNullOrBlank()) append(" msg='$exMsg'")
+                if (!userAgent.isNullOrBlank()) append(" userAgent='$userAgent'")
+            }
 
         when {
             statusCode.is5xxServerError -> securityLogger.error(logMessage, throwable)

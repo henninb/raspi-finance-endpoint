@@ -1,26 +1,31 @@
 package finance.controllers
 
-import finance.domain.User
 import finance.domain.LoginRequest
+import finance.domain.User
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import javax.crypto.SecretKey
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import jakarta.validation.Valid
 import org.springframework.validation.BindingResult
-import java.util.*
+import org.springframework.web.bind.annotation.CookieValue
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import java.util.Date
+import javax.crypto.SecretKey
 
 @CrossOrigin
 @RestController
 @RequestMapping("/api")
 class LoginController(private val userService: UserService) : BaseController() {
-
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
 
@@ -32,7 +37,7 @@ class LoginController(private val userService: UserService) : BaseController() {
     fun login(
         @Valid @RequestBody loginRequest: LoginRequest,
         bindingResult: BindingResult,
-        response: HttpServletResponse
+        response: HttpServletResponse,
     ): ResponseEntity<Map<String, String>> {
         // Entry log for tracing
         logger.info("LOGIN_REQUEST username=${loginRequest.username}")
@@ -40,22 +45,24 @@ class LoginController(private val userService: UserService) : BaseController() {
         // Check for validation errors on the minimal DTO
         if (bindingResult.hasErrors()) {
             val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
-            logger.warn("LOGIN_400_VALIDATION username=${loginRequest.username} errors=${errors}")
+            logger.warn("LOGIN_400_VALIDATION username=${loginRequest.username} errors=$errors")
             return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
         }
 
         // Validate user credentials against stored hash (no strength checks here)
-        val authAttempt = User().apply {
-            username = loginRequest.username
-            password = loginRequest.password
-        }
+        val authAttempt =
+            User().apply {
+                username = loginRequest.username
+                password = loginRequest.password
+            }
 
-        val user = try {
-            userService.signIn(authAttempt)
-        } catch (e: Exception) {
-            logger.warn("LOGIN_401_EXCEPTION username=${loginRequest.username} ex=${e.javaClass.simpleName} msg=${e.message}")
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
-        }
+        val user =
+            try {
+                userService.signIn(authAttempt)
+            } catch (e: Exception) {
+                logger.warn("LOGIN_401_EXCEPTION username=${loginRequest.username} ex=${e.javaClass.simpleName} msg=${e.message}")
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
+            }
 
         logger.info("LOGIN_AUTH_ATTEMPT username=${loginRequest.username}")
         if (user.isEmpty) {
@@ -67,31 +74,35 @@ class LoginController(private val userService: UserService) : BaseController() {
         val now = Date()
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
         val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
-        val token = Jwts.builder()
-            .claim("username", loginRequest.username)
-            .notBefore(now)
-            .expiration(expiration)
-            .signWith(key)
-            .compact()
+        val token =
+            Jwts.builder()
+                .claim("username", loginRequest.username)
+                .notBefore(now)
+                .expiration(expiration)
+                .signWith(key)
+                .compact()
 
         // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true ||
-                        System.getenv("HOST_IP")?.contains("192.168") == true ||
-                        activeProfile == "dev" || activeProfile == "development"
+        val isLocalDev =
+            System.getenv("USERNAME")?.contains("henninb") == true ||
+                System.getenv("HOST_IP")?.contains("192.168") == true ||
+                activeProfile == "dev" || activeProfile == "development"
 
-        val cookieBuilder = ResponseCookie.from("token", token)
-            .path("/")
-            .maxAge(7 * 24 * 60 * 60)
-            .httpOnly(true) // Prevent XSS token theft
-            .secure(!isLocalDev) // Require HTTPS in production
-            .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
+        val cookieBuilder =
+            ResponseCookie.from("token", token)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .httpOnly(true) // Prevent XSS token theft
+                .secure(!isLocalDev) // Require HTTPS in production
+                .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
 
         // Configure domain based on environment
-        val cookie = if (isLocalDev) {
-            cookieBuilder.build() // No domain restriction for local development
-        } else {
-            cookieBuilder.domain(".bhenning.com").build() // Domain for production
-        }
+        val cookie =
+            if (isLocalDev) {
+                cookieBuilder.build() // No domain restriction for local development
+            } else {
+                cookieBuilder.domain(".bhenning.com").build() // Domain for production
+            }
 
         response.addHeader("Set-Cookie", cookie.toString())
         logger.info("LOGIN_SUCCESS username=${loginRequest.username}")
@@ -102,23 +113,26 @@ class LoginController(private val userService: UserService) : BaseController() {
     @PostMapping("/logout")
     fun logout(response: HttpServletResponse): ResponseEntity<Void> {
         // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true ||
-                        System.getenv("HOST_IP")?.contains("192.168") == true ||
-                        activeProfile == "dev" || activeProfile == "development"
+        val isLocalDev =
+            System.getenv("USERNAME")?.contains("henninb") == true ||
+                System.getenv("HOST_IP")?.contains("192.168") == true ||
+                activeProfile == "dev" || activeProfile == "development"
 
-        val cookieBuilder = ResponseCookie.from("token", "")
-            .path("/")
-            .maxAge(0)
-            .httpOnly(true) // Prevent XSS token theft
-            .secure(!isLocalDev) // Require HTTPS in production
-            .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
+        val cookieBuilder =
+            ResponseCookie.from("token", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true) // Prevent XSS token theft
+                .secure(!isLocalDev) // Require HTTPS in production
+                .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
 
         // Configure domain based on environment
-        val cookie = if (isLocalDev) {
-            cookieBuilder.build() // No domain restriction for local development
-        } else {
-            cookieBuilder.domain(".bhenning.com").build() // Domain for production
-        }
+        val cookie =
+            if (isLocalDev) {
+                cookieBuilder.build() // No domain restriction for local development
+            } else {
+                cookieBuilder.domain(".bhenning.com").build() // Domain for production
+            }
 
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.noContent().build()
@@ -129,7 +143,7 @@ class LoginController(private val userService: UserService) : BaseController() {
     fun register(
         @Valid @RequestBody newUser: User,
         bindingResult: BindingResult,
-        response: HttpServletResponse
+        response: HttpServletResponse,
     ): ResponseEntity<Map<String, String>> {
         // Check for validation errors
         if (bindingResult.hasErrors()) {
@@ -162,31 +176,35 @@ class LoginController(private val userService: UserService) : BaseController() {
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
 
         val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
-        val token = Jwts.builder()
-            .claim("username", newUser.username)
-            .notBefore(now)
-            .expiration(expiration)
-            .signWith(key)
-            .compact()
+        val token =
+            Jwts.builder()
+                .claim("username", newUser.username)
+                .notBefore(now)
+                .expiration(expiration)
+                .signWith(key)
+                .compact()
 
         // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev = System.getenv("USERNAME")?.contains("henninb") == true ||
-                        System.getenv("HOST_IP")?.contains("192.168") == true ||
-                        activeProfile == "dev" || activeProfile == "development"
+        val isLocalDev =
+            System.getenv("USERNAME")?.contains("henninb") == true ||
+                System.getenv("HOST_IP")?.contains("192.168") == true ||
+                activeProfile == "dev" || activeProfile == "development"
 
-        val cookieBuilder = ResponseCookie.from("token", token)
-            .httpOnly(true) // Prevent XSS token theft
-            .secure(!isLocalDev) // Require HTTPS in production
-            .maxAge(24 * 60 * 60)
-            .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
-            .path("/")
+        val cookieBuilder =
+            ResponseCookie.from("token", token)
+                .httpOnly(true) // Prevent XSS token theft
+                .secure(!isLocalDev) // Require HTTPS in production
+                .maxAge(24 * 60 * 60)
+                .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
+                .path("/")
 
         // Configure domain based on environment
-        val cookie = if (isLocalDev) {
-            cookieBuilder.build() // No domain restriction for local development
-        } else {
-            cookieBuilder.domain(".bhenning.com").build() // Domain for production
-        }
+        val cookie =
+            if (isLocalDev) {
+                cookieBuilder.build() // No domain restriction for local development
+            } else {
+                cookieBuilder.domain(".bhenning.com").build() // Domain for production
+            }
 
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Registration successful"))
@@ -194,7 +212,9 @@ class LoginController(private val userService: UserService) : BaseController() {
 
     // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
     @GetMapping("/me")
-    fun getCurrentUser(@CookieValue(name = "token", required = false) token: String?): ResponseEntity<Any> {
+    fun getCurrentUser(
+        @CookieValue(name = "token", required = false) token: String?,
+    ): ResponseEntity<Any> {
         // Check if the token cookie is present.
         if (token.isNullOrBlank()) {
             logger.info("No token found in the request")
@@ -204,11 +224,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         try {
             // Parse and validate the JWT.
             val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
-            val claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .payload
+            val claims =
+                Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .payload
 
             val username = claims["username"] as? String
             if (username.isNullOrBlank()) {

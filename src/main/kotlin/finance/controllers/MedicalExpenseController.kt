@@ -2,22 +2,29 @@ package finance.controllers
 
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
+import finance.domain.ServiceResult
 import finance.exceptions.DuplicateMedicalExpenseException
 import finance.services.StandardizedMedicalExpenseService
-import finance.domain.ServiceResult
-import org.slf4j.LoggerFactory
+import jakarta.validation.ConstraintViolationException
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotNull
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.orm.jpa.JpaSystemException
-import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.CrossOrigin
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
-import jakarta.validation.ConstraintViolationException
-import jakarta.validation.Valid
-import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotNull
 import java.math.BigDecimal
 import java.sql.Date
 
@@ -26,7 +33,6 @@ import java.sql.Date
 @RequestMapping("/api/medical-expenses")
 class MedicalExpenseController(private val standardizedMedicalExpenseService: StandardizedMedicalExpenseService) :
     StandardizedBaseController(), StandardRestController<MedicalExpense, Long> {
-
     init {
         logger.info("★★★ MedicalExpenseController constructor called! Service: $standardizedMedicalExpenseService")
     }
@@ -64,7 +70,9 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{medicalExpenseId}", produces = ["application/json"])
-    override fun findById(@PathVariable medicalExpenseId: Long): ResponseEntity<MedicalExpense> {
+    override fun findById(
+        @PathVariable medicalExpenseId: Long,
+    ): ResponseEntity<MedicalExpense> {
         return when (val result = standardizedMedicalExpenseService.findById(medicalExpenseId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved medical expense: $medicalExpenseId")
@@ -90,7 +98,9 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    override fun save(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
+    override fun save(
+        @Valid @RequestBody medicalExpense: MedicalExpense,
+    ): ResponseEntity<MedicalExpense> {
         return when (val result = standardizedMedicalExpenseService.save(medicalExpense)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense created successfully: ${result.data.medicalExpenseId}")
@@ -120,7 +130,10 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/{medicalExpenseId}", consumes = ["application/json"], produces = ["application/json"])
-    override fun update(@PathVariable medicalExpenseId: Long, @Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
+    override fun update(
+        @PathVariable medicalExpenseId: Long,
+        @Valid @RequestBody medicalExpense: MedicalExpense,
+    ): ResponseEntity<MedicalExpense> {
         // Ensure the ID matches the path parameter
         medicalExpense.medicalExpenseId = medicalExpenseId
 
@@ -157,7 +170,9 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      * Returns 200 OK with deleted entity (standardized behavior)
      */
     @DeleteMapping("/{medicalExpenseId}", produces = ["application/json"])
-    override fun deleteById(@PathVariable medicalExpenseId: Long): ResponseEntity<MedicalExpense> {
+    override fun deleteById(
+        @PathVariable medicalExpenseId: Long,
+    ): ResponseEntity<MedicalExpense> {
         // First find the entity to return it after deletion
         val entityResult = standardizedMedicalExpenseService.findById(medicalExpenseId)
         if (entityResult !is ServiceResult.Success) {
@@ -210,9 +225,11 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      * Original method name preserved for backward compatibility
      */
     @PostMapping("/legacy", consumes = ["application/json"], produces = ["application/json"])
-    fun insertMedicalExpense(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
+    fun insertMedicalExpense(
+        @Valid @RequestBody medicalExpense: MedicalExpense,
+    ): ResponseEntity<MedicalExpense> {
         logger.info("POST /medical-expenses - Creating medical expense for transaction ID: ${medicalExpense.transactionId}")
-        logger.info("Service instance: ${standardizedMedicalExpenseService}")
+        logger.info("Service instance: $standardizedMedicalExpenseService")
 
         return try {
             val createdExpense = standardizedMedicalExpenseService.insertMedicalExpense(medicalExpense)
@@ -247,7 +264,9 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     }
 
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertMedicalExpenseWithInsertEndpoint(@Valid @RequestBody medicalExpense: MedicalExpense): ResponseEntity<MedicalExpense> {
+    fun insertMedicalExpenseWithInsertEndpoint(
+        @Valid @RequestBody medicalExpense: MedicalExpense,
+    ): ResponseEntity<MedicalExpense> {
         logger.info("POST /medical-expenses/insert - Creating medical expense for transaction ID: ${medicalExpense.transactionId}")
 
         return try {
@@ -289,7 +308,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @PutMapping("/update/{medicalExpenseId}", consumes = ["application/json"], produces = ["application/json"])
     fun updateMedicalExpense(
         @PathVariable medicalExpenseId: Long,
-        @Valid @RequestBody medicalExpense: MedicalExpense
+        @Valid @RequestBody medicalExpense: MedicalExpense,
     ): ResponseEntity<MedicalExpense> {
         logger.info("PUT /medical-expenses/$medicalExpenseId - Updating medical expense")
 
@@ -313,7 +332,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      */
     @GetMapping("/select/{medicalExpenseId}", produces = ["application/json"])
     fun getMedicalExpenseById(
-        @PathVariable medicalExpenseId: Long
+        @PathVariable medicalExpenseId: Long,
     ): ResponseEntity<MedicalExpense> {
         logger.info("GET /medical-expenses/$medicalExpenseId - Retrieving medical expense")
 
@@ -333,7 +352,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/transaction/{transactionId}")
     fun getMedicalExpenseByTransactionId(
-        @PathVariable transactionId: Long
+        @PathVariable transactionId: Long,
     ): ResponseEntity<MedicalExpense> {
         logger.info("GET /medical-expenses/transaction/$transactionId - Retrieving medical expense by transaction ID")
 
@@ -353,7 +372,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/account/{accountId}")
     fun getMedicalExpensesByAccountId(
-        @PathVariable accountId: Long
+        @PathVariable accountId: Long,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/account/$accountId - Retrieving medical expenses by account ID")
 
@@ -370,7 +389,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     fun getMedicalExpensesByAccountIdAndDateRange(
         @PathVariable accountId: Long,
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date
+        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/account/$accountId/date-range - Retrieving medical expenses by account and date range")
 
@@ -385,7 +404,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/provider/{providerId}")
     fun getMedicalExpensesByProviderId(
-        @PathVariable providerId: Long
+        @PathVariable providerId: Long,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/provider/$providerId - Retrieving medical expenses by provider ID")
 
@@ -400,7 +419,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/family-member/{familyMemberId}")
     fun getMedicalExpensesByFamilyMemberId(
-        @PathVariable familyMemberId: Long
+        @PathVariable familyMemberId: Long,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/family-member/$familyMemberId - Retrieving medical expenses by family member ID")
 
@@ -417,7 +436,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     fun getMedicalExpensesByFamilyMemberAndDateRange(
         @PathVariable familyMemberId: Long,
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date
+        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/family-member/$familyMemberId/date-range - Retrieving medical expenses by family member and date range")
 
@@ -432,7 +451,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/claim-status/{claimStatus}")
     fun getMedicalExpensesByClaimStatus(
-        @PathVariable claimStatus: ClaimStatus
+        @PathVariable claimStatus: ClaimStatus,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/claim-status/$claimStatus - Retrieving medical expenses by claim status")
 
@@ -487,7 +506,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @PatchMapping("/{medicalExpenseId}/claim-status")
     fun updateClaimStatusPatch(
         @PathVariable medicalExpenseId: Long,
-        @RequestParam claimStatus: ClaimStatus
+        @RequestParam claimStatus: ClaimStatus,
     ): ResponseEntity<Map<String, String>> {
         logger.info("PATCH /medical-expenses/$medicalExpenseId/claim-status - Updating claim status to: $claimStatus")
         return updateClaimStatusInternal(medicalExpenseId, claimStatus)
@@ -496,13 +515,16 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @PutMapping("/{medicalExpenseId}/claim-status")
     fun updateClaimStatusPut(
         @PathVariable medicalExpenseId: Long,
-        @RequestParam claimStatus: ClaimStatus
+        @RequestParam claimStatus: ClaimStatus,
     ): ResponseEntity<Map<String, String>> {
         logger.info("PUT /medical-expenses/$medicalExpenseId/claim-status - Updating claim status to: $claimStatus")
         return updateClaimStatusInternal(medicalExpenseId, claimStatus)
     }
 
-    private fun updateClaimStatusInternal(medicalExpenseId: Long, claimStatus: ClaimStatus): ResponseEntity<Map<String, String>> {
+    private fun updateClaimStatusInternal(
+        medicalExpenseId: Long,
+        claimStatus: ClaimStatus,
+    ): ResponseEntity<Map<String, String>> {
         return try {
             val success = standardizedMedicalExpenseService.updateClaimStatus(medicalExpenseId, claimStatus)
             if (success) {
@@ -522,7 +544,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      */
     @DeleteMapping("/delete/{medicalExpenseId}", produces = ["application/json"])
     fun softDeleteMedicalExpense(
-        @PathVariable medicalExpenseId: Long
+        @PathVariable medicalExpenseId: Long,
     ): ResponseEntity<Map<String, String>> {
         logger.info("DELETE /medical-expenses/$medicalExpenseId - Soft deleting medical expense")
 
@@ -541,7 +563,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/totals/year/{year}")
     fun getMedicalTotalsByYear(
-        @PathVariable year: Int
+        @PathVariable year: Int,
     ): ResponseEntity<Map<String, BigDecimal>> {
         logger.info("GET /medical-expenses/totals/year/$year - Retrieving medical totals by year")
 
@@ -550,12 +572,13 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
             val totalPatientResponsibility = standardizedMedicalExpenseService.getTotalPatientResponsibilityByYear(year)
             val totalInsurancePaid = standardizedMedicalExpenseService.getTotalInsurancePaidByYear(year)
 
-            val totals = mapOf(
-                "totalBilled" to totalBilled,
-                "totalPatientResponsibility" to totalPatientResponsibility,
-                "totalInsurancePaid" to totalInsurancePaid,
-                "totalCovered" to (totalInsurancePaid + (totalBilled - totalPatientResponsibility - totalInsurancePaid))
-            )
+            val totals =
+                mapOf(
+                    "totalBilled" to totalBilled,
+                    "totalPatientResponsibility" to totalPatientResponsibility,
+                    "totalInsurancePaid" to totalInsurancePaid,
+                    "totalCovered" to (totalInsurancePaid + (totalBilled - totalPatientResponsibility - totalInsurancePaid)),
+                )
             ResponseEntity.ok(totals)
         } catch (e: Exception) {
             logger.error("Error retrieving medical totals for year: $year", e)
@@ -578,7 +601,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/procedure-code/{procedureCode}")
     fun getMedicalExpensesByProcedureCode(
-        @PathVariable procedureCode: String
+        @PathVariable procedureCode: String,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/procedure-code/$procedureCode - Retrieving medical expenses by procedure code")
 
@@ -593,7 +616,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/diagnosis-code/{diagnosisCode}")
     fun getMedicalExpensesByDiagnosisCode(
-        @PathVariable diagnosisCode: String
+        @PathVariable diagnosisCode: String,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/diagnosis-code/$diagnosisCode - Retrieving medical expenses by diagnosis code")
 
@@ -609,7 +632,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @GetMapping("/date-range")
     fun getMedicalExpensesByDateRange(
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date
+        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/date-range - Retrieving medical expenses by date range")
 
@@ -626,7 +649,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @PostMapping("/{medicalExpenseId}/payments/{transactionId}")
     fun linkPaymentTransaction(
         @PathVariable medicalExpenseId: Long,
-        @PathVariable transactionId: Long
+        @PathVariable transactionId: Long,
     ): ResponseEntity<MedicalExpense> {
         logger.info("POST /medical-expenses/$medicalExpenseId/payments/$transactionId - Linking payment transaction")
 
@@ -648,7 +671,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @DeleteMapping("/{medicalExpenseId}/payments")
     fun unlinkPaymentTransaction(
-        @PathVariable medicalExpenseId: Long
+        @PathVariable medicalExpenseId: Long,
     ): ResponseEntity<MedicalExpense> {
         logger.info("DELETE /medical-expenses/$medicalExpenseId/payments - Unlinking payment transaction")
 
@@ -667,7 +690,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @PutMapping("/{medicalExpenseId}/sync-payment")
     fun syncPaymentAmount(
-        @PathVariable medicalExpenseId: Long
+        @PathVariable medicalExpenseId: Long,
     ): ResponseEntity<MedicalExpense> {
         logger.info("PUT /medical-expenses/$medicalExpenseId/sync-payment - Syncing payment amount")
 
@@ -756,7 +779,7 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
 
     @GetMapping("/totals/year/{year}/paid")
     fun getTotalPaidAmountByYear(
-        @PathVariable year: Int
+        @PathVariable year: Int,
     ): ResponseEntity<Map<String, BigDecimal>> {
         logger.info("GET /medical-expenses/totals/year/$year/paid - Retrieving total paid amount by year")
 

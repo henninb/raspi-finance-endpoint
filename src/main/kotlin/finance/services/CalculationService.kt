@@ -14,9 +14,8 @@ import java.math.RoundingMode
  */
 @Service
 open class CalculationService(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
 ) : ICalculationService, BaseService() {
-
     companion object {
         private const val MAX_REASONABLE_AMOUNT = 999999999.99
         private val ZERO_SCALE_2 = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
@@ -26,13 +25,14 @@ open class CalculationService(
         return try {
             logger.debug("Calculating active totals for account: $accountNameOwner")
 
-            val resultSet = executeWithResilienceSync(
-                operation = {
-                    transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
-                },
-                operationName = "calculateActiveTotalsByAccountNameOwner-$accountNameOwner",
-                timeoutSeconds = 45
-            )
+            val resultSet =
+                executeWithResilienceSync(
+                    operation = {
+                        transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
+                    },
+                    operationName = "calculateActiveTotalsByAccountNameOwner-$accountNameOwner",
+                    timeoutSeconds = 45,
+                )
 
             var totalsFuture = ZERO_SCALE_2
             var totalsCleared = ZERO_SCALE_2
@@ -71,7 +71,6 @@ open class CalculationService(
 
             meterService.incrementExceptionThrownCounter("TotalsCalculated")
             return result
-
         } catch (ex: Exception) {
             logger.error("Error calculating totals for account $accountNameOwner: ${ex.message}", ex)
             meterService.incrementExceptionCaughtCounter("TotalsCalculationError")
@@ -96,7 +95,6 @@ open class CalculationService(
 
             logger.debug("Calculated in-memory totals: $totalsMap")
             return totalsMap.toMap()
-
         } catch (ex: Exception) {
             logger.error("Error calculating totals from transactions: ${ex.message}", ex)
             meterService.incrementExceptionCaughtCounter("InMemoryTotalsCalculationError")
@@ -108,13 +106,13 @@ open class CalculationService(
         return try {
             logger.debug("Calculating grand total from totals map: $totalsMap")
 
-            val grandTotal = totalsMap.values
-                .fold(BigDecimal.ZERO) { acc, amount -> acc.add(amount) }
-                .setScale(2, RoundingMode.HALF_UP)
+            val grandTotal =
+                totalsMap.values
+                    .fold(BigDecimal.ZERO) { acc, amount -> acc.add(amount) }
+                    .setScale(2, RoundingMode.HALF_UP)
 
             logger.debug("Calculated grand total: $grandTotal")
             return grandTotal
-
         } catch (ex: Exception) {
             logger.error("Error calculating grand total: ${ex.message}", ex)
             meterService.incrementExceptionCaughtCounter("GrandTotalCalculationError")
@@ -125,29 +123,30 @@ open class CalculationService(
     override fun createTotals(
         totalsFuture: BigDecimal,
         totalsCleared: BigDecimal,
-        totalsOutstanding: BigDecimal
+        totalsOutstanding: BigDecimal,
     ): Totals {
         return try {
             logger.debug("Creating Totals object: Future=$totalsFuture, Cleared=$totalsCleared, Outstanding=$totalsOutstanding")
 
-            val grandTotal = calculateGrandTotal(
-                mapOf(
-                    TransactionState.Future to totalsFuture,
-                    TransactionState.Cleared to totalsCleared,
-                    TransactionState.Outstanding to totalsOutstanding
+            val grandTotal =
+                calculateGrandTotal(
+                    mapOf(
+                        TransactionState.Future to totalsFuture,
+                        TransactionState.Cleared to totalsCleared,
+                        TransactionState.Outstanding to totalsOutstanding,
+                    ),
                 )
-            )
 
-            val result = Totals(
-                totalsFuture = totalsFuture,
-                totalsCleared = totalsCleared,
-                totals = grandTotal,
-                totalsOutstanding = totalsOutstanding
-            )
+            val result =
+                Totals(
+                    totalsFuture = totalsFuture,
+                    totalsCleared = totalsCleared,
+                    totals = grandTotal,
+                    totalsOutstanding = totalsOutstanding,
+                )
 
             logger.debug("Created Totals object with grand total: $grandTotal")
             return result
-
         } catch (ex: Exception) {
             logger.error("Error creating Totals object: ${ex.message}", ex)
             meterService.incrementExceptionCaughtCounter("TotalsCreationError")
@@ -157,7 +156,7 @@ open class CalculationService(
                 totalsFuture = ZERO_SCALE_2,
                 totalsCleared = ZERO_SCALE_2,
                 totals = ZERO_SCALE_2,
-                totalsOutstanding = ZERO_SCALE_2
+                totalsOutstanding = ZERO_SCALE_2,
             )
         }
     }
@@ -168,9 +167,10 @@ open class CalculationService(
 
             // Validate individual amounts are within reasonable limits
             val amounts = listOf(totals.totalsFuture, totals.totalsCleared, totals.totalsOutstanding, totals.totals)
-            val allAmountsReasonable = amounts.all { amount ->
-                amount.abs().compareTo(BigDecimal(MAX_REASONABLE_AMOUNT)) <= 0
-            }
+            val allAmountsReasonable =
+                amounts.all { amount ->
+                    amount.abs().compareTo(BigDecimal(MAX_REASONABLE_AMOUNT)) <= 0
+                }
 
             if (!allAmountsReasonable) {
                 logger.warn("Totals validation failed: amounts exceed reasonable limits")
@@ -178,13 +178,14 @@ open class CalculationService(
             }
 
             // Validate that grand total equals sum of individual totals
-            val expectedGrandTotal = calculateGrandTotal(
-                mapOf(
-                    TransactionState.Future to totals.totalsFuture,
-                    TransactionState.Cleared to totals.totalsCleared,
-                    TransactionState.Outstanding to totals.totalsOutstanding
+            val expectedGrandTotal =
+                calculateGrandTotal(
+                    mapOf(
+                        TransactionState.Future to totals.totalsFuture,
+                        TransactionState.Cleared to totals.totalsCleared,
+                        TransactionState.Outstanding to totals.totalsOutstanding,
+                    ),
                 )
-            )
 
             val grandTotalMatches = totals.totals.compareTo(expectedGrandTotal) == 0
 
@@ -195,7 +196,6 @@ open class CalculationService(
 
             logger.debug("Totals validation passed")
             return true
-
         } catch (ex: Exception) {
             logger.error("Error validating totals: ${ex.message}", ex)
             meterService.incrementExceptionCaughtCounter("TotalsValidationError")
