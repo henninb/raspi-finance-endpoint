@@ -17,7 +17,7 @@ import java.util.UUID
 
 @Slf4j
 @ActiveProfiles("func")
-class PendingTransactionControllerIsolatedSpec extends BaseControllerSpec {
+class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared String endpointName = 'pending/transaction'
 

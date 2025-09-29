@@ -12,7 +12,7 @@ import spock.lang.Shared
 @Slf4j
 @ActiveProfiles("func")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class StandardizedAccountControllerSpec extends BaseControllerSpec {
+class StandardizedAccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     // ===== STANDARDIZED METHOD NAMING TESTS =====
 

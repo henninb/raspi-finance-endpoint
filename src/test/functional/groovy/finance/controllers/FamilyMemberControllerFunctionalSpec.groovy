@@ -7,7 +7,7 @@ import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 
 @ActiveProfiles("func")
-class FamilyMemberControllerIsolatedSpec extends BaseControllerSpec {
+class FamilyMemberControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     private static final String ENDPOINT = 'family-members'
 

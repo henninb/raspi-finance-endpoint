@@ -12,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 
 @ActiveProfiles("func")
-class ReceiptImageControllerIsolatedSpec extends BaseControllerSpec {
+class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared ReceiptImageTestContext receiptImageTestContext
     @Shared String endpointName = 'receipt/image'
