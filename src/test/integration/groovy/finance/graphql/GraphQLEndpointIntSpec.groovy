@@ -24,7 +24,7 @@ import java.util.*
     'spring.graphql.path=/graphql',
     'spring.main.web-application-type=servlet'
 ])
-class GraphQLIntegrationSpec extends BaseRestTemplateIntegrationSpec {
+class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
 
     // GraphQL is currently disabled in the application
     // @Autowired(required = false)

@@ -20,7 +20,7 @@ import java.util.Optional
  * Uses BaseIntegrationSpec + TestFixtures contexts + SmartTransactionBuilder
  * to avoid brittle hardcoded names and shared state.
  */
-class TransactionRepositoryMigratedIntSpec extends BaseIntegrationSpec {
+class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     TransactionRepository transactionRepository

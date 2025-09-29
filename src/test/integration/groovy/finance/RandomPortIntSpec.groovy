@@ -3,7 +3,7 @@ package finance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 
-class RandomPortSpec extends BaseRestTemplateIntegrationSpec {
+class RandomPortIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     ApplicationContext applicationContext

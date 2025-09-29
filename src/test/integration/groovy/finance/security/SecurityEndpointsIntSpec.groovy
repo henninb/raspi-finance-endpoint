@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.Date
 
 @Transactional
-class SecurityIntegrationSimpleSpec extends BaseRestTemplateIntegrationSpec {
+class SecurityEndpointsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     UserRepository userRepository

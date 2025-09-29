@@ -22,7 +22,7 @@ import java.util.Optional
  * ✅ Proper FK relationship management with TestDataManager
  * ✅ Financial validation and consistency
  */
-class AccountRepositorySimpleMigratedIntSpec extends BaseIntegrationSpec {
+class AccountRepositorySimpleIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     AccountRepository accountRepository

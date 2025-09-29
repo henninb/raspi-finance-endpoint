@@ -29,7 +29,7 @@ import java.util.Optional
  * ✅ Proper FK relationship management with TestDataManager
  * ✅ Financial amount validation and consistency
  */
-class MedicalExpenseRepositoryMigratedIntSpec extends BaseIntegrationSpec {
+class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     MedicalExpenseRepository medicalExpenseRepository

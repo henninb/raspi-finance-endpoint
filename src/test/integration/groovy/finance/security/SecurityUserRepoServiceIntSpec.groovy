@@ -9,7 +9,7 @@ import org.springframework.http.*
 import org.springframework.transaction.annotation.Transactional
 
 @Transactional
-class SecurityIntegrationWorkingSpec extends BaseRestTemplateIntegrationSpec {
+class SecurityUserRepoServiceIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     UserRepository userRepository

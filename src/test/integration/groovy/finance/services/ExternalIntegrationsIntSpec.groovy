@@ -21,7 +21,7 @@ import java.sql.Timestamp
 import java.math.BigDecimal
 
 @Transactional
-class ExternalIntegrationsSpec extends BaseRestTemplateIntegrationSpec {
+class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     MeterRegistry meterRegistry
