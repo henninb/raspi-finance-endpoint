@@ -15,7 +15,7 @@ import java.math.BigDecimal
 import java.sql.Date
 import java.util.UUID
 
-class TransferQuerySpec extends BaseIntegrationSpec {
+class TransferQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
     StandardizedTransferService transferService
@@ -102,4 +102,3 @@ class TransferQuerySpec extends BaseIntegrationSpec {
         transferService.insertTransfer(t)
     }
 }
-
