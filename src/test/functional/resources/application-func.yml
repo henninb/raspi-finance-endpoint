@@ -1,3 +1,11 @@
+server:
+  address: 0.0.0.0
+  port: 8080
+  http2:
+    enabled: true
+  tomcat:
+    connection-timeout: 10s
+
 spring:
   application:
     name: raspi-finance-endpoint
@@ -8,9 +16,7 @@ spring:
       path: /graphiql
     schema:
       printer:
-        enabled: true
-      locations: classpath:graphql/
-      file-extensions: .graphqls,.gqls
+        enabled: false
   main:
     web-application-type: servlet
 
@@ -46,9 +52,13 @@ spring:
       auto-commit: false
   flyway:
     enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
     locations: classpath:/db/migration/func
   sql:
     init:
+      continue-on-error: false
       mode: embedded
       schema-locations: classpath:/db/schema-func.sql
   h2:
