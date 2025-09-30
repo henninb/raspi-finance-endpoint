@@ -110,6 +110,38 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 - **Resilience**: Resilience4j with circuit breakers, retry logic, and time limiters
 - **Profiles**: `prod`, `stage`, `prodora`, `func`, `int`, `unit`, `perf`, `ora`, `db-resilience`
 
+#### Hibernate/Flyway Execution Order
+**CRITICAL**: Understanding the timing of Hibernate initialization vs Flyway migration execution is essential for test configuration:
+
+**Production Environment:**
+- Flyway runs first during Spring Boot startup
+- Creates/migrates database schema via migration files
+- Hibernate then validates against the existing schema (`ddl-auto: validate`)
+
+**Test Environments:**
+- **Functional Tests** (`application-func.yml`):
+  - Uses `hibernate.ddl-auto: create`
+  - Hibernate creates schema structure first during Spring context initialization
+  - Flyway runs afterward for data migrations and additional schema changes
+  - **Result**: Schema exists when Flyway executes
+
+- **Integration Tests** (`application-int.yml`):
+  - Uses `hibernate.ddl-auto: create` (fixed from previous `validate` setting)
+  - Follows same pattern as functional tests for consistency
+  - **Previous Issue**: When set to `validate`, Hibernate tried to validate against empty database before Flyway could run
+  - **Solution**: Changed to `create` to match functional test pattern
+
+**Key Timing Rules:**
+1. Hibernate initialization happens during Spring Boot context startup
+2. Manual Flyway calls in `setupSpec()` run **after** Spring context is fully loaded
+3. If Hibernate uses `ddl-auto: validate`, the schema must already exist before context loading
+4. If Hibernate uses `ddl-auto: create`, it creates schema first, allowing subsequent Flyway execution
+
+**Configuration Requirements:**
+- **Production**: `ddl-auto: validate` + Flyway auto-migration during startup
+- **Tests**: `ddl-auto: create` + optional Flyway for additional migrations
+- **Never**: Manual Flyway calls cannot fix schema validation failures during context initialization
+
 ### Test Strategy
 - **Unit Tests**: Spock specs in `src/test/unit/groovy/`
   - **DTO Unit Tests**: Comprehensive validation testing in `src/test/unit/groovy/finance/controllers/dto/`

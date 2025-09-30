@@ -20,7 +20,45 @@ This guide outlines the migration strategy to transform the current integration 
 - HTTP endpoint testing
 - End-to-end scenarios
 
-## CURRENT MIGRATION STATUS (Updated 2025-09-06)
+## CURRENT MIGRATION STATUS (Updated 2025-09-30)
+
+### 🔧 **CRITICAL: Hibernate/Flyway Execution Order for Integration Tests**
+
+**BREAKING DISCOVERY (2025-09-30)**: Integration tests were failing due to incorrect Hibernate/Flyway execution timing. This issue was resolved by understanding Spring Boot context initialization order:
+
+**Production Environment Pattern:**
+- Flyway auto-migration runs during Spring Boot startup
+- Creates/migrates database schema via migration files
+- Hibernate validates against existing schema (`ddl-auto: validate`)
+
+**Integration Test Pattern (FIXED):**
+- **Previous Issue**: Used `hibernate.ddl-auto: validate` but no schema existed before Spring context initialization
+- **Root Cause**: Hibernate schema validation occurs during Spring Boot context startup, before manual Flyway calls in `setupSpec()`
+- **Solution**: Changed to `hibernate.ddl-auto: create` to match functional test pattern
+
+**Integration Test Configuration Fix**:
+```yaml
+# application-int.yml - CRITICAL SETTING
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create  # CHANGED from 'validate' - allows schema creation before Flyway
+  sql:
+    init:
+      mode: embedded     # FIXED from 'never' - enables SQL initialization
+```
+
+**Key Timing Rules Discovered**:
+1. **Hibernate initialization happens during Spring Boot context startup**
+2. **Manual Flyway calls in `setupSpec()` run AFTER Spring context is fully loaded**
+3. **If Hibernate uses `ddl-auto: validate`, schema must exist before context loading**
+4. **If Hibernate uses `ddl-auto: create`, it creates schema first, allowing subsequent Flyway execution**
+
+**Implications for Integration Test Architecture**:
+- Integration tests now follow same pattern as functional tests
+- Both test environments use `ddl-auto: create` for H2 compatibility
+- Production continues using `ddl-auto: validate` with Flyway auto-migration
+- All three environments now work consistently without manual Flyway injection
 
 ### 📊 **Migration Progress Summary**
 
