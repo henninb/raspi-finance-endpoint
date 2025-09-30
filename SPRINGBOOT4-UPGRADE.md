@@ -69,6 +69,45 @@ integrationTestImplementation("org.springframework.boot:spring-boot-starter-rest
 functionalTestImplementation("org.springframework.boot:spring-boot-starter-restclient:${springBootVersion}")
 ```
 
+## Critical Database Configuration Discovery (2025-09-30)
+
+### Hibernate/Flyway Execution Order During Spring Boot Context Initialization
+
+**BREAKING DISCOVERY**: A critical timing issue was discovered and resolved regarding the interaction between Hibernate DDL auto-configuration and Flyway migration execution during Spring Boot context initialization.
+
+**The Problem**:
+- **Integration Tests** were consistently failing with schema validation errors
+- **Root Cause**: Hibernate schema validation (`ddl-auto: validate`) occurs during Spring Boot context startup, before any manual Flyway calls in test `setupSpec()` methods
+- **Timing Issue**: Manual Flyway execution happens AFTER Spring context is fully loaded, too late for Hibernate validation
+
+**The Solution**:
+```yaml
+# Integration Test Configuration (application-int.yml)
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create  # CHANGED from 'validate' - creates schema before validation
+  sql:
+    init:
+      mode: embedded     # FIXED from 'never' - enables SQL initialization
+```
+
+**Key Timing Rules for Spring Boot 4.0**:
+1. **Hibernate initialization occurs during Spring Boot context startup**
+2. **Manual Flyway calls in `setupSpec()` run AFTER context is fully loaded**
+3. **`ddl-auto: validate` requires existing schema before context loading**
+4. **`ddl-auto: create` creates schema first, allowing subsequent Flyway execution**
+
+**Environment-Specific Patterns**:
+- **Production**: `ddl-auto: validate` + Flyway auto-migration during startup
+- **Functional Tests**: `ddl-auto: create` + optional Flyway for additional migrations
+- **Integration Tests**: `ddl-auto: create` + optional Flyway for additional migrations
+
+**Configuration Consistency Achieved**:
+- Integration and functional tests now use identical H2/Hibernate patterns
+- Production maintains existing Flyway-first approach with schema validation
+- All three environments work consistently without manual Flyway injection in test code
+
 ## Test Infrastructure Issues Requiring Resolution
 
 The application is fully functional, but test infrastructure needs optimization to achieve higher test success rates.
