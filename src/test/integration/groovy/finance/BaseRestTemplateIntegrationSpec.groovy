@@ -23,7 +23,7 @@ import spock.lang.AutoCleanup
 
 @Slf4j
 @ActiveProfiles("int")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = Application)
 @TestPropertySource(properties = [
     "server.port=0",

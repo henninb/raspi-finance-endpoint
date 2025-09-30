@@ -19,7 +19,7 @@ import spock.lang.Specification
 
 @Slf4j
 @ActiveProfiles("int")
-@SpringBootTest
+@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(classes = Application)
 @EnableSharedInjection
 @Transactional
