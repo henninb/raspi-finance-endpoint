@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 open class OpenApiConfig {
     @Bean
-    open fun customOpenAPI(): OpenAPI {
-        return OpenAPI()
+    open fun customOpenAPI(): OpenAPI =
+        OpenAPI()
             .info(
                 Info()
                     .title("Raspi Finance API")
@@ -26,24 +26,20 @@ open class OpenApiConfig {
                             .name("Brian Henning")
                             .email("henninb@msn.com")
                             .url("https://github.com/henninb/raspi-finance-endpoint"),
-                    )
-                    .license(
+                    ).license(
                         License()
                             .name("MIT License")
                             .url("https://opensource.org/licenses/MIT"),
                     ),
-            )
-            .addServersItem(
+            ).addServersItem(
                 Server()
                     .url("https://finance.bhenning.com")
                     .description("Production server"),
-            )
-            .addServersItem(
+            ).addServersItem(
                 Server()
                     .url("http://localhost:8080")
                     .description("Development server"),
-            )
-            .components(
+            ).components(
                 Components()
                     .addSecuritySchemes(
                         "bearerAuth",
@@ -53,9 +49,7 @@ open class OpenApiConfig {
                             .bearerFormat("JWT")
                             .description("JWT Bearer Token Authentication"),
                     ),
-            )
-            .addSecurityItem(
+            ).addSecurityItem(
                 SecurityRequirement().addList("bearerAuth"),
             )
-    }
 }

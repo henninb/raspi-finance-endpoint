@@ -6,12 +6,10 @@ import jakarta.persistence.Converter
 
 @Converter
 class AccountTypeConverter : AttributeConverter<AccountType, String> {
-    override fun convertToDatabaseColumn(attribute: AccountType): String {
-        return attribute.label
-    }
+    override fun convertToDatabaseColumn(attribute: AccountType): String = attribute.label
 
-    override fun convertToEntityAttribute(attribute: String): AccountType {
-        return when (attribute.trim().lowercase()) {
+    override fun convertToEntityAttribute(attribute: String): AccountType =
+        when (attribute.trim().lowercase()) {
             // Existing types (preserve compatibility)
             "credit" -> AccountType.Credit
             "debit" -> AccountType.Debit
@@ -60,5 +58,4 @@ class AccountTypeConverter : AttributeConverter<AccountType, String> {
 
             else -> throw RuntimeException("Unknown account type attribute: $attribute")
         }
-    }
 }

@@ -51,8 +51,7 @@ open class WebSecurityConfig(
                 auth.requestMatchers("/api/**").authenticated()
                 auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
                 auth.anyRequest().permitAll()
-            }
-            .formLogin { it.disable() }
+            }.formLogin { it.disable() }
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter::class.java)
         val chain = http.build()
@@ -77,24 +76,19 @@ open class WebSecurityConfig(
 
     // Prevent Boot from auto-registering these filters with the servlet container; they are managed by SecurityFilterChain
     @Bean
-    open fun jwtFilterRegistration(jwtAuthenticationFilter: JwtAuthenticationFilter): FilterRegistrationBean<JwtAuthenticationFilter> =
-        FilterRegistrationBean<JwtAuthenticationFilter>(jwtAuthenticationFilter).apply { isEnabled = false }
+    open fun jwtFilterRegistration(jwtAuthenticationFilter: JwtAuthenticationFilter): FilterRegistrationBean<JwtAuthenticationFilter> = FilterRegistrationBean<JwtAuthenticationFilter>(jwtAuthenticationFilter).apply { isEnabled = false }
 
     @Bean
-    open fun rateLimitFilterRegistration(rateLimitingFilter: RateLimitingFilter): FilterRegistrationBean<RateLimitingFilter> =
-        FilterRegistrationBean<RateLimitingFilter>(rateLimitingFilter).apply { isEnabled = false }
+    open fun rateLimitFilterRegistration(rateLimitingFilter: RateLimitingFilter): FilterRegistrationBean<RateLimitingFilter> = FilterRegistrationBean<RateLimitingFilter>(rateLimitingFilter).apply { isEnabled = false }
 
     @Bean
-    open fun securityAuditFilterRegistration(securityAuditFilter: SecurityAuditFilter): FilterRegistrationBean<SecurityAuditFilter> =
-        FilterRegistrationBean<SecurityAuditFilter>(securityAuditFilter).apply { isEnabled = false }
+    open fun securityAuditFilterRegistration(securityAuditFilter: SecurityAuditFilter): FilterRegistrationBean<SecurityAuditFilter> = FilterRegistrationBean<SecurityAuditFilter>(securityAuditFilter).apply { isEnabled = false }
 
     @Bean
-    open fun httpErrorLoggingFilterRegistration(httpErrorLoggingFilter: HttpErrorLoggingFilter): FilterRegistrationBean<HttpErrorLoggingFilter> =
-        FilterRegistrationBean<HttpErrorLoggingFilter>(httpErrorLoggingFilter).apply { isEnabled = false }
+    open fun httpErrorLoggingFilterRegistration(httpErrorLoggingFilter: HttpErrorLoggingFilter): FilterRegistrationBean<HttpErrorLoggingFilter> = FilterRegistrationBean<HttpErrorLoggingFilter>(httpErrorLoggingFilter).apply { isEnabled = false }
 
     @Bean
-    open fun loggingCorsFilterRegistration(loggingCorsFilter: LoggingCorsFilter): FilterRegistrationBean<LoggingCorsFilter> =
-        FilterRegistrationBean<LoggingCorsFilter>(loggingCorsFilter).apply { isEnabled = false }
+    open fun loggingCorsFilterRegistration(loggingCorsFilter: LoggingCorsFilter): FilterRegistrationBean<LoggingCorsFilter> = FilterRegistrationBean<LoggingCorsFilter>(loggingCorsFilter).apply { isEnabled = false }
 
     @Bean
     open fun corsConfigurationSource(): CorsConfigurationSource {

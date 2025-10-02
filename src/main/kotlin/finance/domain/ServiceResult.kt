@@ -8,7 +8,9 @@ sealed class ServiceResult<T> {
     /**
      * Represents a successful operation with data
      */
-    data class Success<T>(val data: T) : ServiceResult<T>() {
+    data class Success<T>(
+        val data: T,
+    ) : ServiceResult<T>() {
         companion object {
             @JvmStatic
             fun <T> of(data: T): Success<T> = Success(data)
@@ -18,7 +20,9 @@ sealed class ServiceResult<T> {
     /**
      * Represents a not found error
      */
-    data class NotFound<T>(val message: String) : ServiceResult<T>() {
+    data class NotFound<T>(
+        val message: String,
+    ) : ServiceResult<T>() {
         companion object {
             @JvmStatic
             fun <T> of(message: String): NotFound<T> = NotFound(message)
@@ -28,7 +32,9 @@ sealed class ServiceResult<T> {
     /**
      * Represents validation errors with field-specific error messages
      */
-    data class ValidationError<T>(val errors: Map<String, String>) : ServiceResult<T>() {
+    data class ValidationError<T>(
+        val errors: Map<String, String>,
+    ) : ServiceResult<T>() {
         companion object {
             @JvmStatic
             fun <T> of(errors: Map<String, String>): ValidationError<T> = ValidationError(errors)
@@ -38,7 +44,10 @@ sealed class ServiceResult<T> {
     /**
      * Represents business logic errors with error codes
      */
-    data class BusinessError<T>(val message: String, val errorCode: String) : ServiceResult<T>() {
+    data class BusinessError<T>(
+        val message: String,
+        val errorCode: String,
+    ) : ServiceResult<T>() {
         companion object {
             @JvmStatic
             fun <T> of(
@@ -51,7 +60,9 @@ sealed class ServiceResult<T> {
     /**
      * Represents system/technical errors with exception details
      */
-    data class SystemError<T>(val exception: Exception) : ServiceResult<T>() {
+    data class SystemError<T>(
+        val exception: Exception,
+    ) : ServiceResult<T>() {
         companion object {
             @JvmStatic
             fun <T> of(exception: Exception): SystemError<T> = SystemError(exception)

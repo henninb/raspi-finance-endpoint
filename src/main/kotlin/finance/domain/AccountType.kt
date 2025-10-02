@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class AccountType(val label: String, val category: String) {
+enum class AccountType(
+    val label: String,
+    val category: String,
+) {
     // Existing types (preserve compatibility)
     @JsonProperty("credit")
     Credit("credit", "liability"),
@@ -107,14 +110,19 @@ enum class AccountType(val label: String, val category: String) {
     override fun toString(): String = name.lowercase()
 
     companion object {
+        @JvmStatic
         fun getAssetTypes(): List<AccountType> = values().filter { it.category == "asset" }
 
+        @JvmStatic
         fun getLiabilityTypes(): List<AccountType> = values().filter { it.category == "liability" }
 
+        @JvmStatic
         fun getMedicalTypes(): List<AccountType> = listOf(HSA, FSA, MedicalSavings)
 
+        @JvmStatic
         fun getInvestmentTypes(): List<AccountType> = listOf(Brokerage, Retirement401k, RetirementIRA, RetirementRoth, Pension)
 
+        @JvmStatic
         fun getBusinessTypes(): List<AccountType> = listOf(BusinessChecking, BusinessSavings, BusinessCredit)
     }
 }

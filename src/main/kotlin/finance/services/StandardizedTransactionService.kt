@@ -48,14 +48,13 @@ class StandardizedTransactionService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Transaction>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Transaction>> =
+        handleServiceOperation("findAllActive", null) {
             transactionRepository.findAll().filter { it.activeStatus }
         }
-    }
 
-    override fun findById(id: String): ServiceResult<Transaction> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: String): ServiceResult<Transaction> =
+        handleServiceOperation("findById", id) {
             val optionalTransaction = transactionRepository.findByGuid(id)
             if (optionalTransaction.isPresent) {
                 optionalTransaction.get()
@@ -63,10 +62,9 @@ class StandardizedTransactionService(
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Transaction): ServiceResult<Transaction> {
-        return handleServiceOperation("save", entity.guid) {
+    override fun save(entity: Transaction): ServiceResult<Transaction> =
+        handleServiceOperation("save", entity.guid) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -90,10 +88,9 @@ class StandardizedTransactionService(
 
             transactionRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: Transaction): ServiceResult<Transaction> {
-        return handleServiceOperation("update", entity.guid) {
+    override fun update(entity: Transaction): ServiceResult<Transaction> =
+        handleServiceOperation("update", entity.guid) {
             val existingTransaction = transactionRepository.findByGuid(entity.guid)
             if (existingTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: ${entity.guid}")
@@ -107,10 +104,9 @@ class StandardizedTransactionService(
             // Use existing masterTransactionUpdater logic
             masterTransactionUpdater(existingTransaction.get(), entity)
         }
-    }
 
-    override fun deleteById(id: String): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: String): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalTransaction = transactionRepository.findByGuid(id)
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $id")
@@ -118,7 +114,6 @@ class StandardizedTransactionService(
             transactionRepository.delete(optionalTransaction.get())
             true
         }
-    }
 
     // ===== Business-Specific ServiceResult Methods =====
 
@@ -146,38 +141,35 @@ class StandardizedTransactionService(
         }
     }
 
-    fun findTransactionsByCategoryStandardized(categoryName: String): ServiceResult<List<Transaction>> {
-        return handleServiceOperation("findTransactionsByCategory", categoryName) {
+    fun findTransactionsByCategoryStandardized(categoryName: String): ServiceResult<List<Transaction>> =
+        handleServiceOperation("findTransactionsByCategory", categoryName) {
             val transactions = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName)
             transactions.ifEmpty { emptyList() }
         }
-    }
 
-    fun findTransactionsByDescriptionStandardized(descriptionName: String): ServiceResult<List<Transaction>> {
-        return handleServiceOperation("findTransactionsByDescription", descriptionName) {
+    fun findTransactionsByDescriptionStandardized(descriptionName: String): ServiceResult<List<Transaction>> =
+        handleServiceOperation("findTransactionsByDescription", descriptionName) {
             val transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName)
             transactions.ifEmpty { emptyList() }
         }
-    }
 
     fun findTransactionsByDateRangeStandardized(
         startDate: Date,
         endDate: Date,
         pageable: Pageable,
-    ): ServiceResult<Page<Transaction>> {
-        return handleServiceOperation("findTransactionsByDateRange", null) {
+    ): ServiceResult<Page<Transaction>> =
+        handleServiceOperation("findTransactionsByDateRange", null) {
             if (startDate.after(endDate)) {
                 throw IllegalStateException("startDate must be before or equal to endDate")
             }
             transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable)
         }
-    }
 
     fun updateTransactionStateStandardized(
         guid: String,
         transactionState: TransactionState,
-    ): ServiceResult<Transaction> {
-        return handleServiceOperation("updateTransactionState", guid) {
+    ): ServiceResult<Transaction> =
+        handleServiceOperation("updateTransactionState", guid) {
             val transactionOptional = transactionRepository.findByGuid(guid)
             if (transactionOptional.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $guid")
@@ -199,13 +191,12 @@ class StandardizedTransactionService(
             transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             transactionRepository.saveAndFlush(transaction)
         }
-    }
 
     fun changeAccountNameOwnerStandardized(
         accountNameOwner: String,
         guid: String,
-    ): ServiceResult<Transaction> {
-        return handleServiceOperation("changeAccountNameOwner", guid) {
+    ): ServiceResult<Transaction> =
+        handleServiceOperation("changeAccountNameOwner", guid) {
             val accountOptional = accountService.account(accountNameOwner)
             val transactionOptional = transactionRepository.findByGuid(guid)
 
@@ -220,7 +211,6 @@ class StandardizedTransactionService(
             transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             transactionRepository.saveAndFlush(transaction)
         }
-    }
 
     fun updateTransactionReceiptImageByGuidStandardized(
         guid: String,
@@ -276,8 +266,8 @@ class StandardizedTransactionService(
         }
     }
 
-    fun createFutureTransactionStandardized(transaction: Transaction): ServiceResult<Transaction> {
-        return handleServiceOperation("createFutureTransaction", transaction.guid) {
+    fun createFutureTransactionStandardized(transaction: Transaction): ServiceResult<Transaction> =
+        handleServiceOperation("createFutureTransaction", transaction.guid) {
             val calendarTransactionDate = Calendar.getInstance()
             val calendarDueDate = Calendar.getInstance()
             calendarTransactionDate.time = transaction.transactionDate
@@ -313,7 +303,6 @@ class StandardizedTransactionService(
             }
             transactionFuture
         }
-    }
 
     // ===== Legacy Method Compatibility =====
 
@@ -347,9 +336,7 @@ class StandardizedTransactionService(
         }
     }
 
-    fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
-        return calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
-    }
+    fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals = calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
 
     fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
         val result = findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)
@@ -424,13 +411,9 @@ class StandardizedTransactionService(
     fun createThumbnail(
         rawImage: ByteArray,
         imageFormatType: ImageFormatType,
-    ): ByteArray {
-        return imageProcessingService.createThumbnail(rawImage, imageFormatType)
-    }
+    ): ByteArray = imageProcessingService.createThumbnail(rawImage, imageFormatType)
 
-    fun getImageFormatType(rawImage: ByteArray): ImageFormatType {
-        return imageProcessingService.getImageFormatType(rawImage)
-    }
+    fun getImageFormatType(rawImage: ByteArray): ImageFormatType = imageProcessingService.getImageFormatType(rawImage)
 
     fun createFutureTransaction(transaction: Transaction): Transaction {
         val result = createFutureTransactionStandardized(transaction)
@@ -465,7 +448,9 @@ class StandardizedTransactionService(
         val result = findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
         return when (result) {
             is ServiceResult.Success -> result.data
-            else -> org.springframework.data.domain.Page.empty(pageable)
+            else ->
+                org.springframework.data.domain.Page
+                    .empty(pageable)
         }
     }
 

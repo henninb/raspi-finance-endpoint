@@ -33,7 +33,8 @@ open class DatabaseResilienceConfiguration {
     @Bean
     open fun databaseCircuitBreaker(): CircuitBreaker {
         val config =
-            CircuitBreakerConfig.custom()
+            CircuitBreakerConfig
+                .custom()
                 .failureRateThreshold(50.0f)
                 .waitDurationInOpenState(Duration.ofSeconds(60))
                 .slidingWindowSize(10)
@@ -45,8 +46,7 @@ open class DatabaseResilienceConfiguration {
                     SQLException::class.java,
                     DataAccessResourceFailureException::class.java,
                     CannotGetJdbcConnectionException::class.java,
-                )
-                .build()
+                ).build()
 
         val circuitBreaker = CircuitBreaker.of("database", config)
 
@@ -57,11 +57,9 @@ open class DatabaseResilienceConfiguration {
                     event.stateTransition.fromState,
                     event.stateTransition.toState,
                 )
-            }
-            .onFailureRateExceeded { event ->
+            }.onFailureRateExceeded { event ->
                 logger.error("Circuit breaker failure rate exceeded: {}%", event.failureRate)
-            }
-            .onCallNotPermitted { event ->
+            }.onCallNotPermitted { event ->
                 logger.warn("Circuit breaker call not permitted: {}", event.creationTime)
             }
 
@@ -71,19 +69,18 @@ open class DatabaseResilienceConfiguration {
     @Bean
     open fun databaseRetry(): Retry {
         val config =
-            RetryConfig.custom<Any>()
+            RetryConfig
+                .custom<Any>()
                 .maxAttempts(3)
                 .waitDuration(Duration.ofSeconds(1))
                 .retryExceptions(
                     SQLException::class.java,
                     DataAccessResourceFailureException::class.java,
                     CannotGetJdbcConnectionException::class.java,
-                )
-                .ignoreExceptions(
+                ).ignoreExceptions(
                     jakarta.validation.ValidationException::class.java,
                     IllegalArgumentException::class.java,
-                )
-                .build()
+                ).build()
 
         val retry = Retry.of("database", config)
 
@@ -102,7 +99,8 @@ open class DatabaseResilienceConfiguration {
     @Bean
     open fun databaseTimeLimiter(): TimeLimiter {
         val config =
-            TimeLimiterConfig.custom()
+            TimeLimiterConfig
+                .custom()
                 .timeoutDuration(Duration.ofSeconds(30))
                 .cancelRunningFuture(true)
                 .build()
@@ -118,14 +116,13 @@ open class DatabaseResilienceConfiguration {
     }
 
     @Bean
-    open fun scheduledExecutorService(): ScheduledExecutorService {
-        return Executors.newScheduledThreadPool(4) { runnable ->
+    open fun scheduledExecutorService(): ScheduledExecutorService =
+        Executors.newScheduledThreadPool(4) { runnable ->
             Thread(runnable).apply {
                 isDaemon = true
                 name = "db-resilience-scheduler"
             }
         }
-    }
 
     // TODO: HealthIndicator API changed in Spring Boot 4.0.0-M1
     // @Bean

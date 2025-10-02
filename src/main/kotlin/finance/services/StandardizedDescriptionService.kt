@@ -24,8 +24,8 @@ class StandardizedDescriptionService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Description>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Description>> =
+        handleServiceOperation("findAllActive", null) {
             val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
             descriptions.map { description ->
                 val count = transactionRepository.countByDescriptionName(description.descriptionName)
@@ -33,10 +33,9 @@ class StandardizedDescriptionService(
                 description
             }
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<Description> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<Description> =
+        handleServiceOperation("findById", id) {
             val optionalDescription = descriptionRepository.findByDescriptionId(id)
             if (optionalDescription.isPresent) {
                 optionalDescription.get()
@@ -44,10 +43,9 @@ class StandardizedDescriptionService(
                 throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Description): ServiceResult<Description> {
-        return handleServiceOperation("save", entity.descriptionId) {
+    override fun save(entity: Description): ServiceResult<Description> =
+        handleServiceOperation("save", entity.descriptionId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -60,10 +58,9 @@ class StandardizedDescriptionService(
 
             descriptionRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: Description): ServiceResult<Description> {
-        return handleServiceOperation("update", entity.descriptionId) {
+    override fun update(entity: Description): ServiceResult<Description> =
+        handleServiceOperation("update", entity.descriptionId) {
             val existingDescription = descriptionRepository.findByDescriptionId(entity.descriptionId!!)
             if (existingDescription.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Description not found: ${entity.descriptionId}")
@@ -77,10 +74,9 @@ class StandardizedDescriptionService(
 
             descriptionRepository.saveAndFlush(descriptionToUpdate)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalDescription = descriptionRepository.findByDescriptionId(id)
             if (optionalDescription.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
@@ -88,12 +84,11 @@ class StandardizedDescriptionService(
             descriptionRepository.delete(optionalDescription.get())
             true
         }
-    }
 
     // ===== ServiceResult Business Methods for Controller =====
 
-    fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> {
-        return handleServiceOperation("findByDescriptionName", null) {
+    fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
+        handleServiceOperation("findByDescriptionName", null) {
             val optionalDescription = descriptionRepository.findByDescriptionName(descriptionName)
             if (optionalDescription.isPresent) {
                 val description = optionalDescription.get()
@@ -104,10 +99,9 @@ class StandardizedDescriptionService(
                 throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
             }
         }
-    }
 
-    fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteByDescriptionName", null) {
+    fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Boolean> =
+        handleServiceOperation("deleteByDescriptionName", null) {
             val optionalDescription = descriptionRepository.findByDescriptionName(descriptionName)
             if (optionalDescription.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
@@ -115,7 +109,6 @@ class StandardizedDescriptionService(
             descriptionRepository.delete(optionalDescription.get())
             true
         }
-    }
 
     // ===== Legacy Method Compatibility =====
 
@@ -133,37 +126,37 @@ class StandardizedDescriptionService(
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
                 val violations =
-                    result.errors.map { (field, message) ->
-                        object : jakarta.validation.ConstraintViolation<Description> {
-                            override fun getMessage(): String = message
+                    result.errors
+                        .map { (field, message) ->
+                            object : jakarta.validation.ConstraintViolation<Description> {
+                                override fun getMessage(): String = message
 
-                            override fun getMessageTemplate(): String = message
+                                override fun getMessageTemplate(): String = message
 
-                            override fun getRootBean(): Description = description
+                                override fun getRootBean(): Description = description
 
-                            override fun getRootBeanClass(): Class<Description> = Description::class.java
+                                override fun getRootBeanClass(): Class<Description> = Description::class.java
 
-                            override fun getLeafBean(): Any = description
+                                override fun getLeafBean(): Any = description
 
-                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+                                override fun getExecutableParameters(): Array<Any> = emptyArray()
 
-                            override fun getExecutableReturnValue(): Any? = null
+                                override fun getExecutableReturnValue(): Any? = null
 
-                            override fun getPropertyPath(): jakarta.validation.Path {
-                                return object : jakarta.validation.Path {
-                                    override fun toString(): String = field
+                                override fun getPropertyPath(): jakarta.validation.Path =
+                                    object : jakarta.validation.Path {
+                                        override fun toString(): String = field
 
-                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                }
+                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                    }
+
+                                override fun getInvalidValue(): Any? = null
+
+                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                             }
-
-                            override fun getInvalidValue(): Any? = null
-
-                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                        }
-                    }.toSet()
+                        }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
             is ServiceResult.BusinessError -> {
@@ -177,13 +170,9 @@ class StandardizedDescriptionService(
         }
     }
 
-    fun findByDescriptionName(descriptionName: String): Optional<Description> {
-        return descriptionRepository.findByDescriptionName(descriptionName)
-    }
+    fun findByDescriptionName(descriptionName: String): Optional<Description> = descriptionRepository.findByDescriptionName(descriptionName)
 
-    fun description(descriptionName: String): Optional<Description> {
-        return findByDescriptionName(descriptionName)
-    }
+    fun description(descriptionName: String): Optional<Description> = findByDescriptionName(descriptionName)
 
     fun mergeDescriptions(
         targetName: String,

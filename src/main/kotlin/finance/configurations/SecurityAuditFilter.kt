@@ -49,17 +49,24 @@ class SecurityAuditFilter(
                 logSecurityAuditEvent(request, response, "AFTER_REQUEST", responseTime)
 
                 // Increment security audit counter
-                Counter.builder("security.audit.endpoint.access")
+                Counter
+                    .builder("security.audit.endpoint.access")
                     .description("Security audit events for sensitive endpoint access")
                     .tags(
                         listOf(
                             Tag.of("endpoint", sanitizeEndpoint(requestUri)),
                             Tag.of("method", method),
                             Tag.of("status", response.status.toString()),
-                            Tag.of("authenticated", SecurityContextHolder.getContext().authentication?.isAuthenticated.toString()),
+                            Tag.of(
+                                "authenticated",
+                                SecurityContextHolder
+                                    .getContext()
+                                    .authentication
+                                    ?.isAuthenticated
+                                    .toString(),
+                            ),
                         ),
-                    )
-                    .register(meterRegistry)
+                    ).register(meterRegistry)
                     .increment()
             }
 
@@ -79,7 +86,8 @@ class SecurityAuditFilter(
                     responseTime,
                 )
 
-                Counter.builder("security.audit.http.4xx")
+                Counter
+                    .builder("security.audit.http.4xx")
                     .description("Count of 4xx responses observed by security audit filter")
                     .tags(
                         listOf(
@@ -88,8 +96,7 @@ class SecurityAuditFilter(
                             Tag.of("endpoint", sanitizeEndpoint(requestUri)),
                             Tag.of("authenticated", isAuthenticated.toString()),
                         ),
-                    )
-                    .register(meterRegistry)
+                    ).register(meterRegistry)
                     .increment()
             }
         }
@@ -156,8 +163,15 @@ class SecurityAuditFilter(
 
         securityLogger.info(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} status={} responseTime={}ms userAgent='{}'",
-            auditType, phase, username, request.requestURI, request.method, clientIp,
-            response.status, responseTime, userAgent ?: "unknown",
+            auditType,
+            phase,
+            username,
+            request.requestURI,
+            request.method,
+            clientIp,
+            response.status,
+            responseTime,
+            userAgent ?: "unknown",
         )
     }
 
@@ -172,13 +186,11 @@ class SecurityAuditFilter(
         }
     }
 
-    private fun sanitizeUserAgent(userAgent: String?): String? {
-        return userAgent?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
-    }
+    private fun sanitizeUserAgent(userAgent: String?): String? = userAgent?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
 
-    private fun sanitizeEndpoint(uri: String): String {
-        return uri.replace(Regex("/\\d+"), "/{id}")
+    private fun sanitizeEndpoint(uri: String): String =
+        uri
+            .replace(Regex("/\\d+"), "/{id}")
             .replace(Regex("/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"), "/{uuid}")
             .take(50)
-    }
 }

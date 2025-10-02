@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class MedicalProviderType(val label: String) {
+enum class MedicalProviderType(
+    val label: String,
+) {
     @JsonProperty("general")
     General("general"),
 

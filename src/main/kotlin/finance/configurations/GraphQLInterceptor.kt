@@ -16,8 +16,9 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
     override fun intercept(
         request: WebGraphQlRequest,
         chain: WebGraphQlInterceptor.Chain,
-    ): Mono<WebGraphQlResponse> {
-        return chain.next(request)
+    ): Mono<WebGraphQlResponse> =
+        chain
+            .next(request)
             .doOnNext { response ->
                 try {
                     val executionResult = response.executionResult
@@ -73,9 +74,7 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
                 } catch (e: Exception) {
                     logger.error("Error in GraphQL response interceptor", e)
                 }
-            }
-            .doOnError { error ->
+            }.doOnError { error ->
                 logger.error("GraphQL request failed completely", error)
             }
-    }
 }

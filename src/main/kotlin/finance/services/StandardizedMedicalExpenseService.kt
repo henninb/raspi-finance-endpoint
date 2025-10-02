@@ -24,21 +24,19 @@ class StandardizedMedicalExpenseService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<MedicalExpense>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<MedicalExpense>> =
+        handleServiceOperation("findAllActive", null) {
             medicalExpenseRepository.findByActiveStatusTrueOrderByServiceDateDesc()
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<MedicalExpense> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<MedicalExpense> =
+        handleServiceOperation("findById", id) {
             val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(id)
             medicalExpense ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: $id")
         }
-    }
 
-    override fun save(entity: MedicalExpense): ServiceResult<MedicalExpense> {
-        return handleServiceOperation("save", entity.medicalExpenseId) {
+    override fun save(entity: MedicalExpense): ServiceResult<MedicalExpense> =
+        handleServiceOperation("save", entity.medicalExpenseId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -56,27 +54,24 @@ class StandardizedMedicalExpenseService(
 
             medicalExpenseRepository.save(entity)
         }
-    }
 
-    override fun update(entity: MedicalExpense): ServiceResult<MedicalExpense> {
-        return handleServiceOperation("update", entity.medicalExpenseId) {
+    override fun update(entity: MedicalExpense): ServiceResult<MedicalExpense> =
+        handleServiceOperation("update", entity.medicalExpenseId) {
             val existingExpense =
                 medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(entity.medicalExpenseId!!)
                     ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: ${entity.medicalExpenseId}")
 
             medicalExpenseRepository.save(entity)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val updatedRows = medicalExpenseRepository.softDeleteByMedicalExpenseId(id)
             if (updatedRows == 0) {
                 throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: $id")
             }
             true
         }
-    }
 
     // ===== Legacy Method Compatibility =====
 

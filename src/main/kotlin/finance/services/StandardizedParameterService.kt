@@ -19,14 +19,13 @@ class StandardizedParameterService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Parameter>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Parameter>> =
+        handleServiceOperation("findAllActive", null) {
             parameterRepository.findByActiveStatusIsTrue()
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<Parameter> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<Parameter> =
+        handleServiceOperation("findById", id) {
             val optionalParameter = parameterRepository.findById(id)
             if (optionalParameter.isPresent) {
                 optionalParameter.get()
@@ -34,20 +33,18 @@ class StandardizedParameterService(
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Parameter): ServiceResult<Parameter> {
-        return handleServiceOperation("save", entity.parameterId) {
+    override fun save(entity: Parameter): ServiceResult<Parameter> =
+        handleServiceOperation("save", entity.parameterId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
             }
             parameterRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: Parameter): ServiceResult<Parameter> {
-        return handleServiceOperation("update", entity.parameterId) {
+    override fun update(entity: Parameter): ServiceResult<Parameter> =
+        handleServiceOperation("update", entity.parameterId) {
             val existingParameter = parameterRepository.findById(entity.parameterId!!)
             if (existingParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: ${entity.parameterId}")
@@ -62,10 +59,9 @@ class StandardizedParameterService(
 
             parameterRepository.saveAndFlush(parameterToUpdate)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalParameter = parameterRepository.findById(id)
             if (optionalParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $id")
@@ -73,13 +69,12 @@ class StandardizedParameterService(
             parameterRepository.delete(optionalParameter.get())
             true
         }
-    }
 
     /**
      * ServiceResult version of findByParameterName for modern controller usage
      */
-    fun findByParameterNameStandardized(parameterName: String): ServiceResult<Parameter> {
-        return handleServiceOperation("findByParameterName", null) {
+    fun findByParameterNameStandardized(parameterName: String): ServiceResult<Parameter> =
+        handleServiceOperation("findByParameterName", null) {
             val optionalParameter = parameterRepository.findByParameterName(parameterName)
             if (optionalParameter.isPresent) {
                 optionalParameter.get()
@@ -87,13 +82,12 @@ class StandardizedParameterService(
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $parameterName")
             }
         }
-    }
 
     /**
      * ServiceResult version of deleteByParameterName for modern controller usage
      */
-    fun deleteByParameterNameStandardized(parameterName: String): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteByParameterName", null) {
+    fun deleteByParameterNameStandardized(parameterName: String): ServiceResult<Boolean> =
+        handleServiceOperation("deleteByParameterName", null) {
             val optionalParameter = parameterRepository.findByParameterName(parameterName)
             if (optionalParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $parameterName")
@@ -101,5 +95,4 @@ class StandardizedParameterService(
             parameterRepository.delete(optionalParameter.get())
             true
         }
-    }
 }

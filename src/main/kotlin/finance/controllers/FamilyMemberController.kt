@@ -22,8 +22,9 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/family-members")
-open class FamilyMemberController(private val standardizedFamilyMemberService: StandardizedFamilyMemberService) :
-    StandardizedBaseController() {
+open class FamilyMemberController(
+    private val standardizedFamilyMemberService: StandardizedFamilyMemberService,
+) : StandardizedBaseController() {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -31,8 +32,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    fun findAllActive(): ResponseEntity<List<FamilyMember>> {
-        return when (val result = standardizedFamilyMemberService.findAllActive()) {
+    fun findAllActive(): ResponseEntity<List<FamilyMember>> =
+        when (val result = standardizedFamilyMemberService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active family members")
                 ResponseEntity.ok(result.data)
@@ -50,7 +51,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<List<FamilyMember>>()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/family-members/std/{familyMemberId}
@@ -59,8 +59,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @GetMapping("/std/{familyMemberId}", produces = ["application/json"])
     fun findById(
         @PathVariable familyMemberId: Long,
-    ): ResponseEntity<FamilyMember> {
-        return when (val result = standardizedFamilyMemberService.findByIdServiceResult(familyMemberId)) {
+    ): ResponseEntity<FamilyMember> =
+        when (val result = standardizedFamilyMemberService.findByIdServiceResult(familyMemberId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved family member: $familyMemberId")
                 ResponseEntity.ok(result.data)
@@ -78,7 +78,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<FamilyMember>()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/family-members
@@ -87,8 +86,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     fun save(
         @Valid @RequestBody member: FamilyMember,
-    ): ResponseEntity<*> {
-        return when (val result = standardizedFamilyMemberService.save(member)) {
+    ): ResponseEntity<*> =
+        when (val result = standardizedFamilyMemberService.save(member)) {
             is ServiceResult.Success -> {
                 logger.info("Family member created successfully: ${member.memberName} for owner: ${member.owner}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -116,7 +115,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Any>()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/family-members/std/{familyMemberId}
@@ -164,8 +162,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @DeleteMapping("/std/{familyMemberId}", produces = ["application/json"])
     fun deleteById(
         @PathVariable familyMemberId: Long,
-    ): ResponseEntity<*> {
-        return when (val result = standardizedFamilyMemberService.deleteById(familyMemberId)) {
+    ): ResponseEntity<*> =
+        when (val result = standardizedFamilyMemberService.deleteById(familyMemberId)) {
             is ServiceResult.Success -> {
                 logger.info("Family member deleted successfully: $familyMemberId")
                 ResponseEntity.ok(mapOf("message" to "Family member deleted successfully"))
@@ -183,7 +181,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Any>()
             }
         }
-    }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 
@@ -192,16 +189,14 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
      * Maintains original behavior
      */
     @GetMapping(produces = ["application/json"])
-    fun getAll(): ResponseEntity<List<FamilyMember>> =
-        ResponseEntity.ok(standardizedFamilyMemberService.findAll())
+    fun getAll(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
 
     /**
      * Legacy endpoint - GET /api/family-members/all
      * Maintains original behavior
      */
     @GetMapping("/all", produces = ["application/json"])
-    fun getAllWithSuffix(): ResponseEntity<List<FamilyMember>> =
-        ResponseEntity.ok(standardizedFamilyMemberService.findAll())
+    fun getAllWithSuffix(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
 
     /**
      * Legacy endpoint - POST /api/family-members/insert
@@ -210,8 +205,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insert(
         @RequestBody member: FamilyMember,
-    ): ResponseEntity<FamilyMember> {
-        return try {
+    ): ResponseEntity<FamilyMember> =
+        try {
             logger.info("Inserting family member: ${member.memberName} for owner: ${member.owner} (legacy endpoint)")
             val result = standardizedFamilyMemberService.insertFamilyMember(member)
             logger.info("Family member inserted successfully: ${result.familyMemberId}")
@@ -223,7 +218,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
             logger.error("Failed to insert family member: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, ex.message, ex)
         }
-    }
 
     /**
      * Legacy endpoint - GET /api/family-members/{id}
@@ -256,8 +250,7 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @GetMapping("/owner/{owner}", produces = ["application/json"])
     fun byOwner(
         @PathVariable owner: String,
-    ): ResponseEntity<List<FamilyMember>> =
-        ResponseEntity.ok(standardizedFamilyMemberService.findByOwner(owner))
+    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findByOwner(owner))
 
     /**
      * Business logic endpoint - GET /api/family-members/owner/{owner}/relationship/{relationship}
@@ -267,8 +260,7 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     fun byOwnerAndRelationship(
         @PathVariable owner: String,
         @PathVariable relationship: FamilyRelationship,
-    ): ResponseEntity<List<FamilyMember>> =
-        ResponseEntity.ok(standardizedFamilyMemberService.findByOwnerAndRelationship(owner, relationship))
+    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findByOwnerAndRelationship(owner, relationship))
 
     /**
      * Business logic endpoint - PUT /api/family-members/{id}/activate
@@ -277,8 +269,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @PutMapping("/{id}/activate")
     fun activateMember(
         @PathVariable id: Long,
-    ): ResponseEntity<Map<String, String>> {
-        return try {
+    ): ResponseEntity<Map<String, String>> =
+        try {
             logger.info("Activating family member: $id")
             val ok = standardizedFamilyMemberService.updateActiveStatus(id, true)
             if (ok) {
@@ -292,7 +284,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
             logger.error("Failed to activate family member $id: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to activate family member: ${ex.message}", ex)
         }
-    }
 
     /**
      * Business logic endpoint - PUT /api/family-members/{id}/deactivate
@@ -301,8 +292,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @PutMapping("/{id}/deactivate")
     fun deactivateMember(
         @PathVariable id: Long,
-    ): ResponseEntity<Map<String, String>> {
-        return try {
+    ): ResponseEntity<Map<String, String>> =
+        try {
             logger.info("Deactivating family member: $id")
             val ok = standardizedFamilyMemberService.updateActiveStatus(id, false)
             if (ok) {
@@ -316,7 +307,6 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
             logger.error("Failed to deactivate family member $id: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to deactivate family member: ${ex.message}", ex)
         }
-    }
 
     /**
      * Business logic endpoint - DELETE /api/family-members/{id}
@@ -326,8 +316,8 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
     @DeleteMapping("/{id}")
     fun softDelete(
         @PathVariable id: Long,
-    ): ResponseEntity<Map<String, String>> {
-        return try {
+    ): ResponseEntity<Map<String, String>> =
+        try {
             logger.info("Soft deleting family member: $id")
             val ok = standardizedFamilyMemberService.softDelete(id)
             if (ok) {
@@ -341,5 +331,4 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
             logger.error("Failed to soft delete family member $id: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete family member: ${ex.message}", ex)
         }
-    }
 }

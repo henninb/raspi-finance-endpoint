@@ -28,14 +28,13 @@ class StandardizedTransferService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Transfer>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Transfer>> =
+        handleServiceOperation("findAllActive", null) {
             transferRepository.findAll().sortedByDescending { transfer -> transfer.transactionDate }
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<Transfer> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<Transfer> =
+        handleServiceOperation("findById", id) {
             val optionalTransfer = transferRepository.findByTransferId(id)
             if (optionalTransfer.isPresent) {
                 optionalTransfer.get()
@@ -43,10 +42,9 @@ class StandardizedTransferService(
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Transfer): ServiceResult<Transfer> {
-        return handleServiceOperation("save", entity.transferId) {
+    override fun save(entity: Transfer): ServiceResult<Transfer> =
+        handleServiceOperation("save", entity.transferId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -59,10 +57,9 @@ class StandardizedTransferService(
 
             transferRepository.save(entity)
         }
-    }
 
-    override fun update(entity: Transfer): ServiceResult<Transfer> {
-        return handleServiceOperation("update", entity.transferId) {
+    override fun update(entity: Transfer): ServiceResult<Transfer> =
+        handleServiceOperation("update", entity.transferId) {
             val existingTransfer = transferRepository.findByTransferId(entity.transferId!!)
             if (existingTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: ${entity.transferId}")
@@ -78,10 +75,9 @@ class StandardizedTransferService(
 
             transferRepository.save(entity)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalTransfer = transferRepository.findByTransferId(id)
             if (optionalTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: $id")
@@ -89,7 +85,6 @@ class StandardizedTransferService(
             transferRepository.delete(optionalTransfer.get())
             true
         }
-    }
 
     // ===== Legacy Method Compatibility =====
 
@@ -182,9 +177,7 @@ class StandardizedTransferService(
         }
     }
 
-    fun findByTransferId(transferId: Long): Optional<Transfer> {
-        return transferRepository.findByTransferId(transferId)
-    }
+    fun findByTransferId(transferId: Long): Optional<Transfer> = transferRepository.findByTransferId(transferId)
 
     fun deleteByTransferId(transferId: Long): Boolean {
         val optionalTransfer = transferRepository.findByTransferId(transferId)

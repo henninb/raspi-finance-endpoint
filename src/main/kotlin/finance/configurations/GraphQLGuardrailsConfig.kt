@@ -33,6 +33,5 @@ open class GraphQLGuardrailsConfig {
      * beans and applies a chained instrumentation to the GraphQL builder.
      */
     @Bean
-    open fun graphQlGuardrailsInstrumentation(): Instrumentation =
-        createGuardrailInstrumentation(maxDepth = 12, maxComplexity = 300)
+    open fun graphQlGuardrailsInstrumentation(): Instrumentation = createGuardrailInstrumentation(maxDepth = 12, maxComplexity = 300)
 }

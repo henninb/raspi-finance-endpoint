@@ -24,14 +24,13 @@ class StandardizedValidationAmountService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<ValidationAmount>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<ValidationAmount>> =
+        handleServiceOperation("findAllActive", null) {
             validationAmountRepository.findByActiveStatusTrueOrderByValidationDateDesc()
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<ValidationAmount> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<ValidationAmount> =
+        handleServiceOperation("findById", id) {
             val optionalValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(id)
             if (optionalValidationAmount.isPresent) {
                 optionalValidationAmount.get()
@@ -39,10 +38,9 @@ class StandardizedValidationAmountService(
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: $id")
             }
         }
-    }
 
-    override fun save(entity: ValidationAmount): ServiceResult<ValidationAmount> {
-        return handleServiceOperation("save", entity.validationId) {
+    override fun save(entity: ValidationAmount): ServiceResult<ValidationAmount> =
+        handleServiceOperation("save", entity.validationId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -62,10 +60,9 @@ class StandardizedValidationAmountService(
             }
             saved
         }
-    }
 
-    override fun update(entity: ValidationAmount): ServiceResult<ValidationAmount> {
-        return handleServiceOperation("update", entity.validationId) {
+    override fun update(entity: ValidationAmount): ServiceResult<ValidationAmount> =
+        handleServiceOperation("update", entity.validationId) {
             val existingValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(entity.validationId!!)
             if (existingValidationAmount.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: ${entity.validationId}")
@@ -89,10 +86,9 @@ class StandardizedValidationAmountService(
             }
             updated
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(id)
             if (optionalValidationAmount.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: $id")
@@ -100,7 +96,6 @@ class StandardizedValidationAmountService(
             validationAmountRepository.delete(optionalValidationAmount.get())
             true
         }
-    }
 
     // ===== Legacy methods still needed by controller =====
 
@@ -165,37 +160,37 @@ class StandardizedValidationAmountService(
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
                 val violations =
-                    result.errors.map { (field, message) ->
-                        object : jakarta.validation.ConstraintViolation<ValidationAmount> {
-                            override fun getMessage(): String = message
+                    result.errors
+                        .map { (field, message) ->
+                            object : jakarta.validation.ConstraintViolation<ValidationAmount> {
+                                override fun getMessage(): String = message
 
-                            override fun getMessageTemplate(): String = message
+                                override fun getMessageTemplate(): String = message
 
-                            override fun getRootBean(): ValidationAmount = validationAmount
+                                override fun getRootBean(): ValidationAmount = validationAmount
 
-                            override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
+                                override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
 
-                            override fun getLeafBean(): Any = validationAmount
+                                override fun getLeafBean(): Any = validationAmount
 
-                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+                                override fun getExecutableParameters(): Array<Any> = emptyArray()
 
-                            override fun getExecutableReturnValue(): Any? = null
+                                override fun getExecutableReturnValue(): Any? = null
 
-                            override fun getPropertyPath(): jakarta.validation.Path {
-                                return object : jakarta.validation.Path {
-                                    override fun toString(): String = field
+                                override fun getPropertyPath(): jakarta.validation.Path =
+                                    object : jakarta.validation.Path {
+                                        override fun toString(): String = field
 
-                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                }
+                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                    }
+
+                                override fun getInvalidValue(): Any? = null
+
+                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                             }
-
-                            override fun getInvalidValue(): Any? = null
-
-                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                        }
-                    }.toSet()
+                        }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
             else -> throw RuntimeException("Failed to insert validation amount: $result")

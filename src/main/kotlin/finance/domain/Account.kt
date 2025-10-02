@@ -85,8 +85,16 @@ data class Account(
     var validationDate: Timestamp,
 ) {
     constructor() : this(
-        0L, "", AccountType.Undefined, true,
-        "0000", BigDecimal(0.0), BigDecimal(0.0), BigDecimal(0.0), Timestamp(0), Timestamp(0),
+        0L,
+        "",
+        AccountType.Undefined,
+        true,
+        "0000",
+        BigDecimal(0.0),
+        BigDecimal(0.0),
+        BigDecimal(0.0),
+        Timestamp(0),
+        Timestamp(0),
     )
 
     @JsonProperty

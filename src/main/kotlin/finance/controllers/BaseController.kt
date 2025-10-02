@@ -101,14 +101,13 @@ open class BaseController {
         }
     }
 
-    private fun getCurrentHttpRequest(): HttpServletRequest? {
-        return try {
+    private fun getCurrentHttpRequest(): HttpServletRequest? =
+        try {
             val requestAttributes = RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes
             requestAttributes.request
         } catch (e: Exception) {
             null
         }
-    }
 
     private fun getClientIpAddress(request: HttpServletRequest?): String {
         if (request == null) return "unknown"
@@ -123,9 +122,7 @@ open class BaseController {
         }
     }
 
-    private fun sanitizeHeader(header: String?): String? {
-        return header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
-    }
+    private fun sanitizeHeader(header: String?): String? = header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
 
     companion object {
         val mapper = ObjectMapper()

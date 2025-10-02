@@ -18,7 +18,7 @@ plugins {
     id "org.flywaydb.flyway" version "${flywayVersion}"
     id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
     // Kotlin linter/formatter
-    id "org.jlleitschuh.gradle.ktlint" version "12.1.0"
+    id "org.jlleitschuh.gradle.ktlint" version "13.1.0"
 }
 
 apply from: 'test.gradle'
@@ -131,7 +131,7 @@ dependencies {
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonCoreVersion}")
 
     //Groovy
     implementation("org.apache.groovy:groovy:${groovyVersion}")
@@ -154,9 +154,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
 
     //Jackson
-    implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
+    implementation("com.fasterxml.jackson.core:jackson-core:${jacksonCoreVersion}")
+    implementation("com.fasterxml.jackson.core:jackson-databind:${jacksonCoreVersion}")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonAnnotationsVersion}")
 
 
     // GraphQL (Spring for GraphQL)

@@ -19,14 +19,29 @@ class HttpErrorLoggingFilter(
 
         private val SENSITIVE_HEADERS =
             setOf(
-                "authorization", "cookie", "set-cookie", "x-auth-token",
-                "token", "jwt", "api-key", "x-api-key", "password",
+                "authorization",
+                "cookie",
+                "set-cookie",
+                "x-auth-token",
+                "token",
+                "jwt",
+                "api-key",
+                "x-api-key",
+                "password",
             )
 
         private val SENSITIVE_PARAMS =
             setOf(
-                "password", "token", "jwt", "secret", "key", "auth",
-                "credential", "ssn", "credit", "account",
+                "password",
+                "token",
+                "jwt",
+                "secret",
+                "key",
+                "auth",
+                "credential",
+                "ssn",
+                "credit",
+                "account",
             )
     }
 
@@ -102,7 +117,8 @@ class HttpErrorLoggingFilter(
         method: String,
         uri: String,
     ) {
-        Counter.builder("http.error.responses")
+        Counter
+            .builder("http.error.responses")
             .description("HTTP error responses by status code and endpoint")
             .tags(
                 listOf(
@@ -111,8 +127,7 @@ class HttpErrorLoggingFilter(
                     Tag.of("method", method),
                     Tag.of("endpoint", sanitizeEndpointForMetrics(uri)),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
     }
 
@@ -127,22 +142,17 @@ class HttpErrorLoggingFilter(
         }
     }
 
-    private fun sanitizeUserAgent(userAgent: String?): String? {
-        return userAgent?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
-    }
+    private fun sanitizeUserAgent(userAgent: String?): String? = userAgent?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
 
-    private fun sanitizeHeader(header: String?): String? {
-        return header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
-    }
+    private fun sanitizeHeader(header: String?): String? = header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
 
-    private fun sanitizeUri(uri: String): String {
-        return uri.replace(Regex("[\\r\\n\\t]"), "")
-    }
+    private fun sanitizeUri(uri: String): String = uri.replace(Regex("[\\r\\n\\t]"), "")
 
     private fun sanitizeQueryString(queryString: String?): String? {
         if (queryString.isNullOrBlank()) return null
 
-        return queryString.split("&")
+        return queryString
+            .split("&")
             .map { param ->
                 val parts = param.split("=", limit = 2)
                 val key = parts[0].lowercase()
@@ -151,15 +161,14 @@ class HttpErrorLoggingFilter(
                 } else {
                     param
                 }
-            }
-            .joinToString("&")
+            }.joinToString("&")
             .replace(Regex("[\\r\\n\\t]"), "")
     }
 
-    private fun sanitizeEndpointForMetrics(uri: String): String {
-        return uri.replace(Regex("/\\d+"), "/{id}")
+    private fun sanitizeEndpointForMetrics(uri: String): String =
+        uri
+            .replace(Regex("/\\d+"), "/{id}")
             .replace(Regex("/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"), "/{uuid}")
             .replace(Regex("/[0-9a-fA-F]{32,}"), "/{hash}")
             .take(100)
-    }
 }

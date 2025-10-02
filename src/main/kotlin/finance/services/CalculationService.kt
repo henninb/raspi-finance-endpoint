@@ -15,7 +15,8 @@ import java.math.RoundingMode
 @Service
 open class CalculationService(
     private val transactionRepository: TransactionRepository,
-) : ICalculationService, BaseService() {
+) : BaseService(),
+    ICalculationService {
     companion object {
         private const val MAX_REASONABLE_AMOUNT = 999999999.99
         private val ZERO_SCALE_2 = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)

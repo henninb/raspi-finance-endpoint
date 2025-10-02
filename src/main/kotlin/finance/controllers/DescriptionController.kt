@@ -21,8 +21,10 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/description")
-class DescriptionController(private val standardizedDescriptionService: StandardizedDescriptionService) :
-    StandardizedBaseController(), StandardRestController<Description, String> {
+class DescriptionController(
+    private val standardizedDescriptionService: StandardizedDescriptionService,
+) : StandardizedBaseController(),
+    StandardRestController<Description, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -30,8 +32,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Description>> {
-        return when (val result = standardizedDescriptionService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<Description>> =
+        when (val result = standardizedDescriptionService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active descriptions")
                 ResponseEntity.ok(result.data)
@@ -49,7 +51,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/description/{descriptionName}
@@ -58,8 +59,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     @GetMapping("/{descriptionName}", produces = ["application/json"])
     override fun findById(
         @PathVariable("descriptionName") id: String,
-    ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(id)) {
+    ): ResponseEntity<Description> =
+        when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved description: $id")
                 ResponseEntity.ok(result.data)
@@ -77,7 +78,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/description
@@ -86,8 +86,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Description,
-    ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.save(entity)) {
+    ): ResponseEntity<Description> =
+        when (val result = standardizedDescriptionService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Description created successfully: ${entity.descriptionName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -109,7 +109,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/description/{descriptionName}
@@ -119,8 +118,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     override fun update(
         @PathVariable("descriptionName") id: String,
         @Valid @RequestBody entity: Description,
-    ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.update(entity)) {
+    ): ResponseEntity<Description> =
+        when (val result = standardizedDescriptionService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Description updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -142,7 +141,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
             }
         }
-    }
 
     /**
      * Standardized entity deletion - DELETE /api/description/{descriptionName}
@@ -197,8 +195,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      * Maintains original behavior
      */
     @GetMapping("/select/active", produces = ["application/json"])
-    fun selectAllDescriptions(): ResponseEntity<List<Description>> {
-        return when (val result = standardizedDescriptionService.findAllActive()) {
+    fun selectAllDescriptions(): ResponseEntity<List<Description>> =
+        when (val result = standardizedDescriptionService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} descriptions (legacy endpoint)")
                 ResponseEntity.ok(result.data)
@@ -212,7 +210,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve descriptions")
             }
         }
-    }
 
     /**
      * Legacy endpoint - PUT /api/description/update/{description_name}
@@ -272,8 +269,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     @GetMapping("/select/{description_name}")
     fun selectDescriptionName(
         @PathVariable("description_name") descriptionName: String,
-    ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
+    ): ResponseEntity<Description> =
+        when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved description: $descriptionName (legacy endpoint)")
                 ResponseEntity.ok(result.data)
@@ -291,7 +288,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve description")
             }
         }
-    }
 
     /**
      * Legacy endpoint - POST /api/description/insert
@@ -299,8 +295,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertDescription(
         @RequestBody description: Description,
-    ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.save(description)) {
+    ): ResponseEntity<Description> =
+        when (val result = standardizedDescriptionService.save(description)) {
             is ServiceResult.Success -> {
                 logger.info("Description inserted successfully: ${description.descriptionName} (legacy endpoint)")
                 ResponseEntity(result.data, HttpStatus.CREATED)
@@ -326,7 +322,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error")
             }
         }
-    }
 
     /**
      * Legacy endpoint - DELETE /api/description/delete/{descriptionName}
@@ -382,8 +377,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
     @PostMapping("/merge", consumes = ["application/json"], produces = ["application/json"])
     fun mergeDescriptions(
         @RequestBody request: MergeDescriptionsRequest,
-    ): ResponseEntity<Description> {
-        return try {
+    ): ResponseEntity<Description> =
+        try {
             if (request.targetName.isBlank() || request.sourceNames.isEmpty()) {
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetName and sourceNames are required")
             }
@@ -396,5 +391,4 @@ class DescriptionController(private val standardizedDescriptionService: Standard
             logger.error("Failed to merge descriptions into ${request.targetName}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge descriptions: ${ex.message}", ex)
         }
-    }
 }

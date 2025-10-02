@@ -19,7 +19,9 @@ import io.micrometer.core.instrument.Tag
 import org.springframework.stereotype.Service
 
 @Service
-class MeterService(private var meterRegistry: MeterRegistry) {
+class MeterService(
+    private var meterRegistry: MeterRegistry,
+) {
     private val hostName = "server" // setHostName()
 
     fun setHostName(): String? {
@@ -42,8 +44,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(EXCEPTION_NAME_TAG, exceptionName),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementExceptionCaughtCounter(exceptionName: String): Unit =
@@ -55,8 +56,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(EXCEPTION_NAME_TAG, exceptionName),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionUpdateClearedCounter(accountNameOwner: String): Unit =
@@ -68,8 +68,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionSuccessfullyInsertedCounter(accountNameOwner: String): Unit =
@@ -80,8 +79,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionAlreadyExistsCounter(accountNameOwner: String): Unit =
@@ -92,8 +90,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionRestSelectNoneFoundCounter(accountNameOwner: String): Unit =
@@ -104,8 +101,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionRestTransactionStateUpdateFailureCounter(accountNameOwner: String): Unit =
@@ -116,8 +112,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionRestReoccurringStateUpdateFailureCounter(accountNameOwner: String): Unit =
@@ -128,8 +123,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementAccountListIsEmpty(accountNameOwner: String): Unit =
@@ -140,8 +134,7 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 
     fun incrementTransactionReceiptImageInserted(accountNameOwner: String): Unit =
@@ -152,7 +145,6 @@ class MeterService(private var meterRegistry: MeterRegistry) {
                     Tag.of(ACCOUNT_NAME_OWNER_TAG, accountNameOwner),
                     Tag.of(SERVER_NAME_TAG, hostName),
                 ),
-            )
-            .register(meterRegistry)
+            ).register(meterRegistry)
             .increment()
 }

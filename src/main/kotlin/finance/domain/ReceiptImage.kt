@@ -79,9 +79,7 @@ data class ReceiptImage(
     @Column(name = "thumbnail", nullable = false)
     lateinit var thumbnail: ByteArray
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

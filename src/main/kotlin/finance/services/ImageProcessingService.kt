@@ -14,7 +14,9 @@ import javax.imageio.ImageReader
  * Extracted from TransactionService for better separation of concerns and testability
  */
 @Service
-open class ImageProcessingService : IImageProcessingService, BaseService() {
+open class ImageProcessingService :
+    BaseService(),
+    IImageProcessingService {
     companion object {
         private const val THUMBNAIL_SIZE = 100
         private const val MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
@@ -36,7 +38,8 @@ open class ImageProcessingService : IImageProcessingService, BaseService() {
             }
 
             val thumbnail =
-                Thumbnails.of(bufferedImage)
+                Thumbnails
+                    .of(bufferedImage)
                     .size(THUMBNAIL_SIZE, THUMBNAIL_SIZE)
                     .asBufferedImage()
 

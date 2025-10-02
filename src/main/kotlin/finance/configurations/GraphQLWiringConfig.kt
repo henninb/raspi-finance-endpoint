@@ -9,8 +9,8 @@ import org.springframework.graphql.execution.RuntimeWiringConfigurer
 @Configuration
 open class GraphQLWiringConfig {
     @Bean
-    open fun runtimeWiringConfigurer(): RuntimeWiringConfigurer {
-        return RuntimeWiringConfigurer { builder: RuntimeWiring.Builder ->
+    open fun runtimeWiringConfigurer(): RuntimeWiringConfigurer =
+        RuntimeWiringConfigurer { builder: RuntimeWiring.Builder ->
             builder
                 // Custom scalars for Spring Boot 4.0 GraphQL
                 .scalar(ExtendedScalars.GraphQLLong)
@@ -18,5 +18,4 @@ open class GraphQLWiringConfig {
                 .scalar(SqlDateScalar.INSTANCE)
                 .scalar(TimestampScalar.INSTANCE)
         }
-    }
 }

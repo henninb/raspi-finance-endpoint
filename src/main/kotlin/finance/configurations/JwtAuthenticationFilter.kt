@@ -39,7 +39,9 @@ class JwtAuthenticationFilter(
         var token: String? =
             run {
                 request.cookies?.firstOrNull { it.name == "token" }?.value
-                    ?: request.getHeader("Cookie")?.split(';')
+                    ?: request
+                        .getHeader("Cookie")
+                        ?.split(';')
                         ?.map { it.trim() }
                         ?.firstOrNull { it.startsWith("token=") }
                         ?.substringAfter("token=")
@@ -56,7 +58,8 @@ class JwtAuthenticationFilter(
             try {
                 val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
                 val claims: Claims =
-                    Jwts.parser()
+                    Jwts
+                        .parser()
                         .verifyWith(key)
                         .build()
                         .parseSignedClaims(token)
@@ -72,15 +75,15 @@ class JwtAuthenticationFilter(
                 SecurityContextHolder.getContext().authentication = auth
 
                 securityLogger.info("Authentication successful for user: {} from IP: {}", username, getClientIpAddress(request))
-                Counter.builder("authentication.success")
+                Counter
+                    .builder("authentication.success")
                     .description("Number of successful authentication attempts")
                     .tags(
                         listOfNotNull(
                             Tag.of("username", username ?: "unknown"),
                             Tag.of("ip_address", getClientIpAddress(request)),
                         ),
-                    )
-                    .register(meterRegistry)
+                    ).register(meterRegistry)
                     .increment()
             } catch (ex: JwtException) {
                 val clientIp = getClientIpAddress(request)
@@ -91,7 +94,8 @@ class JwtAuthenticationFilter(
                     userAgent,
                     ex.message,
                 )
-                Counter.builder("authentication.failure")
+                Counter
+                    .builder("authentication.failure")
                     .description("Number of failed authentication attempts")
                     .tags(
                         listOfNotNull(
@@ -99,8 +103,7 @@ class JwtAuthenticationFilter(
                             Tag.of("ip_address", clientIp),
                             Tag.of("user_agent", userAgent.take(100)),
                         ),
-                    )
-                    .register(meterRegistry)
+                    ).register(meterRegistry)
                     .increment()
                 SecurityContextHolder.clearContext()
             }

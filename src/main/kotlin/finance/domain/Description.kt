@@ -54,9 +54,7 @@ data class Description(
     @JsonProperty
     var descriptionCount: Long = 0
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

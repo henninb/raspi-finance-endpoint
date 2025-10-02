@@ -22,8 +22,8 @@ class StandardizedCategoryService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Category>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Category>> =
+        handleServiceOperation("findAllActive", null) {
             val categories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
             categories.map { category ->
                 val count = transactionRepository.countByCategoryName(category.categoryName)
@@ -31,10 +31,9 @@ class StandardizedCategoryService(
                 category
             }
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<Category> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<Category> =
+        handleServiceOperation("findById", id) {
             val optionalCategory = categoryRepository.findByCategoryId(id)
             if (optionalCategory.isPresent) {
                 optionalCategory.get()
@@ -42,10 +41,9 @@ class StandardizedCategoryService(
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Category): ServiceResult<Category> {
-        return handleServiceOperation("save", entity.categoryId) {
+    override fun save(entity: Category): ServiceResult<Category> =
+        handleServiceOperation("save", entity.categoryId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -58,10 +56,9 @@ class StandardizedCategoryService(
 
             categoryRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: Category): ServiceResult<Category> {
-        return handleServiceOperation("update", entity.categoryId) {
+    override fun update(entity: Category): ServiceResult<Category> =
+        handleServiceOperation("update", entity.categoryId) {
             val existingCategory = categoryRepository.findByCategoryId(entity.categoryId!!)
             if (existingCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: ${entity.categoryId}")
@@ -75,10 +72,9 @@ class StandardizedCategoryService(
 
             categoryRepository.saveAndFlush(categoryToUpdate)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalCategory = categoryRepository.findByCategoryId(id)
             if (optionalCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $id")
@@ -86,10 +82,9 @@ class StandardizedCategoryService(
             categoryRepository.delete(optionalCategory.get())
             true
         }
-    }
 
-    fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> {
-        return handleServiceOperation("findByCategoryName", null) {
+    fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =
+        handleServiceOperation("findByCategoryName", null) {
             val optionalCategory = categoryRepository.findByCategoryName(categoryName)
             if (optionalCategory.isPresent) {
                 val category = optionalCategory.get()
@@ -100,10 +95,9 @@ class StandardizedCategoryService(
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
             }
         }
-    }
 
-    fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteByCategoryName", null) {
+    fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Boolean> =
+        handleServiceOperation("deleteByCategoryName", null) {
             val optionalCategory = categoryRepository.findByCategoryName(categoryName)
             if (optionalCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
@@ -111,7 +105,6 @@ class StandardizedCategoryService(
             categoryRepository.delete(optionalCategory.get())
             true
         }
-    }
 
     // ===== Business Logic Methods =====
 

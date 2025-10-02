@@ -10,9 +10,7 @@ data class Totals(
     val totals: BigDecimal,
     val totalsOutstanding: BigDecimal,
 ) {
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

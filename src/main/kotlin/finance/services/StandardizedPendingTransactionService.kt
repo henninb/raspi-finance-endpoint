@@ -25,14 +25,13 @@ class StandardizedPendingTransactionService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<PendingTransaction>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<PendingTransaction>> =
+        handleServiceOperation("findAllActive", null) {
             pendingTransactionRepository.findAll()
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<PendingTransaction> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<PendingTransaction> =
+        handleServiceOperation("findById", id) {
             val optionalPendingTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(id)
             if (optionalPendingTransaction.isPresent) {
                 optionalPendingTransaction.get()
@@ -40,10 +39,9 @@ class StandardizedPendingTransactionService(
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: $id")
             }
         }
-    }
 
-    override fun save(entity: PendingTransaction): ServiceResult<PendingTransaction> {
-        return handleServiceOperation("save", entity.pendingTransactionId) {
+    override fun save(entity: PendingTransaction): ServiceResult<PendingTransaction> =
+        handleServiceOperation("save", entity.pendingTransactionId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -54,10 +52,9 @@ class StandardizedPendingTransactionService(
 
             pendingTransactionRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: PendingTransaction): ServiceResult<PendingTransaction> {
-        return handleServiceOperation("update", entity.pendingTransactionId) {
+    override fun update(entity: PendingTransaction): ServiceResult<PendingTransaction> =
+        handleServiceOperation("update", entity.pendingTransactionId) {
             val existingTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(entity.pendingTransactionId!!)
             if (existingTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: ${entity.pendingTransactionId}")
@@ -74,10 +71,9 @@ class StandardizedPendingTransactionService(
 
             pendingTransactionRepository.saveAndFlush(transactionToUpdate)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(id)
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: $id")
@@ -85,16 +81,14 @@ class StandardizedPendingTransactionService(
             pendingTransactionRepository.delete(optionalTransaction.get())
             true
         }
-    }
 
     // ===== Business-Specific ServiceResult Methods =====
 
-    fun deleteAll(): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteAll", null) {
+    fun deleteAll(): ServiceResult<Boolean> =
+        handleServiceOperation("deleteAll", null) {
             pendingTransactionRepository.deleteAll()
             true
         }
-    }
 
     // ===== Legacy Method Compatibility (Deprecated - Use ServiceResult methods instead) =====
 
@@ -105,37 +99,37 @@ class StandardizedPendingTransactionService(
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
                 val violations =
-                    result.errors.map { (field, message) ->
-                        object : jakarta.validation.ConstraintViolation<PendingTransaction> {
-                            override fun getMessage(): String = message
+                    result.errors
+                        .map { (field, message) ->
+                            object : jakarta.validation.ConstraintViolation<PendingTransaction> {
+                                override fun getMessage(): String = message
 
-                            override fun getMessageTemplate(): String = message
+                                override fun getMessageTemplate(): String = message
 
-                            override fun getRootBean(): PendingTransaction = pendingTransaction
+                                override fun getRootBean(): PendingTransaction = pendingTransaction
 
-                            override fun getRootBeanClass(): Class<PendingTransaction> = PendingTransaction::class.java
+                                override fun getRootBeanClass(): Class<PendingTransaction> = PendingTransaction::class.java
 
-                            override fun getLeafBean(): Any = pendingTransaction
+                                override fun getLeafBean(): Any = pendingTransaction
 
-                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+                                override fun getExecutableParameters(): Array<Any> = emptyArray()
 
-                            override fun getExecutableReturnValue(): Any? = null
+                                override fun getExecutableReturnValue(): Any? = null
 
-                            override fun getPropertyPath(): jakarta.validation.Path {
-                                return object : jakarta.validation.Path {
-                                    override fun toString(): String = field
+                                override fun getPropertyPath(): jakarta.validation.Path =
+                                    object : jakarta.validation.Path {
+                                        override fun toString(): String = field
 
-                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                }
+                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                    }
+
+                                override fun getInvalidValue(): Any? = null
+
+                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                             }
-
-                            override fun getInvalidValue(): Any? = null
-
-                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                        }
-                    }.toSet()
+                        }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
             else -> throw RuntimeException("Failed to insert pending transaction: $result")

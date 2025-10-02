@@ -42,7 +42,8 @@ class UuidController : BaseController() {
             return ResponseEntity.ok(response)
         } catch (e: Exception) {
             logger.error("Error generating UUID", e)
-            return ResponseEntity.internalServerError()
+            return ResponseEntity
+                .internalServerError()
                 .body(mapOf("error" to "Failed to generate UUID"))
         }
     }
@@ -63,7 +64,8 @@ class UuidController : BaseController() {
 
         if (count <= 0 || count > 100) {
             logger.warn("Invalid UUID count requested: {}", count)
-            return ResponseEntity.badRequest()
+            return ResponseEntity
+                .badRequest()
                 .body(mapOf("error" to "Count must be between 1 and 100"))
         }
 
@@ -83,7 +85,8 @@ class UuidController : BaseController() {
             return ResponseEntity.ok(response)
         } catch (e: Exception) {
             logger.error("Error generating batch UUIDs", e)
-            return ResponseEntity.internalServerError()
+            return ResponseEntity
+                .internalServerError()
                 .body(mapOf("error" to "Failed to generate UUIDs"))
         }
     }
@@ -97,13 +100,12 @@ class UuidController : BaseController() {
         value = ["/health"],
         produces = [MediaType.APPLICATION_JSON_VALUE],
     )
-    fun healthCheck(): ResponseEntity<Map<String, Any>> {
-        return ResponseEntity.ok(
+    fun healthCheck(): ResponseEntity<Map<String, Any>> =
+        ResponseEntity.ok(
             mapOf(
                 "status" to "healthy",
                 "service" to "uuid-generation",
                 "timestamp" to Instant.now().toEpochMilli(),
             ),
         )
-    }
 }

@@ -20,18 +20,17 @@ class StandardizedFamilyMemberService(
 ) : BaseService() {
     // ===== ServiceResult Methods =====
 
-    fun findAllActive(): ServiceResult<List<FamilyMember>> {
-        return try {
+    fun findAllActive(): ServiceResult<List<FamilyMember>> =
+        try {
             val members = familyMemberRepository.findByActiveStatusTrue()
             ServiceResult.Success(members)
         } catch (e: Exception) {
             logger.error("Error retrieving all family members", e)
             ServiceResult.SystemError(e)
         }
-    }
 
-    fun findByIdServiceResult(id: Long): ServiceResult<FamilyMember> {
-        return try {
+    fun findByIdServiceResult(id: Long): ServiceResult<FamilyMember> =
+        try {
             val familyMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
             if (familyMember != null) {
                 ServiceResult.Success(familyMember)
@@ -42,7 +41,6 @@ class StandardizedFamilyMemberService(
             logger.error("Error retrieving family member by ID: $id", e)
             ServiceResult.SystemError(e)
         }
-    }
 
     fun save(entity: FamilyMember): ServiceResult<FamilyMember> {
         return try {

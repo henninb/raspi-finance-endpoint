@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin
 @RestController
 @RequestMapping("/api/receipt/image")
-class ReceiptImageController(private var standardizedReceiptImageService: StandardizedReceiptImageService) : BaseController() {
+class ReceiptImageController(
+    private var standardizedReceiptImageService: StandardizedReceiptImageService,
+) : BaseController() {
     // curl -k --header "Content-Type: application/json" --request POST --data '{"transactionId": 1, "image": "base64encodedimage"}' https://localhost:8443/receipt/image/insert
     @PostMapping("/insert", produces = ["application/json"])
     fun insertReceiptImage(
@@ -61,8 +63,8 @@ class ReceiptImageController(private var standardizedReceiptImageService: Standa
     @GetMapping("/select/{receipt_image_id}")
     fun selectReceiptImage(
         @PathVariable("receipt_image_id") @Positive(message = "Receipt image ID must be positive") receiptImageId: Long,
-    ): ResponseEntity<Map<String, Any>> {
-        return when (val result = standardizedReceiptImageService.findById(receiptImageId)) {
+    ): ResponseEntity<Map<String, Any>> =
+        when (val result = standardizedReceiptImageService.findById(receiptImageId)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved receipt image: $receiptImageId")
                 ResponseEntity.ok(
@@ -85,5 +87,4 @@ class ReceiptImageController(private var standardizedReceiptImageService: Standa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Error retrieving receipt image"))
             }
         }
-    }
 }

@@ -22,8 +22,10 @@ import java.util.Locale
 @CrossOrigin
 @RestController
 @RequestMapping("/api/validation/amount")
-class ValidationAmountController(private var standardizedValidationAmountService: StandardizedValidationAmountService) :
-    StandardizedBaseController(), StandardRestController<ValidationAmount, Long> {
+class ValidationAmountController(
+    private var standardizedValidationAmountService: StandardizedValidationAmountService,
+) : StandardizedBaseController(),
+    StandardRestController<ValidationAmount, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -31,8 +33,8 @@ class ValidationAmountController(private var standardizedValidationAmountService
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<ValidationAmount>> {
-        return when (val result = standardizedValidationAmountService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<ValidationAmount>> =
+        when (val result = standardizedValidationAmountService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active validation amounts")
                 ResponseEntity.ok(result.data)
@@ -50,7 +52,6 @@ class ValidationAmountController(private var standardizedValidationAmountService
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/validation/amount/{validationId}
@@ -59,8 +60,8 @@ class ValidationAmountController(private var standardizedValidationAmountService
     @GetMapping("/{validationId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("validationId") id: Long,
-    ): ResponseEntity<ValidationAmount> {
-        return when (val result = standardizedValidationAmountService.findById(id)) {
+    ): ResponseEntity<ValidationAmount> =
+        when (val result = standardizedValidationAmountService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved validation amount: $id")
                 ResponseEntity.ok(result.data)
@@ -78,7 +79,6 @@ class ValidationAmountController(private var standardizedValidationAmountService
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/validation/amount
@@ -87,8 +87,8 @@ class ValidationAmountController(private var standardizedValidationAmountService
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: ValidationAmount,
-    ): ResponseEntity<ValidationAmount> {
-        return when (val result = standardizedValidationAmountService.save(entity)) {
+    ): ResponseEntity<ValidationAmount> =
+        when (val result = standardizedValidationAmountService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount created successfully: ${result.data.validationId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -110,7 +110,6 @@ class ValidationAmountController(private var standardizedValidationAmountService
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/validation/amount/{validationId}
@@ -195,8 +194,8 @@ class ValidationAmountController(private var standardizedValidationAmountService
     fun insertValidationAmount(
         @RequestBody validationAmount: ValidationAmount,
         @PathVariable("accountNameOwner") accountNameOwner: String,
-    ): ResponseEntity<*> {
-        return try {
+    ): ResponseEntity<*> =
+        try {
             val validationAmountResponse =
                 standardizedValidationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
 
@@ -221,17 +220,17 @@ class ValidationAmountController(private var standardizedValidationAmountService
             val errorResponse = mapOf("error" to "Unexpected error: ${ex.message}")
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse)
         }
-    }
 
     // curl -k https://localhost:8443/validation/amount/select/test_brian/cleared
     @GetMapping("/select/{accountNameOwner}/{transactionStateValue}")
     fun selectValidationAmountByAccountId(
         @PathVariable("accountNameOwner") accountNameOwner: String,
         @PathVariable("transactionStateValue") transactionStateValue: String,
-    ): ResponseEntity<ValidationAmount> {
-        return handleCrudOperation("selectValidationAmountByAccountId", "$accountNameOwner/$transactionStateValue") {
+    ): ResponseEntity<ValidationAmount> =
+        handleCrudOperation("selectValidationAmountByAccountId", "$accountNameOwner/$transactionStateValue") {
             val newTransactionStateValue =
-                transactionStateValue.lowercase()
+                transactionStateValue
+                    .lowercase()
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
             val validationAmount =
                 standardizedValidationAmountService.findValidationAmountByAccountNameOwner(
@@ -241,5 +240,4 @@ class ValidationAmountController(private var standardizedValidationAmountService
             logger.info(mapper.writeValueAsString(validationAmount))
             validationAmount
         }
-    }
 }

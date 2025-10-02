@@ -73,7 +73,15 @@ data class FamilyMember(
     var activeStatus: Boolean = true,
 ) {
     constructor() : this(
-        0L, "", "", FamilyRelationship.Self, null, null, null, null, true,
+        0L,
+        "",
+        "",
+        FamilyRelationship.Self,
+        null,
+        null,
+        null,
+        null,
+        true,
     )
 
     @JsonProperty
@@ -84,9 +92,7 @@ data class FamilyMember(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

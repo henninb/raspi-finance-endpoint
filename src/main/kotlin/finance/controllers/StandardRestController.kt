@@ -69,8 +69,8 @@ abstract class StandardizedBaseController : BaseController() {
         operationName: String,
         entityId: Any?,
         operation: () -> T,
-    ): ResponseEntity<T> {
-        return try {
+    ): ResponseEntity<T> =
+        try {
             val result = operation()
             logSuccessfulOperation(operationName, entityId)
             ResponseEntity.ok(result)
@@ -106,7 +106,6 @@ abstract class StandardizedBaseController : BaseController() {
             logOperationError(operationName, entityId, "Unexpected error", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}")
         }
-    }
 
     /**
      * Standard creation operation handler - returns 201 CREATED
@@ -115,8 +114,8 @@ abstract class StandardizedBaseController : BaseController() {
         entityType: String,
         entityId: Any?,
         operation: () -> T,
-    ): ResponseEntity<T> {
-        return try {
+    ): ResponseEntity<T> =
+        try {
             val result = operation()
             logger.info("$entityType created successfully: $entityId")
             ResponseEntity.status(HttpStatus.CREATED).body(result)
@@ -136,7 +135,6 @@ abstract class StandardizedBaseController : BaseController() {
             logger.error("Unexpected error creating $entityType $entityId: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}")
         }
-    }
 
     /**
      * Standard deletion operation handler - returns 200 OK with deleted entity
@@ -146,8 +144,8 @@ abstract class StandardizedBaseController : BaseController() {
         entityId: Any?,
         findOperation: () -> Optional<T>,
         deleteOperation: () -> Unit,
-    ): ResponseEntity<T> {
-        return try {
+    ): ResponseEntity<T> =
+        try {
             logger.info("Attempting to delete $entityType: $entityId")
             val entity =
                 findOperation().orElseThrow {
@@ -164,7 +162,6 @@ abstract class StandardizedBaseController : BaseController() {
             logger.error("Failed to delete $entityType $entityId: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete $entityType: ${ex.message}")
         }
-    }
 
     private fun logSuccessfulOperation(
         operation: String,

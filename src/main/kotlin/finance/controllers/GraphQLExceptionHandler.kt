@@ -26,7 +26,8 @@ class GraphQLExceptionHandler {
             ex.constraintViolations.joinToString(
                 separator = "; ",
             ) { v -> "${v.propertyPath}: ${v.message}" }
-        return GraphqlErrorBuilder.newError(env)
+        return GraphqlErrorBuilder
+            .newError(env)
             .errorType(ErrorType.BAD_REQUEST)
             .message("Validation failed: $msg")
             .build()
@@ -38,7 +39,8 @@ class GraphQLExceptionHandler {
         env: DataFetchingEnvironment,
     ): GraphQLError {
         logger.warn("GraphQL illegal argument: {}", ex.message)
-        return GraphqlErrorBuilder.newError(env)
+        return GraphqlErrorBuilder
+            .newError(env)
             .errorType(ErrorType.BAD_REQUEST)
             .message(ex.message ?: "Bad request")
             .build()
@@ -50,7 +52,8 @@ class GraphQLExceptionHandler {
         env: DataFetchingEnvironment,
     ): GraphQLError {
         logger.error("GraphQL error", ex)
-        return GraphqlErrorBuilder.newError(env)
+        return GraphqlErrorBuilder
+            .newError(env)
             .errorType(ErrorType.INTERNAL_ERROR)
             .message("Internal server error")
             .build()

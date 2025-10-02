@@ -19,14 +19,13 @@ open class StandardizedReceiptImageService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<ReceiptImage>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<ReceiptImage>> =
+        handleServiceOperation("findAllActive", null) {
             receiptImageRepository.findAll()
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<ReceiptImage> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<ReceiptImage> =
+        handleServiceOperation("findById", id) {
             val optionalReceiptImage = receiptImageRepository.findById(id)
             if (optionalReceiptImage.isPresent) {
                 optionalReceiptImage.get()
@@ -34,10 +33,9 @@ open class StandardizedReceiptImageService(
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
             }
         }
-    }
 
-    override fun save(entity: ReceiptImage): ServiceResult<ReceiptImage> {
-        return handleServiceOperation("save", entity.receiptImageId) {
+    override fun save(entity: ReceiptImage): ServiceResult<ReceiptImage> =
+        handleServiceOperation("save", entity.receiptImageId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -50,10 +48,9 @@ open class StandardizedReceiptImageService(
 
             receiptImageRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: ReceiptImage): ServiceResult<ReceiptImage> {
-        return handleServiceOperation("update", entity.receiptImageId) {
+    override fun update(entity: ReceiptImage): ServiceResult<ReceiptImage> =
+        handleServiceOperation("update", entity.receiptImageId) {
             val existingReceiptImage = receiptImageRepository.findById(entity.receiptImageId)
             if (existingReceiptImage.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: ${entity.receiptImageId}")
@@ -64,10 +61,9 @@ open class StandardizedReceiptImageService(
 
             receiptImageRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalReceiptImage = receiptImageRepository.findById(id)
             if (optionalReceiptImage.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
@@ -75,12 +71,11 @@ open class StandardizedReceiptImageService(
             receiptImageRepository.deleteById(id)
             true
         }
-    }
 
     // ===== Additional ServiceResult Methods =====
 
-    fun findByTransactionId(transactionId: Long): ServiceResult<ReceiptImage> {
-        return handleServiceOperation("findByTransactionId", transactionId) {
+    fun findByTransactionId(transactionId: Long): ServiceResult<ReceiptImage> =
+        handleServiceOperation("findByTransactionId", transactionId) {
             val optionalReceiptImage = receiptImageRepository.findByTransactionId(transactionId)
             if (optionalReceiptImage.isPresent) {
                 optionalReceiptImage.get()
@@ -88,5 +83,4 @@ open class StandardizedReceiptImageService(
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found for transaction: $transactionId")
             }
         }
-    }
 }

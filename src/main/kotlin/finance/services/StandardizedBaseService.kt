@@ -12,7 +12,9 @@ import org.springframework.dao.DataIntegrityViolationException
  * @param T The entity type
  * @param ID The entity identifier type
  */
-abstract class StandardizedBaseService<T, ID> : BaseService(), StandardServiceInterface<T, ID> {
+abstract class StandardizedBaseService<T, ID> :
+    BaseService(),
+    StandardServiceInterface<T, ID> {
     /**
      * Abstract method to get entity name for logging and error messages
      * @return The entity name (e.g., "Account", "Transaction", "Parameter")
@@ -32,8 +34,8 @@ abstract class StandardizedBaseService<T, ID> : BaseService(), StandardServiceIn
         operation: String,
         entityId: ID?,
         block: () -> R,
-    ): ServiceResult<R> {
-        return try {
+    ): ServiceResult<R> =
+        try {
             logger.debug("$operation ${getEntityName()}: $entityId")
             val result = block()
             logger.info("Successfully completed $operation for ${getEntityName()}: $entityId")
@@ -70,7 +72,6 @@ abstract class StandardizedBaseService<T, ID> : BaseService(), StandardServiceIn
             meterService.incrementExceptionThrownCounter("BusinessLogicError")
             ServiceResult.BusinessError.of(message, "BUSINESS_LOGIC_ERROR")
         }
-    }
 
     /**
      * Extracts validation errors from ConstraintViolationException into a map

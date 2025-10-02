@@ -3,7 +3,9 @@ package finance.domain
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-enum class ClaimStatus(val label: String) {
+enum class ClaimStatus(
+    val label: String,
+) {
     Submitted("submitted"),
     Processing("processing"),
     Approved("approved"),
