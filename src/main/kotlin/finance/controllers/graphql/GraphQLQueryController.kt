@@ -5,17 +5,21 @@ import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Payment
+import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
+import finance.domain.Transaction
 import finance.domain.Transfer
 import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
 import finance.services.StandardizedPaymentService
+import finance.services.StandardizedReceiptImageService
 import finance.services.StandardizedTransferService
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.graphql.data.method.annotation.Argument
 import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.graphql.data.method.annotation.SchemaMapping
 import org.springframework.stereotype.Controller
 
 @Controller
@@ -25,6 +29,7 @@ class GraphQLQueryController(
     private val descriptionService: StandardizedDescriptionService,
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
+    private val receiptImageService: StandardizedReceiptImageService,
 ) {
     companion object {
         val logger: Logger = LogManager.getLogger()
@@ -175,5 +180,24 @@ class GraphQLQueryController(
     ): Any? {
         logger.info("GraphQL - Fetching receipt image: $receiptImageId (stub)")
         return null
+    }
+
+    /**
+     * Field resolver for Transaction.receiptImage - follows centralized GraphQL architecture
+     * Replaces the previous TransactionBatchResolver with proper schema mapping
+     */
+    @SchemaMapping(typeName = "Transaction", field = "receiptImage")
+    fun transactionReceiptImage(transaction: Transaction): ReceiptImage? {
+        logger.debug("GraphQL - Resolving receiptImage for transaction: {}", transaction.transactionId)
+        return when (val result = receiptImageService.findByTransactionId(transaction.transactionId)) {
+            is ServiceResult.Success -> {
+                logger.debug("GraphQL - Found receiptImage for transaction: {}", transaction.transactionId)
+                result.data
+            }
+            else -> {
+                logger.debug("GraphQL - No receiptImage found for transaction: {}", transaction.transactionId)
+                null
+            }
+        }
     }
 }

@@ -16,7 +16,8 @@ import java.sql.Timestamp
 class GraphQLQueryControllerSpec extends BaseServiceSpec {
 
     def transferServiceMock = GroovyMock(finance.services.StandardizedTransferService)
-    def controller = new GraphQLQueryController(accountService, categoryService, descriptionService, paymentService, transferServiceMock)
+    def receiptImageServiceMock = GroovyMock(finance.services.StandardizedReceiptImageService)
+    def controller = new GraphQLQueryController(accountService, categoryService, descriptionService, paymentService, transferServiceMock, receiptImageServiceMock)
 
     void setup() {
         accountService.meterService = meterService
