@@ -29,8 +29,10 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/account")
-class AccountController(private val standardizedAccountService: StandardizedAccountService) :
-    StandardizedBaseController(), StandardRestController<Account, String> {
+class AccountController(
+    private val standardizedAccountService: StandardizedAccountService,
+) : StandardizedBaseController(),
+    StandardRestController<Account, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -67,8 +69,8 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     @GetMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun findById(
         @PathVariable("accountNameOwner") id: String,
-    ): ResponseEntity<Account> {
-        return when (val result = standardizedAccountService.findById(id)) {
+    ): ResponseEntity<Account> =
+        when (val result = standardizedAccountService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved account: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -86,7 +88,6 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/account
@@ -95,8 +96,8 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Account,
-    ): ResponseEntity<Account> {
-        return when (val result = standardizedAccountService.save(entity)) {
+    ): ResponseEntity<Account> =
+        when (val result = standardizedAccountService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Account created successfully: ${entity.accountNameOwner} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -118,7 +119,6 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/account/{accountNameOwner}
@@ -128,8 +128,8 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     override fun update(
         @PathVariable("accountNameOwner") id: String,
         @Valid @RequestBody entity: Account,
-    ): ResponseEntity<Account> {
-        return when (val result = standardizedAccountService.update(entity)) {
+    ): ResponseEntity<Account> =
+        when (val result = standardizedAccountService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Account updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -151,7 +151,6 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
         }
-    }
 
     /**
      * Standardized entity deletion - DELETE /api/account/{accountNameOwner}
@@ -210,8 +209,8 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
         ],
     )
     @GetMapping("totals", produces = ["application/json"])
-    fun computeAccountTotals(): ResponseEntity<Map<String, String>> {
-        return try {
+    fun computeAccountTotals(): ResponseEntity<Map<String, String>> =
+        try {
             logger.debug("Computing account totals")
             val response: MutableMap<String, String> = HashMap()
             // TODO: 6/27/2021 - need to modify to 1 call from 3
@@ -230,13 +229,12 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             logger.error("Failed to compute account totals: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to compute account totals: ${ex.message}", ex)
         }
-    }
 
     // GET /api/account/validation/refresh
     // Triggers a bulk refresh of account.validation_date from t_validation_amount
     @GetMapping("/validation/refresh")
-    fun refreshValidationDates(): ResponseEntity<Void> {
-        return try {
+    fun refreshValidationDates(): ResponseEntity<Void> =
+        try {
             logger.info("Refreshing validation dates for all accounts from latest ValidationAmount rows")
             standardizedAccountService.updateValidationDatesForAllAccounts()
             ResponseEntity.noContent().build()
@@ -244,12 +242,11 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             logger.error("Failed to refresh validation dates: ${ex.message}", ex)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
-    }
 
     // curl -k https://localhost:8443/account/payment/required
     @GetMapping("/payment/required", produces = ["application/json"])
-    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
-        return try {
+    fun selectPaymentRequired(): ResponseEntity<List<Account>> =
+        try {
             logger.debug("Finding accounts that require payment")
             val accountNameOwners = standardizedAccountService.findAccountsThatRequirePayment()
             if (accountNameOwners.isEmpty()) {
@@ -262,7 +259,6 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             logger.error("Failed to find accounts requiring payment: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve payment required accounts: ${ex.message}", ex)
         }
-    }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 
@@ -461,8 +457,8 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,
         @RequestParam("new") newAccountNameOwner: String,
-    ): ResponseEntity<Account> {
-        return try {
+    ): ResponseEntity<Account> =
+        try {
             logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
             val accountResponse = standardizedAccountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
             logger.info("Account renamed successfully from $oldAccountNameOwner to $newAccountNameOwner")
@@ -474,14 +470,13 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             logger.error("Failed to rename account from $oldAccountNameOwner to $newAccountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to rename account: ${ex.message}", ex)
         }
-    }
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/deactivate/test_brian
     @PutMapping("/deactivate/{accountNameOwner}", produces = ["application/json"])
     fun deactivateAccount(
         @PathVariable accountNameOwner: String,
-    ): ResponseEntity<Account> {
-        return try {
+    ): ResponseEntity<Account> =
+        try {
             logger.info("Deactivating account: $accountNameOwner")
             val accountResponse = standardizedAccountService.deactivateAccount(accountNameOwner)
             logger.info("Account deactivated successfully: $accountNameOwner")
@@ -503,14 +498,13 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             logger.error("Failed to deactivate account $accountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to deactivate account: ${ex.message}", ex)
         }
-    }
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/activate/test_brian
     @PutMapping("/activate/{accountNameOwner}", produces = ["application/json"])
     fun activateAccount(
         @PathVariable accountNameOwner: String,
-    ): ResponseEntity<Account> {
-        return try {
+    ): ResponseEntity<Account> =
+        try {
             logger.info("Activating account: $accountNameOwner")
             val accountResponse = standardizedAccountService.activateAccount(accountNameOwner)
             logger.info("Account activated successfully: $accountNameOwner")
@@ -532,5 +526,4 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             logger.error("Failed to activate account $accountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to activate account: ${ex.message}", ex)
         }
-    }
 }

@@ -21,8 +21,10 @@ import java.util.Optional
 @CrossOrigin
 @RestController
 @RequestMapping("/api/transfer")
-class TransferController(private var standardizedTransferService: StandardizedTransferService) :
-    StandardizedBaseController(), StandardRestController<Transfer, Long> {
+class TransferController(
+    private var standardizedTransferService: StandardizedTransferService,
+) : StandardizedBaseController(),
+    StandardRestController<Transfer, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -30,8 +32,8 @@ class TransferController(private var standardizedTransferService: StandardizedTr
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Transfer>> {
-        return when (val result = standardizedTransferService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<Transfer>> =
+        when (val result = standardizedTransferService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active transfers")
                 ResponseEntity.ok(result.data)
@@ -49,7 +51,6 @@ class TransferController(private var standardizedTransferService: StandardizedTr
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/transfer/{transferId}
@@ -58,8 +59,8 @@ class TransferController(private var standardizedTransferService: StandardizedTr
     @GetMapping("/{transferId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("transferId") id: Long,
-    ): ResponseEntity<Transfer> {
-        return when (val result = standardizedTransferService.findById(id)) {
+    ): ResponseEntity<Transfer> =
+        when (val result = standardizedTransferService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved transfer: $id")
                 ResponseEntity.ok(result.data)
@@ -77,7 +78,6 @@ class TransferController(private var standardizedTransferService: StandardizedTr
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/transfer
@@ -86,8 +86,8 @@ class TransferController(private var standardizedTransferService: StandardizedTr
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Transfer,
-    ): ResponseEntity<Transfer> {
-        return when (val result = standardizedTransferService.save(entity)) {
+    ): ResponseEntity<Transfer> =
+        when (val result = standardizedTransferService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer created successfully: ${result.data.transferId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -109,7 +109,6 @@ class TransferController(private var standardizedTransferService: StandardizedTr
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/transfer/{transferId}
@@ -202,8 +201,8 @@ class TransferController(private var standardizedTransferService: StandardizedTr
      * Maintains original behavior
      */
     @GetMapping("/select", produces = ["application/json"])
-    fun selectAllTransfers(): ResponseEntity<List<Transfer>> {
-        return when (val result = standardizedTransferService.findAllActive()) {
+    fun selectAllTransfers(): ResponseEntity<List<Transfer>> =
+        when (val result = standardizedTransferService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} transfers (legacy endpoint)")
                 ResponseEntity.ok(result.data)
@@ -213,7 +212,6 @@ class TransferController(private var standardizedTransferService: StandardizedTr
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transfers")
             }
         }
-    }
 
     /**
      * Legacy endpoint - POST /api/transfer/insert
@@ -254,8 +252,8 @@ class TransferController(private var standardizedTransferService: StandardizedTr
     @DeleteMapping("/delete/{transferId}", produces = ["application/json"])
     fun deleteByTransferId(
         @PathVariable transferId: Long,
-    ): ResponseEntity<Transfer> {
-        return try {
+    ): ResponseEntity<Transfer> =
+        try {
             logger.info("Attempting to delete transfer: $transferId (legacy endpoint)")
             val transferOptional: Optional<Transfer> = standardizedTransferService.findByTransferId(transferId)
 
@@ -274,5 +272,4 @@ class TransferController(private var standardizedTransferService: StandardizedTr
             logger.error("Failed to delete transfer $transferId: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete transfer: ${ex.message}", ex)
         }
-    }
 }

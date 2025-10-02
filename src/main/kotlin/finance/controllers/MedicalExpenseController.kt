@@ -31,8 +31,10 @@ import java.sql.Date
 @CrossOrigin
 @RestController
 @RequestMapping("/api/medical-expenses")
-class MedicalExpenseController(private val standardizedMedicalExpenseService: StandardizedMedicalExpenseService) :
-    StandardizedBaseController(), StandardRestController<MedicalExpense, Long> {
+class MedicalExpenseController(
+    private val standardizedMedicalExpenseService: StandardizedMedicalExpenseService,
+) : StandardizedBaseController(),
+    StandardRestController<MedicalExpense, Long> {
     init {
         logger.info("★★★ MedicalExpenseController constructor called! Service: $standardizedMedicalExpenseService")
     }
@@ -44,8 +46,8 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      * Returns active medical expenses using standardized patterns
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<MedicalExpense>> {
-        return when (val result = standardizedMedicalExpenseService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<MedicalExpense>> =
+        when (val result = standardizedMedicalExpenseService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active medical expenses")
                 ResponseEntity.ok(result.data)
@@ -63,7 +65,6 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/medical-expenses/{medicalExpenseId}
@@ -72,8 +73,8 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @GetMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("medicalExpenseId") id: Long,
-    ): ResponseEntity<MedicalExpense> {
-        return when (val result = standardizedMedicalExpenseService.findById(id)) {
+    ): ResponseEntity<MedicalExpense> =
+        when (val result = standardizedMedicalExpenseService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved medical expense: $id")
                 ResponseEntity.ok(result.data)
@@ -91,7 +92,6 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/medical-expenses
@@ -100,8 +100,8 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: MedicalExpense,
-    ): ResponseEntity<MedicalExpense> {
-        return when (val result = standardizedMedicalExpenseService.save(entity)) {
+    ): ResponseEntity<MedicalExpense> =
+        when (val result = standardizedMedicalExpenseService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense created successfully: ${result.data.medicalExpenseId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -123,7 +123,6 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/medical-expenses/{medicalExpenseId}
@@ -525,8 +524,8 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
     private fun updateClaimStatusInternal(
         medicalExpenseId: Long,
         claimStatus: ClaimStatus,
-    ): ResponseEntity<Map<String, String>> {
-        return try {
+    ): ResponseEntity<Map<String, String>> =
+        try {
             val success = standardizedMedicalExpenseService.updateClaimStatus(medicalExpenseId, claimStatus)
             if (success) {
                 ResponseEntity.ok(mapOf("message" to "Claim status updated successfully"))
@@ -537,7 +536,6 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
             logger.error("Error updating claim status for medical expense ID: $medicalExpenseId", e)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
-    }
 
     /**
      * Legacy CRUD endpoint - DELETE /api/medical-expenses/delete/{medicalExpenseId}

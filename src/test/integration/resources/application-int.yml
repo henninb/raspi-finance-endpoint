@@ -71,12 +71,18 @@ spring:
   # = DATA SOURCE
   # ===============================
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;LOCK_TIMEOUT=10000;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password: password
     driver-class-name: org.h2.Driver
     hikari:
       auto-commit: false
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+      idle-timeout: 30000
+      max-lifetime: 60000
+      pool-name: IntegrationTestHikariPool
   sql:
     init:
       continue-on-error: false
@@ -96,7 +102,7 @@ spring:
   # ===============================
   # Show or not log for each sql query
   jpa:
-    show-sql: true
+    show-sql: false
     open-in-view: false
     generate-ddl: false
     hibernate:
@@ -110,12 +116,23 @@ spring:
         connection.provider_disables_autocommit: true
         # JDBC batch settings
         jdbc:
-          batch_size: 20
+          batch_size: 50
           batch_versioned_data: true
           time_zone: UTC
+          fetch_size: 50
         # Query plan cache
         query.plan_cache_max_size: 2048
         query.plan_parameter_metadata_max_size: 128
+        # Second-level cache (test-optimized)
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.internal.NoCachingRegionFactory
+        # Performance optimizations for tests
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
 
 
   # ===============================
@@ -148,10 +165,11 @@ custom:
 # ===============================
 logging:
   level:
-    root: INFO
-    org.flywaydb: DEBUG
-    org.springframework.boot.autoconfigure.flyway: DEBUG
-    org.springframework.boot.autoconfigure: DEBUG
+    root: WARN
+    org.flywaydb: WARN
+    org.springframework.boot.autoconfigure.flyway: WARN
+    org.springframework.boot.autoconfigure: WARN
+    finance: INFO
 
 #spring.jpa.hibernate.ddl-auto: none
 # Hibernate ddl auto (create, create-drop, update): with "create-drop" the database

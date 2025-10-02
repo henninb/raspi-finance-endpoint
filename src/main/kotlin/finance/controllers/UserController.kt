@@ -17,20 +17,20 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/user")
 class UserController
     @Autowired
-    constructor(private var userService: UserService) : BaseController() {
+    constructor(
+        private var userService: UserService,
+    ) : BaseController() {
         // curl -X POST -H "Content-Type: application/json"  -d '{"username":"user","password":"pass"}' http://localhost:8443/user/signin
         @PostMapping("/signin")
         fun signIn(
             @RequestBody user: User,
-        ): ResponseEntity<User> {
-            return ResponseEntity.ok(user)
-        }
+        ): ResponseEntity<User> = ResponseEntity.ok(user)
 
         @PostMapping("/signup")
         fun signUp(
             @RequestBody user: User,
-        ): ResponseEntity<String> {
-            return try {
+        ): ResponseEntity<String> =
+            try {
                 userService.signUp(user)
                 ResponseEntity.ok(mapper.writeValueAsString(user))
             } catch (ex: IllegalArgumentException) {
@@ -43,7 +43,6 @@ class UserController
                 logger.error("Unexpected error during user sign up: ${ex.message}", ex)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to sign up user: ${ex.message}", ex)
             }
-        }
 
 //    @GetMapping(value = "/whoami")
 //    public String whoami(HttpServletRequest req) throws JsonProcessingException {

@@ -31,14 +31,13 @@ class StandardizedPaymentService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Payment>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Payment>> =
+        handleServiceOperation("findAllActive", null) {
             paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
         }
-    }
 
-    override fun findById(id: Long): ServiceResult<Payment> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: Long): ServiceResult<Payment> =
+        handleServiceOperation("findById", id) {
             val optionalPayment = paymentRepository.findByPaymentId(id)
             if (optionalPayment.isPresent) {
                 optionalPayment.get()
@@ -46,10 +45,9 @@ class StandardizedPaymentService(
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Payment): ServiceResult<Payment> {
-        return handleServiceOperation("save", entity.paymentId) {
+    override fun save(entity: Payment): ServiceResult<Payment> =
+        handleServiceOperation("save", entity.paymentId) {
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -62,10 +60,9 @@ class StandardizedPaymentService(
 
             paymentRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: Payment): ServiceResult<Payment> {
-        return handleServiceOperation("update", entity.paymentId) {
+    override fun update(entity: Payment): ServiceResult<Payment> =
+        handleServiceOperation("update", entity.paymentId) {
             val existingPayment = paymentRepository.findByPaymentId(entity.paymentId!!)
             if (existingPayment.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
@@ -84,10 +81,9 @@ class StandardizedPaymentService(
 
             paymentRepository.saveAndFlush(paymentToUpdate)
         }
-    }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: Long): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalPayment = paymentRepository.findByPaymentId(id)
             if (optionalPayment.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
@@ -95,7 +91,6 @@ class StandardizedPaymentService(
             paymentRepository.delete(optionalPayment.get())
             true
         }
-    }
 
     // ===== Legacy Method Compatibility =====
 
@@ -192,9 +187,7 @@ class StandardizedPaymentService(
         }
     }
 
-    fun findByPaymentId(paymentId: Long): Optional<Payment> {
-        return paymentRepository.findByPaymentId(paymentId)
-    }
+    fun findByPaymentId(paymentId: Long): Optional<Payment> = paymentRepository.findByPaymentId(paymentId)
 
     fun deleteByPaymentId(paymentId: Long): Boolean {
         val optionalPayment = paymentRepository.findByPaymentId(paymentId)

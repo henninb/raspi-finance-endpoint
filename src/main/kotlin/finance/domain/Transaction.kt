@@ -126,8 +126,20 @@ data class Transaction(
     var notes: String = "",
 ) {
     constructor() : this(
-        0L, "", 0, AccountType.Undefined, TransactionType.Undefined, "", Date(0),
-        "", "", BigDecimal(0.00), TransactionState.Undefined, true, ReoccurringType.Undefined, "",
+        0L,
+        "",
+        0,
+        AccountType.Undefined,
+        TransactionType.Undefined,
+        "",
+        Date(0),
+        "",
+        "",
+        BigDecimal(0.00),
+        TransactionState.Undefined,
+        true,
+        ReoccurringType.Undefined,
+        "",
     )
 
     @JsonGetter("transactionDate")
@@ -203,9 +215,7 @@ data class Transaction(
     @JsonIgnore
     var categories = mutableListOf<Category>()
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

@@ -146,56 +146,42 @@ data class MedicalExpense(
 
     @Transient
     @JsonProperty("net_amount")
-    fun getNetAmount(): BigDecimal {
-        return billedAmount - insuranceDiscount - insurancePaid
-    }
+    fun getNetAmount(): BigDecimal = billedAmount - insuranceDiscount - insurancePaid
 
     @Transient
     @JsonProperty("total_covered")
-    fun getTotalCovered(): BigDecimal {
-        return insuranceDiscount + insurancePaid
-    }
+    fun getTotalCovered(): BigDecimal = insuranceDiscount + insurancePaid
 
     @Transient
     @JsonProperty("is_fully_paid")
-    fun isFullyPaid(): Boolean {
-        return paidAmount >= patientResponsibility
-    }
+    fun isFullyPaid(): Boolean = paidAmount >= patientResponsibility
 
     @Transient
     @JsonProperty("unpaid_amount")
-    fun getUnpaidAmount(): BigDecimal {
-        return (patientResponsibility - paidAmount).max(BigDecimal.ZERO)
-    }
+    fun getUnpaidAmount(): BigDecimal = (patientResponsibility - paidAmount).max(BigDecimal.ZERO)
 
     @Transient
     @JsonProperty("is_partially_paid")
-    fun isPartiallyPaid(): Boolean {
-        return paidAmount > BigDecimal.ZERO && paidAmount < patientResponsibility
-    }
+    fun isPartiallyPaid(): Boolean = paidAmount > BigDecimal.ZERO && paidAmount < patientResponsibility
 
     @Transient
     @JsonProperty("is_unpaid")
-    fun isUnpaid(): Boolean {
-        return paidAmount.compareTo(BigDecimal.ZERO) == 0 && patientResponsibility.compareTo(BigDecimal.ZERO) > 0
-    }
+    fun isUnpaid(): Boolean = paidAmount.compareTo(BigDecimal.ZERO) == 0 && patientResponsibility.compareTo(BigDecimal.ZERO) > 0
 
     @Transient
     @JsonProperty("is_overpaid")
-    fun isOverpaid(): Boolean {
-        return paidAmount > patientResponsibility
-    }
+    fun isOverpaid(): Boolean = paidAmount > patientResponsibility
 
     @Transient
     @JsonProperty("coverage_percentage")
-    fun getCoveragePercentage(): BigDecimal {
-        return if (billedAmount != BigDecimal.ZERO) {
-            getTotalCovered().divide(billedAmount, 4, java.math.RoundingMode.HALF_UP)
+    fun getCoveragePercentage(): BigDecimal =
+        if (billedAmount != BigDecimal.ZERO) {
+            getTotalCovered()
+                .divide(billedAmount, 4, java.math.RoundingMode.HALF_UP)
                 .multiply(BigDecimal("100"))
         } else {
             BigDecimal.ZERO
         }
-    }
 
     @PrePersist
     fun prePersist() {
@@ -222,9 +208,7 @@ data class MedicalExpense(
         }
     }
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -232,9 +216,7 @@ data class MedicalExpense(
         return medicalExpenseId == other.medicalExpenseId
     }
 
-    override fun hashCode(): Int {
-        return medicalExpenseId.hashCode()
-    }
+    override fun hashCode(): Int = medicalExpenseId.hashCode()
 
     companion object {
         @JsonIgnore

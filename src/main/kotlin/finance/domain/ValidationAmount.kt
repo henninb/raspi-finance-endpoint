@@ -68,9 +68,7 @@ data class ValidationAmount(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

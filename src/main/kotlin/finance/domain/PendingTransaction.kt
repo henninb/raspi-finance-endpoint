@@ -95,9 +95,7 @@ data class PendingTransaction(
     @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

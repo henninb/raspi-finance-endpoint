@@ -20,8 +20,10 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/pending/transaction")
-class PendingTransactionController(private val pendingTransactionService: StandardizedPendingTransactionService) :
-    StandardizedBaseController(), StandardRestController<PendingTransaction, Long> {
+class PendingTransactionController(
+    private val pendingTransactionService: StandardizedPendingTransactionService,
+) : StandardizedBaseController(),
+    StandardRestController<PendingTransaction, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -29,8 +31,8 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<PendingTransaction>> {
-        return when (val result = pendingTransactionService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<PendingTransaction>> =
+        when (val result = pendingTransactionService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active pending transactions")
                 ResponseEntity.ok(result.data)
@@ -48,7 +50,6 @@ class PendingTransactionController(private val pendingTransactionService: Standa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/pending/transaction/{pendingTransactionId}
@@ -57,8 +58,8 @@ class PendingTransactionController(private val pendingTransactionService: Standa
     @GetMapping("/{pendingTransactionId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("pendingTransactionId") id: Long,
-    ): ResponseEntity<PendingTransaction> {
-        return when (val result = pendingTransactionService.findById(id)) {
+    ): ResponseEntity<PendingTransaction> =
+        when (val result = pendingTransactionService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved pending transaction: $id")
                 ResponseEntity.ok(result.data)
@@ -76,7 +77,6 @@ class PendingTransactionController(private val pendingTransactionService: Standa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/pending/transaction
@@ -85,8 +85,8 @@ class PendingTransactionController(private val pendingTransactionService: Standa
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: PendingTransaction,
-    ): ResponseEntity<PendingTransaction> {
-        return when (val result = pendingTransactionService.save(entity)) {
+    ): ResponseEntity<PendingTransaction> =
+        when (val result = pendingTransactionService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Pending transaction created successfully: ${result.data.pendingTransactionId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -108,7 +108,6 @@ class PendingTransactionController(private val pendingTransactionService: Standa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/pending/transaction/{pendingTransactionId}
@@ -202,8 +201,8 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      * Maintains original behavior including 404 when empty
      */
     @GetMapping("/all", produces = ["application/json"])
-    fun getAllPendingTransactions(): ResponseEntity<List<PendingTransaction>> {
-        return when (val result = pendingTransactionService.findAllActive()) {
+    fun getAllPendingTransactions(): ResponseEntity<List<PendingTransaction>> =
+        when (val result = pendingTransactionService.findAllActive()) {
             is ServiceResult.Success -> {
                 if (result.data.isEmpty()) {
                     logger.warn("No pending transactions found")
@@ -225,7 +224,6 @@ class PendingTransactionController(private val pendingTransactionService: Standa
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve pending transactions", RuntimeException("Unexpected result type"))
             }
         }
-    }
 
     /**
      * Legacy endpoint - POST /api/pending/transaction/insert

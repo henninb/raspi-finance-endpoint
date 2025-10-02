@@ -21,8 +21,9 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/category")
-class CategoryController(private val standardizedCategoryService: StandardizedCategoryService) :
-    StandardizedBaseController() {
+class CategoryController(
+    private val standardizedCategoryService: StandardizedCategoryService,
+) : StandardizedBaseController() {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -30,8 +31,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    fun findAllActive(): ResponseEntity<*> {
-        return when (val result = standardizedCategoryService.findAllActive()) {
+    fun findAllActive(): ResponseEntity<*> =
+        when (val result = standardizedCategoryService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active categories")
                 ResponseEntity.ok(result.data)
@@ -49,7 +50,6 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/category/{categoryName}
@@ -58,8 +58,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     @GetMapping("/{categoryName}", produces = ["application/json"])
     fun findById(
         @PathVariable categoryName: String,
-    ): ResponseEntity<*> {
-        return when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
+    ): ResponseEntity<*> =
+        when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved category: $categoryName")
                 ResponseEntity.ok(result.data)
@@ -77,7 +77,6 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/category
@@ -86,8 +85,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     fun save(
         @Valid @RequestBody category: Category,
-    ): ResponseEntity<*> {
-        return when (val result = standardizedCategoryService.save(category)) {
+    ): ResponseEntity<*> =
+        when (val result = standardizedCategoryService.save(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category created successfully: ${category.categoryName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -116,7 +115,6 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/category/{categoryName}
@@ -215,8 +213,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
      * Maintains original behavior: throws 404 if empty
      */
     @GetMapping("/select/active", produces = ["application/json"])
-    fun categories(): ResponseEntity<List<Category>> {
-        return when (val result = standardizedCategoryService.findAllActive()) {
+    fun categories(): ResponseEntity<List<Category>> =
+        when (val result = standardizedCategoryService.findAllActive()) {
             is ServiceResult.Success -> {
                 if (result.data.isEmpty()) {
                     logger.warn("No categories found in the datastore")
@@ -234,7 +232,6 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve categories")
             }
         }
-    }
 
     /**
      * Legacy endpoint - GET /api/category/select/{category_name}
@@ -243,8 +240,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     @GetMapping("/select/{category_name}")
     fun category(
         @PathVariable("category_name") categoryName: String,
-    ): ResponseEntity<Category> {
-        return when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
+    ): ResponseEntity<Category> =
+        when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved category: ${result.data.categoryName}")
                 ResponseEntity.ok(result.data)
@@ -262,7 +259,6 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve category")
             }
         }
-    }
 
     /**
      * Legacy endpoint - POST /api/category/insert
@@ -270,8 +266,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertCategory(
         @RequestBody category: Category,
-    ): ResponseEntity<Category> {
-        return when (val result = standardizedCategoryService.save(category)) {
+    ): ResponseEntity<Category> =
+        when (val result = standardizedCategoryService.save(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category inserted successfully: ${result.data.categoryName}")
                 ResponseEntity(result.data, HttpStatus.CREATED)
@@ -293,7 +289,6 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error")
             }
         }
-    }
 
     /**
      * Legacy endpoint - PUT /api/category/update/{category_name}
@@ -387,8 +382,8 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
     fun mergeCategories(
         @RequestParam(value = "new") categoryName1: String,
         @RequestParam("old") categoryName2: String,
-    ): ResponseEntity<Category> {
-        return try {
+    ): ResponseEntity<Category> =
+        try {
             logger.info("Merging categories: $categoryName2 into $categoryName1")
             val mergedCategory = standardizedCategoryService.mergeCategories(categoryName1, categoryName2)
             logger.info("Categories merged successfully: $categoryName2 into $categoryName1")
@@ -397,5 +392,4 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
             logger.error("Failed to merge categories $categoryName2 into $categoryName1: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge categories: ${ex.message}", ex)
         }
-    }
 }

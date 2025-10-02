@@ -95,8 +95,11 @@ open class BaseService {
         operationName: String = "database-operation",
     ): CompletableFuture<T> {
         // If resilience components are not available (e.g., in test environment), execute directly
-        if (databaseResilienceConfig == null || circuitBreaker == null || retry == null ||
-            timeLimiter == null || scheduledExecutorService == null
+        if (databaseResilienceConfig == null ||
+            circuitBreaker == null ||
+            retry == null ||
+            timeLimiter == null ||
+            scheduledExecutorService == null
         ) {
             logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
             return CompletableFuture.completedFuture(executeDirectly(operation, operationName))
@@ -105,41 +108,42 @@ open class BaseService {
         val startTime = System.currentTimeMillis()
 
         return try {
-            databaseResilienceConfig!!.executeWithResilience(
-                operation = {
-                    val duration =
-                        measureTimeMillis {
-                            operation()
+            databaseResilienceConfig!!
+                .executeWithResilience(
+                    operation = {
+                        val duration =
+                            measureTimeMillis {
+                                operation()
+                            }
+                        if (duration > 100) {
+                            logger.warn("Slow query detected for {}: {} ms", operationName, duration)
+                            meterService.incrementExceptionThrownCounter("SlowQuery")
                         }
-                    if (duration > 100) {
-                        logger.warn("Slow query detected for {}: {} ms", operationName, duration)
-                        meterService.incrementExceptionThrownCounter("SlowQuery")
+                        operation()
+                    },
+                    circuitBreaker = circuitBreaker!!,
+                    retry = retry!!,
+                    timeLimiter = timeLimiter!!,
+                    executor = scheduledExecutorService!!,
+                ).whenComplete { result, throwable ->
+                    val totalDuration = System.currentTimeMillis() - startTime
+                    if (throwable != null) {
+                        logger.error(
+                            "Database operation {} failed after {} ms: {}",
+                            operationName,
+                            totalDuration,
+                            throwable.message,
+                        )
+                        when (throwable.cause) {
+                            is SQLException -> meterService.incrementExceptionThrownCounter("SQLException")
+                            is DataAccessResourceFailureException -> meterService.incrementExceptionThrownCounter("DataAccessResourceFailureException")
+                            is CannotGetJdbcConnectionException -> meterService.incrementExceptionThrownCounter("CannotGetJdbcConnectionException")
+                            else -> meterService.incrementExceptionThrownCounter("DatabaseOperationException")
+                        }
+                    } else {
+                        logger.debug("Database operation {} completed successfully in {} ms", operationName, totalDuration)
                     }
-                    operation()
-                },
-                circuitBreaker = circuitBreaker!!,
-                retry = retry!!,
-                timeLimiter = timeLimiter!!,
-                executor = scheduledExecutorService!!,
-            ).whenComplete { result, throwable ->
-                val totalDuration = System.currentTimeMillis() - startTime
-                if (throwable != null) {
-                    logger.error(
-                        "Database operation {} failed after {} ms: {}",
-                        operationName,
-                        totalDuration,
-                        throwable.message,
-                    )
-                    when (throwable.cause) {
-                        is SQLException -> meterService.incrementExceptionThrownCounter("SQLException")
-                        is DataAccessResourceFailureException -> meterService.incrementExceptionThrownCounter("DataAccessResourceFailureException")
-                        is CannotGetJdbcConnectionException -> meterService.incrementExceptionThrownCounter("CannotGetJdbcConnectionException")
-                        else -> meterService.incrementExceptionThrownCounter("DatabaseOperationException")
-                    }
-                } else {
-                    logger.debug("Database operation {} completed successfully in {} ms", operationName, totalDuration)
                 }
-            }
         } catch (ex: Exception) {
             logger.error(
                 "Failed to execute database operation {} with resilience patterns: {}",
@@ -165,8 +169,11 @@ open class BaseService {
         timeoutSeconds: Long = 30,
     ): T {
         // If resilience components are not available, execute directly
-        if (databaseResilienceConfig == null || circuitBreaker == null || retry == null ||
-            timeLimiter == null || scheduledExecutorService == null
+        if (databaseResilienceConfig == null ||
+            circuitBreaker == null ||
+            retry == null ||
+            timeLimiter == null ||
+            scheduledExecutorService == null
         ) {
             logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
             return executeDirectly(operation, operationName)

@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class FamilyRelationship(val label: String) {
+enum class FamilyRelationship(
+    val label: String,
+) {
     @JsonProperty("self")
     Self("self"),
 
