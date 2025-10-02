@@ -66,19 +66,19 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @GetMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun findById(
-        @PathVariable accountNameOwner: String,
+        @PathVariable("accountNameOwner") id: String,
     ): ResponseEntity<Account> {
-        return when (val result = standardizedAccountService.findById(accountNameOwner)) {
+        return when (val result = standardizedAccountService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved account: $accountNameOwner (standardized)")
+                logger.info("Retrieved account: $id (standardized)")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Account not found: $accountNameOwner (standardized)")
+                logger.warn("Account not found: $id (standardized)")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving account $accountNameOwner: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving account $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -94,11 +94,11 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody account: Account,
+        @Valid @RequestBody entity: Account,
     ): ResponseEntity<Account> {
-        return when (val result = standardizedAccountService.save(account)) {
+        return when (val result = standardizedAccountService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Account created successfully: ${account.accountNameOwner} (standardized)")
+                logger.info("Account created successfully: ${entity.accountNameOwner} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
@@ -126,16 +126,16 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @PutMapping("/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable accountNameOwner: String,
-        @Valid @RequestBody account: Account,
+        @PathVariable("accountNameOwner") id: String,
+        @Valid @RequestBody entity: Account,
     ): ResponseEntity<Account> {
-        return when (val result = standardizedAccountService.update(account)) {
+        return when (val result = standardizedAccountService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Account updated successfully: $accountNameOwner (standardized)")
+                logger.info("Account updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Account not found for update: $accountNameOwner (standardized)")
+                logger.warn("Account not found for update: $id (standardized)")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -150,10 +150,6 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
                 logger.error("System error updating account: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
-            }
         }
     }
 
@@ -163,22 +159,22 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
      */
     @DeleteMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable accountNameOwner: String,
+        @PathVariable("accountNameOwner") id: String,
     ): ResponseEntity<Account> {
         // First get the account to return it
-        val accountResult = standardizedAccountService.findById(accountNameOwner)
+        val accountResult = standardizedAccountService.findById(id)
         if (accountResult !is ServiceResult.Success) {
-            logger.warn("Account not found for deletion: $accountNameOwner")
+            logger.warn("Account not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val result = standardizedAccountService.deleteById(accountNameOwner)) {
+        return when (val result = standardizedAccountService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Account deleted successfully: $accountNameOwner")
+                logger.info("Account deleted successfully: $id")
                 ResponseEntity.ok(accountResult.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Account not found for deletion: $accountNameOwner")
+                logger.warn("Account not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
@@ -456,10 +452,6 @@ class AccountController(private val standardizedAccountService: StandardizedAcco
             is ServiceResult.SystemError -> {
                 logger.error("Failed to update account $accountNameOwner: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update account: ${result.exception.message}", result.exception)
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
             }
         }
     }

@@ -57,19 +57,19 @@ class TransferController(private var standardizedTransferService: StandardizedTr
      */
     @GetMapping("/{transferId}", produces = ["application/json"])
     override fun findById(
-        @PathVariable transferId: Long,
+        @PathVariable("transferId") id: Long,
     ): ResponseEntity<Transfer> {
-        return when (val result = standardizedTransferService.findById(transferId)) {
+        return when (val result = standardizedTransferService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved transfer: $transferId")
+                logger.info("Retrieved transfer: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Transfer not found: $transferId")
+                logger.warn("Transfer not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transfer $transferId: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving transfer $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -85,9 +85,9 @@ class TransferController(private var standardizedTransferService: StandardizedTr
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody transfer: Transfer,
+        @Valid @RequestBody entity: Transfer,
     ): ResponseEntity<Transfer> {
-        return when (val result = standardizedTransferService.save(transfer)) {
+        return when (val result = standardizedTransferService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer created successfully: ${result.data.transferId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -117,19 +117,20 @@ class TransferController(private var standardizedTransferService: StandardizedTr
      */
     @PutMapping("/{transferId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable transferId: Long,
-        @Valid @RequestBody transfer: Transfer,
+        @PathVariable("transferId") id: Long,
+        @Valid @RequestBody entity: Transfer,
     ): ResponseEntity<Transfer> {
         // Ensure the path ID matches the entity ID
-        transfer.transferId = transferId
+        entity.transferId = id
 
-        return when (val result = standardizedTransferService.update(transfer)) {
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
+        return when (val result = standardizedTransferService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Transfer updated successfully: $transferId")
+                logger.info("Transfer updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Transfer not found for update: $transferId")
+                logger.warn("Transfer not found for update: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -141,7 +142,7 @@ class TransferController(private var standardizedTransferService: StandardizedTr
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error updating transfer $transferId: ${result.exception.message}", result.exception)
+                logger.error("System error updating transfer $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -157,34 +158,34 @@ class TransferController(private var standardizedTransferService: StandardizedTr
      */
     @DeleteMapping("/{transferId}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable transferId: Long,
+        @PathVariable("transferId") id: Long,
     ): ResponseEntity<Transfer> {
         // First, retrieve the transfer to return it
         val transferToDelete =
-            when (val findResult = standardizedTransferService.findById(transferId)) {
+            when (val findResult = standardizedTransferService.findById(id)) {
                 is ServiceResult.Success -> findResult.data
                 is ServiceResult.NotFound -> {
-                    logger.warn("Transfer not found for deletion: $transferId")
+                    logger.warn("Transfer not found for deletion: $id")
                     return ResponseEntity.notFound().build()
                 }
                 else -> {
-                    logger.error("Error retrieving transfer for deletion: $transferId")
+                    logger.error("Error retrieving transfer for deletion: $id")
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                 }
             }
 
         // Then delete it
-        return when (val deleteResult = standardizedTransferService.deleteById(transferId)) {
+        return when (val deleteResult = standardizedTransferService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Transfer deleted successfully: $transferId")
+                logger.info("Transfer deleted successfully: $id")
                 ResponseEntity.ok(transferToDelete)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Transfer not found for deletion: $transferId")
+                logger.warn("Transfer not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error deleting transfer $transferId: ${deleteResult.exception.message}", deleteResult.exception)
+                logger.error("System error deleting transfer $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {

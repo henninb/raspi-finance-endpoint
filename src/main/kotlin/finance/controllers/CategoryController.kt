@@ -127,6 +127,7 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
         @PathVariable categoryName: String,
         @Valid @RequestBody category: Category,
     ): ResponseEntity<*> {
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = standardizedCategoryService.update(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category updated successfully: $categoryName")
@@ -303,6 +304,7 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
         @PathVariable("category_name") categoryName: String,
         @RequestBody toBePatchedCategory: Category,
     ): ResponseEntity<Category> {
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = standardizedCategoryService.update(toBePatchedCategory)) {
             is ServiceResult.Success -> {
                 logger.info("Category updated successfully: $categoryName")
@@ -326,7 +328,7 @@ class CategoryController(private val standardizedCategoryService: StandardizedCa
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update category")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
             }
         }
     }

@@ -384,4 +384,100 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         then:
         resp.statusCode == HttpStatus.BAD_REQUEST
     }
+
+    // ===== DEFENSIVE PROGRAMMING TESTS =====
+    // These tests verify that our defensive else clauses handle unexpected service responses
+
+    def "update handles null service response gracefully"() {
+        given:
+        MedicalExpense input = me(1L)
+        and:
+        // Mock the service to return null (simulating unexpected behavior)
+        StandardizedMedicalExpenseService mockService = Mock()
+        mockService.update(_ as MedicalExpense) >> null
+        MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
+
+        when:
+        ResponseEntity<?> response = controllerWithMockedService.update(1L, input)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "save handles null service response gracefully"() {
+        given:
+        MedicalExpense input = me(0L)
+        and:
+        StandardizedMedicalExpenseService mockService = Mock()
+        mockService.save(_ as MedicalExpense) >> null
+        MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
+
+        when:
+        ResponseEntity<MedicalExpense> response = controllerWithMockedService.save(input)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "findById handles null service response gracefully"() {
+        given:
+        StandardizedMedicalExpenseService mockService = Mock()
+        mockService.findByIdStandardized(_ as Long) >> null
+        MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
+
+        when:
+        ResponseEntity<MedicalExpense> response = controllerWithMockedService.findById(1L)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "findAllActive handles null service response gracefully"() {
+        given:
+        StandardizedMedicalExpenseService mockService = Mock()
+        mockService.findAllActiveStandardized() >> null
+        MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
+
+        when:
+        ResponseEntity<List<MedicalExpense>> response = controllerWithMockedService.findAllActive()
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "deleteById handles null findById service response gracefully"() {
+        given:
+        StandardizedMedicalExpenseService mockService = Mock()
+        mockService.findById(_ as Long) >> null  // This causes 404, not 500
+        MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
+
+        when:
+        ResponseEntity<MedicalExpense> response = controllerWithMockedService.deleteById(1L)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body == null
+    }
+
+    def "deleteById handles null deleteById service response gracefully"() {
+        given:
+        // Mock service to return success for findById but null for deleteById
+        StandardizedMedicalExpenseService mockService = Mock()
+        MedicalExpense existingEntity = me(1L)
+        def successResult = new finance.domain.ServiceResult.Success<MedicalExpense>(existingEntity)
+        mockService.findById(_ as Long) >> successResult
+        mockService.deleteById(_ as Long) >> null  // This hits the defensive else clause
+        MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
+
+        when:
+        ResponseEntity<MedicalExpense> response = controllerWithMockedService.deleteById(1L)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
 }

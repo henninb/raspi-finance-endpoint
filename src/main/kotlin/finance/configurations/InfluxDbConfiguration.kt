@@ -63,11 +63,13 @@ open class InfluxDbConfiguration {
             return Duration.parse("PT$stepString")
         }
 
+        @Deprecated("Deprecated in Micrometer InfluxConfig")
         override fun connectTimeout(): Duration {
             val timeoutString = environment.getProperty("management.metrics.export.influx.connect-timeout", "10s")
             return Duration.parse("PT$timeoutString")
         }
 
+        @Deprecated("Deprecated in Micrometer InfluxConfig")
         override fun readTimeout(): Duration {
             val timeoutString = environment.getProperty("management.metrics.export.influx.read-timeout", "30s")
             return Duration.parse("PT$timeoutString")

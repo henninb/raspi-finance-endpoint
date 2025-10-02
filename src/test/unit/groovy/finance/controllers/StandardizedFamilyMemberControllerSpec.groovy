@@ -273,4 +273,82 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
+
+    // ===== DEFENSIVE PROGRAMMING TESTS =====
+    // These tests verify that our defensive else clauses handle unexpected service responses
+
+    def "update handles null service response gracefully"() {
+        given:
+        FamilyMember input = fm(familyMemberId: 1L, memberName: "test")
+        and:
+        // Mock the service to return null (simulating unexpected behavior)
+        StandardizedFamilyMemberService mockService = Mock()
+        mockService.update(_ as FamilyMember) >> null
+        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
+
+        when:
+        ResponseEntity<?> response = controllerWithMockedService.update(1L, input)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        (response.body as Map)["error"] == "Internal server error"
+    }
+
+    def "save handles null service response gracefully"() {
+        given:
+        FamilyMember input = fm(familyMemberId: 0L, memberName: "test")
+        and:
+        StandardizedFamilyMemberService mockService = Mock()
+        mockService.save(_ as FamilyMember) >> null
+        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
+
+        when:
+        ResponseEntity<?> response = controllerWithMockedService.save(input)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "findById handles null service response gracefully"() {
+        given:
+        StandardizedFamilyMemberService mockService = Mock()
+        mockService.findByIdServiceResult(_ as Long) >> null
+        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
+
+        when:
+        ResponseEntity<FamilyMember> response = controllerWithMockedService.findById(1L)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "findAllActive handles null service response gracefully"() {
+        given:
+        StandardizedFamilyMemberService mockService = Mock()
+        mockService.findAllActive() >> null
+        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
+
+        when:
+        ResponseEntity<List<FamilyMember>> response = controllerWithMockedService.findAllActive()
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
+
+    def "deleteById handles null service response gracefully"() {
+        given:
+        StandardizedFamilyMemberService mockService = Mock()
+        mockService.deleteById(_ as Long) >> null
+        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
+
+        when:
+        ResponseEntity<?> response = controllerWithMockedService.deleteById(1L)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
+    }
 }

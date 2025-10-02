@@ -56,19 +56,19 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      */
     @GetMapping("/{pendingTransactionId}", produces = ["application/json"])
     override fun findById(
-        @PathVariable pendingTransactionId: Long,
+        @PathVariable("pendingTransactionId") id: Long,
     ): ResponseEntity<PendingTransaction> {
-        return when (val result = pendingTransactionService.findById(pendingTransactionId)) {
+        return when (val result = pendingTransactionService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved pending transaction: $pendingTransactionId")
+                logger.info("Retrieved pending transaction: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Pending transaction not found: $pendingTransactionId")
+                logger.warn("Pending transaction not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving pending transaction $pendingTransactionId: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -84,9 +84,9 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody pendingTransaction: PendingTransaction,
+        @Valid @RequestBody entity: PendingTransaction,
     ): ResponseEntity<PendingTransaction> {
-        return when (val result = pendingTransactionService.save(pendingTransaction)) {
+        return when (val result = pendingTransactionService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Pending transaction created successfully: ${result.data.pendingTransactionId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -116,19 +116,19 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      */
     @PutMapping("/{pendingTransactionId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable pendingTransactionId: Long,
-        @Valid @RequestBody pendingTransaction: PendingTransaction,
+        @PathVariable("pendingTransactionId") id: Long,
+        @Valid @RequestBody entity: PendingTransaction,
     ): ResponseEntity<PendingTransaction> {
         // Ensure the ID in the path matches the entity
-        pendingTransaction.pendingTransactionId = pendingTransactionId
+        entity.pendingTransactionId = id
 
-        return when (val result = pendingTransactionService.update(pendingTransaction)) {
+        return when (val result = pendingTransactionService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Pending transaction updated successfully: $pendingTransactionId")
+                logger.info("Pending transaction updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Pending transaction not found for update: $pendingTransactionId")
+                logger.warn("Pending transaction not found for update: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -140,11 +140,7 @@ class PendingTransactionController(private val pendingTransactionService: Standa
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error updating pending transaction $pendingTransactionId: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
+                logger.error("System error updating pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -156,18 +152,18 @@ class PendingTransactionController(private val pendingTransactionService: Standa
      */
     @DeleteMapping("/{pendingTransactionId}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable pendingTransactionId: Long,
+        @PathVariable("pendingTransactionId") id: Long,
     ): ResponseEntity<PendingTransaction> {
         // First get the entity to return it
-        val entityResult = pendingTransactionService.findById(pendingTransactionId)
+        val entityResult = pendingTransactionService.findById(id)
         if (entityResult !is ServiceResult.Success) {
             return when (entityResult) {
                 is ServiceResult.NotFound -> {
-                    logger.warn("Pending transaction not found for deletion: $pendingTransactionId")
+                    logger.warn("Pending transaction not found for deletion: $id")
                     ResponseEntity.notFound().build()
                 }
                 is ServiceResult.SystemError -> {
-                    logger.error("System error retrieving pending transaction for deletion $pendingTransactionId: ${entityResult.exception.message}", entityResult.exception)
+                    logger.error("System error retrieving pending transaction for deletion $id: ${entityResult.exception.message}", entityResult.exception)
                     ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                 }
                 else -> {
@@ -179,17 +175,17 @@ class PendingTransactionController(private val pendingTransactionService: Standa
 
         val entityToDelete = entityResult.data
 
-        return when (val result = pendingTransactionService.deleteById(pendingTransactionId)) {
+        return when (val result = pendingTransactionService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Pending transaction deleted successfully: $pendingTransactionId")
+                logger.info("Pending transaction deleted successfully: $id")
                 ResponseEntity.ok(entityToDelete)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Pending transaction not found for deletion: $pendingTransactionId")
+                logger.warn("Pending transaction not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error deleting pending transaction $pendingTransactionId: ${result.exception.message}", result.exception)
+                logger.error("System error deleting pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {

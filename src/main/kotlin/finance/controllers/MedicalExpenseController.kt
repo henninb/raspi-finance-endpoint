@@ -71,19 +71,19 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      */
     @GetMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun findById(
-        @PathVariable medicalExpenseId: Long,
+        @PathVariable("medicalExpenseId") id: Long,
     ): ResponseEntity<MedicalExpense> {
-        return when (val result = standardizedMedicalExpenseService.findById(medicalExpenseId)) {
+        return when (val result = standardizedMedicalExpenseService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved medical expense: $medicalExpenseId")
+                logger.info("Retrieved medical expense: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Medical expense not found: $medicalExpenseId")
+                logger.warn("Medical expense not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving medical expense $medicalExpenseId: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving medical expense $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -99,9 +99,9 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody medicalExpense: MedicalExpense,
+        @Valid @RequestBody entity: MedicalExpense,
     ): ResponseEntity<MedicalExpense> {
-        return when (val result = standardizedMedicalExpenseService.save(medicalExpense)) {
+        return when (val result = standardizedMedicalExpenseService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense created successfully: ${result.data.medicalExpenseId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -131,19 +131,20 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      */
     @PutMapping("/{medicalExpenseId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable medicalExpenseId: Long,
-        @Valid @RequestBody medicalExpense: MedicalExpense,
+        @PathVariable("medicalExpenseId") id: Long,
+        @Valid @RequestBody entity: MedicalExpense,
     ): ResponseEntity<MedicalExpense> {
         // Ensure the ID matches the path parameter
-        medicalExpense.medicalExpenseId = medicalExpenseId
+        entity.medicalExpenseId = id
 
-        return when (val result = standardizedMedicalExpenseService.update(medicalExpense)) {
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
+        return when (val result = standardizedMedicalExpenseService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Medical expense updated successfully: $medicalExpenseId")
+                logger.info("Medical expense updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Medical expense not found for update: $medicalExpenseId")
+                logger.warn("Medical expense not found for update: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -155,12 +156,12 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
                 ResponseEntity.status(HttpStatus.CONFLICT).build<MedicalExpense>()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error updating medical expense $medicalExpenseId: ${result.exception.message}", result.exception)
+                logger.error("System error updating medical expense $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
             }
         }
     }
@@ -171,26 +172,26 @@ class MedicalExpenseController(private val standardizedMedicalExpenseService: St
      */
     @DeleteMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable medicalExpenseId: Long,
+        @PathVariable("medicalExpenseId") id: Long,
     ): ResponseEntity<MedicalExpense> {
         // First find the entity to return it after deletion
-        val entityResult = standardizedMedicalExpenseService.findById(medicalExpenseId)
+        val entityResult = standardizedMedicalExpenseService.findById(id)
         if (entityResult !is ServiceResult.Success) {
-            logger.warn("Medical expense not found for deletion: $medicalExpenseId")
+            logger.warn("Medical expense not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val deleteResult = standardizedMedicalExpenseService.deleteById(medicalExpenseId)) {
+        return when (val deleteResult = standardizedMedicalExpenseService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Medical expense deleted successfully: $medicalExpenseId")
+                logger.info("Medical expense deleted successfully: $id")
                 ResponseEntity.ok(entityResult.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Medical expense not found for deletion: $medicalExpenseId")
+                logger.warn("Medical expense not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error deleting medical expense $medicalExpenseId: ${deleteResult.exception.message}", deleteResult.exception)
+                logger.error("System error deleting medical expense $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
