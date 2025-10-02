@@ -56,20 +56,20 @@ class TransactionController(private val standardizedTransactionService: Standard
      */
     @GetMapping("/{guid}", produces = ["application/json"])
     override fun findById(
-        @PathVariable guid: String,
+        @PathVariable("guid") id: String,
     ): ResponseEntity<Transaction> {
-        return when (val result = standardizedTransactionService.findById(guid)) {
+        return when (val result = standardizedTransactionService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved transaction: $guid")
+                logger.info("Retrieved transaction: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Transaction not found: $guid")
+                logger.warn("Transaction not found: $id")
                 meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transaction $guid: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -85,11 +85,11 @@ class TransactionController(private val standardizedTransactionService: Standard
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody transaction: Transaction,
+        @Valid @RequestBody entity: Transaction,
     ): ResponseEntity<Transaction> {
-        return when (val result = standardizedTransactionService.save(transaction)) {
+        return when (val result = standardizedTransactionService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Transaction created successfully: ${transaction.guid}")
+                logger.info("Transaction created successfully: ${entity.guid}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
@@ -117,19 +117,20 @@ class TransactionController(private val standardizedTransactionService: Standard
      */
     @PutMapping("/{guid}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable guid: String,
-        @Valid @RequestBody transaction: Transaction,
+        @PathVariable("guid") id: String,
+        @Valid @RequestBody entity: Transaction,
     ): ResponseEntity<Transaction> {
         // Ensure the guid matches the path parameter
-        val updatedTransaction = transaction.copy(guid = guid)
+        val updatedTransaction = entity.copy(guid = id)
 
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = standardizedTransactionService.update(updatedTransaction)) {
             is ServiceResult.Success -> {
-                logger.info("Transaction updated successfully: $guid")
+                logger.info("Transaction updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Transaction not found for update: $guid")
+                logger.warn("Transaction not found for update: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -141,12 +142,12 @@ class TransactionController(private val standardizedTransactionService: Standard
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Transaction>()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error updating transaction $guid: ${result.exception.message}", result.exception)
+                logger.error("System error updating transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
             }
         }
     }
@@ -157,26 +158,26 @@ class TransactionController(private val standardizedTransactionService: Standard
      */
     @DeleteMapping("/{guid}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable guid: String,
+        @PathVariable("guid") id: String,
     ): ResponseEntity<Transaction> {
         // First find the entity to return it after deletion
-        val entityResult = standardizedTransactionService.findById(guid)
+        val entityResult = standardizedTransactionService.findById(id)
         if (entityResult !is ServiceResult.Success) {
-            logger.warn("Transaction not found for deletion: $guid")
+            logger.warn("Transaction not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val deleteResult = standardizedTransactionService.deleteById(guid)) {
+        return when (val deleteResult = standardizedTransactionService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Transaction deleted successfully: $guid")
+                logger.info("Transaction deleted successfully: $id")
                 ResponseEntity.ok(entityResult.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Transaction not found for deletion: $guid")
+                logger.warn("Transaction not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error deleting transaction $guid: ${deleteResult.exception.message}", deleteResult.exception)
+                logger.error("System error deleting transaction $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -346,10 +347,6 @@ class TransactionController(private val standardizedTransactionService: Standard
             is ServiceResult.SystemError -> {
                 logger.error("Failed to update transaction $guid: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction: ${result.exception.message}", result.exception)
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
             }
         }
     }

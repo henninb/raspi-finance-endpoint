@@ -58,19 +58,19 @@ class ValidationAmountController(private var standardizedValidationAmountService
      */
     @GetMapping("/{validationId}", produces = ["application/json"])
     override fun findById(
-        @PathVariable validationId: Long,
+        @PathVariable("validationId") id: Long,
     ): ResponseEntity<ValidationAmount> {
-        return when (val result = standardizedValidationAmountService.findById(validationId)) {
+        return when (val result = standardizedValidationAmountService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved validation amount: $validationId")
+                logger.info("Retrieved validation amount: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Validation amount not found: $validationId")
+                logger.warn("Validation amount not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving validation amount $validationId: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -86,9 +86,9 @@ class ValidationAmountController(private var standardizedValidationAmountService
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody validationAmount: ValidationAmount,
+        @Valid @RequestBody entity: ValidationAmount,
     ): ResponseEntity<ValidationAmount> {
-        return when (val result = standardizedValidationAmountService.save(validationAmount)) {
+        return when (val result = standardizedValidationAmountService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount created successfully: ${result.data.validationId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -118,19 +118,19 @@ class ValidationAmountController(private var standardizedValidationAmountService
      */
     @PutMapping("/{validationId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable validationId: Long,
-        @Valid @RequestBody validationAmount: ValidationAmount,
+        @PathVariable("validationId") id: Long,
+        @Valid @RequestBody entity: ValidationAmount,
     ): ResponseEntity<ValidationAmount> {
         // Ensure the validationId in the path matches the entity
-        validationAmount.validationId = validationId
+        entity.validationId = id
 
-        return when (val result = standardizedValidationAmountService.update(validationAmount)) {
+        return when (val result = standardizedValidationAmountService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Validation amount updated successfully: $validationId")
+                logger.info("Validation amount updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Validation amount not found for update: $validationId")
+                logger.warn("Validation amount not found for update: $id")
                 ResponseEntity.notFound().build<ValidationAmount>()
             }
             is ServiceResult.ValidationError -> {
@@ -142,11 +142,7 @@ class ValidationAmountController(private var standardizedValidationAmountService
                 ResponseEntity.status(HttpStatus.CONFLICT).build<ValidationAmount>()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error updating validation amount $validationId: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
+                logger.error("System error updating validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
             }
         }
@@ -158,28 +154,28 @@ class ValidationAmountController(private var standardizedValidationAmountService
      */
     @DeleteMapping("/{validationId}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable validationId: Long,
+        @PathVariable("validationId") id: Long,
     ): ResponseEntity<ValidationAmount> {
         // First check if the validation amount exists
-        val findResult = standardizedValidationAmountService.findById(validationId)
+        val findResult = standardizedValidationAmountService.findById(id)
         if (findResult !is ServiceResult.Success) {
-            logger.warn("Validation amount not found for deletion: $validationId")
+            logger.warn("Validation amount not found for deletion: $id")
             return ResponseEntity.notFound().build<ValidationAmount>()
         }
 
         val validationAmountToDelete = findResult.data
 
-        return when (val result = standardizedValidationAmountService.deleteById(validationId)) {
+        return when (val result = standardizedValidationAmountService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Validation amount deleted successfully: $validationId")
+                logger.info("Validation amount deleted successfully: $id")
                 ResponseEntity.ok(validationAmountToDelete)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Validation amount not found for deletion: $validationId")
+                logger.warn("Validation amount not found for deletion: $id")
                 ResponseEntity.notFound().build<ValidationAmount>()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error deleting validation amount $validationId: ${result.exception.message}", result.exception)
+                logger.error("System error deleting validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
             }
             else -> {

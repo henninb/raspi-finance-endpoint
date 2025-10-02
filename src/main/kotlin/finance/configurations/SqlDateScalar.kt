@@ -21,6 +21,7 @@ object SqlDateScalar {
                             isLenient = false
                         }
 
+                    @Deprecated("Deprecated in GraphQL Extended Scalars")
                     override fun serialize(dataFetcherResult: Any): String {
                         return when (dataFetcherResult) {
                             is Date -> dateFormat.format(dataFetcherResult)
@@ -30,6 +31,7 @@ object SqlDateScalar {
                         }
                     }
 
+                    @Deprecated("Deprecated in GraphQL Extended Scalars")
                     override fun parseValue(input: Any): Date {
                         return when (input) {
                             is String -> Date(dateFormat.parse(input).time)
@@ -39,6 +41,7 @@ object SqlDateScalar {
                         }
                     }
 
+                    @Deprecated("Deprecated in GraphQL Extended Scalars")
                     override fun parseLiteral(input: Any): Date {
                         return when (input) {
                             is StringValue -> Date(dateFormat.parse(input.value).time)
