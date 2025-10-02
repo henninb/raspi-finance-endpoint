@@ -128,6 +128,7 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
         @Valid @RequestBody member: FamilyMember,
     ): ResponseEntity<*> {
         member.familyMemberId = familyMemberId
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = standardizedFamilyMemberService.update(member)) {
             is ServiceResult.Success -> {
                 logger.info("Family member updated successfully: $familyMemberId")
@@ -151,7 +152,7 @@ open class FamilyMemberController(private val standardizedFamilyMemberService: S
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Any>()
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
             }
         }
     }

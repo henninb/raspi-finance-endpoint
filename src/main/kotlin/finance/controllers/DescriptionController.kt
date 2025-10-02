@@ -57,19 +57,19 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      */
     @GetMapping("/{descriptionName}", produces = ["application/json"])
     override fun findById(
-        @PathVariable descriptionName: String,
+        @PathVariable("descriptionName") id: String,
     ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
+        return when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved description: $descriptionName")
+                logger.info("Retrieved description: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Description not found: $descriptionName")
+                logger.warn("Description not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving description $descriptionName: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving description $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -85,11 +85,11 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody description: Description,
+        @Valid @RequestBody entity: Description,
     ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.save(description)) {
+        return when (val result = standardizedDescriptionService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Description created successfully: ${description.descriptionName}")
+                logger.info("Description created successfully: ${entity.descriptionName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
@@ -117,16 +117,16 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      */
     @PutMapping("/{descriptionName}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable descriptionName: String,
-        @Valid @RequestBody description: Description,
+        @PathVariable("descriptionName") id: String,
+        @Valid @RequestBody entity: Description,
     ): ResponseEntity<Description> {
-        return when (val result = standardizedDescriptionService.update(description)) {
+        return when (val result = standardizedDescriptionService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Description updated successfully: $descriptionName")
+                logger.info("Description updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Description not found for update: $descriptionName")
+                logger.warn("Description not found for update: $id")
                 ResponseEntity.notFound().build<Description>()
             }
             is ServiceResult.ValidationError -> {
@@ -138,12 +138,8 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error updating description $descriptionName: ${result.exception.message}", result.exception)
+                logger.error("System error updating description $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
     }
@@ -154,23 +150,23 @@ class DescriptionController(private val standardizedDescriptionService: Standard
      */
     @DeleteMapping("/{descriptionName}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable descriptionName: String,
+        @PathVariable("descriptionName") id: String,
     ): ResponseEntity<Description> {
         // First find the description to return it
-        return when (val findResult = standardizedDescriptionService.findByDescriptionNameStandardized(descriptionName)) {
+        return when (val findResult = standardizedDescriptionService.findByDescriptionNameStandardized(id)) {
             is ServiceResult.Success -> {
                 val description = findResult.data
-                when (val deleteResult = standardizedDescriptionService.deleteByDescriptionNameStandardized(descriptionName)) {
+                when (val deleteResult = standardizedDescriptionService.deleteByDescriptionNameStandardized(id)) {
                     is ServiceResult.Success -> {
-                        logger.info("Description deleted successfully: $descriptionName")
+                        logger.info("Description deleted successfully: $id")
                         ResponseEntity.ok(description)
                     }
                     is ServiceResult.NotFound -> {
-                        logger.warn("Description not found for deletion: $descriptionName")
+                        logger.warn("Description not found for deletion: $id")
                         ResponseEntity.notFound().build<Description>()
                     }
                     is ServiceResult.SystemError -> {
-                        logger.error("System error deleting description $descriptionName: ${deleteResult.exception.message}", deleteResult.exception)
+                        logger.error("System error deleting description $id: ${deleteResult.exception.message}", deleteResult.exception)
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
                     }
                     else -> {
@@ -180,11 +176,11 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                 }
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Description not found for deletion: $descriptionName")
+                logger.warn("Description not found for deletion: $id")
                 ResponseEntity.notFound().build<Description>()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error finding description $descriptionName: ${findResult.exception.message}", findResult.exception)
+                logger.error("System error finding description $id: ${findResult.exception.message}", findResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
             }
             else -> {
@@ -251,10 +247,6 @@ class DescriptionController(private val standardizedDescriptionService: Standard
                     is ServiceResult.SystemError -> {
                         logger.error("Failed to update description $descriptionName: ${updateResult.exception.message}", updateResult.exception)
                         throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update description: ${updateResult.exception.message}", updateResult.exception)
-                    }
-                    else -> {
-                        logger.error("Unexpected update result: $updateResult")
-                        throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update description")
                     }
                 }
             }

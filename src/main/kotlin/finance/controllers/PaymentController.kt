@@ -171,19 +171,19 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      */
     @GetMapping("/{paymentId}", produces = ["application/json"])
     override fun findById(
-        @PathVariable paymentId: Long,
+        @PathVariable("paymentId") id: Long,
     ): ResponseEntity<Payment> {
-        return when (val result = standardizedPaymentService.findById(paymentId)) {
+        return when (val result = standardizedPaymentService.findById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved payment: $paymentId (standardized)")
+                logger.info("Retrieved payment: $id (standardized)")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Payment not found: $paymentId (standardized)")
+                logger.warn("Payment not found: $id (standardized)")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving payment $paymentId: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving payment $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -199,11 +199,11 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody payment: Payment,
+        @Valid @RequestBody entity: Payment,
     ): ResponseEntity<Payment> {
-        return when (val result = standardizedPaymentService.save(payment)) {
+        return when (val result = standardizedPaymentService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Payment created successfully: ${payment.sourceAccount} -> ${payment.destinationAccount} (standardized)")
+                logger.info("Payment created successfully: ${entity.sourceAccount} -> ${entity.destinationAccount} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
@@ -231,16 +231,17 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      */
     @PutMapping("/{paymentId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable paymentId: Long,
-        @Valid @RequestBody payment: Payment,
+        @PathVariable("paymentId") id: Long,
+        @Valid @RequestBody entity: Payment,
     ): ResponseEntity<Payment> {
-        return when (val result = standardizedPaymentService.update(payment)) {
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
+        return when (val result = standardizedPaymentService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Payment updated successfully: $paymentId (standardized)")
+                logger.info("Payment updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Payment not found for update: $paymentId (standardized)")
+                logger.warn("Payment not found for update: $id (standardized)")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -268,22 +269,22 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      */
     @DeleteMapping("/{paymentId}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable paymentId: Long,
+        @PathVariable("paymentId") id: Long,
     ): ResponseEntity<Payment> {
         // First get the payment to return it
-        val paymentResult = standardizedPaymentService.findById(paymentId)
+        val paymentResult = standardizedPaymentService.findById(id)
         if (paymentResult !is ServiceResult.Success) {
-            logger.warn("Payment not found for deletion: $paymentId")
+            logger.warn("Payment not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val result = standardizedPaymentService.deleteById(paymentId)) {
+        return when (val result = standardizedPaymentService.deleteById(id)) {
             is ServiceResult.Success -> {
-                logger.info("Payment deleted successfully: $paymentId")
+                logger.info("Payment deleted successfully: $id")
                 ResponseEntity.ok(paymentResult.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Payment not found for deletion: $paymentId")
+                logger.warn("Payment not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
