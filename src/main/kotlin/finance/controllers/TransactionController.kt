@@ -29,8 +29,11 @@ import java.util.Locale
 @CrossOrigin
 @RestController
 @RequestMapping("/api/transaction")
-class TransactionController(private val standardizedTransactionService: StandardizedTransactionService, private val meterService: MeterService) :
-    StandardizedBaseController(), StandardRestController<Transaction, String> {
+class TransactionController(
+    private val standardizedTransactionService: StandardizedTransactionService,
+    private val meterService: MeterService,
+) : StandardizedBaseController(),
+    StandardRestController<Transaction, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -39,8 +42,8 @@ class TransactionController(private val standardizedTransactionService: Standard
      * Note: Transactions are typically queried by account, category, or other criteria
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Transaction>> {
-        return handleCrudOperation("Find all active transactions", null) {
+    override fun findAllActive(): ResponseEntity<List<Transaction>> =
+        handleCrudOperation("Find all active transactions", null) {
             logger.debug("Retrieving all active transactions (standardized endpoint)")
             // For standardization compliance, return empty list
             // Business logic endpoints like /account/select/{account} should be used for actual queries
@@ -48,7 +51,6 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.info("Standardized endpoint - returning empty list. Use business endpoints for data.")
             transactions
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/transaction/{guid}
@@ -57,8 +59,8 @@ class TransactionController(private val standardizedTransactionService: Standard
     @GetMapping("/{guid}", produces = ["application/json"])
     override fun findById(
         @PathVariable("guid") id: String,
-    ): ResponseEntity<Transaction> {
-        return when (val result = standardizedTransactionService.findById(id)) {
+    ): ResponseEntity<Transaction> =
+        when (val result = standardizedTransactionService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved transaction: $id")
                 ResponseEntity.ok(result.data)
@@ -77,7 +79,6 @@ class TransactionController(private val standardizedTransactionService: Standard
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/transaction
@@ -86,8 +87,8 @@ class TransactionController(private val standardizedTransactionService: Standard
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Transaction,
-    ): ResponseEntity<Transaction> {
-        return when (val result = standardizedTransactionService.save(entity)) {
+    ): ResponseEntity<Transaction> =
+        when (val result = standardizedTransactionService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction created successfully: ${entity.guid}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -109,7 +110,6 @@ class TransactionController(private val standardizedTransactionService: Standard
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/transaction/{guid}
@@ -205,7 +205,9 @@ class TransactionController(private val standardizedTransactionService: Standard
             org.springframework.data.domain.PageRequest.of(
                 page,
                 size,
-                org.springframework.data.domain.Sort.by("transactionDate").descending(),
+                org.springframework.data.domain.Sort
+                    .by("transactionDate")
+                    .descending(),
             )
         val startDate = java.sql.Date(start.time)
         val endDate = java.sql.Date(end.time)
@@ -224,8 +226,8 @@ class TransactionController(private val standardizedTransactionService: Standard
     @GetMapping("/account/select/{accountNameOwner}", produces = ["application/json"])
     fun selectByAccountNameOwner(
         @PathVariable("accountNameOwner") accountNameOwner: String,
-    ): ResponseEntity<List<Transaction>> {
-        return try {
+    ): ResponseEntity<List<Transaction>> =
+        try {
             logger.debug("Retrieving transactions for account: $accountNameOwner")
             val transactions: List<Transaction> =
                 standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
@@ -240,14 +242,13 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to retrieve transactions for account $accountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions: ${ex.message}", ex)
         }
-    }
 
     // curl -k https://localhost:8443/transaction/account/totals/chase_brian
     @GetMapping("/account/totals/{accountNameOwner}", produces = ["application/json"])
     fun selectTotalsCleared(
         @PathVariable("accountNameOwner") accountNameOwner: String,
-    ): ResponseEntity<Totals> {
-        return try {
+    ): ResponseEntity<Totals> =
+        try {
             logger.debug("Calculating totals for account: $accountNameOwner")
             val results: Totals =
                 standardizedTransactionService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
@@ -258,7 +259,6 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to calculate totals for account $accountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to calculate account totals: ${ex.message}", ex)
         }
-    }
 
     /**
      * Legacy CRUD endpoint - GET /api/transaction/select/{guid}
@@ -360,11 +360,12 @@ class TransactionController(private val standardizedTransactionService: Standard
     fun updateTransactionState(
         @PathVariable("guid") guid: String,
         @PathVariable("transactionStateValue") transactionStateValue: String,
-    ): ResponseEntity<Transaction> {
-        return try {
+    ): ResponseEntity<Transaction> =
+        try {
             logger.info("Updating transaction state for $guid to $transactionStateValue")
             val newTransactionStateValue =
-                transactionStateValue.lowercase()
+                transactionStateValue
+                    .lowercase()
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
             val transactionResponse =
                 standardizedTransactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
@@ -377,7 +378,6 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to update transaction state for $guid: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state: ${ex.message}", ex)
         }
-    }
 
     /**
      * Legacy CRUD endpoint - POST /api/transaction/insert
@@ -450,8 +450,8 @@ class TransactionController(private val standardizedTransactionService: Standard
     @PutMapping("/update/account", consumes = ["application/json"], produces = ["application/json"])
     fun changeTransactionAccountNameOwner(
         @RequestBody payload: Map<String, String>,
-    ): ResponseEntity<Transaction> {
-        return try {
+    ): ResponseEntity<Transaction> =
+        try {
             val accountNameOwner = payload["accountNameOwner"]
             val guid = payload["guid"]
             logger.info("Changing transaction account for guid $guid to accountNameOwner $accountNameOwner")
@@ -469,15 +469,14 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to change transaction account: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction account: ${ex.message}", ex)
         }
-    }
 
     // curl -k --header "Content-Type: application/json" --request PUT --data 'base64encodedimagedata' https://localhost:8443/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f
     @PutMapping("/update/receipt/image/{guid}", produces = ["application/json"])
     fun updateTransactionReceiptImageByGuid(
         @PathVariable("guid") guid: String,
         @RequestBody payload: String,
-    ): ResponseEntity<ReceiptImage> {
-        return try {
+    ): ResponseEntity<ReceiptImage> =
+        try {
             logger.info("Updating receipt image for transaction: $guid")
             val receiptImage = standardizedTransactionService.updateTransactionReceiptImageByGuid(guid, payload)
             logger.info("Receipt image updated successfully for transaction: $guid")
@@ -486,7 +485,6 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to update receipt image for transaction $guid: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${ex.message}", ex)
         }
-    }
 
     /**
      * Legacy CRUD endpoint - DELETE /api/transaction/delete/{guid}
@@ -551,8 +549,8 @@ class TransactionController(private val standardizedTransactionService: Standard
     @GetMapping("/category/{category_name}", produces = ["application/json"])
     fun selectTransactionsByCategory(
         @PathVariable("category_name") categoryName: String,
-    ): ResponseEntity<List<Transaction>> {
-        return try {
+    ): ResponseEntity<List<Transaction>> =
+        try {
             logger.debug("Retrieving transactions for category: $categoryName")
             val transactions = standardizedTransactionService.findTransactionsByCategory(categoryName)
             if (transactions.isEmpty()) {
@@ -565,14 +563,13 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to retrieve transactions for category $categoryName: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by category: ${ex.message}", ex)
         }
-    }
 
     // curl -k https://localhost:8443/transaction/description/amazon
     @GetMapping("/description/{description_name}", produces = ["application/json"])
     fun selectTransactionsByDescription(
         @PathVariable("description_name") descriptionName: String,
-    ): ResponseEntity<List<Transaction>> {
-        return try {
+    ): ResponseEntity<List<Transaction>> =
+        try {
             logger.debug("Retrieving transactions for description: $descriptionName")
             val transactions = standardizedTransactionService.findTransactionsByDescription(descriptionName)
             if (transactions.isEmpty()) {
@@ -585,5 +582,4 @@ class TransactionController(private val standardizedTransactionService: Standard
             logger.error("Failed to retrieve transactions for description $descriptionName: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by description: ${ex.message}", ex)
         }
-    }
 }

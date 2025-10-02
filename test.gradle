@@ -111,6 +111,24 @@ task integrationTest(type: Test) {
 
     // Gradle 9 compatibility
     useJUnitPlatform()
+
+    // Performance optimizations
+    maxParallelForks = Math.max(1, (Runtime.runtime.availableProcessors() / 2) as int)
+    forkEvery = 0  // No forking per test class (reuse JVM)
+
+    // JVM optimization for tests
+    jvmArgs = [
+        '-Xmx1024m',
+        '-XX:+UseParallelGC',
+        '-XX:MaxMetaspaceSize=512m',
+        '-Djava.awt.headless=true'
+    ]
+
+    testLogging {
+        events "failed", "skipped"
+        exceptionFormat "short"
+        showStandardStreams = false
+    }
 }
 
 task functionalTest(type: Test) {

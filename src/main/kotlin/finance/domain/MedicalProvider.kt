@@ -124,9 +124,26 @@ data class MedicalProvider(
     var activeStatus: Boolean = true,
 ) {
     constructor() : this(
-        0L, "", MedicalProviderType.General, null, null, null,
-        null, null, null, null, null, "US",
-        null, null, null, null, NetworkStatus.Unknown, null, null, true,
+        0L,
+        "",
+        MedicalProviderType.General,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "US",
+        null,
+        null,
+        null,
+        null,
+        NetworkStatus.Unknown,
+        null,
+        null,
+        true,
     )
 
     @JsonProperty
@@ -137,9 +154,7 @@ data class MedicalProvider(
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    override fun toString(): String {
-        return mapper.writeValueAsString(this)
-    }
+    override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
         @JsonIgnore

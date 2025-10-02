@@ -204,8 +204,8 @@ class RateLimitingFilter : OncePerRequestFilter() {
         }
     }
 
-    private fun isValidIpAddress(ip: String): Boolean {
-        return try {
+    private fun isValidIpAddress(ip: String): Boolean =
+        try {
             InetAddress.getByName(ip)
             // Basic validation - reject obvious spoofing attempts
             ip.matches("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$".toRegex()) ||
@@ -213,7 +213,6 @@ class RateLimitingFilter : OncePerRequestFilter() {
         } catch (e: Exception) {
             false
         }
-    }
 
     private fun cleanupOldEntries() {
         val cutoffTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(windowSizeMinutes * 2)
@@ -252,9 +251,7 @@ class RateLimitingFilter : OncePerRequestFilter() {
         fun isRateLimitExceeded(
             windowStart: Long,
             limit: Int,
-        ): Boolean {
-            return getRequestCount(windowStart) >= limit
-        }
+        ): Boolean = getRequestCount(windowStart) >= limit
 
         fun getRequestCount(windowStart: Long): Int {
             synchronized(lock) {

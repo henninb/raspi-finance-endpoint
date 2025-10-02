@@ -46,7 +46,8 @@ class UserService(
     }
 
     fun findUserByUsername(username: String): User? =
-        userRepository.findByUsername(username)
+        userRepository
+            .findByUsername(username)
             .orElse(null)
             ?.apply { password = "" }
 }

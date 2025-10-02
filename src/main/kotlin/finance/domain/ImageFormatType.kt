@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class ImageFormatType(val label: String) {
+enum class ImageFormatType(
+    val label: String,
+) {
     @JsonProperty("jpeg")
     Jpeg("jpeg"),
 

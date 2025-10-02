@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class TransactionState(val label: String) {
+enum class TransactionState(
+    val label: String,
+) {
     @JsonProperty("cleared")
     Cleared("cleared"),
 
@@ -25,6 +27,7 @@ enum class TransactionState(val label: String) {
     companion object {
         private val VALUES = values()
 
+        @JvmStatic
         fun getByValue(label: String) = VALUES.firstOrNull { it.label == label }
     }
 }

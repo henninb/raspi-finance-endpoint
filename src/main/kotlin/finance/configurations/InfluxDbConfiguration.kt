@@ -15,11 +15,11 @@ import java.time.Duration
 @ConditionalOnProperty(name = ["management.metrics.export.influx.enabled"], havingValue = "true")
 open class InfluxDbConfiguration {
     @Bean
-    open fun influxConfig(environment: Environment): InfluxConfig {
-        return CustomInfluxConfig(environment)
-    }
+    open fun influxConfig(environment: Environment): InfluxConfig = CustomInfluxConfig(environment)
 
-    class CustomInfluxConfig(private val environment: Environment) : InfluxConfig {
+    class CustomInfluxConfig(
+        private val environment: Environment,
+    ) : InfluxConfig {
         override fun get(key: String): String? {
             // Return property values for Micrometer's internal use
             return when (key) {
@@ -28,17 +28,11 @@ open class InfluxDbConfiguration {
             }
         }
 
-        override fun enabled(): Boolean {
-            return environment.getProperty("management.metrics.export.influx.enabled", Boolean::class.java, false)
-        }
+        override fun enabled(): Boolean = environment.getProperty("management.metrics.export.influx.enabled", Boolean::class.java, false)
 
-        override fun uri(): String {
-            return environment.getProperty("management.metrics.export.influx.uri", "http://localhost:8086")
-        }
+        override fun uri(): String = environment.getProperty("management.metrics.export.influx.uri", "http://localhost:8086")
 
-        override fun db(): String {
-            return environment.getProperty("management.metrics.export.influx.db", "metrics")
-        }
+        override fun db(): String = environment.getProperty("management.metrics.export.influx.db", "metrics")
 
         override fun userName(): String? {
             val username = environment.getProperty("management.metrics.export.influx.user-name")
@@ -50,13 +44,9 @@ open class InfluxDbConfiguration {
             return if (password.isNullOrBlank()) null else password
         }
 
-        override fun autoCreateDb(): Boolean {
-            return environment.getProperty("management.metrics.export.influx.auto-create-db", Boolean::class.java, true)
-        }
+        override fun autoCreateDb(): Boolean = environment.getProperty("management.metrics.export.influx.auto-create-db", Boolean::class.java, true)
 
-        override fun compressed(): Boolean {
-            return environment.getProperty("management.metrics.export.influx.compressed", Boolean::class.java, true)
-        }
+        override fun compressed(): Boolean = environment.getProperty("management.metrics.export.influx.compressed", Boolean::class.java, true)
 
         override fun step(): Duration {
             val stepString = environment.getProperty("management.metrics.export.influx.step", "1m")
@@ -75,21 +65,13 @@ open class InfluxDbConfiguration {
             return Duration.parse("PT$timeoutString")
         }
 
-        override fun bucket(): String {
-            return environment.getProperty("management.metrics.export.influx.bucket", "")
-        }
+        override fun bucket(): String = environment.getProperty("management.metrics.export.influx.bucket", "")
 
-        override fun org(): String? {
-            return environment.getProperty("management.metrics.export.influx.org")
-        }
+        override fun org(): String? = environment.getProperty("management.metrics.export.influx.org")
 
-        override fun token(): String? {
-            return environment.getProperty("management.metrics.export.influx.token")
-        }
+        override fun token(): String? = environment.getProperty("management.metrics.export.influx.token")
     }
 
     @Bean
-    open fun influxMeterRegistry(influxConfig: InfluxConfig): InfluxMeterRegistry {
-        return InfluxMeterRegistry(influxConfig, Clock.SYSTEM)
-    }
+    open fun influxMeterRegistry(influxConfig: InfluxConfig): InfluxMeterRegistry = InfluxMeterRegistry(influxConfig, Clock.SYSTEM)
 }

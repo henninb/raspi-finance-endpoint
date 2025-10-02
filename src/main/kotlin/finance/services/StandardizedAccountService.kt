@@ -29,14 +29,13 @@ class StandardizedAccountService(
 
     // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Account>> {
-        return handleServiceOperation("findAllActive", null) {
+    override fun findAllActive(): ServiceResult<List<Account>> =
+        handleServiceOperation("findAllActive", null) {
             accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
         }
-    }
 
-    override fun findById(id: String): ServiceResult<Account> {
-        return handleServiceOperation("findById", id) {
+    override fun findById(id: String): ServiceResult<Account> =
+        handleServiceOperation("findById", id) {
             val optionalAccount = accountRepository.findByAccountNameOwner(id)
             if (optionalAccount.isPresent) {
                 optionalAccount.get()
@@ -44,10 +43,9 @@ class StandardizedAccountService(
                 throw EntityNotFoundException("Account not found: $id")
             }
         }
-    }
 
-    override fun save(entity: Account): ServiceResult<Account> {
-        return handleServiceOperation("save", entity.accountNameOwner) {
+    override fun save(entity: Account): ServiceResult<Account> =
+        handleServiceOperation("save", entity.accountNameOwner) {
             // Check if account already exists
             val existingAccount = accountRepository.findByAccountNameOwner(entity.accountNameOwner)
             if (existingAccount.isPresent) {
@@ -66,10 +64,9 @@ class StandardizedAccountService(
 
             accountRepository.saveAndFlush(entity)
         }
-    }
 
-    override fun update(entity: Account): ServiceResult<Account> {
-        return handleServiceOperation("update", entity.accountId.toString()) {
+    override fun update(entity: Account): ServiceResult<Account> =
+        handleServiceOperation("update", entity.accountId.toString()) {
             val existingAccount = accountRepository.findByAccountId(entity.accountId!!)
             if (existingAccount.isEmpty) {
                 throw EntityNotFoundException("Account not found: ${entity.accountId}")
@@ -89,10 +86,9 @@ class StandardizedAccountService(
 
             accountRepository.saveAndFlush(accountToUpdate)
         }
-    }
 
-    override fun deleteById(id: String): ServiceResult<Boolean> {
-        return handleServiceOperation("deleteById", id) {
+    override fun deleteById(id: String): ServiceResult<Boolean> =
+        handleServiceOperation("deleteById", id) {
             val optionalAccount = accountRepository.findByAccountNameOwner(id)
             if (optionalAccount.isEmpty) {
                 throw EntityNotFoundException("Account not found: $id")
@@ -100,13 +96,10 @@ class StandardizedAccountService(
             accountRepository.delete(optionalAccount.get())
             true
         }
-    }
 
     // ===== Legacy Method Compatibility =====
 
-    fun account(accountNameOwner: String): Optional<Account> {
-        return accountRepository.findByAccountNameOwner(accountNameOwner)
-    }
+    fun account(accountNameOwner: String): Optional<Account> = accountRepository.findByAccountNameOwner(accountNameOwner)
 
     fun accounts(): List<Account> {
         val result = findAllActive()
@@ -116,9 +109,7 @@ class StandardizedAccountService(
         }
     }
 
-    fun accountsByType(accountType: AccountType): List<Account> {
-        return accountRepository.findByActiveStatusAndAccountType(true, accountType)
-    }
+    fun accountsByType(accountType: AccountType): List<Account> = accountRepository.findByActiveStatusAndAccountType(true, accountType)
 
     fun findAccountsThatRequirePayment(): List<Account> {
         updateTotalsForAllAccounts()
@@ -137,37 +128,37 @@ class StandardizedAccountService(
             is ServiceResult.Success -> result.data
             is ServiceResult.ValidationError -> {
                 val violations =
-                    result.errors.map { (field, message) ->
-                        object : jakarta.validation.ConstraintViolation<Account> {
-                            override fun getMessage(): String = message
+                    result.errors
+                        .map { (field, message) ->
+                            object : jakarta.validation.ConstraintViolation<Account> {
+                                override fun getMessage(): String = message
 
-                            override fun getMessageTemplate(): String = message
+                                override fun getMessageTemplate(): String = message
 
-                            override fun getRootBean(): Account = account
+                                override fun getRootBean(): Account = account
 
-                            override fun getRootBeanClass(): Class<Account> = Account::class.java
+                                override fun getRootBeanClass(): Class<Account> = Account::class.java
 
-                            override fun getLeafBean(): Any = account
+                                override fun getLeafBean(): Any = account
 
-                            override fun getExecutableParameters(): Array<Any> = emptyArray()
+                                override fun getExecutableParameters(): Array<Any> = emptyArray()
 
-                            override fun getExecutableReturnValue(): Any? = null
+                                override fun getExecutableReturnValue(): Any? = null
 
-                            override fun getPropertyPath(): jakarta.validation.Path {
-                                return object : jakarta.validation.Path {
-                                    override fun toString(): String = field
+                                override fun getPropertyPath(): jakarta.validation.Path =
+                                    object : jakarta.validation.Path {
+                                        override fun toString(): String = field
 
-                                    override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                }
+                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
+                                    }
+
+                                override fun getInvalidValue(): Any? = null
+
+                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
+
+                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
                             }
-
-                            override fun getInvalidValue(): Any? = null
-
-                            override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                            override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                        }
-                    }.toSet()
+                        }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
             is ServiceResult.BusinessError -> {
@@ -206,7 +197,8 @@ class StandardizedAccountService(
         newAccountNameOwner: String,
     ): Account {
         val oldAccount =
-            accountRepository.findByAccountNameOwner(oldAccountNameOwner)
+            accountRepository
+                .findByAccountNameOwner(oldAccountNameOwner)
                 .orElseThrow { EntityNotFoundException("Account not found") }
 
         logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
@@ -219,7 +211,8 @@ class StandardizedAccountService(
 
     fun deactivateAccount(accountNameOwner: String): Account {
         val account =
-            accountRepository.findByAccountNameOwner(accountNameOwner)
+            accountRepository
+                .findByAccountNameOwner(accountNameOwner)
                 .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Deactivating account: $accountNameOwner")
@@ -232,7 +225,8 @@ class StandardizedAccountService(
 
     fun activateAccount(accountNameOwner: String): Account {
         val account =
-            accountRepository.findByAccountNameOwner(accountNameOwner)
+            accountRepository
+                .findByAccountNameOwner(accountNameOwner)
                 .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Activating account: $accountNameOwner")

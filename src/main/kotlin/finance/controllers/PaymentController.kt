@@ -20,8 +20,10 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/payment")
-class PaymentController(private val standardizedPaymentService: StandardizedPaymentService) :
-    StandardizedBaseController(), StandardRestController<Payment, Long> {
+class PaymentController(
+    private val standardizedPaymentService: StandardizedPaymentService,
+) : StandardizedBaseController(),
+    StandardRestController<Payment, Long> {
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 
     // curl -k https://localhost:8443/payment/select
@@ -31,8 +33,8 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      * Maintains original behavior
      */
     @GetMapping("/select", produces = ["application/json"])
-    fun selectAllPayments(): ResponseEntity<List<Payment>> {
-        return try {
+    fun selectAllPayments(): ResponseEntity<List<Payment>> =
+        try {
             logger.debug("Retrieving all payments")
             val payments = standardizedPaymentService.findAllPayments()
             logger.info("Retrieved ${payments.size} payments")
@@ -41,7 +43,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
             logger.error("Failed to retrieve payments: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve payments: ${ex.message}", ex)
         }
-    }
 
     // curl -k --header "Content-Type: application/json" --request PUT --data '{"transactionDate":"2025-08-15","amount": 123.45}' https://localhost:8443/payment/update/1001
 
@@ -53,8 +54,8 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
     fun updatePayment(
         @PathVariable paymentId: Long,
         @RequestBody patch: Payment,
-    ): ResponseEntity<Payment> {
-        return try {
+    ): ResponseEntity<Payment> =
+        try {
             logger.info("Updating payment: $paymentId")
             val response = standardizedPaymentService.updatePayment(paymentId, patch)
             logger.info("Payment updated successfully: $paymentId")
@@ -74,7 +75,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
             logger.error("Unexpected error updating payment $paymentId: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }
-    }
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"sourceAccount":"checking_brian", "destinationAccount":"visa_brian", "amount": 100.00, "activeStatus": true}' https://localhost:8443/payment/insert
 
@@ -84,8 +84,8 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPayment(
         @RequestBody payment: Payment,
-    ): ResponseEntity<Payment> {
-        return try {
+    ): ResponseEntity<Payment> =
+        try {
             logger.info("Inserting payment: ${payment.sourceAccount} -> ${payment.destinationAccount}")
             val paymentResponse = standardizedPaymentService.insertPayment(payment)
             logger.info("Payment inserted successfully: ${paymentResponse.paymentId}")
@@ -106,7 +106,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
             logger.error("Unexpected error inserting payment ${payment.sourceAccount} -> ${payment.destinationAccount}: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}", ex)
         }
-    }
 
     // curl -k --header "Content-Type: application/json" --request DELETE https://localhost:8443/payment/delete/1001
 
@@ -116,11 +115,12 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
     @DeleteMapping("/delete/{paymentId}", produces = ["application/json"])
     fun deleteByPaymentId(
         @PathVariable paymentId: Long,
-    ): ResponseEntity<Payment> {
-        return try {
+    ): ResponseEntity<Payment> =
+        try {
             logger.info("Attempting to delete payment: $paymentId")
             val payment =
-                standardizedPaymentService.findByPaymentId(paymentId)
+                standardizedPaymentService
+                    .findByPaymentId(paymentId)
                     .orElseThrow {
                         logger.warn("Payment not found for deletion: $paymentId")
                         ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found: $paymentId")
@@ -135,7 +135,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
             logger.error("Failed to delete payment $paymentId: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete payment: ${ex.message}", ex)
         }
-    }
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
@@ -144,8 +143,8 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Payment>> {
-        return when (val result = standardizedPaymentService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<Payment>> =
+        when (val result = standardizedPaymentService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active payments (standardized)")
                 ResponseEntity.ok(result.data)
@@ -163,7 +162,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/payment/{paymentId}
@@ -172,8 +170,8 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
     @GetMapping("/{paymentId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("paymentId") id: Long,
-    ): ResponseEntity<Payment> {
-        return when (val result = standardizedPaymentService.findById(id)) {
+    ): ResponseEntity<Payment> =
+        when (val result = standardizedPaymentService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved payment: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -191,7 +189,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/payment
@@ -200,8 +197,8 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Payment,
-    ): ResponseEntity<Payment> {
-        return when (val result = standardizedPaymentService.save(entity)) {
+    ): ResponseEntity<Payment> =
+        when (val result = standardizedPaymentService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Payment created successfully: ${entity.sourceAccount} -> ${entity.destinationAccount} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -223,7 +220,6 @@ class PaymentController(private val standardizedPaymentService: StandardizedPaym
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/payment/{paymentId}

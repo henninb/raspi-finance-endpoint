@@ -6,8 +6,8 @@ import jakarta.persistence.Converter
 
 @Converter
 class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
-    override fun convertToDatabaseColumn(attribute: ReoccurringType): String {
-        return when (attribute) {
+    override fun convertToDatabaseColumn(attribute: ReoccurringType): String =
+        when (attribute) {
             ReoccurringType.Annually -> "annually"
             ReoccurringType.BiAnnually -> "biannually"
             ReoccurringType.FortNightly -> "fortnightly"
@@ -16,10 +16,9 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
             ReoccurringType.Onetime -> "onetime"
             ReoccurringType.Undefined -> "undefined"
         }
-    }
 
-    override fun convertToEntityAttribute(attribute: String): ReoccurringType {
-        return when (attribute.trim().lowercase()) {
+    override fun convertToEntityAttribute(attribute: String): ReoccurringType =
+        when (attribute.trim().lowercase()) {
             "annually" -> ReoccurringType.Annually
             "biannually" -> ReoccurringType.BiAnnually
             "fortnightly" -> ReoccurringType.FortNightly
@@ -29,5 +28,4 @@ class ReoccurringTypeConverter : AttributeConverter<ReoccurringType, String> {
             "undefined" -> ReoccurringType.Undefined
             else -> throw RuntimeException("Unknown attribute: $attribute")
         }
-    }
 }

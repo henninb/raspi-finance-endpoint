@@ -6,12 +6,10 @@ import jakarta.persistence.Converter
 
 @Converter
 class MedicalProviderTypeConverter : AttributeConverter<MedicalProviderType, String> {
-    override fun convertToDatabaseColumn(attribute: MedicalProviderType): String {
-        return attribute.label
-    }
+    override fun convertToDatabaseColumn(attribute: MedicalProviderType): String = attribute.label
 
-    override fun convertToEntityAttribute(attribute: String): MedicalProviderType {
-        return when (attribute.trim().lowercase()) {
+    override fun convertToEntityAttribute(attribute: String): MedicalProviderType =
+        when (attribute.trim().lowercase()) {
             "general" -> MedicalProviderType.General
             "specialist" -> MedicalProviderType.Specialist
             "hospital" -> MedicalProviderType.Hospital
@@ -27,5 +25,4 @@ class MedicalProviderTypeConverter : AttributeConverter<MedicalProviderType, Str
             "other" -> MedicalProviderType.Other
             else -> throw RuntimeException("Unknown medical provider type attribute: $attribute")
         }
-    }
 }

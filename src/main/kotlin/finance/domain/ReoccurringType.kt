@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
-enum class ReoccurringType(val label: String) {
+enum class ReoccurringType(
+    val label: String,
+) {
     @JsonProperty("monthly")
     Monthly("monthly"),
 

@@ -25,7 +25,8 @@ open class FunctionalTestBootstrap(
             }
             try {
                 val fw =
-                    Flyway.configure()
+                    Flyway
+                        .configure()
                         .dataSource(dataSource)
                         .locations("classpath:db/migration/func")
                         .schemas("func")

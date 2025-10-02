@@ -20,8 +20,9 @@ import org.springframework.web.server.ResponseStatusException
 @CrossOrigin
 @RestController
 @RequestMapping("/api/parameter")
-class ParameterController(private val standardizedParameterService: StandardizedParameterService) :
-    StandardizedBaseController() {
+class ParameterController(
+    private val standardizedParameterService: StandardizedParameterService,
+) : StandardizedBaseController() {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -30,8 +31,8 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Uses ServiceResult pattern for enhanced error handling
      */
     @GetMapping("/active", produces = ["application/json"])
-    fun findAllActive(): ResponseEntity<*> {
-        return when (val result = standardizedParameterService.findAllActive()) {
+    fun findAllActive(): ResponseEntity<*> =
+        when (val result = standardizedParameterService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active parameters")
                 ResponseEntity.ok(result.data)
@@ -42,16 +43,17 @@ class ParameterController(private val standardizedParameterService: Standardized
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameters: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
         }
-    }
 
     /**
      * Standardized single entity retrieval - GET /api/parameter/{parameterName}
@@ -60,29 +62,31 @@ class ParameterController(private val standardizedParameterService: Standardized
     @GetMapping("/{parameterName}", produces = ["application/json"])
     fun findById(
         @PathVariable parameterName: String,
-    ): ResponseEntity<*> {
-        return when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
+    ): ResponseEntity<*> =
+        when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved parameter: $parameterName")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found: $parameterName")
-                ResponseEntity.status(HttpStatus.NOT_FOUND)
+                ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
                     .body(mapOf("error" to result.message))
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameter $parameterName: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
         }
-    }
 
     /**
      * Standardized entity creation - POST /api/parameter
@@ -91,34 +95,37 @@ class ParameterController(private val standardizedParameterService: Standardized
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     fun save(
         @Valid @RequestBody parameter: Parameter,
-    ): ResponseEntity<*> {
-        return when (val result = standardizedParameterService.save(parameter)) {
+    ): ResponseEntity<*> =
+        when (val result = standardizedParameterService.save(parameter)) {
             is ServiceResult.Success -> {
                 logger.info("Parameter created successfully: ${parameter.parameterName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating parameter: ${result.errors}")
-                ResponseEntity.badRequest()
+                ResponseEntity
+                    .badRequest()
                     .body(mapOf("errors" to result.errors))
             }
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating parameter: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT)
+                ResponseEntity
+                    .status(HttpStatus.CONFLICT)
                     .body(mapOf("error" to result.message))
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error creating parameter: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
         }
-    }
 
     /**
      * Standardized entity update - PUT /api/parameter/{parameterName}
@@ -149,39 +156,46 @@ class ParameterController(private val standardizedParameterService: Standardized
                     }
                     is ServiceResult.ValidationError -> {
                         logger.warn("Validation error updating parameter: ${updateResult.errors}")
-                        ResponseEntity.badRequest()
+                        ResponseEntity
+                            .badRequest()
                             .body(mapOf("errors" to updateResult.errors))
                     }
                     is ServiceResult.BusinessError -> {
                         logger.warn("Business error updating parameter: ${updateResult.message}")
-                        ResponseEntity.status(HttpStatus.CONFLICT)
+                        ResponseEntity
+                            .status(HttpStatus.CONFLICT)
                             .body(mapOf("error" to updateResult.message))
                     }
                     is ServiceResult.SystemError -> {
                         logger.error("System error updating parameter: ${updateResult.exception.message}", updateResult.exception)
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(mapOf("error" to "Internal server error"))
                     }
                     else -> {
                         logger.error("Unexpected result type: $updateResult")
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(mapOf("error" to "Internal server error"))
                     }
                 }
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found for update: $parameterName")
-                ResponseEntity.status(HttpStatus.NOT_FOUND)
+                ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
                     .body(mapOf("error" to existsResult.message))
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error checking parameter existence: ${existsResult.exception.message}", existsResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
             else -> {
                 logger.error("Unexpected result type: $existsResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
         }
@@ -207,29 +221,34 @@ class ParameterController(private val standardizedParameterService: Standardized
                     }
                     is ServiceResult.SystemError -> {
                         logger.error("System error deleting parameter: ${deleteResult.exception.message}", deleteResult.exception)
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(mapOf("error" to "Internal server error"))
                     }
                     else -> {
                         logger.error("Unexpected result type: $deleteResult")
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        ResponseEntity
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body(mapOf("error" to "Internal server error"))
                     }
                 }
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found for deletion: $parameterName")
-                ResponseEntity.status(HttpStatus.NOT_FOUND)
+                ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
                     .body(mapOf("error" to findResult.message))
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error finding parameter for deletion: ${findResult.exception.message}", findResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
             else -> {
                 logger.error("Unexpected result type: $findResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mapOf("error" to "Internal server error"))
             }
         }
@@ -242,8 +261,8 @@ class ParameterController(private val standardizedParameterService: Standardized
      * Maintains original behavior: throws 404 if empty
      */
     @GetMapping("/select/active", produces = ["application/json"])
-    fun parameters(): ResponseEntity<List<Parameter>> {
-        return when (val result = standardizedParameterService.findAllActive()) {
+    fun parameters(): ResponseEntity<List<Parameter>> =
+        when (val result = standardizedParameterService.findAllActive()) {
             is ServiceResult.Success -> {
                 if (result.data.isEmpty()) {
                     logger.warn("No parameters found")
@@ -265,7 +284,6 @@ class ParameterController(private val standardizedParameterService: Standardized
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve parameters")
             }
         }
-    }
 
     /**
      * Legacy endpoint - GET /api/parameter/select/{parameterName}
@@ -273,8 +291,8 @@ class ParameterController(private val standardizedParameterService: Standardized
     @GetMapping("/select/{parameterName}", produces = ["application/json"])
     fun selectParameter(
         @PathVariable parameterName: String,
-    ): ResponseEntity<Parameter> {
-        return when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
+    ): ResponseEntity<Parameter> =
+        when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved parameter: $parameterName")
                 ResponseEntity.ok(result.data)
@@ -292,7 +310,6 @@ class ParameterController(private val standardizedParameterService: Standardized
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve parameter")
             }
         }
-    }
 
     /**
      * Legacy endpoint - POST /api/parameter/insert
@@ -300,8 +317,8 @@ class ParameterController(private val standardizedParameterService: Standardized
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertParameter(
         @RequestBody parameter: Parameter,
-    ): ResponseEntity<Parameter> {
-        return when (val result = standardizedParameterService.save(parameter)) {
+    ): ResponseEntity<Parameter> =
+        when (val result = standardizedParameterService.save(parameter)) {
             is ServiceResult.Success -> {
                 logger.info("Parameter inserted successfully: ${parameter.parameterName}")
                 ResponseEntity(result.data, HttpStatus.CREATED)
@@ -323,7 +340,6 @@ class ParameterController(private val standardizedParameterService: Standardized
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error")
             }
         }
-    }
 
     /**
      * Legacy endpoint - PUT /api/parameter/update/{parameter_name}

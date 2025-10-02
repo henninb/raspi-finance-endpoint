@@ -25,7 +25,9 @@ import javax.crypto.SecretKey
 @CrossOrigin
 @RestController
 @RequestMapping("/api")
-class LoginController(private val userService: UserService) : BaseController() {
+class LoginController(
+    private val userService: UserService,
+) : BaseController() {
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
 
@@ -75,7 +77,8 @@ class LoginController(private val userService: UserService) : BaseController() {
         val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
         val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token =
-            Jwts.builder()
+            Jwts
+                .builder()
                 .claim("username", loginRequest.username)
                 .notBefore(now)
                 .expiration(expiration)
@@ -86,10 +89,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         val isLocalDev =
             System.getenv("USERNAME")?.contains("henninb") == true ||
                 System.getenv("HOST_IP")?.contains("192.168") == true ||
-                activeProfile == "dev" || activeProfile == "development"
+                activeProfile == "dev" ||
+                activeProfile == "development"
 
         val cookieBuilder =
-            ResponseCookie.from("token", token)
+            ResponseCookie
+                .from("token", token)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .httpOnly(true) // Prevent XSS token theft
@@ -116,10 +121,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         val isLocalDev =
             System.getenv("USERNAME")?.contains("henninb") == true ||
                 System.getenv("HOST_IP")?.contains("192.168") == true ||
-                activeProfile == "dev" || activeProfile == "development"
+                activeProfile == "dev" ||
+                activeProfile == "development"
 
         val cookieBuilder =
-            ResponseCookie.from("token", "")
+            ResponseCookie
+                .from("token", "")
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true) // Prevent XSS token theft
@@ -177,7 +184,8 @@ class LoginController(private val userService: UserService) : BaseController() {
 
         val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token =
-            Jwts.builder()
+            Jwts
+                .builder()
                 .claim("username", newUser.username)
                 .notBefore(now)
                 .expiration(expiration)
@@ -188,10 +196,12 @@ class LoginController(private val userService: UserService) : BaseController() {
         val isLocalDev =
             System.getenv("USERNAME")?.contains("henninb") == true ||
                 System.getenv("HOST_IP")?.contains("192.168") == true ||
-                activeProfile == "dev" || activeProfile == "development"
+                activeProfile == "dev" ||
+                activeProfile == "development"
 
         val cookieBuilder =
-            ResponseCookie.from("token", token)
+            ResponseCookie
+                .from("token", token)
                 .httpOnly(true) // Prevent XSS token theft
                 .secure(!isLocalDev) // Require HTTPS in production
                 .maxAge(24 * 60 * 60)
@@ -225,7 +235,8 @@ class LoginController(private val userService: UserService) : BaseController() {
             // Parse and validate the JWT.
             val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
             val claims =
-                Jwts.parser()
+                Jwts
+                    .parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
