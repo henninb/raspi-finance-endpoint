@@ -81,88 +81,6 @@ class GraphQLMutationControllerSpec extends Specification {
         result.paymentId == 123L
     }
 
-    def "insertPayment should create payment with provided GUIDs"() {
-        given: "a payment input with explicit GUIDs"
-        def inputDto = new PaymentInputDto(
-            null,
-            "checking_primary",
-            "bills_payable",
-            Date.valueOf("2024-01-15"),
-            new BigDecimal("100.00"),
-            "explicit-guid-source",
-            "explicit-guid-destination",
-            true
-        )
-
-        and: "a saved payment"
-        def savedPayment = new Payment(
-            paymentId: 456L,
-            sourceAccount: "checking_primary",
-            destinationAccount: "bills_payable",
-            transactionDate: Date.valueOf("2024-01-15"),
-            amount: new BigDecimal("100.00"),
-            guidSource: "explicit-guid-source",
-            guidDestination: "explicit-guid-destination",
-            activeStatus: true
-        )
-
-        when: "insertPayment is called"
-        def result = controller.insertPayment(inputDto)
-
-        then: "service inserts the payment with explicit GUIDs"
-        1 * mockPaymentService.insertPayment(_) >> { Payment payment ->
-            assert payment.guidSource == "explicit-guid-source"
-            assert payment.guidDestination == "explicit-guid-destination"
-            return savedPayment
-        }
-
-        and: "meter is incremented"
-        1 * mockMeterRegistry.counter("graphql.payment.create.success") >> mockCounter
-        1 * mockCounter.increment()
-
-        and: "saved payment is returned"
-        result == savedPayment
-        result.paymentId == 456L
-    }
-
-    def "insertPayment should default activeStatus to true when null"() {
-        given: "a payment input with null activeStatus"
-        def inputDto = new PaymentInputDto(
-            null,
-            "checking_primary",
-            "bills_payable",
-            Date.valueOf("2024-01-15"),
-            new BigDecimal("100.00"),
-            null,
-            null,
-            null
-        )
-
-        and: "a saved payment"
-        def savedPayment = new Payment(
-            paymentId: 789L,
-            sourceAccount: "checking_primary",
-            destinationAccount: "bills_payable",
-            activeStatus: true
-        )
-
-        when: "insertPayment is called"
-        def result = controller.insertPayment(inputDto)
-
-        then: "service inserts the payment with activeStatus defaulted to true"
-        1 * mockPaymentService.insertPayment(_) >> { Payment payment ->
-            assert payment.activeStatus == true
-            return savedPayment
-        }
-
-        and: "meter is incremented"
-        1 * mockMeterRegistry.counter("graphql.payment.create.success") >> mockCounter
-        1 * mockCounter.increment()
-
-        and: "saved payment is returned"
-        result.activeStatus == true
-    }
-
     def "deletePayment should delete payment by ID"() {
         given: "a payment ID"
         def paymentId = 123L
@@ -191,7 +109,7 @@ class GraphQLMutationControllerSpec extends Specification {
         result == false
     }
 
-    def "createTransfer should create transfer with generated GUIDs (deprecated)"() {
+    def "createTransfer should create transfer with generated GUIDs"() {
         given: "a valid transfer input"
         def inputDto = new TransferInputDto(
             null,
@@ -237,88 +155,6 @@ class GraphQLMutationControllerSpec extends Specification {
         and: "saved transfer is returned"
         result == savedTransfer
         result.transferId == 321L
-    }
-
-    def "insertTransfer should create transfer with provided GUIDs"() {
-        given: "a transfer input with explicit GUIDs"
-        def inputDto = new TransferInputDto(
-            null,
-            "checking_primary",
-            "savings_primary",
-            Date.valueOf("2024-01-15"),
-            new BigDecimal("500.00"),
-            "explicit-guid-source",
-            "explicit-guid-destination",
-            true
-        )
-
-        and: "a saved transfer"
-        def savedTransfer = new Transfer(
-            transferId: 654L,
-            sourceAccount: "checking_primary",
-            destinationAccount: "savings_primary",
-            transactionDate: Date.valueOf("2024-01-15"),
-            amount: new BigDecimal("500.00"),
-            guidSource: "explicit-guid-source",
-            guidDestination: "explicit-guid-destination",
-            activeStatus: true
-        )
-
-        when: "insertTransfer is called"
-        def result = controller.insertTransfer(inputDto)
-
-        then: "service inserts the transfer with explicit GUIDs"
-        1 * mockTransferService.insertTransfer(_) >> { Transfer transfer ->
-            assert transfer.guidSource == "explicit-guid-source"
-            assert transfer.guidDestination == "explicit-guid-destination"
-            return savedTransfer
-        }
-
-        and: "meter is incremented"
-        1 * mockMeterRegistry.counter("graphql.transfer.create.success") >> mockCounter
-        1 * mockCounter.increment()
-
-        and: "saved transfer is returned"
-        result == savedTransfer
-        result.transferId == 654L
-    }
-
-    def "insertTransfer should default activeStatus to true when null"() {
-        given: "a transfer input with null activeStatus"
-        def inputDto = new TransferInputDto(
-            null,
-            "checking_primary",
-            "savings_primary",
-            Date.valueOf("2024-01-15"),
-            new BigDecimal("500.00"),
-            null,
-            null,
-            null
-        )
-
-        and: "a saved transfer"
-        def savedTransfer = new Transfer(
-            transferId: 987L,
-            sourceAccount: "checking_primary",
-            destinationAccount: "savings_primary",
-            activeStatus: true
-        )
-
-        when: "insertTransfer is called"
-        def result = controller.insertTransfer(inputDto)
-
-        then: "service inserts the transfer with activeStatus defaulted to true"
-        1 * mockTransferService.insertTransfer(_) >> { Transfer transfer ->
-            assert transfer.activeStatus == true
-            return savedTransfer
-        }
-
-        and: "meter is incremented"
-        1 * mockMeterRegistry.counter("graphql.transfer.create.success") >> mockCounter
-        1 * mockCounter.increment()
-
-        and: "saved transfer is returned"
-        result.activeStatus == true
     }
 
     def "deleteTransfer should delete transfer by ID"() {
