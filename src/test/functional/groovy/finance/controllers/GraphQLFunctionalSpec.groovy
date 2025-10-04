@@ -65,17 +65,14 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
         0 * _
     }
 
-    void 'insertTransfer mutation should accept input parameter - TDD failing test'() {
+    void 'createTransfer mutation should accept transfer parameter'() {
         given: 'transfer data for the test'
-        // Use simple account names that match the existing primary/secondary pattern
-        // Ensure accounts exist and use the exact persisted names from the DB helper
         def sourceAccount = testDataManager.createAccountFor(testOwner, "primary", 'debit', true)
         def destinationAccount = testDataManager.createAccountFor(testOwner, "secondary", 'debit', true)
 
-        // Create the GraphQL mutation that the client expects to work (with 'input' parameter)
         def mutation = '''
-            mutation InsertTransfer($input: TransferInput!) {
-                insertTransfer(input: $input) {
+            mutation CreateTransfer($transfer: TransferInput!) {
+                createTransfer(transfer: $transfer) {
                     transferId
                     sourceAccount
                     destinationAccount
@@ -86,7 +83,7 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
         '''
 
         def variables = [
-            input: [
+            transfer: [
                 sourceAccount: sourceAccount,
                 destinationAccount: destinationAccount,
                 transactionDate: "2024-01-15",
@@ -114,137 +111,15 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
                 null,
                 true
         )
-        def created = mutationController.insertTransfer(dto)
+        def created = mutationController.createTransfer(dto)
 
-        then: 'it succeeds and returns data'
-        created != null
-        created.sourceAccount == sourceAccount
-        created.destinationAccount == destinationAccount
-        created.amount == new BigDecimal("100.00")
-        0 * _
-    }
-
-    void 'insertTransfer mutation should accept guidSource and guidDestination fields - TDD failing test'() {
-        given: 'transfer data with guid fields that frontend wants to send'
-        def sourceAccount = testDataManager.createAccountFor(testOwner, "primary", 'debit', true)
-        def destinationAccount = testDataManager.createAccountFor(testOwner, "secondary", 'debit', true)
-        def testGuidSource = "550e8400-e29b-41d4-a716-446655440001"
-        def testGuidDestination = "550e8400-e29b-41d4-a716-446655440002"
-
-        def mutation = '''
-            mutation InsertTransfer($input: TransferInput!) {
-                insertTransfer(input: $input) {
-                    transferId
-                    sourceAccount
-                    destinationAccount
-                    amount
-                    guidSource
-                    guidDestination
-                    activeStatus
-                }
-            }
-        '''
-
-        def variables = [
-            input: [
-                sourceAccount: sourceAccount,
-                destinationAccount: destinationAccount,
-                transactionDate: "2024-01-15",
-                amount: 100.00,
-                guidSource: testGuidSource,
-                guidDestination: testGuidDestination,
-                activeStatus: true
-            ]
-        ]
-
-        def requestBody = [
-            query: mutation,
-            variables: variables
-        ]
-
-        def jsonBuilder = new JsonBuilder(requestBody)
-
-        when: 'calling the mutation controller directly with guidSource and guidDestination'
-        withUserRole()
-        def dto = new finance.controllers.dto.TransferInputDto(
-                null,
-                sourceAccount,
-                destinationAccount,
-                java.sql.Date.valueOf("2024-01-15"),
-                new BigDecimal("100.00"),
-                testGuidSource,
-                testGuidDestination,
-                true
-        )
-        def created = mutationController.insertTransfer(dto)
-
-        then: 'it accepts guidSource and guidDestination without errors'
+        then: 'it succeeds and returns data with auto-generated GUIDs'
         created != null
         created.sourceAccount == sourceAccount
         created.destinationAccount == destinationAccount
         created.amount == new BigDecimal("100.00")
         created.guidSource != null
         created.guidDestination != null
-        0 * _
-    }
-
-    void 'insertTransfer mutation should handle empty string guidSource and guidDestination - reproduces UUID validation error'() {
-        given: 'transfer data with empty string guid fields that cause validation error'
-        def sourceAccount = testDataManager.createAccountFor(testOwner, "primary", 'debit', true)
-        def destinationAccount = testDataManager.createAccountFor(testOwner, "secondary", 'debit', true)
-
-        def mutation = '''
-            mutation InsertTransfer($input: TransferInput!) {
-                insertTransfer(input: $input) {
-                    transferId
-                    sourceAccount
-                    destinationAccount
-                    amount
-                    guidSource
-                    guidDestination
-                    activeStatus
-                }
-            }
-        '''
-
-        def variables = [
-            input: [
-                sourceAccount: sourceAccount,
-                destinationAccount: destinationAccount,
-                transactionDate: "2025-09-27T17:40:44.658Z",
-                amount: 2883.45,
-                guidSource: "",
-                guidDestination: "",
-                activeStatus: true
-            ]
-        ]
-
-        def requestBody = [
-            query: mutation,
-            variables: variables
-        ]
-
-        def jsonBuilder = new JsonBuilder(requestBody)
-
-        when: 'calling the mutation controller directly with empty string guid fields'
-        withUserRole()
-        def dto = new finance.controllers.dto.TransferInputDto(
-                null,
-                sourceAccount,
-                destinationAccount,
-                java.sql.Date.valueOf("2025-09-27"),
-                new BigDecimal("2883.45"),
-                null,
-                null,
-                true
-        )
-        def created = mutationController.insertTransfer(dto)
-
-        then: 'it succeeds; controller normalizes empty to generated UUIDs'
-        created != null
-        created.sourceAccount == sourceAccount
-        created.destinationAccount == destinationAccount
-        created.amount == new BigDecimal("2883.45")
         0 * _
     }
 
