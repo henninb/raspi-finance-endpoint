@@ -54,28 +54,6 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    fun insertPayment(
-        @Argument("input") @Valid input: PaymentInputDto,
-    ): Payment {
-        logger.info("GraphQL - Creating payment via insertPayment")
-        val domain =
-            Payment().apply {
-                this.sourceAccount = input.sourceAccount
-                this.destinationAccount = input.destinationAccount
-                this.transactionDate = input.transactionDate
-                this.amount = input.amount
-                this.guidSource = input.guidSource ?: UUID.randomUUID().toString()
-                this.guidDestination = input.guidDestination ?: UUID.randomUUID().toString()
-                this.activeStatus = input.activeStatus ?: true
-            }
-        val saved = paymentService.insertPayment(domain)
-        meterRegistry.counter("graphql.payment.create.success").increment()
-        logger.info("GraphQL - Created payment via insertPayment id={} with guidSource={}", saved.paymentId, saved.guidSource)
-        return saved
-    }
-
-    @PreAuthorize("hasAuthority('USER')")
-    @MutationMapping
     fun deletePayment(
         @Argument paymentId: Long,
     ): Boolean {
@@ -85,11 +63,10 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
-    @Deprecated("Use insertTransfer instead. This method will be removed in a future version.")
     fun createTransfer(
         @Argument("transfer") @Valid transfer: TransferInputDto,
     ): Transfer {
-        logger.warn("GraphQL - DEPRECATED: createTransfer used. Please migrate to insertTransfer.")
+        logger.info("GraphQL - Creating transfer via @MutationMapping")
         val domain =
             Transfer().apply {
                 this.sourceAccount = transfer.sourceAccount
@@ -113,27 +90,5 @@ class GraphQLMutationController(
     ): Boolean {
         logger.info("GraphQL - Deleting transfer id={}", transferId)
         return transferService.deleteByTransferId(transferId)
-    }
-
-    @PreAuthorize("hasAuthority('USER')")
-    @MutationMapping
-    fun insertTransfer(
-        @Argument("input") @Valid input: TransferInputDto,
-    ): Transfer {
-        logger.info("GraphQL - Creating transfer via insertTransfer")
-        val domain =
-            Transfer().apply {
-                this.sourceAccount = input.sourceAccount
-                this.destinationAccount = input.destinationAccount
-                this.transactionDate = input.transactionDate
-                this.amount = input.amount
-                this.guidSource = input.guidSource ?: UUID.randomUUID().toString()
-                this.guidDestination = input.guidDestination ?: UUID.randomUUID().toString()
-                this.activeStatus = input.activeStatus ?: true
-            }
-        val saved = transferService.insertTransfer(domain)
-        meterRegistry.counter("graphql.transfer.create.success").increment()
-        logger.info("GraphQL - Created transfer via insertTransfer id={} with guidSource={}", saved.transferId, saved.guidSource)
-        return saved
     }
 }
