@@ -17,6 +17,7 @@ import finance.domain.Transaction
 import finance.domain.TransactionNotFoundException
 import finance.domain.TransactionState
 import finance.domain.TransactionValidationException
+import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
 import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Page
@@ -43,6 +44,7 @@ class StandardizedTransactionService(
     private val standardizedReceiptImageService: StandardizedReceiptImageService,
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService,
+    private val paymentRepository: PaymentRepository,
 ) : StandardizedBaseService<Transaction, String>() {
     override fun getEntityName(): String = "Transaction"
 
@@ -111,7 +113,22 @@ class StandardizedTransactionService(
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $id")
             }
-            transactionRepository.delete(optionalTransaction.get())
+
+            val transaction = optionalTransaction.get()
+
+            // Check if transaction is referenced by any payments
+            val referencingPayments = paymentRepository.findByGuidSourceOrGuidDestination(transaction.guid, transaction.guid)
+
+            if (referencingPayments.isNotEmpty()) {
+                val paymentCount = referencingPayments.size
+                val paymentWord = if (paymentCount == 1) "payment" else "payments"
+                throw org.springframework.dao.DataIntegrityViolationException(
+                    "Cannot delete transaction ${transaction.guid} because it is referenced by " +
+                        "$paymentCount $paymentWord. Please delete the related payments first.",
+                )
+            }
+
+            transactionRepository.delete(transaction)
             true
         }
 
