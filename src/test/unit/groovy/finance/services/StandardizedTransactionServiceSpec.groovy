@@ -44,7 +44,8 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
             descriptionService,
             standardizedReceiptImageServiceMock,
             imageProcessingServiceMock,
-            calculationServiceMock
+            calculationServiceMock,
+            paymentRepositoryMock
         )
         standardizedTransactionService.validator = validatorMock
         standardizedTransactionService.meterService = meterService
@@ -397,12 +398,16 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         given: "an existing transaction"
         def guid = "test-guid-123"
         def transaction = createTestTransaction()
+        transaction.guid = guid
 
         when: "deleteById is called"
         def result = standardizedTransactionService.deleteById(guid)
 
         then: "repository findByGuid is called"
         1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+
+        and: "payment repository checks for references"
+        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> []
 
         and: "repository delete is called"
         1 * transactionRepositoryMock.delete(transaction)
@@ -425,6 +430,60 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
         result.message.contains("Transaction not found: non-existent-guid")
+    }
+
+    def "deleteById should return BusinessError when transaction is referenced by payments"() {
+        given: "a transaction that is referenced by payments"
+        def guid = "referenced-guid-123"
+        def transaction = createTestTransaction()
+        transaction.guid = guid
+
+        and: "payments that reference this transaction"
+        def payment1 = GroovyMock(finance.domain.Payment)
+        def payment2 = GroovyMock(finance.domain.Payment)
+        payment1.paymentId >> 1L
+        payment2.paymentId >> 2L
+
+        when: "deleteById is called"
+        def result = standardizedTransactionService.deleteById(guid)
+
+        then: "repository findByGuid is called"
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+
+        and: "payment repository checks for references"
+        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> [payment1, payment2]
+
+        and: "repository delete is NOT called"
+        0 * transactionRepositoryMock.delete(_)
+
+        and: "result is BusinessError with informative message"
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("Cannot delete transaction")
+        result.message.contains(guid)
+        result.message.contains("2 payment")
+    }
+
+    def "deleteById should succeed when transaction has no payment references"() {
+        given: "a transaction with no payment references"
+        def guid = "unreferenced-guid-123"
+        def transaction = createTestTransaction()
+        transaction.guid = guid
+
+        when: "deleteById is called"
+        def result = standardizedTransactionService.deleteById(guid)
+
+        then: "repository findByGuid is called"
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+
+        and: "payment repository checks for references"
+        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> []
+
+        and: "repository delete is called"
+        1 * transactionRepositoryMock.delete(transaction)
+
+        and: "result is Success"
+        result instanceof ServiceResult.Success
+        result.data == true
     }
 
     // ===== Business-Specific ServiceResult Methods Tests =====
