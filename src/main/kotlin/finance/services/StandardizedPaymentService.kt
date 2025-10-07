@@ -173,24 +173,23 @@ class StandardizedPaymentService(
      * Delete transactions associated with a payment (cascade delete helper)
      * Returns the number of transactions successfully deleted
      */
-    private fun deleteAssociatedTransactions(payment: Payment): Int {
+    private fun deleteAssociatedTransactions(guidSource: String?, guidDestination: String?): Int {
         var deletedCount = 0
 
         // Delete source transaction
-        if (!payment.guidSource.isNullOrBlank()) {
-            when (val result = transactionService.deleteByIdInternal(payment.guidSource!!)) {
+        if (!guidSource.isNullOrBlank()) {
+            when (val result = transactionService.deleteByIdInternal(guidSource)) {
                 is ServiceResult.Success -> {
                     deletedCount++
-                    logger.info("Deleted source transaction: ${payment.guidSource}")
+                    logger.info("Deleted source transaction: $guidSource")
                 }
                 is ServiceResult.NotFound -> {
-                    logger.warn("Source transaction not found: ${payment.guidSource}")
+                    logger.warn("Source transaction not found: $guidSource")
                 }
                 is ServiceResult.BusinessError -> {
                     logger.error("Failed to delete source transaction: ${result.message}")
                     throw org.springframework.dao.DataIntegrityViolationException(
-                        "Cannot delete payment ${payment.paymentId} because source transaction " +
-                            "${payment.guidSource} could not be deleted: ${result.message}",
+                        "Cannot delete payment because source transaction $guidSource could not be deleted: ${result.message}",
                     )
                 }
                 else -> {
@@ -200,20 +199,19 @@ class StandardizedPaymentService(
         }
 
         // Delete destination transaction
-        if (!payment.guidDestination.isNullOrBlank()) {
-            when (val result = transactionService.deleteByIdInternal(payment.guidDestination!!)) {
+        if (!guidDestination.isNullOrBlank()) {
+            when (val result = transactionService.deleteByIdInternal(guidDestination)) {
                 is ServiceResult.Success -> {
                     deletedCount++
-                    logger.info("Deleted destination transaction: ${payment.guidDestination}")
+                    logger.info("Deleted destination transaction: $guidDestination")
                 }
                 is ServiceResult.NotFound -> {
-                    logger.warn("Destination transaction not found: ${payment.guidDestination}")
+                    logger.warn("Destination transaction not found: $guidDestination")
                 }
                 is ServiceResult.BusinessError -> {
                     logger.error("Failed to delete destination transaction: ${result.message}")
                     throw org.springframework.dao.DataIntegrityViolationException(
-                        "Cannot delete payment ${payment.paymentId} because destination transaction " +
-                            "${payment.guidDestination} could not be deleted: ${result.message}",
+                        "Cannot delete payment because destination transaction $guidDestination could not be deleted: ${result.message}",
                     )
                 }
                 else -> {
