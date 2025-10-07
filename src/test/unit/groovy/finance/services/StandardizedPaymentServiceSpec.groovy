@@ -185,19 +185,23 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
 
     // ===== TDD Tests for deleteById() =====
 
-    def "deleteById should return Success when payment exists"() {
-        given: "existing payment"
-        def payment = PaymentBuilder.builder().withPaymentId(1L).build()
+    def "deleteById should return Success when payment exists with no GUIDs"() {
+        given: "existing payment with null GUIDs"
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(1L)
+                .withGuidSource(null)
+                .withGuidDestination(null)
+                .build()
 
         when: "deleting existing payment"
         def result = standardizedPaymentService.deleteById(1L)
 
         then: "should return Success"
         1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(payment)
+        0 * transactionServiceMock.deleteByIdInternal(_)  // No transactions to delete
         1 * paymentRepositoryMock.delete(payment)
         result instanceof ServiceResult.Success
         result.data == true
-        0 * _
     }
 
     def "deleteById should return NotFound when payment does not exist"() {
@@ -209,6 +213,184 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
+    }
+
+    // ===== TDD Tests for Cascade Delete =====
+
+    def "deleteById should cascade delete source and destination transactions"() {
+        given: "a payment with valid transaction GUIDs"
+        def paymentId = 1L
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(paymentId)
+                .withGuidSource("source-guid-123")
+                .withGuidDestination("dest-guid-456")
+                .build()
+
+        when: "deleteById is called"
+        def result = standardizedPaymentService.deleteById(paymentId)
+
+        then: "repository finds the payment"
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+
+        and: "transaction service deletes source transaction"
+        1 * transactionServiceMock.deleteByIdInternal("source-guid-123") >>
+                new ServiceResult.Success(true)
+
+        and: "transaction service deletes destination transaction"
+        1 * transactionServiceMock.deleteByIdInternal("dest-guid-456") >>
+                new ServiceResult.Success(true)
+
+        and: "payment repository deletes the payment"
+        1 * paymentRepositoryMock.delete(payment)
+
+        and: "result is Success"
+        result instanceof ServiceResult.Success
+        result.data == true
+    }
+
+    def "deleteById should handle missing source transaction gracefully"() {
+        given: "a payment where source transaction doesn't exist"
+        def paymentId = 2L
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(paymentId)
+                .withGuidSource("missing-source")
+                .withGuidDestination("valid-dest")
+                .build()
+
+        when: "deleteById is called"
+        def result = standardizedPaymentService.deleteById(paymentId)
+
+        then: "repository finds the payment"
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+
+        and: "source transaction delete returns NotFound (logged as warning)"
+        1 * transactionServiceMock.deleteByIdInternal("missing-source") >>
+                new ServiceResult.NotFound("Transaction not found")
+
+        and: "destination transaction still gets deleted"
+        1 * transactionServiceMock.deleteByIdInternal("valid-dest") >>
+                new ServiceResult.Success(true)
+
+        and: "payment is still deleted"
+        1 * paymentRepositoryMock.delete(payment)
+
+        and: "result is Success"
+        result instanceof ServiceResult.Success
+    }
+
+    def "deleteById should handle null transaction GUIDs"() {
+        given: "a payment with null transaction GUIDs"
+        def paymentId = 3L
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(paymentId)
+                .withGuidSource(null)
+                .withGuidDestination(null)
+                .build()
+
+        when: "deleteById is called"
+        def result = standardizedPaymentService.deleteById(paymentId)
+
+        then: "repository finds the payment"
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+
+        and: "no transaction deletes are attempted"
+        0 * transactionServiceMock.deleteByIdInternal(_)
+
+        and: "payment is deleted"
+        1 * paymentRepositoryMock.delete(payment)
+
+        and: "result is Success"
+        result instanceof ServiceResult.Success
+    }
+
+    def "deleteById should handle blank transaction GUIDs"() {
+        given: "a payment with blank transaction GUIDs"
+        def paymentId = 4L
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(paymentId)
+                .withGuidSource("")
+                .withGuidDestination("  ")
+                .build()
+
+        when: "deleteById is called"
+        def result = standardizedPaymentService.deleteById(paymentId)
+
+        then: "repository finds the payment"
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+
+        and: "no transaction deletes are attempted"
+        0 * transactionServiceMock.deleteByIdInternal(_)
+
+        and: "payment is deleted"
+        1 * paymentRepositoryMock.delete(payment)
+
+        and: "result is Success"
+        result instanceof ServiceResult.Success
+    }
+
+    def "deleteById should fail if source transaction delete has BusinessError"() {
+        given: "a payment where source transaction delete fails"
+        def paymentId = 5L
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(paymentId)
+                .withGuidSource("locked-transaction")
+                .withGuidDestination("valid-dest")
+                .build()
+
+        when: "deleteById is called"
+        def result = standardizedPaymentService.deleteById(paymentId)
+
+        then: "repository finds the payment"
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+
+        and: "source transaction delete returns BusinessError"
+        1 * transactionServiceMock.deleteByIdInternal("locked-transaction") >>
+                new ServiceResult.BusinessError("Transaction is locked", "TRANSACTION_LOCKED")
+
+        and: "destination transaction delete is NOT attempted"
+        0 * transactionServiceMock.deleteByIdInternal("valid-dest")
+
+        and: "payment delete is NOT attempted"
+        0 * paymentRepositoryMock.delete(_)
+
+        and: "result is BusinessError with clear message"
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("Cannot delete payment")
+        result.message.contains("source transaction")
+        result.message.contains("locked-transaction")
+    }
+
+    def "deleteById should fail if destination transaction delete has BusinessError"() {
+        given: "a payment where destination transaction delete fails"
+        def paymentId = 6L
+        def payment = PaymentBuilder.builder()
+                .withPaymentId(paymentId)
+                .withGuidSource("valid-source")
+                .withGuidDestination("locked-dest")
+                .build()
+
+        when: "deleteById is called"
+        def result = standardizedPaymentService.deleteById(paymentId)
+
+        then: "repository finds the payment"
+        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+
+        and: "source transaction deletes successfully"
+        1 * transactionServiceMock.deleteByIdInternal("valid-source") >>
+                new ServiceResult.Success(true)
+
+        and: "destination transaction delete returns BusinessError"
+        1 * transactionServiceMock.deleteByIdInternal("locked-dest") >>
+                new ServiceResult.BusinessError("Transaction is locked", "TRANSACTION_LOCKED")
+
+        and: "payment delete is NOT attempted"
+        0 * paymentRepositoryMock.delete(_)
+
+        and: "result is BusinessError with clear message"
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("Cannot delete payment")
+        result.message.contains("destination transaction")
+        result.message.contains("locked-dest")
     }
 
     // ===== TDD Tests for Legacy Method Support =====

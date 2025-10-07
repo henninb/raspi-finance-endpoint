@@ -486,6 +486,70 @@ class StandardizedTransactionServiceSpec extends BaseServiceSpec {
         result.data == true
     }
 
+    // ===== TDD Tests for deleteByIdInternal() (Cascade Delete Support) =====
+
+    def "deleteByIdInternal should delete transaction without checking payment references"() {
+        given: "a transaction that IS referenced by payments"
+        def guid = "transaction-with-payments"
+        def transaction = createTestTransaction()
+        transaction.guid = guid
+
+        when: "deleteByIdInternal is called"
+        def result = standardizedTransactionService.deleteByIdInternal(guid)
+
+        then: "repository finds the transaction"
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+
+        and: "NO payment reference check is performed"
+        0 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(_, _)
+
+        and: "repository delete IS called"
+        1 * transactionRepositoryMock.delete(transaction)
+
+        and: "result is Success"
+        result instanceof ServiceResult.Success
+        result.data == true
+    }
+
+    def "deleteByIdInternal should return NotFound when transaction does not exist"() {
+        given: "a transaction GUID that doesn't exist"
+        def guid = "non-existent-guid"
+
+        when: "deleteByIdInternal is called"
+        def result = standardizedTransactionService.deleteByIdInternal(guid)
+
+        then: "repository findByGuid is called"
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+
+        and: "NO payment reference check is performed"
+        0 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(_, _)
+
+        and: "result is NotFound"
+        result instanceof ServiceResult.NotFound
+        result.message.contains("Transaction not found: non-existent-guid")
+    }
+
+    def "deleteById should still block deletion when payment references exist"() {
+        given: "a transaction referenced by a payment"
+        def guid = "transaction-with-payment"
+        def transaction = createTestTransaction()
+        transaction.guid = guid
+        def payment = GroovyMock(finance.domain.Payment)
+
+        when: "public deleteById is called"
+        def result = standardizedTransactionService.deleteById(guid)
+
+        then: "payment reference check IS performed"
+        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> [payment]
+
+        and: "repository delete is NOT called"
+        0 * transactionRepositoryMock.delete(_)
+
+        and: "result is BusinessError"
+        result instanceof ServiceResult.BusinessError
+    }
+
     // ===== Business-Specific ServiceResult Methods Tests =====
 
     def "findByAccountNameOwnerOrderByTransactionDateStandardized should return Success with sorted transactions"() {
