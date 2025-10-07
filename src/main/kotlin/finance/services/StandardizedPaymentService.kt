@@ -53,6 +53,58 @@ class StandardizedPaymentService(
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
             }
 
+            // If GUIDs are not set, we need to create transactions first
+            // This prevents foreign key constraint violations
+            if (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank()) {
+                logger.info("Creating transactions for payment: ${entity.sourceAccount} -> ${entity.destinationAccount}")
+
+                // Process accounts (create if missing)
+                processPaymentAccount(entity.destinationAccount)
+                processPaymentAccount(entity.sourceAccount)
+
+                // Validate destination account type
+                val destinationAccount = accountService.account(entity.destinationAccount).get()
+                if (destinationAccount.accountType == AccountType.Debit) {
+                    throw ValidationException("Account cannot make a payment to a debit account: ${entity.destinationAccount}")
+                }
+
+                // Create credit transaction
+                val transactionCredit = Transaction()
+                populateCreditTransaction(transactionCredit, entity, entity.sourceAccount)
+                val creditResult = transactionService.save(transactionCredit)
+                when (creditResult) {
+                    is ServiceResult.Success -> {
+                        entity.guidDestination = creditResult.data.guid
+                        logger.debug("Credit transaction created: ${creditResult.data.guid}")
+                    }
+                    is ServiceResult.ValidationError -> {
+                        throw jakarta.validation.ConstraintViolationException("Credit transaction validation failed: ${creditResult.errors}", emptySet())
+                    }
+                    is ServiceResult.BusinessError -> {
+                        throw org.springframework.dao.DataIntegrityViolationException("Credit transaction business error: ${creditResult.message}")
+                    }
+                    else -> throw RuntimeException("Failed to create credit transaction: $creditResult")
+                }
+
+                // Create debit transaction
+                val transactionDebit = Transaction()
+                populateDebitTransaction(transactionDebit, entity, entity.sourceAccount)
+                val debitResult = transactionService.save(transactionDebit)
+                when (debitResult) {
+                    is ServiceResult.Success -> {
+                        entity.guidSource = debitResult.data.guid
+                        logger.debug("Debit transaction created: ${debitResult.data.guid}")
+                    }
+                    is ServiceResult.ValidationError -> {
+                        throw jakarta.validation.ConstraintViolationException("Debit transaction validation failed: ${debitResult.errors}", emptySet())
+                    }
+                    is ServiceResult.BusinessError -> {
+                        throw org.springframework.dao.DataIntegrityViolationException("Debit transaction business error: ${debitResult.message}")
+                    }
+                    else -> throw RuntimeException("Failed to create debit transaction: $debitResult")
+                }
+            }
+
             // Set timestamps
             val timestamp = Timestamp(System.currentTimeMillis())
             entity.dateAdded = timestamp
@@ -159,6 +211,7 @@ class StandardizedPaymentService(
         }
 
         // Use the standardized save method and handle ServiceResult
+        // GUIDs are now set, so save() won't try to create transactions again
         val result = save(payment)
         return when (result) {
             is ServiceResult.Success -> result.data
