@@ -227,22 +227,33 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
     }
 
     def "insertPayment should delegate to save and return data"() {
-        given: "valid payment"
-        def payment = PaymentBuilder.builder().build()
+        given: "valid payment with null GUIDs to trigger transaction creation"
+        def payment = PaymentBuilder.builder()
+                .withGuidSource(null)
+                .withGuidDestination(null)
+                .build()
         def savedPayment = PaymentBuilder.builder().withPaymentId(1L).build()
         Set<ConstraintViolation<Payment>> noViolations = [] as Set
         def mockDestAccount = GroovyMock(finance.domain.Account)
         def mockSourceAccount = GroovyMock(finance.domain.Account)
+        // Create actual Transaction objects with GUIDs set
+        def transaction1 = new finance.domain.Transaction()
+        transaction1.guid = "test-guid-dest"
+        def transaction2 = new finance.domain.Transaction()
+        transaction2.guid = "test-guid-source"
         mockDestAccount.accountType >> finance.domain.AccountType.Credit
 
         when: "calling legacy insertPayment method"
         def result = standardizedPaymentService.insertPayment(payment)
 
         then: "should return saved payment"
-        1 * validatorMock.validate(payment) >> noViolations
+        // insertPayment creates transactions and processes accounts
         2 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(mockDestAccount)
         1 * accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(mockSourceAccount)
-        2 * transactionServiceMock.save(_) >> { new ServiceResult.Success(GroovyMock(finance.domain.Transaction) { getGuid() >> "test-guid" }) }
+        1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction1)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction2)
+        // save() is called after GUIDs are set, so it validates and saves without creating new transactions
+        1 * validatorMock.validate(payment) >> noViolations
         1 * paymentRepositoryMock.saveAndFlush(payment) >> savedPayment
         result.paymentId == 1L
     }

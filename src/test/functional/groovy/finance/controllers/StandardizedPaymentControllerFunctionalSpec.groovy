@@ -474,6 +474,89 @@ class StandardizedPaymentControllerFunctionalSpec extends BaseControllerFunction
         paymentTestContext?.cleanup()
     }
 
+    // TRANSACTION GUID CREATION TESTS (TDD)
+
+    void 'should create transaction GUIDs when saving payment through standardized endpoint'() {
+        given: 'a test payment context using TestDataManager'
+        def paymentTestContext = testFixtures.createPaymentContext(testOwner)
+
+        and: 'a test payment without GUIDs set'
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withSourceAccount("txnsrc_test")
+                .withDestinationAccount("txndest_test")
+                .withAmount(new BigDecimal("150.00"))
+                .buildAndValidate()
+
+        // Ensure GUIDs are null to test automatic creation
+        payment.guidSource = null
+        payment.guidDestination = null
+
+        when: 'creating payment with standardized endpoint'
+        ResponseEntity<String> response = postEndpoint(endpointName, payment.toString())
+
+        then: 'should return 201 CREATED status'
+        response.statusCode == HttpStatus.CREATED
+
+        and: 'should create transaction records with valid GUIDs'
+        def jsonResponse = new JsonSlurper().parseText(response.body)
+        jsonResponse.paymentId != null
+        jsonResponse.guidSource != null
+        jsonResponse.guidDestination != null
+        jsonResponse.guidSource != ""
+        jsonResponse.guidDestination != ""
+
+        and: 'GUIDs should be valid UUID format'
+        jsonResponse.guidSource ==~ /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+        jsonResponse.guidDestination ==~ /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+
+        and: 'documents expected behavior'
+        // The standardized save() method should create transaction records first
+        // This prevents foreign key constraint violations
+        // Behavior should match legacy insertPayment() method
+        true
+
+        cleanup:
+        paymentTestContext?.cleanup()
+    }
+
+    void 'should not fail with foreign key constraint when guidSource/guidDestination are null'() {
+        given: 'a test payment context using TestDataManager'
+        def paymentTestContext = testFixtures.createPaymentContext(testOwner)
+
+        and: 'a test payment with null GUIDs'
+        Payment payment = SmartPaymentBuilder.builderForOwner(testOwner)
+                .withSourceAccount("fksrc_test")
+                .withDestinationAccount("fkdest_test")
+                .withAmount(new BigDecimal("250.00"))
+                .buildAndValidate()
+        payment.guidSource = null
+        payment.guidDestination = null
+
+        when: 'creating payment with standardized endpoint'
+        ResponseEntity<String> response = postEndpoint(endpointName, payment.toString())
+
+        then: 'should NOT return 409 CONFLICT'
+        response.statusCode != HttpStatus.CONFLICT
+
+        and: 'should return 201 CREATED'
+        response.statusCode == HttpStatus.CREATED
+
+        and: 'should have valid transaction GUIDs created'
+        def jsonResponse = new JsonSlurper().parseText(response.body)
+        jsonResponse.guidSource != null
+        jsonResponse.guidDestination != null
+
+        and: 'documents expected behavior'
+        // This test verifies that the standardized save() method
+        // properly creates transaction records before saving the payment
+        // This prevents: "ERROR: insert or update on table t_payment violates
+        // foreign key constraint fk_payment_guid_source"
+        true
+
+        cleanup:
+        paymentTestContext?.cleanup()
+    }
+
     // Helper methods for standardized endpoints
     protected ResponseEntity<String> getEndpoint(String path) {
         String token = generateJwtToken(username)
