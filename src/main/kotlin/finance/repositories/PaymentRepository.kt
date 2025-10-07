@@ -15,6 +15,12 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
         paymentId: Long,
     ): Optional<Payment>
 
+    // Find payments that reference a specific transaction GUID (either as source or destination)
+    fun findByGuidSourceOrGuidDestination(
+        guidSource: String,
+        guidDestination: String,
+    ): List<Payment>
+
 //    @Transactional
 //    fun deleteByPaymentId(paymentId: Long)
 }
