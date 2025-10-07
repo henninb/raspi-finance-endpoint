@@ -132,6 +132,23 @@ class StandardizedTransactionService(
             true
         }
 
+    /**
+     * Internal delete method for cascade operations - bypasses payment reference check
+     * This method should only be called from payment cascade delete logic
+     */
+    fun deleteByIdInternal(id: String): ServiceResult<Boolean> =
+        handleServiceOperation("deleteByIdInternal", id) {
+            val optionalTransaction = transactionRepository.findByGuid(id)
+            if (optionalTransaction.isEmpty) {
+                throw jakarta.persistence.EntityNotFoundException("Transaction not found: $id")
+            }
+
+            val transaction = optionalTransaction.get()
+            transactionRepository.delete(transaction)
+            logger.info("Transaction deleted (cascade): ${transaction.guid}")
+            true
+        }
+
     // ===== Business-Specific ServiceResult Methods =====
 
     fun findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner: String): ServiceResult<List<Transaction>> {

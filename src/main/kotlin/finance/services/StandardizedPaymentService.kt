@@ -11,6 +11,7 @@ import finance.repositories.PaymentRepository
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.Optional
@@ -134,15 +135,95 @@ class StandardizedPaymentService(
             paymentRepository.saveAndFlush(paymentToUpdate)
         }
 
+    @Transactional
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
             val optionalPayment = paymentRepository.findByPaymentId(id)
             if (optionalPayment.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
             }
-            paymentRepository.delete(optionalPayment.get())
+
+            val payment = optionalPayment.get()
+
+            // Save GUIDs before clearing them
+            val savedGuidSource = payment.guidSource
+            val savedGuidDestination = payment.guidDestination
+
+            // Step 1: Clear foreign key references in payment to avoid constraint violations
+            payment.guidSource = null
+            payment.guidDestination = null
+            paymentRepository.saveAndFlush(payment)
+            logger.info("Cleared transaction references for payment $id")
+
+            // Step 2: Delete associated transactions (cascade delete)
+            val transactionsDeleted = deleteAssociatedTransactions(savedGuidSource, savedGuidDestination)
+            logger.info(
+                "Deleted $transactionsDeleted transaction(s) for payment $id: " +
+                    "source=$savedGuidSource, destination=$savedGuidDestination",
+            )
+
+            // Step 3: Delete the payment
+            paymentRepository.delete(payment)
+            logger.info("Payment deleted successfully: $id")
+
             true
         }
+
+    /**
+     * Delete transactions associated with a payment (cascade delete helper)
+     * Returns the number of transactions successfully deleted
+     */
+    private fun deleteAssociatedTransactions(payment: Payment): Int {
+        var deletedCount = 0
+
+        // Delete source transaction
+        if (!payment.guidSource.isNullOrBlank()) {
+            when (val result = transactionService.deleteByIdInternal(payment.guidSource!!)) {
+                is ServiceResult.Success -> {
+                    deletedCount++
+                    logger.info("Deleted source transaction: ${payment.guidSource}")
+                }
+                is ServiceResult.NotFound -> {
+                    logger.warn("Source transaction not found: ${payment.guidSource}")
+                }
+                is ServiceResult.BusinessError -> {
+                    logger.error("Failed to delete source transaction: ${result.message}")
+                    throw org.springframework.dao.DataIntegrityViolationException(
+                        "Cannot delete payment ${payment.paymentId} because source transaction " +
+                            "${payment.guidSource} could not be deleted: ${result.message}",
+                    )
+                }
+                else -> {
+                    throw RuntimeException("Unexpected error deleting source transaction: $result")
+                }
+            }
+        }
+
+        // Delete destination transaction
+        if (!payment.guidDestination.isNullOrBlank()) {
+            when (val result = transactionService.deleteByIdInternal(payment.guidDestination!!)) {
+                is ServiceResult.Success -> {
+                    deletedCount++
+                    logger.info("Deleted destination transaction: ${payment.guidDestination}")
+                }
+                is ServiceResult.NotFound -> {
+                    logger.warn("Destination transaction not found: ${payment.guidDestination}")
+                }
+                is ServiceResult.BusinessError -> {
+                    logger.error("Failed to delete destination transaction: ${result.message}")
+                    throw org.springframework.dao.DataIntegrityViolationException(
+                        "Cannot delete payment ${payment.paymentId} because destination transaction " +
+                            "${payment.guidDestination} could not be deleted: ${result.message}",
+                    )
+                }
+                else -> {
+                    throw RuntimeException("Unexpected error deleting destination transaction: $result")
+                }
+            }
+        }
+
+        return deletedCount
+    }
 
     // ===== Legacy Method Compatibility =====
 
