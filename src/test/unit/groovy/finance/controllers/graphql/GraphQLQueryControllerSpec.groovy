@@ -4,6 +4,7 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Description
+import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
@@ -12,6 +13,7 @@ import finance.domain.Transfer
 import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
+import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
 import finance.services.StandardizedTransferService
@@ -23,6 +25,7 @@ class GraphQLQueryControllerSpec extends Specification {
     StandardizedAccountService mockAccountService
     StandardizedCategoryService mockCategoryService
     StandardizedDescriptionService mockDescriptionService
+    StandardizedParameterService mockParameterService
     StandardizedPaymentService mockPaymentService
     StandardizedTransferService mockTransferService
     StandardizedReceiptImageService mockReceiptImageService
@@ -31,6 +34,7 @@ class GraphQLQueryControllerSpec extends Specification {
         mockAccountService = Mock(StandardizedAccountService)
         mockCategoryService = Mock(StandardizedCategoryService)
         mockDescriptionService = Mock(StandardizedDescriptionService)
+        mockParameterService = Mock(StandardizedParameterService)
         mockPaymentService = Mock(StandardizedPaymentService)
         mockTransferService = Mock(StandardizedTransferService)
         mockReceiptImageService = Mock(StandardizedReceiptImageService)
@@ -39,6 +43,7 @@ class GraphQLQueryControllerSpec extends Specification {
             mockAccountService,
             mockCategoryService,
             mockDescriptionService,
+            mockParameterService,
             mockPaymentService,
             mockTransferService,
             mockReceiptImageService
@@ -323,19 +328,70 @@ class GraphQLQueryControllerSpec extends Specification {
         result == null
     }
 
-    def "parameters should return empty list (stub)"() {
+    def "parameters should return list from service when successful"() {
+        given: "a list of parameters"
+        def parameters = [
+            new Parameter(1L, "param1", "value1", true),
+            new Parameter(2L, "param2", "value2", true)
+        ]
+
         when: "parameters is called"
         def result = controller.parameters()
 
-        then: "empty list is returned"
+        then: "service returns success result"
+        1 * mockParameterService.findAllActive() >> ServiceResult.Success.of(parameters)
+
+        and: "parameter list is returned"
+        result == parameters
+        result.size() == 2
+    }
+
+    def "parameters should return empty list when service fails"() {
+        when: "parameters is called"
+        def result = controller.parameters()
+
+        then: "service returns failure result"
+        1 * mockParameterService.findAllActive() >> ServiceResult.NotFound.of("No parameters found")
+
+        and: "empty list is returned"
         result == []
     }
 
-    def "parameter should return null (stub)"() {
+    def "parameter should return single parameter when present"() {
+        given: "a parameter"
+        def parameter = new Parameter(123L, "test_param", "test_value", true)
+
         when: "parameter is called"
         def result = controller.parameter(123L)
 
-        then: "null is returned"
+        then: "service returns success result"
+        1 * mockParameterService.findById(123L) >> ServiceResult.Success.of(parameter)
+
+        and: "parameter is returned"
+        result == parameter
+        result.parameterId == 123L
+        result.parameterName == "test_param"
+    }
+
+    def "parameter should return null when not found"() {
+        when: "parameter is called"
+        def result = controller.parameter(123L)
+
+        then: "service returns not found result"
+        1 * mockParameterService.findById(123L) >> ServiceResult.NotFound.of("Parameter not found")
+
+        and: "null is returned"
+        result == null
+    }
+
+    def "parameter should return null when service fails"() {
+        when: "parameter is called"
+        def result = controller.parameter(123L)
+
+        then: "service returns system error"
+        1 * mockParameterService.findById(123L) >> ServiceResult.SystemError.of(new RuntimeException("DB Error"))
+
+        and: "null is returned"
         result == null
     }
 

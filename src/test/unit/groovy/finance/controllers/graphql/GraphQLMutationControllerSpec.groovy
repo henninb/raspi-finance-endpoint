@@ -2,8 +2,13 @@ package finance.controllers.graphql
 
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransferInputDto
+import finance.domain.Category
+import finance.domain.Parameter
 import finance.domain.Payment
+import finance.domain.ServiceResult
 import finance.domain.Transfer
+import finance.services.StandardizedCategoryService
+import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.Counter
@@ -15,18 +20,24 @@ import java.sql.Date
 class GraphQLMutationControllerSpec extends Specification {
 
     GraphQLMutationController controller
+    StandardizedCategoryService mockCategoryService
+    StandardizedParameterService mockParameterService
     StandardizedPaymentService mockPaymentService
     StandardizedTransferService mockTransferService
     MeterRegistry mockMeterRegistry
     Counter mockCounter
 
     def setup() {
+        mockCategoryService = Mock(StandardizedCategoryService)
+        mockParameterService = Mock(StandardizedParameterService)
         mockPaymentService = Mock(StandardizedPaymentService)
         mockTransferService = Mock(StandardizedTransferService)
         mockMeterRegistry = Mock(MeterRegistry)
         mockCounter = Mock(Counter)
 
         controller = new GraphQLMutationController(
+            mockCategoryService,
+            mockParameterService,
             mockPaymentService,
             mockTransferService,
             mockMeterRegistry
@@ -180,6 +191,107 @@ class GraphQLMutationControllerSpec extends Specification {
 
         then: "service returns false"
         1 * mockTransferService.deleteByTransferId(999L) >> false
+
+        and: "deletion failure is returned"
+        result == false
+    }
+
+    def "createParameter should create parameter successfully"() {
+        given: "a valid parameter"
+        def parameter = new Parameter(0L, "test_param", "test_value", true)
+
+        and: "a saved parameter"
+        def savedParameter = new Parameter(123L, "test_param", "test_value", true)
+
+        when: "createParameter is called"
+        def result = controller.createParameter(parameter)
+
+        then: "service returns success result"
+        1 * mockParameterService.save(parameter) >> ServiceResult.Success.of(savedParameter)
+
+        and: "meter registry is called"
+        1 * mockMeterRegistry.counter("graphql.parameter.create.success") >> mockCounter
+        1 * mockCounter.increment()
+
+        and: "saved parameter is returned"
+        result == savedParameter
+        result.parameterId == 123L
+    }
+
+    def "createParameter should handle validation errors"() {
+        given: "an invalid parameter"
+        def parameter = new Parameter(0L, "", "test_value", true)
+
+        when: "createParameter is called"
+        controller.createParameter(parameter)
+
+        then: "service returns validation error"
+        1 * mockParameterService.save(parameter) >> ServiceResult.ValidationError.of(["parameterName": "must not be blank"])
+
+        and: "exception is thrown"
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateParameter should update parameter successfully"() {
+        given: "an existing parameter"
+        def parameter = new Parameter(123L, "test_param", "updated_value", true)
+
+        when: "updateParameter is called"
+        def result = controller.updateParameter(parameter)
+
+        then: "service returns success result"
+        1 * mockParameterService.update(parameter) >> ServiceResult.Success.of(parameter)
+
+        and: "meter registry is called"
+        1 * mockMeterRegistry.counter("graphql.parameter.update.success") >> mockCounter
+        1 * mockCounter.increment()
+
+        and: "updated parameter is returned"
+        result == parameter
+        result.parameterValue == "updated_value"
+    }
+
+    def "updateParameter should handle not found errors"() {
+        given: "a non-existent parameter"
+        def parameter = new Parameter(999L, "test_param", "test_value", true)
+
+        when: "updateParameter is called"
+        controller.updateParameter(parameter)
+
+        then: "service returns not found"
+        1 * mockParameterService.update(parameter) >> ServiceResult.NotFound.of("Parameter not found")
+
+        and: "exception is thrown"
+        thrown(IllegalArgumentException)
+    }
+
+    def "deleteParameter should delete parameter successfully"() {
+        given: "an existing parameter ID"
+        def parameterId = 123L
+
+        when: "deleteParameter is called"
+        def result = controller.deleteParameter(parameterId)
+
+        then: "service returns success result"
+        1 * mockParameterService.deleteById(parameterId) >> ServiceResult.Success.of(true)
+
+        and: "meter registry is called"
+        1 * mockMeterRegistry.counter("graphql.parameter.delete.success") >> mockCounter
+        1 * mockCounter.increment()
+
+        and: "deletion success is returned"
+        result == true
+    }
+
+    def "deleteParameter should return false when parameter not found"() {
+        given: "a non-existent parameter ID"
+        def parameterId = 999L
+
+        when: "deleteParameter is called"
+        def result = controller.deleteParameter(parameterId)
+
+        then: "service returns not found"
+        1 * mockParameterService.deleteById(parameterId) >> ServiceResult.NotFound.of("Parameter not found")
 
         and: "deletion failure is returned"
         result == false

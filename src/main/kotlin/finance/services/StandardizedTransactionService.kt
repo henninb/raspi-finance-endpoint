@@ -145,6 +145,8 @@ class StandardizedTransactionService(
 
             val transaction = optionalTransaction.get()
             transactionRepository.delete(transaction)
+            // Flush to surface FK violations immediately and ensure operation order
+            transactionRepository.flush()
             logger.info("Transaction deleted (cascade): ${transaction.guid}")
             true
         }

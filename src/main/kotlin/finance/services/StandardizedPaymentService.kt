@@ -145,15 +145,14 @@ class StandardizedPaymentService(
 
             val payment = optionalPayment.get()
 
-            // Save GUIDs before clearing them
+            // Save GUIDs before removing the payment
             val savedGuidSource = payment.guidSource
             val savedGuidDestination = payment.guidDestination
 
-            // Step 1: Clear foreign key references in payment to avoid constraint violations
-            payment.guidSource = null
-            payment.guidDestination = null
-            paymentRepository.saveAndFlush(payment)
-            logger.info("Cleared transaction references for payment $id")
+            // Step 1: Delete the payment first to break FK references
+            paymentRepository.delete(payment)
+            paymentRepository.flush()
+            logger.info("Payment deleted (flushed) to allow cascade transaction deletes: $id")
 
             // Step 2: Delete associated transactions (cascade delete)
             val transactionsDeleted = deleteAssociatedTransactions(savedGuidSource, savedGuidDestination)
@@ -162,10 +161,6 @@ class StandardizedPaymentService(
                     "source=$savedGuidSource, destination=$savedGuidDestination",
             )
 
-            // Step 3: Delete the payment
-            paymentRepository.delete(payment)
-            logger.info("Payment deleted successfully: $id")
-
             true
         }
 
@@ -173,7 +168,10 @@ class StandardizedPaymentService(
      * Delete transactions associated with a payment (cascade delete helper)
      * Returns the number of transactions successfully deleted
      */
-    private fun deleteAssociatedTransactions(guidSource: String?, guidDestination: String?): Int {
+    private fun deleteAssociatedTransactions(
+        guidSource: String?,
+        guidDestination: String?,
+    ): Int {
         var deletedCount = 0
 
         // Delete source transaction

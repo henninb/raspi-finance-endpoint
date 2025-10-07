@@ -328,7 +328,7 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         result instanceof ServiceResult.Success
     }
 
-    def "deleteById should fail if source transaction delete has BusinessError"() {
+    def "deleteById should fail if source transaction delete has BusinessError (payment delete invoked, transaction rolls back)"() {
         given: "a payment where source transaction delete fails"
         def paymentId = 5L
         def payment = PaymentBuilder.builder()
@@ -343,15 +343,15 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         then: "repository finds the payment"
         1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
 
+        and: "payment delete is attempted first (will be rolled back by transaction)"
+        1 * paymentRepositoryMock.delete(payment)
+
         and: "source transaction delete returns BusinessError"
         1 * transactionServiceMock.deleteByIdInternal("locked-transaction") >>
                 new ServiceResult.BusinessError("Transaction is locked", "TRANSACTION_LOCKED")
 
         and: "destination transaction delete is NOT attempted"
         0 * transactionServiceMock.deleteByIdInternal("valid-dest")
-
-        and: "payment delete is NOT attempted"
-        0 * paymentRepositoryMock.delete(_)
 
         and: "result is BusinessError with clear message"
         result instanceof ServiceResult.BusinessError
@@ -360,7 +360,7 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         result.message.contains("locked-transaction")
     }
 
-    def "deleteById should fail if destination transaction delete has BusinessError"() {
+    def "deleteById should fail if destination transaction delete has BusinessError (payment delete invoked, transaction rolls back)"() {
         given: "a payment where destination transaction delete fails"
         def paymentId = 6L
         def payment = PaymentBuilder.builder()
@@ -375,6 +375,9 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         then: "repository finds the payment"
         1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
 
+        and: "payment delete is attempted first (will be rolled back by transaction)"
+        1 * paymentRepositoryMock.delete(payment)
+
         and: "source transaction deletes successfully"
         1 * transactionServiceMock.deleteByIdInternal("valid-source") >>
                 new ServiceResult.Success(true)
@@ -382,9 +385,6 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         and: "destination transaction delete returns BusinessError"
         1 * transactionServiceMock.deleteByIdInternal("locked-dest") >>
                 new ServiceResult.BusinessError("Transaction is locked", "TRANSACTION_LOCKED")
-
-        and: "payment delete is NOT attempted"
-        0 * paymentRepositoryMock.delete(_)
 
         and: "result is BusinessError with clear message"
         result instanceof ServiceResult.BusinessError

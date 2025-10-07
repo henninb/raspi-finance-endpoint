@@ -4,6 +4,7 @@ import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
 import finance.domain.Description
+import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
@@ -12,6 +13,7 @@ import finance.domain.Transfer
 import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
+import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
 import finance.services.StandardizedTransferService
@@ -27,6 +29,7 @@ class GraphQLQueryController(
     private val accountService: StandardizedAccountService,
     private val categoryService: StandardizedCategoryService,
     private val descriptionService: StandardizedDescriptionService,
+    private val parameterService: StandardizedParameterService,
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
     private val receiptImageService: StandardizedReceiptImageService,
@@ -141,17 +144,23 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun parameters(): List<Any> {
-        logger.info("GraphQL - Fetching all parameters (stub)")
-        return emptyList()
+    fun parameters(): List<Parameter> {
+        logger.info("GraphQL - Fetching all parameters")
+        return when (val result = parameterService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
     fun parameter(
         @Argument parameterId: Long,
-    ): Any? {
-        logger.info("GraphQL - Fetching parameter: $parameterId (stub)")
-        return null
+    ): Parameter? {
+        logger.info("GraphQL - Fetching parameter: $parameterId")
+        return when (val result = parameterService.findById(parameterId)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping

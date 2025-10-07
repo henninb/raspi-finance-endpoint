@@ -66,18 +66,20 @@ type Mutation {
     deletePayment( paymentId: ID! ) : Boolean
     createTransfer( transfer: TransferInput ) : Transfer
     deleteTransfer( transferId: ID! ) : Boolean
+    createParameter( parameter: ParameterInput ) : Parameter
+    updateParameter( parameter: ParameterInput ) : Parameter
+    deleteParameter( parameterId: ID! ) : Boolean
+    createCategory( category: CategoryInput ) : Category
+    updateCategory( category: CategoryInput ) : Category
+    deleteCategory( categoryName: String! ) : Boolean
     # Unimplemented mutations removed to match implementation
     # createDescription( description: String) : Description
-    # createCategory( category: String) : Category
     # createAccount( account: AccountInput ) : Account
     # updateAccount( account: AccountInput ) : Account
     # deleteAccount( accountId: Long! ) : Boolean
     # createTransaction( transaction: TransactionInput ) : Transaction
     # updateTransaction( transaction: TransactionInput ) : Transaction
     # deleteTransaction( transactionId: Long! ) : Boolean
-    # createParameter( parameter: ParameterInput ) : Parameter
-    # updateParameter( parameter: ParameterInput ) : Parameter
-    # deleteParameter( parameterId: Long! ) : Boolean
     # createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
     # updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
     # deleteValidationAmount( validationId: Long! ) : Boolean
@@ -227,6 +229,12 @@ input ParameterInput {
     parameterId: ID
     parameterName: String!
     parameterValue: String!
+    activeStatus: Boolean
+}
+
+input CategoryInput {
+    categoryId: ID
+    categoryName: String!
     activeStatus: Boolean
 }
 

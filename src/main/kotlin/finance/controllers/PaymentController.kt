@@ -283,6 +283,10 @@ class PaymentController(
                 logger.warn("Payment not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting payment $id: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting payment: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
