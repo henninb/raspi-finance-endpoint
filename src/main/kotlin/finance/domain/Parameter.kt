@@ -29,17 +29,17 @@ data class Parameter(
     @field:Min(value = 0L)
     @param:JsonProperty
     @Column(name = "parameter_id", nullable = false)
-    var parameterId: Long,
+    var parameterId: Long = 0L,
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", unique = true, nullable = false)
     @param:JsonProperty
-    var parameterName: String,
+    var parameterName: String = "",
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_value", unique = true, nullable = false)
     @param:JsonProperty
-    var parameterValue: String,
+    var parameterValue: String = "",
     @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
