@@ -262,6 +262,8 @@ type Parameter {
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean!
+    dateAdded: Timestamp!
+    dateUpdated: Timestamp!
 }
 
 # complete 7/17/2021

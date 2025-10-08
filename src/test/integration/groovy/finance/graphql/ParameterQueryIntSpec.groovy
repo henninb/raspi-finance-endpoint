@@ -50,6 +50,23 @@ class ParameterQueryIntSpec extends BaseIntegrationSpec {
         queryController.parameter(999999L) == null
     }
 
+    def "fetch parameter should include dateAdded and dateUpdated fields"() {
+        given:
+        def savedParameter = createTestParameter("test_param_dates", "dates_value")
+
+        when:
+        def result = queryController.parameter(savedParameter.parameterId)
+
+        then:
+        result != null
+        result.parameterId == savedParameter.parameterId
+        result.parameterName == "test_param_dates"
+        result.parameterValue == "dates_value"
+        result.activeStatus == true
+        result.dateAdded != null
+        result.dateUpdated != null
+    }
+
     private Parameter createTestParameter(String name, String value) {
         Parameter parameter = new Parameter(
             0L,
