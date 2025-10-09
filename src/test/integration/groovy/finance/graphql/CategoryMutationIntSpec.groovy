@@ -1,6 +1,7 @@
 package finance.graphql
 
 import finance.BaseIntegrationSpec
+import finance.controllers.dto.CategoryInputDto
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.Category
 import finance.services.StandardizedCategoryService
@@ -18,14 +19,14 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     def "createCategory mutation succeeds with valid input"() {
         given:
         withUserRole()
-        def category = new Category(
-                0L,
-                true,
-                "test_create_category"
+        def categoryInput = new CategoryInputDto(
+                null,
+                "test_create_category",
+                true
         )
 
         when:
-        def result = mutationController.createCategory(category)
+        def result = mutationController.createCategory(categoryInput)
 
         then:
         result != null
@@ -37,14 +38,14 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     def "createCategory mutation fails validation for empty category name"() {
         given:
         withUserRole()
-        def category = new Category(
-                0L,
-                true,
-                ""                      // invalid: empty
+        def categoryInput = new CategoryInputDto(
+                null,
+                "",                      // invalid: empty
+                true
         )
 
         when:
-        mutationController.createCategory(category)
+        mutationController.createCategory(categoryInput)
 
         then:
         thrown(ConstraintViolationException)
@@ -53,14 +54,14 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     def "createCategory mutation fails validation for category name too long"() {
         given:
         withUserRole()
-        def category = new Category(
-                0L,
-                true,
-                "a" * 51                // invalid: exceeds 50 character limit
+        def categoryInput = new CategoryInputDto(
+                null,
+                "a" * 51,                // invalid: exceeds 50 character limit
+                true
         )
 
         when:
-        mutationController.createCategory(category)
+        mutationController.createCategory(categoryInput)
 
         then:
         thrown(ConstraintViolationException)
@@ -69,14 +70,14 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     def "createCategory mutation fails validation for category name with spaces"() {
         given:
         withUserRole()
-        def category = new Category(
-                0L,
-                true,
-                "invalid category"      // invalid: contains space
+        def categoryInput = new CategoryInputDto(
+                null,
+                "invalid category",      // invalid: contains space
+                true
         )
 
         when:
-        mutationController.createCategory(category)
+        mutationController.createCategory(categoryInput)
 
         then:
         thrown(ConstraintViolationException)
@@ -86,14 +87,14 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
         given:
         withUserRole()
         def created = createTestCategory("test_update_category")
-        def updated = new Category(
+        def categoryInput = new CategoryInputDto(
                 created.categoryId,
-                false,                  // change active status
-                "test_update_category"
+                "test_update_category",
+                false                   // change active status
         )
 
         when:
-        def result = mutationController.updateCategory(updated)
+        def result = mutationController.updateCategory(categoryInput, null)
 
         then:
         result != null
@@ -105,14 +106,14 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     def "updateCategory mutation fails for non-existent category"() {
         given:
         withUserRole()
-        def category = new Category(
+        def categoryInput = new CategoryInputDto(
                 999999L,                // non-existent ID
-                true,
-                "nonexistent"
+                "nonexistent",
+                true
         )
 
         when:
-        mutationController.updateCategory(category)
+        mutationController.updateCategory(categoryInput, null)
 
         then:
         thrown(RuntimeException)
