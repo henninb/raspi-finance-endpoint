@@ -1,5 +1,6 @@
 package finance.controllers.graphql
 
+import finance.controllers.dto.CategoryInputDto
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransferInputDto
 import finance.domain.Category
@@ -183,9 +184,17 @@ class GraphQLMutationController(
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createCategory(
-        @Argument("category") @Valid category: Category,
+        @Argument("category") @Valid categoryInput: CategoryInputDto,
     ): Category {
         logger.info("GraphQL - Creating category via @MutationMapping")
+
+        val category =
+            Category().apply {
+                this.categoryId = categoryInput.categoryId ?: 0L
+                this.categoryName = categoryInput.categoryName
+                this.activeStatus = categoryInput.activeStatus ?: true
+            }
+
         return when (val result = categoryService.save(category)) {
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.category.create.success").increment()
@@ -210,9 +219,68 @@ class GraphQLMutationController(
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateCategory(
-        @Argument("category") @Valid category: Category,
+        @Argument("category") @Valid categoryInput: CategoryInputDto,
+        @Argument("oldCategoryName") oldCategoryName: String?,
     ): Category {
-        logger.info("GraphQL - Updating category: {}", category.categoryName)
+        logger.info(
+            "GraphQL - Updating category with input: categoryId={}, categoryName={}, oldCategoryName={}",
+            categoryInput.categoryId,
+            categoryInput.categoryName,
+            oldCategoryName,
+        )
+
+        // Determine which category to update based on what information is provided:
+        // 1. If categoryId is provided, use it directly
+        // 2. If oldCategoryName is provided, look up the category by that name
+        // 3. If neither is provided, look up by the new categoryName (for simple updates without renaming)
+        val existingCategoryId =
+            when {
+                categoryInput.categoryId != null -> {
+                    logger.debug("Using provided categoryId: {}", categoryInput.categoryId)
+                    categoryInput.categoryId
+                }
+                oldCategoryName != null -> {
+                    logger.debug("Looking up category by oldCategoryName: {}", oldCategoryName)
+                    when (val findResult = categoryService.findByCategoryNameStandardized(oldCategoryName)) {
+                        is ServiceResult.Success -> findResult.data.categoryId
+                        is ServiceResult.NotFound -> {
+                            logger.warn("GraphQL - Old category not found: {}", oldCategoryName)
+                            throw IllegalArgumentException("Category not found: $oldCategoryName")
+                        }
+                        else -> {
+                            logger.error("GraphQL - Error finding category: {}", oldCategoryName)
+                            throw RuntimeException("Failed to find category: $oldCategoryName")
+                        }
+                    }
+                }
+                else -> {
+                    // Try to look up by the new name (for updates that don't involve renaming)
+                    logger.debug("Looking up category by categoryName: {}", categoryInput.categoryName)
+                    when (val findResult = categoryService.findByCategoryNameStandardized(categoryInput.categoryName)) {
+                        is ServiceResult.Success -> findResult.data.categoryId
+                        is ServiceResult.NotFound -> {
+                            logger.warn("GraphQL - Category not found: {}", categoryInput.categoryName)
+                            throw IllegalArgumentException(
+                                "Category not found: ${categoryInput.categoryName}. " +
+                                    "If renaming, provide oldCategoryName parameter. " +
+                                    "Example: updateCategory(category: { categoryName: \"newname\" }, oldCategoryName: \"oldname\")",
+                            )
+                        }
+                        else -> {
+                            logger.error("GraphQL - Error finding category: {}", categoryInput.categoryName)
+                            throw RuntimeException("Failed to find category: ${categoryInput.categoryName}")
+                        }
+                    }
+                }
+            }
+
+        val category =
+            Category().apply {
+                this.categoryId = existingCategoryId
+                this.categoryName = categoryInput.categoryName
+                this.activeStatus = categoryInput.activeStatus ?: true
+            }
+
         return when (val result = categoryService.update(category)) {
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.category.update.success").increment()
@@ -220,8 +288,8 @@ class GraphQLMutationController(
                 result.data
             }
             is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Category not found: {}", category.categoryName)
-                throw IllegalArgumentException("Category not found: ${category.categoryName}")
+                logger.warn("GraphQL - Category not found with ID: {}", existingCategoryId)
+                throw IllegalArgumentException("Category not found with ID: $existingCategoryId")
             }
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating category: {}", result.errors)
