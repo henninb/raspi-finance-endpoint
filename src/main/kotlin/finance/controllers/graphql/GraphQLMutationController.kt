@@ -2,16 +2,19 @@ package finance.controllers.graphql
 
 import finance.controllers.dto.CategoryInputDto
 import finance.controllers.dto.DescriptionInputDto
+import finance.controllers.dto.MedicalExpenseInputDto
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransferInputDto
 import finance.domain.Category
 import finance.domain.Description
+import finance.domain.MedicalExpense
 import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.domain.Transfer
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
+import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedTransferService
@@ -31,6 +34,7 @@ import java.util.UUID
 class GraphQLMutationController(
     private val categoryService: StandardizedCategoryService,
     private val descriptionService: StandardizedDescriptionService,
+    private val medicalExpenseService: StandardizedMedicalExpenseService,
     private val parameterService: StandardizedParameterService,
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
@@ -476,6 +480,133 @@ class GraphQLMutationController(
             }
             else -> {
                 logger.error("GraphQL - Error deleting description: {}", descriptionName)
+                false
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun createMedicalExpense(
+        @Argument("medicalExpense") @Valid medicalExpenseInput: MedicalExpenseInputDto,
+    ): MedicalExpense {
+        logger.info("GraphQL - Creating medical expense via @MutationMapping")
+
+        val medicalExpense =
+            MedicalExpense().apply {
+                this.medicalExpenseId = medicalExpenseInput.medicalExpenseId ?: 0L
+                this.transactionId = medicalExpenseInput.transactionId
+                this.providerId = medicalExpenseInput.providerId
+                this.familyMemberId = medicalExpenseInput.familyMemberId
+                this.serviceDate = medicalExpenseInput.serviceDate!!
+                this.serviceDescription = medicalExpenseInput.serviceDescription
+                this.procedureCode = medicalExpenseInput.procedureCode
+                this.diagnosisCode = medicalExpenseInput.diagnosisCode
+                this.billedAmount = medicalExpenseInput.billedAmount!!
+                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount!!
+                this.insurancePaid = medicalExpenseInput.insurancePaid!!
+                this.patientResponsibility = medicalExpenseInput.patientResponsibility!!
+                this.paidDate = medicalExpenseInput.paidDate
+                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork!!
+                this.claimNumber = medicalExpenseInput.claimNumber!!
+                this.claimStatus = medicalExpenseInput.claimStatus!!
+                this.activeStatus = medicalExpenseInput.activeStatus ?: true
+                this.paidAmount = medicalExpenseInput.paidAmount!!
+            }
+
+        return when (val result = medicalExpenseService.save(medicalExpense)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.medicalExpense.create.success").increment()
+                logger.info("GraphQL - Created medical expense: {}", result.data.medicalExpenseId)
+                result.data
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error creating medical expense: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error creating medical expense: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error creating medical expense")
+                throw RuntimeException("Failed to create medical expense")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun updateMedicalExpense(
+        @Argument("medicalExpense") @Valid medicalExpenseInput: MedicalExpenseInputDto,
+    ): MedicalExpense {
+        logger.info("GraphQL - Updating medical expense id={}", medicalExpenseInput.medicalExpenseId)
+
+        val medicalExpense =
+            MedicalExpense().apply {
+                this.medicalExpenseId = medicalExpenseInput.medicalExpenseId!!
+                this.transactionId = medicalExpenseInput.transactionId
+                this.providerId = medicalExpenseInput.providerId
+                this.familyMemberId = medicalExpenseInput.familyMemberId
+                this.serviceDate = medicalExpenseInput.serviceDate!!
+                this.serviceDescription = medicalExpenseInput.serviceDescription
+                this.procedureCode = medicalExpenseInput.procedureCode
+                this.diagnosisCode = medicalExpenseInput.diagnosisCode
+                this.billedAmount = medicalExpenseInput.billedAmount!!
+                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount!!
+                this.insurancePaid = medicalExpenseInput.insurancePaid!!
+                this.patientResponsibility = medicalExpenseInput.patientResponsibility!!
+                this.paidDate = medicalExpenseInput.paidDate
+                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork!!
+                this.claimNumber = medicalExpenseInput.claimNumber!!
+                this.claimStatus = medicalExpenseInput.claimStatus!!
+                this.activeStatus = medicalExpenseInput.activeStatus ?: true
+                this.paidAmount = medicalExpenseInput.paidAmount!!
+            }
+
+        return when (val result = medicalExpenseService.update(medicalExpense)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.medicalExpense.update.success").increment()
+                logger.info("GraphQL - Updated medical expense: {}", result.data.medicalExpenseId)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Medical expense not found: {}", medicalExpenseInput.medicalExpenseId)
+                throw IllegalArgumentException("Medical expense not found: ${medicalExpenseInput.medicalExpenseId}")
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error updating medical expense: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error updating medical expense: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error updating medical expense")
+                throw RuntimeException("Failed to update medical expense")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun deleteMedicalExpense(
+        @Argument medicalExpenseId: Long,
+    ): Boolean {
+        logger.info("GraphQL - Deleting medical expense id={}", medicalExpenseId)
+        return when (val result = medicalExpenseService.deleteById(medicalExpenseId)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.medicalExpense.delete.success").increment()
+                logger.info("GraphQL - Deleted medical expense id={}", medicalExpenseId)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Medical expense not found for deletion: {}", medicalExpenseId)
+                false
+            }
+            else -> {
+                logger.error("GraphQL - Error deleting medical expense id={}", medicalExpenseId)
                 false
             }
         }
