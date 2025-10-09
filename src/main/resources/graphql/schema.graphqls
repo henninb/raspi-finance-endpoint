@@ -70,7 +70,7 @@ type Mutation {
     updateParameter( parameter: ParameterInput ) : Parameter
     deleteParameter( parameterId: ID! ) : Boolean
     createCategory( category: CategoryInput ) : Category
-    updateCategory( category: CategoryInput ) : Category
+    updateCategory( category: CategoryInput, oldCategoryName: String ) : Category
     deleteCategory( categoryName: String! ) : Boolean
     # Unimplemented mutations removed to match implementation
     # createDescription( description: String) : Description
