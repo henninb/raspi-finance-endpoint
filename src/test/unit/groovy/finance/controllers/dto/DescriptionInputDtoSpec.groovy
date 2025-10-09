@@ -79,7 +79,7 @@ class DescriptionInputDtoSpec extends BaseDomainSpec {
         violations.isEmpty()
     }
 
-    def "DescriptionInputDto should accept mixed case input"() {
+    def "DescriptionInputDto should reject mixed case input due to pattern validation"() {
         given:
         def dto = new DescriptionInputDto(null, "Test_Description", true)
 
@@ -87,8 +87,9 @@ class DescriptionInputDtoSpec extends BaseDomainSpec {
         Set<ConstraintViolation<DescriptionInputDto>> violations = validator.validate(dto)
 
         then:
-        // Mixed case should be accepted since there's no pattern validation
-        violations.isEmpty()
+        // Mixed case should be rejected - pattern only allows lowercase letters, numbers, underscore, hyphen
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'descriptionName' && it.message.contains('alphanumeric no space') }
     }
 
     def "DescriptionInputDto should have default values for optional fields"() {
