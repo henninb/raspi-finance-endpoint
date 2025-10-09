@@ -39,6 +39,15 @@ enum TransactionType {
     Undefined
 }
 
+enum ClaimStatus {
+    Submitted
+    Approved
+    Denied
+    Pending
+    Paid
+    Undefined
+}
+
 type Query {
     descriptions : [Description]
     description (descriptionName: String!) : Description
@@ -58,6 +67,9 @@ type Query {
     validationAmount(validationId: ID!) : ValidationAmount
     receiptImages : [ReceiptImage]
     receiptImage(receiptImageId: ID!) : ReceiptImage
+    medicalExpenses : [MedicalExpense]
+    medicalExpense(medicalExpenseId: ID!) : MedicalExpense
+    medicalExpensesByClaimStatus(claimStatus: ClaimStatus!) : [MedicalExpense]
     #mutation: Mutation
 }
 
@@ -75,6 +87,9 @@ type Mutation {
     createDescription( description: DescriptionInput ) : Description
     updateDescription( description: DescriptionInput, oldDescriptionName: String ) : Description
     deleteDescription( descriptionName: String! ) : Boolean
+    createMedicalExpense( medicalExpense: MedicalExpenseInput ) : MedicalExpense
+    updateMedicalExpense( medicalExpense: MedicalExpenseInput ) : MedicalExpense
+    deleteMedicalExpense( medicalExpenseId: ID! ) : Boolean
     # Unimplemented mutations removed to match implementation
     # createAccount( account: AccountInput ) : Account
     # updateAccount( account: AccountInput ) : Account
@@ -282,4 +297,48 @@ type ValidationAmount {
     activeStatus: Boolean!
     transactionState: TransactionState!
     amount: BigDecimal!
+}
+
+type MedicalExpense {
+    medicalExpenseId: ID
+    transactionId: ID
+    providerId: ID
+    familyMemberId: ID
+    serviceDate: Date!
+    serviceDescription: String
+    procedureCode: String
+    diagnosisCode: String
+    billedAmount: BigDecimal!
+    insuranceDiscount: BigDecimal!
+    insurancePaid: BigDecimal!
+    patientResponsibility: BigDecimal!
+    paidDate: Date
+    isOutOfNetwork: Boolean!
+    claimNumber: String!
+    claimStatus: ClaimStatus!
+    activeStatus: Boolean!
+    dateAdded: Timestamp
+    dateUpdated: Timestamp
+    paidAmount: BigDecimal!
+}
+
+input MedicalExpenseInput {
+    medicalExpenseId: ID
+    transactionId: ID
+    providerId: ID
+    familyMemberId: ID
+    serviceDate: Date!
+    serviceDescription: String
+    procedureCode: String
+    diagnosisCode: String
+    billedAmount: BigDecimal!
+    insuranceDiscount: BigDecimal!
+    insurancePaid: BigDecimal!
+    patientResponsibility: BigDecimal!
+    paidDate: Date
+    isOutOfNetwork: Boolean!
+    claimNumber: String!
+    claimStatus: ClaimStatus!
+    activeStatus: Boolean
+    paidAmount: BigDecimal!
 }
