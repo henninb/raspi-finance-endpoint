@@ -23,9 +23,10 @@ class GraphQLMutationControllerSpec extends BaseServiceSpec {
     def transferCreateCounterMock = Mock(Counter)
     def categoryServiceMock = GroovyMock(finance.services.StandardizedCategoryService)
     def descriptionServiceMock = GroovyMock(finance.services.StandardizedDescriptionService)
+    def medicalExpenseServiceMock = GroovyMock(finance.services.StandardizedMedicalExpenseService)
     def parameterServiceMock = GroovyMock(finance.services.StandardizedParameterService)
     def transferServiceMock = GroovyMock(finance.services.StandardizedTransferService)
-    def controller = new GraphQLMutationController(categoryServiceMock, descriptionServiceMock, parameterServiceMock, paymentService, transferServiceMock, meterRegistryMock)
+    def controller = new GraphQLMutationController(categoryServiceMock, descriptionServiceMock, medicalExpenseServiceMock, parameterServiceMock, paymentService, transferServiceMock, meterRegistryMock)
 
     void setup() {
         paymentService.meterService = meterService

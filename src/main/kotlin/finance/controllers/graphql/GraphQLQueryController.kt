@@ -3,7 +3,9 @@ package finance.controllers.graphql
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
+import finance.domain.ClaimStatus
 import finance.domain.Description
+import finance.domain.MedicalExpense
 import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ReceiptImage
@@ -13,6 +15,7 @@ import finance.domain.Transfer
 import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
+import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
@@ -29,6 +32,7 @@ class GraphQLQueryController(
     private val accountService: StandardizedAccountService,
     private val categoryService: StandardizedCategoryService,
     private val descriptionService: StandardizedDescriptionService,
+    private val medicalExpenseService: StandardizedMedicalExpenseService,
     private val parameterService: StandardizedParameterService,
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
@@ -189,6 +193,34 @@ class GraphQLQueryController(
     ): Any? {
         logger.info("GraphQL - Fetching receipt image: $receiptImageId (stub)")
         return null
+    }
+
+    @QueryMapping
+    fun medicalExpenses(): List<MedicalExpense> {
+        logger.info("GraphQL - Fetching all medical expenses")
+        return when (val result = medicalExpenseService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
+    }
+
+    @QueryMapping
+    fun medicalExpense(
+        @Argument medicalExpenseId: Long,
+    ): MedicalExpense? {
+        logger.info("GraphQL - Fetching medical expense: $medicalExpenseId")
+        return when (val result = medicalExpenseService.findById(medicalExpenseId)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
+    }
+
+    @QueryMapping
+    fun medicalExpensesByClaimStatus(
+        @Argument claimStatus: ClaimStatus,
+    ): List<MedicalExpense> {
+        logger.info("GraphQL - Fetching medical expenses by claim status: $claimStatus")
+        return medicalExpenseService.findMedicalExpensesByClaimStatus(claimStatus)
     }
 
     /**
