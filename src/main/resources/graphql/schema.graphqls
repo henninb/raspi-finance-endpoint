@@ -72,8 +72,10 @@ type Mutation {
     createCategory( category: CategoryInput ) : Category
     updateCategory( category: CategoryInput, oldCategoryName: String ) : Category
     deleteCategory( categoryName: String! ) : Boolean
+    createDescription( description: DescriptionInput ) : Description
+    updateDescription( description: DescriptionInput, oldDescriptionName: String ) : Description
+    deleteDescription( descriptionName: String! ) : Boolean
     # Unimplemented mutations removed to match implementation
-    # createDescription( description: String) : Description
     # createAccount( account: AccountInput ) : Account
     # updateAccount( account: AccountInput ) : Account
     # deleteAccount( accountId: Long! ) : Boolean
@@ -235,6 +237,12 @@ input ParameterInput {
 input CategoryInput {
     categoryId: ID
     categoryName: String!
+    activeStatus: Boolean
+}
+
+input DescriptionInput {
+    descriptionId: ID
+    descriptionName: String!
     activeStatus: Boolean
 }
 

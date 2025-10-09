@@ -8,6 +8,7 @@ import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.domain.Transfer
 import finance.services.StandardizedCategoryService
+import finance.services.StandardizedDescriptionService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedTransferService
@@ -21,6 +22,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
     GraphQLMutationController controller
     StandardizedCategoryService mockCategoryService
+    StandardizedDescriptionService mockDescriptionService
     StandardizedParameterService mockParameterService
     StandardizedPaymentService mockPaymentService
     StandardizedTransferService mockTransferService
@@ -29,6 +31,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
     def setup() {
         mockCategoryService = Mock(StandardizedCategoryService)
+        mockDescriptionService = Mock(StandardizedDescriptionService)
         mockParameterService = Mock(StandardizedParameterService)
         mockPaymentService = Mock(StandardizedPaymentService)
         mockTransferService = Mock(StandardizedTransferService)
@@ -37,6 +40,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
         controller = new GraphQLMutationController(
             mockCategoryService,
+            mockDescriptionService,
             mockParameterService,
             mockPaymentService,
             mockTransferService,
