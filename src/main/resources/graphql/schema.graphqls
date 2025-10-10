@@ -90,6 +90,9 @@ type Mutation {
     createMedicalExpense( medicalExpense: MedicalExpenseInput ) : MedicalExpense
     updateMedicalExpense( medicalExpense: MedicalExpenseInput ) : MedicalExpense
     deleteMedicalExpense( medicalExpenseId: ID! ) : Boolean
+    createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
+    updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
+    deleteValidationAmount( validationId: ID! ) : Boolean
     # Unimplemented mutations removed to match implementation
     # createAccount( account: AccountInput ) : Account
     # updateAccount( account: AccountInput ) : Account
@@ -97,9 +100,6 @@ type Mutation {
     # createTransaction( transaction: TransactionInput ) : Transaction
     # updateTransaction( transaction: TransactionInput ) : Transaction
     # deleteTransaction( transactionId: Long! ) : Boolean
-    # createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
-    # updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
-    # deleteValidationAmount( validationId: Long! ) : Boolean
 }
 
 # complete 7/17/2021

@@ -5,6 +5,7 @@ import finance.controllers.dto.DescriptionInputDto
 import finance.controllers.dto.MedicalExpenseInputDto
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransferInputDto
+import finance.controllers.dto.ValidationAmountInputDto
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.MedicalExpense
@@ -12,12 +13,14 @@ import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.domain.Transfer
+import finance.domain.ValidationAmount
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
 import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedTransferService
+import finance.services.StandardizedValidationAmountService
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.validation.Valid
 import org.apache.logging.log4j.LogManager
@@ -38,6 +41,7 @@ class GraphQLMutationController(
     private val parameterService: StandardizedParameterService,
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
+    private val validationAmountService: StandardizedValidationAmountService,
     private val meterRegistry: MeterRegistry,
 ) {
     companion object {
@@ -607,6 +611,109 @@ class GraphQLMutationController(
             }
             else -> {
                 logger.error("GraphQL - Error deleting medical expense id={}", medicalExpenseId)
+                false
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun createValidationAmount(
+        @Argument("validationAmount") @Valid validationAmountInput: ValidationAmountInputDto,
+    ): ValidationAmount {
+        logger.info("GraphQL - Creating validation amount via @MutationMapping")
+
+        val validationAmount =
+            ValidationAmount().apply {
+                this.validationId = validationAmountInput.validationId ?: 0L
+                this.accountId = validationAmountInput.accountId
+                this.validationDate = validationAmountInput.validationDate
+                this.activeStatus = validationAmountInput.activeStatus ?: true
+                this.transactionState = validationAmountInput.transactionState
+                this.amount = validationAmountInput.amount
+            }
+
+        return when (val result = validationAmountService.save(validationAmount)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.validationAmount.create.success").increment()
+                logger.info("GraphQL - Created validation amount: {}", result.data.validationId)
+                result.data
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error creating validation amount: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error creating validation amount: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error creating validation amount")
+                throw RuntimeException("Failed to create validation amount")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun updateValidationAmount(
+        @Argument("validationAmount") @Valid validationAmountInput: ValidationAmountInputDto,
+    ): ValidationAmount {
+        logger.info("GraphQL - Updating validation amount id={}", validationAmountInput.validationId)
+
+        val validationAmount =
+            ValidationAmount().apply {
+                this.validationId = validationAmountInput.validationId!!
+                this.accountId = validationAmountInput.accountId
+                this.validationDate = validationAmountInput.validationDate
+                this.activeStatus = validationAmountInput.activeStatus ?: true
+                this.transactionState = validationAmountInput.transactionState
+                this.amount = validationAmountInput.amount
+            }
+
+        return when (val result = validationAmountService.update(validationAmount)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.validationAmount.update.success").increment()
+                logger.info("GraphQL - Updated validation amount: {}", result.data.validationId)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Validation amount not found: {}", validationAmountInput.validationId)
+                throw IllegalArgumentException("Validation amount not found: ${validationAmountInput.validationId}")
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error updating validation amount: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error updating validation amount: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error updating validation amount")
+                throw RuntimeException("Failed to update validation amount")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun deleteValidationAmount(
+        @Argument validationId: Long,
+    ): Boolean {
+        logger.info("GraphQL - Deleting validation amount id={}", validationId)
+        return when (val result = validationAmountService.deleteById(validationId)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.validationAmount.delete.success").increment()
+                logger.info("GraphQL - Deleted validation amount id={}", validationId)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Validation amount not found for deletion: {}", validationId)
+                false
+            }
+            else -> {
+                logger.error("GraphQL - Error deleting validation amount id={}", validationId)
                 false
             }
         }
