@@ -28,6 +28,7 @@ class GraphQLMutationControllerSpec extends Specification {
     StandardizedParameterService mockParameterService
     StandardizedPaymentService mockPaymentService
     StandardizedTransferService mockTransferService
+    finance.services.StandardizedValidationAmountService mockValidationAmountService
     MeterRegistry mockMeterRegistry
     Counter mockCounter
 
@@ -38,6 +39,7 @@ class GraphQLMutationControllerSpec extends Specification {
         mockParameterService = Mock(StandardizedParameterService)
         mockPaymentService = Mock(StandardizedPaymentService)
         mockTransferService = Mock(StandardizedTransferService)
+        mockValidationAmountService = Mock(finance.services.StandardizedValidationAmountService)
         mockMeterRegistry = Mock(MeterRegistry)
         mockCounter = Mock(Counter)
 
@@ -48,6 +50,7 @@ class GraphQLMutationControllerSpec extends Specification {
             mockParameterService,
             mockPaymentService,
             mockTransferService,
+            mockValidationAmountService,
             mockMeterRegistry
         )
     }

@@ -9,7 +9,9 @@ import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.domain.Transaction
+import finance.domain.TransactionState
 import finance.domain.Transfer
+import finance.domain.ValidationAmount
 import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
@@ -18,6 +20,7 @@ import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
 import finance.services.StandardizedTransferService
+import finance.services.StandardizedValidationAmountService
 import spock.lang.Specification
 
 class GraphQLQueryControllerSpec extends Specification {
@@ -31,6 +34,7 @@ class GraphQLQueryControllerSpec extends Specification {
     StandardizedPaymentService mockPaymentService
     StandardizedTransferService mockTransferService
     StandardizedReceiptImageService mockReceiptImageService
+    StandardizedValidationAmountService mockValidationAmountService
 
     def setup() {
         mockAccountService = Mock(StandardizedAccountService)
@@ -41,6 +45,7 @@ class GraphQLQueryControllerSpec extends Specification {
         mockPaymentService = Mock(StandardizedPaymentService)
         mockTransferService = Mock(StandardizedTransferService)
         mockReceiptImageService = Mock(StandardizedReceiptImageService)
+        mockValidationAmountService = Mock(StandardizedValidationAmountService)
 
         controller = new GraphQLQueryController(
             mockAccountService,
@@ -50,7 +55,8 @@ class GraphQLQueryControllerSpec extends Specification {
             mockParameterService,
             mockPaymentService,
             mockTransferService,
-            mockReceiptImageService
+            mockReceiptImageService,
+            mockValidationAmountService
         )
     }
 
@@ -399,19 +405,70 @@ class GraphQLQueryControllerSpec extends Specification {
         result == null
     }
 
-    def "validationAmounts should return empty list (stub)"() {
+    def "validationAmounts should return list from service when successful"() {
+        given: "a list of validation amounts"
+        def validationAmounts = [
+            new ValidationAmount(1L, 123L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Cleared, new BigDecimal("100.00")),
+            new ValidationAmount(2L, 124L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Outstanding, new BigDecimal("200.00"))
+        ]
+
         when: "validationAmounts is called"
         def result = controller.validationAmounts()
 
-        then: "empty list is returned"
+        then: "service returns success result"
+        1 * mockValidationAmountService.findAllActive() >> ServiceResult.Success.of(validationAmounts)
+
+        and: "validation amount list is returned"
+        result == validationAmounts
+        result.size() == 2
+    }
+
+    def "validationAmounts should return empty list when service fails"() {
+        when: "validationAmounts is called"
+        def result = controller.validationAmounts()
+
+        then: "service returns failure result"
+        1 * mockValidationAmountService.findAllActive() >> ServiceResult.NotFound.of("No validation amounts found")
+
+        and: "empty list is returned"
         result == []
     }
 
-    def "validationAmount should return null (stub)"() {
+    def "validationAmount should return single validation amount when present"() {
+        given: "a validation amount"
+        def validationAmount = new ValidationAmount(123L, 456L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Cleared, new BigDecimal("150.00"))
+
         when: "validationAmount is called"
         def result = controller.validationAmount(123L)
 
-        then: "null is returned"
+        then: "service returns success result"
+        1 * mockValidationAmountService.findById(123L) >> ServiceResult.Success.of(validationAmount)
+
+        and: "validation amount is returned"
+        result == validationAmount
+        result.validationId == 123L
+        result.amount == new BigDecimal("150.00")
+    }
+
+    def "validationAmount should return null when not found"() {
+        when: "validationAmount is called"
+        def result = controller.validationAmount(123L)
+
+        then: "service returns not found result"
+        1 * mockValidationAmountService.findById(123L) >> ServiceResult.NotFound.of("Validation amount not found")
+
+        and: "null is returned"
+        result == null
+    }
+
+    def "validationAmount should return null when service fails"() {
+        when: "validationAmount is called"
+        def result = controller.validationAmount(123L)
+
+        then: "service returns system error"
+        1 * mockValidationAmountService.findById(123L) >> ServiceResult.SystemError.of(new RuntimeException("DB Error"))
+
+        and: "null is returned"
         result == null
     }
 
