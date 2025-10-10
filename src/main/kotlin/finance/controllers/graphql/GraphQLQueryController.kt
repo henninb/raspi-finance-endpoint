@@ -12,6 +12,7 @@ import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.Transfer
+import finance.domain.ValidationAmount
 import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
@@ -20,6 +21,7 @@ import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
 import finance.services.StandardizedTransferService
+import finance.services.StandardizedValidationAmountService
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.graphql.data.method.annotation.Argument
@@ -37,6 +39,7 @@ class GraphQLQueryController(
     private val paymentService: StandardizedPaymentService,
     private val transferService: StandardizedTransferService,
     private val receiptImageService: StandardizedReceiptImageService,
+    private val validationAmountService: StandardizedValidationAmountService,
 ) {
     companion object {
         val logger: Logger = LogManager.getLogger()
@@ -168,17 +171,23 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun validationAmounts(): List<Any> {
-        logger.info("GraphQL - Fetching all validation amounts (stub)")
-        return emptyList()
+    fun validationAmounts(): List<ValidationAmount> {
+        logger.info("GraphQL - Fetching all validation amounts")
+        return when (val result = validationAmountService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
     fun validationAmount(
         @Argument validationId: Long,
-    ): Any? {
-        logger.info("GraphQL - Fetching validation amount: $validationId (stub)")
-        return null
+    ): ValidationAmount? {
+        logger.info("GraphQL - Fetching validation amount: $validationId")
+        return when (val result = validationAmountService.findById(validationId)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping
