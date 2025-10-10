@@ -1,4 +1,4 @@
-package finance.graphql
+package finance.controllers
 
 import finance.controllers.GraphQLExceptionHandler
 import spock.lang.Specification
