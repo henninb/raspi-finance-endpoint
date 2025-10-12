@@ -7,11 +7,13 @@ import finance.domain.Parameter
 import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.domain.Transfer
+import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
 import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
+import finance.services.StandardizedTransactionService
 import finance.services.StandardizedTransferService
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
@@ -22,33 +24,39 @@ import java.sql.Date
 class GraphQLMutationControllerSpec extends Specification {
 
     GraphQLMutationController controller
+    StandardizedAccountService mockAccountService
     StandardizedCategoryService mockCategoryService
     StandardizedDescriptionService mockDescriptionService
     StandardizedMedicalExpenseService mockMedicalExpenseService
     StandardizedParameterService mockParameterService
     StandardizedPaymentService mockPaymentService
+    StandardizedTransactionService mockTransactionService
     StandardizedTransferService mockTransferService
     finance.services.StandardizedValidationAmountService mockValidationAmountService
     MeterRegistry mockMeterRegistry
     Counter mockCounter
 
     def setup() {
+        mockAccountService = Mock(StandardizedAccountService)
         mockCategoryService = Mock(StandardizedCategoryService)
         mockDescriptionService = Mock(StandardizedDescriptionService)
         mockMedicalExpenseService = Mock(StandardizedMedicalExpenseService)
         mockParameterService = Mock(StandardizedParameterService)
         mockPaymentService = Mock(StandardizedPaymentService)
+        mockTransactionService = Mock(StandardizedTransactionService)
         mockTransferService = Mock(StandardizedTransferService)
         mockValidationAmountService = Mock(finance.services.StandardizedValidationAmountService)
         mockMeterRegistry = Mock(MeterRegistry)
         mockCounter = Mock(Counter)
 
         controller = new GraphQLMutationController(
+            mockAccountService,
             mockCategoryService,
             mockDescriptionService,
             mockMedicalExpenseService,
             mockParameterService,
             mockPaymentService,
+            mockTransactionService,
             mockTransferService,
             mockValidationAmountService,
             mockMeterRegistry

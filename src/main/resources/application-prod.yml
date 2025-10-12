@@ -82,6 +82,11 @@ spring:
         # Enable prepared statement caching
         preparedStatementCacheQueries: 256
         preparedStatementCacheSizeMiB: 5
+        # Additional security parameters
+        ApplicationName: raspi-finance-endpoint
+        assumeMinServerVersion: 18.0
+        # Note: sslmode parameter should be added to DATASOURCE URL environment variable
+        # Example: jdbc:postgresql://postgresql-server:5432/finance_db?sslmode=require
   sql:
     init:
       continue-on-error: false

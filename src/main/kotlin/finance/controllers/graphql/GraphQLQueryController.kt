@@ -20,6 +20,7 @@ import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
+import finance.services.StandardizedTransactionService
 import finance.services.StandardizedTransferService
 import finance.services.StandardizedValidationAmountService
 import org.apache.logging.log4j.LogManager
@@ -37,6 +38,7 @@ class GraphQLQueryController(
     private val medicalExpenseService: StandardizedMedicalExpenseService,
     private val parameterService: StandardizedParameterService,
     private val paymentService: StandardizedPaymentService,
+    private val transactionService: StandardizedTransactionService,
     private val transferService: StandardizedTransferService,
     private val receiptImageService: StandardizedReceiptImageService,
     private val validationAmountService: StandardizedValidationAmountService,
@@ -133,21 +135,26 @@ class GraphQLQueryController(
         return transferService.findByTransferId(transferId).orElse(null)
     }
 
-    // Stub queries for remaining schema fields
     @QueryMapping
     fun transactions(
         @Argument accountNameOwner: String,
-    ): List<Any> {
-        logger.info("GraphQL - Fetching transactions for account: $accountNameOwner (stub)")
-        return emptyList()
+    ): List<Transaction> {
+        logger.info("GraphQL - Fetching transactions for account: $accountNameOwner")
+        return when (val result = transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
     fun transaction(
-        @Argument transactionId: Long,
-    ): Any? {
-        logger.info("GraphQL - Fetching transaction: $transactionId (stub)")
-        return null
+        @Argument guid: String,
+    ): Transaction? {
+        logger.info("GraphQL - Fetching transaction: $guid")
+        return when (val result = transactionService.findById(guid)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping
