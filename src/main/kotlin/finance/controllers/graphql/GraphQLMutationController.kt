@@ -1,24 +1,31 @@
 package finance.controllers.graphql
 
+import finance.controllers.dto.AccountInputDto
 import finance.controllers.dto.CategoryInputDto
 import finance.controllers.dto.DescriptionInputDto
 import finance.controllers.dto.MedicalExpenseInputDto
 import finance.controllers.dto.PaymentInputDto
+import finance.controllers.dto.TransactionInputDto
 import finance.controllers.dto.TransferInputDto
 import finance.controllers.dto.ValidationAmountInputDto
+import finance.domain.Account
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.MedicalExpense
 import finance.domain.Parameter
 import finance.domain.Payment
+import finance.domain.ReoccurringType
 import finance.domain.ServiceResult
+import finance.domain.Transaction
 import finance.domain.Transfer
 import finance.domain.ValidationAmount
+import finance.services.StandardizedAccountService
 import finance.services.StandardizedCategoryService
 import finance.services.StandardizedDescriptionService
 import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
+import finance.services.StandardizedTransactionService
 import finance.services.StandardizedTransferService
 import finance.services.StandardizedValidationAmountService
 import io.micrometer.core.instrument.MeterRegistry
@@ -30,16 +37,20 @@ import org.springframework.graphql.data.method.annotation.MutationMapping
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.validation.annotation.Validated
+import java.math.BigDecimal
+import java.sql.Timestamp
 import java.util.UUID
 
 @Controller
 @Validated
 class GraphQLMutationController(
+    private val accountService: StandardizedAccountService,
     private val categoryService: StandardizedCategoryService,
     private val descriptionService: StandardizedDescriptionService,
     private val medicalExpenseService: StandardizedMedicalExpenseService,
     private val parameterService: StandardizedParameterService,
     private val paymentService: StandardizedPaymentService,
+    private val transactionService: StandardizedTransactionService,
     private val transferService: StandardizedTransferService,
     private val validationAmountService: StandardizedValidationAmountService,
     private val meterRegistry: MeterRegistry,
@@ -714,6 +725,293 @@ class GraphQLMutationController(
             }
             else -> {
                 logger.error("GraphQL - Error deleting validation amount id={}", validationId)
+                false
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun createAccount(
+        @Argument("account") @Valid accountInput: AccountInputDto,
+    ): Account {
+        logger.info("GraphQL - Creating account via @MutationMapping")
+
+        val account =
+            Account().apply {
+                this.accountId = accountInput.accountId ?: 0L
+                this.accountNameOwner = accountInput.accountNameOwner
+                this.accountType = accountInput.accountType
+                this.activeStatus = accountInput.activeStatus ?: true
+                this.moniker = accountInput.moniker ?: "0000"
+                this.outstanding = accountInput.outstanding ?: BigDecimal.ZERO
+                this.cleared = accountInput.cleared ?: BigDecimal.ZERO
+                this.future = accountInput.future ?: BigDecimal.ZERO
+                this.dateClosed = accountInput.dateClosed ?: Timestamp(0)
+                this.validationDate = accountInput.validationDate ?: Timestamp(System.currentTimeMillis())
+            }
+
+        return when (val result = accountService.save(account)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.account.create.success").increment()
+                logger.info("GraphQL - Created account: {}", result.data.accountNameOwner)
+                result.data
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error creating account: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error creating account: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error creating account")
+                throw RuntimeException("Failed to create account")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun updateAccount(
+        @Argument("account") @Valid accountInput: AccountInputDto,
+        @Argument("oldAccountNameOwner") oldAccountNameOwner: String?,
+    ): Account {
+        logger.info(
+            "GraphQL - Updating account with input: accountId={}, accountNameOwner={}, oldAccountNameOwner={}",
+            accountInput.accountId,
+            accountInput.accountNameOwner,
+            oldAccountNameOwner,
+        )
+
+        // Determine which account to update based on what information is provided:
+        // 1. If accountId is provided, use it directly
+        // 2. If oldAccountNameOwner is provided, look up the account by that name
+        // 3. If neither is provided, look up by the new accountNameOwner (for simple updates without renaming)
+        val existingAccountId =
+            when {
+                accountInput.accountId != null -> {
+                    logger.debug("Using provided accountId: {}", accountInput.accountId)
+                    accountInput.accountId
+                }
+                oldAccountNameOwner != null -> {
+                    logger.debug("Looking up account by oldAccountNameOwner: {}", oldAccountNameOwner)
+                    when (val findResult = accountService.findById(oldAccountNameOwner)) {
+                        is ServiceResult.Success -> findResult.data.accountId
+                        is ServiceResult.NotFound -> {
+                            logger.warn("GraphQL - Old account not found: {}", oldAccountNameOwner)
+                            throw IllegalArgumentException("Account not found: $oldAccountNameOwner")
+                        }
+                        else -> {
+                            logger.error("GraphQL - Error finding account: {}", oldAccountNameOwner)
+                            throw RuntimeException("Failed to find account: $oldAccountNameOwner")
+                        }
+                    }
+                }
+                else -> {
+                    // Try to look up by the new name (for updates that don't involve renaming)
+                    logger.debug("Looking up account by accountNameOwner: {}", accountInput.accountNameOwner)
+                    when (val findResult = accountService.findById(accountInput.accountNameOwner)) {
+                        is ServiceResult.Success -> findResult.data.accountId
+                        is ServiceResult.NotFound -> {
+                            logger.warn("GraphQL - Account not found: {}", accountInput.accountNameOwner)
+                            throw IllegalArgumentException(
+                                "Account not found: ${accountInput.accountNameOwner}. " +
+                                    "If renaming, provide oldAccountNameOwner parameter. " +
+                                    "Example: updateAccount(account: { accountNameOwner: \"newname\" }, oldAccountNameOwner: \"oldname\")",
+                            )
+                        }
+                        else -> {
+                            logger.error("GraphQL - Error finding account: {}", accountInput.accountNameOwner)
+                            throw RuntimeException("Failed to find account: ${accountInput.accountNameOwner}")
+                        }
+                    }
+                }
+            }
+
+        val account =
+            Account().apply {
+                this.accountId = existingAccountId
+                this.accountNameOwner = accountInput.accountNameOwner
+                this.accountType = accountInput.accountType
+                this.activeStatus = accountInput.activeStatus ?: true
+                this.moniker = accountInput.moniker ?: "0000"
+                this.outstanding = accountInput.outstanding ?: BigDecimal.ZERO
+                this.cleared = accountInput.cleared ?: BigDecimal.ZERO
+                this.future = accountInput.future ?: BigDecimal.ZERO
+                this.dateClosed = accountInput.dateClosed ?: Timestamp(0)
+                this.validationDate = accountInput.validationDate ?: Timestamp(System.currentTimeMillis())
+            }
+
+        return when (val result = accountService.update(account)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.account.update.success").increment()
+                logger.info("GraphQL - Updated account: {}", result.data.accountNameOwner)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Account not found with ID: {}", existingAccountId)
+                throw IllegalArgumentException("Account not found with ID: $existingAccountId")
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error updating account: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error updating account: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error updating account")
+                throw RuntimeException("Failed to update account")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun deleteAccount(
+        @Argument accountNameOwner: String,
+    ): Boolean {
+        logger.info("GraphQL - Deleting account: {}", accountNameOwner)
+        return when (val result = accountService.deleteById(accountNameOwner)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.account.delete.success").increment()
+                logger.info("GraphQL - Deleted account: {}", accountNameOwner)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Account not found for deletion: {}", accountNameOwner)
+                false
+            }
+            else -> {
+                logger.error("GraphQL - Error deleting account: {}", accountNameOwner)
+                false
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun createTransaction(
+        @Argument("transaction") @Valid transactionInput: TransactionInputDto,
+    ): Transaction {
+        logger.info("GraphQL - Creating transaction via @MutationMapping")
+
+        val transaction =
+            Transaction().apply {
+                this.transactionId = transactionInput.transactionId ?: 0L
+                this.guid = transactionInput.guid ?: UUID.randomUUID().toString()
+                this.accountId = transactionInput.accountId ?: 0L
+                this.accountType = transactionInput.accountType
+                this.transactionType = transactionInput.transactionType
+                this.accountNameOwner = transactionInput.accountNameOwner
+                this.transactionDate = transactionInput.transactionDate
+                this.description = transactionInput.description
+                this.category = transactionInput.category
+                this.amount = transactionInput.amount
+                this.transactionState = transactionInput.transactionState
+                this.activeStatus = transactionInput.activeStatus ?: true
+                this.reoccurringType = transactionInput.reoccurringType ?: ReoccurringType.Undefined
+                this.notes = transactionInput.notes ?: ""
+                this.dueDate = transactionInput.dueDate
+                this.receiptImageId = transactionInput.receiptImageId
+                this.dateAdded = Timestamp(System.currentTimeMillis())
+                this.dateUpdated = Timestamp(System.currentTimeMillis())
+            }
+
+        return when (val result = transactionService.save(transaction)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.transaction.create.success").increment()
+                logger.info("GraphQL - Created transaction: {}", result.data.guid)
+                result.data
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error creating transaction: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error creating transaction: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error creating transaction")
+                throw RuntimeException("Failed to create transaction")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun updateTransaction(
+        @Argument("transaction") @Valid transactionInput: TransactionInputDto,
+    ): Transaction {
+        logger.info("GraphQL - Updating transaction guid={}", transactionInput.guid)
+
+        val transaction =
+            Transaction().apply {
+                this.transactionId = transactionInput.transactionId ?: 0L
+                this.guid = transactionInput.guid ?: throw IllegalArgumentException("GUID is required for update")
+                this.accountId = transactionInput.accountId ?: 0L
+                this.accountType = transactionInput.accountType
+                this.transactionType = transactionInput.transactionType
+                this.accountNameOwner = transactionInput.accountNameOwner
+                this.transactionDate = transactionInput.transactionDate
+                this.description = transactionInput.description
+                this.category = transactionInput.category
+                this.amount = transactionInput.amount
+                this.transactionState = transactionInput.transactionState
+                this.activeStatus = transactionInput.activeStatus ?: true
+                this.reoccurringType = transactionInput.reoccurringType ?: ReoccurringType.Undefined
+                this.notes = transactionInput.notes ?: ""
+                this.dueDate = transactionInput.dueDate
+                this.receiptImageId = transactionInput.receiptImageId
+            }
+
+        return when (val result = transactionService.update(transaction)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.transaction.update.success").increment()
+                logger.info("GraphQL - Updated transaction: {}", result.data.guid)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Transaction not found: {}", transaction.guid)
+                throw IllegalArgumentException("Transaction not found: ${transaction.guid}")
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("GraphQL - Validation error updating transaction: {}", result.errors)
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("GraphQL - Business error updating transaction: {}", result.message)
+                throw IllegalStateException(result.message)
+            }
+            else -> {
+                logger.error("GraphQL - Unexpected error updating transaction")
+                throw RuntimeException("Failed to update transaction")
+            }
+        }
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
+    fun deleteTransaction(
+        @Argument guid: String,
+    ): Boolean {
+        logger.info("GraphQL - Deleting transaction guid={}", guid)
+        return when (val result = transactionService.deleteById(guid)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.transaction.delete.success").increment()
+                logger.info("GraphQL - Deleted transaction: {}", guid)
+                result.data
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("GraphQL - Transaction not found for deletion: {}", guid)
+                false
+            }
+            else -> {
+                logger.error("GraphQL - Error deleting transaction: {}", guid)
                 false
             }
         }
