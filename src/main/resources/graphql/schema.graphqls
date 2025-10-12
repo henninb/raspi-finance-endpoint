@@ -56,7 +56,7 @@ type Query {
     account(accountNameOwner: String!) : Account
     accounts(accountType: AccountType) : [Account]
     transactions(accountNameOwner: String!) : [Transaction]
-    transaction(transactionId: ID!) : Transaction
+    transaction(guid: String!) : Transaction
     payments : [Payment]
     payment(paymentId: ID!) : Payment
     transfers : [Transfer]
@@ -93,13 +93,12 @@ type Mutation {
     createValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
     updateValidationAmount( validationAmount: ValidationAmountInput ) : ValidationAmount
     deleteValidationAmount( validationId: ID! ) : Boolean
-    # Unimplemented mutations removed to match implementation
-    # createAccount( account: AccountInput ) : Account
-    # updateAccount( account: AccountInput ) : Account
-    # deleteAccount( accountId: Long! ) : Boolean
-    # createTransaction( transaction: TransactionInput ) : Transaction
-    # updateTransaction( transaction: TransactionInput ) : Transaction
-    # deleteTransaction( transactionId: Long! ) : Boolean
+    createAccount( account: AccountInput ) : Account
+    updateAccount( account: AccountInput, oldAccountNameOwner: String ) : Account
+    deleteAccount( accountNameOwner: String! ) : Boolean
+    createTransaction( transaction: TransactionInput ) : Transaction
+    updateTransaction( transaction: TransactionInput ) : Transaction
+    deleteTransaction( guid: String! ) : Boolean
 }
 
 # complete 7/17/2021

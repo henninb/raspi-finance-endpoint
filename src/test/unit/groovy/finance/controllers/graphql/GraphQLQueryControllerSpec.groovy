@@ -19,6 +19,7 @@ import finance.services.StandardizedMedicalExpenseService
 import finance.services.StandardizedParameterService
 import finance.services.StandardizedPaymentService
 import finance.services.StandardizedReceiptImageService
+import finance.services.StandardizedTransactionService
 import finance.services.StandardizedTransferService
 import finance.services.StandardizedValidationAmountService
 import spock.lang.Specification
@@ -32,6 +33,7 @@ class GraphQLQueryControllerSpec extends Specification {
     StandardizedMedicalExpenseService mockMedicalExpenseService
     StandardizedParameterService mockParameterService
     StandardizedPaymentService mockPaymentService
+    StandardizedTransactionService mockTransactionService
     StandardizedTransferService mockTransferService
     StandardizedReceiptImageService mockReceiptImageService
     StandardizedValidationAmountService mockValidationAmountService
@@ -43,6 +45,7 @@ class GraphQLQueryControllerSpec extends Specification {
         mockMedicalExpenseService = Mock(StandardizedMedicalExpenseService)
         mockParameterService = Mock(StandardizedParameterService)
         mockPaymentService = Mock(StandardizedPaymentService)
+        mockTransactionService = Mock(StandardizedTransactionService)
         mockTransferService = Mock(StandardizedTransferService)
         mockReceiptImageService = Mock(StandardizedReceiptImageService)
         mockValidationAmountService = Mock(StandardizedValidationAmountService)
@@ -54,6 +57,7 @@ class GraphQLQueryControllerSpec extends Specification {
             mockMedicalExpenseService,
             mockParameterService,
             mockPaymentService,
+            mockTransactionService,
             mockTransferService,
             mockReceiptImageService,
             mockValidationAmountService
@@ -322,19 +326,58 @@ class GraphQLQueryControllerSpec extends Specification {
         result == null
     }
 
-    def "transactions should return empty list (stub)"() {
+    def "transactions should return list of transactions for account"() {
+        given: "a list of transactions"
+        def transactions = [
+            new Transaction(transactionId: 1L, guid: "guid1", accountNameOwner: "checking_primary"),
+            new Transaction(transactionId: 2L, guid: "guid2", accountNameOwner: "checking_primary")
+        ]
+
         when: "transactions is called"
         def result = controller.transactions("checking_primary")
 
-        then: "empty list is returned"
+        then: "service returns success with transactions"
+        1 * mockTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_primary") >> ServiceResult.Success.of(transactions)
+
+        and: "transactions are returned"
+        result == transactions
+        result.size() == 2
+    }
+
+    def "transactions should return empty list when service fails"() {
+        when: "transactions is called"
+        def result = controller.transactions("checking_primary")
+
+        then: "service returns failure"
+        1 * mockTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_primary") >> ServiceResult.NotFound.of("not found")
+
+        and: "empty list is returned"
         result == []
     }
 
-    def "transaction should return null (stub)"() {
-        when: "transaction is called"
-        def result = controller.transaction(123L)
+    def "transaction should return transaction by guid"() {
+        given: "a transaction"
+        def transaction = new Transaction(transactionId: 123L, guid: "test-guid-123", accountNameOwner: "checking_primary")
 
-        then: "null is returned"
+        when: "transaction is called with guid"
+        def result = controller.transaction("test-guid-123")
+
+        then: "service returns the transaction"
+        1 * mockTransactionService.findById("test-guid-123") >> ServiceResult.Success.of(transaction)
+
+        and: "transaction is returned"
+        result == transaction
+        result.guid == "test-guid-123"
+    }
+
+    def "transaction should return null when not found"() {
+        when: "transaction is called with non-existent guid"
+        def result = controller.transaction("nonexistent-guid")
+
+        then: "service returns not found"
+        1 * mockTransactionService.findById("nonexistent-guid") >> ServiceResult.NotFound.of("not found")
+
+        and: "null is returned"
         result == null
     }
 
