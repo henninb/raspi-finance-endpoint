@@ -94,6 +94,7 @@ tasks.named('check') { dependsOn 'codenarcMainRatchet' }
 
 // KtLint configuration: enforce rules for main sources
 ktlint {
+    version.set("1.7.1")
     // Fail the build on style violations now that codebase is cleaned
     ignoreFailures.set(false)
 }
@@ -125,6 +126,16 @@ compileJava {
 
 wrapper {
     gradleVersion = "${gradleVersion}"
+}
+
+// Configure bootRun to pass environment variables from shell
+bootRun {
+    // Pass all environment variables to the Spring Boot application
+    doFirst {
+        System.getenv().each { key, value ->
+            environment key, value
+        }
+    }
 }
 
 dependencies {
