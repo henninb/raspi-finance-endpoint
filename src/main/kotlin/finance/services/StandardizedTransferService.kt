@@ -45,6 +45,19 @@ class StandardizedTransferService(
 
     override fun save(entity: Transfer): ServiceResult<Transfer> =
         handleServiceOperation("save", entity.transferId) {
+            // Detect new transfers: if transferId is 0 or null AND guidSource/guidDestination are missing
+            // then use the full insertTransfer workflow to create transactions
+            val isNewTransfer = (entity.transferId == null || entity.transferId == 0L)
+            val needsTransactionCreation = (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank())
+
+            if (isNewTransfer && needsTransactionCreation) {
+                logger.info("Detected new transfer creation - delegating to insertTransfer workflow")
+                // Use insertTransfer for the full workflow (creates transactions, sets GUIDs)
+                // This will recursively call save() again, but with GUIDs populated
+                return@handleServiceOperation insertTransfer(entity)
+            }
+
+            // For updates or transfers that already have GUIDs, just save directly
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
