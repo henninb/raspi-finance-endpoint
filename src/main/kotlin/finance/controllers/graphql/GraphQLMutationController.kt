@@ -85,11 +85,43 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
+    fun updatePayment(
+        @Argument id: Long,
+        @Argument("payment") @Valid payment: PaymentInputDto,
+    ): Payment {
+        logger.info("GraphQL - Updating payment id={}", id)
+
+        // Find existing payment to preserve GUIDs
+        val existingPayment = paymentService.findByPaymentId(id)
+        if (existingPayment.isEmpty) {
+            logger.warn("GraphQL - Payment not found: {}", id)
+            throw IllegalArgumentException("Payment not found: $id")
+        }
+
+        val domain =
+            Payment().apply {
+                this.sourceAccount = payment.sourceAccount
+                this.destinationAccount = payment.destinationAccount
+                this.transactionDate = payment.transactionDate
+                this.amount = payment.amount
+                this.guidSource = existingPayment.get().guidSource
+                this.guidDestination = existingPayment.get().guidDestination
+                this.activeStatus = payment.activeStatus ?: true
+            }
+
+        val updated = paymentService.updatePayment(id, domain)
+        meterRegistry.counter("graphql.payment.update.success").increment()
+        logger.info("GraphQL - Updated payment id={}", updated.paymentId)
+        return updated
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
     fun deletePayment(
-        @Argument paymentId: Long,
+        @Argument id: Long,
     ): Boolean {
-        logger.info("GraphQL - Deleting payment id={}", paymentId)
-        return paymentService.deleteByPaymentId(paymentId)
+        logger.info("GraphQL - Deleting payment id={}", id)
+        return paymentService.deleteByPaymentId(id)
     }
 
     @PreAuthorize("hasAuthority('USER')")
@@ -116,11 +148,44 @@ class GraphQLMutationController(
 
     @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
+    fun updateTransfer(
+        @Argument id: Long,
+        @Argument("transfer") @Valid transfer: TransferInputDto,
+    ): Transfer {
+        logger.info("GraphQL - Updating transfer id={}", id)
+
+        // Find existing transfer to preserve GUIDs
+        val existingTransfer = transferService.findByTransferId(id)
+        if (existingTransfer.isEmpty) {
+            logger.warn("GraphQL - Transfer not found: {}", id)
+            throw IllegalArgumentException("Transfer not found: $id")
+        }
+
+        val domain =
+            Transfer().apply {
+                this.transferId = id
+                this.sourceAccount = transfer.sourceAccount
+                this.destinationAccount = transfer.destinationAccount
+                this.transactionDate = transfer.transactionDate
+                this.amount = transfer.amount
+                this.guidSource = existingTransfer.get().guidSource
+                this.guidDestination = existingTransfer.get().guidDestination
+                this.activeStatus = transfer.activeStatus ?: true
+            }
+
+        val updated = transferService.updateTransfer(domain)
+        meterRegistry.counter("graphql.transfer.update.success").increment()
+        logger.info("GraphQL - Updated transfer id={}", updated.transferId)
+        return updated
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @MutationMapping
     fun deleteTransfer(
-        @Argument transferId: Long,
+        @Argument id: Long,
     ): Boolean {
-        logger.info("GraphQL - Deleting transfer id={}", transferId)
-        return transferService.deleteByTransferId(transferId)
+        logger.info("GraphQL - Deleting transfer id={}", id)
+        return transferService.deleteByTransferId(id)
     }
 
     @PreAuthorize("hasAuthority('USER')")
