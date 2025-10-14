@@ -20,7 +20,8 @@ import java.sql.Timestamp
 class StandardizedAccountServiceSpec extends BaseServiceSpec {
 
     def accountRepositoryMock = Mock(AccountRepository)
-    def standardizedAccountService = new StandardizedAccountService(accountRepositoryMock)
+    def validationAmountRepositoryMock = Mock(finance.repositories.ValidationAmountRepository)
+    def standardizedAccountService = new StandardizedAccountService(accountRepositoryMock, validationAmountRepositoryMock)
 
     void setup() {
         standardizedAccountService.meterService = meterService
@@ -184,13 +185,14 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
 
     def "deleteById should return Success when account exists"() {
         given: "existing account"
-        def account = AccountBuilder.builder().withAccountNameOwner("test_account").build()
+        def account = AccountBuilder.builder().withAccountId(100L).withAccountNameOwner("test_account").build()
 
         when: "deleting existing account"
         def result = standardizedAccountService.deleteById("test_account")
 
         then: "should return Success"
         1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
+        1 * validationAmountRepositoryMock.findByAccountId(100L) >> []
         1 * accountRepositoryMock.delete(account)
         result instanceof ServiceResult.Success
         result.data == true
