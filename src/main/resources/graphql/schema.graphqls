@@ -75,9 +75,11 @@ type Query {
 
 type Mutation {
     createPayment( payment: PaymentInput ) : Payment
-    deletePayment( paymentId: ID! ) : Boolean
+    updatePayment( id: ID!, payment: PaymentInput ) : Payment
+    deletePayment( id: ID! ) : Boolean
     createTransfer( transfer: TransferInput ) : Transfer
-    deleteTransfer( transferId: ID! ) : Boolean
+    updateTransfer( id: ID!, transfer: TransferInput ) : Transfer
+    deleteTransfer( id: ID! ) : Boolean
     createParameter( parameter: ParameterInput ) : Parameter
     updateParameter( parameter: ParameterInput ) : Parameter
     deleteParameter( parameterId: ID! ) : Boolean
