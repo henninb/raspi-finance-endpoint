@@ -37,7 +37,7 @@ class BaseServiceSpec extends Specification {
 
     protected StandardizedReceiptImageService receiptImageService = new StandardizedReceiptImageService(receiptImageRepositoryMock)
     protected StandardizedDescriptionService descriptionService = new StandardizedDescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
-    protected StandardizedAccountService accountService = new StandardizedAccountService(accountRepositoryMock)
+    protected StandardizedAccountService accountService = new StandardizedAccountService(accountRepositoryMock, validationAmountRepositoryMock)
     protected StandardizedCategoryService categoryService = new StandardizedCategoryService(categoryRepositoryMock, transactionRepositoryMock)
     protected ImageProcessingService imageProcessingService = new ImageProcessingService() {
         {

@@ -5,6 +5,7 @@ import finance.domain.AccountType
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.repositories.AccountRepository
+import finance.repositories.ValidationAmountRepository
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
@@ -24,6 +25,7 @@ import java.util.Optional
 @Primary
 class StandardizedAccountService(
     private val accountRepository: AccountRepository,
+    private val validationAmountRepository: ValidationAmountRepository,
 ) : StandardizedBaseService<Account, String>() {
     override fun getEntityName(): String = "Account"
 
@@ -93,7 +95,17 @@ class StandardizedAccountService(
             if (optionalAccount.isEmpty) {
                 throw EntityNotFoundException("Account not found: $id")
             }
-            accountRepository.delete(optionalAccount.get())
+            val account = optionalAccount.get()
+
+            // Delete all associated ValidationAmount records first to avoid foreign key constraint violation
+            // This is needed for production DB which lacks ON DELETE CASCADE
+            val validationAmounts = validationAmountRepository.findByAccountId(account.accountId)
+            if (validationAmounts.isNotEmpty()) {
+                logger.info("Deleting ${validationAmounts.size} ValidationAmount records for account: ${account.accountNameOwner}")
+                validationAmountRepository.deleteAll(validationAmounts)
+            }
+
+            accountRepository.delete(account)
             true
         }
 

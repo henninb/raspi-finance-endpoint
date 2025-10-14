@@ -15,7 +15,8 @@ import java.util.Optional
 class StandardizedAccountControllerSpec extends Specification {
 
     finance.repositories.AccountRepository accountRepository = Mock()
-    StandardizedAccountService accountService = new StandardizedAccountService(accountRepository)
+    finance.repositories.ValidationAmountRepository validationAmountRepository = Mock()
+    StandardizedAccountService accountService = new StandardizedAccountService(accountRepository, validationAmountRepository)
 
     @Subject
     AccountController controller = new AccountController(accountService)
@@ -290,10 +291,11 @@ class StandardizedAccountControllerSpec extends Specification {
     def "deleteById returns 200 with deleted account when found"() {
         given:
         String id = "acct_del"
-        Account existing = acct(accountNameOwner: id)
+        Account existing = acct(accountId: 100L, accountNameOwner: id)
         and:
         // First for controller pre-fetch, second for service delete path
         2 * accountRepository.findByAccountNameOwner(id) >> Optional.of(existing)
+        validationAmountRepository.findByAccountId(100L) >> []
 
         when:
         ResponseEntity<Account> response = controller.deleteById(id)
@@ -366,9 +368,10 @@ class StandardizedAccountControllerSpec extends Specification {
     def "legacy deleteAccount returns 200 when found"() {
         given:
         String id = "acct_legacy"
-        Account existing = acct(accountNameOwner: id)
+        Account existing = acct(accountId: 101L, accountNameOwner: id)
         and:
         2 * accountRepository.findByAccountNameOwner(id) >> Optional.of(existing)
+        validationAmountRepository.findByAccountId(101L) >> []
 
         when:
         ResponseEntity<Account> response = controller.deleteAccount(id)
