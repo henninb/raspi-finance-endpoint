@@ -187,21 +187,27 @@ open class FamilyMemberController(
     /**
      * Legacy endpoint - GET /api/family-members
      * Maintains original behavior
+     * @deprecated Use GET /api/family-members/active instead
      */
+    @Deprecated("Use GET /api/family-members/active instead", ReplaceWith("findAllActive()"))
     @GetMapping(produces = ["application/json"])
     fun getAll(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
 
     /**
      * Legacy endpoint - GET /api/family-members/all
      * Maintains original behavior
+     * @deprecated Use GET /api/family-members/active instead
      */
+    @Deprecated("Use GET /api/family-members/active instead", ReplaceWith("findAllActive()"))
     @GetMapping("/all", produces = ["application/json"])
     fun getAllWithSuffix(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
 
     /**
      * Legacy endpoint - POST /api/family-members/insert
      * Maintains original behavior
+     * @deprecated Use POST /api/family-members instead
      */
+    @Deprecated("Use POST /api/family-members instead", ReplaceWith("save(member)"))
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insert(
         @RequestBody member: FamilyMember,
@@ -223,7 +229,9 @@ open class FamilyMemberController(
      * Legacy endpoint - GET /api/family-members/{id}
      * Maintains original behavior (note: conflicts with standardized /{familyMemberId})
      * Spring will resolve this based on order and specificity
+     * @deprecated Use standardized endpoint instead (method name conflict with findById)
      */
+    @Deprecated("Use standardized endpoint instead (method name conflict with findById)")
     @GetMapping("/{id}", produces = ["application/json"])
     fun getById(
         @PathVariable id: Long,

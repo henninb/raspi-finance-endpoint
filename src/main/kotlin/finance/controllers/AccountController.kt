@@ -265,7 +265,9 @@ class AccountController(
     /**
      * Legacy endpoint - GET /api/account/select/active
      * Maintains original behavior including 404 when empty
+     * @deprecated Use GET /api/account/active instead (returns empty list instead of 404)
      */
+    @Deprecated("Use GET /api/account/active instead (returns empty list instead of 404)", ReplaceWith("findAllActive()"))
     @Operation(
         summary = "Get active accounts",
         description = "Retrieves all active financial accounts with updated totals",
@@ -309,7 +311,9 @@ class AccountController(
     /**
      * Legacy endpoint - GET /api/account/select/{accountNameOwner}
      * Maintains original behavior
+     * @deprecated Use GET /api/account/{accountNameOwner} instead
      */
+    @Deprecated("Use GET /api/account/{accountNameOwner} instead", ReplaceWith("findById(accountNameOwner)"))
     @GetMapping("/select/{accountNameOwner}", produces = ["application/json"])
     fun account(
         @PathVariable accountNameOwner: String,
@@ -338,7 +342,9 @@ class AccountController(
     /**
      * Legacy endpoint - POST /api/account/insert
      * Maintains original behavior
+     * @deprecated Use POST /api/account instead
      */
+    @Deprecated("Use POST /api/account instead", ReplaceWith("save(account)"))
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertAccount(
         @RequestBody account: Account,
@@ -371,7 +377,9 @@ class AccountController(
     /**
      * Legacy endpoint - DELETE /api/account/delete/{accountNameOwner}
      * Maintains original behavior
+     * @deprecated Use DELETE /api/account/{accountNameOwner} instead
      */
+    @Deprecated("Use DELETE /api/account/{accountNameOwner} instead", ReplaceWith("deleteById(accountNameOwner)"))
     @DeleteMapping("/delete/{accountNameOwner}", produces = ["application/json"])
     fun deleteAccount(
         @PathVariable accountNameOwner: String,
@@ -420,7 +428,9 @@ class AccountController(
     /**
      * Legacy endpoint - PUT /api/account/update/{accountNameOwner}
      * Maintains original behavior using Map<String, Any>
+     * @deprecated Use PUT /api/account/{accountNameOwner} instead (uses Account entity instead of Map)
      */
+    @Deprecated("Use PUT /api/account/{accountNameOwner} instead (uses Account entity instead of Map)", ReplaceWith("update(accountNameOwner, mapper.convertValue(account, Account::class.java))"))
     @PutMapping("/update/{accountNameOwner}", produces = ["application/json"])
     fun updateAccount(
         @PathVariable("accountNameOwner") accountNameOwner: String,
