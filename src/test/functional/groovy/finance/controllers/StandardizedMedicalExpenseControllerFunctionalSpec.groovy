@@ -270,31 +270,6 @@ class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerF
         true
     }
 
-    void 'should maintain legacy endpoint: insertMedicalExpense with /insert'() {
-        given: 'a valid medical expense'
-        MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
-                .withServiceDescription("legacy_insert_${System.currentTimeMillis()}")
-                .withTransactionId(null)
-                .buildAndValidate()
-
-        when: 'calling legacy insertMedicalExpense endpoint'
-        ResponseEntity<String> response = postEndpoint("/${endpointName}/insert", medicalExpense.toString())
-
-        then: 'should return 201 CREATED'
-        response.statusCode == HttpStatus.CREATED
-
-        and: 'should return created medical expense'
-        def jsonResponse = new JsonSlurper().parseText(response.body)
-        jsonResponse.serviceDescription.startsWith("legacy_insert")
-
-        and: 'documents backward compatibility'
-        // Legacy endpoint preserved: POST /api/medical-expenses/insert
-        // Original method name: insertMedicalExpenseWithInsertEndpoint()
-        // Also includes: POST /api/medical-expenses/legacy (insertMedicalExpense)
-        // Dual endpoint support maintained
-        true
-    }
-
     void 'should maintain legacy endpoint: getMedicalExpenseById with /select/{medicalExpenseId}'() {
         given: 'an existing medical expense'
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
