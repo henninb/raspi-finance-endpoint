@@ -19,6 +19,25 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
         // Parent setupSpec() is called automatically
     }
 
+    private ResponseEntity<String> postJson(String path, String payload) {
+        String token = generateJwtToken(username)
+        HttpHeaders h = new HttpHeaders()
+        h.setContentType(MediaType.APPLICATION_JSON)
+        h.set("Authorization", "Bearer " + token)
+        h.set("Cookie", "token=" + token)
+        HttpEntity<String> entity = new HttpEntity<>(payload, h)
+        try {
+            return restTemplate.exchange(
+                    baseUrl + "/api" + path,
+                    HttpMethod.POST,
+                    entity,
+                    String
+            )
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            return new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
+    }
+
     void 'should successfully insert new medical expense with isolated test data'() {
         given: 'a transaction and medical expense linked to test owner'
         // Create a test transaction first
@@ -27,7 +46,7 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
                 .buildAndValidate()
 
         // Insert the transaction to get a valid transaction ID
-        ResponseEntity<String> transactionResponse = insertEndpoint("transaction", transaction.toString())
+        ResponseEntity<String> transactionResponse = postJson("/transaction", transaction.toString())
 
         // Create medical expense linked to the transaction
         MedicalExpense medicalExpense = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
@@ -35,7 +54,7 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
                 .buildAndValidate()
 
         when: 'posting to medical expenses endpoint'
-        ResponseEntity<String> response = insertEndpoint(endpointName, medicalExpense.toString())
+        ResponseEntity<String> response = postJson("/${endpointName}", medicalExpense.toString())
 
         then: 'should return created status and echo fields'
         transactionResponse.statusCode == HttpStatus.CREATED
@@ -54,7 +73,7 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
                 .withUniqueDescription("duplicate-medical")
                 .buildAndValidate()
 
-        ResponseEntity<String> transactionResponse = insertEndpoint("transaction", transaction.toString())
+        ResponseEntity<String> transactionResponse = postJson("/transaction", transaction.toString())
         Long transactionId = extractTransactionIdFromResponse(transactionResponse.body)
 
         // First medical expense
@@ -67,10 +86,10 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
                 .withTransactionId(transactionId)
                 .buildAndValidate()
 
-        ResponseEntity<String> firstResponse = insertEndpoint(endpointName, firstMedicalExpense.toString())
+        ResponseEntity<String> firstResponse = postJson("/${endpointName}", firstMedicalExpense.toString())
 
         when: 'attempting to insert second medical expense for same transaction'
-        ResponseEntity<String> response = insertEndpoint(endpointName, secondMedicalExpense.toString())
+        ResponseEntity<String> response = postJson("/${endpointName}", secondMedicalExpense.toString())
 
         then: 'first insert succeeds, second is rejected with 409 Conflict'
         transactionResponse.statusCode == HttpStatus.CREATED
@@ -85,7 +104,7 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
                 .withUniqueDescription("invalid-financial")
                 .buildAndValidate()
 
-        ResponseEntity<String> transactionResponse = insertEndpoint("transaction", transaction.toString())
+        ResponseEntity<String> transactionResponse = postJson("/transaction", transaction.toString())
         Long transactionId = extractTransactionIdFromResponse(transactionResponse.body)
 
         // Create medical expense with invalid amounts (billed < allocated)
@@ -97,7 +116,7 @@ class MedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpe
                 .build() // Use build() instead of buildAndValidate() to allow invalid data
 
         when: 'attempting to insert invalid medical expense'
-        ResponseEntity<String> response = insertEndpoint(endpointName, invalidMedicalExpense.toString())
+        ResponseEntity<String> response = postJson("/${endpointName}", invalidMedicalExpense.toString())
 
         then: 'should be rejected at server with 500'
         transactionResponse.statusCode == HttpStatus.CREATED

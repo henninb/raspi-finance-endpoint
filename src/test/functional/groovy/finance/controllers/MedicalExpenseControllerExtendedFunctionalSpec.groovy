@@ -13,13 +13,33 @@ class MedicalExpenseControllerExtendedFunctionalSpec extends BaseControllerFunct
 
     private static final String ENDPOINT = 'medical-expenses'
 
+    private ResponseEntity<String> postJson(String path, String payload) {
+        String token = generateJwtToken(username)
+        HttpHeaders h = new HttpHeaders()
+        h.setContentType(MediaType.APPLICATION_JSON)
+        h.set("Authorization", "Bearer " + token)
+        h.set("Cookie", "token=" + token)
+        HttpEntity<String> entity = new HttpEntity<>(payload, h)
+        try {
+            return restTemplate.exchange(
+                    baseUrl + "/api" + path,
+                    HttpMethod.POST,
+                    entity,
+                    String
+            )
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            return new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
+    }
+
     private ResponseEntity<String> postMedicalExpenseForNewTransaction(BigDecimal billed = 350.00G,
                                                                       ClaimStatus claimStatus = ClaimStatus.Submitted) {
         Transaction tx = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withUniqueDescription("med-extended-${System.nanoTime()}")
                 .buildAndValidate()
 
-        ResponseEntity<String> txResp = insertEndpoint("transaction", tx.toString())
+        // Use standardized transaction creation endpoint
+        ResponseEntity<String> txResp = postJson("/transaction", tx.toString())
         assert txResp.statusCode == HttpStatus.CREATED
         Long txId = extractLong(txResp.body, 'transactionId')
 
@@ -29,7 +49,8 @@ class MedicalExpenseControllerExtendedFunctionalSpec extends BaseControllerFunct
                 .withClaimStatus(claimStatus)
                 .buildAndValidate()
 
-        return insertEndpoint(ENDPOINT, me.toString())
+        // Use standardized medical expense creation endpoint
+        return postJson("/${ENDPOINT}", me.toString())
     }
 
     void 'should retrieve medical expense by transaction id'() {
