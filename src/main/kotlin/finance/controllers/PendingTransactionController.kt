@@ -199,7 +199,9 @@ class PendingTransactionController(
     /**
      * Legacy endpoint - GET /api/pending/transaction/all
      * Maintains original behavior including 404 when empty
+     * @deprecated Use GET /api/pending/transaction/active instead (returns empty list instead of 404)
      */
+    @Deprecated("Use GET /api/pending/transaction/active instead (returns empty list instead of 404)", ReplaceWith("findAllActive()"))
     @GetMapping("/all", produces = ["application/json"])
     fun getAllPendingTransactions(): ResponseEntity<List<PendingTransaction>> =
         when (val result = pendingTransactionService.findAllActive()) {
@@ -228,7 +230,9 @@ class PendingTransactionController(
     /**
      * Legacy endpoint - POST /api/pending/transaction/insert
      * Maintains original behavior
+     * @deprecated Use POST /api/pending/transaction instead
      */
+    @Deprecated("Use POST /api/pending/transaction instead", ReplaceWith("save(pendingTransaction)"))
     @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
     fun insertPendingTransaction(
         @RequestBody pendingTransaction: PendingTransaction,
@@ -261,7 +265,9 @@ class PendingTransactionController(
     /**
      * Legacy endpoint - DELETE /api/pending/transaction/delete/{id}
      * Returns 204 NO_CONTENT for backward compatibility
+     * @deprecated Use DELETE /api/pending/transaction/{pendingTransactionId} instead
      */
+    @Deprecated("Use DELETE /api/pending/transaction/{pendingTransactionId} instead", ReplaceWith("deleteById(id)"))
     @DeleteMapping("/delete/{id}")
     fun deletePendingTransaction(
         @PathVariable id: Long,
@@ -291,7 +297,9 @@ class PendingTransactionController(
     /**
      * Legacy endpoint - DELETE /api/pending/transaction/delete/all
      * Bulk delete operation - remains as-is for backward compatibility
+     * @deprecated Bulk delete operations should be replaced with individual deletes or batch processing
      */
+    @Deprecated("Bulk delete operations should be replaced with individual deletes or batch processing")
     @DeleteMapping("/delete/all")
     fun deleteAllPendingTransactions(): ResponseEntity<Void> {
         logger.info("Attempting to delete all pending transactions (legacy endpoint)")
