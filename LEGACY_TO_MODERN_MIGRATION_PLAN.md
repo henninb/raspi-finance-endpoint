@@ -3,11 +3,12 @@
 **Project**: raspi-finance-endpoint
 **Frontend**: nextjs-website
 **Analysis Date**: 2025-10-15
-**Status**: DRAFT - Ready for Review
+**Last Updated**: 2025-10-16
+**Status**: IN PROGRESS - Phase 1 Complete
 
 ## Executive Summary
 
-This plan identifies **unused legacy endpoints** that can be safely deleted and provides a phased migration strategy for converting remaining legacy endpoints to modern/standardized REST patterns. The analysis identified 159+ total backend endpoints with approximately **46 legacy endpoints**, of which **14 can be immediately deleted** without frontend changes.
+This plan identifies **unused legacy endpoints** that can be safely deleted and provides a phased migration strategy for converting remaining legacy endpoints to modern/standardized REST patterns. The analysis identified 159+ total backend endpoints with approximately **46 legacy endpoints**, of which **17 have been deleted** in Phase 1 without frontend changes.
 
 ### Key Findings
 
@@ -18,8 +19,8 @@ This plan identifies **unused legacy endpoints** that can be safely deleted and 
 | **Standardized Endpoints** | 55 | RESTful patterns |
 | **Business Logic Endpoints** | 58+ | Domain-specific operations |
 | **Frontend API Calls** | 50+ REST + GraphQL | Active usage |
-| **Unused Legacy Endpoints** | 14 | Safe to delete immediately |
-| **Legacy Endpoints Requiring Migration** | 15 | Frontend update needed first |
+| **✅ Deleted Legacy Endpoints (Phase 1)** | 17 | Completed - all tests passing |
+| **Legacy Endpoints Requiring Migration (Phase 2)** | 12 | Frontend update needed first |
 
 ---
 
@@ -152,28 +153,84 @@ fun softDeleteMedicalExpense(@PathVariable medicalExpenseId: Long): ResponseEnti
 
 ---
 
-### Phase 1 Summary
+### 1.5 PendingTransactionController - DELETE MOST LEGACY (3 endpoints) ✅ COMPLETED
 
-**Total Endpoints to Delete**: 14 legacy endpoints
-**Total Time Estimate**: 2-3 hours
-**Prerequisites**: None - frontend already migrated
-**Success Criteria**: All functional tests pass after deletion
+The frontend uses mixed endpoints - modern for most operations, legacy for batch delete only.
 
-**Deletion Checklist**:
-- [ ] Delete PaymentController legacy endpoints (4)
-- [ ] Delete TransferController legacy endpoints (3)
-- [ ] Delete CategoryController legacy endpoints (5)
-- [ ] Delete MedicalExpenseController legacy endpoints (2)
-- [ ] Run full test suite: `SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --continue`
-- [ ] Verify GraphQL endpoints still work
-- [ ] Update OpenAPI/Swagger documentation
-- [ ] Commit changes: `git commit -m "refactor: remove unused legacy endpoints for Payment, Transfer, Category, MedicalExpense"`
+```kotlin
+// ✅ DELETED - Unused by frontend
+@GetMapping("/all")
+fun getAllPendingTransactions(): ResponseEntity<List<PendingTransaction>>
+
+// ✅ DELETED - Unused by frontend
+@PostMapping("/insert")
+fun insertPendingTransaction(@Valid @RequestBody pendingTransaction: PendingTransaction): ResponseEntity<PendingTransaction>
+
+// ✅ DELETED - Unused by frontend (modern DELETE /{id} returns entity, not 204)
+@DeleteMapping("/delete/{id}")
+fun deletePendingTransaction(@PathVariable id: Long): ResponseEntity<Void>
+
+// ✅ PRESERVED - Frontend actively uses this for batch operations
+@DeleteMapping("/delete/all")
+fun deleteAllPendingTransactions(): ResponseEntity<Void>
+```
+
+**Frontend Usage**: ✅ Uses `GET /api/pending/transaction/active`, `POST /api/pending/transaction`, `DELETE /api/pending/transaction/{id}`, and legacy `DELETE /api/pending/transaction/delete/all`
+
+**Completed Work**:
+- ✅ Removed 3 unused legacy endpoints from PendingTransactionController
+- ✅ Preserved DELETE /delete/all (frontend actively uses this)
+- ✅ Updated unit tests - removed 8 legacy test methods
+- ✅ Updated functional tests to use modern endpoints
+- ✅ All 354 functional tests passing (100% success rate)
+
+**Key Behavioral Changes**:
+- Modern DELETE /{id} returns 200 OK with deleted entity (not 204 NO_CONTENT)
+- Modern DELETE /{id} returns 404 NOT_FOUND for missing items (not 500 INTERNAL_SERVER_ERROR)
+- Modern GET /active returns empty list when no items exist (not 404 NOT_FOUND)
+
+**Risk**: Low - Frontend already migrated to modern endpoints
+**Testing**: ✅ All tests passing after deletion
+**Completion Date**: 2025-10-16
 
 ---
 
-## Phase 2: Frontend Migration Required (15 endpoints)
+### Phase 1 Summary
+
+**✅ STATUS: COMPLETE**
+
+**Total Endpoints Deleted**: 17 legacy endpoints
+**Actual Time Spent**: ~3 hours
+**Prerequisites**: None - frontend already migrated
+**Success Criteria**: ✅ All 354 functional tests passing (100% success rate)
+
+**Deletion Checklist**:
+- [x] Delete PaymentController legacy endpoints (4) - ✅ Completed
+- [x] Delete TransferController legacy endpoints (3) - ✅ Completed
+- [x] Delete CategoryController legacy endpoints (5) - ✅ Completed
+- [x] Delete MedicalExpenseController legacy endpoints (2) - ✅ Completed
+- [x] Delete PendingTransactionController legacy endpoints (3) - ✅ Completed
+- [x] Run full test suite: `SPRING_PROFILES_ACTIVE=func ./gradlew functionalTest --continue` - ✅ All passing
+- [x] Verify GraphQL endpoints still work - ✅ Verified
+- [x] Update tests (unit + functional) - ✅ All updated and passing
+- [x] Commit changes with appropriate messages - ✅ All committed
+
+**Git Commits**:
+- `bc9fb35` - tests fixed
+- `f75889c` - test: remove legacy endpoint test for deleted /insert endpoint
+- `4464c43` - test: remove legacy endpoint tests from StandardizedTransferControllerSpec
+- `36f17c3` - fix: Remove legacy tests for deleted Payment controller methods
+- `0269103` - refactor: Phase 1 - Remove unused legacy endpoints
+- `407a44f` - fix: Update ReceiptImage functional tests to call legacy /insert endpoint directly
+- Additional commits for PendingTransaction migration
+
+---
+
+## Phase 2: Frontend Migration Required (12 endpoints)
 
 These legacy endpoints are **actively used** by the frontend and require frontend migration before backend deletion.
+
+**Note**: PendingTransactionController was originally in this phase but has been moved to Phase 1 - most endpoints were already unused by the frontend and have been deleted.
 
 ### 2.1 AccountController - MIGRATE FRONTEND FIRST (5 endpoints)
 
@@ -328,52 +385,7 @@ fun findAllActive(
 
 ---
 
-### 2.4 PendingTransactionController - MIGRATE FRONTEND FIRST (4 endpoints)
-
-**Priority**: MEDIUM
-**Frontend Files to Update**:
-- `lib/hooks/usePendingTransactionFetch.ts`
-- `lib/hooks/usePendingTransactionInsert.ts`
-- `lib/hooks/usePendingTransactionDelete.ts`
-- `app/pending/page.tsx`
-
-#### Current Frontend Usage (Legacy)
-```typescript
-// ❌ LEGACY - Update to modern endpoint
-GET /api/pending/transaction/all               → GET /api/pending/transaction/active
-POST /api/pending/transaction/insert           → POST /api/pending/transaction
-PUT /api/pending/transaction/update/{pendingTransactionId} → PUT /api/pending/transaction/{pendingTransactionId}
-DELETE /api/pending/transaction/delete/{id}    → DELETE /api/pending/transaction/{id}
-DELETE /api/pending/transaction/delete/all     → (Batch delete via individual calls)
-```
-
-#### Backend Endpoints to Delete After Frontend Migration
-```kotlin
-// ❌ DELETE after frontend migration
-@GetMapping("/all")
-fun getAllPendingTransactions(): ResponseEntity<List<PendingTransaction>>
-
-// ❌ DELETE after frontend migration
-@PostMapping("/insert")
-fun insertPendingTransaction(@Valid @RequestBody pendingTransaction: PendingTransaction): ResponseEntity<PendingTransaction>
-
-// ❌ DELETE after frontend migration (returns 204 NO_CONTENT)
-@DeleteMapping("/delete/{id}")
-fun deletePendingTransaction(@PathVariable id: Long): ResponseEntity<Void>
-
-// ❌ DELETE after frontend migration (or keep as business logic endpoint)
-@DeleteMapping("/delete/all")
-fun deleteAllPendingTransactions(): ResponseEntity<Void>
-```
-
-**Note**: The `DELETE /delete/all` endpoint may be useful as a business logic operation. Consider keeping it as a non-CRUD operation.
-
-**Estimated Time**: 3-4 hours
-**Risk**: Low-Medium - Moderate usage
-
----
-
-### 2.5 FamilyMemberController - MIGRATE FRONTEND FIRST (1 endpoint)
+### 2.4 FamilyMemberController - MIGRATE FRONTEND FIRST (1 endpoint)
 
 **Priority**: LOW
 **Frontend Files to Update**:
@@ -400,9 +412,9 @@ fun insert(@Valid @RequestBody familyMember: FamilyMember): ResponseEntity<*>
 
 ### Phase 2 Summary
 
-**Total Endpoints Requiring Frontend Migration**: 15 endpoints
-**Total Frontend Files to Update**: ~20-25 files
-**Total Time Estimate**: 14-20 hours (includes testing and monitoring)
+**Total Endpoints Requiring Frontend Migration**: 12 endpoints (reduced from 15 - PendingTransaction completed in Phase 1)
+**Total Frontend Files to Update**: ~15-20 files
+**Total Time Estimate**: 11-17 hours (includes testing and monitoring)
 **Success Criteria**:
 - All frontend functionality works with modern endpoints
 - Zero console errors related to API calls
@@ -620,13 +632,13 @@ Document all API changes with:
 
 ### Overall Project Timeline
 
-| Phase | Tasks | Time Estimate | Risk Level | Dependencies |
-|-------|-------|---------------|------------|--------------|
-| **Phase 1** | Delete unused legacy endpoints | 2-3 hours | Low | None |
-| **Phase 2** | Migrate frontend to modern endpoints | 14-20 hours | Medium | Phase 1 complete |
-| **Phase 3** | Consistency and cleanup | 10-13 hours | Low | Phase 2 complete |
-| **Phase 4** | Testing and documentation | 10-14 hours | Low | Phases 1-3 complete |
-| **TOTAL** | | **36-50 hours** | | |
+| Phase | Tasks | Time Estimate | Risk Level | Status | Dependencies |
+|-------|-------|---------------|------------|--------|--------------|
+| **Phase 1** | Delete unused legacy endpoints | ~~2-3 hours~~ ✅ 3 hours (actual) | Low | ✅ COMPLETE | None |
+| **Phase 2** | Migrate frontend to modern endpoints | 11-17 hours (updated) | Medium | 🔄 NOT STARTED | Phase 1 complete |
+| **Phase 3** | Consistency and cleanup | 10-13 hours | Low | 🔄 NOT STARTED | Phase 2 complete |
+| **Phase 4** | Testing and documentation | 10-14 hours | Low | 🔄 NOT STARTED | Phases 1-3 complete |
+| **TOTAL** | | **31-44 hours** (reduced from 36-50) | | | |
 
 ### Estimated Calendar Time
 - **Aggressive**: 1-2 weeks (full-time focus)
@@ -681,19 +693,23 @@ Set up monitoring for:
 - [ ] Document current API usage patterns
 - [ ] Create rollback procedures
 
-### Phase 1: Immediate Deletion
-- [ ] Delete PaymentController legacy endpoints
-- [ ] Delete TransferController legacy endpoints
-- [ ] Delete CategoryController legacy endpoints
-- [ ] Delete MedicalExpenseController legacy endpoints
-- [ ] Run full test suite
-- [ ] Deploy to staging
-- [ ] Test in staging
-- [ ] Deploy to production
-- [ ] Monitor for 48 hours
+### Phase 1: Immediate Deletion ✅ COMPLETE
+- [x] Delete PaymentController legacy endpoints (4) - ✅ Completed
+- [x] Delete TransferController legacy endpoints (3) - ✅ Completed
+- [x] Delete CategoryController legacy endpoints (5) - ✅ Completed
+- [x] Delete MedicalExpenseController legacy endpoints (2) - ✅ Completed
+- [x] Delete PendingTransactionController legacy endpoints (3) - ✅ Completed
+- [x] Run full test suite - ✅ All 354 tests passing
+- [x] Update unit and functional tests - ✅ All updated
+- [x] Verify GraphQL endpoints still work - ✅ Verified
+- [ ] Deploy to staging - ⏳ Pending
+- [ ] Test in staging - ⏳ Pending
+- [ ] Deploy to production - ⏳ Pending
+- [ ] Monitor for 48 hours - ⏳ Pending
 
 ### Phase 2: Frontend Migration
-**For Each Controller (Account, Transaction, ValidationAmount, PendingTransaction, FamilyMember):**
+**For Each Controller (Account, Transaction, ValidationAmount, FamilyMember):**
+**Note**: PendingTransaction removed from this phase - completed in Phase 1
 - [ ] Identify all frontend files using legacy endpoints
 - [ ] Update hooks/services to use modern endpoints
 - [ ] Update component imports
@@ -739,8 +755,9 @@ Set up monitoring for:
 - **Zero increase** in API error rates
 - **No degradation** in API response times
 - **100% test coverage** maintained or improved
-- **14 legacy endpoints deleted** in Phase 1
-- **15 legacy endpoints migrated** in Phase 2
+- ✅ **17 legacy endpoints deleted** in Phase 1 (exceeded target of 14)
+- ✅ **354 functional tests passing** (100% success rate after Phase 1)
+- **12 legacy endpoints to migrate** in Phase 2 (reduced from 15)
 
 ### Qualitative Metrics
 - Frontend code is cleaner and more consistent
@@ -810,10 +827,10 @@ Set up monitoring for:
 ### Pending Transaction Endpoints
 | Legacy Endpoint | Modern Endpoint | Frontend Status | Action |
 |----------------|-----------------|-----------------|--------|
-| `GET /all` | `GET /active` | Using legacy | Migrate |
-| `POST /insert` | `POST /` | Using legacy | Migrate |
-| `DELETE /delete/{id}` | `DELETE /{id}` | Using legacy | Migrate |
-| `DELETE /delete/all` | *Keep as business logic* | Using legacy | Keep/Migrate |
+| `GET /all` | `GET /active` | ~~Using legacy~~ | ✅ DELETED (Phase 1) |
+| `POST /insert` | `POST /` | ~~Using legacy~~ | ✅ DELETED (Phase 1) |
+| `DELETE /delete/{id}` | `DELETE /{id}` | ~~Using legacy~~ | ✅ DELETED (Phase 1) |
+| `DELETE /delete/all` | *Keep as business logic* | Using legacy | ✅ PRESERVED (frontend uses) |
 
 ### Family Member Endpoints
 | Legacy Endpoint | Modern Endpoint | Frontend Status | Action |
