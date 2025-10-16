@@ -30,7 +30,18 @@ class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         String payload = '{"transactionId":1, "image":"test", "activeStatus":true}'
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, payload)
+        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(payload, headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/insert",
+            org.springframework.http.HttpMethod.POST,
+            entity,
+            String
+        )
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -56,7 +67,18 @@ class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         ReceiptImage receiptImage = receiptImageTestContext.createJpegReceiptImage(transactionId)
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
+        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/insert",
+            org.springframework.http.HttpMethod.POST,
+            entity,
+            String
+        )
 
         then:
         response.statusCode == HttpStatus.OK
@@ -83,7 +105,18 @@ class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
 
         when:
-        ResponseEntity<String> response = insertEndpoint(endpointName, receiptImage.toString())
+        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/insert",
+            org.springframework.http.HttpMethod.POST,
+            entity,
+            String
+        )
 
         then:
         response.statusCode == HttpStatus.OK
@@ -110,7 +143,18 @@ class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
 
         // First insert the receipt image to get its ID
-        ResponseEntity<String> insertResponse = insertEndpoint(endpointName, receiptImage.toString())
+        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        String token = generateJwtToken(username)
+        headers.set("Cookie", "token=${token}")
+        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> insertResponse = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/insert",
+            org.springframework.http.HttpMethod.POST,
+            entity,
+            String
+        )
 
         // Try both "id":"1" and "id":1 formats since we're not sure which format is returned
         String receiptImageId
