@@ -78,7 +78,7 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         HttpEntity entity = new HttpEntity<>(invalidPayload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/insert",
+            "http://localhost:${port}/api/pending/transaction",
             HttpMethod.POST, entity, String)
 
         then: 'response should be bad request'
@@ -98,7 +98,7 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         HttpEntity entity = new HttpEntity<>(incompletePayload, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/insert",
+            "http://localhost:${port}/api/pending/transaction",
             HttpMethod.POST, entity, String)
 
         then: 'response should be bad request'
@@ -149,7 +149,7 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/all",
+            "http://localhost:${port}/api/pending/transaction/active",
             HttpMethod.GET, entity, String)
 
         then: 'response should be successful'
@@ -195,11 +195,12 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/delete/${pendingTransactionId}",
+            "http://localhost:${port}/api/pending/transaction/${pendingTransactionId}",
             HttpMethod.DELETE, entity, String)
 
-        then: 'response should be successful with no content'
-        response.statusCode == HttpStatus.NO_CONTENT
+        then: 'response should be successful with deleted entity'
+        response.statusCode == HttpStatus.OK
+        response.body != null
 
         0 * _
     }
@@ -215,11 +216,11 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/delete/${nonExistentId}",
+            "http://localhost:${port}/api/pending/transaction/${nonExistentId}",
             HttpMethod.DELETE, entity, String)
 
-        then: 'response should be internal server error'
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        then: 'response should be not found'
+        response.statusCode == HttpStatus.NOT_FOUND
 
         0 * _
     }
@@ -273,7 +274,7 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         0 * _
     }
 
-    void 'should return not found when getting all pending transactions after deletion'() {
+    void 'should return empty list when getting all pending transactions after deletion'() {
         given: 'all pending transactions are deleted'
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
@@ -287,11 +288,15 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
 
         when: 'getting all pending transactions after deletion'
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/all",
+            "http://localhost:${port}/api/pending/transaction/active",
             HttpMethod.GET, entity, String)
 
-        then: 'response should be not found'
-        response.statusCode == HttpStatus.NOT_FOUND
+        then: 'response should be OK with empty list'
+        response.statusCode == HttpStatus.OK
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def jsonResponse = jsonSlurper.parseText(response.body)
+        jsonResponse instanceof List
+        jsonResponse.size() == 0
 
         0 * _
     }
@@ -319,7 +324,7 @@ class PendingTransactionControllerFunctionalSpec extends BaseControllerFunctiona
         HttpEntity entity = new HttpEntity<>(pendingTransaction.toString(), noAuthHeaders)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/pending/transaction/insert",
+            "http://localhost:${port}/api/pending/transaction",
             HttpMethod.POST, entity, String)
 
         then: 'response should be forbidden (endpoint requires authentication)'
