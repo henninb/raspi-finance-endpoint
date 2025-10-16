@@ -126,7 +126,7 @@ class BaseControllerFunctionalSpec extends Specification {
 
         try {
             return restTemplate.exchange(
-                    baseUrl + "/api/${endpointName}/insert",
+                    baseUrl + "/api/${endpointName}",
                     HttpMethod.POST,
                     entity,
                     String
