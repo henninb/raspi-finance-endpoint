@@ -60,7 +60,19 @@ class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, testAccount.toString())
 
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, testAccount.accountNameOwner)
+        // Account uses modern endpoint - call directly
+        String token = generateJwtToken(username)
+        HttpHeaders reqHeaders = new HttpHeaders()
+        reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
+        reqHeaders.add("Authorization", "Bearer " + token)
+        HttpEntity<Void> entity = new HttpEntity<>(reqHeaders)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl + "/api/${endpointName}/${testAccount.accountNameOwner}",
+                HttpMethod.GET,
+                entity,
+                String
+        )
 
         then:
         insertResponse.statusCode == HttpStatus.CREATED
@@ -71,7 +83,24 @@ class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     void 'should return not found for non-existent account'() {
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, "nonexistent_${testOwner}")
+        // Account uses modern endpoint - call directly
+        String token = generateJwtToken(username)
+        HttpHeaders reqHeaders = new HttpHeaders()
+        reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
+        reqHeaders.add("Authorization", "Bearer " + token)
+        HttpEntity<Void> entity = new HttpEntity<>(reqHeaders)
+
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.exchange(
+                    baseUrl + "/api/${endpointName}/nonexistent_${testOwner}",
+                    HttpMethod.GET,
+                    entity,
+                    String
+            )
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            response = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
@@ -87,7 +116,19 @@ class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, account.toString())
 
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, account.accountNameOwner)
+        // Account uses modern endpoint - call directly
+        String token = generateJwtToken(username)
+        HttpHeaders reqHeaders = new HttpHeaders()
+        reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
+        reqHeaders.add("Authorization", "Bearer " + token)
+        HttpEntity<Void> entity = new HttpEntity<>(reqHeaders)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl + "/api/${endpointName}/${account.accountNameOwner}",
+                HttpMethod.DELETE,
+                entity,
+                String
+        )
 
         then:
         insertResponse.statusCode == HttpStatus.CREATED
@@ -105,7 +146,19 @@ class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, accountToDelete.toString())
 
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, accountToDelete.accountNameOwner)
+        // Account uses modern endpoint - call directly
+        String token = generateJwtToken(username)
+        HttpHeaders reqHeaders = new HttpHeaders()
+        reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
+        reqHeaders.add("Authorization", "Bearer " + token)
+        HttpEntity<Void> entity = new HttpEntity<>(reqHeaders)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                baseUrl + "/api/${endpointName}/${accountToDelete.accountNameOwner}",
+                HttpMethod.DELETE,
+                entity,
+                String
+        )
 
         then:
         insertResponse.statusCode == HttpStatus.CREATED
@@ -238,7 +291,23 @@ class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         HttpEntity entity = new HttpEntity<>(null, headers)
 
         when:
-        ResponseEntity<String> deleteResponse = deleteEndpoint(endpointName, nonExistentAccount)
+        // Account uses modern endpoint - call directly
+        HttpHeaders reqHeaders = new HttpHeaders()
+        reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
+        reqHeaders.add("Authorization", "Bearer " + token)
+        HttpEntity<Void> deleteEntity = new HttpEntity<>(reqHeaders)
+
+        ResponseEntity<String> deleteResponse
+        try {
+            deleteResponse = restTemplate.exchange(
+                    baseUrl + "/api/${endpointName}/${nonExistentAccount}",
+                    HttpMethod.DELETE,
+                    deleteEntity,
+                    String
+            )
+        } catch (org.springframework.web.client.HttpStatusCodeException ex) {
+            deleteResponse = new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
+        }
         ResponseEntity<String> deactivateResponse
         try {
             deactivateResponse = restTemplate.exchange(

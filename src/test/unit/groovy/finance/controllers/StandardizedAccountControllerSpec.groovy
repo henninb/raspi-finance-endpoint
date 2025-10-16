@@ -365,60 +365,6 @@ class StandardizedAccountControllerSpec extends Specification {
         response.body.containsKey("totals")
     }
 
-    def "legacy deleteAccount returns 200 when found"() {
-        given:
-        String id = "acct_legacy"
-        Account existing = acct(accountId: 101L, accountNameOwner: id)
-        and:
-        2 * accountRepository.findByAccountNameOwner(id) >> Optional.of(existing)
-        validationAmountRepository.findByAccountId(101L) >> []
-
-        when:
-        ResponseEntity<Account> response = controller.deleteAccount(id)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        response.body.accountNameOwner == id
-    }
-
-    def "legacy deleteAccount throws 404 when missing"() {
-        given:
-        accountRepository.findByAccountNameOwner("missing") >> Optional.empty()
-
-        when:
-        controller.deleteAccount("missing")
-
-        then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
-    }
-
-    def "legacy updateAccount returns 200"() {
-        given:
-        def payload = [
-            accountId: 50L,
-            accountNameOwner: "acct_map",
-            accountType: "credit",
-            activeStatus: true,
-            moniker: "1234",
-            outstanding: 0.00,
-            future: 0.00,
-            cleared: 0.00,
-            dateClosed: new Timestamp(0L),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        ]
-        and:
-        accountRepository.findByAccountId(50L) >> Optional.of(acct(accountId: 50L, accountNameOwner: "acct_map"))
-        accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
-
-        when:
-        ResponseEntity<Account> response = controller.updateAccount("acct_map", payload)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        response.body.accountNameOwner == "acct_map"
-    }
-
     def "renameAccountNameOwner returns 200"() {
         given:
         Account existing = acct(accountId: 60L, accountNameOwner: "old")
