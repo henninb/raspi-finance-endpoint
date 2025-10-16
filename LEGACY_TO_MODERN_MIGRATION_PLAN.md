@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This plan identifies **unused legacy endpoints** that can be safely deleted and provides a phased migration strategy for converting remaining legacy endpoints to modern/standardized REST patterns. The analysis identified 159+ total backend endpoints with approximately **46 legacy endpoints**, of which **17 have been deleted** in Phase 1 without frontend changes.
+This plan identifies **unused legacy endpoints** that can be safely deleted and provides a phased migration strategy for converting remaining legacy endpoints to modern/standardized REST patterns. The analysis identified 159+ total backend endpoints with approximately **46 legacy endpoints**, of which **22 have been deleted** in Phase 1 and Phase 2 combined.
 
 ### Key Findings
 
@@ -20,7 +20,8 @@ This plan identifies **unused legacy endpoints** that can be safely deleted and 
 | **Business Logic Endpoints** | 58+ | Domain-specific operations |
 | **Frontend API Calls** | 50+ REST + GraphQL | Active usage |
 | **✅ Deleted Legacy Endpoints (Phase 1)** | 17 | Completed - all tests passing |
-| **Legacy Endpoints Requiring Migration (Phase 2)** | 12 | Frontend update needed first |
+| **✅ Deleted Legacy Endpoints (Phase 2 - Account)** | 5 | Completed - frontend already migrated |
+| **Legacy Endpoints Requiring Migration (Phase 2)** | 7 | Transaction, ValidationAmount, FamilyMember |
 
 ---
 
@@ -232,59 +233,53 @@ These legacy endpoints are **actively used** by the frontend and require fronten
 
 **Note**: PendingTransactionController was originally in this phase but has been moved to Phase 1 - most endpoints were already unused by the frontend and have been deleted.
 
-### 2.1 AccountController - MIGRATE FRONTEND FIRST (5 endpoints)
+### 2.1 AccountController - ✅ COMPLETED (5 endpoints)
 
 **Priority**: HIGH - Core functionality
-**Frontend Files to Update**:
-- `lib/hooks/useAccountFetch.ts`
-- `lib/hooks/useAccountInsert.ts`
-- `lib/hooks/useAccountUpdate.ts`
-- `lib/hooks/useAccountDelete.ts`
-- `app/accounts/page.tsx`
-- `app/accounts/[accountNameOwner]/page.tsx`
+**Status**: ✅ **DELETED** - Frontend was already migrated
+**Completion Date**: 2025-10-16
 
-#### Current Frontend Usage (Legacy)
-```typescript
-// ❌ LEGACY - Update to modern endpoint
-GET /api/account/select/active          → GET /api/account/active
-POST /api/account/insert                → POST /api/account
-PUT /api/account/update/{accountNameOwner} → PUT /api/account/{accountNameOwner}
-DELETE /api/account/delete/{accountNameOwner} → DELETE /api/account/{accountNameOwner}
-```
+#### Frontend Migration Status
+**Frontend Repository**: nextjs-website
+**Migration Completed**: 2025-10-15 (documented in `ACCOUNT_MIGRATION_COMPLETE.md`)
 
-#### Backend Endpoints to Delete After Frontend Migration
+All frontend hooks migrated to modern endpoints:
+- ✅ `useAccountFetch.ts` → Uses `GET /api/account/active`
+- ✅ `useAccountInsert.ts` → Uses `POST /api/account`
+- ✅ `useAccountUpdate.ts` → Uses `PUT /api/account/{accountNameOwner}`
+- ✅ `useAccountDelete.ts` → Uses `DELETE /api/account/{accountNameOwner}`
+
+#### Backend Endpoints Deleted
 ```kotlin
-// ❌ DELETE after frontend migration
+// ✅ DELETED - Frontend already using modern endpoints
 @GetMapping("/select/active")
 fun accounts(): ResponseEntity<List<Account>>
 
-// ❌ DELETE after frontend migration
+// ✅ DELETED - Frontend already using modern endpoints
 @GetMapping("/select/{accountNameOwner}")
 fun account(@PathVariable accountNameOwner: String): ResponseEntity<Account>
 
-// ❌ DELETE after frontend migration
+// ✅ DELETED - Frontend already using modern endpoints
 @PostMapping("/insert")
 fun insertAccount(@Valid @RequestBody account: Account): ResponseEntity<Account>
 
-// ❌ DELETE after frontend migration
+// ✅ DELETED - Frontend already using modern endpoints
 @PutMapping("/update/{accountNameOwner}")
 fun updateAccount(@PathVariable accountNameOwner: String, @Valid @RequestBody account: Account): ResponseEntity<Account>
 
-// ❌ DELETE after frontend migration
+// ✅ DELETED - Frontend already using modern endpoints
 @DeleteMapping("/delete/{accountNameOwner}")
 fun deleteAccount(@PathVariable accountNameOwner: String): ResponseEntity<Account>
 ```
 
-**Migration Steps**:
-1. Update frontend to use modern Account endpoints
-2. Test frontend functionality thoroughly
-3. Deploy frontend changes
-4. Monitor for errors (1 week)
-5. Delete backend legacy endpoints
-6. Run functional tests
+**Migration Steps Completed**:
+1. ✅ Verified frontend already uses modern Account endpoints
+2. ✅ Deleted 5 legacy backend endpoints from AccountController
+3. ✅ Removed 5 test methods that compared legacy vs modern endpoints
+4. ✅ Ran functional tests - all passing (BUILD SUCCESSFUL)
 
-**Estimated Time**: 4-6 hours (frontend + testing)
-**Risk**: Medium - Core functionality, high usage
+**Actual Time**: 1 hour
+**Risk**: None - Frontend already migrated
 
 ---
 
@@ -412,14 +407,21 @@ fun insert(@Valid @RequestBody familyMember: FamilyMember): ResponseEntity<*>
 
 ### Phase 2 Summary
 
-**Total Endpoints Requiring Frontend Migration**: 12 endpoints (reduced from 15 - PendingTransaction completed in Phase 1)
-**Total Frontend Files to Update**: ~15-20 files
-**Total Time Estimate**: 11-17 hours (includes testing and monitoring)
+**Total Endpoints Requiring Frontend Migration**: 7 endpoints (reduced from 12 - Account completed)
+**Completed Endpoints**: 5 (Account - frontend already migrated)
+**Total Frontend Files to Update**: ~10-15 files (Transaction, ValidationAmount, FamilyMember)
+**Total Time Estimate**: 7-11 hours (reduced from 11-17 hours)
 **Success Criteria**:
 - All frontend functionality works with modern endpoints
 - Zero console errors related to API calls
 - All functional tests pass
 - 1 week of production monitoring shows no issues
+
+**Progress**:
+- ✅ AccountController (5 endpoints) - Completed 2025-10-16
+- 🔄 TransactionController (4 endpoints) - Pending
+- 🔄 ValidationAmountController (1 endpoint) - Pending
+- 🔄 FamilyMemberController (1 endpoint) - Pending
 
 ---
 
