@@ -84,7 +84,7 @@ class SecurityAuditFunctionalSpec extends BaseControllerFunctionalSpec {
         def entity = new org.springframework.http.HttpEntity<>(null, headers)
 
         return restTemplate.exchange(
-                createURLWithPort("/api/${endpointName}/select/active"),
+                createURLWithPort("/api/${endpointName}/active"),
                 HttpMethod.GET,
                 entity,
                 String
