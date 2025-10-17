@@ -21,7 +21,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/parameter")
 class ParameterController(
     private val standardizedParameterService: StandardizedParameterService,
-) : StandardizedBaseController() {
+) : StandardizedBaseController(),
+    StandardRestController<Parameter, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -30,7 +31,7 @@ class ParameterController(
      * Uses ServiceResult pattern for enhanced error handling
      */
     @GetMapping("/active", produces = ["application/json"])
-    fun findAllActive(): ResponseEntity<*> =
+    override fun findAllActive(): ResponseEntity<List<Parameter>> =
         when (val result = standardizedParameterService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active parameters")
@@ -42,15 +43,11 @@ class ParameterController(
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameters: ${result.exception.message}", result.exception)
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -59,9 +56,9 @@ class ParameterController(
      * Uses camelCase parameter and ServiceResult pattern for enhanced error handling
      */
     @GetMapping("/{parameterName}", produces = ["application/json"])
-    fun findById(
+    override fun findById(
         @PathVariable parameterName: String,
-    ): ResponseEntity<*> =
+    ): ResponseEntity<Parameter> =
         when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved parameter: $parameterName")
@@ -69,21 +66,15 @@ class ParameterController(
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found: $parameterName")
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(mapOf("error" to result.message))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameter $parameterName: ${result.exception.message}", result.exception)
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -92,9 +83,9 @@ class ParameterController(
      * Returns 201 CREATED with ServiceResult pattern for enhanced error handling
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    fun save(
+    override fun save(
         @Valid @RequestBody parameter: Parameter,
-    ): ResponseEntity<*> =
+    ): ResponseEntity<Parameter> =
         when (val result = standardizedParameterService.save(parameter)) {
             is ServiceResult.Success -> {
                 logger.info("Parameter created successfully: ${parameter.parameterName}")
@@ -102,27 +93,19 @@ class ParameterController(
             }
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating parameter: ${result.errors}")
-                ResponseEntity
-                    .badRequest()
-                    .body(mapOf("errors" to result.errors))
+                ResponseEntity.badRequest().build()
             }
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating parameter: ${result.message}")
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(mapOf("error" to result.message))
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error creating parameter: ${result.exception.message}", result.exception)
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -131,10 +114,10 @@ class ParameterController(
      * Uses camelCase parameter and ServiceResult pattern for enhanced error handling
      */
     @PutMapping("/{parameterName}", consumes = ["application/json"], produces = ["application/json"])
-    fun update(
+    override fun update(
         @PathVariable parameterName: String,
         @Valid @RequestBody parameter: Parameter,
-    ): ResponseEntity<*> {
+    ): ResponseEntity<Parameter> {
         // First check if parameter exists
         return when (val existsResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
@@ -155,47 +138,33 @@ class ParameterController(
                     }
                     is ServiceResult.ValidationError -> {
                         logger.warn("Validation error updating parameter: ${updateResult.errors}")
-                        ResponseEntity
-                            .badRequest()
-                            .body(mapOf("errors" to updateResult.errors))
+                        ResponseEntity.badRequest().build()
                     }
                     is ServiceResult.BusinessError -> {
                         logger.warn("Business error updating parameter: ${updateResult.message}")
-                        ResponseEntity
-                            .status(HttpStatus.CONFLICT)
-                            .body(mapOf("error" to updateResult.message))
+                        ResponseEntity.status(HttpStatus.CONFLICT).build()
                     }
                     is ServiceResult.SystemError -> {
                         logger.error("System error updating parameter: ${updateResult.exception.message}", updateResult.exception)
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(mapOf("error" to "Internal server error"))
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                     else -> {
                         logger.error("Unexpected result type: $updateResult")
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(mapOf("error" to "Internal server error"))
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found for update: $parameterName")
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(mapOf("error" to existsResult.message))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error checking parameter existence: ${existsResult.exception.message}", existsResult.exception)
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $existsResult")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
     }
@@ -205,9 +174,9 @@ class ParameterController(
      * Returns 200 OK with deleted entity using ServiceResult pattern
      */
     @DeleteMapping("/{parameterName}", produces = ["application/json"])
-    fun deleteById(
+    override fun deleteById(
         @PathVariable parameterName: String,
-    ): ResponseEntity<*> {
+    ): ResponseEntity<Parameter> {
         // First get the parameter to return it after deletion
         return when (val findResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
             is ServiceResult.Success -> {
@@ -220,35 +189,25 @@ class ParameterController(
                     }
                     is ServiceResult.SystemError -> {
                         logger.error("System error deleting parameter: ${deleteResult.exception.message}", deleteResult.exception)
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(mapOf("error" to "Internal server error"))
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                     else -> {
                         logger.error("Unexpected result type: $deleteResult")
-                        ResponseEntity
-                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(mapOf("error" to "Internal server error"))
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found for deletion: $parameterName")
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(mapOf("error" to findResult.message))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error finding parameter for deletion: ${findResult.exception.message}", findResult.exception)
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $findResult")
-                ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
     }

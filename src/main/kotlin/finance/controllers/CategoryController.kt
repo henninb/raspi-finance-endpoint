@@ -84,9 +84,9 @@ class CategoryController(
      * Returns 201 CREATED
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    fun save(
+    override fun save(
         @Valid @RequestBody category: Category,
-    ): ResponseEntity<*> =
+    ): ResponseEntity<Category> =
         when (val result = standardizedCategoryService.save(category)) {
             is ServiceResult.Success -> {
                 logger.info("Category created successfully: ${category.categoryName}")
@@ -94,26 +94,19 @@ class CategoryController(
             }
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating category: ${result.errors}")
-                ResponseEntity.badRequest().body(mapOf("errors" to result.errors))
+                ResponseEntity.badRequest().build()
             }
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating category: ${result.message}")
-                // Provide user-friendly message for duplicate key violations
-                val userMessage =
-                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                        "Duplicate category found"
-                    } else {
-                        result.message
-                    }
-                ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to userMessage))
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error creating category: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -122,10 +115,10 @@ class CategoryController(
      * Uses camelCase parameter without @PathVariable annotation
      */
     @PutMapping("/{categoryName}", consumes = ["application/json"], produces = ["application/json"])
-    fun update(
+    override fun update(
         @PathVariable categoryName: String,
         @Valid @RequestBody category: Category,
-    ): ResponseEntity<*> {
+    ): ResponseEntity<Category> {
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = standardizedCategoryService.update(category)) {
             is ServiceResult.Success -> {
@@ -134,30 +127,23 @@ class CategoryController(
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Category not found for update: $categoryName")
-                ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Category not found for update: $categoryName"))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating category: ${result.errors}")
-                ResponseEntity.badRequest().body(mapOf("errors" to result.errors))
+                ResponseEntity.badRequest().build()
             }
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating category: ${result.message}")
-                // Provide user-friendly message for duplicate key violations
-                val userMessage =
-                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                        "Duplicate category found"
-                    } else {
-                        result.message
-                    }
-                ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to userMessage))
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error updating category: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
     }
@@ -167,9 +153,9 @@ class CategoryController(
      * Returns 200 OK with deleted entity
      */
     @DeleteMapping("/{categoryName}", produces = ["application/json"])
-    fun deleteById(
+    override fun deleteById(
         @PathVariable categoryName: String,
-    ): ResponseEntity<*> {
+    ): ResponseEntity<Category> {
         // First get the category to return it after deletion
         return when (val findResult = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
@@ -180,29 +166,29 @@ class CategoryController(
                     }
                     is ServiceResult.NotFound -> {
                         logger.warn("Category not found for deletion: $categoryName")
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Category not found for deletion: $categoryName"))
+                        ResponseEntity.notFound().build()
                     }
                     is ServiceResult.SystemError -> {
                         logger.error("System error deleting category: ${deleteResult.exception.message}", deleteResult.exception)
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                     else -> {
                         logger.error("Unexpected delete result type: $deleteResult")
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Category not found for deletion: $categoryName")
-                ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Category not found for deletion: $categoryName"))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error finding category for deletion: ${findResult.exception.message}", findResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected find result type: $findResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
     }
