@@ -260,97 +260,6 @@ class TransactionController(
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to calculate account totals: ${ex.message}", ex)
         }
 
-    /**
-     * Legacy CRUD endpoint - GET /api/transaction/select/{guid}
-     * Original method name preserved for backward compatibility
-     */
-    @GetMapping("/select/{guid}", produces = ["application/json"])
-    fun findTransaction(
-        @PathVariable("guid") guid: String,
-    ): ResponseEntity<Transaction> {
-        logger.debug("findTransaction() - Searching for transaction with guid = $guid (legacy endpoint)")
-
-        return when (val result = standardizedTransactionService.findById(guid)) {
-            is ServiceResult.Success -> {
-                logger.debug("Transaction found, guid = $guid")
-                ResponseEntity.ok(result.data)
-            }
-            is ServiceResult.NotFound -> {
-                logger.error("Transaction not found, guid = $guid")
-                meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found, guid: $guid")
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transaction $guid: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transaction: ${result.exception.message}", result.exception)
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
-            }
-        }
-    }
-
-    /**
-     * Legacy CRUD endpoint - PUT /api/transaction/update/{guid}
-     * Original method name preserved for backward compatibility
-     */
-    @PutMapping("/update/{guid}", consumes = ["application/json"], produces = ["application/json"])
-    fun updateTransaction(
-        @PathVariable("guid") guid: String,
-        @RequestBody toBePatchedTransaction: Transaction,
-    ): ResponseEntity<Transaction> {
-        logger.info("Updating transaction: $guid (legacy endpoint)")
-
-        // First validate transaction exists and get existing data
-        val existingTransaction =
-            when (val findResult = standardizedTransactionService.findById(guid)) {
-                is ServiceResult.Success -> findResult.data
-                is ServiceResult.NotFound -> {
-                    logger.warn("Transaction not found for update: $guid")
-                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
-                }
-                is ServiceResult.SystemError -> {
-                    logger.error("System error retrieving transaction for update $guid: ${findResult.exception.message}", findResult.exception)
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transaction: ${findResult.exception.message}", findResult.exception)
-                }
-                else -> {
-                    logger.error("Unexpected result type: $findResult")
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
-                }
-            }
-
-        // Preserve existing transaction ID and ensure guid matches path parameter
-        val updatedTransaction =
-            toBePatchedTransaction.copy(
-                transactionId = existingTransaction.transactionId,
-                guid = guid,
-            )
-
-        return when (val result = standardizedTransactionService.update(updatedTransaction)) {
-            is ServiceResult.Success -> {
-                logger.info("Transaction updated successfully: $guid")
-                ResponseEntity.ok(result.data)
-            }
-            is ServiceResult.NotFound -> {
-                logger.warn("Transaction not found for update: $guid")
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
-            }
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error updating transaction $guid: ${result.errors}")
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
-            }
-            is ServiceResult.BusinessError -> {
-                logger.error("Business error updating transaction $guid: ${result.message}")
-                throw ResponseStatusException(HttpStatus.CONFLICT, result.message)
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("Failed to update transaction $guid: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction: ${result.exception.message}", result.exception)
-            }
-        }
-    }
-
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/transaction/state/update/340c315d-39ad-4a02-a294-84a74c1c7ddc/cleared
     @PutMapping(
         "/state/update/{guid}/{transactionStateValue}",
@@ -379,46 +288,13 @@ class TransactionController(
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state: ${ex.message}", ex)
         }
 
-    /**
-     * Legacy CRUD endpoint - POST /api/transaction/insert
-     * Original method name preserved for backward compatibility
-     */
-    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insertTransaction(
-        @RequestBody transaction: Transaction,
-    ): ResponseEntity<Transaction> {
-        logger.info("Attempting to insert transaction: ${mapper.writeValueAsString(transaction)} (legacy endpoint)")
-
-        return when (val result = standardizedTransactionService.save(transaction)) {
-            is ServiceResult.Success -> {
-                logger.info("Transaction inserted successfully: ${mapper.writeValueAsString(result.data)}")
-                ResponseEntity(result.data, HttpStatus.CREATED)
-            }
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error inserting transaction: ${result.errors}")
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
-            }
-            is ServiceResult.BusinessError -> {
-                logger.error("Failed to insert transaction due to data integrity violation: ${result.message}")
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate transaction found.")
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("Unexpected error occurred while inserting transaction: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${result.exception.message}", result.exception)
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
-            }
-        }
-    }
-
-    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "description":"future transaction", "category":"misc", "amount": 15.00, "reoccurringType":"monthly"}' https://localhost:8443/transaction/future/insert
-    @PostMapping("/future/insert", consumes = ["application/json"], produces = ["application/json"])
+    // Modern business logic endpoint - POST /api/transaction/future
+    // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "description":"future transaction", "category":"misc", "amount": 15.00, "reoccurringType":"monthly"}' https://localhost:8443/transaction/future
+    @PostMapping("/future", consumes = ["application/json"], produces = ["application/json"])
     fun insertFutureTransaction(
         @RequestBody transaction: Transaction,
     ): ResponseEntity<Transaction> {
-        logger.info("Inserting future transaction for account: ${transaction.accountNameOwner} (legacy endpoint)")
+        logger.info("Inserting future transaction for account: ${transaction.accountNameOwner}")
         val futureTransaction = standardizedTransactionService.createFutureTransaction(transaction)
         logger.debug("Created future transaction with date: ${futureTransaction.transactionDate}")
 
@@ -485,54 +361,6 @@ class TransactionController(
             logger.error("Failed to update receipt image for transaction $guid: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${ex.message}", ex)
         }
-
-    /**
-     * Legacy CRUD endpoint - DELETE /api/transaction/delete/{guid}
-     * Original method name preserved for backward compatibility
-     */
-    @DeleteMapping("/delete/{guid}", produces = ["application/json"])
-    fun deleteTransaction(
-        @PathVariable("guid") guid: String,
-    ): ResponseEntity<Transaction> {
-        logger.debug("deleteTransaction() - Deleting transaction with guid = $guid (legacy endpoint)")
-
-        // First get the transaction to return it
-        val transaction =
-            when (val findResult = standardizedTransactionService.findById(guid)) {
-                is ServiceResult.Success -> findResult.data
-                is ServiceResult.NotFound -> {
-                    logger.error("Transaction not found for deletion, guid = $guid")
-                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
-                }
-                is ServiceResult.SystemError -> {
-                    logger.error("System error retrieving transaction for deletion $guid: ${findResult.exception.message}", findResult.exception)
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transaction: ${findResult.exception.message}", findResult.exception)
-                }
-                else -> {
-                    logger.error("Unexpected result type: $findResult")
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
-                }
-            }
-
-        return when (val result = standardizedTransactionService.deleteById(guid)) {
-            is ServiceResult.Success -> {
-                logger.info("Transaction deleted: ${transaction.guid}")
-                ResponseEntity.ok(transaction)
-            }
-            is ServiceResult.NotFound -> {
-                logger.error("Transaction not found for deletion, guid = $guid")
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found: $guid")
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("Transaction not deleted, guid = $guid: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete transaction: ${result.exception.message}", result.exception)
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
-            }
-        }
-    }
 
 //    //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
 //    @GetMapping("/payment/required", produces = ["application/json"])
