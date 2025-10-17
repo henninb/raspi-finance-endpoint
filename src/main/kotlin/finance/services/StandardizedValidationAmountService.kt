@@ -29,6 +29,39 @@ class StandardizedValidationAmountService(
             validationAmountRepository.findByActiveStatusTrueOrderByValidationDateDesc()
         }
 
+    /**
+     * Find active validation amounts with optional filtering
+     * @param accountNameOwner Optional account name filter
+     * @param transactionState Optional transaction state filter
+     * @return ServiceResult containing filtered list of validation amounts
+     */
+    fun findAllActiveFiltered(
+        accountNameOwner: String? = null,
+        transactionState: TransactionState? = null,
+    ): ServiceResult<List<ValidationAmount>> =
+        handleServiceOperation("findAllActiveFiltered", null) {
+            val allActive = validationAmountRepository.findByActiveStatusTrueOrderByValidationDateDesc()
+
+            // Apply filters if provided
+            var filtered = allActive
+
+            if (accountNameOwner != null) {
+                val account = accountRepository.findByAccountNameOwner(accountNameOwner)
+                if (account.isPresent) {
+                    filtered = filtered.filter { it.accountId == account.get().accountId }
+                } else {
+                    // Account not found - return empty list
+                    return@handleServiceOperation emptyList()
+                }
+            }
+
+            if (transactionState != null) {
+                filtered = filtered.filter { it.transactionState == transactionState }
+            }
+
+            filtered
+        }
+
     override fun findById(id: Long): ServiceResult<ValidationAmount> =
         handleServiceOperation("findById", id) {
             val optionalValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(id)

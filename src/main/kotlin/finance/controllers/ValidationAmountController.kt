@@ -29,14 +29,54 @@ class ValidationAmountController(
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
-     * Standardized collection retrieval - GET /api/validation/amount/active
+     * Interface implementation - GET /api/validation/amount/active (no parameters)
+     * Delegates to parameterized version
+     */
+    override fun findAllActive(): ResponseEntity<List<ValidationAmount>> = findAllActiveWithFilters(null, null)
+
+    /**
+     * Standardized collection retrieval with filtering - GET /api/validation/amount/active
      * Returns empty list instead of throwing 404 (standardized behavior)
+     * Supports optional query parameters for filtering:
+     * - accountNameOwner: Filter by account name
+     * - transactionState: Filter by transaction state (cleared, outstanding, future)
      */
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<ValidationAmount>> =
-        when (val result = standardizedValidationAmountService.findAllActive()) {
+    fun findAllActiveWithFilters(
+        @org.springframework.web.bind.annotation.RequestParam(required = false) accountNameOwner: String?,
+        @org.springframework.web.bind.annotation.RequestParam(required = false) transactionState: String?,
+    ): ResponseEntity<List<ValidationAmount>> {
+        // Convert transactionState string to enum if provided
+        val state =
+            transactionState?.let {
+                try {
+                    TransactionState.valueOf(
+                        it
+                            .lowercase()
+                            .replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() },
+                    )
+                } catch (ex: IllegalArgumentException) {
+                    logger.warn("Invalid transaction state provided: $it")
+                    null
+                }
+            }
+
+        // Use filtered method if any parameters provided, otherwise use standard method
+        val result =
+            if (accountNameOwner != null || state != null) {
+                standardizedValidationAmountService.findAllActiveFiltered(accountNameOwner, state)
+            } else {
+                standardizedValidationAmountService.findAllActive()
+            }
+
+        return when (result) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved ${result.data.size} active validation amounts")
+                val filterMsg =
+                    buildString {
+                        if (accountNameOwner != null) append(" for account=$accountNameOwner")
+                        if (state != null) append(" with state=$state")
+                    }
+                logger.info("Retrieved ${result.data.size} active validation amounts$filterMsg")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
@@ -52,6 +92,7 @@ class ValidationAmountController(
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
+    }
 
     /**
      * Standardized single entity retrieval - GET /api/validation/amount/{validationId}
