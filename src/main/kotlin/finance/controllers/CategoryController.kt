@@ -23,7 +23,8 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/category")
 class CategoryController(
     private val standardizedCategoryService: StandardizedCategoryService,
-) : StandardizedBaseController() {
+) : StandardizedBaseController(),
+    StandardRestController<Category, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
 
     /**
@@ -31,7 +32,7 @@ class CategoryController(
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
     @GetMapping("/active", produces = ["application/json"])
-    fun findAllActive(): ResponseEntity<*> =
+    override fun findAllActive(): ResponseEntity<List<Category>> =
         when (val result = standardizedCategoryService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active categories")
@@ -39,15 +40,15 @@ class CategoryController(
             }
             is ServiceResult.NotFound -> {
                 logger.warn("No categories found")
-                ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "No categories found"))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving categories: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -56,9 +57,9 @@ class CategoryController(
      * Uses camelCase parameter without @PathVariable annotation
      */
     @GetMapping("/{categoryName}", produces = ["application/json"])
-    fun findById(
+    override fun findById(
         @PathVariable categoryName: String,
-    ): ResponseEntity<*> =
+    ): ResponseEntity<Category> =
         when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved category: $categoryName")
@@ -66,15 +67,15 @@ class CategoryController(
             }
             is ServiceResult.NotFound -> {
                 logger.warn("Category not found: $categoryName")
-                ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Category not found: $categoryName"))
+                ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving category $categoryName: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
