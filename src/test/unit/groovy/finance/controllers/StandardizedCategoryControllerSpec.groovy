@@ -61,7 +61,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        (response.body as Map).get("error") == "No categories found"
+        // After standardization: empty body with status code only
+        response.body == null
     }
 
     def "findAllActive returns 500 on system error"() {
@@ -101,7 +102,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        (response.body as Map).containsKey("error")
+        // After standardization: empty body with status code only
+        response.body == null
     }
 
     def "findById returns 500 on system error"() {
@@ -144,7 +146,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
-        (response.body as Map).containsKey("errors")
+        // After standardization: empty body with status code only
+        response.body == null
     }
 
     def "save returns 409 on duplicate"() {
@@ -158,7 +161,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.CONFLICT
-        (response.body as Map).get("error") == "Duplicate category found"
+        // After standardization: empty body with status code only
+        response.body == null
     }
 
     def "save returns 500 on system error"() {
@@ -202,7 +206,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        (response.body as Map).containsKey("error")
+        // After standardization: empty body with status code only
+        response.body == null
     }
 
     def "update returns 500 on system error"() {
@@ -244,7 +249,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        (response.body as Map).containsKey("error")
+        // After standardization: empty body with status code only
+        response.body == null
     }
 
     def "deleteById returns 500 on system error during find"() {
@@ -289,7 +295,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map)["error"] == "Internal server error"
+        // After standardization: empty body with status code only (else clause handles null)
+        response.body == null
     }
 
     // Note: Testing "unexpected result types" is complex with Spock's type system
@@ -308,13 +315,14 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map)["error"] == "Internal server error"
+        // After standardization: empty body with status code only (else clause handles null)
+        response.body == null
     }
 
     def "findById handles null service response gracefully"() {
         given:
         StandardizedCategoryService mockService = Mock()
-        mockService.findByIdStandardized(_ as String) >> null
+        mockService.findByCategoryNameStandardized(_ as String) >> null
         CategoryController controllerWithMockedService = new CategoryController(mockService)
 
         when:
@@ -322,13 +330,14 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map)["error"] == "Internal server error"
+        // After standardization: empty body with status code only (else clause handles null)
+        response.body == null
     }
 
     def "findAllActive handles null service response gracefully"() {
         given:
         StandardizedCategoryService mockService = Mock()
-        mockService.findAllActiveStandardized() >> null
+        mockService.findAllActive() >> null
         CategoryController controllerWithMockedService = new CategoryController(mockService)
 
         when:
@@ -336,6 +345,7 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map)["error"] == "Internal server error"
+        // After standardization: empty body with status code only (else clause handles null)
+        response.body == null
     }
 }
