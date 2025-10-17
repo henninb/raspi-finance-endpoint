@@ -60,8 +60,19 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         Transaction transaction = transactionTestContext.createUniqueTransaction("findable")
         insertEndpoint(endpointName, transaction.toString())
 
+        and:
+        String token = generateJwtToken(username)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers)
+
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, transaction.guid)
+        // Use modern endpoint: GET /api/transaction/{guid}
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${transaction.guid}"),
+                HttpMethod.GET,
+                requestEntity,
+                String
+        )
 
         then:
         response.statusCode == HttpStatus.OK
@@ -70,8 +81,19 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     }
 
     void 'should return not found for non-existent transaction guid'() {
+        given:
+        String token = generateJwtToken(username)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers)
+
         when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, UUID.randomUUID().toString())
+        // Use modern endpoint: GET /api/transaction/{guid}
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${UUID.randomUUID().toString()}"),
+                HttpMethod.GET,
+                requestEntity,
+                String
+        )
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
@@ -83,8 +105,19 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         Transaction transaction = transactionTestContext.createUniqueTransaction("todelete")
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, transaction.toString())
 
+        and:
+        String token = generateJwtToken(username)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers)
+
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, transaction.guid)
+        // Use modern endpoint: DELETE /api/transaction/{guid}
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${transaction.guid}"),
+                HttpMethod.DELETE,
+                requestEntity,
+                String
+        )
 
         then:
         insertResponse.statusCode == HttpStatus.CREATED
@@ -305,8 +338,19 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     }
 
     void 'should return not found when deleting non-existent transaction'() {
+        given:
+        String token = generateJwtToken(username)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers)
+
         when:
-        ResponseEntity<String> response = deleteEndpoint(endpointName, UUID.randomUUID().toString())
+        // Use modern endpoint: DELETE /api/transaction/{guid}
+        ResponseEntity<String> response = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${UUID.randomUUID().toString()}"),
+                HttpMethod.DELETE,
+                requestEntity,
+                String
+        )
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
@@ -316,6 +360,7 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'should complete full transaction lifecycle - insert, find, delete'() {
         given:
         Transaction transaction = transactionTestContext.createUniqueTransaction("lifecycle")
+        String token = generateJwtToken(username)
 
         when: 'insert transaction'
         ResponseEntity<String> insertResponse = insertEndpoint(endpointName, transaction.toString())
@@ -326,7 +371,15 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         0 * _
 
         when: 'find transaction'
-        ResponseEntity<String> findResponse = selectEndpoint(endpointName, transaction.guid)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> findEntity = new HttpEntity<>(headers)
+        // Use modern endpoint: GET /api/transaction/{guid}
+        ResponseEntity<String> findResponse = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${transaction.guid}"),
+                HttpMethod.GET,
+                findEntity,
+                String
+        )
 
         then: 'find succeeds'
         findResponse.statusCode == HttpStatus.OK
@@ -341,14 +394,30 @@ class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         0 * _
 
         when: 'delete transaction'
-        ResponseEntity<String> deleteResponse = deleteEndpoint(endpointName, transaction.guid)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> deleteEntity = new HttpEntity<>(headers)
+        // Use modern endpoint: DELETE /api/transaction/{guid}
+        ResponseEntity<String> deleteResponse = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${transaction.guid}"),
+                HttpMethod.DELETE,
+                deleteEntity,
+                String
+        )
 
         then: 'delete succeeds'
         deleteResponse.statusCode == HttpStatus.OK
         0 * _
 
         when: 'find after delete'
-        ResponseEntity<String> findAfterDeleteResponse = selectEndpoint(endpointName, transaction.guid)
+        headers.add("Cookie", "token=${token}")
+        HttpEntity<Void> findAfterDeleteEntity = new HttpEntity<>(headers)
+        // Use modern endpoint: GET /api/transaction/{guid}
+        ResponseEntity<String> findAfterDeleteResponse = restTemplate.exchange(
+                createURLWithPort("/api/${endpointName}/${transaction.guid}"),
+                HttpMethod.GET,
+                findAfterDeleteEntity,
+                String
+        )
 
         then: 'transaction not found after delete'
         findAfterDeleteResponse.statusCode == HttpStatus.NOT_FOUND
