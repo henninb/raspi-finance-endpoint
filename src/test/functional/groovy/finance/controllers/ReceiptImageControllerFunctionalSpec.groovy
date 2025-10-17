@@ -25,41 +25,37 @@ class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         receiptImageTestContext?.cleanup()
     }
 
-    void 'should reject receipt image insertion with invalid base64 image'() {
-        given:
-        String payload = '{"transactionId":1, "image":"test", "activeStatus":true}'
+    // ===== MODERN ENDPOINT TESTS =====
 
+    void 'modern endpoint: GET /active should return empty list when no receipt images exist'() {
         when:
-        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
-        headers.set("Cookie", "token=${token}")
-        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(payload, headers)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/receipt/image/insert",
-            org.springframework.http.HttpMethod.POST,
+            "http://localhost:${port}/api/receipt/image/active",
+            org.springframework.http.HttpMethod.GET,
             entity,
             String
         )
 
         then:
-        response.statusCode == HttpStatus.BAD_REQUEST
+        response.statusCode == HttpStatus.OK
+        response.body == "[]" || response.body.contains('"receiptImageId"')
         0 * _
     }
 
-
-    void 'should successfully insert jpeg receipt image'() {
+    void 'modern endpoint: POST / should create receipt image and return 201 CREATED'() {
         given:
-        // Create transaction via HTTP endpoint first (like ValidationAmount does with accounts)
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
-                .withUniqueDescription("jpeg_receipt")
+                .withUniqueDescription("modern_create_receipt")
                 .buildAndValidate()
 
         ResponseEntity<String> transactionResponse = insertEndpoint('transaction', transaction.toString())
         assert transactionResponse.statusCode in [HttpStatus.OK, HttpStatus.CREATED]
 
-        // Extract transaction ID from response
         String transactionBody = transactionResponse.body
         String transactionIdStr = (transactionBody =~ /"transactionId":(\d+)/)[0][1]
         Long transactionId = Long.parseLong(transactionIdStr)
@@ -67,110 +63,198 @@ class ReceiptImageControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         ReceiptImage receiptImage = receiptImageTestContext.createJpegReceiptImage(transactionId)
 
         when:
-        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
-        headers.set("Cookie", "token=${token}")
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
         org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
 
         ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/receipt/image/insert",
+            "http://localhost:${port}/api/receipt/image",
             org.springframework.http.HttpMethod.POST,
             entity,
             String
         )
 
         then:
-        response.statusCode == HttpStatus.OK
-        response.body.contains('"id":')
-        response.body.contains('"message":"Receipt image inserted"')
-        0 * _
-    }
-
-    void 'should successfully insert png receipt image'() {
-        given:
-        // Create transaction via HTTP endpoint first
-        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
-                .withUniqueDescription("png_receipt")
-                .buildAndValidate()
-
-        ResponseEntity<String> transactionResponse = insertEndpoint('transaction', transaction.toString())
-        assert transactionResponse.statusCode in [HttpStatus.OK, HttpStatus.CREATED]
-
-        // Extract transaction ID from response
-        String transactionBody = transactionResponse.body
-        String transactionIdStr = (transactionBody =~ /"transactionId":(\d+)/)[0][1]
-        Long transactionId = Long.parseLong(transactionIdStr)
-
-        ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
-
-        when:
-        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
-        String token = generateJwtToken(username)
-        headers.set("Cookie", "token=${token}")
-        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
-
-        ResponseEntity<String> response = restTemplate.exchange(
-            "http://localhost:${port}/api/receipt/image/insert",
-            org.springframework.http.HttpMethod.POST,
-            entity,
-            String
-        )
-
-        then:
-        response.statusCode == HttpStatus.OK
-        response.body.contains('"id":')
-        response.body.contains('"message":"Receipt image inserted"')
-        0 * _
-    }
-
-    void 'should retrieve receipt image by id when it exists'() {
-        given:
-        // Create transaction via HTTP endpoint first
-        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
-                .withUniqueDescription("retrieve_receipt")
-                .buildAndValidate()
-
-        ResponseEntity<String> transactionResponse = insertEndpoint('transaction', transaction.toString())
-        assert transactionResponse.statusCode in [HttpStatus.OK, HttpStatus.CREATED]
-
-        // Extract transaction ID from response
-        String transactionBody = transactionResponse.body
-        String transactionIdStr = (transactionBody =~ /"transactionId":(\d+)/)[0][1]
-        Long transactionId = Long.parseLong(transactionIdStr)
-
-        ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
-
-        // First insert the receipt image to get its ID
-        // ReceiptImage uses legacy /insert endpoint - call directly instead of using helper
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
-        String token = generateJwtToken(username)
-        headers.set("Cookie", "token=${token}")
-        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
-
-        ResponseEntity<String> insertResponse = restTemplate.exchange(
-            "http://localhost:${port}/api/receipt/image/insert",
-            org.springframework.http.HttpMethod.POST,
-            entity,
-            String
-        )
-
-        // Try both "id":"1" and "id":1 formats since we're not sure which format is returned
-        String receiptImageId
-        try {
-            receiptImageId = (insertResponse.body =~ /"id":"(\d+)"/)[0][1]
-        } catch (IndexOutOfBoundsException e) {
-            receiptImageId = (insertResponse.body =~ /"id":(\d+)/)[0][1]
-        }
-
-        when:
-        ResponseEntity<String> response = selectEndpoint(endpointName, receiptImageId)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        response.body.contains('"receiptImage":')
+        response.statusCode == HttpStatus.CREATED
+        response.body.contains('"receiptImageId":')
         response.body.contains('"transactionId":' + transactionId)
         0 * _
     }
+
+    void 'modern endpoint: GET /{id} should retrieve receipt image by id'() {
+        given:
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueDescription("modern_get_receipt")
+                .buildAndValidate()
+
+        ResponseEntity<String> transactionResponse = insertEndpoint('transaction', transaction.toString())
+        assert transactionResponse.statusCode in [HttpStatus.OK, HttpStatus.CREATED]
+
+        String transactionBody = transactionResponse.body
+        String transactionIdStr = (transactionBody =~ /"transactionId":(\d+)/)[0][1]
+        Long transactionId = Long.parseLong(transactionIdStr)
+
+        ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
+
+        // Create receipt image using modern endpoint
+        String token = generateJwtToken(username)
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity createEntity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> createResponse = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image",
+            org.springframework.http.HttpMethod.POST,
+            createEntity,
+            String
+        )
+
+        String receiptImageId = (createResponse.body =~ /"receiptImageId":(\d+)/)[0][1]
+
+        when:
+        headers = new org.springframework.http.HttpHeaders()
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity getEntity = new org.springframework.http.HttpEntity<>(headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/${receiptImageId}",
+            org.springframework.http.HttpMethod.GET,
+            getEntity,
+            String
+        )
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body.contains('"receiptImageId":' + receiptImageId)
+        response.body.contains('"transactionId":' + transactionId)
+        0 * _
+    }
+
+    void 'modern endpoint: PUT /{id} should update receipt image'() {
+        given:
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueDescription("modern_update_receipt")
+                .buildAndValidate()
+
+        ResponseEntity<String> transactionResponse = insertEndpoint('transaction', transaction.toString())
+        assert transactionResponse.statusCode in [HttpStatus.OK, HttpStatus.CREATED]
+
+        String transactionBody = transactionResponse.body
+        String transactionIdStr = (transactionBody =~ /"transactionId":(\d+)/)[0][1]
+        Long transactionId = Long.parseLong(transactionIdStr)
+
+        ReceiptImage receiptImage = receiptImageTestContext.createJpegReceiptImage(transactionId)
+
+        // Create receipt image
+        String token = generateJwtToken(username)
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity createEntity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> createResponse = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image",
+            org.springframework.http.HttpMethod.POST,
+            createEntity,
+            String
+        )
+
+        String receiptImageId = (createResponse.body =~ /"receiptImageId":(\d+)/)[0][1]
+        receiptImage.receiptImageId = Long.parseLong(receiptImageId)
+        receiptImage.activeStatus = false
+
+        when:
+        headers = new org.springframework.http.HttpHeaders()
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity updateEntity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/${receiptImageId}",
+            org.springframework.http.HttpMethod.PUT,
+            updateEntity,
+            String
+        )
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body.contains('"receiptImageId":' + receiptImageId)
+        response.body.contains('"activeStatus":false')
+        0 * _
+    }
+
+    void 'modern endpoint: DELETE /{id} should delete receipt image and return 200 OK with entity'() {
+        given:
+        Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withUniqueDescription("modern_delete_receipt")
+                .buildAndValidate()
+
+        ResponseEntity<String> transactionResponse = insertEndpoint('transaction', transaction.toString())
+        assert transactionResponse.statusCode in [HttpStatus.OK, HttpStatus.CREATED]
+
+        String transactionBody = transactionResponse.body
+        String transactionIdStr = (transactionBody =~ /"transactionId":(\d+)/)[0][1]
+        Long transactionId = Long.parseLong(transactionIdStr)
+
+        ReceiptImage receiptImage = receiptImageTestContext.createPngReceiptImage(transactionId)
+
+        // Create receipt image
+        String token = generateJwtToken(username)
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity createEntity = new org.springframework.http.HttpEntity<>(receiptImage.toString(), headers)
+
+        ResponseEntity<String> createResponse = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image",
+            org.springframework.http.HttpMethod.POST,
+            createEntity,
+            String
+        )
+
+        String receiptImageId = (createResponse.body =~ /"receiptImageId":(\d+)/)[0][1]
+
+        when:
+        headers = new org.springframework.http.HttpHeaders()
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity deleteEntity = new org.springframework.http.HttpEntity<>(headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/${receiptImageId}",
+            org.springframework.http.HttpMethod.DELETE,
+            deleteEntity,
+            String
+        )
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body.contains('"receiptImageId":' + receiptImageId)
+        0 * _
+    }
+
+    void 'modern endpoint: GET /{id} should return 404 NOT_FOUND for non-existent id'() {
+        when:
+        String token = generateJwtToken(username)
+        headers.add("Cookie", "token=${token}")
+        headers.add("Authorization", "Bearer ${token}")
+        org.springframework.http.HttpEntity entity = new org.springframework.http.HttpEntity<>(headers)
+
+        ResponseEntity<String> response = restTemplate.exchange(
+            "http://localhost:${port}/api/receipt/image/999999",
+            org.springframework.http.HttpMethod.GET,
+            entity,
+            String
+        )
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        0 * _
+    }
+
 }

@@ -270,16 +270,13 @@ class StandardizedParameterControllerFunctionalSpec extends BaseControllerFuncti
         when: 'attempting to create duplicate parameter'
         ResponseEntity<String> response = postEndpoint(endpointName, parameter.toString())
 
-        then: 'should return 409 CONFLICT with standardized message'
+        then: 'should return 409 CONFLICT'
         response.statusCode == HttpStatus.CONFLICT
-
-        and: 'should contain standardized error message format'
-        response.body.contains("Data integrity violation") || response.body.contains("constraint")
 
         and: 'documents standardized exception handling'
         // After standardization: ServiceResult.BusinessError -> 409 CONFLICT
-        // Enhanced error message with detailed constraint violation information
-        // Consistent ServiceResult error format across all controllers
+        // Status code indicates conflict, response body is empty (typed response pattern)
+        // Consistent with other modernized controllers (Payment, Transfer, Category, etc.)
         true
     }
 

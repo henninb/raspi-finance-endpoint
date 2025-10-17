@@ -102,7 +102,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        (response.body as Map).containsKey("error")
+        response.body == null
     }
 
     def "findById returns 500 on system error"() {
@@ -114,7 +114,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map).containsKey("error")
+        response.body == null
     }
 
     def "save creates parameter and returns 201"() {
@@ -145,7 +145,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
-        (response.body as Map).containsKey("errors")
+        response.body == null
     }
 
     def "save handles conflict with 409 when unique violation"() {
@@ -159,7 +159,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.CONFLICT
-        (response.body as Map).get("error")
+        response.body == null
     }
 
     def "save returns 500 on system error"() {
@@ -173,7 +173,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map).containsKey("error")
+        response.body == null
     }
 
     def "update returns 200 when parameter exists"() {
@@ -217,7 +217,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map).containsKey("error")
+        response.body == null
     }
 
     def "update returns 400 when validation fails"() {
@@ -234,7 +234,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
-        (response.body as Map).containsKey("errors")
+        response.body == null
     }
 
     def "update returns 409 on business conflict"() {
@@ -251,7 +251,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.CONFLICT
-        (response.body as Map).containsKey("error")
+        response.body == null
     }
 
     def "update returns 500 on system error"() {
@@ -268,7 +268,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map).containsKey("error")
+        response.body == null
     }
 
     def "deleteById returns 200 with deleted entity when found"() {
