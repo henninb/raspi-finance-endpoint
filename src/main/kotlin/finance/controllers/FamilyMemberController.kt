@@ -24,7 +24,8 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/family-members")
 open class FamilyMemberController(
     private val standardizedFamilyMemberService: StandardizedFamilyMemberService,
-) : StandardizedBaseController() {
+) : StandardizedBaseController(),
+    StandardRestController<FamilyMember, Long> {
     // ===== STANDARDIZED CRUD ENDPOINTS =====
 
     /**
@@ -32,7 +33,7 @@ open class FamilyMemberController(
      * Returns all active family members
      */
     @GetMapping("/active", produces = ["application/json"])
-    fun findAllActive(): ResponseEntity<List<FamilyMember>> =
+    override fun findAllActive(): ResponseEntity<List<FamilyMember>> =
         when (val result = standardizedFamilyMemberService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active family members")
@@ -53,41 +54,148 @@ open class FamilyMemberController(
         }
 
     /**
+     * GET /api/family-members/{familyMemberId}
+     * Get single family member by ID
+     */
+    @GetMapping("/{familyMemberId}", produces = ["application/json"])
+    override fun findById(
+        @PathVariable("familyMemberId") id: Long,
+    ): ResponseEntity<FamilyMember> =
+        when (val result = standardizedFamilyMemberService.findByIdServiceResult(id)) {
+            is ServiceResult.Success<FamilyMember> -> {
+                logger.info("Retrieved family member: $id")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound<FamilyMember> -> {
+                logger.warn("Family member not found: $id")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError<FamilyMember> -> {
+                logger.error("System error retrieving family member $id: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+
+    /**
      * POST /api/family-members
      * Create new family member
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
-    fun save(
-        @Valid @RequestBody member: FamilyMember,
-    ): ResponseEntity<*> =
-        when (val result = standardizedFamilyMemberService.save(member)) {
+    override fun save(
+        @Valid @RequestBody entity: FamilyMember,
+    ): ResponseEntity<FamilyMember> =
+        when (val result = standardizedFamilyMemberService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Family member created successfully: ${member.memberName} for owner: ${member.owner}")
+                logger.info("Family member created successfully: ${entity.memberName} for owner: ${entity.owner}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating family member: ${result.errors}")
-                ResponseEntity.badRequest().body(mapOf("errors" to result.errors))
+                ResponseEntity.badRequest().build()
             }
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating family member: ${result.message}")
-                val userMessage =
-                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                        "Duplicate family member found"
-                    } else {
-                        result.message
-                    }
-                ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to userMessage))
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
             is ServiceResult.SystemError -> {
                 logger.error("System error creating family member: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
                 logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Any>()
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
+
+    /**
+     * PUT /api/family-members/{familyMemberId}
+     * Update existing family member
+     */
+    @PutMapping("/{familyMemberId}", consumes = ["application/json"], produces = ["application/json"])
+    override fun update(
+        @PathVariable("familyMemberId") id: Long,
+        @Valid @RequestBody entity: FamilyMember,
+    ): ResponseEntity<FamilyMember> {
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
+        return when (val result = standardizedFamilyMemberService.update(entity)) {
+            is ServiceResult.Success -> {
+                logger.info("Family member updated successfully: $id")
+                ResponseEntity.ok(result.data)
+            }
+            is ServiceResult.NotFound -> {
+                logger.warn("Family member not found for update: $id")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error updating family member: ${result.errors}")
+                ResponseEntity.badRequest().build()
+            }
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error updating family member: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+            is ServiceResult.SystemError -> {
+                logger.error("System error updating family member: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
+
+    /**
+     * DELETE /api/family-members/{familyMemberId}
+     * Delete family member (returns deleted entity)
+     * Note: Finds member regardless of active status to support deleting already-deactivated members
+     */
+    @DeleteMapping("/{familyMemberId}", produces = ["application/json"])
+    override fun deleteById(
+        @PathVariable("familyMemberId") id: Long,
+    ): ResponseEntity<FamilyMember> {
+        // First get the family member to return it after deletion (regardless of active status)
+        return when (val findResult = standardizedFamilyMemberService.findByIdAnyStatus(id)) {
+            is ServiceResult.Success<FamilyMember> -> {
+                val memberToDelete = findResult.data
+
+                when (val deleteResult = standardizedFamilyMemberService.deleteById(id)) {
+                    is ServiceResult.Success<Boolean> -> {
+                        logger.info("Family member deleted successfully: $id")
+                        ResponseEntity.ok(memberToDelete)
+                    }
+                    is ServiceResult.NotFound<Boolean> -> {
+                        logger.warn("Family member not found for deletion: $id")
+                        ResponseEntity.notFound().build()
+                    }
+                    is ServiceResult.SystemError<Boolean> -> {
+                        logger.error("System error deleting family member: ${deleteResult.exception.message}", deleteResult.exception)
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+                    }
+                    else -> {
+                        logger.error("Unexpected result type: $deleteResult")
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+                    }
+                }
+            }
+            is ServiceResult.NotFound<FamilyMember> -> {
+                logger.warn("Family member not found for deletion: $id")
+                ResponseEntity.notFound().build()
+            }
+            is ServiceResult.SystemError<FamilyMember> -> {
+                logger.error("System error finding family member for deletion: ${findResult.exception.message}", findResult.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+            else -> {
+                logger.error("Unexpected result type: $findResult")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
 
     // ===== BUSINESS LOGIC ENDPOINTS =====
 
@@ -154,28 +262,5 @@ open class FamilyMemberController(
         } catch (ex: Exception) {
             logger.error("Failed to deactivate family member $id: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to deactivate family member: ${ex.message}", ex)
-        }
-
-    /**
-     * DELETE /api/family-members/{id}
-     * Soft delete a family member (sets active status to false)
-     */
-    @DeleteMapping("/{id}")
-    fun softDelete(
-        @PathVariable id: Long,
-    ): ResponseEntity<Map<String, String>> =
-        try {
-            logger.info("Soft deleting family member: $id")
-            val ok = standardizedFamilyMemberService.softDelete(id)
-            if (ok) {
-                logger.info("Family member soft deleted successfully: $id")
-                ResponseEntity.ok(mapOf("message" to "Family member deleted successfully"))
-            } else {
-                logger.warn("Family member not found for deletion: $id")
-                ResponseEntity.notFound().build<Map<String, String>>()
-            }
-        } catch (ex: Exception) {
-            logger.error("Failed to soft delete family member $id: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete family member: ${ex.message}", ex)
         }
 }
