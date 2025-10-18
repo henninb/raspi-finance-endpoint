@@ -45,9 +45,9 @@ class StandardizedTransferService(
 
     override fun save(entity: Transfer): ServiceResult<Transfer> =
         handleServiceOperation("save", entity.transferId) {
-            // Detect new transfers: if transferId is 0 or null AND guidSource/guidDestination are missing
+            // Detect new transfers: if transferId is 0 AND guidSource/guidDestination are missing
             // then use the full insertTransfer workflow to create transactions
-            val isNewTransfer = (entity.transferId == null || entity.transferId == 0L)
+            val isNewTransfer = (entity.transferId == 0L)
             val needsTransactionCreation = (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank())
 
             if (isNewTransfer && needsTransactionCreation) {
