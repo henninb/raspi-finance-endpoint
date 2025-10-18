@@ -110,7 +110,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
-        (response.body as Map).containsKey("errors")
+        response.body == null  // Standardized pattern: no body on error
     }
 
     def "save returns 409 when duplicate"() {
@@ -124,7 +124,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.CONFLICT
-        (response.body as Map).get("error") == "Duplicate family member found"
+        response.body == null  // Standardized pattern: no body on error
     }
 
     def "save returns 500 on system error"() {
