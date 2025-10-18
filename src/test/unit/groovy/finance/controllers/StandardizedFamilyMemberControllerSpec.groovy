@@ -79,48 +79,6 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
-    // ===== STANDARDIZED: findById =====
-    def "findById returns entity and 200 when found"() {
-        given:
-        long id = 11L
-        FamilyMember member = fm(familyMemberId: id)
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> member
-
-        when:
-        ResponseEntity<FamilyMember> response = controller.findById(id)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        response.body.familyMemberId == id
-    }
-
-    def "findById returns 404 when missing"() {
-        given:
-        long id = 404L
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> null
-
-        when:
-        ResponseEntity<FamilyMember> response = controller.findById(id)
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-    }
-
-    def "findById returns 500 on system error"() {
-        given:
-        long id = 500L
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> { throw new RuntimeException("boom") }
-
-        when:
-        ResponseEntity<FamilyMember> response = controller.findById(id)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-    }
-
     // ===== STANDARDIZED: save =====
     def "save creates family member and returns 201"() {
         given:
@@ -183,116 +141,8 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
-    // ===== STANDARDIZED: update =====
-    def "update returns 200 when exists"() {
-        given:
-        long id = 21L
-        FamilyMember existing = fm(familyMemberId: id, owner: "alice", memberName: "bob")
-        FamilyMember patch = fm(familyMemberId: id, owner: "alice", memberName: "bobby")
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> existing
-        familyRepo.save(_ as FamilyMember) >> { FamilyMember m -> m }
-
-        when:
-        ResponseEntity<?> response = controller.update(id, patch)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        (response.body as FamilyMember).memberName == "bobby"
-    }
-
-    def "update returns 404 when missing"() {
-        given:
-        long id = 22L
-        FamilyMember patch = fm(familyMemberId: id)
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> null
-
-        when:
-        ResponseEntity<?> response = controller.update(id, patch)
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-    }
-
-    def "update returns 500 on system error"() {
-        given:
-        long id = 23L
-        FamilyMember existing = fm(familyMemberId: id)
-        FamilyMember patch = fm(familyMemberId: id, memberName: "newname")
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> existing
-        familyRepo.save(_ as FamilyMember) >> { throw new RuntimeException("db") }
-
-        when:
-        ResponseEntity<?> response = controller.update(id, patch)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-    }
-
-    // ===== STANDARDIZED: deleteById =====
-    def "deleteById returns 200 with message when deleted"() {
-        given:
-        long id = 31L
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> fm(familyMemberId: id)
-        familyRepo.softDeleteByFamilyMemberId(id) >> 1
-
-        when:
-        ResponseEntity<?> response = controller.deleteById(id)
-
-        then:
-        response.statusCode == HttpStatus.OK
-        (response.body as Map).get("message") == "Family member deleted successfully"
-    }
-
-    def "deleteById returns 404 when missing"() {
-        given:
-        long id = 32L
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> null
-
-        when:
-        ResponseEntity<?> response = controller.deleteById(id)
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-    }
-
-    def "deleteById returns 500 on system error"() {
-        given:
-        long id = 33L
-        and:
-        familyRepo.findByFamilyMemberIdAndActiveStatusTrue(id) >> fm(familyMemberId: id)
-        familyRepo.softDeleteByFamilyMemberId(id) >> { throw new RuntimeException("db") }
-
-        when:
-        ResponseEntity<?> response = controller.deleteById(id)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-    }
-
     // ===== DEFENSIVE PROGRAMMING TESTS =====
     // These tests verify that our defensive else clauses handle unexpected service responses
-
-    def "update handles null service response gracefully"() {
-        given:
-        FamilyMember input = fm(familyMemberId: 1L, memberName: "test")
-        and:
-        // Mock the service to return null (simulating unexpected behavior)
-        StandardizedFamilyMemberService mockService = Mock()
-        mockService.update(_ as FamilyMember) >> null
-        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
-
-        when:
-        ResponseEntity<?> response = controllerWithMockedService.update(1L, input)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        (response.body as Map)["error"] == "Internal server error"
-    }
 
     def "save handles null service response gracefully"() {
         given:
@@ -310,20 +160,6 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         response.body == null
     }
 
-    def "findById handles null service response gracefully"() {
-        given:
-        StandardizedFamilyMemberService mockService = Mock()
-        mockService.findByIdServiceResult(_ as Long) >> null
-        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
-
-        when:
-        ResponseEntity<FamilyMember> response = controllerWithMockedService.findById(1L)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
     def "findAllActive handles null service response gracefully"() {
         given:
         StandardizedFamilyMemberService mockService = Mock()
@@ -332,20 +168,6 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
         when:
         ResponseEntity<List<FamilyMember>> response = controllerWithMockedService.findAllActive()
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
-    def "deleteById handles null service response gracefully"() {
-        given:
-        StandardizedFamilyMemberService mockService = Mock()
-        mockService.deleteById(_ as Long) >> null
-        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
-
-        when:
-        ResponseEntity<?> response = controllerWithMockedService.deleteById(1L)
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR

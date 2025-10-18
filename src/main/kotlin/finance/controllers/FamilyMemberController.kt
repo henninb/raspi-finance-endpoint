@@ -25,11 +25,11 @@ import org.springframework.web.server.ResponseStatusException
 open class FamilyMemberController(
     private val standardizedFamilyMemberService: StandardizedFamilyMemberService,
 ) : StandardizedBaseController() {
-    // ===== STANDARDIZED ENDPOINTS (NEW) =====
+    // ===== STANDARDIZED CRUD ENDPOINTS =====
 
     /**
-     * Standardized collection retrieval - GET /api/family-members/active
-     * Returns empty list instead of throwing 404 (standardized behavior)
+     * GET /api/family-members/active
+     * Returns all active family members
      */
     @GetMapping("/active", produces = ["application/json"])
     fun findAllActive(): ResponseEntity<List<FamilyMember>> =
@@ -53,35 +53,8 @@ open class FamilyMemberController(
         }
 
     /**
-     * Standardized single entity retrieval - GET /api/family-members/std/{familyMemberId}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
-    @GetMapping("/std/{familyMemberId}", produces = ["application/json"])
-    fun findById(
-        @PathVariable familyMemberId: Long,
-    ): ResponseEntity<FamilyMember> =
-        when (val result = standardizedFamilyMemberService.findByIdServiceResult(familyMemberId)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved family member: $familyMemberId")
-                ResponseEntity.ok(result.data)
-            }
-            is ServiceResult.NotFound -> {
-                logger.warn("Family member not found: $familyMemberId")
-                ResponseEntity.notFound().build<FamilyMember>()
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving family member $familyMemberId: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<FamilyMember>()
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<FamilyMember>()
-            }
-        }
-
-    /**
-     * Standardized entity creation - POST /api/family-members
-     * Returns 201 CREATED
+     * POST /api/family-members
+     * Create new family member
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     fun save(
@@ -116,121 +89,11 @@ open class FamilyMemberController(
             }
         }
 
-    /**
-     * Standardized entity update - PUT /api/family-members/std/{familyMemberId}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
-    @PutMapping("/std/{familyMemberId}", consumes = ["application/json"], produces = ["application/json"])
-    fun update(
-        @PathVariable familyMemberId: Long,
-        @Valid @RequestBody member: FamilyMember,
-    ): ResponseEntity<*> {
-        member.familyMemberId = familyMemberId
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedFamilyMemberService.update(member)) {
-            is ServiceResult.Success -> {
-                logger.info("Family member updated successfully: $familyMemberId")
-                ResponseEntity.ok(result.data)
-            }
-            is ServiceResult.NotFound -> {
-                logger.warn("Family member not found for update: $familyMemberId")
-                ResponseEntity.notFound().build<Any>()
-            }
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating family member: ${result.errors}")
-                ResponseEntity.badRequest().body(mapOf("errors" to result.errors))
-            }
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating family member: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to result.message))
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("System error updating family member $familyMemberId: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
-            }
-        }
-    }
+    // ===== BUSINESS LOGIC ENDPOINTS =====
 
     /**
-     * Standardized entity deletion - DELETE /api/family-members/std/{familyMemberId}
-     * Returns 200 OK with success message
-     */
-    @DeleteMapping("/std/{familyMemberId}", produces = ["application/json"])
-    fun deleteById(
-        @PathVariable familyMemberId: Long,
-    ): ResponseEntity<*> =
-        when (val result = standardizedFamilyMemberService.deleteById(familyMemberId)) {
-            is ServiceResult.Success -> {
-                logger.info("Family member deleted successfully: $familyMemberId")
-                ResponseEntity.ok(mapOf("message" to "Family member deleted successfully"))
-            }
-            is ServiceResult.NotFound -> {
-                logger.warn("Family member not found for deletion: $familyMemberId")
-                ResponseEntity.notFound().build<Any>()
-            }
-            is ServiceResult.SystemError -> {
-                logger.error("System error deleting family member $familyMemberId: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Internal server error"))
-            }
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Any>()
-            }
-        }
-
-    // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
-
-    /**
-     * Legacy endpoint - GET /api/family-members
-     * Maintains original behavior
-     * @deprecated Use GET /api/family-members/active instead
-     */
-    @Deprecated("Use GET /api/family-members/active instead", ReplaceWith("findAllActive()"))
-    @GetMapping(produces = ["application/json"])
-    fun getAll(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
-
-    /**
-     * Legacy endpoint - GET /api/family-members/all
-     * Maintains original behavior
-     * @deprecated Use GET /api/family-members/active instead
-     */
-    @Deprecated("Use GET /api/family-members/active instead", ReplaceWith("findAllActive()"))
-    @GetMapping("/all", produces = ["application/json"])
-    fun getAllWithSuffix(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
-
-    /**
-     * Legacy endpoint - GET /api/family-members/{id}
-     * Maintains original behavior (note: conflicts with standardized /{familyMemberId})
-     * Spring will resolve this based on order and specificity
-     * @deprecated Use standardized endpoint instead (method name conflict with findById)
-     */
-    @Deprecated("Use standardized endpoint instead (method name conflict with findById)")
-    @GetMapping("/{id}", produces = ["application/json"])
-    fun getById(
-        @PathVariable id: Long,
-    ): ResponseEntity<FamilyMember> {
-        return try {
-            logger.debug("Retrieving family member: $id (legacy endpoint)")
-            val member =
-                standardizedFamilyMemberService.findById(id)
-                    ?: return ResponseEntity.notFound().build<FamilyMember>()
-            logger.info("Retrieved family member: $id")
-            ResponseEntity.ok(member)
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve family member $id: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve family member: ${ex.message}", ex)
-        }
-    }
-
-    // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
-
-    /**
-     * Business logic endpoint - GET /api/family-members/owner/{owner}
-     * Preserved as-is, not part of standardization
+     * GET /api/family-members/owner/{owner}
+     * Get all family members by owner
      */
     @GetMapping("/owner/{owner}", produces = ["application/json"])
     fun byOwner(
@@ -238,8 +101,8 @@ open class FamilyMemberController(
     ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findByOwner(owner))
 
     /**
-     * Business logic endpoint - GET /api/family-members/owner/{owner}/relationship/{relationship}
-     * Preserved as-is, not part of standardization
+     * GET /api/family-members/owner/{owner}/relationship/{relationship}
+     * Get family members by owner and relationship type
      */
     @GetMapping("/owner/{owner}/relationship/{relationship}", produces = ["application/json"])
     fun byOwnerAndRelationship(
@@ -248,8 +111,8 @@ open class FamilyMemberController(
     ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findByOwnerAndRelationship(owner, relationship))
 
     /**
-     * Business logic endpoint - PUT /api/family-members/{id}/activate
-     * Preserved as-is, not part of standardization
+     * PUT /api/family-members/{id}/activate
+     * Activate a family member
      */
     @PutMapping("/{id}/activate")
     fun activateMember(
@@ -271,8 +134,8 @@ open class FamilyMemberController(
         }
 
     /**
-     * Business logic endpoint - PUT /api/family-members/{id}/deactivate
-     * Preserved as-is, not part of standardization
+     * PUT /api/family-members/{id}/deactivate
+     * Deactivate a family member
      */
     @PutMapping("/{id}/deactivate")
     fun deactivateMember(
@@ -294,9 +157,8 @@ open class FamilyMemberController(
         }
 
     /**
-     * Business logic endpoint - DELETE /api/family-members/{id}
-     * Preserved as-is, soft delete functionality
-     * Note: This conflicts with standardized deleteById - Spring will handle resolution
+     * DELETE /api/family-members/{id}
+     * Soft delete a family member (sets active status to false)
      */
     @DeleteMapping("/{id}")
     fun softDelete(

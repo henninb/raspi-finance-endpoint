@@ -58,19 +58,19 @@ class CategoryController(
      */
     @GetMapping("/{categoryName}", produces = ["application/json"])
     override fun findById(
-        @PathVariable categoryName: String,
+        @PathVariable("categoryName") id: String,
     ): ResponseEntity<Category> =
-        when (val result = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
+        when (val result = standardizedCategoryService.findByCategoryNameStandardized(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved category: $categoryName")
+                logger.info("Retrieved category: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Category not found: $categoryName")
+                logger.warn("Category not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving category $categoryName: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving category $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -85,11 +85,11 @@ class CategoryController(
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody category: Category,
+        @Valid @RequestBody entity: Category,
     ): ResponseEntity<Category> =
-        when (val result = standardizedCategoryService.save(category)) {
+        when (val result = standardizedCategoryService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Category created successfully: ${category.categoryName}")
+                logger.info("Category created successfully: ${entity.categoryName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
@@ -116,17 +116,17 @@ class CategoryController(
      */
     @PutMapping("/{categoryName}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable categoryName: String,
-        @Valid @RequestBody category: Category,
+        @PathVariable("categoryName") id: String,
+        @Valid @RequestBody entity: Category,
     ): ResponseEntity<Category> {
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedCategoryService.update(category)) {
+        return when (val result = standardizedCategoryService.update(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Category updated successfully: $categoryName")
+                logger.info("Category updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Category not found for update: $categoryName")
+                logger.warn("Category not found for update: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.ValidationError -> {
@@ -154,18 +154,18 @@ class CategoryController(
      */
     @DeleteMapping("/{categoryName}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable categoryName: String,
+        @PathVariable("categoryName") id: String,
     ): ResponseEntity<Category> {
         // First get the category to return it after deletion
-        return when (val findResult = standardizedCategoryService.findByCategoryNameStandardized(categoryName)) {
+        return when (val findResult = standardizedCategoryService.findByCategoryNameStandardized(id)) {
             is ServiceResult.Success -> {
-                when (val deleteResult = standardizedCategoryService.deleteByCategoryNameStandardized(categoryName)) {
+                when (val deleteResult = standardizedCategoryService.deleteByCategoryNameStandardized(id)) {
                     is ServiceResult.Success -> {
-                        logger.info("Category deleted successfully: $categoryName")
+                        logger.info("Category deleted successfully: $id")
                         ResponseEntity.ok(findResult.data)
                     }
                     is ServiceResult.NotFound -> {
-                        logger.warn("Category not found for deletion: $categoryName")
+                        logger.warn("Category not found for deletion: $id")
                         ResponseEntity.notFound().build()
                     }
                     is ServiceResult.SystemError -> {
@@ -179,7 +179,7 @@ class CategoryController(
                 }
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Category not found for deletion: $categoryName")
+                logger.warn("Category not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {

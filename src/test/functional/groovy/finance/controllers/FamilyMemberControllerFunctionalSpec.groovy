@@ -19,16 +19,16 @@ class FamilyMemberControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         return insertEndpoint(ENDPOINT, member.toString())
     }
 
-    void 'should create and retrieve family member by id'() {
+    void 'should create family member and verify via owner endpoint'() {
         when:
         def post = postMember(testOwner, "${testOwner}", FamilyRelationship.Self)
         Long id = extractLong(post.body, 'familyMemberId')
-        def get = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}/${id}"), HttpMethod.GET, new HttpEntity<>(null, headers), String)
+        def getByOwner = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}/owner/${testOwner}"), HttpMethod.GET, new HttpEntity<>(null, headers), String)
 
         then:
         post.statusCode == HttpStatus.CREATED
-        get.statusCode == HttpStatus.OK
-        extractLong(get.body, 'familyMemberId') == id
+        getByOwner.statusCode == HttpStatus.OK
+        getByOwner.body.contains("\"familyMemberId\":${id}")
     }
 
     void 'should list by owner and relationship'() {
@@ -90,12 +90,12 @@ class FamilyMemberControllerFunctionalSpec extends BaseControllerFunctionalSpec 
         deleteResponse.statusCode == HttpStatus.OK
     }
 
-    void 'should retrieve all family members'() {
+    void 'should retrieve all active family members'() {
         when:
         def post1 = postMember(testOwner, "${testOwner}-member1", FamilyRelationship.Self)
         def post2 = postMember(testOwner, "${testOwner}-member2", FamilyRelationship.Spouse)
         def post3 = postMember(testOwner, "${testOwner}-member3", FamilyRelationship.Child)
-        def getAll = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}"), HttpMethod.GET, new HttpEntity<>(null, headers), String)
+        def getAll = restTemplate.exchange(createURLWithPort("/api/${ENDPOINT}/active"), HttpMethod.GET, new HttpEntity<>(null, headers), String)
 
         then:
         post1.statusCode == HttpStatus.CREATED
