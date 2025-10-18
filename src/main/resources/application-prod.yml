@@ -99,6 +99,8 @@ spring:
     show-sql: false
     open-in-view: false
     generate-ddl: true
+    # Database platform - Spring Boot property that sets dialect BEFORE DB connection
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: ${HIBERNATE_DDL}
     properties:
