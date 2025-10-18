@@ -57,19 +57,19 @@ class ParameterController(
      */
     @GetMapping("/{parameterName}", produces = ["application/json"])
     override fun findById(
-        @PathVariable parameterName: String,
+        @PathVariable("parameterName") id: String,
     ): ResponseEntity<Parameter> =
-        when (val result = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
+        when (val result = standardizedParameterService.findByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
-                logger.info("Retrieved parameter: $parameterName")
+                logger.info("Retrieved parameter: $id")
                 ResponseEntity.ok(result.data)
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Parameter not found: $parameterName")
+                logger.warn("Parameter not found: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
-                logger.error("System error retrieving parameter $parameterName: ${result.exception.message}", result.exception)
+                logger.error("System error retrieving parameter $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
             else -> {
@@ -84,11 +84,11 @@ class ParameterController(
      */
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
-        @Valid @RequestBody parameter: Parameter,
+        @Valid @RequestBody entity: Parameter,
     ): ResponseEntity<Parameter> =
-        when (val result = standardizedParameterService.save(parameter)) {
+        when (val result = standardizedParameterService.save(entity)) {
             is ServiceResult.Success -> {
-                logger.info("Parameter created successfully: ${parameter.parameterName}")
+                logger.info("Parameter created successfully: ${entity.parameterName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
             is ServiceResult.ValidationError -> {
@@ -115,25 +115,25 @@ class ParameterController(
      */
     @PutMapping("/{parameterName}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
-        @PathVariable parameterName: String,
-        @Valid @RequestBody parameter: Parameter,
+        @PathVariable("parameterName") id: String,
+        @Valid @RequestBody entity: Parameter,
     ): ResponseEntity<Parameter> {
         // First check if parameter exists
-        return when (val existsResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
+        return when (val existsResult = standardizedParameterService.findByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
                 // Parameter exists, proceed with update
                 val existingParameter = existsResult.data
                 val updatedParameter =
                     Parameter(
                         parameterId = existingParameter.parameterId,
-                        parameterName = parameterName,
-                        parameterValue = parameter.parameterValue,
-                        activeStatus = parameter.activeStatus,
+                        parameterName = id,
+                        parameterValue = entity.parameterValue,
+                        activeStatus = entity.activeStatus,
                     )
 
                 when (val updateResult = standardizedParameterService.update(updatedParameter)) {
                     is ServiceResult.Success -> {
-                        logger.info("Parameter updated successfully: $parameterName")
+                        logger.info("Parameter updated successfully: $id")
                         ResponseEntity.ok(updateResult.data)
                     }
                     is ServiceResult.ValidationError -> {
@@ -155,7 +155,7 @@ class ParameterController(
                 }
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Parameter not found for update: $parameterName")
+                logger.warn("Parameter not found for update: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
@@ -175,16 +175,16 @@ class ParameterController(
      */
     @DeleteMapping("/{parameterName}", produces = ["application/json"])
     override fun deleteById(
-        @PathVariable parameterName: String,
+        @PathVariable("parameterName") id: String,
     ): ResponseEntity<Parameter> {
         // First get the parameter to return it after deletion
-        return when (val findResult = standardizedParameterService.findByParameterNameStandardized(parameterName)) {
+        return when (val findResult = standardizedParameterService.findByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
                 val parameterToDelete = findResult.data
 
-                when (val deleteResult = standardizedParameterService.deleteByParameterNameStandardized(parameterName)) {
+                when (val deleteResult = standardizedParameterService.deleteByParameterNameStandardized(id)) {
                     is ServiceResult.Success -> {
-                        logger.info("Parameter deleted successfully: $parameterName")
+                        logger.info("Parameter deleted successfully: $id")
                         ResponseEntity.ok(parameterToDelete)
                     }
                     is ServiceResult.SystemError -> {
@@ -198,7 +198,7 @@ class ParameterController(
                 }
             }
             is ServiceResult.NotFound -> {
-                logger.warn("Parameter not found for deletion: $parameterName")
+                logger.warn("Parameter not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
             is ServiceResult.SystemError -> {
