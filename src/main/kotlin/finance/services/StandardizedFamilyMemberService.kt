@@ -42,6 +42,19 @@ class StandardizedFamilyMemberService(
             ServiceResult.SystemError(e)
         }
 
+    fun findByIdAnyStatus(id: Long): ServiceResult<FamilyMember> =
+        try {
+            val familyMember = familyMemberRepository.findById(id).orElse(null)
+            if (familyMember != null) {
+                ServiceResult.Success(familyMember)
+            } else {
+                ServiceResult.NotFound("FamilyMember not found: $id")
+            }
+        } catch (e: Exception) {
+            logger.error("Error retrieving family member by ID (any status): $id", e)
+            ServiceResult.SystemError(e)
+        }
+
     fun save(entity: FamilyMember): ServiceResult<FamilyMember> {
         return try {
             // Check if family member already exists first (before validation for test compatibility)
@@ -99,7 +112,8 @@ class StandardizedFamilyMemberService(
 
     fun deleteById(id: Long): ServiceResult<Boolean> {
         return try {
-            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+            // Check if family member exists first (regardless of active status)
+            val existingMember = familyMemberRepository.findById(id).orElse(null)
             if (existingMember == null) {
                 return ServiceResult.NotFound("FamilyMember not found: $id")
             }
