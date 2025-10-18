@@ -1,0 +1,62 @@
+# ARM64-specific Dockerfile for Raspberry Pi deployment
+# Use ARM64-compatible OpenJDK base image
+FROM arm64v8/openjdk:21-jdk-slim
+
+ARG TIMEZONE="America/Chicago"
+ENV TIMEZONE ${TIMEZONE}
+ARG APP="raspi-finance-endpoint"
+ENV APP ${APP}
+ARG USERNAME="set the username as build time"
+ENV USERNAME ${USERNAME}
+ARG CURRENT_GID="set the gid"
+ENV CURRENT_GID ${CURRENT_GID}
+ARG CURRENT_UID="set the uid"
+ENV CURRENT_UID ${CURRENT_UID}
+
+# Create user and group for non-root execution
+RUN groupadd -g ${CURRENT_GID} ${USERNAME}
+RUN useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} ${USERNAME}
+
+# Set timezone
+RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
+
+# Create application directories with proper permissions
+RUN mkdir -p -m 0755 /opt/${APP}/bin
+RUN mkdir -p -m 0755 /opt/${APP}/logs/archive
+RUN mkdir -p -m 0755 /opt/${APP}/ssl
+RUN mkdir -p -m 0755 /opt/${APP}/json_in
+
+# Copy SSL certificates
+COPY ./ssl /opt/${APP}/ssl
+
+# Copy application JAR
+ADD ./build/libs/${APP}.jar /opt/${APP}/bin/${APP}.jar
+
+# Set ownership for all application files
+RUN chown -R ${USERNAME}:${USERNAME} /opt/${APP}
+
+# Security: Install only required tools for health check, then cleanup
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && apt-get purge -y --auto-remove \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+WORKDIR /opt/${APP}/bin
+
+# Switch to non-root user
+USER ${USERNAME}
+
+# Expose HTTPS port
+EXPOSE 8443
+
+# Health check configuration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -k -f https://localhost:8443/actuator/health || exit 1
+
+# Run application with ARM-optimized JVM settings
+# Note: ARM CPUs may have less memory, so adjust heap size as needed
+CMD java -Duser.timezone=${TIMEZONE} \
+    -Xmx1536m \
+    -XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -Djava.security.egd=file:/dev/./urandom \
+    -jar /opt/${APP}/bin/${APP}.jar
