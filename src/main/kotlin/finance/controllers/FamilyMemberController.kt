@@ -203,29 +203,6 @@ open class FamilyMemberController(
     fun getAllWithSuffix(): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findAll())
 
     /**
-     * Legacy endpoint - POST /api/family-members/insert
-     * Maintains original behavior
-     * @deprecated Use POST /api/family-members instead
-     */
-    @Deprecated("Use POST /api/family-members instead", ReplaceWith("save(member)"))
-    @PostMapping("/insert", consumes = ["application/json"], produces = ["application/json"])
-    fun insert(
-        @RequestBody member: FamilyMember,
-    ): ResponseEntity<FamilyMember> =
-        try {
-            logger.info("Inserting family member: ${member.memberName} for owner: ${member.owner} (legacy endpoint)")
-            val result = standardizedFamilyMemberService.insertFamilyMember(member)
-            logger.info("Family member inserted successfully: ${result.familyMemberId}")
-            ResponseEntity.status(HttpStatus.CREATED).body(result)
-        } catch (ex: DataIntegrityViolationException) {
-            logger.error("Failed to insert family member due to data integrity violation: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate family member")
-        } catch (ex: Exception) {
-            logger.error("Failed to insert family member: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, ex.message, ex)
-        }
-
-    /**
      * Legacy endpoint - GET /api/family-members/{id}
      * Maintains original behavior (note: conflicts with standardized /{familyMemberId})
      * Spring will resolve this based on order and specificity
