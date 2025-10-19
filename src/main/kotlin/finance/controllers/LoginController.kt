@@ -5,6 +5,10 @@ import finance.domain.User
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
@@ -23,6 +27,7 @@ import java.util.Date
 import javax.crypto.SecretKey
 
 @CrossOrigin
+@Tag(name = "Authentication", description = "Login, logout, registration, and user info")
 @RestController
 @RequestMapping("/api")
 class LoginController(
@@ -35,6 +40,14 @@ class LoginController(
     private lateinit var activeProfile: String
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
+    @Operation(summary = "Authenticate and issue JWT cookie")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Login successful"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "401", description = "Invalid credentials"),
+        ],
+    )
     @PostMapping("/login")
     fun login(
         @Valid @RequestBody loginRequest: LoginRequest,
@@ -115,6 +128,12 @@ class LoginController(
     }
 
     // curl -k --header "Content-Type: application/json" --request POST https://localhost:8443/api/logout
+    @Operation(summary = "Invalidate JWT cookie and logout")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "204", description = "Logout successful"),
+        ],
+    )
     @PostMapping("/logout")
     fun logout(response: HttpServletResponse): ResponseEntity<Void> {
         // Check if we're in a local development context (even if profile is prod)
@@ -146,6 +165,15 @@ class LoginController(
     }
 
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "newuser", "password": "password123", "email": "user@example.com"}' https://localhost:8443/api/register
+    @Operation(summary = "Register new user and issue JWT cookie")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Registration successful"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Username already exists"),
+            ApiResponse(responseCode = "500", description = "Server error during registration"),
+        ],
+    )
     @PostMapping("/register", consumes = ["application/json"])
     fun register(
         @Valid @RequestBody newUser: User,
@@ -221,6 +249,13 @@ class LoginController(
     }
 
     // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
+    @Operation(summary = "Return JWT identity info from cookie")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Token valid; user info returned"),
+            ApiResponse(responseCode = "401", description = "Missing or invalid token"),
+        ],
+    )
     @GetMapping("/me")
     fun getCurrentUser(
         @CookieValue(name = "token", required = false) token: String?,

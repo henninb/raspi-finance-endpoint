@@ -29,47 +29,72 @@ open class BaseController {
             IllegalArgumentException::class, MethodArgumentNotValidException::class,
         ],
     )
-    fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, String>> {
-        logSecureError("BAD_REQUEST", throwable, HttpStatus.BAD_REQUEST)
-        val response = mapOf("response" to "BAD_REQUEST: ${throwable.javaClass.simpleName}")
-        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
+    fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.BAD_REQUEST
+        logSecureError("BAD_REQUEST", throwable, status)
+        val body = buildErrorBody(status, "BAD_REQUEST", throwable.javaClass.simpleName)
+        return ResponseEntity(body, status)
     }
 
     @ExceptionHandler(value = [ValidationException::class])
-    fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, String>> {
-        logSecureError("VALIDATION_EXCEPTION", throwable, HttpStatus.BAD_REQUEST)
-        val response = mapOf("response" to "BAD_REQUEST: ${throwable.javaClass.simpleName}")
-        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
+    fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.BAD_REQUEST
+        logSecureError("VALIDATION_EXCEPTION", throwable, status)
+        val body = buildErrorBody(status, "BAD_REQUEST", throwable.javaClass.simpleName)
+        return ResponseEntity(body, status)
     }
 
     @ExceptionHandler(value = [ResponseStatusException::class])
-    fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, String>> {
+    fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, Any>> {
         val httpStatus = HttpStatus.valueOf(throwable.statusCode.value())
         logSecureError("RESPONSE_STATUS_EXCEPTION", throwable, httpStatus)
-        val errorMessage = throwable.reason ?: "${throwable.statusCode}: ${throwable.javaClass.simpleName}"
-        val response = mapOf("response" to errorMessage)
-        return ResponseEntity(response, throwable.statusCode)
+        val errorMessage = throwable.reason ?: "${throwable.javaClass.simpleName}"
+        val body = buildErrorBody(httpStatus, httpStatus.name, errorMessage)
+        return ResponseEntity(body, httpStatus)
     }
 
     @ExceptionHandler(value = [AuthenticationException::class])
-    fun handleUnauthorized(throwable: Throwable): ResponseEntity<Map<String, String>> {
-        logSecureError("UNAUTHORIZED", throwable, HttpStatus.UNAUTHORIZED)
-        val response = mapOf("response" to "UNAUTHORIZED: ${throwable.javaClass.simpleName}")
-        return ResponseEntity(response, HttpStatus.UNAUTHORIZED)
+    fun handleUnauthorized(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.UNAUTHORIZED
+        logSecureError("UNAUTHORIZED", throwable, status)
+        val body = buildErrorBody(status, "UNAUTHORIZED", throwable.javaClass.simpleName)
+        return ResponseEntity(body, status)
     }
 
     @ExceptionHandler(value = [ClientAbortException::class])
-    fun handleServiceUnavailable(throwable: Throwable): ResponseEntity<Map<String, String>> {
-        logSecureError("SERVICE_UNAVAILABLE", throwable, HttpStatus.SERVICE_UNAVAILABLE)
-        val response = mapOf("response" to "SERVICE_UNAVAILABLE: ${throwable.javaClass.simpleName}")
-        return ResponseEntity(response, HttpStatus.SERVICE_UNAVAILABLE)
+    fun handleServiceUnavailable(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.SERVICE_UNAVAILABLE
+        logSecureError("SERVICE_UNAVAILABLE", throwable, status)
+        val body = buildErrorBody(status, "SERVICE_UNAVAILABLE", throwable.javaClass.simpleName)
+        return ResponseEntity(body, status)
     }
 
     @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): ResponseEntity<Map<String, String>> {
-        logSecureError("INTERNAL_SERVER_ERROR", throwable, HttpStatus.INTERNAL_SERVER_ERROR)
-        val response = mapOf("response" to "INTERNAL_SERVER_ERROR: ${throwable.javaClass.simpleName}")
-        return ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR)
+    fun handleHttpInternalError(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.INTERNAL_SERVER_ERROR
+        logSecureError("INTERNAL_SERVER_ERROR", throwable, status)
+        val body = buildErrorBody(status, "INTERNAL_SERVER_ERROR", throwable.javaClass.simpleName)
+        return ResponseEntity(body, status)
+    }
+
+    private fun buildErrorBody(
+        status: HttpStatus,
+        code: String,
+        message: String?,
+    ): Map<String, Any> {
+        val request = getCurrentHttpRequest()
+        val method = request?.method ?: "unknown"
+        val uri = request?.requestURI ?: "unknown"
+        val safeMessage = sanitizeHeader(message) ?: status.reasonPhrase
+        return mapOf(
+            "timestamp" to System.currentTimeMillis(),
+            "status" to status.value(),
+            "error" to status.reasonPhrase,
+            "code" to code,
+            "message" to safeMessage,
+            "path" to uri,
+            "method" to method,
+        )
     }
 
     private fun logSecureError(

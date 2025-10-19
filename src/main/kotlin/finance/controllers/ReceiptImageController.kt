@@ -3,6 +3,10 @@ package finance.controllers
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.services.StandardizedReceiptImageService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @CrossOrigin
+@Tag(name = "Receipt Image Management", description = "Operations for managing receipt images")
 @RestController
 @RequestMapping("/api/receipt/image")
 class ReceiptImageController(
@@ -29,6 +34,13 @@ class ReceiptImageController(
      * Standardized collection retrieval - GET /api/receipt/image/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active receipt images")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active receipt images retrieved"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<ReceiptImage>> =
         when (val result = standardizedReceiptImageService.findAllActive()) {
@@ -54,6 +66,14 @@ class ReceiptImageController(
      * Standardized single entity retrieval - GET /api/receipt/image/{receiptImageId}
      * Uses camelCase parameter with @PathVariable annotation
      */
+    @Operation(summary = "Get receipt image by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Receipt image retrieved"),
+            ApiResponse(responseCode = "404", description = "Receipt image not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{receiptImageId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("receiptImageId") id: Long,
@@ -81,6 +101,15 @@ class ReceiptImageController(
      * Standardized entity creation - POST /api/receipt/image
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create receipt image")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Receipt image created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: ReceiptImage,
@@ -112,6 +141,16 @@ class ReceiptImageController(
      * Standardized entity update - PUT /api/receipt/image/{receiptImageId}
      * Uses camelCase parameter with @PathVariable annotation
      */
+    @Operation(summary = "Update receipt image by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Receipt image updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Receipt image not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{receiptImageId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("receiptImageId") id: Long,
@@ -150,6 +189,14 @@ class ReceiptImageController(
      * Standardized entity deletion - DELETE /api/receipt/image/{receiptImageId}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete receipt image by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Receipt image deleted"),
+            ApiResponse(responseCode = "404", description = "Receipt image not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{receiptImageId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("receiptImageId") id: Long,

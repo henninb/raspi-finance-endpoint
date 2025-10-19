@@ -39,6 +39,13 @@ class AccountController(
      * Standardized collection retrieval - GET /api/account/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active accounts")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active accounts retrieved"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Account>> {
         standardizedAccountService.updateTotalsForAllAccounts()
@@ -66,6 +73,14 @@ class AccountController(
      * Standardized single entity retrieval - GET /api/account/{accountNameOwner}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get account by accountNameOwner")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Account retrieved"),
+            ApiResponse(responseCode = "404", description = "Account not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun findById(
         @PathVariable("accountNameOwner") id: String,
@@ -93,6 +108,15 @@ class AccountController(
      * Standardized entity creation - POST /api/account
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create account")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Account created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Account,
@@ -124,6 +148,16 @@ class AccountController(
      * Standardized entity update - PUT /api/account/{accountNameOwner}
      * Uses entity type instead of Map<String, Any>
      */
+    @Operation(summary = "Update account by accountNameOwner")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Account updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Account not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("accountNameOwner") id: String,
@@ -156,6 +190,14 @@ class AccountController(
      * Standardized entity deletion - DELETE /api/account/{accountNameOwner}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete account by accountNameOwner")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Account deleted"),
+            ApiResponse(responseCode = "404", description = "Account not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("accountNameOwner") id: String,
@@ -232,6 +274,8 @@ class AccountController(
 
     // GET /api/account/validation/refresh
     // Triggers a bulk refresh of account.validation_date from t_validation_amount
+    @Operation(summary = "Refresh validation dates for all accounts")
+    @ApiResponses(value = [ApiResponse(responseCode = "204", description = "Refresh triggered"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/validation/refresh")
     fun refreshValidationDates(): ResponseEntity<Void> =
         try {
@@ -244,6 +288,8 @@ class AccountController(
         }
 
     // curl -k https://localhost:8443/account/payment/required
+    @Operation(summary = "List accounts that require payment")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Accounts retrieved"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/payment/required", produces = ["application/json"])
     fun selectPaymentRequired(): ResponseEntity<List<Account>> =
         try {
@@ -261,6 +307,8 @@ class AccountController(
         }
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/rename?old=test_brian&new=testnew_brian
+    @Operation(summary = "Rename accountNameOwner")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Account renamed"), ApiResponse(responseCode = "409", description = "Target exists"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/rename", produces = ["application/json"])
     fun renameAccountNameOwner(
         @RequestParam(value = "old") oldAccountNameOwner: String,
@@ -280,6 +328,8 @@ class AccountController(
         }
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/deactivate/test_brian
+    @Operation(summary = "Deactivate account")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Account deactivated"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/deactivate/{accountNameOwner}", produces = ["application/json"])
     fun deactivateAccount(
         @PathVariable accountNameOwner: String,
@@ -308,6 +358,8 @@ class AccountController(
         }
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/account/activate/test_brian
+    @Operation(summary = "Activate account")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Account activated"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/activate/{accountNameOwner}", produces = ["application/json"])
     fun activateAccount(
         @PathVariable accountNameOwner: String,

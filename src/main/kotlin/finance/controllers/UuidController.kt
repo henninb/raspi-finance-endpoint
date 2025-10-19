@@ -1,5 +1,9 @@
 package finance.controllers
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -13,6 +17,7 @@ import java.util.UUID
  * Provides server-side UUID generation for enhanced security
  */
 @RestController
+@Tag(name = "UUID Utilities", description = "Server-side UUID generation endpoints")
 @RequestMapping("/api/uuid")
 class UuidController : BaseController() {
     /**
@@ -20,6 +25,13 @@ class UuidController : BaseController() {
      *
      * @return ResponseEntity containing the generated UUID and timestamp
      */
+    @Operation(summary = "Generate single UUID with timestamp")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "UUID generated"),
+            ApiResponse(responseCode = "500", description = "Failed to generate UUID"),
+        ],
+    )
     @PostMapping(
         value = ["/generate"],
         produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -55,6 +67,14 @@ class UuidController : BaseController() {
      * @param count Number of UUIDs to generate (max 100)
      * @return ResponseEntity containing array of generated UUIDs
      */
+    @Operation(summary = "Generate multiple UUIDs (max 100)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "UUIDs generated"),
+            ApiResponse(responseCode = "400", description = "Invalid count"),
+            ApiResponse(responseCode = "500", description = "Failed to generate UUIDs"),
+        ],
+    )
     @PostMapping(
         value = ["/generate/batch"],
         produces = [MediaType.APPLICATION_JSON_VALUE],
@@ -96,6 +116,8 @@ class UuidController : BaseController() {
      *
      * @return ResponseEntity indicating service status
      */
+    @Operation(summary = "Health check for UUID service")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Service healthy")])
     @PostMapping(
         value = ["/health"],
         produces = [MediaType.APPLICATION_JSON_VALUE],

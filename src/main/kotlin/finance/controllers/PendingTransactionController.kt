@@ -3,6 +3,10 @@ package finance.controllers
 import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
 import finance.services.StandardizedPendingTransactionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
+@Tag(name = "Pending Transaction Management", description = "Operations for managing pending transactions")
 @RestController
 @RequestMapping("/api/pending/transaction")
 class PendingTransactionController(
@@ -30,6 +35,13 @@ class PendingTransactionController(
      * Standardized collection retrieval - GET /api/pending/transaction/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active pending transactions")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active pending transactions retrieved"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<PendingTransaction>> =
         when (val result = pendingTransactionService.findAllActive()) {
@@ -55,6 +67,14 @@ class PendingTransactionController(
      * Standardized single entity retrieval - GET /api/pending/transaction/{pendingTransactionId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get pending transaction by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Pending transaction retrieved"),
+            ApiResponse(responseCode = "404", description = "Pending transaction not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{pendingTransactionId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("pendingTransactionId") id: Long,
@@ -82,6 +102,15 @@ class PendingTransactionController(
      * Standardized entity creation - POST /api/pending/transaction
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create pending transaction")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Pending transaction created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: PendingTransaction,
@@ -113,6 +142,16 @@ class PendingTransactionController(
      * Standardized entity update - PUT /api/pending/transaction/{pendingTransactionId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update pending transaction by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Pending transaction updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Pending transaction not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{pendingTransactionId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("pendingTransactionId") id: Long,
@@ -149,6 +188,14 @@ class PendingTransactionController(
      * Standardized entity deletion - DELETE /api/pending/transaction/{pendingTransactionId}
      * Returns 200 OK with deleted entity (instead of 204 NO_CONTENT)
      */
+    @Operation(summary = "Delete pending transaction by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Pending transaction deleted"),
+            ApiResponse(responseCode = "404", description = "Pending transaction not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{pendingTransactionId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("pendingTransactionId") id: Long,
@@ -202,6 +249,8 @@ class PendingTransactionController(
      * @deprecated Bulk delete operations should be replaced with individual deletes or batch processing
      */
     @Deprecated("Bulk delete operations should be replaced with individual deletes or batch processing")
+    @Operation(summary = "Delete all pending transactions (legacy)")
+    @ApiResponses(value = [ApiResponse(responseCode = "204", description = "All pending transactions deleted"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @DeleteMapping("/delete/all")
     fun deleteAllPendingTransactions(): ResponseEntity<Void> {
         logger.info("Attempting to delete all pending transactions (legacy endpoint)")

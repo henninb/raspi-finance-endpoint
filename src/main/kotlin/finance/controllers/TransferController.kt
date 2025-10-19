@@ -3,6 +3,10 @@ package finance.controllers
 import finance.domain.ServiceResult
 import finance.domain.Transfer
 import finance.services.StandardizedTransferService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.util.Optional
 
 @CrossOrigin
+@Tag(name = "Transfer Management", description = "Operations for managing transfers")
 @RestController
 @RequestMapping("/api/transfer")
 class TransferController(
@@ -31,6 +36,14 @@ class TransferController(
      * Standardized collection retrieval - GET /api/transfer/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active transfers")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active transfers retrieved"),
+            ApiResponse(responseCode = "404", description = "No transfers found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Transfer>> =
         when (val result = standardizedTransferService.findAllActive()) {
@@ -56,6 +69,14 @@ class TransferController(
      * Standardized single entity retrieval - GET /api/transfer/{transferId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get transfer by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Transfer retrieved"),
+            ApiResponse(responseCode = "404", description = "Transfer not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{transferId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("transferId") id: Long,
@@ -83,6 +104,15 @@ class TransferController(
      * Standardized entity creation - POST /api/transfer
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create transfer")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Transfer created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Transfer,
@@ -114,6 +144,16 @@ class TransferController(
      * Standardized entity update - PUT /api/transfer/{transferId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update transfer by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Transfer updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Transfer not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{transferId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("transferId") id: Long,
@@ -155,6 +195,14 @@ class TransferController(
      * Standardized entity deletion - DELETE /api/transfer/{transferId}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete transfer by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Transfer deleted"),
+            ApiResponse(responseCode = "404", description = "Transfer not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{transferId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("transferId") id: Long,

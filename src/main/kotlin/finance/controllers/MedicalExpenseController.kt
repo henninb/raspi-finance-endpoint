@@ -5,6 +5,10 @@ import finance.domain.MedicalExpense
 import finance.domain.ServiceResult
 import finance.exceptions.DuplicateMedicalExpenseException
 import finance.services.StandardizedMedicalExpenseService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotNull
@@ -29,6 +33,7 @@ import java.math.BigDecimal
 import java.sql.Date
 
 @CrossOrigin
+@Tag(name = "Medical Expense Management", description = "Operations for managing medical expenses")
 @RestController
 @RequestMapping("/api/medical-expenses")
 class MedicalExpenseController(
@@ -45,6 +50,14 @@ class MedicalExpenseController(
      * Standardized collection retrieval - GET /api/medical-expenses/active
      * Returns active medical expenses using standardized patterns
      */
+    @Operation(summary = "Get all active medical expenses")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active medical expenses retrieved"),
+            ApiResponse(responseCode = "404", description = "No medical expenses found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<MedicalExpense>> =
         when (val result = standardizedMedicalExpenseService.findAllActive()) {
@@ -70,6 +83,14 @@ class MedicalExpenseController(
      * Standardized single entity retrieval - GET /api/medical-expenses/{medicalExpenseId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get medical expense by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Medical expense retrieved"),
+            ApiResponse(responseCode = "404", description = "Medical expense not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("medicalExpenseId") id: Long,
@@ -97,6 +118,15 @@ class MedicalExpenseController(
      * Standardized entity creation - POST /api/medical-expenses
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create medical expense")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Medical expense created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: MedicalExpense,
@@ -128,6 +158,16 @@ class MedicalExpenseController(
      * Standardized entity update - PUT /api/medical-expenses/{medicalExpenseId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update medical expense by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Medical expense updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Medical expense not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{medicalExpenseId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("medicalExpenseId") id: Long,
@@ -169,6 +209,14 @@ class MedicalExpenseController(
      * Standardized entity deletion - DELETE /api/medical-expenses/{medicalExpenseId}
      * Returns 200 OK with deleted entity (standardized behavior)
      */
+    @Operation(summary = "Delete medical expense by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Medical expense deleted"),
+            ApiResponse(responseCode = "404", description = "Medical expense not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("medicalExpenseId") id: Long,
@@ -206,6 +254,8 @@ class MedicalExpenseController(
      * Legacy collection endpoint - GET /api/medical-expenses/all
      * Original method name preserved for backward compatibility
      */
+    @Operation(summary = "Get all medical expenses (legacy)")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "All expenses returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/all")
     fun getAllMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses - Retrieving all medical expenses")
@@ -224,6 +274,8 @@ class MedicalExpenseController(
      * Legacy CRUD endpoint - PUT /api/medical-expenses/update/{medicalExpenseId}
      * Original method name preserved for backward compatibility
      */
+    @Operation(summary = "Legacy update medical expense by ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Updated"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/update/{medicalExpenseId}", consumes = ["application/json"], produces = ["application/json"])
     fun updateMedicalExpense(
         @PathVariable medicalExpenseId: Long,
@@ -249,6 +301,8 @@ class MedicalExpenseController(
      * Legacy CRUD endpoint - GET /api/medical-expenses/select/{medicalExpenseId}
      * Original method name preserved for backward compatibility
      */
+    @Operation(summary = "Legacy get medical expense by ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Found"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/select/{medicalExpenseId}", produces = ["application/json"])
     fun getMedicalExpenseById(
         @PathVariable medicalExpenseId: Long,
@@ -269,6 +323,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Get medical expense by transaction ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Found"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/transaction/{transactionId}")
     fun getMedicalExpenseByTransactionId(
         @PathVariable transactionId: Long,
@@ -289,6 +345,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by account ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/account/{accountId}")
     fun getMedicalExpensesByAccountId(
         @PathVariable accountId: Long,
@@ -304,6 +362,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by account and date range")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/account/{accountId}/date-range")
     fun getMedicalExpensesByAccountIdAndDateRange(
         @PathVariable accountId: Long,
@@ -321,6 +381,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by provider ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/provider/{providerId}")
     fun getMedicalExpensesByProviderId(
         @PathVariable providerId: Long,
@@ -336,6 +398,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by family member ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/family-member/{familyMemberId}")
     fun getMedicalExpensesByFamilyMemberId(
         @PathVariable familyMemberId: Long,
@@ -351,6 +415,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by family member and date range")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/family-member/{familyMemberId}/date-range")
     fun getMedicalExpensesByFamilyMemberAndDateRange(
         @PathVariable familyMemberId: Long,
@@ -368,6 +434,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by claim status")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/claim-status/{claimStatus}")
     fun getMedicalExpensesByClaimStatus(
         @PathVariable claimStatus: ClaimStatus,
@@ -383,6 +451,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List out-of-network medical expenses")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/out-of-network")
     fun getOutOfNetworkExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/out-of-network - Retrieving out-of-network medical expenses")
@@ -396,6 +466,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List outstanding patient balances")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/outstanding-balances")
     fun getOutstandingPatientBalances(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/outstanding-balances - Retrieving outstanding patient balances")
@@ -409,6 +481,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List active open claims")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/open-claims")
     fun getActiveOpenClaims(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/open-claims - Retrieving active open claims")
@@ -422,6 +496,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Patch claim status for a medical expense")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Updated"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PatchMapping("/{medicalExpenseId}/claim-status")
     fun updateClaimStatusPatch(
         @PathVariable medicalExpenseId: Long,
@@ -431,6 +507,8 @@ class MedicalExpenseController(
         return updateClaimStatusInternal(medicalExpenseId, claimStatus)
     }
 
+    @Operation(summary = "Update claim status for a medical expense")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Updated"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/{medicalExpenseId}/claim-status")
     fun updateClaimStatusPut(
         @PathVariable medicalExpenseId: Long,
@@ -460,6 +538,8 @@ class MedicalExpenseController(
      * Legacy CRUD endpoint - DELETE /api/medical-expenses/delete/{medicalExpenseId}
      * Original method name preserved for backward compatibility
      */
+    @Operation(summary = "Legacy delete medical expense by ID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Deleted"), ApiResponse(responseCode = "404", description = "Not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @DeleteMapping("/delete/{medicalExpenseId}", produces = ["application/json"])
     fun softDeleteMedicalExpense(
         @PathVariable medicalExpenseId: Long,
@@ -479,6 +559,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Totals (billed/patient/insurance) by year")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Totals returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/totals/year/{year}")
     fun getMedicalTotalsByYear(
         @PathVariable year: Int,
@@ -504,6 +586,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Counts by claim status")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Counts returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/claim-status-counts")
     fun getClaimStatusCounts(): ResponseEntity<Map<ClaimStatus, Long>> {
         logger.info("GET /medical-expenses/claim-status-counts - Retrieving claim status counts")
@@ -517,6 +601,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by procedure code")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/procedure-code/{procedureCode}")
     fun getMedicalExpensesByProcedureCode(
         @PathVariable procedureCode: String,
@@ -532,6 +618,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by diagnosis code")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/diagnosis-code/{diagnosisCode}")
     fun getMedicalExpensesByDiagnosisCode(
         @PathVariable diagnosisCode: String,
@@ -547,6 +635,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses by service date range")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/date-range")
     fun getMedicalExpensesByDateRange(
         @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
@@ -564,6 +654,8 @@ class MedicalExpenseController(
     }
 
     // New payment-related endpoints for Phase 2.5
+    @Operation(summary = "Link a payment transaction to a medical expense")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Linked"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "409", description = "Duplicate link"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PostMapping("/{medicalExpenseId}/payments/{transactionId}")
     fun linkPaymentTransaction(
         @PathVariable medicalExpenseId: Long,
@@ -587,6 +679,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Unlink payment transaction from a medical expense")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Unlinked"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @DeleteMapping("/{medicalExpenseId}/payments")
     fun unlinkPaymentTransaction(
         @PathVariable medicalExpenseId: Long,
@@ -606,6 +700,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Sync paid amount from linked transaction")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Synced"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/{medicalExpenseId}/sync-payment")
     fun syncPaymentAmount(
         @PathVariable medicalExpenseId: Long,
@@ -625,6 +721,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List unpaid medical expenses")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/unpaid")
     fun getUnpaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/unpaid - Retrieving unpaid medical expenses")
@@ -639,6 +737,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List partially paid medical expenses")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/partially-paid")
     fun getPartiallyPaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/partially-paid - Retrieving partially paid medical expenses")
@@ -653,6 +753,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List fully paid medical expenses")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/fully-paid")
     fun getFullyPaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/fully-paid - Retrieving fully paid medical expenses")
@@ -667,6 +769,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List medical expenses without linked transactions")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/without-transaction")
     fun getMedicalExpensesWithoutTransaction(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/without-transaction - Retrieving medical expenses without linked transactions")
@@ -681,6 +785,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "List overpaid medical expenses")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/overpaid")
     fun getOverpaidMedicalExpenses(): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/overpaid - Retrieving overpaid medical expenses")
@@ -695,6 +801,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Total paid amount by year")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Total returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/totals/year/{year}/paid")
     fun getTotalPaidAmountByYear(
         @PathVariable year: Int,
@@ -711,6 +819,8 @@ class MedicalExpenseController(
         }
     }
 
+    @Operation(summary = "Total unpaid balance")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Total returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/totals/unpaid-balance")
     fun getTotalUnpaidBalance(): ResponseEntity<Map<String, BigDecimal>> {
         logger.info("GET /medical-expenses/totals/unpaid-balance - Retrieving total unpaid balance")

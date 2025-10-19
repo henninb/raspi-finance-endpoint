@@ -4,6 +4,10 @@ import finance.domain.Description
 import finance.domain.MergeDescriptionsRequest
 import finance.domain.ServiceResult
 import finance.services.StandardizedDescriptionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
+@Tag(name = "Description Management", description = "Operations for managing descriptions")
 @RestController
 @RequestMapping("/api/description")
 class DescriptionController(
@@ -31,6 +36,14 @@ class DescriptionController(
      * Standardized collection retrieval - GET /api/description/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active descriptions")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active descriptions retrieved"),
+            ApiResponse(responseCode = "404", description = "No descriptions found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Description>> =
         when (val result = standardizedDescriptionService.findAllActive()) {
@@ -56,6 +69,14 @@ class DescriptionController(
      * Standardized single entity retrieval - GET /api/description/{descriptionName}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get description by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Description retrieved"),
+            ApiResponse(responseCode = "404", description = "Description not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{descriptionName}", produces = ["application/json"])
     override fun findById(
         @PathVariable("descriptionName") id: String,
@@ -83,6 +104,15 @@ class DescriptionController(
      * Standardized entity creation - POST /api/description
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create description")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Description created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Description,
@@ -114,6 +144,16 @@ class DescriptionController(
      * Standardized entity update - PUT /api/description/{descriptionName}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update description by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Description updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Description not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{descriptionName}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("descriptionName") id: String,
@@ -146,6 +186,14 @@ class DescriptionController(
      * Standardized entity deletion - DELETE /api/description/{descriptionName}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete description by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Description deleted"),
+            ApiResponse(responseCode = "404", description = "Description not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{descriptionName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("descriptionName") id: String,
@@ -194,6 +242,8 @@ class DescriptionController(
      * Business logic endpoint - POST /api/description/merge
      * Preserved as-is, not part of standardization
      */
+    @Operation(summary = "Merge multiple descriptions into a target")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Descriptions merged"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PostMapping("/merge", consumes = ["application/json"], produces = ["application/json"])
     fun mergeDescriptions(
         @RequestBody request: MergeDescriptionsRequest,
