@@ -3,6 +3,10 @@ package finance.controllers
 import finance.domain.Category
 import finance.domain.ServiceResult
 import finance.services.StandardizedCategoryService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
+@Tag(name = "Category Management", description = "Operations for managing categories")
 @RestController
 @RequestMapping("/api/category")
 class CategoryController(
@@ -31,6 +36,14 @@ class CategoryController(
      * Standardized collection retrieval - GET /api/category/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active categories")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active categories retrieved"),
+            ApiResponse(responseCode = "404", description = "No categories found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Category>> =
         when (val result = standardizedCategoryService.findAllActive()) {
@@ -56,6 +69,14 @@ class CategoryController(
      * Standardized single entity retrieval - GET /api/category/{categoryName}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get category by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Category retrieved"),
+            ApiResponse(responseCode = "404", description = "Category not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{categoryName}", produces = ["application/json"])
     override fun findById(
         @PathVariable("categoryName") id: String,
@@ -83,6 +104,15 @@ class CategoryController(
      * Standardized entity creation - POST /api/category
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create category")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Category created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Category,
@@ -114,6 +144,16 @@ class CategoryController(
      * Standardized entity update - PUT /api/category/{categoryName}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update category by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Category updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Category not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{categoryName}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("categoryName") id: String,
@@ -152,6 +192,14 @@ class CategoryController(
      * Standardized entity deletion - DELETE /api/category/{categoryName}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete category by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Category deleted"),
+            ApiResponse(responseCode = "404", description = "Category not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{categoryName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("categoryName") id: String,
@@ -200,6 +248,8 @@ class CategoryController(
      * Preserved as-is, not part of standardization
      */
     @PutMapping("/merge", produces = ["application/json"])
+    @Operation(summary = "Merge one category into another")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Categories merged"), ApiResponse(responseCode = "500", description = "Internal server error")])
     fun mergeCategories(
         @RequestParam(value = "new") categoryName1: String,
         @RequestParam("old") categoryName2: String,

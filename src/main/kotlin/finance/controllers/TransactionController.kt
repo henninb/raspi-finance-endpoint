@@ -7,6 +7,10 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.MeterService
 import finance.services.StandardizedTransactionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -27,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.util.Locale
 
 @CrossOrigin
+@Tag(name = "Transaction Management", description = "Operations for managing transactions")
 @RestController
 @RequestMapping("/api/transaction")
 class TransactionController(
@@ -41,6 +46,13 @@ class TransactionController(
      * Returns empty list (standardized behavior) - use business endpoints for meaningful queries
      * Note: Transactions are typically queried by account, category, or other criteria
      */
+    @Operation(summary = "Get all active transactions (empty by design)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Empty list returned by design"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Transaction>> =
         handleCrudOperation("Find all active transactions", null) {
@@ -56,6 +68,14 @@ class TransactionController(
      * Standardized single entity retrieval - GET /api/transaction/{guid}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get transaction by GUID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Transaction retrieved"),
+            ApiResponse(responseCode = "404", description = "Transaction not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{guid}", produces = ["application/json"])
     override fun findById(
         @PathVariable("guid") id: String,
@@ -84,6 +104,15 @@ class TransactionController(
      * Standardized entity creation - POST /api/transaction
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create transaction")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Transaction created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Transaction,
@@ -115,6 +144,16 @@ class TransactionController(
      * Standardized entity update - PUT /api/transaction/{guid}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update transaction by GUID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Transaction updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Transaction not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{guid}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("guid") id: String,
@@ -156,6 +195,14 @@ class TransactionController(
      * Standardized entity deletion - DELETE /api/transaction/{guid}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete transaction by GUID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Transaction deleted"),
+            ApiResponse(responseCode = "404", description = "Transaction not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{guid}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("guid") id: String,
@@ -194,6 +241,8 @@ class TransactionController(
      * Returns a paged list of transactions across all accounts filtered by transactionDate
      * Query params: startDate=yyyy-MM-dd, endDate=yyyy-MM-dd, plus standard Spring Data page params
      */
+    @Operation(summary = "Find transactions by date range (paged)")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Page returned"), ApiResponse(responseCode = "400", description = "Invalid range"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/date-range", produces = ["application/json"])
     fun findByDateRange(
         @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd") start: java.util.Date,
@@ -223,6 +272,8 @@ class TransactionController(
      * Legacy business logic endpoint - GET /api/transaction/account/select/{accountNameOwner}
      * Returns transactions for specific account (business logic preserved)
      */
+    @Operation(summary = "List transactions for an account")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transactions returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/account/select/{accountNameOwner}", produces = ["application/json"])
     fun selectByAccountNameOwner(
         @PathVariable("accountNameOwner") accountNameOwner: String,
@@ -244,6 +295,8 @@ class TransactionController(
         }
 
     // curl -k https://localhost:8443/transaction/account/totals/chase_brian
+    @Operation(summary = "Get totals for an account")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Totals returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/account/totals/{accountNameOwner}", produces = ["application/json"])
     fun selectTotalsCleared(
         @PathVariable("accountNameOwner") accountNameOwner: String,
@@ -261,6 +314,8 @@ class TransactionController(
         }
 
     // curl -k --header "Content-Type: application/json" --request PUT https://localhost:8443/transaction/state/update/340c315d-39ad-4a02-a294-84a74c1c7ddc/cleared
+    @Operation(summary = "Update transaction state by GUID")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transaction state updated"), ApiResponse(responseCode = "400", description = "Invalid state"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping(
         "/state/update/{guid}/{transactionStateValue}",
         consumes = ["application/json"],
@@ -290,6 +345,8 @@ class TransactionController(
 
     // Modern business logic endpoint - POST /api/transaction/future
     // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "description":"future transaction", "category":"misc", "amount": 15.00, "reoccurringType":"monthly"}' https://localhost:8443/transaction/future
+    @Operation(summary = "Create a future-dated transaction")
+    @ApiResponses(value = [ApiResponse(responseCode = "201", description = "Future transaction created"), ApiResponse(responseCode = "400", description = "Validation error"), ApiResponse(responseCode = "409", description = "Duplicate"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PostMapping("/future", consumes = ["application/json"], produces = ["application/json"])
     fun insertFutureTransaction(
         @RequestBody transaction: Transaction,
@@ -323,6 +380,8 @@ class TransactionController(
     }
 
     // curl -k --header "Content-Type: application/json" --request PUT --data '{"guid":"340c315d-39ad-4a02-a294-84a74c1c7ddc", "accountNameOwner":"new_account"}' https://localhost:8443/transaction/update/account
+    @Operation(summary = "Change the accountNameOwner for a transaction")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transaction updated"), ApiResponse(responseCode = "400", description = "Missing fields"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/update/account", consumes = ["application/json"], produces = ["application/json"])
     fun changeTransactionAccountNameOwner(
         @RequestBody payload: Map<String, String>,
@@ -347,6 +406,8 @@ class TransactionController(
         }
 
     // curl -k --header "Content-Type: application/json" --request PUT --data 'base64encodedimagedata' https://localhost:8443/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f
+    @Operation(summary = "Update receipt image for a transaction")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Receipt image updated"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/update/receipt/image/{guid}", produces = ["application/json"])
     fun updateTransactionReceiptImageByGuid(
         @PathVariable("guid") guid: String,
@@ -374,6 +435,8 @@ class TransactionController(
 //    }
 
     // curl -k https://localhost:8443/transaction/category/ach
+    @Operation(summary = "List transactions by category name")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transactions returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/category/{category_name}", produces = ["application/json"])
     fun selectTransactionsByCategory(
         @PathVariable("category_name") categoryName: String,
@@ -393,6 +456,8 @@ class TransactionController(
         }
 
     // curl -k https://localhost:8443/transaction/description/amazon
+    @Operation(summary = "List transactions by description name")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transactions returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/description/{description_name}", produces = ["application/json"])
     fun selectTransactionsByDescription(
         @PathVariable("description_name") descriptionName: String,

@@ -3,6 +3,10 @@ package finance.controllers
 import finance.domain.Parameter
 import finance.domain.ServiceResult
 import finance.services.StandardizedParameterService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @CrossOrigin
+@Tag(name = "Parameter Management", description = "Operations for managing parameters")
 @RestController
 @RequestMapping("/api/parameter")
 class ParameterController(
@@ -30,6 +35,13 @@ class ParameterController(
      * Returns empty list instead of throwing 404 (standardized behavior)
      * Uses ServiceResult pattern for enhanced error handling
      */
+    @Operation(summary = "Get all active parameters")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active parameters retrieved"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Parameter>> =
         when (val result = standardizedParameterService.findAllActive()) {
@@ -55,6 +67,14 @@ class ParameterController(
      * Standardized single entity retrieval - GET /api/parameter/{parameterName}
      * Uses camelCase parameter and ServiceResult pattern for enhanced error handling
      */
+    @Operation(summary = "Get parameter by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Parameter retrieved"),
+            ApiResponse(responseCode = "404", description = "Parameter not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{parameterName}", produces = ["application/json"])
     override fun findById(
         @PathVariable("parameterName") id: String,
@@ -82,6 +102,15 @@ class ParameterController(
      * Standardized entity creation - POST /api/parameter
      * Returns 201 CREATED with ServiceResult pattern for enhanced error handling
      */
+    @Operation(summary = "Create parameter")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Parameter created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Parameter,
@@ -113,6 +142,16 @@ class ParameterController(
      * Standardized entity update - PUT /api/parameter/{parameterName}
      * Uses camelCase parameter and ServiceResult pattern for enhanced error handling
      */
+    @Operation(summary = "Update parameter by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Parameter updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Parameter not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{parameterName}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("parameterName") id: String,
@@ -173,6 +212,14 @@ class ParameterController(
      * Standardized entity deletion - DELETE /api/parameter/{parameterName}
      * Returns 200 OK with deleted entity using ServiceResult pattern
      */
+    @Operation(summary = "Delete parameter by name")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Parameter deleted"),
+            ApiResponse(responseCode = "404", description = "Parameter not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{parameterName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("parameterName") id: String,
