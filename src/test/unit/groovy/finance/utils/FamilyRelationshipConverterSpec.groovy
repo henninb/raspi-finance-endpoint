@@ -29,10 +29,26 @@ class FamilyRelationshipConverterSpec extends Specification {
 
     def "invalid relationship throws RuntimeException"() {
         when:
-        converter.convertToEntityAttribute('cousin')
+            converter.convertToEntityAttribute('cousin')
 
         then:
-        thrown(RuntimeException)
+            def ex = thrown(RuntimeException)
+            ex.message == 'Unknown family relationship attribute: cousin'
+    }
+
+    def "round trip conversion works for all FamilyRelationship values"() {
+        expect:
+        FamilyRelationship.values().every { original ->
+            String db = converter.convertToDatabaseColumn(original)
+            converter.convertToEntityAttribute(db) == original
+        }
+    }
+
+    def "all FamilyRelationship values convert to non-empty labels"() {
+        expect:
+        FamilyRelationship.values().every { fr ->
+            def label = converter.convertToDatabaseColumn(fr)
+            label != null && !label.trim().isEmpty()
+        }
     }
 }
-

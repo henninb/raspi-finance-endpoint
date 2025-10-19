@@ -1,48 +1,36 @@
 package finance.utils
 
 import spock.lang.Specification
-
-import javax.imageio.ImageIO
 import jakarta.validation.ConstraintValidatorContext
-import java.awt.image.BufferedImage
-import java.awt.Color
-import java.io.ByteArrayOutputStream
 
 class ImageValidatorSpec extends Specification {
-    def validator = new ImageValidator()
+
     def context = Mock(ConstraintValidatorContext)
 
-    private static byte[] makePngBytes(int w = 1, int h = 1, Color color = Color.RED) {
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                img.setRGB(x, y, color.getRGB())
-            }
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream()
-        ImageIO.write(img, 'png', baos)
-        return baos.toByteArray()
-    }
+    def "Empty byte array is valid"() {
+        given:
+        def validator = new ImageValidator()
 
-    def "empty byte array is considered valid"() {
         expect:
         validator.isValid(new byte[0], context)
     }
 
-    def "valid PNG bytes are accepted"() {
+    def "JPEG image bytes are valid"() {
         given:
-        byte[] bytes = makePngBytes()
+        def validator = new ImageValidator()
+        byte[] bytes = this.class.getResourceAsStream('/viking-icon.jpg').bytes
 
         expect:
         validator.isValid(bytes, context)
     }
 
-    def "random bytes are rejected"() {
+    def "Random non-image bytes are invalid"() {
         given:
-        byte[] bytes = new byte[32]
-        new Random(1234).nextBytes(bytes)
+        def validator = new ImageValidator()
+        byte[] bytes = 'not an image'.getBytes('UTF-8')
 
         expect:
         !validator.isValid(bytes, context)
     }
 }
+
