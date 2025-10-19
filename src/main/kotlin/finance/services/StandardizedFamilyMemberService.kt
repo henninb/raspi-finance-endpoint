@@ -112,8 +112,8 @@ class StandardizedFamilyMemberService(
 
     fun deleteById(id: Long): ServiceResult<Boolean> {
         return try {
-            // Check if family member exists first (regardless of active status)
-            val existingMember = familyMemberRepository.findById(id).orElse(null)
+            // Check if family member exists (active only) to match standardized behavior and specs
+            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
             if (existingMember == null) {
                 return ServiceResult.NotFound("FamilyMember not found: $id")
             }
@@ -122,6 +122,24 @@ class StandardizedFamilyMemberService(
             ServiceResult.Success(updatedRows > 0)
         } catch (e: Exception) {
             logger.error("Error deleting family member", e)
+            ServiceResult.SystemError(e)
+        }
+    }
+
+    /**
+     * Delete by id regardless of current active status.
+     * Used by controller to support deleting already-deactivated members (functional spec).
+     */
+    fun deleteByIdAnyStatus(id: Long): ServiceResult<Boolean> {
+        return try {
+            val existingMember = familyMemberRepository.findById(id).orElse(null)
+            if (existingMember == null) {
+                return ServiceResult.NotFound("FamilyMember not found: $id")
+            }
+            val updatedRows = familyMemberRepository.softDeleteByFamilyMemberId(id)
+            ServiceResult.Success(updatedRows > 0)
+        } catch (e: Exception) {
+            logger.error("Error deleting family member (any status)", e)
             ServiceResult.SystemError(e)
         }
     }

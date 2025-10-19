@@ -3,6 +3,10 @@ package finance.controllers
 import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.services.StandardizedPaymentService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
+@Tag(name = "Payment Management", description = "Operations for managing payments")
 @RestController
 @RequestMapping("/api/payment")
 class PaymentController(
@@ -30,6 +35,13 @@ class PaymentController(
      * Standardized collection retrieval - GET /api/payment/active
      * Returns empty list instead of throwing 404 (standardized behavior)
      */
+    @Operation(summary = "Get all active payments")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active payments retrieved"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Payment>> =
         when (val result = standardizedPaymentService.findAllActive()) {
@@ -55,6 +67,14 @@ class PaymentController(
      * Standardized single entity retrieval - GET /api/payment/{paymentId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get payment by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Payment retrieved"),
+            ApiResponse(responseCode = "404", description = "Payment not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{paymentId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("paymentId") id: Long,
@@ -82,6 +102,15 @@ class PaymentController(
      * Standardized entity creation - POST /api/payment
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create payment")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Payment created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Payment,
@@ -113,6 +142,16 @@ class PaymentController(
      * Standardized entity update - PUT /api/payment/{paymentId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Update payment by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Payment updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Payment not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{paymentId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("paymentId") id: Long,
@@ -151,6 +190,14 @@ class PaymentController(
      * Standardized entity deletion - DELETE /api/payment/{paymentId}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete payment by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Payment deleted"),
+            ApiResponse(responseCode = "404", description = "Payment not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{paymentId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("paymentId") id: Long,

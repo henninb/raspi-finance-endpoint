@@ -4,6 +4,10 @@ import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
 import finance.services.StandardizedValidationAmountService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -20,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.util.Locale
 
 @CrossOrigin
+@Tag(name = "Validation Amount Management", description = "Operations for managing validation amounts")
 @RestController
 @RequestMapping("/api/validation/amount")
 class ValidationAmountController(
@@ -41,6 +46,14 @@ class ValidationAmountController(
      * - accountNameOwner: Filter by account name
      * - transactionState: Filter by transaction state (cleared, outstanding, future)
      */
+    @Operation(summary = "Get all active validation amounts (with optional filters)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active validation amounts retrieved"),
+            ApiResponse(responseCode = "404", description = "No validation amounts found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     fun findAllActiveWithFilters(
         @org.springframework.web.bind.annotation.RequestParam(required = false) accountNameOwner: String?,
@@ -98,6 +111,14 @@ class ValidationAmountController(
      * Standardized single entity retrieval - GET /api/validation/amount/{validationId}
      * Uses camelCase parameter without @PathVariable annotation
      */
+    @Operation(summary = "Get validation amount by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Validation amount retrieved"),
+            ApiResponse(responseCode = "404", description = "Validation amount not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{validationId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("validationId") id: Long,
@@ -125,6 +146,15 @@ class ValidationAmountController(
      * Standardized entity creation - POST /api/validation/amount
      * Returns 201 CREATED
      */
+    @Operation(summary = "Create validation amount")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Validation amount created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: ValidationAmount,
@@ -156,6 +186,16 @@ class ValidationAmountController(
      * Standardized entity update - PUT /api/validation/amount/{validationId}
      * Uses entity type instead of Map<String, Any>
      */
+    @Operation(summary = "Update validation amount by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Validation amount updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Validation amount not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{validationId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("validationId") id: Long,
@@ -192,6 +232,14 @@ class ValidationAmountController(
      * Standardized entity deletion - DELETE /api/validation/amount/{validationId}
      * Returns 200 OK with deleted entity
      */
+    @Operation(summary = "Delete validation amount by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Validation amount deleted"),
+            ApiResponse(responseCode = "404", description = "Validation amount not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{validationId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("validationId") id: Long,

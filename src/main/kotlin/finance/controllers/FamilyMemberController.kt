@@ -4,6 +4,10 @@ import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.domain.ServiceResult
 import finance.services.StandardizedFamilyMemberService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @CrossOrigin
+@Tag(name = "Family Member Management", description = "Operations for managing family members")
 @RestController
 @RequestMapping("/api/family-members")
 open class FamilyMemberController(
@@ -32,6 +37,14 @@ open class FamilyMemberController(
      * GET /api/family-members/active
      * Returns all active family members
      */
+    @Operation(summary = "Get all active family members")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Active family members retrieved"),
+            ApiResponse(responseCode = "404", description = "No family members found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<FamilyMember>> =
         when (val result = standardizedFamilyMemberService.findAllActive()) {
@@ -57,6 +70,14 @@ open class FamilyMemberController(
      * GET /api/family-members/{familyMemberId}
      * Get single family member by ID
      */
+    @Operation(summary = "Get family member by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Family member retrieved"),
+            ApiResponse(responseCode = "404", description = "Family member not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @GetMapping("/{familyMemberId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("familyMemberId") id: Long,
@@ -84,6 +105,15 @@ open class FamilyMemberController(
      * POST /api/family-members
      * Create new family member
      */
+    @Operation(summary = "Create family member")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Family member created"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "409", description = "Conflict/duplicate"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: FamilyMember,
@@ -115,6 +145,16 @@ open class FamilyMemberController(
      * PUT /api/family-members/{familyMemberId}
      * Update existing family member
      */
+    @Operation(summary = "Update family member by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Family member updated"),
+            ApiResponse(responseCode = "400", description = "Validation error"),
+            ApiResponse(responseCode = "404", description = "Family member not found"),
+            ApiResponse(responseCode = "409", description = "Conflict"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @PutMapping("/{familyMemberId}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("familyMemberId") id: Long,
@@ -154,6 +194,14 @@ open class FamilyMemberController(
      * Delete family member (returns deleted entity)
      * Note: Finds member regardless of active status to support deleting already-deactivated members
      */
+    @Operation(summary = "Delete family member by ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Family member deleted"),
+            ApiResponse(responseCode = "404", description = "Family member not found"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
     @DeleteMapping("/{familyMemberId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("familyMemberId") id: Long,
@@ -163,7 +211,7 @@ open class FamilyMemberController(
             is ServiceResult.Success<FamilyMember> -> {
                 val memberToDelete = findResult.data
 
-                when (val deleteResult = standardizedFamilyMemberService.deleteById(id)) {
+                when (val deleteResult = standardizedFamilyMemberService.deleteByIdAnyStatus(id)) {
                     is ServiceResult.Success<Boolean> -> {
                         logger.info("Family member deleted successfully: $id")
                         ResponseEntity.ok(memberToDelete)
