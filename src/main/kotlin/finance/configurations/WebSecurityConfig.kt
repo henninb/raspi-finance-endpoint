@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -44,7 +45,22 @@ open class WebSecurityConfig(
             .addFilterBefore(httpErrorLoggingFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
-            .csrf { it.disable() }
+            .headers { headers ->
+                headers.contentTypeOptions { }
+                headers.frameOptions { it.deny() }
+                headers.referrerPolicy { it.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN) }
+                // Apply HSTS only when running with a production-like profile
+                val isProd = environment.activeProfiles.any { it.equals("prod", true) || it.equals("production", true) }
+                if (isProd) {
+                    headers.httpStrictTransportSecurity { hsts ->
+                        hsts.includeSubDomains(true).preload(true).maxAgeInSeconds(15552000)
+                    }
+                }
+                headers.contentSecurityPolicy { csp ->
+                    // Minimal CSP for API-only service; adjust if serving web content
+                    csp.policyDirectives("default-src 'none'")
+                }
+            }.csrf { it.disable() }
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/login", "/api/register").permitAll()
                 auth.requestMatchers("/graphql").authenticated()

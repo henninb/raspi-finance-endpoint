@@ -2,6 +2,131 @@
 
 This document contains a comprehensive security assessment of the raspi-finance-endpoint application, focusing on the `/api/login` endpoint vulnerabilities and remediation strategies.
 
+## Additional Hardening Opportunities (2025-10-19)
+
+The items below complement the existing findings with concrete, high‑impact steps to reduce OWASP Top 10 risk, improve zero‑day readiness, protect APIs, and manage CVEs/supply‑chain exposure.
+
+### 0. Supply Chain & CVE Management
+- Pin to GA releases: Avoid milestone/RC builds in production (e.g., `springBootVersion=4.0.0-M3`, `springSecurityVersion=7.0.0-M3`, `micrometerInfluxRegistryVersion=1.16.0-RC1`, `jacksonAnnotationsVersion=3.0-rc5`). Track the latest stable Boot line (e.g., 3.3.x/3.4.x) and align ecosystem versions via the Spring Boot BOM.
+- Remove unnecessary surfaces: Drop `org.apache.logging.log4j:log4j-core` unless required; project already uses Logback. Reduces attack surface and classpath conflicts.
+- Enable dependency locking: Use Gradle dependency locking to freeze transitive versions and prevent drift.
+- Automate CVE scanning: Add OWASP Dependency-Check and/or Grype/Trivy to CI for Gradle and container images. Fail PRs on high/critical CVEs.
+- Keep JJWT current: Stay on latest JJWT 0.13.x+ and prefer small, frequent upgrades to minimize blast radius.
+
+Example Gradle plugin (documented; add when ready):
+```gradle
+plugins {
+  id "org.owasp.dependencycheck" version "9.2.0"
+}
+
+dependencyCheck {
+  failBuildOnCVSS = 7.0
+  suppressionFile = "config/dependencycheck/suppressions.xml" // optional
+}
+
+tasks.named('check') { dependsOn 'dependencyCheckAnalyze' }
+```
+
+### 1. Security Headers (A05:2021 – Security Misconfiguration)
+- Enforce HSTS in prod: `Strict-Transport-Security: max-age=15552000; includeSubDomains; preload`.
+- Set standard headers via Spring Security: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, a conservative `Referrer-Policy`, and a minimal CSP (even for APIs) to guard default error pages.
+- Prefer SecurityFilterChain headers API over a custom filter to centralize policy.
+
+Suggested snippet (WebSecurityConfig):
+```kotlin
+http
+  .headers { headers ->
+    headers.contentTypeOptions { }
+    headers.frameOptions { it.deny() }
+    headers.referrerPolicy { it.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN) }
+    headers.httpStrictTransportSecurity { it.includeSubDomains(true).preload(true).maxAgeInSeconds(15552000) }
+    headers.contentSecurityPolicy { csp -> csp.policyDirectives("default-src 'none'") }
+  }
+```
+
+### 2. Logging Hygiene (A09:2021 – Security Logging & Monitoring Failures)
+- Disable body logging in prod: `RequestLoggingFilter` currently logs request bodies. Restrict to `dev` only and redact sensitive keys if ever enabled. Consider removing entirely on public endpoints.
+- Downgrade sensitive logs: Success auth logs with username/IP at `INFO` can leak PII in aggregated logs. Consider `DEBUG` for success; keep failures at `WARN` with redaction/truncation (already partially implemented).
+- Never log secrets/tokens: Continue sanitizing headers/params; ensure any new filters avoid cookies, `Authorization`, keys, or JWTs in logs.
+
+Dev-only filter example:
+```kotlin
+@Profile("dev")
+@Component
+class RequestLoggingFilter : OncePerRequestFilter() { /* redacted body logging */ }
+```
+
+### 3. CORS Policy Tightening (A05:2021 – Security Misconfiguration)
+- Externalize allowed origins: Replace hardcoded origins in `WebSecurityConfig.corsConfigurationSource()` with profile‑driven lists. Maintain a minimal prod allowlist; remove `chrome-extension://...` from prod.
+- Avoid wildcards and mixed schemes; prefer `https://<exact-host>`.
+
+### 4. Actuator Hardening (A05:2021)
+- Production: limit exposure to `health`, `info` and require auth; disable details on `health` unless behind auth. Keep “include *” only in local/dev.
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+```
+
+### 5. GraphQL Guardrails (A01/A04/A06)
+- Move depth/complexity limits to config: Keep defaults conservative and allow tightening in prod (e.g., depth 8–10, complexity ~150–200).
+- Disable GraphiQL in prod: Already configurable; ensure prod profile sets `graphiql.enabled: false`.
+- Consider allowlisted persisted queries in prod to reduce attack surface.
+
+### 6. Rate Limiting & Abuse Controls (A07:2021 – Identification & Authentication Failures)
+- Current filter improves trust of proxy headers; extend limiting dimensions: per IP, per user, and per credential source (cookie vs header).
+- Introduce endpoint‑specific throttles: Stricter for `/api/login`, `/graphql` mutations, and write endpoints.
+- Consider a proven library (e.g., Bucket4j) with token buckets and distributed backing (Redis) if running multi‑instance.
+
+### 7. API Protection (A01/A02/A05)
+- Optional API key guard: Implement an interceptor to enforce a static or rotated API key for non‑browser use cases; scope to specific routes (e.g., admin/automation). Keep disabled by default.
+- Uniform auth across REST and GraphQL: Ensure JWT cookie/Authorization header paths are consistent and CSRF‑resistant (SameSite=Strict is in place).
+
+### 8. JWT Hardening (A07/A02)
+- Key rotation: Implement dual‑key validation (current + previous) and put a `kid` header in tokens to streamline rollovers.
+- Shorter lifetimes for privileged ops: Keep general tokens short (e.g., 30–60 min) and consider refresh tokens for longer sessions if needed.
+- Blacklist on logout (optional): For high‑risk users/flows, maintain a short‑lived denylist until token expiry.
+
+### 9. Zero‑Day Readiness
+- CI policy gates: Fail builds on high/critical CVEs; surface SBOMs (CycloneDX) for quick impact analysis.
+- Runtime posture: Keep defense‑in‑depth (headers, CORS, strict auth, minimal logs) to mitigate exploitability of unknowns.
+- Fast upgrades: Use Dependabot (or Renovate) for Gradle and Docker to shorten patch lead time.
+
+Example `.github/dependabot.yml` (documented):
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+```
+
+### 10. Quick OWASP Top 10 Alignment
+- A01 Broken Access Control: Enforce method security (`@PreAuthorize`), double‑check all admin‑level routes, and avoid controller over‑exposure.
+- A02 Cryptographic Failures: Enforce TLS, HSTS, strong JWT keys, and avoid legacy ciphers.
+- A03 Injection: Continue using JPA/validation; validate GraphQL inputs and IDs/UUIDs.
+- A04 Insecure Design: Keep rate limiting/account lockout and secure defaults.
+- A05 Security Misconfiguration: Headers, CORS, actuator, and minimal services.
+- A06 Vulnerable & Outdated Components: CVE scanning, GA releases, BOM alignment, dependency locking.
+- A07 Identification & Auth Failures: MFA option, lockout, token rotation, cookie security.
+- A08 Software/Data Integrity: Sign images (Sigstore/Cosign), verify artifact provenance.
+- A09 Security Logging/Monitoring: Redacted, structured logs; metrics + alerts.
+- A10 Server-Side Request Forgery: Avoid proxying arbitrary URLs; whitelist outbound targets if added.
+
+—
+The sections below remain from the earlier assessment and continue to apply.
+
 ## RED TEAM ASSESSMENT: /api/login ENDPOINT
 
 ### CRITICAL VULNERABILITIES IDENTIFIED ⚠️

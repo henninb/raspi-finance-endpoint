@@ -8,19 +8,17 @@ import io.github.resilience4j.timelimiter.TimeLimiter
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
 import org.springframework.jdbc.CannotGetJdbcConnectionException
-import org.springframework.stereotype.Service
 import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
-@Service
 open class BaseService {
     @Autowired
     lateinit var meterService: MeterService
@@ -111,15 +109,16 @@ open class BaseService {
             databaseResilienceConfig!!
                 .executeWithResilience(
                     operation = {
+                        var result: T
                         val duration =
                             measureTimeMillis {
-                                operation()
+                                result = operation()
                             }
                         if (duration > 100) {
                             logger.warn("Slow query detected for {}: {} ms", operationName, duration)
                             meterService.incrementExceptionThrownCounter("SlowQuery")
                         }
-                        operation()
+                        result
                     },
                     circuitBreaker = circuitBreaker!!,
                     retry = retry!!,
@@ -236,6 +235,6 @@ open class BaseService {
 
     companion object {
         val mapper = ObjectMapper()
-        val logger: Logger = LogManager.getLogger()
+        val logger: Logger = LoggerFactory.getLogger(BaseService::class.java)
     }
 }

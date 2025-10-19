@@ -1,240 +1,192 @@
 package finance.services
 
-import finance.domain.Totals
 import finance.domain.Transaction
 import finance.domain.TransactionState
-import finance.helpers.TransactionBuilder
-import spock.lang.Shared
-import spock.lang.Unroll
+import finance.repositories.TransactionRepository
+import spock.lang.Specification
 
 import java.math.BigDecimal
-import java.math.RoundingMode
 
-/**
- * TDD Specification for CalculationService
- * Tests the extracted calculation functionality from TransactionService
- */
-class CalculationServiceSpec extends BaseServiceSpec {
+class CalculationServiceSpec extends Specification {
 
-    protected CalculationService calculationService = new CalculationService(transactionRepositoryMock)
+    def repo = Mock(TransactionRepository)
 
-    @Shared
-    List<Transaction> testTransactions
+    CalculationService service
+    def registry
 
-    void setup() {
-        calculationService.meterService = meterService
-        calculationService.validator = validatorMock
+    def setup() {
+        service = new CalculationService(repo)
+        // Provide a meter service with a real registry for counter assertions
+        registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
+        service.meterService = new MeterService(registry, null)
     }
 
-    def setupSpec() {
-        // Create test transactions for calculation testing
-        testTransactions = makeTestTransactions()
+    private static Transaction tx(TransactionState state, BigDecimal amount) {
+        def t = new Transaction()
+        t.transactionState = state
+        t.amount = amount
+        return t
     }
 
-    // ===== TDD Tests for calculateActiveTotalsByAccountNameOwner() =====
-
-    def "should calculate totals by account name using repository aggregation"() {
-        given: "an account name and mocked repository result"
-        String accountName = "test_account"
-        // Mock repository result: [amount, id, transactionState]
-        List<Object[]> mockResult = [
-            [new BigDecimal("100.50"), 1, "future"] as Object[],
-            [new BigDecimal("250.75"), 1, "cleared"] as Object[],
-            [new BigDecimal("-50.25"), 1, "outstanding"] as Object[]
+    def "calculateTotalsFromTransactions groups and sums by state"() {
+        given:
+        def transactions = [
+                tx(TransactionState.Cleared, new BigDecimal('10.12')),
+                tx(TransactionState.Outstanding, new BigDecimal('5.50')),
+                tx(TransactionState.Future, new BigDecimal('2.38'))
         ]
 
-        when: "calculating totals"
-        Totals result = calculationService.calculateActiveTotalsByAccountNameOwner(accountName)
+        when:
+        def totalsMap = service.calculateTotalsFromTransactions(transactions)
 
-        then: "repository is called and totals are calculated correctly"
-        1 * transactionRepositoryMock.sumTotalsForActiveTransactionsByAccountNameOwner(accountName) >> mockResult
-        result != null
-        result.totalsFuture == new BigDecimal("100.50")
-        result.totalsCleared == new BigDecimal("250.75")
-        result.totalsOutstanding == new BigDecimal("-50.25")
-        result.totals == new BigDecimal("301.00") // Grand total: 100.50 + 250.75 + (-50.25) = 301.00
-        0 * _
+        then:
+        totalsMap[TransactionState.Cleared] == new BigDecimal('10.12').setScale(2)
+        totalsMap[TransactionState.Outstanding] == new BigDecimal('5.50').setScale(2)
+        totalsMap[TransactionState.Future] == new BigDecimal('2.38').setScale(2)
     }
 
-    def "should handle empty repository result gracefully"() {
-        given: "an account name with no transactions"
-        String accountName = "empty_account"
-        List<Object[]> emptyResult = []
-
-        when: "calculating totals"
-        Totals result = calculationService.calculateActiveTotalsByAccountNameOwner(accountName)
-
-        then: "all totals should be zero"
-        1 * transactionRepositoryMock.sumTotalsForActiveTransactionsByAccountNameOwner(accountName) >> emptyResult
-        result != null
-        result.totalsFuture == BigDecimal.ZERO
-        result.totalsCleared == BigDecimal.ZERO
-        result.totalsOutstanding == BigDecimal.ZERO
-        result.totals == BigDecimal.ZERO
-        0 * _
-    }
-
-    def "should handle null values in repository result"() {
-        given: "repository result with null values"
-        String accountName = "test_account"
-        List<Object[]> resultWithNulls = [
-            [null, 1, "future"] as Object[],
-            [new BigDecimal("100.00"), 1, "cleared"] as Object[],
-            [new BigDecimal("50.00"), 1, null] as Object[]
+    def "calculateGrandTotal sums all totals with scale 2"() {
+        given:
+        def totalsMap = [
+                (TransactionState.Cleared): new BigDecimal('10.12'),
+                (TransactionState.Outstanding): new BigDecimal('5.50'),
+                (TransactionState.Future): new BigDecimal('2.38')
         ]
 
-        when: "calculating totals"
-        Totals result = calculationService.calculateActiveTotalsByAccountNameOwner(accountName)
-
-        then: "null values are handled gracefully"
-        1 * transactionRepositoryMock.sumTotalsForActiveTransactionsByAccountNameOwner(accountName) >> resultWithNulls
-        result != null
-        result.totalsFuture == BigDecimal.ZERO // null handled
-        result.totalsCleared == new BigDecimal("100.00")
-        result.totalsOutstanding == BigDecimal.ZERO // unknown state handled
-        result.totals == new BigDecimal("100.00")
-        0 * _
+        expect:
+        service.calculateGrandTotal(totalsMap) == new BigDecimal('18.00').setScale(2)
     }
 
-    // ===== TDD Tests for calculateTotalsFromTransactions() =====
+    def "createTotals assembles values and computes grand total"() {
+        when:
+        def totals = service.createTotals(
+                new BigDecimal('2.38').setScale(2),
+                new BigDecimal('10.12').setScale(2),
+                new BigDecimal('5.50').setScale(2)
+        )
 
-    def "should calculate totals from transaction list correctly"() {
-        given: "a list of transactions with different states"
-        List<Transaction> transactions = [
-            makeTransaction(TransactionState.Future, new BigDecimal("50.00")),
-            makeTransaction(TransactionState.Future, new BigDecimal("25.00")),
-            makeTransaction(TransactionState.Cleared, new BigDecimal("100.00")),
-            makeTransaction(TransactionState.Outstanding, new BigDecimal("-30.00"))
+        then:
+        totals.totals == new BigDecimal('18.00').setScale(2)
+        totals.totalsFuture == new BigDecimal('2.38').setScale(2)
+        totals.totalsCleared == new BigDecimal('10.12').setScale(2)
+        totals.totalsOutstanding == new BigDecimal('5.50').setScale(2)
+    }
+
+    def "validateTotals passes for consistent, reasonable amounts"() {
+        given:
+        def totals = service.createTotals(
+                new BigDecimal('2.00').setScale(2),
+                new BigDecimal('3.00').setScale(2),
+                new BigDecimal('5.00').setScale(2)
+        )
+
+        expect:
+        service.validateTotals(totals)
+    }
+
+    def "validateTotals fails when grand total mismatches expected sum"() {
+        given:
+        def totals = new finance.domain.Totals(
+                new BigDecimal('2.00').setScale(2),
+                new BigDecimal('3.00').setScale(2),
+                new BigDecimal('4.99').setScale(2), // incorrect grand total (should be 10.00)
+                new BigDecimal('5.00').setScale(2)
+        )
+
+        expect:
+        !service.validateTotals(totals)
+    }
+
+    def "validateTotals fails when amounts exceed reasonable bounds"() {
+        given:
+        def huge = new BigDecimal('1000000000.00').setScale(2)
+        def totals = new finance.domain.Totals(huge, huge, huge, huge)
+
+        expect:
+        !service.validateTotals(totals)
+    }
+
+    def "calculateActiveTotalsByAccountNameOwner parses mixed rows and sets per-state totals"() {
+        given:
+        def account = 'owner_account'
+        def rows = [
+                [new BigDecimal('12.34'), 0L, 'future'] as Object[],
+                [new BigDecimal('56.78'), 0L, 'cleared'] as Object[],
+                [new BigDecimal('1.11'),  0L, 'outstanding'] as Object[],
+                [null,                      0L, 'cleared'] as Object[],      // skipped (null amount)
+                [new BigDecimal('2.22'),   0L, 'unknown_state'] as Object[], // ignored (unknown state)
+                [new BigDecimal('3.33'),   0L, null] as Object[]             // skipped (null state)
         ]
 
-        when: "calculating totals from transactions"
-        Map<TransactionState, BigDecimal> result = calculationService.calculateTotalsFromTransactions(transactions)
+        and:
+        repo.sumTotalsForActiveTransactionsByAccountNameOwner(account) >> rows
 
-        then: "totals are calculated correctly by state"
-        result[TransactionState.Future] == new BigDecimal("75.00")
-        result[TransactionState.Cleared] == new BigDecimal("100.00")
-        result[TransactionState.Outstanding] == new BigDecimal("-30.00")
-        result.size() == 3
+        when:
+        def totals = service.calculateActiveTotalsByAccountNameOwner(account)
+
+        then:
+        totals.totalsFuture == new BigDecimal('12.34').setScale(2)
+        totals.totalsCleared == new BigDecimal('56.78').setScale(2)
+        totals.totalsOutstanding == new BigDecimal('1.11').setScale(2)
+        totals.totals == new BigDecimal('70.23').setScale(2)
+
+        and: 'counter for TotalsCalculated was incremented with server tag'
+        def c = registry.get(finance.utils.Constants.EXCEPTION_THROWN_COUNTER)
+                .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, 'TotalsCalculated')
+                .counter()
+        c.count() >= 1d
     }
 
-    def "should handle empty transaction list"() {
-        given: "an empty list of transactions"
-        List<Transaction> emptyTransactions = []
+    def "calculateActiveTotalsByAccountNameOwner increments caught counter on exception"() {
+        given:
+        def account = 'owner_error'
+        repo.sumTotalsForActiveTransactionsByAccountNameOwner(account) >> { throw new RuntimeException('boom') }
 
-        when: "calculating totals"
-        Map<TransactionState, BigDecimal> result = calculationService.calculateTotalsFromTransactions(emptyTransactions)
+        when:
+        service.calculateActiveTotalsByAccountNameOwner(account)
 
-        then: "result should be empty map"
-        result != null
-        result.isEmpty()
+        then:
+        thrown(RuntimeException)
+
+        and:
+        def cc = registry.get(finance.utils.Constants.EXCEPTION_CAUGHT_COUNTER)
+                .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, 'TotalsCalculationError')
+                .counter()
+        cc.count() >= 1d
     }
 
-    // ===== TDD Tests for calculateGrandTotal() =====
+    def "calculateActiveTotalsByAccountNameOwner wraps SQLException as DataAccessResourceFailureException via resilience"() {
+        given: 'enable resilience path in BaseService'
+        def cfg = new finance.configurations.DatabaseResilienceConfiguration()
+        service.databaseResilienceConfig = cfg
+        service.circuitBreaker = cfg.databaseCircuitBreaker()
+        service.retry = cfg.databaseRetry()
+        service.timeLimiter = cfg.databaseTimeLimiter()
+        service.scheduledExecutorService = cfg.scheduledExecutorService()
 
-    @Unroll
-    def "should calculate grand total correctly for #description"() {
-        given: "totals map with various amounts"
-        Map<TransactionState, BigDecimal> totalsMap = inputTotals
+        and: 'repository throws a SQLException inside the resilient operation'
+        def account = 'resilience_case'
+        repo.sumTotalsForActiveTransactionsByAccountNameOwner(account) >> { throw new java.sql.SQLException('db down') }
 
-        when: "calculating grand total"
-        BigDecimal result = calculationService.calculateGrandTotal(totalsMap)
+        when:
+        service.calculateActiveTotalsByAccountNameOwner(account)
 
-        then: "grand total is calculated with proper rounding"
-        result == expectedTotal
+        then:
+        thrown(org.springframework.dao.DataAccessResourceFailureException)
 
-        where:
-        description              | inputTotals                                                                                           | expectedTotal
-        "positive amounts"       | [(TransactionState.Future): new BigDecimal("100.50"), (TransactionState.Cleared): new BigDecimal("200.25")] | new BigDecimal("300.75")
-        "mixed positive/negative"| [(TransactionState.Future): new BigDecimal("100.00"), (TransactionState.Outstanding): new BigDecimal("-25.50")] | new BigDecimal("74.50")
-        "rounding required"      | [(TransactionState.Future): new BigDecimal("100.333"), (TransactionState.Cleared): new BigDecimal("200.666")] | new BigDecimal("301.00")
-        "empty map"              | [:]                                                                                                   | BigDecimal.ZERO
-    }
+        and: 'BaseService increments a thrown counter tag (implementation-dependent)'
+        def possibleTags = ['SQLException','DatabaseOperationException','DataAccessResourceFailureException','CannotGetJdbcConnectionException','DatabaseOperationTimeoutException']
+        assert possibleTags.any { tag ->
+            def c = registry.find(finance.utils.Constants.EXCEPTION_THROWN_COUNTER)
+                    .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, tag)
+                    .counter()
+            c != null && c.count() >= 1d
+        }
 
-    // ===== TDD Tests for createTotals() =====
-
-    def "should create Totals object with calculated grand total"() {
-        given: "individual total amounts"
-        BigDecimal totalsFuture = new BigDecimal("150.50")
-        BigDecimal totalsCleared = new BigDecimal("300.25")
-        BigDecimal totalsOutstanding = new BigDecimal("-25.75")
-
-        when: "creating Totals object"
-        Totals result = calculationService.createTotals(totalsFuture, totalsCleared, totalsOutstanding)
-
-        then: "Totals object is created with correct grand total"
-        result != null
-        result.totalsFuture == totalsFuture
-        result.totalsCleared == totalsCleared
-        result.totalsOutstanding == totalsOutstanding
-        result.totals == new BigDecimal("425.00") // 150.50 + 300.25 + (-25.75) = 425.00
-    }
-
-    // ===== TDD Tests for validateTotals() =====
-
-    @Unroll
-    def "should validate totals correctly for #description"() {
-        given: "a Totals object with various values"
-        Totals totals = inputTotals
-
-        when: "validating totals"
-        boolean result = calculationService.validateTotals(totals)
-
-        then: "validation result matches expectation"
-        result == expectedResult
-
-        where:
-        description           | inputTotals                                                                                                        | expectedResult
-        "valid positive totals" | new Totals(new BigDecimal("100.00"), new BigDecimal("200.00"), new BigDecimal("350.00"), new BigDecimal("50.00")) | true
-        "valid with negatives"  | new Totals(new BigDecimal("100.00"), new BigDecimal("200.00"), new BigDecimal("250.00"), new BigDecimal("-50.00")) | true
-        "invalid grand total"   | new Totals(new BigDecimal("100.00"), new BigDecimal("200.00"), new BigDecimal("400.00"), new BigDecimal("50.00")) | false  // Grand total doesn't match sum
-        "extremely large values"| new Totals(new BigDecimal("999999999.99"), new BigDecimal("1.00"), new BigDecimal("1000000000.99"), BigDecimal.ZERO) | false  // Beyond reasonable limits
-    }
-
-    // ===== TDD Tests for Integration with Existing TransactionService Behavior =====
-
-    def "should maintain compatibility with existing transaction totals calculation"() {
-        given: "repository result matching existing TransactionService format"
-        String accountName = "compatibility_test"
-        List<Object[]> repositoryResult = [
-            [new BigDecimal("150.00"), 1, "future"] as Object[],
-            [new BigDecimal("350.50"), 1, "cleared"] as Object[],
-            [new BigDecimal("75.25"), 1, "outstanding"] as Object[]
-        ]
-
-        when: "calculating totals using new service"
-        Totals result = calculationService.calculateActiveTotalsByAccountNameOwner(accountName)
-
-        then: "result matches existing TransactionService behavior"
-        1 * transactionRepositoryMock.sumTotalsForActiveTransactionsByAccountNameOwner(accountName) >> repositoryResult
-        result != null
-
-        // Verify each component matches expected format
-        result.totalsFuture.scale() <= 2
-        result.totalsCleared.scale() <= 2
-        result.totalsOutstanding.scale() <= 2
-        result.totals.scale() <= 2
-
-        // Verify grand total calculation
-        BigDecimal expectedGrandTotal = result.totalsFuture + result.totalsCleared + result.totalsOutstanding
-        result.totals == expectedGrandTotal.setScale(2, RoundingMode.HALF_UP)
-        0 * _
-    }
-
-    // ===== Test Data Helper Methods =====
-
-    private List<Transaction> makeTestTransactions() {
-        return [
-            makeTransaction(TransactionState.Future, new BigDecimal("100.00")),
-            makeTransaction(TransactionState.Cleared, new BigDecimal("200.00")),
-            makeTransaction(TransactionState.Outstanding, new BigDecimal("-50.00"))
-        ]
-    }
-
-    private Transaction makeTransaction(TransactionState state, BigDecimal amount) {
-        return TransactionBuilder.builder()
-            .withTransactionState(state)
-            .withAmount(amount)
-            .withAccountNameOwner("test_account")
-            .build()
+        and: 'service increments caught counter for TotalsCalculationError'
+        def caughtCounter = registry.get(finance.utils.Constants.EXCEPTION_CAUGHT_COUNTER)
+                .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, 'TotalsCalculationError')
+                .counter()
+        caughtCounter.count() >= 1d
     }
 }

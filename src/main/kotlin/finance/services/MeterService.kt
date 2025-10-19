@@ -16,20 +16,33 @@ import finance.utils.Constants.TRANSACTION_TRANSACTION_STATE_UPDATED_CLEARED_COU
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class MeterService(
     private var meterRegistry: MeterRegistry,
+    @param:Value("\${metrics.server-name:}") private val configuredServerName: String? = null,
 ) {
-    private val hostName = "server" // setHostName()
+    constructor(meterRegistry: MeterRegistry) : this(meterRegistry, null)
+    constructor() : this(SimpleMeterRegistry(), null)
 
-    fun setHostName(): String? {
+    private val hostName: String =
+        when {
+            !configuredServerName.isNullOrBlank() -> configuredServerName
+            else -> {
+                val envHost = setHostName()
+                if (envHost.isBlank() || envHost == "Unknown") "server" else envHost
+            }
+        }
+
+    fun setHostName(): String {
         val env = System.getenv()
         return if (env.containsKey("COMPUTERNAME")) {
-            env["COMPUTERNAME"]
+            env["COMPUTERNAME"] ?: "Unknown"
         } else if (env.containsKey("HOSTNAME")) {
-            env["HOSTNAME"]
+            env["HOSTNAME"] ?: "Unknown"
         } else {
             "Unknown"
         }
