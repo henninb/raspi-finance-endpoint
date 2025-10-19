@@ -37,10 +37,32 @@ class MedicalProviderTypeConverterSpec extends Specification {
 
     def "invalid provider type throws RuntimeException"() {
         when:
-        converter.convertToEntityAttribute('unknown_provider')
+            converter.convertToEntityAttribute('unknown_provider')
 
         then:
-        thrown(RuntimeException)
+            def ex = thrown(RuntimeException)
+            ex.message == 'Unknown medical provider type attribute: unknown_provider'
+    }
+
+    def "round trip conversion works for common MedicalProviderType values"() {
+        expect:
+        [
+            MedicalProviderType.General,
+            MedicalProviderType.Specialist,
+            MedicalProviderType.Hospital,
+            MedicalProviderType.Pharmacy,
+            MedicalProviderType.Laboratory,
+            MedicalProviderType.Imaging,
+            MedicalProviderType.UrgentCare,
+            MedicalProviderType.Emergency,
+            MedicalProviderType.MentalHealth,
+            MedicalProviderType.Dental,
+            MedicalProviderType.Vision,
+            MedicalProviderType.PhysicalTherapy,
+            MedicalProviderType.Other
+        ].every { original ->
+            String db = converter.convertToDatabaseColumn(original)
+            converter.convertToEntityAttribute(db) == original
+        }
     }
 }
-

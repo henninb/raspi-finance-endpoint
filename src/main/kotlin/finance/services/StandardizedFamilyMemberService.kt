@@ -22,8 +22,7 @@ class StandardizedFamilyMemberService(
 
     fun findAllActive(): ServiceResult<List<FamilyMember>> =
         try {
-            val members = familyMemberRepository.findByActiveStatusTrue()
-            ServiceResult.Success(members)
+            ServiceResult.Success(familyMemberRepository.findByActiveStatusTrue())
         } catch (e: Exception) {
             logger.error("Error retrieving all family members", e)
             ServiceResult.SystemError(e)
@@ -31,12 +30,8 @@ class StandardizedFamilyMemberService(
 
     fun findByIdServiceResult(id: Long): ServiceResult<FamilyMember> =
         try {
-            val familyMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
-            if (familyMember != null) {
-                ServiceResult.Success(familyMember)
-            } else {
-                ServiceResult.NotFound("FamilyMember not found: $id")
-            }
+            val fm = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+            if (fm != null) ServiceResult.Success(fm) else ServiceResult.NotFound("FamilyMember not found: $id")
         } catch (e: Exception) {
             logger.error("Error retrieving family member by ID: $id", e)
             ServiceResult.SystemError(e)
@@ -60,26 +55,24 @@ class StandardizedFamilyMemberService(
             // Check if family member already exists first (before validation for test compatibility)
             val existingMember = familyMemberRepository.findByOwnerAndMemberName(entity.owner, entity.memberName)
             if (existingMember != null) {
-                return ServiceResult.BusinessError("Family member already exists for owner='${entity.owner}', name='${entity.memberName}'", "DATA_INTEGRITY_VIOLATION")
+                return ServiceResult.BusinessError(
+                    "Family member already exists for owner='${entity.owner}', name='${entity.memberName}'",
+                    "DATA_INTEGRITY_VIOLATION",
+                )
             }
 
-            // Validate entity
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
-                val errorMap =
-                    violations.associate {
-                        (it.propertyPath?.toString() ?: "unknown") to it.message
-                    }
-                return ServiceResult.ValidationError(errorMap)
+                return ServiceResult.ValidationError(
+                    violations.associate { (it.propertyPath?.toString() ?: "unknown") to it.message },
+                )
             }
 
-            // Set timestamps
             val timestamp = Timestamp(System.currentTimeMillis())
             entity.dateAdded = timestamp
             entity.dateUpdated = timestamp
 
-            val savedEntity = familyMemberRepository.save(entity)
-            ServiceResult.Success(savedEntity)
+            ServiceResult.Success(familyMemberRepository.save(entity))
         } catch (e: jakarta.validation.ConstraintViolationException) {
             val errorMap =
                 e.constraintViolations.associate {
@@ -94,16 +87,14 @@ class StandardizedFamilyMemberService(
 
     fun update(entity: FamilyMember): ServiceResult<FamilyMember> {
         return try {
-            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(entity.familyMemberId!!)
-            if (existingMember == null) {
-                return ServiceResult.NotFound("FamilyMember not found: ${entity.familyMemberId}")
-            }
+            val existingMember =
+                familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(entity.familyMemberId!!)
+                    ?: return ServiceResult.NotFound("FamilyMember not found: ${entity.familyMemberId}")
 
-            // Update timestamp
+            // Keep immutable fields from existing if needed; for now, update timestamps only
+            entity.dateAdded = existingMember.dateAdded
             entity.dateUpdated = Timestamp(System.currentTimeMillis())
-
-            val savedEntity = familyMemberRepository.save(entity)
-            ServiceResult.Success(savedEntity)
+            ServiceResult.Success(familyMemberRepository.save(entity))
         } catch (e: Exception) {
             logger.error("Error updating family member", e)
             ServiceResult.SystemError(e)
@@ -112,11 +103,9 @@ class StandardizedFamilyMemberService(
 
     fun deleteById(id: Long): ServiceResult<Boolean> {
         return try {
-            // Check if family member exists (active only) to match standardized behavior and specs
-            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
-            if (existingMember == null) {
-                return ServiceResult.NotFound("FamilyMember not found: $id")
-            }
+            val existingMember =
+                familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+                    ?: return ServiceResult.NotFound("FamilyMember not found: $id")
 
             val updatedRows = familyMemberRepository.softDeleteByFamilyMemberId(id)
             ServiceResult.Success(updatedRows > 0)
@@ -145,6 +134,11 @@ class StandardizedFamilyMemberService(
     }
 
     // ===== Legacy Methods for Backward Compatibility =====
+
+    fun findById(id: Long): FamilyMember? {
+        logger.debug("Finding family member by ID: $id")
+        return familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+    }
 
     fun insertFamilyMember(member: FamilyMember): FamilyMember {
         logger.info("Inserting family member for owner: ${member.owner}")
@@ -198,7 +192,7 @@ class StandardizedFamilyMemberService(
         }
     }
 
-    fun findById(id: Long): FamilyMember? {
+    fun findFamilyMemberById(id: Long): FamilyMember? {
         logger.debug("Finding family member by ID: $id")
         return familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
     }

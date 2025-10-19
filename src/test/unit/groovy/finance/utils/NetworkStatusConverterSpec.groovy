@@ -28,10 +28,18 @@ class NetworkStatusConverterSpec extends Specification {
 
     def "invalid input throws RuntimeException"() {
         when:
-        converter.convertToEntityAttribute('not-a-status')
+            converter.convertToEntityAttribute('not-a-status')
 
         then:
-        thrown(RuntimeException)
+            def ex = thrown(RuntimeException)
+            ex.message == 'Unknown network status attribute: not-a-status'
+    }
+
+    def "round trip conversion works for all NetworkStatus values"() {
+        expect:
+        [NetworkStatus.InNetwork, NetworkStatus.OutOfNetwork, NetworkStatus.Unknown].every { original ->
+            String db = converter.convertToDatabaseColumn(original)
+            converter.convertToEntityAttribute(db) == original
+        }
     }
 }
-

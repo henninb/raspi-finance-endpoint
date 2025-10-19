@@ -65,3 +65,4 @@ kls_database.db
 *.log
 excel_in
 .DS_Store
+gradle.lockfile
