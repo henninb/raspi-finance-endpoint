@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.services.TokenBlacklistService
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.boot.web.servlet.FilterRegistrationBean
@@ -62,7 +63,7 @@ open class WebSecurityConfig(
                 }
             }.csrf { it.disable() }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/api/login", "/api/register").permitAll()
+                auth.requestMatchers("/api/login", "/api/register", "/api/logout").permitAll()
                 auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
                 auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
@@ -71,7 +72,7 @@ open class WebSecurityConfig(
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter::class.java)
         val chain = http.build()
-        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register']")
+        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register','/api/logout']")
         return chain
     }
 
@@ -88,7 +89,10 @@ open class WebSecurityConfig(
     open fun loggingCorsFilter(corsConfigurationSource: CorsConfigurationSource): LoggingCorsFilter = LoggingCorsFilter(corsConfigurationSource)
 
     @Bean
-    open fun jwtAuthenticationFilter(meterRegistry: MeterRegistry): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry)
+    open fun jwtAuthenticationFilter(
+        meterRegistry: MeterRegistry,
+        tokenBlacklistService: TokenBlacklistService,
+    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService)
 
     // Prevent Boot from auto-registering these filters with the servlet container; they are managed by SecurityFilterChain
     @Bean

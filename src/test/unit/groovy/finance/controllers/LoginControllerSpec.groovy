@@ -2,6 +2,7 @@ package finance.controllers
 
 import finance.domain.User
 import finance.repositories.UserRepository
+import finance.services.TokenBlacklistService
 import finance.services.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,7 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 class LoginControllerSpec extends Specification {
     private UserRepository userRepository = Mock()
     private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder())
-    private LoginController loginController = new LoginController(userService)
+    private TokenBlacklistService tokenBlacklistService = Mock()
+    private LoginController loginController = new LoginController(userService, tokenBlacklistService)
     private HttpServletResponse response = Mock()
     private BindingResult bindingResult = Mock()
 
@@ -68,10 +70,24 @@ class LoginControllerSpec extends Specification {
     }
 
     def "logout should clear token and return NO_CONTENT"() {
+        given:
+        def request = Mock(jakarta.servlet.http.HttpServletRequest)
+        def key = Keys.hmacShaKeyFor(loginController.jwtKey.bytes)
+        def token = Jwts.builder()
+            .claim("username", "testuser")
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key)
+            .compact()
+        request.getCookies() >> null
+        request.getHeader("Cookie") >> "token=${token}"
+        request.getHeader("Authorization") >> null
+
         when:
-        ResponseEntity<Void> result = loginController.logout(response)
+        ResponseEntity<Void> result = loginController.logout(request, response)
 
         then:
+        1 * tokenBlacklistService.blacklistToken(token, _)
         result.statusCode == HttpStatus.NO_CONTENT
     }
 

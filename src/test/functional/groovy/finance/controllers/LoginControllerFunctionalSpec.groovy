@@ -236,6 +236,161 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         0 * _
     }
 
+    void 'should blacklist token on logout and reject subsequent requests'() {
+        given: "a registered user with valid credentials"
+        String blacklistTestUser = "blacklist_test_${testOwner.split('_')[1]}"
+        def registerUser = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(blacklistTestUser)
+            .withPassword(testPassword)
+            .withFirstName("blacklist")
+            .withLastName("test")
+            .buildAndValidate()
+
+        // Register the user first
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity registerEntity = new HttpEntity<>(registerUser.toString(), headers)
+        ResponseEntity<String> registerResponse = restTemplate.exchange(
+            createURLWithPort("/api/register"),
+            HttpMethod.POST, registerEntity, String)
+
+        and: "valid login credentials to obtain a fresh token"
+        def loginUser = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(blacklistTestUser)
+            .withPassword(testPassword)
+            .withFirstName("blacklist")
+            .withLastName("test")
+            .buildAndValidate()
+
+        String payload = loginUser.toString()
+
+        when: "logging in to get a token"
+        HttpEntity loginEntity = new HttpEntity<>(payload, headers)
+        ResponseEntity<String> loginResponse = restTemplate.exchange(
+            createURLWithPort("/api/login"),
+            HttpMethod.POST, loginEntity, String)
+
+        then: "login should be successful"
+        loginResponse.statusCode == HttpStatus.OK
+        def cookieHeaders = loginResponse.headers.get("Set-Cookie")
+        cookieHeaders != null
+        def tokenCookie = cookieHeaders.find { it.contains("token=") }
+        tokenCookie != null
+        def token = tokenCookie.split("token=")[1].split(";")[0]
+
+        when: "accessing protected endpoint with token before logout"
+        HttpHeaders authHeaders = new HttpHeaders()
+        authHeaders.set("Cookie", "token=${token}")
+        HttpEntity meEntity = new HttpEntity<>(null, authHeaders)
+        ResponseEntity<String> meResponse = restTemplate.exchange(
+            createURLWithPort("/api/me"),
+            HttpMethod.GET, meEntity, String)
+
+        then: "should successfully access protected endpoint"
+        meResponse.statusCode == HttpStatus.OK
+
+        when: "logging out with the token"
+        HttpHeaders logoutHeaders = new HttpHeaders()
+        logoutHeaders.set("Cookie", "token=${token}")
+        HttpEntity logoutEntity = new HttpEntity<>(null, logoutHeaders)
+        ResponseEntity<String> logoutResponse = restTemplate.exchange(
+            createURLWithPort("/api/logout"),
+            HttpMethod.POST, logoutEntity, String)
+
+        then: "logout should be successful"
+        logoutResponse.statusCode == HttpStatus.NO_CONTENT
+
+        when: "trying to access protected endpoint with blacklisted token"
+        HttpHeaders blacklistedTokenHeaders = new HttpHeaders()
+        blacklistedTokenHeaders.set("Cookie", "token=${token}")
+        HttpEntity blacklistedEntity = new HttpEntity<>(null, blacklistedTokenHeaders)
+        ResponseEntity<String> blacklistedResponse = restTemplate.exchange(
+            createURLWithPort("/api/me"),
+            HttpMethod.GET, blacklistedEntity, String)
+
+        then: "should reject request with blacklisted token"
+        (blacklistedResponse.statusCode == HttpStatus.UNAUTHORIZED || blacklistedResponse.statusCode == HttpStatus.FORBIDDEN)
+        0 * _
+    }
+
+    void 'should blacklist token when logging out via Authorization header'() {
+        given: "a registered user with valid credentials"
+        String authHeaderTestUser = "authheader_test_${testOwner.split('_')[1]}"
+        def registerUser = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(authHeaderTestUser)
+            .withPassword(testPassword)
+            .withFirstName("authheader")
+            .withLastName("test")
+            .buildAndValidate()
+
+        // Register the user first
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity registerEntity = new HttpEntity<>(registerUser.toString(), headers)
+        ResponseEntity<String> registerResponse = restTemplate.exchange(
+            createURLWithPort("/api/register"),
+            HttpMethod.POST, registerEntity, String)
+
+        and: "valid login credentials to obtain a fresh token"
+        def loginUser = SmartUserBuilder.builderForOwner(testOwner)
+            .withUsername(authHeaderTestUser)
+            .withPassword(testPassword)
+            .withFirstName("authheader")
+            .withLastName("test")
+            .buildAndValidate()
+
+        String payload = loginUser.toString()
+
+        when: "logging in to get a token"
+        HttpEntity loginEntity = new HttpEntity<>(payload, headers)
+        ResponseEntity<String> loginResponse = restTemplate.exchange(
+            createURLWithPort("/api/login"),
+            HttpMethod.POST, loginEntity, String)
+
+        then: "login should be successful"
+        loginResponse.statusCode == HttpStatus.OK
+        def cookieHeaders = loginResponse.headers.get("Set-Cookie")
+        cookieHeaders != null
+        def tokenCookie = cookieHeaders.find { it.contains("token=") }
+        tokenCookie != null
+        def token = tokenCookie.split("token=")[1].split(";")[0]
+
+        when: "logging out using Authorization header"
+        HttpHeaders logoutHeaders = new HttpHeaders()
+        logoutHeaders.set("Authorization", "Bearer ${token}")
+        HttpEntity logoutEntity = new HttpEntity<>(null, logoutHeaders)
+        ResponseEntity<String> logoutResponse = restTemplate.exchange(
+            createURLWithPort("/api/logout"),
+            HttpMethod.POST, logoutEntity, String)
+
+        then: "logout should be successful"
+        logoutResponse.statusCode == HttpStatus.NO_CONTENT
+
+        when: "trying to access protected endpoint with blacklisted token via Authorization header"
+        HttpHeaders blacklistedTokenHeaders = new HttpHeaders()
+        blacklistedTokenHeaders.set("Authorization", "Bearer ${token}")
+        HttpEntity blacklistedEntity = new HttpEntity<>(null, blacklistedTokenHeaders)
+        ResponseEntity<String> blacklistedResponse = restTemplate.exchange(
+            createURLWithPort("/api/me"),
+            HttpMethod.GET, blacklistedEntity, String)
+
+        then: "should reject request with blacklisted token"
+        (blacklistedResponse.statusCode == HttpStatus.UNAUTHORIZED || blacklistedResponse.statusCode == HttpStatus.FORBIDDEN)
+        0 * _
+    }
+
+    void 'should handle logout gracefully with invalid token'() {
+        when: "logging out with an invalid token"
+        HttpHeaders logoutHeaders = new HttpHeaders()
+        logoutHeaders.set("Cookie", "token=invalid_token_value")
+        HttpEntity logoutEntity = new HttpEntity<>(null, logoutHeaders)
+        ResponseEntity<String> logoutResponse = restTemplate.exchange(
+            createURLWithPort("/api/logout"),
+            HttpMethod.POST, logoutEntity, String)
+
+        then: "logout should still succeed or be forbidden (both are acceptable for invalid tokens)"
+        (logoutResponse.statusCode == HttpStatus.NO_CONTENT || logoutResponse.statusCode == HttpStatus.FORBIDDEN)
+        0 * _
+    }
+
     void 'should reject registration with invalid payload'() {
         given: "invalid registration payload"
         String payload = '{"invalidField": "invalid"}'

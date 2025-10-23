@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.services.TokenBlacklistService
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
@@ -22,6 +23,7 @@ import javax.crypto.SecretKey
 
 class JwtAuthenticationFilter(
     private val meterRegistry: MeterRegistry,
+    private val tokenBlacklistService: TokenBlacklistService,
 ) : OncePerRequestFilter() {
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
@@ -55,57 +57,74 @@ class JwtAuthenticationFilter(
         }
 
         if (!token.isNullOrBlank()) {
-            try {
-                val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
-                val claims: Claims =
-                    Jwts
-                        .parser()
-                        .verifyWith(key)
-                        .build()
-                        .parseSignedClaims(token)
-                        .payload
-
-                val username = claims.get("username", String::class.java)
-                val authorities =
-                    listOf(
-                        SimpleGrantedAuthority("ROLE_USER"),
-                        SimpleGrantedAuthority("USER"),
-                    )
-                val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
-                SecurityContextHolder.getContext().authentication = auth
-
-                securityLogger.info("Authentication successful for user: {} from IP: {}", username, getClientIpAddress(request))
-                Counter
-                    .builder("authentication.success")
-                    .description("Number of successful authentication attempts")
-                    .tags(
-                        listOfNotNull(
-                            Tag.of("username", username ?: "unknown"),
-                            Tag.of("ip_address", getClientIpAddress(request)),
-                        ),
-                    ).register(meterRegistry)
-                    .increment()
-            } catch (ex: JwtException) {
+            // Check if token is blacklisted before processing
+            if (tokenBlacklistService.isBlacklisted(token)) {
                 val clientIp = getClientIpAddress(request)
-                val userAgent = request.getHeader("User-Agent") ?: "unknown"
-                securityLogger.warn(
-                    "JWT authentication failed from IP: {} with User-Agent: {}. Reason: {}",
-                    clientIp,
-                    userAgent,
-                    ex.message,
-                )
+                securityLogger.warn("Blacklisted token used from IP: {}", clientIp)
                 Counter
                     .builder("authentication.failure")
                     .description("Number of failed authentication attempts")
                     .tags(
                         listOfNotNull(
-                            Tag.of("reason", ex.javaClass.simpleName),
+                            Tag.of("reason", "BlacklistedToken"),
                             Tag.of("ip_address", clientIp),
-                            Tag.of("user_agent", userAgent.take(100)),
                         ),
                     ).register(meterRegistry)
                     .increment()
                 SecurityContextHolder.clearContext()
+            } else {
+                try {
+                    val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
+                    val claims: Claims =
+                        Jwts
+                            .parser()
+                            .verifyWith(key)
+                            .build()
+                            .parseSignedClaims(token)
+                            .payload
+
+                    val username = claims.get("username", String::class.java)
+                    val authorities =
+                        listOf(
+                            SimpleGrantedAuthority("ROLE_USER"),
+                            SimpleGrantedAuthority("USER"),
+                        )
+                    val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
+                    SecurityContextHolder.getContext().authentication = auth
+
+                    securityLogger.info("Authentication successful for user: {} from IP: {}", username, getClientIpAddress(request))
+                    Counter
+                        .builder("authentication.success")
+                        .description("Number of successful authentication attempts")
+                        .tags(
+                            listOfNotNull(
+                                Tag.of("username", username ?: "unknown"),
+                                Tag.of("ip_address", getClientIpAddress(request)),
+                            ),
+                        ).register(meterRegistry)
+                        .increment()
+                } catch (ex: JwtException) {
+                    val clientIp = getClientIpAddress(request)
+                    val userAgent = request.getHeader("User-Agent") ?: "unknown"
+                    securityLogger.warn(
+                        "JWT authentication failed from IP: {} with User-Agent: {}. Reason: {}",
+                        clientIp,
+                        userAgent,
+                        ex.message,
+                    )
+                    Counter
+                        .builder("authentication.failure")
+                        .description("Number of failed authentication attempts")
+                        .tags(
+                            listOfNotNull(
+                                Tag.of("reason", ex.javaClass.simpleName),
+                                Tag.of("ip_address", clientIp),
+                                Tag.of("user_agent", userAgent.take(100)),
+                            ),
+                        ).register(meterRegistry)
+                        .increment()
+                    SecurityContextHolder.clearContext()
+                }
             }
         }
 
