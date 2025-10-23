@@ -19,8 +19,6 @@ plugins {
     id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
     // Kotlin linter/formatter
     id "org.jlleitschuh.gradle.ktlint" version "13.1.0"
-    // OWASP Dependency-Check for CVE scanning
-    id "org.owasp.dependencycheck" version "9.2.0"
 }
 
 apply from: 'test.gradle'
@@ -90,10 +88,6 @@ tasks.register('codenarcMainRatchet', org.gradle.api.plugins.quality.CodeNarc) {
 
 // Wire ratchet into the lifecycle so CI fails only on the narrow ruleset
 tasks.named('check') { dependsOn 'codenarcMainRatchet' }
-
-// OWASP Dependency-Check is available as a separate task: ./gradlew dependencyCheckAnalyze
-// Commented out from automatic check task to prevent blocking builds
-// tasks.named('check') { dependsOn 'dependencyCheckAnalyze' }
 
 // The CodeNarc plugin automatically creates tasks for each Groovy source set
 // (including custom ones from test.gradle) and wires them into 'check'.
@@ -252,47 +246,6 @@ dependencies {
 jooq {
     version = "${jooqVersion}"  // the default (can be omitted)
     edition = JooqEdition.OSS  // the default (can be omitted)
-}
-
-// Basic OWASP Dependency-Check configuration
-dependencyCheck {
-    // Fail build on high/critical CVEs; adjust as needed
-    failBuildOnCVSS = 7.0
-
-    // Local convenience: read NVD_API_KEY from env.secrets if not provided
-    def readNvdKeyFromEnvSecrets = {
-        try {
-            def f = file('env.secrets')
-            if (f.exists()) {
-                def matcher = (f.getText('UTF-8') =~ /(?m)^\s*NVD_API_KEY\s*=\s*(.+?)\s*$/)
-                if (matcher.find()) {
-                    def raw = matcher.group(1).trim()
-                    // strip surrounding quotes if present
-                    if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
-                        raw = raw.substring(1, raw.length()-1)
-                    }
-                    return raw
-                }
-            }
-        } catch (Throwable ignored) { }
-        return ''
-    }.call()
-
-    def resolvedNvdKey = System.getenv('NVD_API_KEY') ?: (project.findProperty('nvdApiKey') ?: readNvdKeyFromEnvSecrets)
-    def hasNvdKey = (resolvedNvdKey != null && resolvedNvdKey.toString().trim())
-
-    // Skip locally if no NVD API key is configured; CI should provide one
-    skip = !hasNvdKey && (System.getenv('CI') == null)
-    nvd {
-        apiKey = resolvedNvdKey?.toString() ?: ''
-        // Free tier requires at least 6000ms between requests
-        delay = 8000
-    }
-    analyzers {
-        // Kotlin/Gradle projects primarily use the Gradle analyzer
-        assemblyEnabled = false
-        nodeEnabled = false
-    }
 }
 
 // Enable Gradle dependency locking for all configurations
