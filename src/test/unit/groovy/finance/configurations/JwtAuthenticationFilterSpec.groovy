@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.services.TokenBlacklistService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
@@ -31,7 +32,9 @@ class JwtAuthenticationFilterSpec extends Specification {
     def "sets authentication from valid Bearer token"() {
         given:
         def meter = new SimpleMeterRegistry()
-        def filter = new JwtAuthenticationFilter(meter)
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        tokenBlacklistService.isBlacklisted(_) >> false
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'a' * 64 // 64-byte key
         setJwtKey(filter, secret)
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
@@ -57,7 +60,9 @@ class JwtAuthenticationFilterSpec extends Specification {
     def "sets authentication from token cookie"() {
         given:
         def meter = new SimpleMeterRegistry()
-        def filter = new JwtAuthenticationFilter(meter)
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        tokenBlacklistService.isBlacklisted(_) >> false
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'b' * 64
         setJwtKey(filter, secret)
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
@@ -84,7 +89,9 @@ class JwtAuthenticationFilterSpec extends Specification {
     def "invalid token clears SecurityContext and continues chain"() {
         given:
         def meter = new SimpleMeterRegistry()
-        def filter = new JwtAuthenticationFilter(meter)
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        tokenBlacklistService.isBlacklisted(_) >> false
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'c' * 64
         setJwtKey(filter, secret)
         // Malformed token
@@ -105,6 +112,38 @@ class JwtAuthenticationFilterSpec extends Specification {
         filter.doFilterInternal(req, res, chain)
 
         then:
+        SecurityContextHolder.context.authentication == null
+        1 * chain.doFilter(req, res)
+    }
+
+    def "blacklisted token clears SecurityContext and continues chain"() {
+        given:
+        def meter = new SimpleMeterRegistry()
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
+        String secret = 'd' * 64
+        setJwtKey(filter, secret)
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
+        String token = Jwts.builder().claim('username', 'charlie').signWith(key).compact()
+
+        // Configure mock to return true for this specific token
+        tokenBlacklistService.isBlacklisted(token) >> true
+
+        def req = Mock(HttpServletRequest)
+        req.getCookies() >> null
+        req.getHeader('Cookie') >> null
+        req.getHeader('Authorization') >> "Bearer ${token}"
+        req.getHeader('X-Forwarded-For') >> null
+        req.getHeader('X-Real-IP') >> null
+        req.getRemoteAddr() >> '127.0.0.1'
+        def res = Mock(HttpServletResponse)
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * tokenBlacklistService.isBlacklisted(token) >> true
         SecurityContextHolder.context.authentication == null
         1 * chain.doFilter(req, res)
     }

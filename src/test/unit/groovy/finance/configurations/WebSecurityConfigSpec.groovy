@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.services.TokenBlacklistService
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.core.env.Environment
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -15,6 +16,7 @@ class WebSecurityConfigSpec extends Specification {
     WebSecurityConfig webSecurityConfig
     Environment environment = Mock()
     MeterRegistry meterRegistry = Mock()
+    TokenBlacklistService tokenBlacklistService = Mock()
 
     def setup() {
         webSecurityConfig = new WebSecurityConfig(environment)
@@ -55,9 +57,9 @@ class WebSecurityConfigSpec extends Specification {
         filter instanceof HttpErrorLoggingFilter
     }
 
-    def "should create jwt authentication filter bean with meter registry"() {
+    def "should create jwt authentication filter bean with meter registry and token blacklist service"() {
         when:
-        JwtAuthenticationFilter filter = webSecurityConfig.jwtAuthenticationFilter(meterRegistry)
+        JwtAuthenticationFilter filter = webSecurityConfig.jwtAuthenticationFilter(meterRegistry, tokenBlacklistService)
 
         then:
         filter != null
@@ -87,7 +89,7 @@ class WebSecurityConfigSpec extends Specification {
 
     def "should create filter registration beans with disabled status"() {
         given:
-        def jwtFilter = new JwtAuthenticationFilter(meterRegistry)
+        def jwtFilter = new JwtAuthenticationFilter(meterRegistry, tokenBlacklistService)
         def rateLimitFilter = new RateLimitingFilter()
         def securityAuditFilter = new SecurityAuditFilter(meterRegistry)
         def httpErrorLoggingFilter = new HttpErrorLoggingFilter(meterRegistry)

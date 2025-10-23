@@ -2,6 +2,7 @@ package finance.controllers
 
 import finance.domain.LoginRequest
 import finance.domain.User
+import finance.services.TokenBlacklistService
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Value
@@ -32,6 +34,7 @@ import javax.crypto.SecretKey
 @RequestMapping("/api")
 class LoginController(
     private val userService: UserService,
+    private val tokenBlacklistService: TokenBlacklistService,
 ) : BaseController() {
     @Value("\${custom.project.jwt.key}")
     private lateinit var jwtKey: String
@@ -135,7 +138,53 @@ class LoginController(
         ],
     )
     @PostMapping("/logout")
-    fun logout(response: HttpServletResponse): ResponseEntity<Void> {
+    fun logout(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+    ): ResponseEntity<Void> {
+        // Extract token from cookie or Authorization header
+        var token: String? =
+            run {
+                request.cookies?.firstOrNull { it.name == "token" }?.value
+                    ?: request
+                        .getHeader("Cookie")
+                        ?.split(';')
+                        ?.map { it.trim() }
+                        ?.firstOrNull { it.startsWith("token=") }
+                        ?.substringAfter("token=")
+            }
+
+        if (token.isNullOrBlank()) {
+            val authHeader = request.getHeader("Authorization")
+            if (!authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ")) {
+                token = authHeader.removePrefix("Bearer ").trim()
+            }
+        }
+
+        // If token exists, blacklist it before clearing the cookie
+        if (!token.isNullOrBlank()) {
+            try {
+                val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
+                val claims =
+                    Jwts
+                        .parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(token)
+                        .payload
+
+                val expirationTime = claims.expiration?.time ?: 0L
+                val username = claims["username"] as? String
+
+                // Blacklist the token with its expiration time
+                tokenBlacklistService.blacklistToken(token, expirationTime)
+                logger.info("Token blacklisted for user: $username, expiration: ${Date(expirationTime)}")
+            } catch (e: Exception) {
+                // Token might be invalid or expired, but we still clear the cookie
+                logger.warn("Failed to parse token during logout: ${e.message}")
+            }
+        }
+
         // Check if we're in a local development context (even if profile is prod)
         val isLocalDev =
             System.getenv("USERNAME")?.contains("henninb") == true ||
@@ -161,6 +210,7 @@ class LoginController(
             }
 
         response.addHeader("Set-Cookie", cookie.toString())
+        logger.info("Logout successful, cookie cleared")
         return ResponseEntity.noContent().build()
     }
 
