@@ -105,15 +105,15 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
         thrown(RuntimeException)
     }
 
-    def "createPayment mutation fails when destination is debit account"() {
+    def "createPayment mutation succeeds when destination is asset account (TRANSFER behavior)"() {
         given:
         withUserRole()
-        // Create an extra debit account to use as invalid destination
-        String debitDest = testDataManager.createAccountFor(testOwner, "savings", "debit", true)
+        // Create a savings (asset/debit) account as destination
+        String savingsAccount = testDataManager.createAccountFor(testOwner, "savings", "savings", true)
         def dto = new PaymentInputDto(
                 null,
                 srcName,
-                debitDest,                      // invalid destination: debit account
+                savingsAccount,                 // asset to asset = TRANSFER
                 Date.valueOf("2024-01-15"),
                 new BigDecimal("100.00"),
                 null,
@@ -122,10 +122,70 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
         )
 
         when:
-        mutationController.createPayment(dto)
+        def result = mutationController.createPayment(dto)
 
         then:
-        thrown(RuntimeException)
+        result != null
+        result.paymentId > 0
+        result.sourceAccount == srcName
+        result.destinationAccount == savingsAccount
+        result.amount == new BigDecimal("100.00")
+    }
+
+    def "createPayment mutation succeeds with liability to asset (CASH_ADVANCE behavior)"() {
+        given:
+        withUserRole()
+        // Create credit card (liability) source and checking (asset) destination
+        String creditCardAccount = testDataManager.createAccountFor(testOwner, "credit_card", "credit_card", true)
+        String checkingAccount = testDataManager.createAccountFor(testOwner, "checking", "checking", true)
+        def dto = new PaymentInputDto(
+                null,
+                creditCardAccount,              // liability source
+                checkingAccount,                // asset destination = CASH_ADVANCE
+                Date.valueOf("2024-01-15"),
+                new BigDecimal("200.00"),
+                null,
+                null,
+                null
+        )
+
+        when:
+        def result = mutationController.createPayment(dto)
+
+        then:
+        result != null
+        result.paymentId > 0
+        result.sourceAccount == creditCardAccount
+        result.destinationAccount == checkingAccount
+        result.amount == new BigDecimal("200.00")
+    }
+
+    def "createPayment mutation succeeds with liability to liability (BALANCE_TRANSFER behavior)"() {
+        given:
+        withUserRole()
+        // Create two credit card (liability) accounts
+        String creditCard1 = testDataManager.createAccountFor(testOwner, "credit_card_1", "credit_card", true)
+        String creditCard2 = testDataManager.createAccountFor(testOwner, "credit_card_2", "credit_card", true)
+        def dto = new PaymentInputDto(
+                null,
+                creditCard1,                    // liability source
+                creditCard2,                    // liability destination = BALANCE_TRANSFER
+                Date.valueOf("2024-01-15"),
+                new BigDecimal("500.00"),
+                null,
+                null,
+                null
+        )
+
+        when:
+        def result = mutationController.createPayment(dto)
+
+        then:
+        result != null
+        result.paymentId > 0
+        result.sourceAccount == creditCard1
+        result.destinationAccount == creditCard2
+        result.amount == new BigDecimal("500.00")
     }
 
     def "deletePayment mutation returns true for existing payment"() {

@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Payment
+import finance.domain.PaymentBehavior
 import finance.domain.ReoccurringType
 import finance.domain.ServiceResult
 import finance.domain.Transaction
@@ -63,46 +64,64 @@ class StandardizedPaymentService(
                 processPaymentAccount(entity.destinationAccount)
                 processPaymentAccount(entity.sourceAccount)
 
-                // Validate destination account type
+                // Retrieve account types for behavior inference
+                val sourceAccount = accountService.account(entity.sourceAccount).get()
                 val destinationAccount = accountService.account(entity.destinationAccount).get()
-                if (destinationAccount.accountType == AccountType.Debit) {
-                    throw ValidationException("Account cannot make a payment to a debit account: ${entity.destinationAccount}")
-                }
 
-                // Create credit transaction
-                val transactionCredit = Transaction()
-                populateCreditTransaction(transactionCredit, entity, entity.sourceAccount)
-                val creditResult = transactionService.save(transactionCredit)
-                when (creditResult) {
+                // Infer payment behavior from account types
+                val behavior =
+                    PaymentBehavior.inferBehavior(
+                        sourceAccount.accountType,
+                        destinationAccount.accountType,
+                    )
+                logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
+
+                // Create destination transaction
+                val transactionDestination = Transaction()
+                populateDestinationTransaction(
+                    transactionDestination,
+                    entity,
+                    entity.sourceAccount,
+                    destinationAccount.accountType,
+                    behavior,
+                )
+                val destinationResult = transactionService.save(transactionDestination)
+                when (destinationResult) {
                     is ServiceResult.Success -> {
-                        entity.guidDestination = creditResult.data.guid
-                        logger.debug("Credit transaction created: ${creditResult.data.guid}")
+                        entity.guidDestination = destinationResult.data.guid
+                        logger.debug("Destination transaction created: ${destinationResult.data.guid}")
                     }
                     is ServiceResult.ValidationError -> {
-                        throw jakarta.validation.ConstraintViolationException("Credit transaction validation failed: ${creditResult.errors}", emptySet())
+                        throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
                     }
                     is ServiceResult.BusinessError -> {
-                        throw org.springframework.dao.DataIntegrityViolationException("Credit transaction business error: ${creditResult.message}")
+                        throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
                     }
-                    else -> throw RuntimeException("Failed to create credit transaction: $creditResult")
+                    else -> throw RuntimeException("Failed to create destination transaction: $destinationResult")
                 }
 
-                // Create debit transaction
-                val transactionDebit = Transaction()
-                populateDebitTransaction(transactionDebit, entity, entity.sourceAccount)
-                val debitResult = transactionService.save(transactionDebit)
-                when (debitResult) {
+                // Create source transaction
+                val transactionSource = Transaction()
+                populateSourceTransaction(
+                    transactionSource,
+                    entity,
+                    entity.sourceAccount,
+                    sourceAccount.accountType,
+                    behavior,
+                )
+                val sourceResult = transactionService.save(transactionSource)
+                when (sourceResult) {
                     is ServiceResult.Success -> {
-                        entity.guidSource = debitResult.data.guid
-                        logger.debug("Debit transaction created: ${debitResult.data.guid}")
+                        entity.guidSource = sourceResult.data.guid
+                        logger.debug("Source transaction created: ${sourceResult.data.guid}")
                     }
                     is ServiceResult.ValidationError -> {
-                        throw jakarta.validation.ConstraintViolationException("Debit transaction validation failed: ${debitResult.errors}", emptySet())
+                        throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
                     }
                     is ServiceResult.BusinessError -> {
-                        throw org.springframework.dao.DataIntegrityViolationException("Debit transaction business error: ${debitResult.message}")
+                        throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
                     }
-                    else -> throw RuntimeException("Failed to create debit transaction: $debitResult")
+                    else -> throw RuntimeException("Failed to create source transaction: $sourceResult")
                 }
             }
 
@@ -231,10 +250,12 @@ class StandardizedPaymentService(
         }
     }
 
+    /**
+     * Legacy insertPayment method - now uses new behavior-aware logic.
+     * @deprecated Consider using save() method instead
+     */
     fun insertPayment(payment: Payment): Payment {
         logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
-        val transactionCredit = Transaction()
-        val transactionDebit = Transaction()
 
         // Process destination account - create if missing
         processPaymentAccount(payment.destinationAccount)
@@ -242,49 +263,70 @@ class StandardizedPaymentService(
         // Process source account - create if missing
         processPaymentAccount(payment.sourceAccount)
 
-        // Validate destination account type after ensuring it exists
+        // Retrieve account types for behavior inference
+        val sourceAccount = accountService.account(payment.sourceAccount).get()
         val destinationAccount = accountService.account(payment.destinationAccount).get()
-        if (destinationAccount.accountType == AccountType.Debit) {
-            logger.error("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
-            throw ValidationException("Account cannot make a payment to a debit account: ${payment.destinationAccount}")
-        }
+
+        // Infer payment behavior from account types
+        val behavior =
+            PaymentBehavior.inferBehavior(
+                sourceAccount.accountType,
+                destinationAccount.accountType,
+            )
+        logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
+
+        // Create transactions
+        val transactionDestination = Transaction()
+        val transactionSource = Transaction()
 
         val paymentAccountNameOwner = payment.sourceAccount
-        populateCreditTransaction(transactionCredit, payment, paymentAccountNameOwner)
-        populateDebitTransaction(transactionDebit, payment, paymentAccountNameOwner)
+        populateDestinationTransaction(
+            transactionDestination,
+            payment,
+            paymentAccountNameOwner,
+            destinationAccount.accountType,
+            behavior,
+        )
+        populateSourceTransaction(
+            transactionSource,
+            payment,
+            paymentAccountNameOwner,
+            sourceAccount.accountType,
+            behavior,
+        )
 
-        logger.info("Creating debit and credit transactions for payment")
+        logger.info("Creating source and destination transactions for payment")
 
-        // Create credit transaction using ServiceResult pattern
-        val creditResult = transactionService.save(transactionCredit)
-        when (creditResult) {
+        // Create destination transaction using ServiceResult pattern
+        val destinationResult = transactionService.save(transactionDestination)
+        when (destinationResult) {
             is ServiceResult.Success -> {
-                payment.guidDestination = creditResult.data.guid
-                logger.debug("Credit transaction created successfully: ${creditResult.data.guid}")
+                payment.guidDestination = destinationResult.data.guid
+                logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
             }
             is ServiceResult.ValidationError -> {
-                throw jakarta.validation.ConstraintViolationException("Credit transaction validation failed: ${creditResult.errors}", emptySet())
+                throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
             }
             is ServiceResult.BusinessError -> {
-                throw org.springframework.dao.DataIntegrityViolationException("Credit transaction business error: ${creditResult.message}")
+                throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
             }
-            else -> throw RuntimeException("Failed to create credit transaction: $creditResult")
+            else -> throw RuntimeException("Failed to create destination transaction: $destinationResult")
         }
 
-        // Create debit transaction using ServiceResult pattern
-        val debitResult = transactionService.save(transactionDebit)
-        when (debitResult) {
+        // Create source transaction using ServiceResult pattern
+        val sourceResult = transactionService.save(transactionSource)
+        when (sourceResult) {
             is ServiceResult.Success -> {
-                payment.guidSource = debitResult.data.guid
-                logger.debug("Debit transaction created successfully: ${debitResult.data.guid}")
+                payment.guidSource = sourceResult.data.guid
+                logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
             }
             is ServiceResult.ValidationError -> {
-                throw jakarta.validation.ConstraintViolationException("Debit transaction validation failed: ${debitResult.errors}", emptySet())
+                throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
             }
             is ServiceResult.BusinessError -> {
-                throw org.springframework.dao.DataIntegrityViolationException("Debit transaction business error: ${debitResult.message}")
+                throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
             }
-            else -> throw RuntimeException("Failed to create debit transaction: $debitResult")
+            else -> throw RuntimeException("Failed to create source transaction: $sourceResult")
         }
 
         // Use the standardized save method and handle ServiceResult
@@ -361,57 +403,149 @@ class StandardizedPaymentService(
         return account
     }
 
+    // ===== Payment Behavior and Amount Calculation Methods =====
+
+    /**
+     * Calculates the transaction amount for the source account based on payment behavior.
+     *
+     * @param amount The absolute payment amount (always positive)
+     * @param behavior The payment behavior determining sign logic
+     * @return The signed transaction amount for the source account
+     */
+    private fun calculateSourceAmount(
+        amount: BigDecimal,
+        behavior: PaymentBehavior,
+    ): BigDecimal =
+        when (behavior) {
+            PaymentBehavior.BILL_PAYMENT -> -amount.abs() // Asset decreases
+            PaymentBehavior.TRANSFER -> -amount.abs() // Asset decreases
+            PaymentBehavior.CASH_ADVANCE -> amount.abs() // Liability increases (more debt)
+            PaymentBehavior.BALANCE_TRANSFER -> -amount.abs() // Liability decreases (debt moved)
+            else -> -amount.abs() // Default: negative (safest)
+        }
+
+    /**
+     * Calculates the transaction amount for the destination account based on payment behavior.
+     *
+     * @param amount The absolute payment amount (always positive)
+     * @param behavior The payment behavior determining sign logic
+     * @return The signed transaction amount for the destination account
+     */
+    private fun calculateDestinationAmount(
+        amount: BigDecimal,
+        behavior: PaymentBehavior,
+    ): BigDecimal =
+        when (behavior) {
+            PaymentBehavior.BILL_PAYMENT -> -amount.abs() // Liability decreases (debt paid)
+            PaymentBehavior.TRANSFER -> amount.abs() // Asset increases
+            PaymentBehavior.CASH_ADVANCE -> amount.abs() // Asset increases (cash received)
+            PaymentBehavior.BALANCE_TRANSFER -> amount.abs() // Liability increases (debt received)
+            else -> -amount.abs() // Default: negative (safest)
+        }
+
     // ===== Transaction Population Methods =====
 
+    /**
+     * Populates the source transaction for a payment.
+     * Uses payment behavior to determine correct transaction amount sign.
+     *
+     * @param transactionSource The transaction object to populate
+     * @param payment The payment entity
+     * @param sourceAccountNameOwner The source account name
+     * @param sourceAccountType The actual account type of the source account
+     * @param behavior The payment behavior determining amount logic
+     */
+    fun populateSourceTransaction(
+        transactionSource: finance.domain.Transaction,
+        payment: Payment,
+        sourceAccountNameOwner: String,
+        sourceAccountType: AccountType,
+        behavior: PaymentBehavior,
+    ) {
+        transactionSource.guid = UUID.randomUUID().toString()
+        transactionSource.transactionDate = payment.transactionDate
+        transactionSource.description = "payment"
+        transactionSource.category = "bill_pay"
+        transactionSource.notes = "to ${payment.destinationAccount}"
+        transactionSource.amount = calculateSourceAmount(payment.amount, behavior)
+        transactionSource.transactionState = TransactionState.Outstanding
+        transactionSource.reoccurringType = ReoccurringType.Onetime
+        transactionSource.accountType = sourceAccountType
+        transactionSource.accountNameOwner = sourceAccountNameOwner
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transactionSource.dateUpdated = timestamp
+        transactionSource.dateAdded = timestamp
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     * @deprecated Use populateSourceTransaction instead
+     */
+    @Deprecated("Use populateSourceTransaction with behavior parameter")
     fun populateDebitTransaction(
         transactionDebit: finance.domain.Transaction,
         payment: Payment,
         paymentAccountNameOwner: String,
     ) {
-        transactionDebit.guid = UUID.randomUUID().toString()
-        transactionDebit.transactionDate = payment.transactionDate
-        transactionDebit.description = "payment"
-        transactionDebit.category = "bill_pay"
-        transactionDebit.notes = "to ${payment.destinationAccount}"
-        if (payment.amount > BigDecimal(0.0)) {
-            transactionDebit.amount = payment.amount * BigDecimal(-1.0)
-        } else {
-            transactionDebit.amount = payment.amount
-        }
-        transactionDebit.transactionState = TransactionState.Outstanding
-        transactionDebit.reoccurringType = ReoccurringType.Onetime
-        transactionDebit.accountType = AccountType.Debit
-        transactionDebit.accountNameOwner = paymentAccountNameOwner
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transactionDebit.dateUpdated = timestamp
-        transactionDebit.dateAdded = timestamp
+        // Legacy behavior: assume BILL_PAYMENT (asset to liability)
+        populateSourceTransaction(
+            transactionDebit,
+            payment,
+            paymentAccountNameOwner,
+            AccountType.Debit,
+            PaymentBehavior.BILL_PAYMENT,
+        )
     }
 
+    /**
+     * Populates the destination transaction for a payment.
+     * Uses payment behavior to determine correct transaction amount sign.
+     *
+     * @param transactionDestination The transaction object to populate
+     * @param payment The payment entity
+     * @param sourceAccountNameOwner The source account name (for notes)
+     * @param destinationAccountType The actual account type of the destination account
+     * @param behavior The payment behavior determining amount logic
+     */
+    fun populateDestinationTransaction(
+        transactionDestination: finance.domain.Transaction,
+        payment: Payment,
+        sourceAccountNameOwner: String,
+        destinationAccountType: AccountType,
+        behavior: PaymentBehavior,
+    ) {
+        transactionDestination.guid = UUID.randomUUID().toString()
+        transactionDestination.transactionDate = payment.transactionDate
+        transactionDestination.description = "payment"
+        transactionDestination.category = "bill_pay"
+        transactionDestination.notes = "from $sourceAccountNameOwner"
+        transactionDestination.amount = calculateDestinationAmount(payment.amount, behavior)
+        transactionDestination.transactionState = TransactionState.Outstanding
+        transactionDestination.reoccurringType = ReoccurringType.Onetime
+        transactionDestination.accountType = destinationAccountType
+        transactionDestination.accountNameOwner = payment.destinationAccount
+        val timestamp = Timestamp(System.currentTimeMillis())
+        transactionDestination.dateUpdated = timestamp
+        transactionDestination.dateAdded = timestamp
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     * @deprecated Use populateDestinationTransaction instead
+     */
+    @Deprecated("Use populateDestinationTransaction with behavior parameter")
     fun populateCreditTransaction(
         transactionCredit: finance.domain.Transaction,
         payment: Payment,
         paymentAccountNameOwner: String,
     ) {
-        transactionCredit.guid = UUID.randomUUID().toString()
-        transactionCredit.transactionDate = payment.transactionDate
-        transactionCredit.description = "payment"
-        transactionCredit.category = "bill_pay"
-        transactionCredit.notes = "from $paymentAccountNameOwner"
-        when {
-            payment.amount > BigDecimal(0.0) -> {
-                transactionCredit.amount = payment.amount * BigDecimal(-1.0)
-            }
-            else -> {
-                transactionCredit.amount = payment.amount
-            }
-        }
-
-        transactionCredit.transactionState = TransactionState.Outstanding
-        transactionCredit.reoccurringType = ReoccurringType.Onetime
-        transactionCredit.accountType = AccountType.Credit
-        transactionCredit.accountNameOwner = payment.destinationAccount
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transactionCredit.dateUpdated = timestamp
-        transactionCredit.dateAdded = timestamp
+        // Legacy behavior: assume BILL_PAYMENT (asset to liability)
+        populateDestinationTransaction(
+            transactionCredit,
+            payment,
+            paymentAccountNameOwner,
+            AccountType.Credit,
+            PaymentBehavior.BILL_PAYMENT,
+        )
     }
 }

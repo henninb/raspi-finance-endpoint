@@ -96,6 +96,13 @@ A Spring Boot financial management application built with Kotlin/Groovy that pro
 
 #### Key Components
 - **Transaction Processing**: Excel file upload, manual entry, and automated categorization
+- **Payment Flexibility**: Supports 4 payment behaviors with automatic behavior inference based on account types
+  - **BILL_PAYMENT**: Asset → Liability (e.g., Checking → Credit Card)
+  - **TRANSFER**: Asset → Asset (e.g., Checking → Savings)
+  - **CASH_ADVANCE**: Liability → Asset (e.g., Credit Card → Checking)
+  - **BALANCE_TRANSFER**: Liability → Liability (e.g., Credit Card A → Credit Card B)
+  - Payment amounts stored as absolute values with transaction signs determined by account category
+  - Behavior inference via `PaymentBehavior.inferBehavior()` based on source/destination account types
 - **Medical Expense Tracking**: Healthcare cost management with claim processing
 - **Multi-Database Support**: PostgreSQL/Oracle/H2 with profile-based configuration
 - **Security**: JWT-based authentication with Spring Security 7.0
@@ -639,6 +646,8 @@ def dto = new PaymentInputDto("checking_primary", "bills_payable", amount)
 - **MEDICAL_EXPENSE_PLAN.md**: Medical expense feature implementation
 - **MEDICAL_CLAIMS_INSERT.md**: Medical claims processing guide
 - **DESCRIPTION_DETAILS.md**: Transaction description management
+- **PAYMENT_FLEXIBILITY_PLAN.md**: Payment flexibility feature implementation with behavior inference
+- **TEST_COVERAGE_IMPROVEMENTS.md**: Comprehensive test coverage additions (58 new tests)
 - **TODO.md**: Current development tasks and priorities
 
 ### Spring Boot 4.0 Migration Status
@@ -656,10 +665,15 @@ def dto = new PaymentInputDto("checking_primary", "bills_payable", amount)
   - **✅ Architecture Validation**: Confirmed DTO value vs domain class approach
   - **✅ Test Organization**: Complete unit test coverage with proper Groovy-Kotlin interop
   - **✅ GraphQL Integration**: DTOs properly integrated with centralized GraphQL controllers
+- **✅ Payment Flexibility Feature**: Complete implementation with comprehensive test coverage
+  - **✅ PaymentBehavior Enum**: 4 payment behaviors (BILL_PAYMENT, TRANSFER, CASH_ADVANCE, BALANCE_TRANSFER)
+  - **✅ Behavior Inference**: Automatic behavior determination from account types
+  - **✅ Amount Calculation**: Transaction sign logic based on payment behavior
+  - **✅ Test Coverage**: 58 new tests added (10 unit + 48 integration) without modifying app code
+  - **✅ Documentation**: PAYMENT_FLEXIBILITY_PLAN.md and TEST_COVERAGE_IMPROVEMENTS.md
 - **✅ Build System**: Gradle 9.1.0 with parallel builds enabled
 - **⚠️ Configuration Cache**: Currently disabled for plugin compatibility
 - **⚠️ Performance**: Optimization and benchmarking in progress
-- **⚠️ Documentation**: Final documentation updates needed
 
 ### Test Execution Examples
 ```bash
