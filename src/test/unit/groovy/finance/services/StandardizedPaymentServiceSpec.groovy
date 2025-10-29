@@ -416,22 +416,32 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
                 .build()
         def savedPayment = PaymentBuilder.builder().withPaymentId(1L).build()
         Set<ConstraintViolation<Payment>> noViolations = [] as Set
-        def mockDestAccount = GroovyMock(finance.domain.Account)
-        def mockSourceAccount = GroovyMock(finance.domain.Account)
+
+        // Create real Account objects with actual account types
+        def mockDestAccount = new finance.domain.Account()
+        mockDestAccount.accountNameOwner = payment.destinationAccount
+        mockDestAccount.accountType = finance.domain.AccountType.CreditCard
+        mockDestAccount.accountId = 1L
+
+        def mockSourceAccount = new finance.domain.Account()
+        mockSourceAccount.accountNameOwner = payment.sourceAccount
+        mockSourceAccount.accountType = finance.domain.AccountType.Checking
+        mockSourceAccount.accountId = 2L
+
         // Create actual Transaction objects with GUIDs set
         def transaction1 = new finance.domain.Transaction()
         transaction1.guid = "test-guid-dest"
         def transaction2 = new finance.domain.Transaction()
         transaction2.guid = "test-guid-source"
-        mockDestAccount.accountType >> finance.domain.AccountType.Credit
 
         when: "calling legacy insertPayment method"
         def result = standardizedPaymentService.insertPayment(payment)
 
         then: "should return saved payment"
-        // insertPayment creates transactions and processes accounts
+        // processPaymentAccount calls for both accounts (2 calls each for process + behavior inference)
         2 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(mockDestAccount)
-        1 * accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(mockSourceAccount)
+        2 * accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(mockSourceAccount)
+        // Transaction service saves both transactions
         1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction1)
         1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction2)
         // save() is called after GUIDs are set, so it validates and saves without creating new transactions
@@ -504,11 +514,21 @@ class StandardizedPaymentServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<ConstraintViolation<Payment>> violations = [violation] as Set
 
-        and: "account service returns existing accounts"
-        def existingAccount = GroovyMock(Account)
-        existingAccount.accountType >> AccountType.Credit
-        accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(existingAccount)
-        accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(existingAccount)
+        and: "account service returns existing accounts with proper accountType"
+        // Create real Account objects instead of GroovyMock so accountType can be accessed
+        def existingDestAccount = new finance.domain.Account()
+        existingDestAccount.accountNameOwner = payment.destinationAccount
+        existingDestAccount.accountType = finance.domain.AccountType.CreditCard
+        existingDestAccount.accountId = 1L
+
+        def existingSourceAccount = new finance.domain.Account()
+        existingSourceAccount.accountNameOwner = payment.sourceAccount
+        existingSourceAccount.accountType = finance.domain.AccountType.Checking
+        existingSourceAccount.accountId = 2L
+
+        // With behavior inference, we call findByAccountNameOwner for both source and dest accounts
+        accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(existingDestAccount)
+        accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(existingSourceAccount)
 
         when: "calling legacy insertPayment with invalid data"
         standardizedPaymentService.insertPayment(payment)
