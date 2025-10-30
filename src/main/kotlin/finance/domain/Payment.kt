@@ -3,6 +3,7 @@ package finance.domain
 import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSetter
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -37,6 +38,7 @@ import java.util.Calendar
     uniqueConstraints = [UniqueConstraint(columnNames = ["destination_account", "transaction_date", "amount"])],
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 data class Payment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -107,6 +109,10 @@ data class Payment(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper =
+            ObjectMapper().apply {
+                setDefaultPropertyInclusion(JsonInclude.Include.NON_DEFAULT)
+                findAndRegisterModules()
+            }
     }
 }

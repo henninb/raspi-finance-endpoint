@@ -157,7 +157,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.update(updatedAccount)
 
         then: "should return Success with updated account"
-        1 * accountRepositoryMock.findByAccountId(1L) >> Optional.of(existingAccount)
+        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(existingAccount)
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account account ->
             assert account.activeStatus == false
             return account
@@ -168,16 +168,16 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
     }
 
     def "update should return NotFound when account does not exist"() {
-        given: "account with non-existent ID"
-        def account = AccountBuilder.builder().withAccountId(999L).build()
+        given: "account with non-existent accountNameOwner"
+        def account = AccountBuilder.builder().withAccountId(999L).withAccountNameOwner("foo_brian").build()
 
         when: "updating non-existent account"
         def result = standardizedAccountService.update(account)
 
         then: "should return NotFound result"
-        1 * accountRepositoryMock.findByAccountId(999L) >> Optional.empty()
+        1 * accountRepositoryMock.findByAccountNameOwner("foo_brian") >> Optional.empty()
         result instanceof ServiceResult.NotFound
-        result.message.contains("Account not found: 999")
+        result.message.contains("Account not found: foo_brian")
         0 * _
     }
 

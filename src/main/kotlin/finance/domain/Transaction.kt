@@ -54,9 +54,7 @@ import java.util.Calendar
 @Entity
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-// does not fix the issue
-// @Immutable //The [account] property of the [finance.domain.Transaction] entity was modified, but it won't be updated because the property is immutable.
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -128,7 +126,7 @@ data class Transaction(
     constructor() : this(
         0L,
         "",
-        0,
+        0L,
         AccountType.Undefined,
         TransactionType.Undefined,
         "",
@@ -219,7 +217,11 @@ data class Transaction(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper =
+            ObjectMapper().apply {
+                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
+                findAndRegisterModules()
+            }
 
         @JsonIgnore
         private val logger = LogManager.getLogger()
