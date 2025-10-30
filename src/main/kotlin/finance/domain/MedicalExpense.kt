@@ -2,6 +2,7 @@ package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -35,9 +36,11 @@ import java.sql.Timestamp
 @Entity
 @Table(name = "t_medical_expense")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class MedicalExpense(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "medical_expense_id")
     var medicalExpenseId: Long = 0L,
     @Column(name = "transaction_id")
@@ -116,12 +119,6 @@ data class MedicalExpense(
     @Column(name = "active_status", nullable = false)
     @field:NotNull(message = "Active status cannot be null")
     var activeStatus: Boolean = true,
-    @Column(name = "date_added", nullable = false)
-    @field:NotNull(message = "Date added cannot be null")
-    var dateAdded: Timestamp = Timestamp(System.currentTimeMillis()),
-    @Column(name = "date_updated", nullable = false)
-    @field:NotNull(message = "Date updated cannot be null")
-    var dateUpdated: Timestamp = Timestamp(System.currentTimeMillis()),
     @Column(name = "paid_amount", precision = 12, scale = 2, nullable = false)
     @field:NotNull(message = "Paid amount cannot be null")
     @field:DecimalMin(value = "0.00", message = "Paid amount must be non-negative")
@@ -129,6 +126,16 @@ data class MedicalExpense(
     @field:Digits(integer = 10, fraction = 2, message = "Paid amount must have at most 10 integer digits and 2 decimal places")
     var paidAmount: BigDecimal = BigDecimal.ZERO,
 ) {
+    @JsonIgnore
+    @Column(name = "date_added", nullable = false)
+    @field:NotNull(message = "Date added cannot be null")
+    var dateAdded: Timestamp = Timestamp(System.currentTimeMillis())
+
+    @JsonIgnore
+    @Column(name = "date_updated", nullable = false)
+    @field:NotNull(message = "Date updated cannot be null")
+    var dateUpdated: Timestamp = Timestamp(System.currentTimeMillis())
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id", insertable = false, updatable = false)
     @JsonIgnore
@@ -222,6 +229,8 @@ data class MedicalExpense(
         @JsonIgnore
         private val mapper =
             ObjectMapper().apply {
+                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
+                findAndRegisterModules()
                 configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
                 configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             }

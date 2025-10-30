@@ -166,10 +166,10 @@ class DatabaseResilienceIntSpec extends Specification {
             "1600",  // moniker
             BigDecimal.ZERO,  // outstanding
             BigDecimal.ZERO,  // future
-            BigDecimal.ZERO,  // cleared
-            new Timestamp(0),  // dateClosed
-            new Timestamp(System.currentTimeMillis())  // validationDate
+            BigDecimal.ZERO  // cleared
         )
+        testAccount.dateClosed = new Timestamp(0)
+        testAccount.validationDate = new Timestamp(System.currentTimeMillis())
 
         when:
         CompletableFuture<Account> result = databaseResilienceConfiguration.executeWithResilience(
@@ -206,10 +206,10 @@ class DatabaseResilienceIntSpec extends Specification {
                     "1700",  // moniker (4 digits)
                     BigDecimal.ZERO,  // outstanding
                     BigDecimal.ZERO,  // future
-                    BigDecimal.ZERO,  // cleared
-                    new Timestamp(0),  // dateClosed
-                    new Timestamp(System.currentTimeMillis())  // validationDate
+                    BigDecimal.ZERO  // cleared
                 )
+                account.dateClosed = new Timestamp(0)
+                account.validationDate = new Timestamp(System.currentTimeMillis())
                 return accountRepository.save(account)
             }
         }
@@ -252,10 +252,10 @@ class DatabaseResilienceIntSpec extends Specification {
                         "1800",  // moniker (4 digits)
                         BigDecimal.ZERO,  // outstanding
                         BigDecimal.ZERO,  // future
-                        BigDecimal.ZERO,  // cleared
-                        new Timestamp(0),  // dateClosed
-                        new Timestamp(System.currentTimeMillis())  // validationDate
+                        BigDecimal.ZERO  // cleared
                     )
+                    account.dateClosed = new Timestamp(0)
+                    account.validationDate = new Timestamp(System.currentTimeMillis())
                     return accountRepository.save(account)
                 } as java.util.function.Supplier
             )
@@ -275,7 +275,7 @@ class DatabaseResilienceIntSpec extends Specification {
         def batchNames = ["batcha_test", "batchb_test", "batchc_test", "batchd_test", "batche_test"]
         List<Account> testAccounts = []
         for (int i = 0; i < 5; i++) {
-            testAccounts.add(new Account(
+            Account account = new Account(
                 0L,  // accountId
                 batchNames[i],  // accountNameOwner
                 AccountType.Debit,  // accountType
@@ -283,10 +283,11 @@ class DatabaseResilienceIntSpec extends Specification {
                 "1900",  // moniker (4 digits)
                 BigDecimal.ZERO,  // outstanding
                 BigDecimal.ZERO,  // future
-                BigDecimal.ZERO,  // cleared
-                new Timestamp(0),  // dateClosed
-                new Timestamp(System.currentTimeMillis())  // validationDate
-            ))
+                BigDecimal.ZERO  // cleared
+            )
+            account.dateClosed = new Timestamp(0)
+            account.validationDate = new Timestamp(System.currentTimeMillis())
+            testAccounts.add(account)
         }
 
         when:
