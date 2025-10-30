@@ -68,10 +68,10 @@ class StandardizedAccountService(
         }
 
     override fun update(entity: Account): ServiceResult<Account> =
-        handleServiceOperation("update", entity.accountId.toString()) {
-            val existingAccount = accountRepository.findByAccountId(entity.accountId!!)
+        handleServiceOperation("update", entity.accountNameOwner) {
+            val existingAccount = accountRepository.findByAccountNameOwner(entity.accountNameOwner)
             if (existingAccount.isEmpty) {
-                throw EntityNotFoundException("Account not found: ${entity.accountId}")
+                throw EntityNotFoundException("Account not found: ${entity.accountNameOwner}")
             }
 
             // Update fields from the provided entity

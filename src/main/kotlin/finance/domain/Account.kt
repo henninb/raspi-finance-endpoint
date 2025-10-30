@@ -2,6 +2,7 @@ package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
@@ -39,12 +40,13 @@ import java.util.Calendar
     ],
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class Account(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_account_account_id_seq")
-    @param:JsonProperty
     @field:Min(value = 0L)
+    @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
     @param:JsonProperty
@@ -77,13 +79,15 @@ data class Account(
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "cleared", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var cleared: BigDecimal,
-    @param:JsonProperty
-    @Column(name = "date_closed")
-    var dateClosed: Timestamp,
-    @param:JsonProperty
-    @Column(name = "validation_date", nullable = false)
-    var validationDate: Timestamp,
 ) {
+    @JsonIgnore
+    @Column(name = "date_closed")
+    var dateClosed: Timestamp = Timestamp(0)
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(name = "validation_date", nullable = false)
+    var validationDate: Timestamp = Timestamp(System.currentTimeMillis())
+
     constructor() : this(
         0L,
         "",
@@ -93,15 +97,13 @@ data class Account(
         BigDecimal(0.0),
         BigDecimal(0.0),
         BigDecimal(0.0),
-        Timestamp(0),
-        Timestamp(0),
     )
 
-    @JsonProperty
+    @JsonIgnore
     @Column(name = "date_added", nullable = false)
     var dateAdded: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
-    @JsonProperty
+    @JsonIgnore
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
 
@@ -112,6 +114,10 @@ data class Account(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper =
+            ObjectMapper().apply {
+                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
+                findAndRegisterModules()
+            }
     }
 }

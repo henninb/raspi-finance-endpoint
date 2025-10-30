@@ -1,33 +1,13 @@
 package finance.controllers
 
-import finance.Application
 import groovy.json.JsonBuilder
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.ResultActions
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import spock.lang.Specification
-import java.util.Base64
 
-//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-
-@AutoConfigureMockMvc
-@ActiveProfiles("func")
-@SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
-
-    @Autowired
-    MockMvc mockMvc
 
     // Also use controllers directly to avoid brittle endpoint assumptions
     @Autowired

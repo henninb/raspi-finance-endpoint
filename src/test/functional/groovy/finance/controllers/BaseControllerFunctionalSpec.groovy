@@ -15,7 +15,6 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import java.io.IOException
 import java.lang.reflect.Field
-import org.springframework.test.web.reactive.server.WebTestClient
 import java.net.HttpURLConnection
 import org.flywaydb.core.Flyway
 
@@ -40,9 +39,6 @@ import java.util.Date
 @Transactional
 @Import([TestSecurityConfig])
 class BaseControllerFunctionalSpec extends Specification {
-    @Autowired
-    protected WebTestClient webTestClient
-
     @Shared
     @Autowired
     protected Environment environment
@@ -176,14 +172,6 @@ class BaseControllerFunctionalSpec extends Specification {
         } catch (org.springframework.web.client.HttpStatusCodeException ex) {
             return new ResponseEntity<>(ex.getResponseBodyAsString(), ex.getResponseHeaders(), ex.getStatusCode())
         }
-    }
-
-    private ResponseEntity<String> convertWebTestClientResponse(WebTestClient.ResponseSpec responseSpec) {
-        def result = responseSpec.returnResult(String.class)
-        def status = HttpStatus.valueOf(result.status.value())
-        def body = result.responseBodyContent ? new String(result.responseBodyContent) : null
-        def headers = result.responseHeaders
-        return new ResponseEntity<String>(body, headers, status)
     }
 
     def setupSpec() {

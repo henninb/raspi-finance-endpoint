@@ -23,14 +23,14 @@ import java.util.Calendar
 
 @Entity
 @Table(name = "t_user")
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_user_user_id_seq")
-    @param:Min(value = 0L)
-    @param:JsonProperty
+    @field:Min(value = 0L)
+    @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "user_id", nullable = false)
     var userId: Long,
     @param:JsonProperty
@@ -77,6 +77,10 @@ data class User(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper =
+            ObjectMapper().apply {
+                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
+                findAndRegisterModules()
+            }
     }
 }

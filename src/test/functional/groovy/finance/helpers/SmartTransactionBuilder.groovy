@@ -18,7 +18,7 @@ class SmartTransactionBuilder {
     private TransactionType transactionType = TransactionType.Expense
     private String accountNameOwner
     private Date transactionDate
-    private Date dueDate
+    private Date dueDate = null
     private String description
     private String category
     private BigDecimal amount
@@ -35,7 +35,7 @@ class SmartTransactionBuilder {
         this.guid = UUID.randomUUID().toString()
         this.accountNameOwner = generateConstraintCompliantAccountName()
         this.transactionDate = new Date(System.currentTimeMillis() - (Math.random() * 365 * 24 * 60 * 60 * 1000L) as Long)
-        this.dueDate = new Date(this.transactionDate.time + (7 * 24 * 60 * 60 * 1000L))
+        // dueDate is optional - only set if explicitly requested via withDueDate()
         this.description = generateConstraintCompliantDescription()
         this.category = generateConstraintCompliantCategory()
         this.amount = generateValidAmount()

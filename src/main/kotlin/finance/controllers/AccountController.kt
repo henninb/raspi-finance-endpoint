@@ -162,8 +162,11 @@ class AccountController(
     override fun update(
         @PathVariable("accountNameOwner") id: String,
         @Valid @RequestBody entity: Account,
-    ): ResponseEntity<Account> =
-        when (val result = standardizedAccountService.update(entity)) {
+    ): ResponseEntity<Account> {
+        // Ensure the accountNameOwner matches the path parameter (similar to Transaction controller pattern)
+        val updatedEntity = entity.copy(accountNameOwner = id)
+
+        return when (val result = standardizedAccountService.update(updatedEntity)) {
             is ServiceResult.Success -> {
                 logger.info("Account updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -185,6 +188,7 @@ class AccountController(
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
         }
+    }
 
     /**
      * Standardized entity deletion - DELETE /api/account/{accountNameOwner}

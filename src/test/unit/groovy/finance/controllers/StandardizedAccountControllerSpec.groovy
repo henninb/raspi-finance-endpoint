@@ -219,7 +219,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 9L, accountNameOwner: "acct_upd")
         Account patch = acct(accountId: 9L, accountNameOwner: "acct_upd", moniker: "5678")
         and:
-        accountRepository.findByAccountId(9L) >> Optional.of(existing)
+        accountRepository.findByAccountNameOwner("acct_upd") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
 
         when:
@@ -234,7 +234,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account patch = acct(accountId: 888L, accountNameOwner: "nope")
         and:
-        accountRepository.findByAccountId(888L) >> Optional.empty()
+        accountRepository.findByAccountNameOwner("nope") >> Optional.empty()
 
         when:
         ResponseEntity<Account> response = controller.update("nope", patch)
@@ -248,7 +248,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 10L, accountNameOwner: "acct_val")
         Account patch = acct(accountId: 10L, accountNameOwner: "acct_val", moniker: "9999")
         and:
-        accountRepository.findByAccountId(10L) >> Optional.of(existing)
+        accountRepository.findByAccountNameOwner("acct_val") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new jakarta.validation.ConstraintViolationException("bad", [] as Set) }
 
         when:
@@ -263,7 +263,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 11L, accountNameOwner: "acct_conf")
         Account patch = acct(accountId: 11L, accountNameOwner: "acct_conf")
         and:
-        accountRepository.findByAccountId(11L) >> Optional.of(existing)
+        accountRepository.findByAccountNameOwner("acct_conf") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
@@ -278,7 +278,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 12L, accountNameOwner: "acct_sys")
         Account patch = acct(accountId: 12L, accountNameOwner: "acct_sys")
         and:
-        accountRepository.findByAccountId(12L) >> Optional.of(existing)
+        accountRepository.findByAccountNameOwner("acct_sys") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new RuntimeException("boom") }
 
         when:
