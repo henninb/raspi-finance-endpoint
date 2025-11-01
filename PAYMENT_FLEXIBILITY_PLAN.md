@@ -259,7 +259,7 @@ enum class PaymentBehavior {
 | **BILL_PAYMENT** | -amount | -amount | Asset decreases, liability decreases |
 | **TRANSFER** | -amount | +amount | One asset decreases, other increases |
 | **CASH_ADVANCE** | +amount | +amount | Liability increases, asset increases |
-| **BALANCE_TRANSFER** | -amount | +amount | One liability decreases, other increases |
+| **BALANCE_TRANSFER** | +amount | -amount | Source liability increases (charging), dest liability decreases (being paid) |
 
 ---
 
@@ -400,7 +400,7 @@ fun calculateSourceAmount(amount: BigDecimal, behavior: PaymentBehavior): BigDec
         PaymentBehavior.BILL_PAYMENT -> -amount.abs()      // Asset decreases
         PaymentBehavior.TRANSFER -> -amount.abs()           // Asset decreases
         PaymentBehavior.CASH_ADVANCE -> amount.abs()        // Liability increases (more debt)
-        PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()   // Liability decreases (debt moved)
+        PaymentBehavior.BALANCE_TRANSFER -> amount.abs()    // Liability increases (charging to pay another card)
         else -> -amount.abs()                               // Default: negative
     }
 }
@@ -413,7 +413,7 @@ fun calculateDestinationAmount(amount: BigDecimal, behavior: PaymentBehavior): B
         PaymentBehavior.BILL_PAYMENT -> -amount.abs()       // Liability decreases (debt paid)
         PaymentBehavior.TRANSFER -> amount.abs()            // Asset increases
         PaymentBehavior.CASH_ADVANCE -> amount.abs()        // Asset increases (cash received)
-        PaymentBehavior.BALANCE_TRANSFER -> amount.abs()    // Liability increases (debt received)
+        PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()   // Liability decreases (debt paid off)
         else -> -amount.abs()                               // Default: negative
     }
 }
@@ -426,7 +426,7 @@ fun calculateDestinationAmount(amount: BigDecimal, behavior: PaymentBehavior): B
 | **BILL_PAYMENT** | asset | liability | **-** | **-** | Checking → Credit Card |
 | **TRANSFER** | asset | asset | **-** | **+** | Checking → Savings |
 | **CASH_ADVANCE** | liability | asset | **+** | **+** | Credit Card → Checking |
-| **BALANCE_TRANSFER** | liability | liability | **-** | **+** | Credit Card A → Credit Card B |
+| **BALANCE_TRANSFER** | liability | liability | **+** | **-** | Credit Card A → Credit Card B (pay B with A) |
 
 ### Real-World Examples
 
@@ -451,8 +451,8 @@ fun calculateDestinationAmount(amount: BigDecimal, behavior: PaymentBehavior): B
 **Example 4: Balance Transfer (New)**
 - Payment: $100 from Credit Card A to Credit Card B
 - Behavior: BALANCE_TRANSFER
-- Source (Credit Card A): -$100 (debt decreases)
-- Destination (Credit Card B): +$100 (debt increases)
+- Source (Credit Card A): +$100 (debt increases - charging on Card A)
+- Destination (Credit Card B): -$100 (debt decreases - paying off Card B)
 
 ---
 

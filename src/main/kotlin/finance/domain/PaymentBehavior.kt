@@ -51,14 +51,14 @@ enum class PaymentBehavior(
     ),
 
     /**
-     * Liability account transferring to another liability account (e.g., balance transfer)
-     * Source: negative (liability decreases - debt moved away)
-     * Destination: positive (liability increases - debt received)
+     * Liability account transferring to another liability account (e.g., paying one credit card with another)
+     * Source: positive (liability increases - charging on this card)
+     * Destination: negative (liability decreases - paying off this card)
      */
     @JsonProperty("balance_transfer")
     BALANCE_TRANSFER(
         "balance_transfer",
-        "Balance transfer between two liability accounts",
+        "Balance transfer between two liability accounts (using one credit card to pay another)",
     ),
 
     /**

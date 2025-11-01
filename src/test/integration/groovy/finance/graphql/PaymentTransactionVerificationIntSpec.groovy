@@ -134,8 +134,8 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         and: "a payment from credit card to credit card (BALANCE_TRANSFER)"
         def dto = new PaymentInputDto(
                 null,
-                creditCard1,                    // source: liability
-                creditCard2,                    // destination: liability
+                creditCard1,                    // source: liability (charging this card)
+                creditCard2,                    // destination: liability (paying this card)
                 Date.valueOf("2024-02-01"),
                 new BigDecimal("1000.00"),
                 null,
@@ -149,13 +149,13 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         then: "payment is created"
         result != null
 
-        and: "source transaction has negative amount (debt moving out)"
+        and: "source transaction has positive amount (debt increasing - charging to pay another card)"
         def sourceTransaction = transactionRepository.findByGuid(result.guidSource).get()
-        sourceTransaction.amount == new BigDecimal("-1000.00")
+        sourceTransaction.amount == new BigDecimal("1000.00")
 
-        and: "destination transaction has positive amount (debt moving in)"
+        and: "destination transaction has negative amount (debt decreasing - being paid off)"
         def destTransaction = transactionRepository.findByGuid(result.guidDestination).get()
-        destTransaction.amount == new BigDecimal("1000.00")
+        destTransaction.amount == new BigDecimal("-1000.00")
     }
 
     def "createPayment should set accountType field to actual account type, not legacy Debit/Credit"() {

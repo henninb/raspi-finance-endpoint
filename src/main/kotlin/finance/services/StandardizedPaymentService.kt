@@ -420,7 +420,7 @@ class StandardizedPaymentService(
             PaymentBehavior.BILL_PAYMENT -> -amount.abs() // Asset decreases
             PaymentBehavior.TRANSFER -> -amount.abs() // Asset decreases
             PaymentBehavior.CASH_ADVANCE -> amount.abs() // Liability increases (more debt)
-            PaymentBehavior.BALANCE_TRANSFER -> -amount.abs() // Liability decreases (debt moved)
+            PaymentBehavior.BALANCE_TRANSFER -> amount.abs() // Liability increases (charging to pay another card)
             else -> -amount.abs() // Default: negative (safest)
         }
 
@@ -439,7 +439,7 @@ class StandardizedPaymentService(
             PaymentBehavior.BILL_PAYMENT -> -amount.abs() // Liability decreases (debt paid)
             PaymentBehavior.TRANSFER -> amount.abs() // Asset increases
             PaymentBehavior.CASH_ADVANCE -> amount.abs() // Asset increases (cash received)
-            PaymentBehavior.BALANCE_TRANSFER -> amount.abs() // Liability increases (debt received)
+            PaymentBehavior.BALANCE_TRANSFER -> -amount.abs() // Liability decreases (debt paid off)
             else -> -amount.abs() // Default: negative (safest)
         }
 
