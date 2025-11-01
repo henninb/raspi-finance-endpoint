@@ -19,6 +19,8 @@ spring:
     property-naming-strategy: LOWER_CAMEL_CASE
     default-property-inclusion: non_null
     mapper.accept-case-insensitive-enums: true
+    deserialization.FAIL_ON_NULL_FOR_PRIMITIVES: false
+    deserialization.FAIL_ON_UNKNOWN_PROPERTIES: false
     time-zone: America/Chicago
 
   # ===============================
