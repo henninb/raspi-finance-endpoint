@@ -2,6 +2,12 @@ spring:
   application:
     name: raspi-finance-endpoint
 
+  # Jackson Configuration - Critical for Kotlin data class deserialization
+  jackson:
+    deserialization:
+      FAIL_ON_NULL_FOR_PRIMITIVES: false
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+
   # GraphQL Configuration for Spring Boot 4.0
   graphql:
     graphiql:
