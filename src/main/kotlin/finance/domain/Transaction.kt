@@ -62,53 +62,53 @@ data class Transaction(
     @field:Min(value = 0L)
     @param:JsonProperty
     @Column(name = "transaction_id")
-    var transactionId: Long,
+    var transactionId: Long = 0L,
     @param:JsonProperty
     @Column(name = "guid", unique = true, nullable = false)
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
-    var guid: String,
+    var guid: String = "",
     @param:JsonProperty
     @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
-    var accountId: Long,
+    var accountId: Long = 0L,
     @param:JsonProperty
     @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = AccountTypeConverter::class)
-    var accountType: AccountType,
+    var accountType: AccountType = AccountType.Undefined,
     @param:JsonProperty
     @Column(name = "transaction_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = TransactionTypeConverter::class)
-    var transactionType: TransactionType,
+    var transactionType: TransactionType = TransactionType.Undefined,
     @param:JsonProperty
     @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
     @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
-    var accountNameOwner: String,
+    var accountNameOwner: String = "",
     @param:JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
-    var transactionDate: Date,
+    var transactionDate: Date = Date(0),
     @param:JsonProperty
     @field:Size(min = 1, max = 75, message = FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE)
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
-    var description: String,
+    var description: String = "",
     @param:JsonProperty
     @field:Size(max = 50, message = FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE)
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @Column(name = "category", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
-    var category: String,
+    var category: String = "",
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
-    var amount: BigDecimal,
+    var amount: BigDecimal = BigDecimal(0.00),
     @param:JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
-    var transactionState: TransactionState,
+    var transactionState: TransactionState = TransactionState.Undefined,
     @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
