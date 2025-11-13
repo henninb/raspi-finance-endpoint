@@ -37,7 +37,7 @@ object TimestampScalar {
                     @Deprecated("Deprecated in GraphQL Extended Scalars")
                     override fun parseLiteral(input: Any): Timestamp =
                         when (input) {
-                            is StringValue -> Timestamp(input.value.toLong())
+                            is StringValue -> Timestamp(input.value?.toLong() ?: throw CoercingParseLiteralException("StringValue has null value"))
                             else -> throw CoercingParseLiteralException("Unable to parse literal $input as Timestamp")
                         }
                 },
