@@ -9,7 +9,7 @@ import spock.lang.Specification
 
 @ActiveProfiles("ora")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TestSpec extends Specification {
+class OracleApplicationContextSpec extends Specification {
 
     @Autowired
     protected ApplicationContext applicationContext
