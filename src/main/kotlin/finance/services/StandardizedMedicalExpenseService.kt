@@ -9,7 +9,7 @@ import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 /**
  * Standardized Medical Expense Service implementing ServiceResult pattern
@@ -164,8 +164,8 @@ class StandardizedMedicalExpenseService(
     }
 
     fun findMedicalExpensesByServiceDateRange(
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by service date range: $startDate to $endDate")
         return medicalExpenseRepository.findByServiceDateBetweenAndActiveStatusTrue(startDate, endDate)
@@ -173,8 +173,8 @@ class StandardizedMedicalExpenseService(
 
     fun findMedicalExpensesByAccountIdAndDateRange(
         accountId: Long,
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by account ID: $accountId and date range: $startDate to $endDate")
         return medicalExpenseRepository.findByAccountIdAndServiceDateBetween(accountId, startDate, endDate)
@@ -192,8 +192,8 @@ class StandardizedMedicalExpenseService(
 
     fun findMedicalExpensesByFamilyMemberAndDateRange(
         familyMemberId: Long,
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<MedicalExpense> {
         logger.debug("Finding medical expenses by family member ID: $familyMemberId and date range: $startDate to $endDate")
         return medicalExpenseRepository.findByFamilyMemberIdAndServiceDateBetween(familyMemberId, startDate, endDate)

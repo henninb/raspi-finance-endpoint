@@ -27,9 +27,8 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 
 @Entity
@@ -64,7 +63,7 @@ data class Payment(
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     @param:JsonProperty
-    var transactionDate: Date,
+    var transactionDate: LocalDate,
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
@@ -81,21 +80,7 @@ data class Payment(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
-    constructor() : this(0L, "", "", Date(0), BigDecimal(0.00), "", "")
-
-    @JsonGetter("transactionDate")
-    fun jsonGetterPaymentDate(): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-        return simpleDateFormat.format(this.transactionDate)
-    }
-
-    @JsonSetter("transactionDate")
-    fun jsonSetterPaymentDate(stringDate: String) {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
-    }
+    constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal(0.00), "", "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

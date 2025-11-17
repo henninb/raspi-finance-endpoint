@@ -29,9 +29,8 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 
 @Entity
@@ -54,7 +53,7 @@ data class PendingTransaction(
     @param:JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
-    var transactionDate: Date,
+    var transactionDate: LocalDate,
     @param:JsonProperty
     @param:Size(min = 1, max = 75)
     @param:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
@@ -75,21 +74,7 @@ data class PendingTransaction(
     @JsonIgnore
     var account: Account? = null,
 ) {
-    constructor() : this(0L, "", Date(0), "", BigDecimal(0.00), "pending", "")
-
-    @JsonGetter("transactionDate")
-    fun jsonGetterTransactionDate(): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-        return simpleDateFormat.format(this.transactionDate)
-    }
-
-    @JsonSetter("transactionDate")
-    fun jsonSetterPaymentDate(stringDate: String) {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
-        simpleDateFormat.isLenient = false
-        this.transactionDate = Date(simpleDateFormat.parse(stringDate).time)
-    }
+    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending", "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")

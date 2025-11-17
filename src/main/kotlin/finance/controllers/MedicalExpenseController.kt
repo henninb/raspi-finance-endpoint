@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 @CrossOrigin
 @Tag(name = "Medical Expense Management", description = "Operations for managing medical expenses")
@@ -367,8 +367,8 @@ class MedicalExpenseController(
     @GetMapping("/account/{accountId}/date-range")
     fun getMedicalExpensesByAccountIdAndDateRange(
         @PathVariable accountId: Long,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date,
+        @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+        @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/account/$accountId/date-range - Retrieving medical expenses by account and date range")
 
@@ -420,8 +420,8 @@ class MedicalExpenseController(
     @GetMapping("/family-member/{familyMemberId}/date-range")
     fun getMedicalExpensesByFamilyMemberAndDateRange(
         @PathVariable familyMemberId: Long,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date,
+        @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+        @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/family-member/$familyMemberId/date-range - Retrieving medical expenses by family member and date range")
 
@@ -639,8 +639,8 @@ class MedicalExpenseController(
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/date-range")
     fun getMedicalExpensesByDateRange(
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") startDate: Date,
-        @RequestParam @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") endDate: Date,
+        @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+        @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
     ): ResponseEntity<List<MedicalExpense>> {
         logger.info("GET /medical-expenses/date-range - Retrieving medical expenses by date range")
 

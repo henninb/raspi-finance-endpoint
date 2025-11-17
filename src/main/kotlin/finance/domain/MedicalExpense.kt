@@ -30,8 +30,8 @@ import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 
 @Entity
 @Table(name = "t_medical_expense")
@@ -55,7 +55,7 @@ data class MedicalExpense(
     @Column(name = "service_date", nullable = false)
     @field:NotNull(message = "Service date cannot be null")
     @field:ValidDate
-    var serviceDate: Date = Date.valueOf("1900-01-01"),
+    var serviceDate: LocalDate = LocalDate.of(1900, 1, 1),
     @Column(name = "service_description")
     @field:Size(max = 500, message = "Service description cannot exceed 500 characters")
     var serviceDescription: String? = null,
@@ -99,7 +99,7 @@ data class MedicalExpense(
     var patientResponsibility: BigDecimal = BigDecimal.ZERO,
     @Column(name = "paid_date")
     @field:ValidDate
-    var paidDate: Date? = null,
+    var paidDate: LocalDate? = null,
     @Column(name = "is_out_of_network", nullable = false)
     @field:NotNull(message = "Out of network status cannot be null")
     @get:JsonProperty("isOutOfNetwork")

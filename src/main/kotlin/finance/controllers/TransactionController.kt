@@ -245,8 +245,8 @@ class TransactionController(
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Page returned"), ApiResponse(responseCode = "400", description = "Invalid range"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @GetMapping("/date-range", produces = ["application/json"])
     fun findByDateRange(
-        @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd") start: java.util.Date,
-        @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd") end: java.util.Date,
+        @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) start: java.time.LocalDate,
+        @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) end: java.time.LocalDate,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): ResponseEntity<Page<Transaction>> {
@@ -258,9 +258,7 @@ class TransactionController(
                     .by("transactionDate")
                     .descending(),
             )
-        val startDate = java.sql.Date(start.time)
-        val endDate = java.sql.Date(end.time)
-        return when (val result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)) {
+        return when (val result = standardizedTransactionService.findTransactionsByDateRangeStandardized(start, end, pageable)) {
             is ServiceResult.Success -> ResponseEntity.ok(result.data)
             is ServiceResult.BusinessError -> ResponseEntity.badRequest().build()
             is ServiceResult.SystemError -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

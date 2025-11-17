@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 data class MedicalExpenseInputDto(
     val medicalExpenseId: Long? = null,
@@ -20,7 +20,7 @@ data class MedicalExpenseInputDto(
     @field:Min(value = 1, message = "Family member ID must be positive when specified")
     val familyMemberId: Long? = null,
     @field:NotNull(message = "Service date cannot be null")
-    val serviceDate: Date?,
+    val serviceDate: LocalDate?,
     @field:Size(max = 500, message = "Service description cannot exceed 500 characters")
     val serviceDescription: String? = null,
     @field:Size(max = 20, message = "Procedure code cannot exceed 20 characters")
@@ -55,7 +55,7 @@ data class MedicalExpenseInputDto(
     @field:DecimalMax(value = "999999999.99", message = "Patient responsibility cannot exceed 999,999,999.99")
     @field:Digits(integer = 10, fraction = 2, message = "Patient responsibility must have at most 10 integer digits and 2 decimal places")
     val patientResponsibility: BigDecimal?,
-    val paidDate: Date? = null,
+    val paidDate: LocalDate? = null,
     @field:NotNull(message = "Out of network status cannot be null")
     val isOutOfNetwork: Boolean?,
     @field:NotNull(message = "Claim number cannot be null")

@@ -23,8 +23,8 @@ import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.Base64
 import java.util.Calendar
 import java.util.UUID
@@ -190,12 +190,12 @@ class StandardizedTransactionService(
         }
 
     fun findTransactionsByDateRangeStandardized(
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
         pageable: Pageable,
     ): ServiceResult<Page<Transaction>> =
         handleServiceOperation("findTransactionsByDateRange", null) {
-            if (startDate.after(endDate)) {
+            if (startDate.isAfter(endDate)) {
                 throw IllegalStateException("startDate must be before or equal to endDate")
             }
             transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable)
@@ -217,7 +217,7 @@ class StandardizedTransactionService(
             }
 
             if (transactionState == TransactionState.Cleared &&
-                transaction.transactionDate > Date(Calendar.getInstance().timeInMillis)
+                transaction.transactionDate.isAfter(LocalDate.now())
             ) {
                 throw InvalidTransactionStateException("Cannot set cleared status on a future dated transaction: ${transaction.transactionDate}.")
             }
@@ -304,16 +304,14 @@ class StandardizedTransactionService(
 
     fun createFutureTransactionStandardized(transaction: Transaction): ServiceResult<Transaction> =
         handleServiceOperation("createFutureTransaction", transaction.guid) {
-            val calendarTransactionDate = Calendar.getInstance()
-            val calendarDueDate = Calendar.getInstance()
-            calendarTransactionDate.time = transaction.transactionDate
-            calculateFutureDate(transaction, calendarTransactionDate)
+            // Calculate future transaction date using LocalDate
+            val futureTransactionDate = calculateFutureLocalDate(transaction, transaction.transactionDate)
+
             val transactionFuture = Transaction()
 
+            // Calculate future due date if present
             if (transaction.dueDate != null) {
-                calendarDueDate.time = transaction.dueDate
-                calculateFutureDate(transaction, calendarDueDate)
-                transactionFuture.dueDate = Date(calendarDueDate.timeInMillis)
+                transactionFuture.dueDate = calculateFutureLocalDate(transaction, transaction.dueDate!!)
             }
 
             transactionFuture.guid = UUID.randomUUID().toString()
@@ -329,7 +327,7 @@ class StandardizedTransactionService(
             transactionFuture.notes = ""
             transactionFuture.reoccurringType = transaction.reoccurringType
             transactionFuture.transactionState = TransactionState.Future
-            transactionFuture.transactionDate = Date(calendarTransactionDate.timeInMillis)
+            transactionFuture.transactionDate = futureTransactionDate
             val futureTimestamp = Timestamp(System.currentTimeMillis())
             transactionFuture.dateUpdated = futureTimestamp
             transactionFuture.dateAdded = futureTimestamp
@@ -477,8 +475,8 @@ class StandardizedTransactionService(
     }
 
     fun findTransactionsByDateRange(
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
         pageable: Pageable,
     ): Page<Transaction> {
         val result = findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
@@ -604,4 +602,23 @@ class StandardizedTransactionService(
             }
         }
     }
+
+    private fun calculateFutureLocalDate(
+        transaction: Transaction,
+        date: LocalDate,
+    ): LocalDate =
+        if (transaction.reoccurringType == ReoccurringType.FortNightly) {
+            date.plusDays(14)
+        } else {
+            if (transaction.accountType == AccountType.Debit) {
+                if (transaction.reoccurringType == ReoccurringType.Monthly) {
+                    date.plusMonths(1)
+                } else {
+                    logger.warn("debit transaction ReoccurringType needs to be configured.")
+                    throw InvalidReoccurringTypeException("debit transaction ReoccurringType needs to be configured.")
+                }
+            } else {
+                date.plusYears(1)
+            }
+        }
 }
