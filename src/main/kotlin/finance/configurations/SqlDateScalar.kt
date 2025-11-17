@@ -6,45 +6,39 @@ import graphql.schema.CoercingParseLiteralException
 import graphql.schema.CoercingParseValueException
 import graphql.schema.CoercingSerializeException
 import graphql.schema.GraphQLScalarType
-import java.sql.Date
-import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 object SqlDateScalar {
     val INSTANCE: GraphQLScalarType =
         GraphQLScalarType
             .newScalar()
             .name("Date")
-            .description("A custom scalar that handles java.sql.Date as String in YYYY-MM-DD format")
+            .description("A custom scalar that handles java.time.LocalDate as String in YYYY-MM-DD format")
             .coercing(
-                object : Coercing<Date, String> {
-                    private val dateFormat =
-                        SimpleDateFormat("yyyy-MM-dd").apply {
-                            isLenient = false
-                        }
+                object : Coercing<LocalDate, String> {
+                    private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
                     @Deprecated("Deprecated in GraphQL Extended Scalars")
                     override fun serialize(dataFetcherResult: Any): String =
                         when (dataFetcherResult) {
-                            is Date -> dateFormat.format(dataFetcherResult)
-                            is java.util.Date -> dateFormat.format(dataFetcherResult)
+                            is LocalDate -> dataFetcherResult.format(dateFormatter)
                             is String -> dataFetcherResult
-                            else -> throw CoercingSerializeException("Unable to serialize $dataFetcherResult as Date")
+                            else -> throw CoercingSerializeException("Unable to serialize $dataFetcherResult as LocalDate")
                         }
 
                     @Deprecated("Deprecated in GraphQL Extended Scalars")
-                    override fun parseValue(input: Any): Date =
+                    override fun parseValue(input: Any): LocalDate =
                         when (input) {
-                            is String -> Date(dateFormat.parse(input).time)
-                            is Long -> Date(input)
-                            is Number -> Date(input.toLong())
-                            else -> throw CoercingParseValueException("Unable to parse $input as Date")
+                            is String -> LocalDate.parse(input, dateFormatter)
+                            else -> throw CoercingParseValueException("Unable to parse $input as LocalDate")
                         }
 
                     @Deprecated("Deprecated in GraphQL Extended Scalars")
-                    override fun parseLiteral(input: Any): Date =
+                    override fun parseLiteral(input: Any): LocalDate =
                         when (input) {
-                            is StringValue -> Date(dateFormat.parse(input.value).time)
-                            else -> throw CoercingParseLiteralException("Unable to parse literal $input as Date")
+                            is StringValue -> LocalDate.parse(input.value, dateFormatter)
+                            else -> throw CoercingParseLiteralException("Unable to parse literal $input as LocalDate")
                         }
                 },
             ).build()
