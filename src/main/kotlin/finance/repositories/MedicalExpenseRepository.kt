@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 @Repository
 interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
@@ -20,13 +20,13 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     fun findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId: Long): MedicalExpense?
 
     fun findByServiceDateBetween(
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<MedicalExpense>
 
     fun findByServiceDateBetweenAndActiveStatusTrue(
-        startDate: Date,
-        endDate: Date,
+        startDate: LocalDate,
+        endDate: LocalDate,
     ): List<MedicalExpense>
 
     fun findByProviderId(providerId: Long?): List<MedicalExpense>
@@ -76,8 +76,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     )
     fun findByAccountIdAndServiceDateBetween(
         @Param("accountId") accountId: Long,
-        @Param("startDate") startDate: Date,
-        @Param("endDate") endDate: Date,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate,
     ): List<MedicalExpense>
 
     @Query(
@@ -124,8 +124,8 @@ interface MedicalExpenseRepository : JpaRepository<MedicalExpense, Long> {
     )
     fun findByFamilyMemberIdAndServiceDateBetween(
         @Param("familyMemberId") familyMemberId: Long?,
-        @Param("startDate") startDate: Date,
-        @Param("endDate") endDate: Date,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate,
     ): List<MedicalExpense>
 
     @Query(

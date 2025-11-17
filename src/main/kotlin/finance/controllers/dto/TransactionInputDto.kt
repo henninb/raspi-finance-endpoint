@@ -24,7 +24,7 @@ import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 data class TransactionInputDto(
     val transactionId: Long? = null,
@@ -42,7 +42,7 @@ data class TransactionInputDto(
     val accountNameOwner: String,
     @field:NotNull
     @field:ValidDate
-    val transactionDate: Date,
+    val transactionDate: LocalDate,
     @field:NotBlank
     @field:Size(min = 1, max = 75, message = FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE)
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
@@ -62,7 +62,7 @@ data class TransactionInputDto(
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     val notes: String? = null,
     @field:ValidDate
-    val dueDate: Date? = null,
+    val dueDate: LocalDate? = null,
     @field:Min(value = 0L)
     val receiptImageId: Long? = null,
 )

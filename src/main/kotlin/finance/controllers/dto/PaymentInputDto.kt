@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 data class PaymentInputDto(
     val paymentId: Long? = null,
@@ -16,7 +16,7 @@ data class PaymentInputDto(
     @field:NotBlank
     val destinationAccount: String,
     @field:NotNull
-    val transactionDate: Date,
+    val transactionDate: LocalDate,
     @field:NotNull
     @field:DecimalMin("0.01")
     val amount: BigDecimal,
