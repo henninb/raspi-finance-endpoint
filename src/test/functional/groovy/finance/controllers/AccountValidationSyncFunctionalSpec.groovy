@@ -227,15 +227,16 @@ class AccountValidationSyncFunctionalSpec extends BaseControllerFunctionalSpec {
 
     // Helper methods specific to this test class
 
-    protected ResponseEntity<String> putEndpoint(String path, String payload) {
+    protected ResponseEntity<String> putEndpoint(String path, Object payload) {
         String token = generateJwtToken(username)
-        log.info("PUT ${path}: ${payload}")
+        String body = bodyAsJson(payload)
+        log.info("PUT ${path}: ${body}")
 
         HttpHeaders reqHeaders = new HttpHeaders()
         reqHeaders.setContentType(MediaType.APPLICATION_JSON)
         reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
         reqHeaders.add("Authorization", "Bearer " + token)
-        HttpEntity<String> entity = new HttpEntity<>(payload, reqHeaders)
+        HttpEntity<String> entity = new HttpEntity<>(body, reqHeaders)
 
         try {
             return restTemplate.exchange(
@@ -270,15 +271,16 @@ class AccountValidationSyncFunctionalSpec extends BaseControllerFunctionalSpec {
         }
     }
 
-    protected ResponseEntity<String> postEndpoint(String path, String payload) {
+    protected ResponseEntity<String> postEndpoint(String path, Object payload) {
         String token = generateJwtToken(username)
-        log.info("POST ${path}: ${payload}")
+        String body = bodyAsJson(payload)
+        log.info("POST ${path}: ${body}")
 
         HttpHeaders reqHeaders = new HttpHeaders()
         reqHeaders.setContentType(MediaType.APPLICATION_JSON)
         reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
         reqHeaders.add("Authorization", "Bearer " + token)
-        HttpEntity<String> entity = new HttpEntity<>(payload, reqHeaders)
+        HttpEntity<String> entity = new HttpEntity<>(body, reqHeaders)
 
         try {
             return restTemplate.exchange(

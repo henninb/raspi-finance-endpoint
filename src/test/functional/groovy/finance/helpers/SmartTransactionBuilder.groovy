@@ -4,6 +4,7 @@ import finance.domain.*
 import groovy.util.logging.Slf4j
 import java.math.BigDecimal
 import java.sql.Date
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
@@ -17,8 +18,8 @@ class SmartTransactionBuilder {
     private AccountType accountType = AccountType.Credit
     private TransactionType transactionType = TransactionType.Expense
     private String accountNameOwner
-    private Date transactionDate
-    private Date dueDate = null
+    private LocalDate transactionDate
+    private LocalDate dueDate
     private String description
     private String category
     private BigDecimal amount
@@ -34,8 +35,9 @@ class SmartTransactionBuilder {
         // Initialize with constraint-compliant defaults
         this.guid = UUID.randomUUID().toString()
         this.accountNameOwner = generateConstraintCompliantAccountName()
-        this.transactionDate = new Date(System.currentTimeMillis() - (Math.random() * 365 * 24 * 60 * 60 * 1000L) as Long)
-        // dueDate is optional - only set if explicitly requested via withDueDate()
+        long randomDays = (long) (Math.random() * 365)
+        this.transactionDate = LocalDate.now().minusDays(randomDays)
+        this.dueDate = this.transactionDate.plusDays(7)
         this.description = generateConstraintCompliantDescription()
         this.category = generateConstraintCompliantCategory()
         this.amount = generateValidAmount()
@@ -278,11 +280,21 @@ class SmartTransactionBuilder {
     }
 
     SmartTransactionBuilder withTransactionDate(Date transactionDate) {
+        this.transactionDate = transactionDate?.toLocalDate()
+        return this
+    }
+
+    SmartTransactionBuilder withTransactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
 
     SmartTransactionBuilder withDueDate(Date dueDate) {
+        this.dueDate = dueDate?.toLocalDate()
+        return this
+    }
+
+    SmartTransactionBuilder withDueDate(LocalDate dueDate) {
         this.dueDate = dueDate
         return this
     }

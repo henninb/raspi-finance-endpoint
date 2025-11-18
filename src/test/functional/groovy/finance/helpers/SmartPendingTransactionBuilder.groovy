@@ -4,6 +4,7 @@ import finance.domain.PendingTransaction
 import groovy.util.logging.Slf4j
 import java.math.BigDecimal
 import java.sql.Date
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
@@ -34,14 +35,11 @@ class SmartPendingTransactionBuilder {
     }
 
     PendingTransaction build() {
-        // Convert string date to java.sql.Date for proper object creation
-        java.sql.Date sqlDate = java.sql.Date.valueOf(this.transactionDate)
-
         // Use no-arg constructor and set fields individually
         PendingTransaction pt = new PendingTransaction()
         pt.pendingTransactionId = 0L
         pt.accountNameOwner = this.accountNameOwner
-        pt.transactionDate = sqlDate
+        pt.transactionDate = LocalDate.parse(this.transactionDate)
         pt.description = this.description
         pt.amount = this.amount
         pt.reviewStatus = this.reviewStatus
@@ -69,8 +67,8 @@ class SmartPendingTransactionBuilder {
         }
         // Parse and validate it's > 2000-01-01
         try {
-            Date parsedDate = Date.valueOf(this.transactionDate)
-            if (!parsedDate.after(Date.valueOf('2000-01-01'))) {
+            LocalDate parsedDate = LocalDate.parse(this.transactionDate)
+            if (!parsedDate.isAfter(LocalDate.of(2000, 1, 1))) {
                 throw new IllegalStateException("transactionDate must be greater than 2000-01-01")
             }
         } catch (Exception e) {
@@ -158,6 +156,11 @@ class SmartPendingTransactionBuilder {
     SmartPendingTransactionBuilder withTransactionDate(Date transactionDate) {
         java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat('yyyy-MM-dd')
         this.transactionDate = formatter.format(transactionDate)
+        return this
+    }
+
+    SmartPendingTransactionBuilder withTransactionDate(LocalDate transactionDate) {
+        this.transactionDate = transactionDate?.toString()
         return this
     }
 

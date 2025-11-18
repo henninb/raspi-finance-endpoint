@@ -3,6 +3,7 @@ package finance.helpers
 import finance.domain.Payment
 import groovy.util.logging.Slf4j
 import java.sql.Date
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
@@ -15,7 +16,7 @@ class SmartPaymentBuilder {
     private String sourceAccount
     private String destinationAccount
     private BigDecimal amount = 0.00G
-    private Date transactionDate = Date.valueOf('2023-01-01')
+    private LocalDate transactionDate = LocalDate.parse('2023-01-01')
     private String guidSource = UUID.randomUUID().toString()
     private String guidDestination = UUID.randomUUID().toString()
     private Boolean activeStatus = true
@@ -59,7 +60,8 @@ class SmartPaymentBuilder {
         while (counter > 0) {
             counter-- // Make it 0-based
             int charIndex = counter % 26
-            String letter = String.valueOf((char)('a' + charIndex))
+            char letterChar = (char)((int)'a' + charIndex)
+            String letter = String.valueOf(letterChar)
             result = letter + result
             counter = (int)(counter / 26)
         }
@@ -105,7 +107,7 @@ class SmartPaymentBuilder {
         if (payment.amount.scale() > 2) {
             throw new IllegalStateException("Amount must have at most 2 decimal places")
         }
-        BigDecimal max = new BigDecimal('99999999.99')
+        BigDecimal max = new BigDecimal('999999.99')  // 6 integer + 2 decimal = 8 total precision
         if (payment.amount > max) {
             throw new IllegalStateException("Amount exceeds allowed precision (8,2)")
         }
@@ -120,7 +122,7 @@ class SmartPaymentBuilder {
         }
 
         // Date must be > 2000-01-01 (loose check)
-        if (payment.transactionDate == null || !payment.transactionDate.after(Date.valueOf('2000-01-01'))) {
+        if (payment.transactionDate == null || !payment.transactionDate.isAfter(LocalDate.of(2000, 1, 1))) {
             throw new IllegalStateException("transactionDate must be greater than 2000-01-01")
         }
 
@@ -160,6 +162,11 @@ class SmartPaymentBuilder {
     }
 
     SmartPaymentBuilder withTransactionDate(Date transactionDate) {
+        this.transactionDate = transactionDate?.toLocalDate()
+        return this
+    }
+
+    SmartPaymentBuilder withTransactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
@@ -190,4 +197,3 @@ class SmartPaymentBuilder {
         return this
     }
 }
-
