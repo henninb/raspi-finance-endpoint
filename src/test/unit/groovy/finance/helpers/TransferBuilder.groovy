@@ -2,8 +2,8 @@ package finance.helpers
 
 import finance.domain.Transfer
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 
 class TransferBuilder {
 
@@ -11,7 +11,7 @@ class TransferBuilder {
     String sourceAccount = 'test_source'
     String destinationAccount = 'test_destination'
     BigDecimal amount = new BigDecimal("100.00")
-    Date transactionDate = Date.valueOf('2024-01-01')
+    LocalDate transactionDate = LocalDate.parse('2024-01-01')
     String guidSource = 'source-guid-123'
     String guidDestination = 'dest-guid-456'
     Boolean activeStatus = true
@@ -59,7 +59,7 @@ class TransferBuilder {
         this
     }
 
-    TransferBuilder withTransactionDate(Date transactionDate) {
+    TransferBuilder withTransactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         this
     }

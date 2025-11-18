@@ -11,8 +11,7 @@ import static finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE
 
 class ValidationAmountSpec extends BaseDomainSpec {
-
-    protected String jsonPayload = '{"accountNameOwner":"chase_brian", "amount":1.23, "activeStatus":true, "transactionState":"cleared"}'
+    protected String jsonPayload = '{"validationId":1,"accountId":1,"amount":1.23,"activeStatus":true,"transactionState":"cleared","validationDate":1700000000000}'
 
     void 'test -- JSON serialization to ValidationAmount'() {
 
@@ -21,6 +20,7 @@ class ValidationAmountSpec extends BaseDomainSpec {
 
         then:
         validationAmount.amount == 1.23
+        validationAmount.validationDate.time == 1700000000000L
         0 * _
     }
 

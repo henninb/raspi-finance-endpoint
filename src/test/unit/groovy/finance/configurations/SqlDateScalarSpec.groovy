@@ -6,19 +6,17 @@ import graphql.schema.CoercingParseValueException
 import graphql.schema.CoercingSerializeException
 import spock.lang.Specification
 
-import java.sql.Date
+import java.time.LocalDate
 
 class SqlDateScalarSpec extends Specification {
     def scalar = SqlDateScalar.INSTANCE.INSTANCE
 
-    def "serialize supports sql Date, util Date, and String"() {
+    def "serialize supports LocalDate and String"() {
         given:
-        def d = Date.valueOf("2020-01-02")
-        def util = new java.util.Date(d.time)
+        def d = LocalDate.parse("2020-01-02")
 
         expect:
         scalar.coercing.serialize(d) == "2020-01-02"
-        scalar.coercing.serialize(util) == "2020-01-02"
         scalar.coercing.serialize("2021-12-31") == "2021-12-31"
     }
 
@@ -30,11 +28,9 @@ class SqlDateScalarSpec extends Specification {
         thrown(CoercingSerializeException)
     }
 
-    def "parseValue supports String date and epoch millis"() {
+    def "parseValue supports String date"() {
         expect:
-        scalar.coercing.parseValue("2020-01-02") == Date.valueOf("2020-01-02")
-        scalar.coercing.parseValue(1577923200000L) == new Date(1577923200000L)
-        scalar.coercing.parseValue(Integer.valueOf(1000)).time == 1000L
+        scalar.coercing.parseValue("2020-01-02") == LocalDate.parse("2020-01-02")
     }
 
     def "parseValue rejects unsupported input"() {
@@ -47,7 +43,7 @@ class SqlDateScalarSpec extends Specification {
 
     def "parseLiteral supports StringValue in yyyy-MM-dd format"() {
         expect:
-        scalar.coercing.parseLiteral(new StringValue("2020-01-02")) == Date.valueOf("2020-01-02")
+        scalar.coercing.parseLiteral(new StringValue("2020-01-02")) == LocalDate.parse("2020-01-02")
     }
 
     def "parseLiteral rejects unsupported literal"() {

@@ -148,7 +148,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         testTransaction.description = "metricstest"
         testTransaction.category = "metricstest"
         testTransaction.amount = new BigDecimal("100.00")
-        testTransaction.transactionDate = Date.valueOf("2023-05-20")
+        testTransaction.transactionDate = Date.valueOf("2023-05-20").toLocalDate()
         testTransaction.transactionState = TransactionState.Cleared
         testTransaction.transactionType = TransactionType.Expense
         testTransaction.activeStatus = true
@@ -264,7 +264,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         transaction.description = "dbtest"
         transaction.category = "dbtest"
         transaction.amount = new BigDecimal("75.50")
-        transaction.transactionDate = Date.valueOf("2023-05-21")
+        transaction.transactionDate = Date.valueOf("2023-05-21").toLocalDate()
         transaction.transactionState = TransactionState.Cleared
         transaction.transactionType = TransactionType.Income
         transaction.activeStatus = true

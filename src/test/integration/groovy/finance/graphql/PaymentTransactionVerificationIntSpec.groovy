@@ -8,7 +8,7 @@ import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 /**
  * Integration tests verifying that payment creation generates transactions
@@ -35,7 +35,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,                // source: asset
                 creditCardAccount,              // destination: liability
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("150.00"),
                 null,
                 null,
@@ -70,7 +70,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,                // source: asset
                 savingsAccount,                 // destination: asset
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("500.00"),
                 null,
                 null,
@@ -103,7 +103,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 creditCardAccount,              // source: liability
                 checkingAccount,                // destination: asset
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("300.00"),
                 null,
                 null,
@@ -136,7 +136,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 creditCard1,                    // source: liability (charging this card)
                 creditCard2,                    // destination: liability (paying this card)
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("1000.00"),
                 null,
                 null,
@@ -169,7 +169,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,
                 savingsAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("75.00"),
                 null,
                 null,
@@ -204,7 +204,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 sourceAcct,
                 destAcct,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("100.00"),
                 null,
                 null,
@@ -237,7 +237,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 sourceAcct,
                 destAcct,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("200.00"),
                 null,
                 null,
@@ -273,7 +273,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,
                 savingsAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("0.01"),         // minimum amount
                 null,
                 null,
@@ -306,7 +306,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,
                 savingsAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("999999.99"),    // large amount
                 null,
                 null,
@@ -339,7 +339,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 hsaAccount,
                 checkingAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("250.00"),
                 null,
                 null,
@@ -373,7 +373,7 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
                 null,
                 brokerageAccount,
                 mortgageAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("2000.00"),
                 null,
                 null,
