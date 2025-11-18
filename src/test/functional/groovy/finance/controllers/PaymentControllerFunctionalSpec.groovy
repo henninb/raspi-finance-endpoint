@@ -579,15 +579,16 @@ class StandardizedPaymentControllerFunctionalSpec extends BaseControllerFunction
         }
     }
 
-    protected ResponseEntity<String> postEndpoint(String path, String payload) {
+    protected ResponseEntity<String> postEndpoint(String path, Object payload) {
         String token = generateJwtToken(username)
-        log.info(payload)
+        String body = payload instanceof String ? payload : asJson(payload)
+        log.info(body)
 
         HttpHeaders reqHeaders = new HttpHeaders()
         reqHeaders.setContentType(MediaType.APPLICATION_JSON)
         reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
         reqHeaders.add("Authorization", "Bearer " + token)
-        HttpEntity<String> entity = new HttpEntity<>(payload, reqHeaders)
+        HttpEntity<String> entity = new HttpEntity<>(body, reqHeaders)
 
         try {
             return restTemplate.exchange(
@@ -601,15 +602,16 @@ class StandardizedPaymentControllerFunctionalSpec extends BaseControllerFunction
         }
     }
 
-    protected ResponseEntity<String> putEndpoint(String path, String payload) {
+    protected ResponseEntity<String> putEndpoint(String path, Object payload) {
         String token = generateJwtToken(username)
-        log.info(payload)
+        String body = payload instanceof String ? payload : asJson(payload)
+        log.info(body)
 
         HttpHeaders reqHeaders = new HttpHeaders()
         reqHeaders.setContentType(MediaType.APPLICATION_JSON)
         reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
         reqHeaders.add("Authorization", "Bearer " + token)
-        HttpEntity<String> entity = new HttpEntity<>(payload, reqHeaders)
+        HttpEntity<String> entity = new HttpEntity<>(body, reqHeaders)
 
         try {
             return restTemplate.exchange(
