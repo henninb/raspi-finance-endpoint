@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.Payment
 import finance.domain.ServiceResult
-import finance.services.StandardizedPaymentService
+import finance.services.PaymentService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -26,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/payment")
 class PaymentController(
-    private val standardizedPaymentService: StandardizedPaymentService,
+    private val paymentService: PaymentService,
 ) : StandardizedBaseController(),
     StandardRestController<Payment, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -44,7 +44,7 @@ class PaymentController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Payment>> =
-        when (val result = standardizedPaymentService.findAllActive()) {
+        when (val result = paymentService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active payments (standardized)")
                 ResponseEntity.ok(result.data)
@@ -79,7 +79,7 @@ class PaymentController(
     override fun findById(
         @PathVariable("paymentId") id: Long,
     ): ResponseEntity<Payment> =
-        when (val result = standardizedPaymentService.findById(id)) {
+        when (val result = paymentService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved payment: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -115,7 +115,7 @@ class PaymentController(
     override fun save(
         @Valid @RequestBody entity: Payment,
     ): ResponseEntity<Payment> =
-        when (val result = standardizedPaymentService.save(entity)) {
+        when (val result = paymentService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Payment created successfully: ${entity.sourceAccount} -> ${entity.destinationAccount} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -158,7 +158,7 @@ class PaymentController(
         @Valid @RequestBody entity: Payment,
     ): ResponseEntity<Payment> {
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedPaymentService.update(entity)) {
+        return when (val result = paymentService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Payment updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -203,13 +203,13 @@ class PaymentController(
         @PathVariable("paymentId") id: Long,
     ): ResponseEntity<Payment> {
         // First get the payment to return it
-        val paymentResult = standardizedPaymentService.findById(id)
+        val paymentResult = paymentService.findById(id)
         if (paymentResult !is ServiceResult.Success) {
             logger.warn("Payment not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val result = standardizedPaymentService.deleteById(id)) {
+        return when (val result = paymentService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Payment deleted successfully: $id")
                 ResponseEntity.ok(paymentResult.data)

@@ -19,15 +19,15 @@ import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.Transfer
 import finance.domain.ValidationAmount
-import finance.services.StandardizedAccountService
-import finance.services.StandardizedCategoryService
-import finance.services.StandardizedDescriptionService
-import finance.services.StandardizedMedicalExpenseService
-import finance.services.StandardizedParameterService
-import finance.services.StandardizedPaymentService
-import finance.services.StandardizedTransactionService
-import finance.services.StandardizedTransferService
-import finance.services.StandardizedValidationAmountService
+import finance.services.AccountService
+import finance.services.CategoryService
+import finance.services.DescriptionService
+import finance.services.MedicalExpenseService
+import finance.services.ParameterService
+import finance.services.PaymentService
+import finance.services.TransactionService
+import finance.services.TransferService
+import finance.services.ValidationAmountService
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.validation.Valid
 import org.apache.logging.log4j.LogManager
@@ -44,15 +44,15 @@ import java.util.UUID
 @Controller
 @Validated
 class GraphQLMutationController(
-    private val accountService: StandardizedAccountService,
-    private val categoryService: StandardizedCategoryService,
-    private val descriptionService: StandardizedDescriptionService,
-    private val medicalExpenseService: StandardizedMedicalExpenseService,
-    private val parameterService: StandardizedParameterService,
-    private val paymentService: StandardizedPaymentService,
-    private val transactionService: StandardizedTransactionService,
-    private val transferService: StandardizedTransferService,
-    private val validationAmountService: StandardizedValidationAmountService,
+    private val accountService: AccountService,
+    private val categoryService: CategoryService,
+    private val descriptionService: DescriptionService,
+    private val medicalExpenseService: MedicalExpenseService,
+    private val parameterService: ParameterService,
+    private val paymentService: PaymentService,
+    private val transactionService: TransactionService,
+    private val transferService: TransferService,
+    private val validationAmountService: ValidationAmountService,
     private val meterRegistry: MeterRegistry,
 ) {
     companion object {

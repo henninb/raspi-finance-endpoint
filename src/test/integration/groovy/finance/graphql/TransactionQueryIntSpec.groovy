@@ -9,8 +9,8 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.domain.TransactionType
 import finance.repositories.TransactionRepository
-import finance.services.StandardizedAccountService
-import finance.services.StandardizedTransactionService
+import finance.services.AccountService
+import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Shared
@@ -22,10 +22,10 @@ import java.sql.Timestamp
 class TransactionQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedTransactionService transactionService
+    TransactionService transactionService
 
     @Shared @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     @Shared @Autowired
     GraphQLQueryController queryController

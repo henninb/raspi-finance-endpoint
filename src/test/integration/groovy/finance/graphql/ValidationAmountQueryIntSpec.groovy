@@ -7,7 +7,7 @@ import finance.domain.AccountType
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
-import finance.services.StandardizedValidationAmountService
+import finance.services.ValidationAmountService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
@@ -16,7 +16,7 @@ import java.sql.Timestamp
 class ValidationAmountQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedValidationAmountService validationAmountService
+    ValidationAmountService validationAmountService
 
     @Shared @Autowired
     GraphQLQueryController queryController

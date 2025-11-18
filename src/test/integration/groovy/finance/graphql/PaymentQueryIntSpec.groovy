@@ -6,7 +6,7 @@ import finance.domain.Account
 import finance.domain.Payment
 import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
-import finance.services.StandardizedPaymentService
+import finance.services.PaymentService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
@@ -17,7 +17,7 @@ import java.util.UUID
 class PaymentQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedPaymentService paymentService
+    PaymentService paymentService
 
     @Shared @Autowired
     AccountRepository accountRepository

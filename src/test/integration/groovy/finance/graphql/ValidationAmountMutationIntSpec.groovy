@@ -8,7 +8,7 @@ import finance.domain.AccountType
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
-import finance.services.StandardizedValidationAmountService
+import finance.services.ValidationAmountService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 
@@ -20,7 +20,7 @@ class ValidationAmountMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedValidationAmountService validationAmountService
+    ValidationAmountService validationAmountService
 
     @Autowired
     AccountRepository accountRepository

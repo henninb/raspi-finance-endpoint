@@ -17,7 +17,7 @@ import spock.lang.Specification
 class AccountServiceIntSpec extends Specification {
 
     @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     void 'computeTheGrandTotalForAllTransactions'() {
         when:

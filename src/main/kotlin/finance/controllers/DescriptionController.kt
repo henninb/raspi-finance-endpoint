@@ -3,7 +3,7 @@ package finance.controllers
 import finance.domain.Description
 import finance.domain.MergeDescriptionsRequest
 import finance.domain.ServiceResult
-import finance.services.StandardizedDescriptionService
+import finance.services.DescriptionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -27,7 +27,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/description")
 class DescriptionController(
-    private val standardizedDescriptionService: StandardizedDescriptionService,
+    private val descriptionService: DescriptionService,
 ) : StandardizedBaseController(),
     StandardRestController<Description, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -46,7 +46,7 @@ class DescriptionController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Description>> =
-        when (val result = standardizedDescriptionService.findAllActive()) {
+        when (val result = descriptionService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active descriptions")
                 ResponseEntity.ok(result.data)
@@ -81,7 +81,7 @@ class DescriptionController(
     override fun findById(
         @PathVariable("descriptionName") id: String,
     ): ResponseEntity<Description> =
-        when (val result = standardizedDescriptionService.findByDescriptionNameStandardized(id)) {
+        when (val result = descriptionService.findByDescriptionNameStandardized(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved description: $id")
                 ResponseEntity.ok(result.data)
@@ -117,7 +117,7 @@ class DescriptionController(
     override fun save(
         @Valid @RequestBody entity: Description,
     ): ResponseEntity<Description> =
-        when (val result = standardizedDescriptionService.save(entity)) {
+        when (val result = descriptionService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Description created successfully: ${entity.descriptionName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -159,7 +159,7 @@ class DescriptionController(
         @PathVariable("descriptionName") id: String,
         @Valid @RequestBody entity: Description,
     ): ResponseEntity<Description> =
-        when (val result = standardizedDescriptionService.update(entity)) {
+        when (val result = descriptionService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Description updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -199,10 +199,10 @@ class DescriptionController(
         @PathVariable("descriptionName") id: String,
     ): ResponseEntity<Description> {
         // First find the description to return it
-        return when (val findResult = standardizedDescriptionService.findByDescriptionNameStandardized(id)) {
+        return when (val findResult = descriptionService.findByDescriptionNameStandardized(id)) {
             is ServiceResult.Success -> {
                 val description = findResult.data
-                when (val deleteResult = standardizedDescriptionService.deleteByDescriptionNameStandardized(id)) {
+                when (val deleteResult = descriptionService.deleteByDescriptionNameStandardized(id)) {
                     is ServiceResult.Success -> {
                         logger.info("Description deleted successfully: $id")
                         ResponseEntity.ok(description)
@@ -253,7 +253,7 @@ class DescriptionController(
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetName and sourceNames are required")
             }
             logger.info("Merging descriptions ${request.sourceNames} into ${request.targetName}")
-            val merged = standardizedDescriptionService.mergeDescriptions(request.targetName, request.sourceNames)
+            val merged = descriptionService.mergeDescriptions(request.targetName, request.sourceNames)
             ResponseEntity.ok(merged)
         } catch (ex: ResponseStatusException) {
             throw ex

@@ -3,7 +3,7 @@ package finance.controllers
 import finance.domain.Account
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
-import finance.services.StandardizedAccountService
+import finance.services.AccountService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -30,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/account")
 class AccountController(
-    private val standardizedAccountService: StandardizedAccountService,
+    private val accountService: AccountService,
 ) : StandardizedBaseController(),
     StandardRestController<Account, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -48,8 +48,8 @@ class AccountController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Account>> {
-        standardizedAccountService.updateTotalsForAllAccounts()
-        return when (val result = standardizedAccountService.findAllActive()) {
+        accountService.updateTotalsForAllAccounts()
+        return when (val result = accountService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active accounts (standardized)")
                 ResponseEntity.ok(result.data)
@@ -85,7 +85,7 @@ class AccountController(
     override fun findById(
         @PathVariable("accountNameOwner") id: String,
     ): ResponseEntity<Account> =
-        when (val result = standardizedAccountService.findById(id)) {
+        when (val result = accountService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved account: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -121,7 +121,7 @@ class AccountController(
     override fun save(
         @Valid @RequestBody entity: Account,
     ): ResponseEntity<Account> =
-        when (val result = standardizedAccountService.save(entity)) {
+        when (val result = accountService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Account created successfully: ${entity.accountNameOwner} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -166,7 +166,7 @@ class AccountController(
         // Ensure the accountNameOwner matches the path parameter (similar to Transaction controller pattern)
         val updatedEntity = entity.copy(accountNameOwner = id)
 
-        return when (val result = standardizedAccountService.update(updatedEntity)) {
+        return when (val result = accountService.update(updatedEntity)) {
             is ServiceResult.Success -> {
                 logger.info("Account updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -207,13 +207,13 @@ class AccountController(
         @PathVariable("accountNameOwner") id: String,
     ): ResponseEntity<Account> {
         // First get the account to return it
-        val accountResult = standardizedAccountService.findById(id)
+        val accountResult = accountService.findById(id)
         if (accountResult !is ServiceResult.Success) {
             logger.warn("Account not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val result = standardizedAccountService.deleteById(id)) {
+        return when (val result = accountService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Account deleted successfully: $id")
                 ResponseEntity.ok(accountResult.data)
@@ -260,9 +260,9 @@ class AccountController(
             logger.debug("Computing account totals")
             val response: MutableMap<String, String> = HashMap()
             // TODO: 6/27/2021 - need to modify to 1 call from 3
-            val totalsCleared = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
-            val totalsFuture = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
-            val totalsOutstanding = standardizedAccountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
+            val totalsCleared = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Cleared)
+            val totalsFuture = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Future)
+            val totalsOutstanding = accountService.sumOfAllTransactionsByTransactionState(TransactionState.Outstanding)
 
             logger.debug("Account totals computed - Outstanding: $totalsOutstanding, Cleared: $totalsCleared, Future: $totalsFuture")
 
@@ -284,7 +284,7 @@ class AccountController(
     fun refreshValidationDates(): ResponseEntity<Void> =
         try {
             logger.info("Refreshing validation dates for all accounts from latest ValidationAmount rows")
-            standardizedAccountService.updateValidationDatesForAllAccounts()
+            accountService.updateValidationDatesForAllAccounts()
             ResponseEntity.noContent().build()
         } catch (ex: Exception) {
             logger.error("Failed to refresh validation dates: ${ex.message}", ex)
@@ -298,7 +298,7 @@ class AccountController(
     fun selectPaymentRequired(): ResponseEntity<List<Account>> =
         try {
             logger.debug("Finding accounts that require payment")
-            val accountNameOwners = standardizedAccountService.findAccountsThatRequirePayment()
+            val accountNameOwners = accountService.findAccountsThatRequirePayment()
             if (accountNameOwners.isEmpty()) {
                 logger.info("No accounts requiring payment found")
             } else {
@@ -320,7 +320,7 @@ class AccountController(
     ): ResponseEntity<Account> =
         try {
             logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
-            val accountResponse = standardizedAccountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
+            val accountResponse = accountService.renameAccountNameOwner(oldAccountNameOwner, newAccountNameOwner)
             logger.info("Account renamed successfully from $oldAccountNameOwner to $newAccountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
@@ -340,7 +340,7 @@ class AccountController(
     ): ResponseEntity<Account> =
         try {
             logger.info("Deactivating account: $accountNameOwner")
-            val accountResponse = standardizedAccountService.deactivateAccount(accountNameOwner)
+            val accountResponse = accountService.deactivateAccount(accountNameOwner)
             logger.info("Account deactivated successfully: $accountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: jakarta.persistence.EntityNotFoundException) {
@@ -370,7 +370,7 @@ class AccountController(
     ): ResponseEntity<Account> =
         try {
             logger.info("Activating account: $accountNameOwner")
-            val accountResponse = standardizedAccountService.activateAccount(accountNameOwner)
+            val accountResponse = accountService.activateAccount(accountNameOwner)
             logger.info("Account activated successfully: $accountNameOwner")
             ResponseEntity.ok(accountResponse)
         } catch (ex: jakarta.persistence.EntityNotFoundException) {

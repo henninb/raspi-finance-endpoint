@@ -4,7 +4,7 @@ import finance.BaseIntegrationSpec
 import finance.controllers.dto.DescriptionInputDto
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.Description
-import finance.services.StandardizedDescriptionService
+import finance.services.DescriptionService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 
@@ -14,7 +14,7 @@ class DescriptionMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedDescriptionService descriptionService
+    DescriptionService descriptionService
 
     def "createDescription mutation succeeds with valid input"() {
         given:
