@@ -1,6 +1,12 @@
 package finance.controllers
 
 import finance.Application
+import com.fasterxml.jackson.databind.ObjectMapper
+import finance.domain.MedicalExpense
+import finance.domain.Payment
+import finance.domain.PendingTransaction
+import finance.domain.Transaction
+import finance.domain.Transfer
 import finance.helpers.TestDataManager
 import finance.helpers.TestFixtures
 import groovy.util.logging.Slf4j
@@ -68,6 +74,8 @@ class BaseControllerFunctionalSpec extends Specification {
     @Value('${custom.project.jwt.key}')
     protected String jwtKey
 
+    @Shared
+    protected ObjectMapper jsonMapper = new ObjectMapper().findAndRegisterModules()
 
     protected HttpHeaders headers = new HttpHeaders()
     @Shared
@@ -109,16 +117,25 @@ class BaseControllerFunctionalSpec extends Specification {
                 .compact()
     }
 
+    protected String asJson(Object value) {
+        jsonMapper.writeValueAsString(value)
+    }
 
-    protected ResponseEntity<String> insertEndpoint(String endpointName, String payload) {
+    protected String bodyAsJson(Object payload) {
+        payload instanceof String ? payload : asJson(payload)
+    }
+
+
+    protected ResponseEntity<String> insertEndpoint(String endpointName, Object payload) {
         String token = generateJwtToken(username)
-        log.info(payload)
+        String body = payload instanceof String ? payload : asJson(payload)
+        log.info(body)
 
         HttpHeaders reqHeaders = new HttpHeaders()
         reqHeaders.setContentType(MediaType.APPLICATION_JSON)
         reqHeaders.add("Cookie", authCookie ?: ("token=" + token))
         reqHeaders.add("Authorization", "Bearer " + token)
-        HttpEntity<String> entity = new HttpEntity<>(payload, reqHeaders)
+        HttpEntity<String> entity = new HttpEntity<>(body, reqHeaders)
 
         try {
             return restTemplate.exchange(
@@ -187,6 +204,11 @@ class BaseControllerFunctionalSpec extends Specification {
             log.warn("Flyway migration call in functional tests: ${e.message}")
         }
         testDataManager.createMinimalAccountsFor(testOwner)
+
+        def jsonFn = { -> jsonMapper.writeValueAsString(delegate) }
+        [Payment, Transaction, PendingTransaction, Transfer, MedicalExpense].each { clazz ->
+            clazz.metaClass.toString = jsonFn
+        }
 
         // Register a functional test user to obtain a real JWT cookie
         try {

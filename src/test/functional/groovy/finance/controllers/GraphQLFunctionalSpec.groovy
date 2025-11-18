@@ -85,7 +85,7 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
                 null,
                 sourceAccount,
                 destinationAccount,
-                java.sql.Date.valueOf("2024-01-15"),
+                java.time.LocalDate.parse("2024-01-15"),
                 new BigDecimal("100.00"),
                 null,
                 null,
