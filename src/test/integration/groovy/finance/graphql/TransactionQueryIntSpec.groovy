@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Shared
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import java.sql.Timestamp
 
 @Transactional
@@ -115,7 +115,7 @@ class TransactionQueryIntSpec extends BaseIntegrationSpec {
         transaction.accountNameOwner = accountNameOwner
         transaction.accountType = accountType
         transaction.transactionType = TransactionType.Expense
-        transaction.transactionDate = Date.valueOf("2024-01-15")
+        transaction.transactionDate = LocalDate.parse("2024-01-15")
         transaction.description = description
         transaction.category = category
         transaction.amount = new BigDecimal("100.00")

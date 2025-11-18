@@ -5,6 +5,7 @@ import finance.domain.ClaimStatus
 import groovy.util.logging.Slf4j
 import java.math.BigDecimal
 import java.sql.Date
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
@@ -16,7 +17,7 @@ class SmartMedicalExpenseBuilder {
     private Long transactionId = 1001L
     private Long providerId = null
     private Long familyMemberId = null
-    private Date serviceDate = Date.valueOf("2024-01-15")
+    private LocalDate serviceDate = LocalDate.parse("2024-01-15")
     private String serviceDescription
     private String procedureCode = "99396"
     private String diagnosisCode = "Z00.00"
@@ -24,7 +25,7 @@ class SmartMedicalExpenseBuilder {
     private BigDecimal insuranceDiscount = new BigDecimal("50.00")
     private BigDecimal insurancePaid = new BigDecimal("250.00")
     private BigDecimal patientResponsibility = new BigDecimal("50.00")
-    private Date paidDate = null
+    private LocalDate paidDate = null
     private Boolean isOutOfNetwork = false
     private String claimNumber
     private ClaimStatus claimStatus = ClaimStatus.Submitted
@@ -73,6 +74,11 @@ class SmartMedicalExpenseBuilder {
     }
 
     SmartMedicalExpenseBuilder withServiceDate(Date serviceDate) {
+        this.serviceDate = serviceDate?.toLocalDate()
+        return this
+    }
+
+    SmartMedicalExpenseBuilder withServiceDate(LocalDate serviceDate) {
         this.serviceDate = serviceDate
         return this
     }
@@ -162,7 +168,7 @@ class SmartMedicalExpenseBuilder {
         }
 
         // Validate service date is not in the future
-        if (medicalExpense.serviceDate > new Date(System.currentTimeMillis())) {
+        if (medicalExpense.serviceDate != null && medicalExpense.serviceDate.isAfter(LocalDate.now())) {
             throw new IllegalStateException("Service date cannot be in the future")
         }
 

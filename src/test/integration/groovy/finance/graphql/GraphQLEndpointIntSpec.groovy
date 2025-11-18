@@ -98,7 +98,7 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
         testPayment.accountNameOwner = accountName
         testPayment.sourceAccount = "source_account_test"
         testPayment.destinationAccount = "destination_account_test"
-        testPayment.transactionDate = Date.valueOf("2023-05-20")
+        testPayment.transactionDate = Date.valueOf("2023-05-20").toLocalDate()
         testPayment.amount = new BigDecimal("250.00")
         testPayment.guidSource = UUID.randomUUID().toString()
         testPayment.guidDestination = UUID.randomUUID().toString()

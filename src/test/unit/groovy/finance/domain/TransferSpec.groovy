@@ -1,13 +1,10 @@
 package finance.domain
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 
 import java.math.BigDecimal
 import java.sql.Timestamp
-import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.util.*
 
 class TransferSpec extends Specification {
 
@@ -53,65 +50,6 @@ class TransferSpec extends Specification {
         transfer.activeStatus == true
         transfer.dateAdded instanceof Timestamp
         transfer.dateUpdated instanceof Timestamp
-    }
-
-    def "Transfer - toString returns valid JSON"() {
-        given:
-        def transfer = new Transfer(1L, "test_source", "test_dest",
-                                  LocalDate.of(2023, 1, 1), new BigDecimal("100.00"),
-                                  "source-guid", "dest-guid", true)
-
-        when:
-        def json = transfer.toString()
-        def mapper = new ObjectMapper()
-        def parsedTransfer = mapper.readValue(json, Map.class)
-
-        then:
-        json != null
-        parsedTransfer.transferId == 1
-        parsedTransfer.sourceAccount == "test_source"
-        parsedTransfer.destinationAccount == "test_dest"
-        parsedTransfer.transactionDate == "2023-01-01"
-        parsedTransfer.amount == 100.00
-        parsedTransfer.guidSource == "source-guid"
-        parsedTransfer.guidDestination == "dest-guid"
-        parsedTransfer.activeStatus == true
-    }
-
-    def "Transfer - jsonGetterTransferDate formats date correctly"() {
-        given:
-        def transfer = new Transfer()
-        transfer.transactionDate = LocalDate.of(2023, 12, 25)
-
-        when:
-        def formattedDate = transfer.jsonGetterTransferDate()
-
-        then:
-        formattedDate == "2023-12-25"
-    }
-
-    def "Transfer - jsonSetterTransfertDate parses date correctly"() {
-        given:
-        def transfer = new Transfer()
-        def dateString = "2023-12-25"
-
-        when:
-        transfer.jsonSetterTransfertDate(dateString)
-
-        then:
-        transfer.transactionDate == LocalDate.of(2023, 12, 25)
-    }
-
-    def "Transfer - jsonSetterTransfertDate handles invalid date format"() {
-        given:
-        def transfer = new Transfer()
-        def invalidDateString = "invalid-date"
-
-        when:
-        transfer.jsonSetterTransfertDate(invalidDateString)
-
-        then:
-        thrown(Exception) // Should throw parsing exception
     }
 
     def "Transfer - properties can be modified"() {

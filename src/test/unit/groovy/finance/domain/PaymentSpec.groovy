@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.PaymentBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
-import java.sql.Date
+import java.time.LocalDate
 
 import static finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
@@ -85,9 +85,9 @@ class PaymentSpec extends BaseDomainSpec {
         violations.iterator().next().invalidValue == payment.properties[invalidField]
 
         where:
-        invalidField      | sourceAccount | destinationAccount | transactionDate            | amount | guidDestination              | guidSource                   | expectedError                                 | errorCount
-        'sourceAccount'   | 'a_'          | 'dest_test'        | Date.valueOf('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
-        'guidDestination' | 'src_test'    | 'dest_test'        | Date.valueOf('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
-        'guidSource'      | 'src_test'    | 'dest_test'        | Date.valueOf('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        invalidField      | sourceAccount | destinationAccount | transactionDate             | amount | guidDestination              | guidSource                   | expectedError                                 | errorCount
+        'sourceAccount'   | 'a_'          | 'dest_test'        | LocalDate.parse('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
+        'guidDestination' | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        'guidSource'      | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
     }
 }

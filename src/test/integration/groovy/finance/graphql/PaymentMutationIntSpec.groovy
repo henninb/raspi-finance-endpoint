@@ -8,7 +8,7 @@ import finance.helpers.PaymentTestScenario
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import jakarta.validation.ConstraintViolationException
 
 class PaymentMutationIntSpec extends BaseIntegrationSpec {
@@ -43,7 +43,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,                           // paymentId
                 srcName,                        // sourceAccount
                 destName,                       // destinationAccount
-                Date.valueOf("2024-01-15"),     // transactionDate
+                LocalDate.parse("2024-01-15"),     // transactionDate
                 new BigDecimal("123.45"),       // amount
                 null,                           // guidSource
                 null,                           // guidDestination
@@ -59,7 +59,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
         result.sourceAccount == srcName
         result.destinationAccount == destName
         result.amount == new BigDecimal("123.45")
-        result.transactionDate == Date.valueOf("2024-01-15")
+        result.transactionDate == LocalDate.parse("2024-01-15")
         result.activeStatus == true
     }
 
@@ -70,7 +70,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,                           // paymentId
                 srcName,                        // sourceAccount
                 destName,                       // destinationAccount
-                Date.valueOf("2024-01-15"),     // transactionDate
+                LocalDate.parse("2024-01-15"),     // transactionDate
                 new BigDecimal("-5.00"),        // amount
                 null,                           // guidSource
                 null,                           // guidDestination
@@ -91,7 +91,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 "ab",                         // invalid: too short / non-existent
                 destName,
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 new BigDecimal("100.00"),
                 null,
                 null,
@@ -114,7 +114,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 srcName,
                 savingsAccount,                 // asset to asset = TRANSFER
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 new BigDecimal("100.00"),
                 null,
                 null,
@@ -142,7 +142,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 creditCardAccount,              // liability source
                 checkingAccount,                // asset destination = CASH_ADVANCE
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 new BigDecimal("200.00"),
                 null,
                 null,
@@ -170,7 +170,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 creditCard1,                    // liability source
                 creditCard2,                    // liability destination = BALANCE_TRANSFER
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 new BigDecimal("500.00"),
                 null,
                 null,
@@ -195,7 +195,7 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
                 null,                           // paymentId
                 srcName,                        // sourceAccount
                 destName,                       // destinationAccount
-                Date.valueOf("2024-01-15"),     // transactionDate
+                LocalDate.parse("2024-01-15"),     // transactionDate
                 new BigDecimal("55.00"),        // amount
                 null,                           // guidSource
                 null,                           // guidDestination

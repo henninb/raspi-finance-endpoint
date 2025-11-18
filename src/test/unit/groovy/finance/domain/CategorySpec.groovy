@@ -3,6 +3,7 @@ package finance.domain
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.module.kotlin.KotlinInvalidNullException
 import finance.helpers.CategoryBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
@@ -43,15 +44,14 @@ class CategorySpec extends BaseDomainSpec {
     }
 
     void 'test JSON deserialization to Category object - category is empty'() {
-
         given:
         String jsonPayloadBad = '{"categoryMissing":"bar"}'
 
         when:
-        Category category = mapper.readValue(jsonPayloadBad, Category)
+        mapper.readValue(jsonPayloadBad, Category)
 
         then:
-        category.categoryName.empty
+        thrown(KotlinInvalidNullException)
         0 * _
     }
 

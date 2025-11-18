@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import java.util.UUID
 
 class PaymentQueryIntSpec extends BaseIntegrationSpec {
@@ -90,7 +90,7 @@ class PaymentQueryIntSpec extends BaseIntegrationSpec {
         Payment payment = new Payment()
         payment.sourceAccount = sourceAccount
         payment.destinationAccount = destinationAccount
-        payment.transactionDate = Date.valueOf("2024-01-01")
+        payment.transactionDate = LocalDate.parse("2024-01-01")
         payment.amount = amount
         payment.guidSource = UUID.randomUUID().toString()
         payment.guidDestination = UUID.randomUUID().toString()

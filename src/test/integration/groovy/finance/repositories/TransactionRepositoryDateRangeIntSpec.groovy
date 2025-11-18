@@ -12,7 +12,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import spock.lang.Shared
 
-import java.sql.Date
+import java.time.LocalDate
 import java.util.Optional
 
 /**
@@ -71,10 +71,10 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
 
     void 'find transactions by transactionDate between with pagination (across accounts)'() {
         given: 'A set of transactions inside and outside the date range for two accounts'
-        Date d2023_01_05 = Date.valueOf('2023-01-05')
-        Date d2023_01_10 = Date.valueOf('2023-01-10')
-        Date d2022_12_31 = Date.valueOf('2022-12-31')
-        Date d2023_02_01 = Date.valueOf('2023-02-01')
+        LocalDate d2023_01_05 = LocalDate.parse('2023-01-05')
+        LocalDate d2023_01_10 = LocalDate.parse('2023-01-10')
+        LocalDate d2022_12_31 = LocalDate.parse('2022-12-31')
+        LocalDate d2023_02_01 = LocalDate.parse('2023-02-01')
 
         Transaction in1 = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAccountId(primaryAccountId)
@@ -126,8 +126,8 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
         def pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc('transactionDate')))
 
         when: 'Querying by date range 2023-01-01 to 2023-01-31'
-        def start = Date.valueOf('2023-01-01')
-        def end = Date.valueOf('2023-01-31')
+        def start = LocalDate.parse('2023-01-01')
+        def end = LocalDate.parse('2023-01-31')
         def page = transactionRepository.findByTransactionDateBetween(start, end, pageable)
 
         then: 'Only the in-range transactions are returned, across both accounts'
@@ -138,6 +138,6 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
 
         and: 'Results are ordered by date descending (latest first)'
         page.content.size() >= 2
-        page.content[0].transactionDate.getTime() >= page.content[1].transactionDate.getTime()
+        !page.content[0].transactionDate.isBefore(page.content[1].transactionDate)
     }
 }
