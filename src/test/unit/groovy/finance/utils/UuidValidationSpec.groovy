@@ -6,8 +6,7 @@ import jakarta.validation.Validation
 import jakarta.validation.Validator
 import jakarta.validation.ValidatorFactory
 import spock.lang.Specification
-
-import java.sql.Date
+import java.time.LocalDate
 
 class UuidValidationSpec extends Specification {
 
@@ -32,7 +31,7 @@ class UuidValidationSpec extends Specification {
                 null,
                 merged.sourceAccount,
                 merged.destinationAccount,
-                new Date(System.currentTimeMillis()),
+                LocalDate.now(),
                 merged.amount,
                 merged.guidSource,
                 merged.guidDestination,

@@ -4,8 +4,8 @@ import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
 
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.*
 
 class MedicalExpenseBuilder {
@@ -16,7 +16,7 @@ class MedicalExpenseBuilder {
     Long transactionId = null
     Long providerId = 1L
     Long familyMemberId = 1L
-    Date serviceDate = Date.valueOf('2024-01-15')
+    LocalDate serviceDate = LocalDate.parse('2024-01-15')
     String serviceDescription = 'Medical service'
     String procedureCode = 'PROC123'
     String diagnosisCode = 'DIAG456'
@@ -24,7 +24,7 @@ class MedicalExpenseBuilder {
     BigDecimal insuranceDiscount = new BigDecimal(AMOUNT_25)
     BigDecimal insurancePaid = new BigDecimal("100.00")
     BigDecimal patientResponsibility = new BigDecimal(AMOUNT_25)
-    Date paidDate = null
+    LocalDate paidDate = null
     Boolean isOutOfNetwork = false
     String claimNumber = 'CLAIM-2024-001'
     ClaimStatus claimStatus = ClaimStatus.Submitted
@@ -84,7 +84,7 @@ class MedicalExpenseBuilder {
         this
     }
 
-    MedicalExpenseBuilder withServiceDate(Date serviceDate) {
+    MedicalExpenseBuilder withServiceDate(LocalDate serviceDate) {
         this.serviceDate = serviceDate
         this
     }
@@ -129,7 +129,7 @@ class MedicalExpenseBuilder {
         this
     }
 
-    MedicalExpenseBuilder withPaidDate(Date paidDate) {
+    MedicalExpenseBuilder withPaidDate(LocalDate paidDate) {
         this.paidDate = paidDate
         this
     }

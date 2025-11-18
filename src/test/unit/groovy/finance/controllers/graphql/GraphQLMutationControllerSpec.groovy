@@ -19,7 +19,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import spock.lang.Specification
 
-import java.sql.Date
+import java.time.LocalDate
 
 class GraphQLMutationControllerSpec extends Specification {
 
@@ -69,7 +69,7 @@ class GraphQLMutationControllerSpec extends Specification {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             null,
@@ -81,7 +81,7 @@ class GraphQLMutationControllerSpec extends Specification {
             paymentId: 123L,
             sourceAccount: "checking_primary",
             destinationAccount: "bills_payable",
-            transactionDate: Date.valueOf("2024-01-15"),
+            transactionDate: LocalDate.of(2024, 1, 15),
             amount: new BigDecimal("100.00"),
             guidSource: "generated-guid-source",
             guidDestination: "generated-guid-destination",
@@ -145,7 +145,7 @@ class GraphQLMutationControllerSpec extends Specification {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("500.00"),
             null,
             null,
@@ -157,7 +157,7 @@ class GraphQLMutationControllerSpec extends Specification {
             transferId: 321L,
             sourceAccount: "checking_primary",
             destinationAccount: "savings_primary",
-            transactionDate: Date.valueOf("2024-01-15"),
+            transactionDate: LocalDate.of(2024, 1, 15),
             amount: new BigDecimal("500.00"),
             guidSource: "generated-guid-source",
             guidDestination: "generated-guid-destination",

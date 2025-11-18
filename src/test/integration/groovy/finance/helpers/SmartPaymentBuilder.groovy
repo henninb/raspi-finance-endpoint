@@ -3,6 +3,7 @@ package finance.helpers
 import finance.domain.Payment
 import groovy.util.logging.Slf4j
 import java.sql.Date
+import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j
@@ -15,7 +16,7 @@ class SmartPaymentBuilder {
     private String sourceAccount
     private String destinationAccount
     private BigDecimal amount = 0.00G
-    private Date transactionDate = Date.valueOf('2023-01-01')
+    private LocalDate transactionDate = LocalDate.parse('2023-01-01')
     private String guidSource = UUID.randomUUID().toString()
     private String guidDestination = UUID.randomUUID().toString()
     private Boolean activeStatus = true
@@ -121,7 +122,7 @@ class SmartPaymentBuilder {
         }
 
         // Date must be > 2000-01-01 (loose check)
-        if (payment.transactionDate == null || !payment.transactionDate.after(Date.valueOf('2000-01-01'))) {
+        if (payment.transactionDate == null || !payment.transactionDate.isAfter(LocalDate.of(2000, 1, 1))) {
             throw new IllegalStateException("transactionDate must be greater than 2000-01-01")
         }
 
@@ -161,6 +162,11 @@ class SmartPaymentBuilder {
     }
 
     SmartPaymentBuilder withTransactionDate(Date transactionDate) {
+        this.transactionDate = transactionDate?.toLocalDate()
+        return this
+    }
+
+    SmartPaymentBuilder withTransactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
@@ -191,4 +197,3 @@ class SmartPaymentBuilder {
         return this
     }
 }
-

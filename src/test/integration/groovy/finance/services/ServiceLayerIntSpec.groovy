@@ -11,7 +11,7 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
 
-import java.sql.Date
+import java.time.LocalDate
 import java.sql.Timestamp
 import java.util.Optional
 
@@ -112,7 +112,7 @@ class ServiceLayerIntSpec extends Specification {
             description: "service_integration_test_transaction",
             category: "service_test_category",
             amount: 150.75,
-            transactionDate: Date.valueOf("2023-05-25"),
+            transactionDate: LocalDate.parse("2023-05-25"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             notes: "Integration test for transaction service",
@@ -166,7 +166,7 @@ class ServiceLayerIntSpec extends Specification {
             description: "category_service_test",
             category: savedCategory.categoryName,
             amount: 200.00,
-            transactionDate: Date.valueOf("2023-05-28"),
+            transactionDate: LocalDate.parse("2023-05-28"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             notes: "integration_test_note",
@@ -208,7 +208,7 @@ class ServiceLayerIntSpec extends Specification {
             description: savedDescription.descriptionName,
             category: "description_test_category",
             amount: 175.25,
-            transactionDate: Date.valueOf("2023-05-29"),
+            transactionDate: LocalDate.parse("2023-05-29"),
             transactionState: TransactionState.Outstanding,
             transactionType: TransactionType.Income,
             notes: "integration_test_note",
@@ -235,7 +235,7 @@ class ServiceLayerIntSpec extends Specification {
             guidSource: UUID.randomUUID().toString(),
             guidDestination: UUID.randomUUID().toString(),
             amount: 300.00,
-            transactionDate: Date.valueOf("2023-05-30"),
+            transactionDate: LocalDate.parse("2023-05-30"),
             activeStatus: true,
             dateUpdated: new Timestamp(System.currentTimeMillis()),
             dateAdded: new Timestamp(System.currentTimeMillis())
@@ -270,7 +270,7 @@ class ServiceLayerIntSpec extends Specification {
             guidSource: UUID.randomUUID().toString(),
             guidDestination: UUID.randomUUID().toString(),
             amount: 250.50,
-            transactionDate: Date.valueOf("2023-05-31"),
+            transactionDate: LocalDate.parse("2023-05-31"),
             activeStatus: true,
             dateUpdated: new Timestamp(System.currentTimeMillis()),
             dateAdded: new Timestamp(System.currentTimeMillis())
@@ -333,7 +333,7 @@ class ServiceLayerIntSpec extends Specification {
             description: "receipt_image_test_transaction",
             category: "receipt_test_category",
             amount: 100.00,
-            transactionDate: Date.valueOf("2023-06-01"),
+            transactionDate: LocalDate.parse("2023-06-01"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             activeStatus: true,
@@ -381,7 +381,7 @@ class ServiceLayerIntSpec extends Specification {
             description: "large_cross_service_test",
             category: "cross_service_category",
             amount: 500.00,
-            transactionDate: Date.valueOf("2023-06-02"),
+            transactionDate: LocalDate.parse("2023-06-02"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Income,
             notes: "integration_test_note",
@@ -413,7 +413,7 @@ class ServiceLayerIntSpec extends Specification {
             description: "rollback_test_transaction",
             category: "rollback_category",
             amount: 100.00,
-            transactionDate: Date.valueOf("2023-06-04"),
+            transactionDate: LocalDate.parse("2023-06-04"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             notes: "integration_test_note",
@@ -450,7 +450,7 @@ class ServiceLayerIntSpec extends Specification {
                 description: "bulk_performance_test_${i}",
                 category: "performance_category",
                 amount: Math.round((Math.random() * 100) * 100) / 100.0,
-                transactionDate: Date.valueOf("2023-06-05"),
+                transactionDate: LocalDate.parse("2023-06-05"),
                 transactionState: TransactionState.Cleared,
                 transactionType: TransactionType.Expense,
                 notes: "bulk_performance_test_note_${i}",

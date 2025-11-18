@@ -12,7 +12,7 @@ import groovy.json.JsonSlurper
 import spock.lang.Requires
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 @TestPropertySource(properties = [
     'spring.graphql.graphiql.enabled=true',
@@ -41,7 +41,7 @@ class GraphQLIdSerializationIntSpec extends BaseRestTemplateIntegrationSpec {
                 null,                           // paymentId
                 src,                            // sourceAccount
                 dest,                           // destinationAccount
-                Date.valueOf("2024-01-15"),     // transactionDate
+                LocalDate.parse("2024-01-15"),     // transactionDate
                 new BigDecimal("12.34"),        // amount
                 null,                           // guidSource
                 null,                           // guidDestination

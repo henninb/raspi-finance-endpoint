@@ -6,7 +6,7 @@ import finance.helpers.SmartTransferBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Shared
-import java.sql.Date
+import java.time.LocalDate
 import java.math.BigDecimal
 
 /**
@@ -37,7 +37,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("checking", "savings")
                 .withAmount(new BigDecimal("500.25"))
-                .withTransactionDate(Date.valueOf("2024-01-20"))
+                .withTransactionDate(LocalDate.parse("2024-01-20"))
                 .asActive()
                 .buildAndValidate()
 
@@ -55,7 +55,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         savedTransfer.sourceAccount.matches(/^[a-z-]*_[a-z]*$/)
         savedTransfer.destinationAccount.matches(/^[a-z-]*_[a-z]*$/)
         savedTransfer.amount == new BigDecimal("500.25")
-        savedTransfer.transactionDate == Date.valueOf("2024-01-20")
+        savedTransfer.transactionDate == LocalDate.parse("2024-01-20")
         savedTransfer.activeStatus == true
         savedTransfer.guidSource != null
         savedTransfer.guidDestination != null
@@ -79,7 +79,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         String uniqueSource = "source_${cleanOwner}"
         String uniqueDestination = "dest_${cleanOwner}"
-        Date transactionDate = Date.valueOf("2024-02-15")
+        LocalDate transactionDate = LocalDate.parse("2024-02-15")
         BigDecimal amount = new BigDecimal("150.75")
 
         Transfer transfer1 = SmartTransferBuilder.builderForOwner(testOwner)
@@ -120,7 +120,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         String sharedSource = "shared_src_${cleanOwner}"
         String sharedDestination = "shared_dest_${cleanOwner}"
-        Date sharedDate = Date.valueOf("2024-03-10")
+        LocalDate sharedDate = LocalDate.parse("2024-03-10")
 
         Transfer transfer1 = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("src1", "dest1")
@@ -164,7 +164,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer1 = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("date1", "datetest")
                 .withAmount(amount)
-                .withTransactionDate(Date.valueOf("2024-04-01"))
+                .withTransactionDate(LocalDate.parse("2024-04-01"))
                 .buildAndValidate()
 
         transfer1.sourceAccount = source
@@ -173,7 +173,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer2 = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("date2", "datetest")
                 .withAmount(amount)
-                .withTransactionDate(Date.valueOf("2024-04-02"))  // Different date
+                .withTransactionDate(LocalDate.parse("2024-04-02"))  // Different date
                 .buildAndValidate()
 
         transfer2.sourceAccount = source
@@ -196,7 +196,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
         String sharedDestination = "shared_dest_${cleanOwner}"
-        Date sharedDate = Date.valueOf("2024-05-15")
+        LocalDate sharedDate = LocalDate.parse("2024-05-15")
         BigDecimal amount = new BigDecimal("225.00")
 
         Transfer transfer1 = SmartTransferBuilder.builderForOwner(testOwner)
@@ -294,7 +294,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("max", "precision")
                 .withAmount(new BigDecimal("999999.99"))  // Maximum allowed precision NUMERIC(8,2) - 6 integer + 2 decimal = 8 total
-                .withTransactionDate(Date.valueOf("2024-06-20"))
+                .withTransactionDate(LocalDate.parse("2024-06-20"))
                 .buildAndValidate()
 
         when:
@@ -310,14 +310,14 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer activeTransfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("active_src", "active_dest")
                 .withAmount(new BigDecimal("75.00"))
-                .withTransactionDate(Date.valueOf("2024-07-10"))
+                .withTransactionDate(LocalDate.parse("2024-07-10"))
                 .asActive()
                 .buildAndValidate()
 
         Transfer inactiveTransfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("inactive_src", "inactive_dest")
                 .withAmount(new BigDecimal("125.00"))
-                .withTransactionDate(Date.valueOf("2024-07-11"))
+                .withTransactionDate(LocalDate.parse("2024-07-11"))
                 .asInactive()
                 .buildAndValidate()
 
@@ -342,7 +342,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("update_src", "update_dest")
                 .withAmount(new BigDecimal("400.00"))
-                .withTransactionDate(Date.valueOf("2024-08-05"))
+                .withTransactionDate(LocalDate.parse("2024-08-05"))
                 .asActive()
                 .buildAndValidate()
         Transfer savedTransfer = transferRepository.save(transfer)
@@ -373,7 +373,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transferToDelete = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("temp_src", "temp_dest")
                 .withAmount(new BigDecimal("50.00"))
-                .withTransactionDate(Date.valueOf("2024-09-01"))
+                .withTransactionDate(LocalDate.parse("2024-09-01"))
                 .asActive()
                 .buildAndValidate()
         Transfer savedTransfer = transferRepository.save(transferToDelete)
@@ -407,7 +407,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("source", "dest")
                 .withAmount(new BigDecimal("275.50"))
-                .withTransactionDate(Date.valueOf("2024-10-01"))
+                .withTransactionDate(LocalDate.parse("2024-10-01"))
                 .asActive()
                 .buildAndValidate()
 
@@ -440,7 +440,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer transfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("persistence_src", "persistence_dest")
                 .withAmount(new BigDecimal("888.99"))
-                .withTransactionDate(Date.valueOf("2024-11-01"))
+                .withTransactionDate(LocalDate.parse("2024-11-01"))
                 .asActive()
                 .buildAndValidate()
 
@@ -485,7 +485,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         Transfer zeroTransfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("zero_src", "zero_dest")
                 .withAmount(new BigDecimal("0.00"))
-                .withTransactionDate(Date.valueOf("2024-12-01"))
+                .withTransactionDate(LocalDate.parse("2024-12-01"))
                 .asActive()
                 .buildAndValidate()
 
@@ -528,7 +528,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         try {
             SmartTransferBuilder.builderForOwner(testOwner)
                     .withUniqueAccounts("src", "dest")
-                    .withTransactionDate(Date.valueOf("1999-01-01"))
+                    .withTransactionDate(LocalDate.parse("1999-01-01"))
                     .buildAndValidate()
             edgeCaseResults << "old-date-allowed"
         } catch (Exception e) {
@@ -539,7 +539,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         def validTransfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("edge", "case")
                 .withAmount(new BigDecimal("0.01"))  // Minimal amount
-                .withTransactionDate(Date.valueOf("2024-12-31"))  // Future date
+                .withTransactionDate(LocalDate.parse("2024-12-31"))  // Future date
                 .buildAndValidate()
         edgeCaseResults << "minimal-valid-created"
 

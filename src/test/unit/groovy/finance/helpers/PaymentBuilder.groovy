@@ -2,8 +2,8 @@ package finance.helpers
 
 import finance.domain.Payment
 
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.*
 
 class PaymentBuilder {
@@ -12,7 +12,7 @@ class PaymentBuilder {
     String sourceAccount = 'source_brian'
     String destinationAccount = 'dest_brian'
     BigDecimal amount = new BigDecimal("100.00")
-    Date transactionDate = Date.valueOf('2020-12-11')
+    LocalDate transactionDate = LocalDate.parse('2020-12-11')
     String guidSource = UUID.randomUUID()
     String guidDestination = UUID.randomUUID()
     Boolean activeStatus = true
@@ -46,7 +46,7 @@ class PaymentBuilder {
         this
     }
 
-    PaymentBuilder withTransactionDate(Date transactionDate) {
+    PaymentBuilder withTransactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         this
     }

@@ -7,7 +7,7 @@ import finance.domain.AccountType
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 /**
  * Integration tests for payment edge cases and boundary conditions.
@@ -29,7 +29,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 undefinedSource,
                 checkingDest,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("100.00"),
                 null,
                 null,
@@ -55,7 +55,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,
                 utilityAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("125.00"),
                 null,
                 null,
@@ -77,7 +77,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_future", "savings", true)
 
         and: "a payment scheduled for future date"
-        def futureDate = Date.valueOf("2025-12-31")
+        def futureDate = LocalDate.parse("2025-12-31")
         def dto = new PaymentInputDto(
                 null,
                 checkingAccount,
@@ -104,7 +104,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
         String creditCardAccount = testDataManager.createAccountFor(testOwner, "credit_past", "credit_card", true)
 
         and: "a payment with past date"
-        def pastDate = Date.valueOf("2020-01-01")
+        def pastDate = LocalDate.parse("2020-01-01")
         def dto = new PaymentInputDto(
                 null,
                 checkingAccount,
@@ -135,7 +135,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 businessChecking,
                 businessSavings,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("5000.00"),
                 null,
                 null,
@@ -161,7 +161,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,
                 prepaidAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("100.00"),
                 null,
                 null,
@@ -187,7 +187,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 cashAccount,
                 giftCardAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("50.00"),
                 null,
                 null,
@@ -213,7 +213,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 savingsAccount,
                 studentLoanAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("350.00"),
                 null,
                 null,
@@ -239,7 +239,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 lineOfCreditAccount,
                 checkingAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("1000.00"),
                 null,
                 null,
@@ -265,7 +265,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 certificateAccount,
                 checkingAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("5000.00"),
                 null,
                 null,
@@ -291,7 +291,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 moneyMarketAccount,
                 autoLoanAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("450.00"),
                 null,
                 null,
@@ -317,7 +317,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 checkingAccount,
                 personalLoanAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("200.00"),
                 null,
                 null,
@@ -343,7 +343,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 retirement401k,
                 retirementIRA,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("10000.00"),
                 null,
                 null,
@@ -369,7 +369,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 fsaAccount,
                 checkingAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("150.00"),
                 null,
                 null,
@@ -395,7 +395,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 escrowAccount,
                 checkingAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("3000.00"),
                 null,
                 null,
@@ -421,7 +421,7 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
                 null,
                 trustAccount,
                 savingsAccount,
-                Date.valueOf("2024-02-01"),
+                LocalDate.parse("2024-02-01"),
                 new BigDecimal("25000.00"),
                 null,
                 null,

@@ -9,7 +9,7 @@ import finance.services.MedicalExpenseService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
 
@@ -27,7 +27,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
                 null,                               // transactionId
                 null,                               // providerId
                 null,                               // familyMemberId
-                Date.valueOf("2024-01-15"),        // serviceDate
+                LocalDate.parse("2024-01-15"),        // serviceDate
                 "Office visit",                     // serviceDescription
                 "99213",                           // procedureCode
                 "A00-A09",                         // diagnosisCode
@@ -94,7 +94,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 null,
                 null,
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "Office visit",
                 "99213",
                 "A00-A09",
@@ -125,7 +125,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 null,
                 null,
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "Office visit",
                 "invalid_code",                    // invalid: contains lowercase
                 "A00-A09",
@@ -157,7 +157,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 null,
                 null,
-                Date.valueOf("2024-02-10"),
+                LocalDate.parse("2024-02-10"),
                 "Updated service description",
                 "PROC123",
                 "A00-A09",
@@ -191,7 +191,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
                 null,
                 null,
                 null,
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "Office visit",
                 "99213",
                 "A00-A09",
@@ -236,7 +236,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
 
     private MedicalExpense createTestMedicalExpense(String procedureCode, String serviceDateStr) {
         MedicalExpense expense = new MedicalExpense()
-        expense.serviceDate = Date.valueOf(serviceDateStr)
+        expense.serviceDate = LocalDate.parse(serviceDateStr)
         expense.serviceDescription = "Test medical service"
         expense.procedureCode = procedureCode
         expense.diagnosisCode = "A00-A09"

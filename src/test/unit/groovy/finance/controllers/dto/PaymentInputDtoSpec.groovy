@@ -141,14 +141,14 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             // Cannot construct with null amount - constructor will fail
             def exception = null
             try {
-                new PaymentInputDto(null, "checking_primary", "bills_payable", Date.valueOf("2024-01-15"), null, null, null, null)
+                new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), null, null, null, null)
             } catch (Exception e) {
                 exception = e
             }
             assert exception != null
             return
         } else {
-            def dto = new PaymentInputDto(null, "checking_primary", "bills_payable", Date.valueOf("2024-01-15"), amount, null, null, null)
+            def dto = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), amount, null, null, null)
             violations = validator.validate(dto)
         }
 

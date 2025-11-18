@@ -8,7 +8,7 @@ import finance.domain.Transfer
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import jakarta.validation.ConstraintViolationException
 
 class TransferMutationIntSpec extends BaseIntegrationSpec {
@@ -46,7 +46,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
                         null,
                         srcName,
                         destName,
-                        Date.valueOf("2024-02-01"),
+                        LocalDate.parse("2024-02-01"),
                         new BigDecimal("300.00"),
                         null,
                         null,
@@ -60,7 +60,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
         result.sourceAccount == srcName
         result.destinationAccount == destName
         result.amount == new BigDecimal("300.00")
-        result.transactionDate == Date.valueOf("2024-02-01")
+        result.transactionDate == LocalDate.parse("2024-02-01")
         result.activeStatus == true
     }
 
@@ -74,7 +74,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
                         null,
                         srcName,
                         destName,
-                        Date.valueOf("2024-02-01"),
+                        LocalDate.parse("2024-02-01"),
                         new BigDecimal("-1.00"),
                         null,
                         null,
@@ -96,7 +96,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
                         null,
                         "nonexistent_${java.util.UUID.randomUUID().toString().take(8)}",
                         destName,
-                        Date.valueOf("2024-02-01"),
+                        LocalDate.parse("2024-02-01"),
                         new BigDecimal("300.00"),
                         null,
                         null,
@@ -116,7 +116,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
                         null,
                         srcName,
                         destName,
-                        Date.valueOf("2024-02-02"),
+                        LocalDate.parse("2024-02-02"),
                         new BigDecimal("25.00"),
                         null,
                         null,

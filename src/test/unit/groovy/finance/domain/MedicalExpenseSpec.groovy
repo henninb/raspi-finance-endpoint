@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import groovy.json.JsonSlurper
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 
 class MedicalExpenseSpec extends Specification {
 
@@ -22,6 +22,7 @@ class MedicalExpenseSpec extends Specification {
         validator = factory.getValidator()
         objectMapper = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            .findAndRegisterModules()
     }
 
     def "should create valid medical expense"() {
@@ -30,7 +31,7 @@ class MedicalExpenseSpec extends Specification {
         medicalExpense.transactionId = 1001L
         medicalExpense.providerId = 1L
         medicalExpense.familyMemberId = 1L
-        medicalExpense.serviceDate = Date.valueOf("2024-01-15")
+        medicalExpense.serviceDate = LocalDate.parse("2024-01-15")
         medicalExpense.serviceDescription = "Annual Physical Exam"
         medicalExpense.procedureCode = "99396"
         medicalExpense.diagnosisCode = "Z00.00"
@@ -41,7 +42,7 @@ class MedicalExpenseSpec extends Specification {
         medicalExpense.isOutOfNetwork = false
         medicalExpense.claimNumber = "CLM-2024-001"
         medicalExpense.claimStatus = ClaimStatus.Paid
-        medicalExpense.paidDate = Date.valueOf("2024-02-01")
+        medicalExpense.paidDate = LocalDate.parse("2024-02-01")
 
         when: "validating the medical expense"
         Set<ConstraintViolation<MedicalExpense>> violations = validator.validate(medicalExpense)
@@ -69,7 +70,7 @@ class MedicalExpenseSpec extends Specification {
     def "should fail validation when service date is invalid"() {
         given: "a medical expense with invalid service date"
         MedicalExpense medicalExpense = createValidMedicalExpense()
-        medicalExpense.serviceDate = Date.valueOf("1999-12-31") // Before 2000-01-01
+        medicalExpense.serviceDate = LocalDate.parse("1999-12-31") // Before 2000-01-01
 
         when: "validating the medical expense"
         Set<ConstraintViolation<MedicalExpense>> violations = validator.validate(medicalExpense)
@@ -178,7 +179,7 @@ class MedicalExpenseSpec extends Specification {
         MedicalExpense medicalExpense = new MedicalExpense(
             patientResponsibility: new BigDecimal("50.00"),
             paidAmount: new BigDecimal("50.00"),
-            paidDate: Date.valueOf("2024-02-01")
+            paidDate: LocalDate.parse("2024-02-01")
         )
 
         when: "checking if fully paid"
@@ -237,7 +238,7 @@ class MedicalExpenseSpec extends Specification {
         given: "a medical expense with inconsistent financial data"
         MedicalExpense medicalExpense = new MedicalExpense(
             transactionId: 1001L,
-            serviceDate: Date.valueOf("2024-01-15"),
+            serviceDate: LocalDate.parse("2024-01-15"),
             billedAmount: new BigDecimal("100.00"),
             insuranceDiscount: new BigDecimal("200.00"),
             insurancePaid: new BigDecimal("600.00"),
@@ -291,7 +292,7 @@ class MedicalExpenseSpec extends Specification {
         MedicalExpense medicalExpense = new MedicalExpense(
             medicalExpenseId: 123L,
             transactionId: 1001L,
-            serviceDate: Date.valueOf("2024-01-15"),
+            serviceDate: LocalDate.parse("2024-01-15"),
             billedAmount: new BigDecimal("350.00"),
             patientResponsibility: new BigDecimal("50.00"),
             claimStatus: ClaimStatus.Paid
@@ -427,7 +428,7 @@ class MedicalExpenseSpec extends Specification {
     private MedicalExpense createValidMedicalExpense() {
         MedicalExpense medicalExpense = new MedicalExpense()
         medicalExpense.transactionId = 1001L
-        medicalExpense.serviceDate = Date.valueOf("2024-01-15")
+        medicalExpense.serviceDate = LocalDate.parse("2024-01-15")
         medicalExpense.billedAmount = new BigDecimal("350.00")
         medicalExpense.insuranceDiscount = new BigDecimal("50.00")
         medicalExpense.insurancePaid = new BigDecimal("250.00")
@@ -442,7 +443,7 @@ class MedicalExpenseSpec extends Specification {
     def "should create medical expense without transaction ID"() {
         given: "a medical expense with no transaction"
         MedicalExpense medicalExpense = new MedicalExpense(
-            serviceDate: Date.valueOf("2024-01-15"),
+            serviceDate: LocalDate.parse("2024-01-15"),
             billedAmount: new BigDecimal("250.00"),
             patientResponsibility: new BigDecimal("50.00"),
             paidAmount: new BigDecimal("0.00"),

@@ -12,6 +12,7 @@ import spock.lang.Subject
 
 import java.math.BigDecimal
 import java.sql.Timestamp
+import java.time.LocalDate
 
 class PendingTransactionServiceSpec extends Specification {
 
@@ -32,7 +33,7 @@ class PendingTransactionServiceSpec extends Specification {
         return new PendingTransaction(
                 1L,
                 "test_account",
-                java.sql.Date.valueOf("2023-01-01"),
+                LocalDate.parse("2023-01-01"),
                 "Test pending transaction",
                 new BigDecimal("100.00"),
                 "pending",
@@ -45,7 +46,7 @@ class PendingTransactionServiceSpec extends Specification {
         return new PendingTransaction(
                 0L,
                 "test_account",
-                java.sql.Date.valueOf("2023-01-01"),
+                LocalDate.parse("2023-01-01"),
                 "Test pending transaction",
                 new BigDecimal("100.00"),
                 "pending",

@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import spock.lang.Shared
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import java.util.Optional
 
 /**
@@ -113,32 +113,32 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
 
         MedicalExpense expense1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId1)
-                .withServiceDate(Date.valueOf("2024-01-15"))
+                .withServiceDate(LocalDate.parse("2024-01-15"))
                 .buildAndValidate()
         medicalExpenseRepository.save(expense1)
 
         MedicalExpense expense2 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId2)
-                .withServiceDate(Date.valueOf("2024-02-15"))
+                .withServiceDate(LocalDate.parse("2024-02-15"))
                 .buildAndValidate()
         medicalExpenseRepository.save(expense2)
 
         MedicalExpense expense3 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId3)
-                .withServiceDate(Date.valueOf("2024-03-15"))
+                .withServiceDate(LocalDate.parse("2024-03-15"))
                 .buildAndValidate()
         medicalExpenseRepository.save(expense3)
 
         when:
         List<MedicalExpense> found = medicalExpenseRepository.findByServiceDateBetweenAndActiveStatusTrue(
-            Date.valueOf("2024-01-01"), Date.valueOf("2024-02-28")
+            LocalDate.parse("2024-01-01"), LocalDate.parse("2024-02-28")
         )
 
         then:
         found.size() >= 2
-        found.any { it.serviceDate == Date.valueOf("2024-01-15") && it.transactionId == transactionId1 }
-        found.any { it.serviceDate == Date.valueOf("2024-02-15") && it.transactionId == transactionId2 }
-        !found.any { it.serviceDate == Date.valueOf("2024-03-15") && it.transactionId == transactionId3 }
+        found.any { it.serviceDate == LocalDate.parse("2024-01-15") && it.transactionId == transactionId1 }
+        found.any { it.serviceDate == LocalDate.parse("2024-02-15") && it.transactionId == transactionId2 }
+        !found.any { it.serviceDate == LocalDate.parse("2024-03-15") && it.transactionId == transactionId3 }
     }
 
     def "should find medical expenses by provider ID"() {
@@ -256,14 +256,14 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
 
         MedicalExpense expense2024_1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId1)
-                .withServiceDate(Date.valueOf("2024-01-15"))
+                .withServiceDate(LocalDate.parse("2024-01-15"))
                 .withBilledAmount(new BigDecimal("500.00"))
                 .buildAndValidate()
         medicalExpenseRepository.save(expense2024_1)
 
         MedicalExpense expense2024_2 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId2)
-                .withServiceDate(Date.valueOf("2024-06-15"))
+                .withServiceDate(LocalDate.parse("2024-06-15"))
                 .withBilledAmount(new BigDecimal("300.00"))
                 .buildAndValidate()
         medicalExpenseRepository.save(expense2024_2)
@@ -282,7 +282,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
 
         MedicalExpense expense1 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId1)
-                .withServiceDate(Date.valueOf("2024-01-15"))
+                .withServiceDate(LocalDate.parse("2024-01-15"))
                 .withBilledAmount(new BigDecimal("300.00"))  // Set billed amount first
                 .build()  // Use build() to allow manual financial setup
         expense1.patientResponsibility = new BigDecimal("100.00")  // Then set patient responsibility
@@ -291,7 +291,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
 
         MedicalExpense expense2 = SmartMedicalExpenseBuilder.builderForOwner(testOwner)
                 .withTransactionId(transactionId2)
-                .withServiceDate(Date.valueOf("2024-06-15"))
+                .withServiceDate(LocalDate.parse("2024-06-15"))
                 .withBilledAmount(new BigDecimal("400.00"))  // Set billed amount first
                 .build()  // Use build() to allow manual financial setup
         expense2.patientResponsibility = new BigDecimal("150.00")  // Then set patient responsibility
@@ -318,7 +318,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
                 .build()  // Use build() to allow manual setup
         paidExpense.patientResponsibility = new BigDecimal("100.00")
         paidExpense.insurancePaid = new BigDecimal("200.00")
-        paidExpense.paidDate = Date.valueOf("2024-02-01")
+        paidExpense.paidDate = LocalDate.parse("2024-02-01")
         medicalExpenseRepository.save(paidExpense)
 
         // Unpaid expense with balance
@@ -500,7 +500,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Credit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2024-01-15"))
+                .withTransactionDate(LocalDate.parse("2024-01-15"))
                 .withDescription("Medical test transaction ${suffix}")
                 .withCategory(repositoryContext.categoryName)
                 .withAmount(new BigDecimal("350.00"))

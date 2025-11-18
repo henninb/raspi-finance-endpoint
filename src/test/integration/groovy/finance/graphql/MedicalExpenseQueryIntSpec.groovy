@@ -8,7 +8,7 @@ import finance.services.MedicalExpenseService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 
 class MedicalExpenseQueryIntSpec extends BaseIntegrationSpec {
 
@@ -68,7 +68,7 @@ class MedicalExpenseQueryIntSpec extends BaseIntegrationSpec {
 
     private MedicalExpense createTestMedicalExpense(String procedureCode, String serviceDateStr, ClaimStatus claimStatus = ClaimStatus.Submitted) {
         MedicalExpense expense = new MedicalExpense()
-        expense.serviceDate = Date.valueOf(serviceDateStr)
+        expense.serviceDate = LocalDate.parse(serviceDateStr)
         expense.serviceDescription = "Test medical service"
         expense.procedureCode = procedureCode
         expense.diagnosisCode = "A00-A09"

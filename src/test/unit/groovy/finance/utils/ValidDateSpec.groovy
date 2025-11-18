@@ -1,11 +1,12 @@
 package finance.utils
 
 import spock.lang.Specification
+import java.lang.annotation.Documented
 import java.lang.annotation.ElementType
+import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
-import java.lang.annotation.Retention
-import java.lang.annotation.Documented
+import java.time.LocalDate
 
 class ValidDateSpec extends Specification {
 
@@ -67,9 +68,9 @@ class ValidDateSpec extends Specification {
 
     static class TestClass {
         @ValidDate
-        java.sql.Date dateField
+        LocalDate dateField
 
         @ValidDate(message = "Custom date validation message")
-        java.sql.Date customMessageField
+        LocalDate customMessageField
     }
 }

@@ -8,7 +8,7 @@ import finance.helpers.SmartAccountBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Shared
-import java.sql.Date
+import java.time.LocalDate
 import java.math.BigDecimal
 import jakarta.validation.ConstraintViolationException
 
@@ -69,7 +69,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         PendingTransaction pendingTx = SmartPendingTransactionBuilder.builderForOwner(testOwner)
                 .withAccountNameOwner(accountName)
                 .withAmount(new BigDecimal("125.50"))
-                .withTransactionDate(Date.valueOf("2024-08-15"))
+                .withTransactionDate(LocalDate.parse("2024-08-15"))
                 .withUniqueDescription("grocery store transaction")
                 .asPending()
                 .buildAndValidate()
@@ -84,7 +84,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         savedTx.accountNameOwner.length() >= 3
         savedTx.accountNameOwner.contains("_")  // Must follow ALPHA_UNDERSCORE_PATTERN
         savedTx.amount == new BigDecimal("125.50")
-        savedTx.transactionDate == Date.valueOf("2024-08-15")
+        savedTx.transactionDate == LocalDate.parse("2024-08-15")
         savedTx.description != null
         savedTx.description.length() >= 1
         savedTx.reviewStatus == "pending"
@@ -260,7 +260,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         PendingTransaction pendingTx = SmartPendingTransactionBuilder.builderForOwner(testOwner)
                 .withAccountNameOwner(accountName)
                 .withAmount(new BigDecimal("99.99"))
-                .withTransactionDate(Date.valueOf("2024-08-20"))
+                .withTransactionDate(LocalDate.parse("2024-08-20"))
                 .withUniqueDescription("delete me")
                 .asPending()
                 .buildAndValidate()
@@ -417,7 +417,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         try {
             PendingTransaction recentTx = SmartPendingTransactionBuilder.builderForOwner(testOwner)
                     .withAccountNameOwner(primaryAccount)
-                    .withTransactionDate(Date.valueOf("2024-06-15"))
+                    .withTransactionDate(LocalDate.parse("2024-06-15"))
                     .withAmount(new BigDecimal("75.00"))
                     .buildAndValidate()
             PendingTransaction savedRecent = pendingTransactionRepository.save(recentTx)
@@ -430,7 +430,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         try {
             PendingTransaction edgeTx = SmartPendingTransactionBuilder.builderForOwner(testOwner)
                     .withAccountNameOwner(secondaryAccount)
-                    .withTransactionDate(Date.valueOf("2000-01-02"))
+                    .withTransactionDate(LocalDate.parse("2000-01-02"))
                     .withAmount(new BigDecimal("25.00"))
                     .buildAndValidate()
             PendingTransaction savedEdge = pendingTransactionRepository.save(edgeTx)
@@ -443,14 +443,14 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         try {
             SmartPendingTransactionBuilder.builderForOwner(testOwner)
                     .withAccountNameOwner(primaryAccount)
-                    .withTransactionDate(Date.valueOf("1999-12-31"))  // Before 2000-01-01
+                    .withTransactionDate(LocalDate.parse("1999-12-31"))  // Before 2000-01-01
                     .buildAndValidate()
             dateResults << "old-date-passed"
         } catch (Exception e) {
             dateResults << "old-date-blocked"
         }
 
-        then: "Date validation provides reliable business rule enforcement"
+        then: "LocalDate validation provides reliable business rule enforcement"
         !dateResults.isEmpty()
 
         and: "Valid dates are properly handled"
@@ -461,7 +461,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         // Non-brittle: we track behavior but don't demand specific exception types
         dateResults.any { it.contains("old-date") }  // Old date handling is tracked
 
-        and: "Date handling system is functioning"
+        and: "LocalDate handling system is functioning"
         dateResults.every { it.contains("success") || it.contains("failed") || it.contains("passed") || it.contains("blocked") }
     }
 
@@ -472,7 +472,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         PendingTransaction businessTx = SmartPendingTransactionBuilder.builderForOwner(testOwner)
                 .withAccountNameOwner(existingAccount)
                 .withAmount(new BigDecimal("1234.56"))
-                .withTransactionDate(Date.valueOf("2024-07-20"))
+                .withTransactionDate(LocalDate.parse("2024-07-20"))
                 .withUniqueDescription("business expense reimbursement")
                 .asPending()
                 .buildAndValidate()
@@ -486,7 +486,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         saved.accountNameOwner.length() >= 3
         saved.accountNameOwner.matches(/^[a-z-_]+$/)  // Pattern compliance
         saved.amount == new BigDecimal("1234.56")
-        saved.transactionDate == Date.valueOf("2024-07-20")
+        saved.transactionDate == LocalDate.parse("2024-07-20")
         saved.description != null
         saved.description.contains("business")
         saved.reviewStatus == "pending"

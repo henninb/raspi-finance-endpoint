@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import java.util.Optional
 
 /**
@@ -62,7 +62,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-01-01"))
+                .withTransactionDate(LocalDate.parse("2023-01-01"))
                 .withDescription("test transaction")
                 .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
                 .withAmount("100.50")
@@ -93,7 +93,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                     .withAccountType(AccountType.Debit)
                     .withTransactionType(TransactionType.Expense)
                     .withAccountNameOwner(ownerAccountName)
-                    .withTransactionDate(Date.valueOf("2023-01-0${i}"))
+                    .withTransactionDate(LocalDate.parse("2023-01-0${i}"))
                     .withDescription("txn_${i}")
                     .withCategory("cat_${i}")
                     .withAmount(new BigDecimal(100 + i))
@@ -108,7 +108,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         then:
         list.size() >= 3
-        list[0].transactionDate.after(list[1].transactionDate)
+        list[0].transactionDate.isAfter(list[1].transactionDate)
         list.every { it.accountNameOwner == ownerAccountName && it.activeStatus }
     }
 
@@ -119,7 +119,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-02-01"))
+                .withTransactionDate(LocalDate.parse("2023-02-01"))
                 .withDescription("grocery shopping")
                 .withCategory("groceries")
                 .withAmount("85.50")
@@ -146,7 +146,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                     .withAccountType(AccountType.Debit)
                     .withTransactionType(TransactionType.Expense)
                     .withAccountNameOwner(ownerAccountName)
-                    .withTransactionDate(Date.valueOf("2023-03-01"))
+                    .withTransactionDate(LocalDate.parse("2023-03-01"))
                     .withDescription("sum_${state}")
                     .withCategory("sumcat")
                     .withAmount("100.00")
@@ -175,7 +175,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-04-01"))
+                .withTransactionDate(LocalDate.parse("2023-04-01"))
                 .withDescription("cleared")
                 .withCategory("testcat")
                 .withAmount("100.00")
@@ -187,7 +187,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-04-02"))
+                .withTransactionDate(LocalDate.parse("2023-04-02"))
                 .withDescription("future")
                 .withCategory("testcat")
                 .withAmount("100.00")
@@ -219,7 +219,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                     .withAccountType(AccountType.Debit)
                     .withTransactionType(TransactionType.Expense)
                     .withAccountNameOwner(ownerAccountName)
-                    .withTransactionDate(Date.valueOf("2023-01-01"))
+                    .withTransactionDate(LocalDate.parse("2023-01-01"))
                     .withDescription(uniqueDescription)
                     .withCategory(uniqueCategory)
                     .withAmount("10.00")
@@ -245,7 +245,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-02-01"))
+                .withTransactionDate(LocalDate.parse("2023-02-01"))
                 .withDescription("dup-guid-1")
                 .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
                 .withAmount("10.00")
@@ -258,7 +258,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-02-02"))
+                .withTransactionDate(LocalDate.parse("2023-02-02"))
                 .withDescription("dup-guid-2")
                 .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
                 .withAmount("12.00")
@@ -281,7 +281,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-03-01"))
+                .withTransactionDate(LocalDate.parse("2023-03-01"))
                 .withDescription("too-long-cat")
                 .withCategory(tooLongCategory)
                 .build()
@@ -301,7 +301,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-03-02"))
+                .withTransactionDate(LocalDate.parse("2023-03-02"))
                 .withDescription("bad-guid")
                 .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
                 .withGuid("123")
@@ -322,7 +322,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAccountType(AccountType.Debit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
-                .withTransactionDate(Date.valueOf("2023-04-01"))
+                .withTransactionDate(LocalDate.parse("2023-04-01"))
                 .withDescription("to-delete")
                 .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
                 .withAmount("5.00")

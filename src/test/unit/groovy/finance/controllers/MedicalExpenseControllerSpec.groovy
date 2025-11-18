@@ -9,7 +9,6 @@ import spock.lang.Specification
 import spock.lang.Subject
 
 import java.math.BigDecimal
-import java.sql.Date
 
 class StandardizedMedicalExpenseControllerSpec extends Specification {
 

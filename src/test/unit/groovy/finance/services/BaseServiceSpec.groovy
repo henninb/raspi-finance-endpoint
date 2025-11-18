@@ -25,7 +25,7 @@ class BaseServiceSpec extends Specification {
     protected TransactionRepository transactionRepositoryMock = GroovyMock(TransactionRepository)
     protected ReceiptImageRepository receiptImageRepositoryMock = GroovyMock(ReceiptImageRepository)
     protected ValidationAmountRepository validationAmountRepositoryMock = GroovyMock(ValidationAmountRepository)
-    protected ObjectMapper mapper = new ObjectMapper()
+    protected ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").getFile().absolutePath
     protected Counter counter = Mock(Counter)

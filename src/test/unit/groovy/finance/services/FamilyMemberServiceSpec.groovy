@@ -8,7 +8,6 @@ import finance.repositories.FamilyMemberRepository
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
-import java.sql.Date
 
 /**
  * TDD Specification for FamilyMemberService

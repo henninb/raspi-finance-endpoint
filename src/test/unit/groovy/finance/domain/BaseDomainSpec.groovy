@@ -10,7 +10,7 @@ import jakarta.validation.ValidatorFactory
 class BaseDomainSpec extends Specification {
     protected ValidatorFactory validatorFactory
     protected Validator validator
-    protected ObjectMapper mapper = new ObjectMapper()
+    protected ObjectMapper mapper = new ObjectMapper().findAndRegisterModules()
 
     void setup() {
         validatorFactory = Validation.buildDefaultValidatorFactory()

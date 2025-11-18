@@ -2,8 +2,8 @@ package finance.utils
 
 import spock.lang.Specification
 import jakarta.validation.ConstraintValidatorContext
-import java.sql.Date
 import java.sql.Timestamp
+import java.time.LocalDate
 
 class DateAndTimestampValidatorSpec extends Specification {
 
@@ -15,10 +15,10 @@ class DateAndTimestampValidatorSpec extends Specification {
 
         expect:
         validator.isValid(null, context)
-        validator.isValid(Date.valueOf("2000-01-02"), context)
+        validator.isValid(LocalDate.parse("2000-01-02"), context)
 
         and:
-        !validator.isValid(Date.valueOf("1999-12-31"), context)
+        !validator.isValid(LocalDate.parse("1999-12-31"), context)
     }
 
     def "TimestampValidator currently throws due to invalid baseline format"() {

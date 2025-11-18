@@ -10,7 +10,6 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import java.math.BigDecimal
-import java.sql.Date
 
 /**
  * TDD Test Specification for MedicalExpenseService

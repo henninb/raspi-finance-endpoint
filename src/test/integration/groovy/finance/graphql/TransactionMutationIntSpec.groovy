@@ -14,7 +14,7 @@ import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 import java.math.BigDecimal
-import java.sql.Date
+import java.time.LocalDate
 import java.sql.Timestamp
 
 class TransactionMutationIntSpec extends BaseIntegrationSpec {
@@ -39,7 +39,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "grocery store",
                 "groceries",
                 new BigDecimal("100.50"),
@@ -78,7 +78,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "",                             // invalid: empty
                 "groceries",
                 new BigDecimal("100.50"),
@@ -108,7 +108,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "grocery store",
                 "",                             // invalid: empty
                 new BigDecimal("100.50"),
@@ -137,7 +137,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "invalid account",              // invalid: contains space
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "grocery store",
                 "groceries",
                 new BigDecimal("100.50"),
@@ -167,7 +167,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "grocery store",
                 "groceries",
                 new BigDecimal("100.123"),      // invalid: 3 decimal places
@@ -197,7 +197,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-20"),     // changed date
+                LocalDate.parse("2024-01-20"),     // changed date
                 "updated store",                // changed description
                 "shopping",                     // changed category
                 new BigDecimal("250.75"),       // changed amount
@@ -216,7 +216,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
         result != null
         result.transactionId == created.transactionId
         result.guid == created.guid
-        result.transactionDate == Date.valueOf("2024-01-20")
+        result.transactionDate == LocalDate.parse("2024-01-20")
         result.description == "updated store"
         result.category == "shopping"
         result.amount == new BigDecimal("250.75")
@@ -234,7 +234,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "grocery store",
                 "groceries",
                 new BigDecimal("100.50"),
@@ -284,7 +284,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 AccountType.Debit,
                 TransactionType.Expense,
                 "checking_primary",
-                Date.valueOf("2024-01-15"),
+                LocalDate.parse("2024-01-15"),
                 "grocery store",
                 "groceries",
                 new BigDecimal("100.50"),
@@ -292,7 +292,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
                 true,                           // activeStatus
                 ReoccurringType.Monthly,        // reoccurringType
                 "Monthly grocery bill",         // notes
-                Date.valueOf("2024-02-15"),     // dueDate
+                LocalDate.parse("2024-02-15"),     // dueDate
                 null
         )
 
@@ -304,7 +304,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
         result.activeStatus == true
         result.reoccurringType == ReoccurringType.Monthly
         result.notes == "Monthly grocery bill"
-        result.dueDate == Date.valueOf("2024-02-15")
+        result.dueDate == LocalDate.parse("2024-02-15")
     }
 
     private Account createTestAccount(String accountNameOwner, AccountType accountType) {
@@ -333,7 +333,7 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
         transaction.accountNameOwner = accountNameOwner
         transaction.accountType = accountType
         transaction.transactionType = TransactionType.Expense
-        transaction.transactionDate = Date.valueOf("2024-01-15")
+        transaction.transactionDate = LocalDate.parse("2024-01-15")
         transaction.description = "test store"
         transaction.category = "test"
         transaction.amount = new BigDecimal("100.00")

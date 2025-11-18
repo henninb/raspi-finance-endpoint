@@ -94,7 +94,7 @@ class TransferQueryIntSpec extends BaseIntegrationSpec {
         def t = new Transfer()
         t.sourceAccount = sourceAccount
         t.destinationAccount = destinationAccount
-        t.transactionDate = Date.valueOf("2024-01-01")
+        t.transactionDate = Date.valueOf("2024-01-01").toLocalDate()
         t.amount = amount
         t.guidSource = UUID.randomUUID().toString()
         t.guidDestination = UUID.randomUUID().toString()
