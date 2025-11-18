@@ -21,28 +21,28 @@ import java.util.Optional
 class ServiceLayerIntSpec extends Specification {
 
     @Autowired
-    StandardizedTransactionService transactionService
+    TransactionService transactionService
 
     @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     @Autowired
-    StandardizedCategoryService categoryService
+    CategoryService categoryService
 
     @Autowired
-    StandardizedDescriptionService descriptionService
+    DescriptionService descriptionService
 
     @Autowired
-    StandardizedPaymentService paymentService
+    PaymentService paymentService
 
     @Autowired
-    StandardizedTransferService transferService
+    TransferService transferService
 
     @Autowired
-    StandardizedValidationAmountService validationAmountService
+    ValidationAmountService validationAmountService
 
     @Autowired
-    StandardizedReceiptImageService receiptImageService
+    ReceiptImageService receiptImageService
 
     @Autowired
     AccountRepository accountRepository

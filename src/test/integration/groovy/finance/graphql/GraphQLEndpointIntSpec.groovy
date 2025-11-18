@@ -34,16 +34,16 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
     // GraphQL graphQL
 
     @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     @Autowired
-    StandardizedCategoryService categoryService
+    CategoryService categoryService
 
     @Autowired
-    StandardizedDescriptionService descriptionService
+    DescriptionService descriptionService
 
     @Autowired
-    StandardizedPaymentService paymentService
+    PaymentService paymentService
 
     @Autowired
     AccountRepository accountRepository

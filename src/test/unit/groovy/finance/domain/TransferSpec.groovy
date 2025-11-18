@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 
 import java.math.BigDecimal
-import java.sql.Date
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.*
 
 class TransferSpec extends Specification {
@@ -19,7 +19,7 @@ class TransferSpec extends Specification {
         transfer.transferId == 0L
         transfer.sourceAccount == ""
         transfer.destinationAccount == ""
-        transfer.transactionDate == new Date(0)
+        transfer.transactionDate == LocalDate.ofEpochDay(0)
         transfer.amount == new BigDecimal("0.00")
         transfer.guidSource == ""
         transfer.guidDestination == ""
@@ -33,7 +33,7 @@ class TransferSpec extends Specification {
         def transferId = 1L
         def sourceAccount = "test_source"
         def destinationAccount = "test_dest"
-        def transactionDate = Date.valueOf("2023-01-01")
+        def transactionDate = LocalDate.of(2023, 1, 1)
         def amount = new BigDecimal("100.00")
         def guidSource = "source-guid"
         def guidDestination = "dest-guid"
@@ -58,7 +58,7 @@ class TransferSpec extends Specification {
     def "Transfer - toString returns valid JSON"() {
         given:
         def transfer = new Transfer(1L, "test_source", "test_dest",
-                                  Date.valueOf("2023-01-01"), new BigDecimal("100.00"),
+                                  LocalDate.of(2023, 1, 1), new BigDecimal("100.00"),
                                   "source-guid", "dest-guid", true)
 
         when:
@@ -81,7 +81,7 @@ class TransferSpec extends Specification {
     def "Transfer - jsonGetterTransferDate formats date correctly"() {
         given:
         def transfer = new Transfer()
-        transfer.transactionDate = Date.valueOf("2023-12-25")
+        transfer.transactionDate = LocalDate.of(2023, 12, 25)
 
         when:
         def formattedDate = transfer.jsonGetterTransferDate()
@@ -99,7 +99,7 @@ class TransferSpec extends Specification {
         transfer.jsonSetterTransfertDate(dateString)
 
         then:
-        transfer.transactionDate == Date.valueOf("2023-12-25")
+        transfer.transactionDate == LocalDate.of(2023, 12, 25)
     }
 
     def "Transfer - jsonSetterTransfertDate handles invalid date format"() {
@@ -122,7 +122,7 @@ class TransferSpec extends Specification {
         transfer.transferId = 5L
         transfer.sourceAccount = "new_source"
         transfer.destinationAccount = "new_dest"
-        transfer.transactionDate = Date.valueOf("2023-06-15")
+        transfer.transactionDate = LocalDate.of(2023, 6, 15)
         transfer.amount = new BigDecimal("250.75")
         transfer.guidSource = "new-source-guid"
         transfer.guidDestination = "new-dest-guid"
@@ -132,7 +132,7 @@ class TransferSpec extends Specification {
         transfer.transferId == 5L
         transfer.sourceAccount == "new_source"
         transfer.destinationAccount == "new_dest"
-        transfer.transactionDate == Date.valueOf("2023-06-15")
+        transfer.transactionDate == LocalDate.of(2023, 6, 15)
         transfer.amount == new BigDecimal("250.75")
         transfer.guidSource == "new-source-guid"
         transfer.guidDestination == "new-dest-guid"

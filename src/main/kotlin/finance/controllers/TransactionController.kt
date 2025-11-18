@@ -6,7 +6,7 @@ import finance.domain.Totals
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.services.MeterService
-import finance.services.StandardizedTransactionService
+import finance.services.TransactionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -35,7 +35,7 @@ import java.util.Locale
 @RestController
 @RequestMapping("/api/transaction")
 class TransactionController(
-    private val standardizedTransactionService: StandardizedTransactionService,
+    private val transactionService: TransactionService,
     private val meterService: MeterService,
 ) : StandardizedBaseController(),
     StandardRestController<Transaction, String> {
@@ -80,7 +80,7 @@ class TransactionController(
     override fun findById(
         @PathVariable("guid") id: String,
     ): ResponseEntity<Transaction> =
-        when (val result = standardizedTransactionService.findById(id)) {
+        when (val result = transactionService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved transaction: $id")
                 ResponseEntity.ok(result.data)
@@ -117,7 +117,7 @@ class TransactionController(
     override fun save(
         @Valid @RequestBody entity: Transaction,
     ): ResponseEntity<Transaction> =
-        when (val result = standardizedTransactionService.save(entity)) {
+        when (val result = transactionService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction created successfully: ${entity.guid}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -163,7 +163,7 @@ class TransactionController(
         val updatedTransaction = entity.copy(guid = id)
 
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedTransactionService.update(updatedTransaction)) {
+        return when (val result = transactionService.update(updatedTransaction)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -208,13 +208,13 @@ class TransactionController(
         @PathVariable("guid") id: String,
     ): ResponseEntity<Transaction> {
         // First find the entity to return it after deletion
-        val entityResult = standardizedTransactionService.findById(id)
+        val entityResult = transactionService.findById(id)
         if (entityResult !is ServiceResult.Success) {
             logger.warn("Transaction not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val deleteResult = standardizedTransactionService.deleteById(id)) {
+        return when (val deleteResult = transactionService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction deleted successfully: $id")
                 ResponseEntity.ok(entityResult.data)
@@ -258,7 +258,7 @@ class TransactionController(
                     .by("transactionDate")
                     .descending(),
             )
-        return when (val result = standardizedTransactionService.findTransactionsByDateRangeStandardized(start, end, pageable)) {
+        return when (val result = transactionService.findTransactionsByDateRangeStandardized(start, end, pageable)) {
             is ServiceResult.Success -> ResponseEntity.ok(result.data)
             is ServiceResult.BusinessError -> ResponseEntity.badRequest().build()
             is ServiceResult.SystemError -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -279,7 +279,7 @@ class TransactionController(
         try {
             logger.debug("Retrieving transactions for account: $accountNameOwner")
             val transactions: List<Transaction> =
-                standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
+                transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
 
             if (transactions.isEmpty()) {
                 logger.info("No transactions found for account: $accountNameOwner")
@@ -302,7 +302,7 @@ class TransactionController(
         try {
             logger.debug("Calculating totals for account: $accountNameOwner")
             val results: Totals =
-                standardizedTransactionService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
+                transactionService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
 
             logger.info("Calculated totals for account $accountNameOwner: $results")
             ResponseEntity.ok(results)
@@ -330,7 +330,7 @@ class TransactionController(
                     .lowercase()
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
             val transactionResponse =
-                standardizedTransactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
+                transactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
             logger.info("Transaction state updated successfully for $guid to $newTransactionStateValue")
             ResponseEntity.ok(transactionResponse)
         } catch (ex: IllegalArgumentException) {
@@ -350,10 +350,10 @@ class TransactionController(
         @RequestBody transaction: Transaction,
     ): ResponseEntity<Transaction> {
         logger.info("Inserting future transaction for account: ${transaction.accountNameOwner}")
-        val futureTransaction = standardizedTransactionService.createFutureTransaction(transaction)
+        val futureTransaction = transactionService.createFutureTransaction(transaction)
         logger.debug("Created future transaction with date: ${futureTransaction.transactionDate}")
 
-        return when (val result = standardizedTransactionService.save(futureTransaction)) {
+        return when (val result = transactionService.save(futureTransaction)) {
             is ServiceResult.Success -> {
                 logger.info("Future transaction inserted successfully: ${result.data.guid}")
                 ResponseEntity(result.data, HttpStatus.CREATED)
@@ -393,7 +393,7 @@ class TransactionController(
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Both accountNameOwner and guid are required")
             }
 
-            val transactionResponse = standardizedTransactionService.changeAccountNameOwner(payload)
+            val transactionResponse = transactionService.changeAccountNameOwner(payload)
             logger.info("Transaction account updated successfully for guid $guid")
             ResponseEntity.ok(transactionResponse)
         } catch (ex: ResponseStatusException) {
@@ -413,7 +413,7 @@ class TransactionController(
     ): ResponseEntity<ReceiptImage> =
         try {
             logger.info("Updating receipt image for transaction: $guid")
-            val receiptImage = standardizedTransactionService.updateTransactionReceiptImageByGuid(guid, payload)
+            val receiptImage = transactionService.updateTransactionReceiptImageByGuid(guid, payload)
             logger.info("Receipt image updated successfully for transaction: $guid")
             ResponseEntity.ok(receiptImage)
         } catch (ex: Exception) {
@@ -441,7 +441,7 @@ class TransactionController(
     ): ResponseEntity<List<Transaction>> =
         try {
             logger.debug("Retrieving transactions for category: $categoryName")
-            val transactions = standardizedTransactionService.findTransactionsByCategory(categoryName)
+            val transactions = transactionService.findTransactionsByCategory(categoryName)
             if (transactions.isEmpty()) {
                 logger.info("No transactions found for category: $categoryName")
             } else {
@@ -462,7 +462,7 @@ class TransactionController(
     ): ResponseEntity<List<Transaction>> =
         try {
             logger.debug("Retrieving transactions for description: $descriptionName")
-            val transactions = standardizedTransactionService.findTransactionsByDescription(descriptionName)
+            val transactions = transactionService.findTransactionsByDescription(descriptionName)
             if (transactions.isEmpty()) {
                 logger.info("No transactions found for description: $descriptionName")
             } else {

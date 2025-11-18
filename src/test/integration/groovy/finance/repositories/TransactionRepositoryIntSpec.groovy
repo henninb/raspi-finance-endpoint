@@ -207,4 +207,134 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
         nonFuture.every { it.transactionState != TransactionState.Future }
         nonFuture.any { it.description == "cleared" }
     }
+
+    void 'test count operations for category and description'() {
+        given:
+        String uniqueCategory = "count_test_category_${testOwner.replaceAll(/[^a-z]/, '')}"
+        String uniqueDescription = "count_test_description_${testOwner.replaceAll(/[^a-z]/, '')}"
+
+        for (int i = 0; i < 3; i++) {
+            Transaction t = SmartTransactionBuilder.builderForOwner(testOwner)
+                    .withAccountId(primaryAccountId)
+                    .withAccountType(AccountType.Debit)
+                    .withTransactionType(TransactionType.Expense)
+                    .withAccountNameOwner(ownerAccountName)
+                    .withTransactionDate(Date.valueOf("2023-01-01"))
+                    .withDescription(uniqueDescription)
+                    .withCategory(uniqueCategory)
+                    .withAmount("10.00")
+                    .asCleared()
+                    .buildAndValidate()
+            transactionRepository.save(t)
+        }
+
+        when:
+        Long categoryCount = transactionRepository.countByCategoryName(uniqueCategory)
+        Long descriptionCount = transactionRepository.countByDescriptionName(uniqueDescription)
+
+        then:
+        categoryCount >= 3
+        descriptionCount >= 3
+    }
+
+    void 'test duplicate GUID insert throws persistence exception'() {
+        given:
+        String duplicateGuid = "11111111-2222-3333-4444-555555555555"
+        def t1 = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-02-01"))
+                .withDescription("dup-guid-1")
+                .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
+                .withAmount("10.00")
+                .withGuid(duplicateGuid)
+                .buildAndValidate()
+        transactionRepository.save(t1)
+
+        def t2 = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-02-02"))
+                .withDescription("dup-guid-2")
+                .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
+                .withAmount("12.00")
+                .withGuid(duplicateGuid)
+                .buildAndValidate()
+
+        when:
+        transactionRepository.save(t2)
+        transactionRepository.flush()
+
+        then:
+        thrown(Exception)
+    }
+
+    void 'test category length constraint violation on save'() {
+        given:
+        def tooLongCategory = "x" * 60
+        def t = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-03-01"))
+                .withDescription("too-long-cat")
+                .withCategory(tooLongCategory)
+                .build()
+
+        when:
+        transactionRepository.save(t)
+        transactionRepository.flush()
+
+        then:
+        thrown(jakarta.validation.ConstraintViolationException)
+    }
+
+    void 'test invalid GUID format constraint violation on save'() {
+        given:
+        def t = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-03-02"))
+                .withDescription("bad-guid")
+                .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
+                .withGuid("123")
+                .build()
+
+        when:
+        transactionRepository.save(t)
+        transactionRepository.flush()
+
+        then:
+        thrown(jakarta.validation.ConstraintViolationException)
+    }
+
+    void 'test delete transaction removes it from repository'() {
+        given:
+        def t = SmartTransactionBuilder.builderForOwner(testOwner)
+                .withAccountId(primaryAccountId)
+                .withAccountType(AccountType.Debit)
+                .withTransactionType(TransactionType.Expense)
+                .withAccountNameOwner(ownerAccountName)
+                .withTransactionDate(Date.valueOf("2023-04-01"))
+                .withDescription("to-delete")
+                .withCategory("test_${testOwner.replaceAll(/[^a-z]/, '').toLowerCase()}")
+                .withAmount("5.00")
+                .asCleared()
+                .buildAndValidate()
+        def saved = transactionRepository.save(t)
+
+        when:
+        transactionRepository.delete(saved)
+        def found = transactionRepository.findByGuid(saved.guid)
+
+        then:
+        !found.isPresent()
+    }
 }

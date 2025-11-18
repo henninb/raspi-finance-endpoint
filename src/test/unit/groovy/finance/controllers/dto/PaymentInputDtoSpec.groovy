@@ -4,7 +4,7 @@ import finance.domain.BaseDomainSpec
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
 
-import java.sql.Date
+import java.time.LocalDate
 
 class PaymentInputDtoSpec extends BaseDomainSpec {
 
@@ -12,7 +12,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
         given:
         def sourceAccount = "checking_primary"
         def destinationAccount = "bills_payable"
-        def transactionDate = Date.valueOf("2024-01-15")
+        def transactionDate = LocalDate.of(2024, 1, 15)
         def amount = new BigDecimal("100.00")
         def guidSource = "12345678-1234-1234-1234-123456789012"
         def guidDestination = "87654321-4321-4321-4321-210987654321"
@@ -47,7 +47,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             null,
@@ -68,7 +68,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             sourceAccount,
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             null,
@@ -93,7 +93,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             destinationAccount,
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             null,
@@ -166,7 +166,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("0.01"),
             null,
             null,
@@ -187,7 +187,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             guidSource,
             null,
@@ -219,7 +219,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             guidDestination,
@@ -250,7 +250,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             "12345678-1234-1234-1234-123456789012",
             "87654321-4321-4321-4321-210987654321",
@@ -270,7 +270,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             null,
@@ -290,7 +290,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "bills_payable",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("100.00"),
             null,
             null,

@@ -4,7 +4,7 @@ import finance.BaseIntegrationSpec
 import finance.controllers.dto.CategoryInputDto
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.Category
-import finance.services.StandardizedCategoryService
+import finance.services.CategoryService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 
@@ -14,7 +14,7 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedCategoryService categoryService
+    CategoryService categoryService
 
     def "createCategory mutation succeeds with valid input"() {
         given:

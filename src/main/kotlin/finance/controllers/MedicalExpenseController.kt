@@ -4,7 +4,7 @@ import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
 import finance.domain.ServiceResult
 import finance.exceptions.DuplicateMedicalExpenseException
-import finance.services.StandardizedMedicalExpenseService
+import finance.services.MedicalExpenseService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -37,11 +37,11 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/api/medical-expenses")
 class MedicalExpenseController(
-    private val standardizedMedicalExpenseService: StandardizedMedicalExpenseService,
+    private val medicalExpenseService: MedicalExpenseService,
 ) : StandardizedBaseController(),
     StandardRestController<MedicalExpense, Long> {
     init {
-        logger.info("★★★ MedicalExpenseController constructor called! Service: $standardizedMedicalExpenseService")
+        logger.info("★★★ MedicalExpenseController constructor called! Service: $medicalExpenseService")
     }
 
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -60,7 +60,7 @@ class MedicalExpenseController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<MedicalExpense>> =
-        when (val result = standardizedMedicalExpenseService.findAllActive()) {
+        when (val result = medicalExpenseService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active medical expenses")
                 ResponseEntity.ok(result.data)
@@ -95,7 +95,7 @@ class MedicalExpenseController(
     override fun findById(
         @PathVariable("medicalExpenseId") id: Long,
     ): ResponseEntity<MedicalExpense> =
-        when (val result = standardizedMedicalExpenseService.findById(id)) {
+        when (val result = medicalExpenseService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved medical expense: $id")
                 ResponseEntity.ok(result.data)
@@ -131,7 +131,7 @@ class MedicalExpenseController(
     override fun save(
         @Valid @RequestBody entity: MedicalExpense,
     ): ResponseEntity<MedicalExpense> =
-        when (val result = standardizedMedicalExpenseService.save(entity)) {
+        when (val result = medicalExpenseService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense created successfully: ${result.data.medicalExpenseId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -177,7 +177,7 @@ class MedicalExpenseController(
         entity.medicalExpenseId = id
 
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedMedicalExpenseService.update(entity)) {
+        return when (val result = medicalExpenseService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -222,13 +222,13 @@ class MedicalExpenseController(
         @PathVariable("medicalExpenseId") id: Long,
     ): ResponseEntity<MedicalExpense> {
         // First find the entity to return it after deletion
-        val entityResult = standardizedMedicalExpenseService.findById(id)
+        val entityResult = medicalExpenseService.findById(id)
         if (entityResult !is ServiceResult.Success) {
             logger.warn("Medical expense not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val deleteResult = standardizedMedicalExpenseService.deleteById(id)) {
+        return when (val deleteResult = medicalExpenseService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense deleted successfully: $id")
                 ResponseEntity.ok(entityResult.data)
@@ -261,7 +261,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses - Retrieving all medical expenses")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findAllMedicalExpenses()
+            val medicalExpenses = medicalExpenseService.findAllMedicalExpenses()
             logger.info("Successfully retrieved ${medicalExpenses.size} medical expenses")
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
@@ -285,7 +285,7 @@ class MedicalExpenseController(
 
         return try {
             medicalExpense.medicalExpenseId = medicalExpenseId
-            val updatedExpense = standardizedMedicalExpenseService.updateMedicalExpense(medicalExpense)
+            val updatedExpense = medicalExpenseService.updateMedicalExpense(medicalExpense)
             logger.info("Successfully updated medical expense with ID: $medicalExpenseId")
             ResponseEntity.ok(updatedExpense)
         } catch (e: IllegalArgumentException) {
@@ -310,7 +310,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/$medicalExpenseId - Retrieving medical expense")
 
         return try {
-            val medicalExpense = standardizedMedicalExpenseService.findMedicalExpenseById(medicalExpenseId)
+            val medicalExpense = medicalExpenseService.findMedicalExpenseById(medicalExpenseId)
             if (medicalExpense != null) {
                 ResponseEntity.ok(medicalExpense)
             } else {
@@ -332,7 +332,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/transaction/$transactionId - Retrieving medical expense by transaction ID")
 
         return try {
-            val medicalExpense = standardizedMedicalExpenseService.findMedicalExpenseByTransactionId(transactionId)
+            val medicalExpense = medicalExpenseService.findMedicalExpenseByTransactionId(transactionId)
             if (medicalExpense != null) {
                 ResponseEntity.ok(medicalExpense)
             } else {
@@ -354,7 +354,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/account/$accountId - Retrieving medical expenses by account ID")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByAccountId(accountId)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByAccountId(accountId)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for account ID: $accountId", e)
@@ -373,7 +373,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/account/$accountId/date-range - Retrieving medical expenses by account and date range")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByAccountIdAndDateRange(accountId, startDate, endDate)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByAccountIdAndDateRange(accountId, startDate, endDate)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for account ID: $accountId and date range", e)
@@ -390,7 +390,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/provider/$providerId - Retrieving medical expenses by provider ID")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByProviderId(providerId)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByProviderId(providerId)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for provider ID: $providerId", e)
@@ -407,7 +407,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/family-member/$familyMemberId - Retrieving medical expenses by family member ID")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByFamilyMemberId(familyMemberId)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByFamilyMemberId(familyMemberId)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for family member ID: $familyMemberId", e)
@@ -426,7 +426,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/family-member/$familyMemberId/date-range - Retrieving medical expenses by family member and date range")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByFamilyMemberAndDateRange(familyMemberId, startDate, endDate)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByFamilyMemberAndDateRange(familyMemberId, startDate, endDate)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for family member ID: $familyMemberId and date range", e)
@@ -443,7 +443,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/claim-status/$claimStatus - Retrieving medical expenses by claim status")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByClaimStatus(claimStatus)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByClaimStatus(claimStatus)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for claim status: $claimStatus", e)
@@ -458,7 +458,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/out-of-network - Retrieving out-of-network medical expenses")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findOutOfNetworkExpenses()
+            val medicalExpenses = medicalExpenseService.findOutOfNetworkExpenses()
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving out-of-network medical expenses", e)
@@ -473,7 +473,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/outstanding-balances - Retrieving outstanding patient balances")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findOutstandingPatientBalances()
+            val medicalExpenses = medicalExpenseService.findOutstandingPatientBalances()
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving outstanding patient balances", e)
@@ -488,7 +488,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/open-claims - Retrieving active open claims")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findActiveOpenClaims()
+            val medicalExpenses = medicalExpenseService.findActiveOpenClaims()
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving active open claims", e)
@@ -523,7 +523,7 @@ class MedicalExpenseController(
         claimStatus: ClaimStatus,
     ): ResponseEntity<Map<String, String>> =
         try {
-            val success = standardizedMedicalExpenseService.updateClaimStatus(medicalExpenseId, claimStatus)
+            val success = medicalExpenseService.updateClaimStatus(medicalExpenseId, claimStatus)
             if (success) {
                 ResponseEntity.ok(mapOf("message" to "Claim status updated successfully"))
             } else {
@@ -547,7 +547,7 @@ class MedicalExpenseController(
         logger.info("DELETE /medical-expenses/$medicalExpenseId - Soft deleting medical expense")
 
         return try {
-            val success = standardizedMedicalExpenseService.softDeleteMedicalExpense(medicalExpenseId)
+            val success = medicalExpenseService.softDeleteMedicalExpense(medicalExpenseId)
             if (success) {
                 ResponseEntity.ok(mapOf("message" to "Medical expense deleted successfully"))
             } else {
@@ -568,9 +568,9 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/totals/year/$year - Retrieving medical totals by year")
 
         return try {
-            val totalBilled = standardizedMedicalExpenseService.getTotalBilledAmountByYear(year)
-            val totalPatientResponsibility = standardizedMedicalExpenseService.getTotalPatientResponsibilityByYear(year)
-            val totalInsurancePaid = standardizedMedicalExpenseService.getTotalInsurancePaidByYear(year)
+            val totalBilled = medicalExpenseService.getTotalBilledAmountByYear(year)
+            val totalPatientResponsibility = medicalExpenseService.getTotalPatientResponsibilityByYear(year)
+            val totalInsurancePaid = medicalExpenseService.getTotalInsurancePaidByYear(year)
 
             val totals =
                 mapOf(
@@ -593,7 +593,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/claim-status-counts - Retrieving claim status counts")
 
         return try {
-            val statusCounts = standardizedMedicalExpenseService.getClaimStatusCounts()
+            val statusCounts = medicalExpenseService.getClaimStatusCounts()
             ResponseEntity.ok(statusCounts)
         } catch (e: Exception) {
             logger.error("Error retrieving claim status counts", e)
@@ -610,7 +610,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/procedure-code/$procedureCode - Retrieving medical expenses by procedure code")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByProcedureCode(procedureCode)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByProcedureCode(procedureCode)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for procedure code: $procedureCode", e)
@@ -627,7 +627,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/diagnosis-code/$diagnosisCode - Retrieving medical expenses by diagnosis code")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByDiagnosisCode(diagnosisCode)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByDiagnosisCode(diagnosisCode)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for diagnosis code: $diagnosisCode", e)
@@ -645,7 +645,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/date-range - Retrieving medical expenses by date range")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesByServiceDateRange(startDate, endDate)
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesByServiceDateRange(startDate, endDate)
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
             logger.error("Error retrieving medical expenses for date range", e)
@@ -664,7 +664,7 @@ class MedicalExpenseController(
         logger.info("POST /medical-expenses/$medicalExpenseId/payments/$transactionId - Linking payment transaction")
 
         return try {
-            val updatedExpense = standardizedMedicalExpenseService.linkPaymentTransaction(medicalExpenseId, transactionId)
+            val updatedExpense = medicalExpenseService.linkPaymentTransaction(medicalExpenseId, transactionId)
             logger.info("Successfully linked transaction $transactionId to medical expense $medicalExpenseId")
             ResponseEntity.ok(updatedExpense)
         } catch (e: DuplicateMedicalExpenseException) {
@@ -688,7 +688,7 @@ class MedicalExpenseController(
         logger.info("DELETE /medical-expenses/$medicalExpenseId/payments - Unlinking payment transaction")
 
         return try {
-            val updatedExpense = standardizedMedicalExpenseService.unlinkPaymentTransaction(medicalExpenseId)
+            val updatedExpense = medicalExpenseService.unlinkPaymentTransaction(medicalExpenseId)
             logger.info("Successfully unlinked payment transaction from medical expense $medicalExpenseId")
             ResponseEntity.ok(updatedExpense)
         } catch (e: IllegalArgumentException) {
@@ -709,7 +709,7 @@ class MedicalExpenseController(
         logger.info("PUT /medical-expenses/$medicalExpenseId/sync-payment - Syncing payment amount")
 
         return try {
-            val updatedExpense = standardizedMedicalExpenseService.updatePaidAmount(medicalExpenseId)
+            val updatedExpense = medicalExpenseService.updatePaidAmount(medicalExpenseId)
             logger.info("Successfully synced payment amount for medical expense $medicalExpenseId")
             ResponseEntity.ok(updatedExpense)
         } catch (e: IllegalArgumentException) {
@@ -728,7 +728,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/unpaid - Retrieving unpaid medical expenses")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findUnpaidMedicalExpenses()
+            val medicalExpenses = medicalExpenseService.findUnpaidMedicalExpenses()
             logger.info("Successfully retrieved ${medicalExpenses.size} unpaid medical expenses")
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
@@ -744,7 +744,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/partially-paid - Retrieving partially paid medical expenses")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findPartiallyPaidMedicalExpenses()
+            val medicalExpenses = medicalExpenseService.findPartiallyPaidMedicalExpenses()
             logger.info("Successfully retrieved ${medicalExpenses.size} partially paid medical expenses")
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
@@ -760,7 +760,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/fully-paid - Retrieving fully paid medical expenses")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findFullyPaidMedicalExpenses()
+            val medicalExpenses = medicalExpenseService.findFullyPaidMedicalExpenses()
             logger.info("Successfully retrieved ${medicalExpenses.size} fully paid medical expenses")
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
@@ -776,7 +776,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/without-transaction - Retrieving medical expenses without linked transactions")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findMedicalExpensesWithoutTransaction()
+            val medicalExpenses = medicalExpenseService.findMedicalExpensesWithoutTransaction()
             logger.info("Successfully retrieved ${medicalExpenses.size} medical expenses without transactions")
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
@@ -792,7 +792,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/overpaid - Retrieving overpaid medical expenses")
 
         return try {
-            val medicalExpenses = standardizedMedicalExpenseService.findOverpaidMedicalExpenses()
+            val medicalExpenses = medicalExpenseService.findOverpaidMedicalExpenses()
             logger.info("Successfully retrieved ${medicalExpenses.size} overpaid medical expenses")
             ResponseEntity.ok(medicalExpenses)
         } catch (e: Exception) {
@@ -810,7 +810,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/totals/year/$year/paid - Retrieving total paid amount by year")
 
         return try {
-            val totalPaid = standardizedMedicalExpenseService.getTotalPaidAmountByYear(year)
+            val totalPaid = medicalExpenseService.getTotalPaidAmountByYear(year)
             val response = mapOf("totalPaid" to totalPaid, "year" to BigDecimal(year))
             ResponseEntity.ok(response)
         } catch (e: Exception) {
@@ -826,7 +826,7 @@ class MedicalExpenseController(
         logger.info("GET /medical-expenses/totals/unpaid-balance - Retrieving total unpaid balance")
 
         return try {
-            val totalUnpaid = standardizedMedicalExpenseService.getTotalUnpaidBalance()
+            val totalUnpaid = medicalExpenseService.getTotalUnpaidBalance()
             val response = mapOf("totalUnpaidBalance" to totalUnpaid)
             ResponseEntity.ok(response)
         } catch (e: Exception) {
