@@ -1,5 +1,6 @@
-# Use specific version for security and reproducibility  
-FROM openjdk:21-jdk-slim
+# Use specific version for security and reproducibility
+# Eclipse Temurin is the official OpenJDK distribution (replaces deprecated openjdk images)
+FROM eclipse-temurin:21-jdk-jammy
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
