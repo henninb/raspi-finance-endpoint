@@ -139,8 +139,8 @@ setup_proxmox_ssh() {
 
     log "Setting up SSH connectivity to Proxmox host..."
 
-    # Test SSH port connectivity
-    if ! nc -zv "$PROXMOX_HOST" 22 >/dev/null 2>&1; then
+    # Test SSH port connectivity using bash built-in (more portable than nc)
+    if ! timeout 3 bash -c "cat < /dev/null > /dev/tcp/$PROXMOX_HOST/22" 2>/dev/null; then
         log_error "Cannot connect to SSH port 22 on $PROXMOX_HOST"
         log "Please ensure:"
         log "1. Proxmox server is running at $PROXMOX_HOST"
