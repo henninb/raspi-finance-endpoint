@@ -5,7 +5,7 @@ import finance.controllers.dto.AccountInputDto
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.Account
 import finance.domain.AccountType
-import finance.services.StandardizedAccountService
+import finance.services.AccountService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 import java.math.BigDecimal
@@ -17,7 +17,7 @@ class AccountMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     def "createAccount mutation succeeds with valid input"() {
         given:

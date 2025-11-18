@@ -4,7 +4,7 @@ import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLQueryController
 import finance.domain.Account
 import finance.domain.AccountType
-import finance.services.StandardizedAccountService
+import finance.services.AccountService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 import java.math.BigDecimal
@@ -13,7 +13,7 @@ import java.sql.Timestamp
 class AccountQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     @Shared @Autowired
     GraphQLQueryController queryController

@@ -3,7 +3,7 @@ package finance.graphql
 import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.Parameter
-import finance.services.StandardizedParameterService
+import finance.services.ParameterService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 
@@ -13,7 +13,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedParameterService parameterService
+    ParameterService parameterService
 
     def "createParameter mutation succeeds with valid input"() {
         given:

@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.Category
 import finance.domain.ServiceResult
-import finance.services.StandardizedCategoryService
+import finance.services.CategoryService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -27,7 +27,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/category")
 class CategoryController(
-    private val standardizedCategoryService: StandardizedCategoryService,
+    private val categoryService: CategoryService,
 ) : StandardizedBaseController(),
     StandardRestController<Category, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -46,7 +46,7 @@ class CategoryController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Category>> =
-        when (val result = standardizedCategoryService.findAllActive()) {
+        when (val result = categoryService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active categories")
                 ResponseEntity.ok(result.data)
@@ -81,7 +81,7 @@ class CategoryController(
     override fun findById(
         @PathVariable("categoryName") id: String,
     ): ResponseEntity<Category> =
-        when (val result = standardizedCategoryService.findByCategoryNameStandardized(id)) {
+        when (val result = categoryService.findByCategoryNameStandardized(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved category: $id")
                 ResponseEntity.ok(result.data)
@@ -117,7 +117,7 @@ class CategoryController(
     override fun save(
         @Valid @RequestBody entity: Category,
     ): ResponseEntity<Category> =
-        when (val result = standardizedCategoryService.save(entity)) {
+        when (val result = categoryService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Category created successfully: ${entity.categoryName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -160,7 +160,7 @@ class CategoryController(
         @Valid @RequestBody entity: Category,
     ): ResponseEntity<Category> {
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedCategoryService.update(entity)) {
+        return when (val result = categoryService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Category updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -205,9 +205,9 @@ class CategoryController(
         @PathVariable("categoryName") id: String,
     ): ResponseEntity<Category> {
         // First get the category to return it after deletion
-        return when (val findResult = standardizedCategoryService.findByCategoryNameStandardized(id)) {
+        return when (val findResult = categoryService.findByCategoryNameStandardized(id)) {
             is ServiceResult.Success -> {
-                when (val deleteResult = standardizedCategoryService.deleteByCategoryNameStandardized(id)) {
+                when (val deleteResult = categoryService.deleteByCategoryNameStandardized(id)) {
                     is ServiceResult.Success -> {
                         logger.info("Category deleted successfully: $id")
                         ResponseEntity.ok(findResult.data)
@@ -256,7 +256,7 @@ class CategoryController(
     ): ResponseEntity<Category> =
         try {
             logger.info("Merging categories: $categoryName2 into $categoryName1")
-            val mergedCategory = standardizedCategoryService.mergeCategories(categoryName1, categoryName2)
+            val mergedCategory = categoryService.mergeCategories(categoryName1, categoryName2)
             logger.info("Categories merged successfully: $categoryName2 into $categoryName1")
             ResponseEntity.ok(mergedCategory)
         } catch (ex: Exception) {

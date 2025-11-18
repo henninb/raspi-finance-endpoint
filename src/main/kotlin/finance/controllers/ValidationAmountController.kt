@@ -3,7 +3,7 @@ package finance.controllers
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-import finance.services.StandardizedValidationAmountService
+import finance.services.ValidationAmountService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -28,7 +28,7 @@ import java.util.Locale
 @RestController
 @RequestMapping("/api/validation/amount")
 class ValidationAmountController(
-    private var standardizedValidationAmountService: StandardizedValidationAmountService,
+    private var validationAmountService: ValidationAmountService,
 ) : StandardizedBaseController(),
     StandardRestController<ValidationAmount, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -77,9 +77,9 @@ class ValidationAmountController(
         // Use filtered method if any parameters provided, otherwise use standard method
         val result =
             if (accountNameOwner != null || state != null) {
-                standardizedValidationAmountService.findAllActiveFiltered(accountNameOwner, state)
+                validationAmountService.findAllActiveFiltered(accountNameOwner, state)
             } else {
-                standardizedValidationAmountService.findAllActive()
+                validationAmountService.findAllActive()
             }
 
         return when (result) {
@@ -123,7 +123,7 @@ class ValidationAmountController(
     override fun findById(
         @PathVariable("validationId") id: Long,
     ): ResponseEntity<ValidationAmount> =
-        when (val result = standardizedValidationAmountService.findById(id)) {
+        when (val result = validationAmountService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved validation amount: $id")
                 ResponseEntity.ok(result.data)
@@ -159,7 +159,7 @@ class ValidationAmountController(
     override fun save(
         @Valid @RequestBody entity: ValidationAmount,
     ): ResponseEntity<ValidationAmount> =
-        when (val result = standardizedValidationAmountService.save(entity)) {
+        when (val result = validationAmountService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount created successfully: ${result.data.validationId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -204,7 +204,7 @@ class ValidationAmountController(
         // Ensure the validationId in the path matches the entity
         entity.validationId = id
 
-        return when (val result = standardizedValidationAmountService.update(entity)) {
+        return when (val result = validationAmountService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -245,7 +245,7 @@ class ValidationAmountController(
         @PathVariable("validationId") id: Long,
     ): ResponseEntity<ValidationAmount> {
         // First check if the validation amount exists
-        val findResult = standardizedValidationAmountService.findById(id)
+        val findResult = validationAmountService.findById(id)
         if (findResult !is ServiceResult.Success) {
             logger.warn("Validation amount not found for deletion: $id")
             return ResponseEntity.notFound().build<ValidationAmount>()
@@ -253,7 +253,7 @@ class ValidationAmountController(
 
         val validationAmountToDelete = findResult.data
 
-        return when (val result = standardizedValidationAmountService.deleteById(id)) {
+        return when (val result = validationAmountService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount deleted successfully: $id")
                 ResponseEntity.ok(validationAmountToDelete)
@@ -286,7 +286,7 @@ class ValidationAmountController(
     ): ResponseEntity<*> =
         try {
             val validationAmountResponse =
-                standardizedValidationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
+                validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
 
             logger.info("ValidationAmount inserted successfully")
             logger.info(mapper.writeValueAsString(validationAmountResponse))
@@ -322,7 +322,7 @@ class ValidationAmountController(
                     .lowercase()
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
             val validationAmount =
-                standardizedValidationAmountService.findValidationAmountByAccountNameOwner(
+                validationAmountService.findValidationAmountByAccountNameOwner(
                     accountNameOwner,
                     TransactionState.valueOf(newTransactionStateValue),
                 )

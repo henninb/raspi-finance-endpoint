@@ -3,14 +3,14 @@ package finance.graphql
 import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLQueryController
 import finance.domain.Parameter
-import finance.services.StandardizedParameterService
+import finance.services.ParameterService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
 class ParameterQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedParameterService parameterService
+    ParameterService parameterService
 
     @Shared @Autowired
     GraphQLQueryController queryController

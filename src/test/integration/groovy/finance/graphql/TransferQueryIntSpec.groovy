@@ -7,7 +7,7 @@ import finance.domain.Transfer
 import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.TransferRepository
-import finance.services.StandardizedTransferService
+import finance.services.TransferService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
@@ -18,7 +18,7 @@ import java.util.UUID
 class TransferQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedTransferService transferService
+    TransferService transferService
 
     @Shared @Autowired
     AccountRepository accountRepository

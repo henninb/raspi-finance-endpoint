@@ -5,7 +5,7 @@ import finance.controllers.dto.MedicalExpenseInputDto
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
-import finance.services.StandardizedMedicalExpenseService
+import finance.services.MedicalExpenseService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 import java.math.BigDecimal
@@ -17,7 +17,7 @@ class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedMedicalExpenseService medicalExpenseService
+    MedicalExpenseService medicalExpenseService
 
     def "createMedicalExpense mutation succeeds with valid input"() {
         given:

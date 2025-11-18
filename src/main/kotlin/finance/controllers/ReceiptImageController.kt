@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
-import finance.services.StandardizedReceiptImageService
+import finance.services.ReceiptImageService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/receipt/image")
 class ReceiptImageController(
-    private val standardizedReceiptImageService: StandardizedReceiptImageService,
+    private val receiptImageService: ReceiptImageService,
 ) : StandardizedBaseController(),
     StandardRestController<ReceiptImage, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -43,7 +43,7 @@ class ReceiptImageController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<ReceiptImage>> =
-        when (val result = standardizedReceiptImageService.findAllActive()) {
+        when (val result = receiptImageService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active receipt images (standardized)")
                 ResponseEntity.ok(result.data)
@@ -78,7 +78,7 @@ class ReceiptImageController(
     override fun findById(
         @PathVariable("receiptImageId") id: Long,
     ): ResponseEntity<ReceiptImage> =
-        when (val result = standardizedReceiptImageService.findById(id)) {
+        when (val result = receiptImageService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved receipt image: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -114,7 +114,7 @@ class ReceiptImageController(
     override fun save(
         @Valid @RequestBody entity: ReceiptImage,
     ): ResponseEntity<ReceiptImage> =
-        when (val result = standardizedReceiptImageService.save(entity)) {
+        when (val result = receiptImageService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Receipt image created successfully: ${result.data.receiptImageId} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -157,7 +157,7 @@ class ReceiptImageController(
         @Valid @RequestBody entity: ReceiptImage,
     ): ResponseEntity<ReceiptImage> {
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedReceiptImageService.update(entity)) {
+        return when (val result = receiptImageService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Receipt image updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -202,13 +202,13 @@ class ReceiptImageController(
         @PathVariable("receiptImageId") id: Long,
     ): ResponseEntity<ReceiptImage> {
         // First get the receipt image to return it
-        val receiptImageResult = standardizedReceiptImageService.findById(id)
+        val receiptImageResult = receiptImageService.findById(id)
         if (receiptImageResult !is ServiceResult.Success) {
             logger.warn("Receipt image not found for deletion: $id")
             return ResponseEntity.notFound().build()
         }
 
-        return when (val result = standardizedReceiptImageService.deleteById(id)) {
+        return when (val result = receiptImageService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Receipt image deleted successfully: $id")
                 ResponseEntity.ok(receiptImageResult.data)

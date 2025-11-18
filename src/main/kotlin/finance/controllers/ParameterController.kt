@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.Parameter
 import finance.domain.ServiceResult
-import finance.services.StandardizedParameterService
+import finance.services.ParameterService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/parameter")
 class ParameterController(
-    private val standardizedParameterService: StandardizedParameterService,
+    private val parameterService: ParameterService,
 ) : StandardizedBaseController(),
     StandardRestController<Parameter, String> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -44,7 +44,7 @@ class ParameterController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Parameter>> =
-        when (val result = standardizedParameterService.findAllActive()) {
+        when (val result = parameterService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active parameters")
                 ResponseEntity.ok(result.data)
@@ -79,7 +79,7 @@ class ParameterController(
     override fun findById(
         @PathVariable("parameterName") id: String,
     ): ResponseEntity<Parameter> =
-        when (val result = standardizedParameterService.findByParameterNameStandardized(id)) {
+        when (val result = parameterService.findByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved parameter: $id")
                 ResponseEntity.ok(result.data)
@@ -115,7 +115,7 @@ class ParameterController(
     override fun save(
         @Valid @RequestBody entity: Parameter,
     ): ResponseEntity<Parameter> =
-        when (val result = standardizedParameterService.save(entity)) {
+        when (val result = parameterService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Parameter created successfully: ${entity.parameterName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -158,7 +158,7 @@ class ParameterController(
         @Valid @RequestBody entity: Parameter,
     ): ResponseEntity<Parameter> {
         // First check if parameter exists
-        return when (val existsResult = standardizedParameterService.findByParameterNameStandardized(id)) {
+        return when (val existsResult = parameterService.findByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
                 // Parameter exists, proceed with update
                 val existingParameter = existsResult.data
@@ -170,7 +170,7 @@ class ParameterController(
                         activeStatus = entity.activeStatus,
                     )
 
-                when (val updateResult = standardizedParameterService.update(updatedParameter)) {
+                when (val updateResult = parameterService.update(updatedParameter)) {
                     is ServiceResult.Success -> {
                         logger.info("Parameter updated successfully: $id")
                         ResponseEntity.ok(updateResult.data)
@@ -225,11 +225,11 @@ class ParameterController(
         @PathVariable("parameterName") id: String,
     ): ResponseEntity<Parameter> {
         // First get the parameter to return it after deletion
-        return when (val findResult = standardizedParameterService.findByParameterNameStandardized(id)) {
+        return when (val findResult = parameterService.findByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
                 val parameterToDelete = findResult.data
 
-                when (val deleteResult = standardizedParameterService.deleteByParameterNameStandardized(id)) {
+                when (val deleteResult = parameterService.deleteByParameterNameStandardized(id)) {
                     is ServiceResult.Success -> {
                         logger.info("Parameter deleted successfully: $id")
                         ResponseEntity.ok(parameterToDelete)

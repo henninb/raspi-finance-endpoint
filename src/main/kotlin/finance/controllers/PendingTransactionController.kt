@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
-import finance.services.StandardizedPendingTransactionService
+import finance.services.PendingTransactionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -26,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/pending/transaction")
 class PendingTransactionController(
-    private val pendingTransactionService: StandardizedPendingTransactionService,
+    private val pendingTransactionService: PendingTransactionService,
 ) : StandardizedBaseController(),
     StandardRestController<PendingTransaction, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====

@@ -4,7 +4,7 @@ import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLQueryController
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
-import finance.services.StandardizedMedicalExpenseService
+import finance.services.MedicalExpenseService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 import java.math.BigDecimal
@@ -13,7 +13,7 @@ import java.sql.Date
 class MedicalExpenseQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedMedicalExpenseService medicalExpenseService
+    MedicalExpenseService medicalExpenseService
 
     @Shared @Autowired
     GraphQLQueryController queryController

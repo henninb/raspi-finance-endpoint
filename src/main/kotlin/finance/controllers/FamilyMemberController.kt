@@ -3,7 +3,7 @@ package finance.controllers
 import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.domain.ServiceResult
-import finance.services.StandardizedFamilyMemberService
+import finance.services.FamilyMemberService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -28,7 +28,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/api/family-members")
 open class FamilyMemberController(
-    private val standardizedFamilyMemberService: StandardizedFamilyMemberService,
+    private val familyMemberService: FamilyMemberService,
 ) : StandardizedBaseController(),
     StandardRestController<FamilyMember, Long> {
     // ===== STANDARDIZED CRUD ENDPOINTS =====
@@ -47,7 +47,7 @@ open class FamilyMemberController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<FamilyMember>> =
-        when (val result = standardizedFamilyMemberService.findAllActive()) {
+        when (val result = familyMemberService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active family members")
                 ResponseEntity.ok(result.data)
@@ -82,7 +82,7 @@ open class FamilyMemberController(
     override fun findById(
         @PathVariable("familyMemberId") id: Long,
     ): ResponseEntity<FamilyMember> =
-        when (val result = standardizedFamilyMemberService.findByIdServiceResult(id)) {
+        when (val result = familyMemberService.findByIdServiceResult(id)) {
             is ServiceResult.Success<FamilyMember> -> {
                 logger.info("Retrieved family member: $id")
                 ResponseEntity.ok(result.data)
@@ -118,7 +118,7 @@ open class FamilyMemberController(
     override fun save(
         @Valid @RequestBody entity: FamilyMember,
     ): ResponseEntity<FamilyMember> =
-        when (val result = standardizedFamilyMemberService.save(entity)) {
+        when (val result = familyMemberService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Family member created successfully: ${entity.memberName} for owner: ${entity.owner}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -161,7 +161,7 @@ open class FamilyMemberController(
         @Valid @RequestBody entity: FamilyMember,
     ): ResponseEntity<FamilyMember> {
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedFamilyMemberService.update(entity)) {
+        return when (val result = familyMemberService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Family member updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -207,11 +207,11 @@ open class FamilyMemberController(
         @PathVariable("familyMemberId") id: Long,
     ): ResponseEntity<FamilyMember> {
         // First get the family member to return it after deletion (regardless of active status)
-        return when (val findResult = standardizedFamilyMemberService.findByIdAnyStatus(id)) {
+        return when (val findResult = familyMemberService.findByIdAnyStatus(id)) {
             is ServiceResult.Success<FamilyMember> -> {
                 val memberToDelete = findResult.data
 
-                when (val deleteResult = standardizedFamilyMemberService.deleteByIdAnyStatus(id)) {
+                when (val deleteResult = familyMemberService.deleteByIdAnyStatus(id)) {
                     is ServiceResult.Success<Boolean> -> {
                         logger.info("Family member deleted successfully: $id")
                         ResponseEntity.ok(memberToDelete)
@@ -254,7 +254,7 @@ open class FamilyMemberController(
     @GetMapping("/owner/{owner}", produces = ["application/json"])
     fun byOwner(
         @PathVariable owner: String,
-    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findByOwner(owner))
+    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(familyMemberService.findByOwner(owner))
 
     /**
      * GET /api/family-members/owner/{owner}/relationship/{relationship}
@@ -264,7 +264,7 @@ open class FamilyMemberController(
     fun byOwnerAndRelationship(
         @PathVariable owner: String,
         @PathVariable relationship: FamilyRelationship,
-    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(standardizedFamilyMemberService.findByOwnerAndRelationship(owner, relationship))
+    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(familyMemberService.findByOwnerAndRelationship(owner, relationship))
 
     /**
      * PUT /api/family-members/{id}/activate
@@ -276,7 +276,7 @@ open class FamilyMemberController(
     ): ResponseEntity<Map<String, String>> =
         try {
             logger.info("Activating family member: $id")
-            val ok = standardizedFamilyMemberService.updateActiveStatus(id, true)
+            val ok = familyMemberService.updateActiveStatus(id, true)
             if (ok) {
                 logger.info("Family member activated successfully: $id")
                 ResponseEntity.ok(mapOf("message" to "Family member activated"))
@@ -299,7 +299,7 @@ open class FamilyMemberController(
     ): ResponseEntity<Map<String, String>> =
         try {
             logger.info("Deactivating family member: $id")
-            val ok = standardizedFamilyMemberService.updateActiveStatus(id, false)
+            val ok = familyMemberService.updateActiveStatus(id, false)
             if (ok) {
                 logger.info("Family member deactivated successfully: $id")
                 ResponseEntity.ok(mapOf("message" to "Family member deactivated"))

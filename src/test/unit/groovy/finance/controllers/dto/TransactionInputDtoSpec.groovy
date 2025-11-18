@@ -8,7 +8,7 @@ import finance.domain.TransactionType
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
 
-import java.sql.Date
+import java.time.LocalDate
 
 class TransactionInputDtoSpec extends BaseDomainSpec {
 
@@ -17,7 +17,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
         def accountNameOwner = "checking_primary"
         def accountType = AccountType.Debit
         def transactionType = TransactionType.Expense
-        def transactionDate = Date.valueOf("2024-01-15")
+        def transactionDate = LocalDate.of(2024, 1, 15)
         def description = "grocery store"
         def category = "groceries"
         def amount = new BigDecimal("100.50")
@@ -64,7 +64,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             accountNameOwner,
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -94,7 +94,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -123,7 +123,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             description,
             "groceries",
             new BigDecimal("100.00"),
@@ -154,7 +154,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             category,
             new BigDecimal("100.00"),
@@ -185,7 +185,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             amount,
@@ -214,7 +214,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             null, // accountType - required
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -240,7 +240,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -270,7 +270,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -298,7 +298,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -330,7 +330,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),
@@ -338,7 +338,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             true,
             ReoccurringType.Monthly,
             "test notes",
-            Date.valueOf("2024-02-15"),
+            LocalDate.of(2024, 2, 15),
             789L
         )
 
@@ -349,7 +349,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
         dto.activeStatus == true
         dto.reoccurringType == ReoccurringType.Monthly
         dto.notes == "test notes"
-        dto.dueDate == Date.valueOf("2024-02-15")
+        dto.dueDate == LocalDate.of(2024, 2, 15)
         dto.receiptImageId == 789L
     }
 
@@ -363,7 +363,7 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
             AccountType.Debit,
             TransactionType.Expense,
             "checking_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             "test description",
             "groceries",
             new BigDecimal("100.00"),

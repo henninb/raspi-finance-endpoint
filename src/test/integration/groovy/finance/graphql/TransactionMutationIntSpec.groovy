@@ -9,8 +9,8 @@ import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.domain.TransactionType
-import finance.services.StandardizedAccountService
-import finance.services.StandardizedTransactionService
+import finance.services.AccountService
+import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
 import java.math.BigDecimal
@@ -23,10 +23,10 @@ class TransactionMutationIntSpec extends BaseIntegrationSpec {
     GraphQLMutationController mutationController
 
     @Autowired
-    StandardizedTransactionService transactionService
+    TransactionService transactionService
 
     @Autowired
-    StandardizedAccountService accountService
+    AccountService accountService
 
     def "createTransaction mutation succeeds with valid input"() {
         given:

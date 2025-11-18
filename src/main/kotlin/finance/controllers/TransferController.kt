@@ -2,7 +2,7 @@ package finance.controllers
 
 import finance.domain.ServiceResult
 import finance.domain.Transfer
-import finance.services.StandardizedTransferService
+import finance.services.TransferService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -27,7 +27,7 @@ import java.util.Optional
 @RestController
 @RequestMapping("/api/transfer")
 class TransferController(
-    private var standardizedTransferService: StandardizedTransferService,
+    private var transferService: TransferService,
 ) : StandardizedBaseController(),
     StandardRestController<Transfer, Long> {
     // ===== STANDARDIZED ENDPOINTS (NEW) =====
@@ -46,7 +46,7 @@ class TransferController(
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Transfer>> =
-        when (val result = standardizedTransferService.findAllActive()) {
+        when (val result = transferService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active transfers")
                 ResponseEntity.ok(result.data)
@@ -81,7 +81,7 @@ class TransferController(
     override fun findById(
         @PathVariable("transferId") id: Long,
     ): ResponseEntity<Transfer> =
-        when (val result = standardizedTransferService.findById(id)) {
+        when (val result = transferService.findById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved transfer: $id")
                 ResponseEntity.ok(result.data)
@@ -117,7 +117,7 @@ class TransferController(
     override fun save(
         @Valid @RequestBody entity: Transfer,
     ): ResponseEntity<Transfer> =
-        when (val result = standardizedTransferService.save(entity)) {
+        when (val result = transferService.save(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer created successfully: ${result.data.transferId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
@@ -163,7 +163,7 @@ class TransferController(
         entity.transferId = id
 
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = standardizedTransferService.update(entity)) {
+        return when (val result = transferService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer updated successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -209,7 +209,7 @@ class TransferController(
     ): ResponseEntity<Transfer> {
         // First, retrieve the transfer to return it
         val transferToDelete =
-            when (val findResult = standardizedTransferService.findById(id)) {
+            when (val findResult = transferService.findById(id)) {
                 is ServiceResult.Success -> findResult.data
                 is ServiceResult.NotFound -> {
                     logger.warn("Transfer not found for deletion: $id")
@@ -222,7 +222,7 @@ class TransferController(
             }
 
         // Then delete it
-        return when (val deleteResult = standardizedTransferService.deleteById(id)) {
+        return when (val deleteResult = transferService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer deleted successfully: $id")
                 ResponseEntity.ok(transferToDelete)

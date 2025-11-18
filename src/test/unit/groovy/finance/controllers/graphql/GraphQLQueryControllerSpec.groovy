@@ -12,43 +12,43 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.domain.Transfer
 import finance.domain.ValidationAmount
-import finance.services.StandardizedAccountService
-import finance.services.StandardizedCategoryService
-import finance.services.StandardizedDescriptionService
-import finance.services.StandardizedMedicalExpenseService
-import finance.services.StandardizedParameterService
-import finance.services.StandardizedPaymentService
-import finance.services.StandardizedReceiptImageService
-import finance.services.StandardizedTransactionService
-import finance.services.StandardizedTransferService
-import finance.services.StandardizedValidationAmountService
+import finance.services.AccountService
+import finance.services.CategoryService
+import finance.services.DescriptionService
+import finance.services.MedicalExpenseService
+import finance.services.ParameterService
+import finance.services.PaymentService
+import finance.services.ReceiptImageService
+import finance.services.TransactionService
+import finance.services.TransferService
+import finance.services.ValidationAmountService
 import spock.lang.Specification
 
 class GraphQLQueryControllerSpec extends Specification {
 
     GraphQLQueryController controller
-    StandardizedAccountService mockAccountService
-    StandardizedCategoryService mockCategoryService
-    StandardizedDescriptionService mockDescriptionService
-    StandardizedMedicalExpenseService mockMedicalExpenseService
-    StandardizedParameterService mockParameterService
-    StandardizedPaymentService mockPaymentService
-    StandardizedTransactionService mockTransactionService
-    StandardizedTransferService mockTransferService
-    StandardizedReceiptImageService mockReceiptImageService
-    StandardizedValidationAmountService mockValidationAmountService
+    AccountService mockAccountService
+    CategoryService mockCategoryService
+    DescriptionService mockDescriptionService
+    MedicalExpenseService mockMedicalExpenseService
+    ParameterService mockParameterService
+    PaymentService mockPaymentService
+    TransactionService mockTransactionService
+    TransferService mockTransferService
+    ReceiptImageService mockReceiptImageService
+    ValidationAmountService mockValidationAmountService
 
     def setup() {
-        mockAccountService = Mock(StandardizedAccountService)
-        mockCategoryService = Mock(StandardizedCategoryService)
-        mockDescriptionService = Mock(StandardizedDescriptionService)
-        mockMedicalExpenseService = Mock(StandardizedMedicalExpenseService)
-        mockParameterService = Mock(StandardizedParameterService)
-        mockPaymentService = Mock(StandardizedPaymentService)
-        mockTransactionService = Mock(StandardizedTransactionService)
-        mockTransferService = Mock(StandardizedTransferService)
-        mockReceiptImageService = Mock(StandardizedReceiptImageService)
-        mockValidationAmountService = Mock(StandardizedValidationAmountService)
+        mockAccountService = Mock(AccountService)
+        mockCategoryService = Mock(CategoryService)
+        mockDescriptionService = Mock(DescriptionService)
+        mockMedicalExpenseService = Mock(MedicalExpenseService)
+        mockParameterService = Mock(ParameterService)
+        mockPaymentService = Mock(PaymentService)
+        mockTransactionService = Mock(TransactionService)
+        mockTransferService = Mock(TransferService)
+        mockReceiptImageService = Mock(ReceiptImageService)
+        mockValidationAmountService = Mock(ValidationAmountService)
 
         controller = new GraphQLQueryController(
             mockAccountService,

@@ -293,4 +293,28 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         thrown(ConstraintViolationException)
     }
 
+    void 'test account repository custom queries'() {
+        given:
+        Account creditAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("credittest")
+            .asCredit()
+            .withOutstanding(new BigDecimal("100.00"))
+            .withFuture(new BigDecimal("50.00"))
+            .withMoniker("5000")
+            .buildAndValidate()
+
+        accountRepository.save(creditAccount)
+
+        when:
+        List<Account> accountsRequiringPayment = accountRepository.findAccountsThatRequirePayment(true, AccountType.Credit)
+
+        then:
+        accountsRequiringPayment.size() >= 1
+        accountsRequiringPayment.any { it.accountNameOwner.contains(testOwner.replaceAll(/[^a-z]/, '')) }
+        accountsRequiringPayment.every {
+            it.accountType == AccountType.Credit &&
+            (it.outstanding > BigDecimal.ZERO || it.future > BigDecimal.ZERO || it.cleared > BigDecimal.ZERO)
+        }
+    }
+
 }

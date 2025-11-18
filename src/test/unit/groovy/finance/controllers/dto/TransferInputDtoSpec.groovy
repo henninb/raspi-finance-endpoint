@@ -4,7 +4,7 @@ import finance.domain.BaseDomainSpec
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
 
-import java.sql.Date
+import java.time.LocalDate
 
 class TransferInputDtoSpec extends BaseDomainSpec {
 
@@ -12,7 +12,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
         given:
         def sourceAccount = "checking_primary"
         def destinationAccount = "savings_primary"
-        def transactionDate = Date.valueOf("2024-01-15")
+        def transactionDate = LocalDate.of(2024, 1, 15)
         def amount = new BigDecimal("250.00")
         def guidSource = "11111111-2222-3333-4444-555555555555"
         def guidDestination = "66666666-7777-8888-9999-000000000000"
@@ -47,7 +47,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             null,
             null,
@@ -68,7 +68,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             sourceAccount,
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             null,
             null,
@@ -93,7 +93,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             destinationAccount,
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             null,
             null,
@@ -140,7 +140,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             amount,
             null,
             null,
@@ -164,7 +164,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("0.01"),
             null,
             null,
@@ -185,7 +185,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             guidSource,
             null,
@@ -217,7 +217,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             null,
             guidDestination,
@@ -248,7 +248,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             "11111111-2222-3333-4444-555555555555",
             "66666666-7777-8888-9999-000000000000",
@@ -268,7 +268,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             null,
             null,
@@ -288,7 +288,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("200.00"),
             null,
             null,
@@ -308,7 +308,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             null,
             "checking_primary",
             "savings_primary",
-            Date.valueOf("2024-01-15"),
+            LocalDate.of(2024, 1, 15),
             new BigDecimal("99999999.99"),
             null,
             null,

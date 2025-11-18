@@ -3,14 +3,14 @@ package finance.graphql
 import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLQueryController
 import finance.domain.Category
-import finance.services.StandardizedCategoryService
+import finance.services.CategoryService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
 class CategoryQueryIntSpec extends BaseIntegrationSpec {
 
     @Shared @Autowired
-    StandardizedCategoryService categoryService
+    CategoryService categoryService
 
     @Shared @Autowired
     GraphQLQueryController queryController
