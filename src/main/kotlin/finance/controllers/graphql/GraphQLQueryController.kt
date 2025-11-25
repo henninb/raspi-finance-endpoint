@@ -251,6 +251,7 @@ class GraphQLQueryController(
                 logger.debug("GraphQL - Found receiptImage for transaction: {}", transaction.transactionId)
                 result.data
             }
+
             else -> {
                 logger.debug("GraphQL - No receiptImage found for transaction: {}", transaction.transactionId)
                 null

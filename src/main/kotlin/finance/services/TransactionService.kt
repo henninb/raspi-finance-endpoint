@@ -279,7 +279,10 @@ class TransactionService(
                             else -> throw ReceiptImageException("Failed to update receipt image for transaction ${transaction.guid}: $updateResult")
                         }
                     }
-                    else -> throw ReceiptImageException("Failed to find receipt image for transaction ${transaction.guid}: $receiptImageResult")
+
+                    else -> {
+                        throw ReceiptImageException("Failed to find receipt image for transaction ${transaction.guid}: $receiptImageResult")
+                    }
                 }
             }
 
@@ -357,12 +360,14 @@ class TransactionService(
                         logger.info("Successfully deleted receipt image for transaction GUID: ${transaction.guid}")
                         return true
                     }
+
                     else -> {
                         logger.warn("Failed to delete receipt image with ID: $receiptImageId: $deleteResult")
                         return false
                     }
                 }
             }
+
             else -> {
                 logger.warn("Receipt image not found with ID: $receiptImageId: $receiptImageResult")
                 return false
@@ -481,10 +486,14 @@ class TransactionService(
     ): Page<Transaction> {
         val result = findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
         return when (result) {
-            is ServiceResult.Success -> result.data
-            else ->
+            is ServiceResult.Success -> {
+                result.data
+            }
+
+            else -> {
                 org.springframework.data.domain.Page
                     .empty(pageable)
+            }
         }
     }
 
@@ -517,6 +526,7 @@ class TransactionService(
                         transaction.categories.add(result.data)
                         logger.info("Using existing category: ${transaction.category}")
                     }
+
                     else -> {
                         logger.info("Creating new category: ${transaction.category}")
                         val category = createDefaultCategory(transaction.category)
@@ -525,6 +535,7 @@ class TransactionService(
                                 logger.info("Created new category: ${transaction.category}")
                                 transaction.categories.add(saveResult.data)
                             }
+
                             else -> {
                                 logger.error("Failed to create category: ${transaction.category}")
                             }
@@ -542,6 +553,7 @@ class TransactionService(
                     is ServiceResult.Success -> {
                         // Found existing description; nothing to do here
                     }
+
                     else -> {
                         logger.info("Creating new description: ${transaction.description}")
                         val description = createDefaultDescription(transaction.description)

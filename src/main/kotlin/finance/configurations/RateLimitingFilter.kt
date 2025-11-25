@@ -129,10 +129,14 @@ class RateLimitingFilter : OncePerRequestFilter() {
                     val forwardedIp = xForwardedFor.split(",")[0].trim()
                     if (isValidIpAddress(forwardedIp)) forwardedIp else clientIp
                 }
+
                 !xRealIp.isNullOrBlank() -> {
                     if (isValidIpAddress(xRealIp)) xRealIp else clientIp
                 }
-                else -> clientIp
+
+                else -> {
+                    clientIp
+                }
             }
         } else {
             // For untrusted sources, only use the direct connection IP

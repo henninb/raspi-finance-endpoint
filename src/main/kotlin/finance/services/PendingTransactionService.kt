@@ -55,7 +55,7 @@ class PendingTransactionService(
 
     override fun update(entity: PendingTransaction): ServiceResult<PendingTransaction> =
         handleServiceOperation("update", entity.pendingTransactionId) {
-            val existingTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(entity.pendingTransactionId!!)
+            val existingTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(entity.pendingTransactionId)
             if (existingTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: ${entity.pendingTransactionId}")
             }
@@ -96,7 +96,10 @@ class PendingTransactionService(
     fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
         val result = save(pendingTransaction)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             is ServiceResult.ValidationError -> {
                 val violations =
                     result.errors
@@ -132,7 +135,10 @@ class PendingTransactionService(
                         }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
-            else -> throw RuntimeException("Failed to insert pending transaction: $result")
+
+            else -> {
+                throw RuntimeException("Failed to insert pending transaction: $result")
+            }
         }
     }
 

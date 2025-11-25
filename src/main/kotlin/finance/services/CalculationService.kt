@@ -50,14 +50,17 @@ open class CalculationService(
                             totalsFuture = amount.setScale(2, RoundingMode.HALF_UP)
                             logger.debug("Future totals: $totalsFuture")
                         }
+
                         "cleared" -> {
                             totalsCleared = amount.setScale(2, RoundingMode.HALF_UP)
                             logger.debug("Cleared totals: $totalsCleared")
                         }
+
                         "outstanding" -> {
                             totalsOutstanding = amount.setScale(2, RoundingMode.HALF_UP)
                             logger.debug("Outstanding totals: $totalsOutstanding")
                         }
+
                         else -> {
                             logger.debug("Unknown transaction state: $transactionState, amount: $amount")
                         }
@@ -87,7 +90,7 @@ open class CalculationService(
 
             transactions.forEach { transaction ->
                 val state = transaction.transactionState
-                val amount = transaction.amount ?: BigDecimal.ZERO
+                val amount = transaction.amount
 
                 val currentTotal = totalsMap[state] ?: BigDecimal.ZERO
                 val newTotal = currentTotal.add(amount).setScale(2, RoundingMode.HALF_UP)

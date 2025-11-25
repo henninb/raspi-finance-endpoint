@@ -91,13 +91,18 @@ class PaymentService(
                         entity.guidDestination = destinationResult.data.guid
                         logger.debug("Destination transaction created: ${destinationResult.data.guid}")
                     }
+
                     is ServiceResult.ValidationError -> {
                         throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
                     }
+
                     is ServiceResult.BusinessError -> {
                         throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
                     }
-                    else -> throw RuntimeException("Failed to create destination transaction: $destinationResult")
+
+                    else -> {
+                        throw RuntimeException("Failed to create destination transaction: $destinationResult")
+                    }
                 }
 
                 // Create source transaction
@@ -115,13 +120,18 @@ class PaymentService(
                         entity.guidSource = sourceResult.data.guid
                         logger.debug("Source transaction created: ${sourceResult.data.guid}")
                     }
+
                     is ServiceResult.ValidationError -> {
                         throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
                     }
+
                     is ServiceResult.BusinessError -> {
                         throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
                     }
-                    else -> throw RuntimeException("Failed to create source transaction: $sourceResult")
+
+                    else -> {
+                        throw RuntimeException("Failed to create source transaction: $sourceResult")
+                    }
                 }
             }
 
@@ -135,7 +145,7 @@ class PaymentService(
 
     override fun update(entity: Payment): ServiceResult<Payment> =
         handleServiceOperation("update", entity.paymentId) {
-            val existingPayment = paymentRepository.findByPaymentId(entity.paymentId!!)
+            val existingPayment = paymentRepository.findByPaymentId(entity.paymentId)
             if (existingPayment.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
             }
@@ -200,15 +210,18 @@ class PaymentService(
                     deletedCount++
                     logger.info("Deleted source transaction: $guidSource")
                 }
+
                 is ServiceResult.NotFound -> {
                     logger.warn("Source transaction not found: $guidSource")
                 }
+
                 is ServiceResult.BusinessError -> {
                     logger.error("Failed to delete source transaction: ${result.message}")
                     throw org.springframework.dao.DataIntegrityViolationException(
                         "Cannot delete payment because source transaction $guidSource could not be deleted: ${result.message}",
                     )
                 }
+
                 else -> {
                     throw RuntimeException("Unexpected error deleting source transaction: $result")
                 }
@@ -222,15 +235,18 @@ class PaymentService(
                     deletedCount++
                     logger.info("Deleted destination transaction: $guidDestination")
                 }
+
                 is ServiceResult.NotFound -> {
                     logger.warn("Destination transaction not found: $guidDestination")
                 }
+
                 is ServiceResult.BusinessError -> {
                     logger.error("Failed to delete destination transaction: ${result.message}")
                     throw org.springframework.dao.DataIntegrityViolationException(
                         "Cannot delete payment because destination transaction $guidDestination could not be deleted: ${result.message}",
                     )
                 }
+
                 else -> {
                     throw RuntimeException("Unexpected error deleting destination transaction: $result")
                 }
@@ -304,13 +320,18 @@ class PaymentService(
                 payment.guidDestination = destinationResult.data.guid
                 logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
             }
+
             is ServiceResult.ValidationError -> {
                 throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
             }
+
             is ServiceResult.BusinessError -> {
                 throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
             }
-            else -> throw RuntimeException("Failed to create destination transaction: $destinationResult")
+
+            else -> {
+                throw RuntimeException("Failed to create destination transaction: $destinationResult")
+            }
         }
 
         // Create source transaction using ServiceResult pattern
@@ -320,28 +341,40 @@ class PaymentService(
                 payment.guidSource = sourceResult.data.guid
                 logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
             }
+
             is ServiceResult.ValidationError -> {
                 throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
             }
+
             is ServiceResult.BusinessError -> {
                 throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
             }
-            else -> throw RuntimeException("Failed to create source transaction: $sourceResult")
+
+            else -> {
+                throw RuntimeException("Failed to create source transaction: $sourceResult")
+            }
         }
 
         // Use the standardized save method and handle ServiceResult
         // GUIDs are now set, so save() won't try to create transactions again
         val result = save(payment)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             is ServiceResult.ValidationError -> {
                 throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
             }
+
             is ServiceResult.BusinessError -> {
                 // Handle data integrity violations (e.g., duplicate payments)
                 throw org.springframework.dao.DataIntegrityViolationException(result.message)
             }
-            else -> throw RuntimeException("Failed to insert payment: $result")
+
+            else -> {
+                throw RuntimeException("Failed to insert payment: $result")
+            }
         }
     }
 
@@ -417,10 +450,18 @@ class PaymentService(
         behavior: PaymentBehavior,
     ): BigDecimal =
         when (behavior) {
-            PaymentBehavior.BILL_PAYMENT -> -amount.abs() // Asset decreases
-            PaymentBehavior.TRANSFER -> -amount.abs() // Asset decreases
-            PaymentBehavior.CASH_ADVANCE -> amount.abs() // Liability increases (more debt)
-            PaymentBehavior.BALANCE_TRANSFER -> amount.abs() // Liability increases (charging to pay another card)
+            PaymentBehavior.BILL_PAYMENT -> -amount.abs()
+
+            // Asset decreases
+            PaymentBehavior.TRANSFER -> -amount.abs()
+
+            // Asset decreases
+            PaymentBehavior.CASH_ADVANCE -> amount.abs()
+
+            // Liability increases (more debt)
+            PaymentBehavior.BALANCE_TRANSFER -> amount.abs()
+
+            // Liability increases (charging to pay another card)
             else -> -amount.abs() // Default: negative (safest)
         }
 
@@ -436,10 +477,18 @@ class PaymentService(
         behavior: PaymentBehavior,
     ): BigDecimal =
         when (behavior) {
-            PaymentBehavior.BILL_PAYMENT -> -amount.abs() // Liability decreases (debt paid)
-            PaymentBehavior.TRANSFER -> amount.abs() // Asset increases
-            PaymentBehavior.CASH_ADVANCE -> amount.abs() // Asset increases (cash received)
-            PaymentBehavior.BALANCE_TRANSFER -> -amount.abs() // Liability decreases (debt paid off)
+            PaymentBehavior.BILL_PAYMENT -> -amount.abs()
+
+            // Liability decreases (debt paid)
+            PaymentBehavior.TRANSFER -> amount.abs()
+
+            // Asset increases
+            PaymentBehavior.CASH_ADVANCE -> amount.abs()
+
+            // Asset increases (cash received)
+            PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()
+
+            // Liability decreases (debt paid off)
             else -> -amount.abs() // Default: negative (safest)
         }
 

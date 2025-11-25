@@ -59,7 +59,7 @@ class CategoryService(
 
     override fun update(entity: Category): ServiceResult<Category> =
         handleServiceOperation("update", entity.categoryId) {
-            val existingCategory = categoryRepository.findByCategoryId(entity.categoryId!!)
+            val existingCategory = categoryRepository.findByCategoryId(entity.categoryId)
             if (existingCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: ${entity.categoryId}")
             }

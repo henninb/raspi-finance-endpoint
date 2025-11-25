@@ -61,7 +61,7 @@ class DescriptionService(
 
     override fun update(entity: Description): ServiceResult<Description> =
         handleServiceOperation("update", entity.descriptionId) {
-            val existingDescription = descriptionRepository.findByDescriptionId(entity.descriptionId!!)
+            val existingDescription = descriptionRepository.findByDescriptionId(entity.descriptionId)
             if (existingDescription.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Description not found: ${entity.descriptionId}")
             }
@@ -123,7 +123,10 @@ class DescriptionService(
     fun insertDescription(description: Description): Description {
         val result = save(description)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             is ServiceResult.ValidationError -> {
                 val violations =
                     result.errors
@@ -159,6 +162,7 @@ class DescriptionService(
                         }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
+
             is ServiceResult.BusinessError -> {
                 if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
                     throw org.springframework.dao.DataIntegrityViolationException(result.message)
@@ -166,7 +170,10 @@ class DescriptionService(
                     throw RuntimeException("Business error: ${result.message}")
                 }
             }
-            else -> throw RuntimeException("Failed to insert description: $result")
+
+            else -> {
+                throw RuntimeException("Failed to insert description: $result")
+            }
         }
     }
 

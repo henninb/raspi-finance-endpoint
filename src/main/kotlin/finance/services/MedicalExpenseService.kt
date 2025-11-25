@@ -58,7 +58,7 @@ class MedicalExpenseService(
     override fun update(entity: MedicalExpense): ServiceResult<MedicalExpense> =
         handleServiceOperation("update", entity.medicalExpenseId) {
             val existingExpense =
-                medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(entity.medicalExpenseId!!)
+                medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(entity.medicalExpenseId)
                     ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: ${entity.medicalExpenseId}")
 
             medicalExpenseRepository.save(entity)
@@ -78,7 +78,10 @@ class MedicalExpenseService(
     fun findAllMedicalExpenses(): List<MedicalExpense> {
         val result = findAllActive()
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             else -> {
                 logger.error("Error retrieving all medical expenses: $result")
                 emptyList()
@@ -105,15 +108,18 @@ class MedicalExpenseService(
                 logger.info("Successfully inserted medical expense with ID: ${result.data.medicalExpenseId}")
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 val message = "Validation failed: ${result.errors}"
                 logger.error(message)
                 throw ValidationException(message)
             }
+
             is ServiceResult.BusinessError -> {
                 logger.error("Business error inserting medical expense: ${result.message}")
                 throw DuplicateMedicalExpenseException(result.message)
             }
+
             else -> {
                 val message = "Failed to insert medical expense: $result"
                 logger.error(message)
@@ -131,15 +137,18 @@ class MedicalExpenseService(
                 logger.info("Successfully updated medical expense with ID: ${result.data.medicalExpenseId}")
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 val message = "Medical expense not found with ID: ${medicalExpense.medicalExpenseId}"
                 logger.error(message)
                 throw IllegalArgumentException(message)
             }
+
             is ServiceResult.BusinessError -> {
                 logger.error("Business error updating medical expense: ${result.message}")
                 throw org.springframework.dao.DataIntegrityViolationException(result.message)
             }
+
             else -> {
                 val message = "Failed to update medical expense: $result"
                 logger.error(message)

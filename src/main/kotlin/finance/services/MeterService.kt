@@ -30,7 +30,10 @@ class MeterService(
 
     private val hostName: String =
         when {
-            !configuredServerName.isNullOrBlank() -> configuredServerName
+            !configuredServerName.isNullOrBlank() -> {
+                configuredServerName
+            }
+
             else -> {
                 val envHost = setHostName()
                 if (envHost.isBlank() || envHost == "Unknown") "server" else envHost

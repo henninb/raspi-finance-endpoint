@@ -74,7 +74,7 @@ class SecurityAuditFilter(
             if (response.status in 400..499) {
                 val authentication = SecurityContextHolder.getContext().authentication
                 val isAuthenticated = authentication?.isAuthenticated ?: false
-                val username = if (isAuthenticated) authentication?.name ?: "unknown" else "anonymous"
+                val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
 
                 securityLogger.info(
                     "SECURITY_HTTP_4XX status={} method={} endpoint={} user={} ip={} responseTime={}ms",
@@ -108,7 +108,7 @@ class SecurityAuditFilter(
     ) {
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
-        val username = if (isAuthenticated) authentication?.name ?: "unknown" else "anonymous"
+        val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
         val clientIp = getClientIpAddress(request)
         val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
 
@@ -134,7 +134,7 @@ class SecurityAuditFilter(
     ) {
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
-        val username = if (isAuthenticated) authentication?.name ?: "unknown" else "anonymous"
+        val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
         val clientIp = getClientIpAddress(request)
         val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
 
