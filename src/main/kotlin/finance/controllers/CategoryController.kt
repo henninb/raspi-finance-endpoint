@@ -51,14 +51,17 @@ class CategoryController(
                 logger.info("Retrieved ${result.data.size} active categories")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No categories found")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving categories: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -86,14 +89,17 @@ class CategoryController(
                 logger.info("Retrieved category: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Category not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving category $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -122,18 +128,22 @@ class CategoryController(
                 logger.info("Category created successfully: ${entity.categoryName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating category: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating category: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating category: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -165,22 +175,27 @@ class CategoryController(
                 logger.info("Category updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Category not found for update: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating category: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating category: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating category: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -212,28 +227,34 @@ class CategoryController(
                         logger.info("Category deleted successfully: $id")
                         ResponseEntity.ok(findResult.data)
                     }
+
                     is ServiceResult.NotFound -> {
                         logger.warn("Category not found for deletion: $id")
                         ResponseEntity.notFound().build()
                     }
+
                     is ServiceResult.SystemError -> {
                         logger.error("System error deleting category: ${deleteResult.exception.message}", deleteResult.exception)
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
+
                     else -> {
                         logger.error("Unexpected delete result type: $deleteResult")
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Category not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error finding category for deletion: ${findResult.exception.message}", findResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected find result type: $findResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

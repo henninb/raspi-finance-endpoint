@@ -94,6 +94,7 @@ abstract class StandardizedBaseController : BaseController() {
                     logOperationError(operationName, entityId, "Entity not found (wrapped)", cause)
                     throw ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found: ${cause.message}")
                 }
+
                 else -> {
                     logOperationError(operationName, entityId, "Execution error", ex)
                     throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Operation failed: ${ex.message}")

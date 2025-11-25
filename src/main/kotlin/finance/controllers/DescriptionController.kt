@@ -51,14 +51,17 @@ class DescriptionController(
                 logger.info("Retrieved ${result.data.size} active descriptions")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No descriptions found")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving descriptions: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -86,14 +89,17 @@ class DescriptionController(
                 logger.info("Retrieved description: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Description not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving description $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -122,18 +128,22 @@ class DescriptionController(
                 logger.info("Description created successfully: ${entity.descriptionName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating description: ${result.errors}")
                 ResponseEntity.badRequest().build<Description>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating description: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating description: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -164,18 +174,22 @@ class DescriptionController(
                 logger.info("Description updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Description not found for update: $id")
                 ResponseEntity.notFound().build<Description>()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating description: ${result.errors}")
                 ResponseEntity.badRequest().build<Description>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating description: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating description $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
@@ -207,28 +221,34 @@ class DescriptionController(
                         logger.info("Description deleted successfully: $id")
                         ResponseEntity.ok(description)
                     }
+
                     is ServiceResult.NotFound -> {
                         logger.warn("Description not found for deletion: $id")
                         ResponseEntity.notFound().build<Description>()
                     }
+
                     is ServiceResult.SystemError -> {
                         logger.error("System error deleting description $id: ${deleteResult.exception.message}", deleteResult.exception)
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
                     }
+
                     else -> {
                         logger.error("Unexpected delete result type: $deleteResult")
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Description not found for deletion: $id")
                 ResponseEntity.notFound().build<Description>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error finding description $id: ${findResult.exception.message}", findResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
             }
+
             else -> {
                 logger.error("Unexpected find result type: $findResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

@@ -77,10 +77,12 @@ open class ImageProcessingService :
                             logger.info("Detected image format: ${imageReader.formatName}")
                             ImageFormatType.Jpeg
                         }
+
                         imageReader.formatName.lowercase() == "png" -> {
                             logger.info("Detected image format: ${imageReader.formatName}")
                             ImageFormatType.Png
                         }
+
                         else -> {
                             logger.debug("Unsupported image format: ${imageReader.formatName}")
                             ImageFormatType.Undefined

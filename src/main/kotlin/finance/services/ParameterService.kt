@@ -45,7 +45,7 @@ class ParameterService(
 
     override fun update(entity: Parameter): ServiceResult<Parameter> =
         handleServiceOperation("update", entity.parameterId) {
-            val existingParameter = parameterRepository.findById(entity.parameterId!!)
+            val existingParameter = parameterRepository.findById(entity.parameterId)
             if (existingParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: ${entity.parameterId}")
             }

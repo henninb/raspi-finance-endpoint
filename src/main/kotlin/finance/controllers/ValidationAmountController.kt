@@ -92,14 +92,17 @@ class ValidationAmountController(
                 logger.info("Retrieved ${result.data.size} active validation amounts$filterMsg")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No validation amounts found")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving validation amounts: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -128,14 +131,17 @@ class ValidationAmountController(
                 logger.info("Retrieved validation amount: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Validation amount not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -164,18 +170,22 @@ class ValidationAmountController(
                 logger.info("Validation amount created successfully: ${result.data.validationId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating validation amount: ${result.errors}")
                 ResponseEntity.badRequest().build<ValidationAmount>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating validation amount: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<ValidationAmount>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating validation amount: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
@@ -209,18 +219,22 @@ class ValidationAmountController(
                 logger.info("Validation amount updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Validation amount not found for update: $id")
                 ResponseEntity.notFound().build<ValidationAmount>()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating validation amount: ${result.errors}")
                 ResponseEntity.badRequest().build<ValidationAmount>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating validation amount: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<ValidationAmount>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
@@ -258,14 +272,17 @@ class ValidationAmountController(
                 logger.info("Validation amount deleted successfully: $id")
                 ResponseEntity.ok(validationAmountToDelete)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Validation amount not found for deletion: $id")
                 ResponseEntity.notFound().build<ValidationAmount>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()

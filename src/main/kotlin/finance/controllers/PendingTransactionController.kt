@@ -49,14 +49,17 @@ class PendingTransactionController(
                 logger.info("Retrieved ${result.data.size} active pending transactions")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No pending transactions found")
                 ResponseEntity.ok(emptyList())
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving pending transactions: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -84,14 +87,17 @@ class PendingTransactionController(
                 logger.info("Retrieved pending transaction: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Pending transaction not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -120,18 +126,22 @@ class PendingTransactionController(
                 logger.info("Pending transaction created successfully: ${result.data.pendingTransactionId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating pending transaction: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating pending transaction: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating pending transaction: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -165,18 +175,22 @@ class PendingTransactionController(
                 logger.info("Pending transaction updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Pending transaction not found for update: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating pending transaction: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating pending transaction: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -208,10 +222,12 @@ class PendingTransactionController(
                     logger.warn("Pending transaction not found for deletion: $id")
                     ResponseEntity.notFound().build()
                 }
+
                 is ServiceResult.SystemError -> {
                     logger.error("System error retrieving pending transaction for deletion $id: ${entityResult.exception.message}", entityResult.exception)
                     ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                 }
+
                 else -> {
                     logger.error("Unexpected result type retrieving entity: $entityResult")
                     ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -226,14 +242,17 @@ class PendingTransactionController(
                 logger.info("Pending transaction deleted successfully: $id")
                 ResponseEntity.ok(entityToDelete)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Pending transaction not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -259,6 +278,7 @@ class PendingTransactionController(
                 logger.info("All pending transactions deleted successfully")
                 ResponseEntity.noContent().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("Failed to delete all pending transactions: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(
@@ -267,6 +287,7 @@ class PendingTransactionController(
                     result.exception,
                 )
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 throw ResponseStatusException(

@@ -96,7 +96,7 @@ class ValidationAmountService(
 
     override fun update(entity: ValidationAmount): ServiceResult<ValidationAmount> =
         handleServiceOperation("update", entity.validationId) {
-            val existingValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(entity.validationId!!)
+            val existingValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(entity.validationId)
             if (existingValidationAmount.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: ${entity.validationId}")
             }
@@ -166,6 +166,7 @@ class ValidationAmountService(
                     // Prefer explicit accountId from payload when valid
                     providedAccountId
                 }
+
                 else -> {
                     val byOwner = accountRepository.findByAccountNameOwner(accountNameOwner)
                     if (byOwner.isPresent) {
@@ -190,7 +191,10 @@ class ValidationAmountService(
         // Use the standard save method and handle ServiceResult
         val result = save(validationAmount)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             is ServiceResult.ValidationError -> {
                 val violations =
                     result.errors
@@ -226,7 +230,10 @@ class ValidationAmountService(
                         }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
-            else -> throw RuntimeException("Failed to insert validation amount: $result")
+
+            else -> {
+                throw RuntimeException("Failed to insert validation amount: $result")
+            }
         }
     }
 }
