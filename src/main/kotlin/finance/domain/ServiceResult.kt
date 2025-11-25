@@ -98,10 +98,22 @@ sealed class ServiceResult<T> {
      */
     inline fun onError(action: (String) -> Unit): ServiceResult<T> {
         when (this) {
-            is NotFound -> action(message)
-            is ValidationError -> action(errors.toString())
-            is BusinessError -> action(message)
-            is SystemError -> action(exception.message ?: "System error occurred")
+            is NotFound -> {
+                action(message)
+            }
+
+            is ValidationError -> {
+                action(errors.toString())
+            }
+
+            is BusinessError -> {
+                action(message)
+            }
+
+            is SystemError -> {
+                action(exception.message ?: "System error occurred")
+            }
+
             else -> {
                 // Success case - do nothing
             }

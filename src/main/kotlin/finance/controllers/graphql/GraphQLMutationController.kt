@@ -200,14 +200,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created parameter id={}", result.data.parameterId)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating parameter: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating parameter: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating parameter")
                 throw RuntimeException("Failed to create parameter")
@@ -227,18 +230,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated parameter id={}", result.data.parameterId)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Parameter not found: {}", parameter.parameterId)
                 throw IllegalArgumentException("Parameter not found: ${parameter.parameterId}")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating parameter: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating parameter: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating parameter")
                 throw RuntimeException("Failed to update parameter")
@@ -258,10 +265,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted parameter id={}", parameterId)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Parameter not found for deletion: {}", parameterId)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting parameter id={}", parameterId)
                 false
@@ -289,14 +298,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created category: {}", result.data.categoryName)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating category: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating category: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating category")
                 throw RuntimeException("Failed to create category")
@@ -327,25 +339,34 @@ class GraphQLMutationController(
                     logger.debug("Using provided categoryId: {}", categoryInput.categoryId)
                     categoryInput.categoryId
                 }
+
                 oldCategoryName != null -> {
                     logger.debug("Looking up category by oldCategoryName: {}", oldCategoryName)
                     when (val findResult = categoryService.findByCategoryNameStandardized(oldCategoryName)) {
-                        is ServiceResult.Success -> findResult.data.categoryId
+                        is ServiceResult.Success -> {
+                            findResult.data.categoryId
+                        }
+
                         is ServiceResult.NotFound -> {
                             logger.warn("GraphQL - Old category not found: {}", oldCategoryName)
                             throw IllegalArgumentException("Category not found: $oldCategoryName")
                         }
+
                         else -> {
                             logger.error("GraphQL - Error finding category: {}", oldCategoryName)
                             throw RuntimeException("Failed to find category: $oldCategoryName")
                         }
                     }
                 }
+
                 else -> {
                     // Try to look up by the new name (for updates that don't involve renaming)
                     logger.debug("Looking up category by categoryName: {}", categoryInput.categoryName)
                     when (val findResult = categoryService.findByCategoryNameStandardized(categoryInput.categoryName)) {
-                        is ServiceResult.Success -> findResult.data.categoryId
+                        is ServiceResult.Success -> {
+                            findResult.data.categoryId
+                        }
+
                         is ServiceResult.NotFound -> {
                             logger.warn("GraphQL - Category not found: {}", categoryInput.categoryName)
                             throw IllegalArgumentException(
@@ -354,6 +375,7 @@ class GraphQLMutationController(
                                     "Example: updateCategory(category: { categoryName: \"newname\" }, oldCategoryName: \"oldname\")",
                             )
                         }
+
                         else -> {
                             logger.error("GraphQL - Error finding category: {}", categoryInput.categoryName)
                             throw RuntimeException("Failed to find category: ${categoryInput.categoryName}")
@@ -375,18 +397,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated category: {}", result.data.categoryName)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Category not found with ID: {}", existingCategoryId)
                 throw IllegalArgumentException("Category not found with ID: $existingCategoryId")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating category: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating category: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating category")
                 throw RuntimeException("Failed to update category")
@@ -406,10 +432,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted category: {}", categoryName)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Category not found for deletion: {}", categoryName)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting category: {}", categoryName)
                 false
@@ -437,14 +465,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created description: {}", result.data.descriptionName)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating description: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating description: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating description")
                 throw RuntimeException("Failed to create description")
@@ -475,25 +506,34 @@ class GraphQLMutationController(
                     logger.debug("Using provided descriptionId: {}", descriptionInput.descriptionId)
                     descriptionInput.descriptionId
                 }
+
                 oldDescriptionName != null -> {
                     logger.debug("Looking up description by oldDescriptionName: {}", oldDescriptionName)
                     when (val findResult = descriptionService.findByDescriptionNameStandardized(oldDescriptionName)) {
-                        is ServiceResult.Success -> findResult.data.descriptionId
+                        is ServiceResult.Success -> {
+                            findResult.data.descriptionId
+                        }
+
                         is ServiceResult.NotFound -> {
                             logger.warn("GraphQL - Old description not found: {}", oldDescriptionName)
                             throw IllegalArgumentException("Description not found: $oldDescriptionName")
                         }
+
                         else -> {
                             logger.error("GraphQL - Error finding description: {}", oldDescriptionName)
                             throw RuntimeException("Failed to find description: $oldDescriptionName")
                         }
                     }
                 }
+
                 else -> {
                     // Try to look up by the new name (for updates that don't involve renaming)
                     logger.debug("Looking up description by descriptionName: {}", descriptionInput.descriptionName)
                     when (val findResult = descriptionService.findByDescriptionNameStandardized(descriptionInput.descriptionName)) {
-                        is ServiceResult.Success -> findResult.data.descriptionId
+                        is ServiceResult.Success -> {
+                            findResult.data.descriptionId
+                        }
+
                         is ServiceResult.NotFound -> {
                             logger.warn("GraphQL - Description not found: {}", descriptionInput.descriptionName)
                             throw IllegalArgumentException(
@@ -502,6 +542,7 @@ class GraphQLMutationController(
                                     "Example: updateDescription(description: { descriptionName: \"newname\" }, oldDescriptionName: \"oldname\")",
                             )
                         }
+
                         else -> {
                             logger.error("GraphQL - Error finding description: {}", descriptionInput.descriptionName)
                             throw RuntimeException("Failed to find description: ${descriptionInput.descriptionName}")
@@ -523,18 +564,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated description: {}", result.data.descriptionName)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Description not found with ID: {}", existingDescriptionId)
                 throw IllegalArgumentException("Description not found with ID: $existingDescriptionId")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating description: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating description: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating description")
                 throw RuntimeException("Failed to update description")
@@ -554,10 +599,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted description: {}", descriptionName)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Description not found for deletion: {}", descriptionName)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting description: {}", descriptionName)
                 false
@@ -600,14 +647,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created medical expense: {}", result.data.medicalExpenseId)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating medical expense: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating medical expense: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating medical expense")
                 throw RuntimeException("Failed to create medical expense")
@@ -650,18 +700,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated medical expense: {}", result.data.medicalExpenseId)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Medical expense not found: {}", medicalExpenseInput.medicalExpenseId)
                 throw IllegalArgumentException("Medical expense not found: ${medicalExpenseInput.medicalExpenseId}")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating medical expense: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating medical expense: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating medical expense")
                 throw RuntimeException("Failed to update medical expense")
@@ -681,10 +735,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted medical expense id={}", medicalExpenseId)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Medical expense not found for deletion: {}", medicalExpenseId)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting medical expense id={}", medicalExpenseId)
                 false
@@ -715,14 +771,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created validation amount: {}", result.data.validationId)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating validation amount: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating validation amount: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating validation amount")
                 throw RuntimeException("Failed to create validation amount")
@@ -753,18 +812,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated validation amount: {}", result.data.validationId)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Validation amount not found: {}", validationAmountInput.validationId)
                 throw IllegalArgumentException("Validation amount not found: ${validationAmountInput.validationId}")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating validation amount: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating validation amount: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating validation amount")
                 throw RuntimeException("Failed to update validation amount")
@@ -784,10 +847,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted validation amount id={}", validationId)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Validation amount not found for deletion: {}", validationId)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting validation amount id={}", validationId)
                 false
@@ -822,14 +887,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created account: {}", result.data.accountNameOwner)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating account: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating account: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating account")
                 throw RuntimeException("Failed to create account")
@@ -860,25 +928,34 @@ class GraphQLMutationController(
                     logger.debug("Using provided accountId: {}", accountInput.accountId)
                     accountInput.accountId
                 }
+
                 oldAccountNameOwner != null -> {
                     logger.debug("Looking up account by oldAccountNameOwner: {}", oldAccountNameOwner)
                     when (val findResult = accountService.findById(oldAccountNameOwner)) {
-                        is ServiceResult.Success -> findResult.data.accountId
+                        is ServiceResult.Success -> {
+                            findResult.data.accountId
+                        }
+
                         is ServiceResult.NotFound -> {
                             logger.warn("GraphQL - Old account not found: {}", oldAccountNameOwner)
                             throw IllegalArgumentException("Account not found: $oldAccountNameOwner")
                         }
+
                         else -> {
                             logger.error("GraphQL - Error finding account: {}", oldAccountNameOwner)
                             throw RuntimeException("Failed to find account: $oldAccountNameOwner")
                         }
                     }
                 }
+
                 else -> {
                     // Try to look up by the new name (for updates that don't involve renaming)
                     logger.debug("Looking up account by accountNameOwner: {}", accountInput.accountNameOwner)
                     when (val findResult = accountService.findById(accountInput.accountNameOwner)) {
-                        is ServiceResult.Success -> findResult.data.accountId
+                        is ServiceResult.Success -> {
+                            findResult.data.accountId
+                        }
+
                         is ServiceResult.NotFound -> {
                             logger.warn("GraphQL - Account not found: {}", accountInput.accountNameOwner)
                             throw IllegalArgumentException(
@@ -887,6 +964,7 @@ class GraphQLMutationController(
                                     "Example: updateAccount(account: { accountNameOwner: \"newname\" }, oldAccountNameOwner: \"oldname\")",
                             )
                         }
+
                         else -> {
                             logger.error("GraphQL - Error finding account: {}", accountInput.accountNameOwner)
                             throw RuntimeException("Failed to find account: ${accountInput.accountNameOwner}")
@@ -915,18 +993,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated account: {}", result.data.accountNameOwner)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Account not found with ID: {}", existingAccountId)
                 throw IllegalArgumentException("Account not found with ID: $existingAccountId")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating account: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating account: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating account")
                 throw RuntimeException("Failed to update account")
@@ -946,10 +1028,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted account: {}", accountNameOwner)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Account not found for deletion: {}", accountNameOwner)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting account: {}", accountNameOwner)
                 false
@@ -992,14 +1076,17 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Created transaction: {}", result.data.guid)
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error creating transaction: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error creating transaction: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error creating transaction")
                 throw RuntimeException("Failed to create transaction")
@@ -1040,18 +1127,22 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Updated transaction: {}", result.data.guid)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Transaction not found: {}", transaction.guid)
                 throw IllegalArgumentException("Transaction not found: ${transaction.guid}")
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("GraphQL - Validation error updating transaction: {}", result.errors)
                 throw IllegalArgumentException("Validation failed: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("GraphQL - Business error updating transaction: {}", result.message)
                 throw IllegalStateException(result.message)
             }
+
             else -> {
                 logger.error("GraphQL - Unexpected error updating transaction")
                 throw RuntimeException("Failed to update transaction")
@@ -1071,10 +1162,12 @@ class GraphQLMutationController(
                 logger.info("GraphQL - Deleted transaction: {}", guid)
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("GraphQL - Transaction not found for deletion: {}", guid)
                 false
             }
+
             else -> {
                 logger.error("GraphQL - Error deleting transaction: {}", guid)
                 false

@@ -38,11 +38,11 @@ A Spring Boot financial management application built with Kotlin/Groovy providin
 ## Architecture
 
 ### Technology Stack
-- **Core**: Kotlin 2.2.20, Spring Boot 4.0.0-M3, Java 21
+- **Core**: Kotlin 2.2.20, Spring Boot 4.0.0-RC2, Java 21
 - **Testing**: Groovy 4.0.28, Spock 2.4-M6, CodeNarc 3.4.0
-- **Security**: Spring Security 7.0.0-M3 with JWT
-- **Database**: PostgreSQL/Oracle (prod), H2 (test), Flyway 11.14.0
-- **Build**: Gradle 9.1.0
+- **Security**: Spring Security 7.0.0-RC3 with JWT
+- **Database**: PostgreSQL/Oracle (prod), H2 (test), Flyway 11.17.0
+- **Build**: Gradle 9.2.1
 - **GraphQL**: Spring GraphQL with Extended Scalars 24.0
 - **Resilience**: Resilience4j 2.3.0
 

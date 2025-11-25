@@ -65,14 +65,17 @@ class MedicalExpenseController(
                 logger.info("Retrieved ${result.data.size} active medical expenses")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No medical expenses found")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving medical expenses: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -100,14 +103,17 @@ class MedicalExpenseController(
                 logger.info("Retrieved medical expense: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Medical expense not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving medical expense $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -136,18 +142,22 @@ class MedicalExpenseController(
                 logger.info("Medical expense created successfully: ${result.data.medicalExpenseId}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating medical expense: ${result.errors}")
                 ResponseEntity.badRequest().build<MedicalExpense>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating medical expense: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<MedicalExpense>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating medical expense: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -182,22 +192,27 @@ class MedicalExpenseController(
                 logger.info("Medical expense updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Medical expense not found for update: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating medical expense: ${result.errors}")
                 ResponseEntity.badRequest().build<MedicalExpense>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating medical expense: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<MedicalExpense>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating medical expense $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
@@ -233,14 +248,17 @@ class MedicalExpenseController(
                 logger.info("Medical expense deleted successfully: $id")
                 ResponseEntity.ok(entityResult.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Medical expense not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting medical expense $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $deleteResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

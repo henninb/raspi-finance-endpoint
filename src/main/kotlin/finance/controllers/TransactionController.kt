@@ -85,15 +85,18 @@ class TransactionController(
                 logger.info("Retrieved transaction: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Transaction not found: $id")
                 meterService.incrementTransactionRestSelectNoneFoundCounter("unknown")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -122,18 +125,22 @@ class TransactionController(
                 logger.info("Transaction created successfully: ${entity.guid}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating transaction: ${result.errors}")
                 ResponseEntity.badRequest().build<Transaction>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating transaction: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Transaction>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating transaction: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -168,22 +175,27 @@ class TransactionController(
                 logger.info("Transaction updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Transaction not found for update: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating transaction: ${result.errors}")
                 ResponseEntity.badRequest().build<Transaction>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating transaction: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Transaction>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
@@ -219,14 +231,17 @@ class TransactionController(
                 logger.info("Transaction deleted successfully: $id")
                 ResponseEntity.ok(entityResult.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Transaction not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting transaction $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $deleteResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -358,18 +373,22 @@ class TransactionController(
                 logger.info("Future transaction inserted successfully: ${result.data.guid}")
                 ResponseEntity(result.data, HttpStatus.CREATED)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.error("Validation error inserting future transaction: ${result.errors}")
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
             }
+
             is ServiceResult.BusinessError -> {
                 logger.error("Failed to insert future transaction due to data integrity violation: ${result.message}")
                 throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate future transaction found.")
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("Unexpected error inserting future transaction: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${result.exception.message}", result.exception)
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")

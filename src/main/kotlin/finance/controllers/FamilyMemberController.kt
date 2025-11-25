@@ -52,14 +52,17 @@ open class FamilyMemberController(
                 logger.info("Retrieved ${result.data.size} active family members")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No family members found")
                 ResponseEntity.notFound().build<List<FamilyMember>>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving family members: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<List<FamilyMember>>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<List<FamilyMember>>()
@@ -87,14 +90,17 @@ open class FamilyMemberController(
                 logger.info("Retrieved family member: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound<FamilyMember> -> {
                 logger.warn("Family member not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError<FamilyMember> -> {
                 logger.error("System error retrieving family member $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -123,18 +129,22 @@ open class FamilyMemberController(
                 logger.info("Family member created successfully: ${entity.memberName} for owner: ${entity.owner}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating family member: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating family member: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating family member: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -166,22 +176,27 @@ open class FamilyMemberController(
                 logger.info("Family member updated successfully: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Family member not found for update: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating family member: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating family member: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating family member: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -216,28 +231,34 @@ open class FamilyMemberController(
                         logger.info("Family member deleted successfully: $id")
                         ResponseEntity.ok(memberToDelete)
                     }
+
                     is ServiceResult.NotFound<Boolean> -> {
                         logger.warn("Family member not found for deletion: $id")
                         ResponseEntity.notFound().build()
                     }
+
                     is ServiceResult.SystemError<Boolean> -> {
                         logger.error("System error deleting family member: ${deleteResult.exception.message}", deleteResult.exception)
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
+
                     else -> {
                         logger.error("Unexpected result type: $deleteResult")
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
+
             is ServiceResult.NotFound<FamilyMember> -> {
                 logger.warn("Family member not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError<FamilyMember> -> {
                 logger.error("System error finding family member for deletion: ${findResult.exception.message}", findResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $findResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

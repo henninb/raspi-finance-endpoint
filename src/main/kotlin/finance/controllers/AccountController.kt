@@ -54,14 +54,17 @@ class AccountController(
                 logger.info("Retrieved ${result.data.size} active accounts (standardized)")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.info("No active accounts found (standardized)")
                 ResponseEntity.ok(emptyList())
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving active accounts: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -90,14 +93,17 @@ class AccountController(
                 logger.info("Retrieved account: $id (standardized)")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Account not found: $id (standardized)")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving account $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -126,18 +132,22 @@ class AccountController(
                 logger.info("Account created successfully: ${entity.accountNameOwner} (standardized)")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating account: ${result.errors}")
                 ResponseEntity.badRequest().build<Account>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating account: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Account>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating account: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
@@ -171,18 +181,22 @@ class AccountController(
                 logger.info("Account updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Account not found for update: $id (standardized)")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error updating account: ${result.errors}")
                 ResponseEntity.badRequest().build<Account>()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating account: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Account>()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating account: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
@@ -218,14 +232,17 @@ class AccountController(
                 logger.info("Account deleted successfully: $id")
                 ResponseEntity.ok(accountResult.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Account not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting account: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()

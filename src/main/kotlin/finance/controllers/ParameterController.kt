@@ -49,14 +49,17 @@ class ParameterController(
                 logger.info("Retrieved ${result.data.size} active parameters")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("No parameters found")
                 ResponseEntity.ok(emptyList<Parameter>()) // Standardized: return empty list, not 404
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameters: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -84,14 +87,17 @@ class ParameterController(
                 logger.info("Retrieved parameter: $id")
                 ResponseEntity.ok(result.data)
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving parameter $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -120,18 +126,22 @@ class ParameterController(
                 logger.info("Parameter created successfully: ${entity.parameterName}")
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating parameter: ${result.errors}")
                 ResponseEntity.badRequest().build()
             }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error creating parameter: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error creating parameter: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -175,32 +185,39 @@ class ParameterController(
                         logger.info("Parameter updated successfully: $id")
                         ResponseEntity.ok(updateResult.data)
                     }
+
                     is ServiceResult.ValidationError -> {
                         logger.warn("Validation error updating parameter: ${updateResult.errors}")
                         ResponseEntity.badRequest().build()
                     }
+
                     is ServiceResult.BusinessError -> {
                         logger.warn("Business error updating parameter: ${updateResult.message}")
                         ResponseEntity.status(HttpStatus.CONFLICT).build()
                     }
+
                     is ServiceResult.SystemError -> {
                         logger.error("System error updating parameter: ${updateResult.exception.message}", updateResult.exception)
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
+
                     else -> {
                         logger.error("Unexpected result type: $updateResult")
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found for update: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error checking parameter existence: ${existsResult.exception.message}", existsResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $existsResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
@@ -234,24 +251,29 @@ class ParameterController(
                         logger.info("Parameter deleted successfully: $id")
                         ResponseEntity.ok(parameterToDelete)
                     }
+
                     is ServiceResult.SystemError -> {
                         logger.error("System error deleting parameter: ${deleteResult.exception.message}", deleteResult.exception)
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
+
                     else -> {
                         logger.error("Unexpected result type: $deleteResult")
                         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
                 }
             }
+
             is ServiceResult.NotFound -> {
                 logger.warn("Parameter not found for deletion: $id")
                 ResponseEntity.notFound().build()
             }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error finding parameter for deletion: ${findResult.exception.message}", findResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+
             else -> {
                 logger.error("Unexpected result type: $findResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

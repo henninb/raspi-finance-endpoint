@@ -88,7 +88,7 @@ class FamilyMemberService(
     fun update(entity: FamilyMember): ServiceResult<FamilyMember> {
         return try {
             val existingMember =
-                familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(entity.familyMemberId!!)
+                familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(entity.familyMemberId)
                     ?: return ServiceResult.NotFound("FamilyMember not found: ${entity.familyMemberId}")
 
             // Keep immutable fields from existing if needed; for now, update timestamps only
@@ -149,15 +149,18 @@ class FamilyMemberService(
                 logger.info("Successfully inserted family member with ID: ${result.data.familyMemberId}")
                 result.data
             }
+
             is ServiceResult.ValidationError -> {
                 val message = "Validation failed: ${result.errors}"
                 logger.error(message)
                 throw ValidationException(message)
             }
+
             is ServiceResult.BusinessError -> {
                 logger.error("Business error inserting family member: ${result.message}")
                 throw DataIntegrityViolationException(result.message)
             }
+
             else -> {
                 val message = "Failed to insert family member: $result"
                 logger.error(message)
@@ -175,15 +178,18 @@ class FamilyMemberService(
                 logger.info("Successfully updated family member with ID: ${result.data.familyMemberId}")
                 result.data
             }
+
             is ServiceResult.NotFound -> {
                 val message = "Family member not found with ID: ${member.familyMemberId}"
                 logger.error(message)
                 throw IllegalArgumentException(message)
             }
+
             is ServiceResult.BusinessError -> {
                 logger.error("Business error updating family member: ${result.message}")
                 throw DataIntegrityViolationException(result.message)
             }
+
             else -> {
                 val message = "Failed to update family member: $result"
                 logger.error(message)

@@ -94,7 +94,7 @@ tasks.named('check') { dependsOn 'codenarcMainRatchet' }
 
 // KtLint configuration: enforce rules for main sources
 ktlint {
-    version.set("1.7.1")
+    version.set("1.8.0")
     // Fail the build on style violations now that codebase is cleaned
     ignoreFailures.set(false)
 }

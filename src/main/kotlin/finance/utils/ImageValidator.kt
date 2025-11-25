@@ -30,10 +30,12 @@ class ImageValidator : ConstraintValidator<ValidImage, ByteArray> {
                         logger.debug("image format: ${imageReader.formatName}")
                         true
                     }
+
                     imageReader.formatName.lowercase() == "png" -> {
                         logger.debug("image format: ${imageReader.formatName}")
                         true
                     }
+
                     else -> {
                         false
                     }

@@ -119,10 +119,17 @@ open class BaseController {
             }
 
         when {
-            statusCode.is5xxServerError -> securityLogger.error(logMessage, throwable)
-            statusCode == HttpStatus.UNAUTHORIZED || statusCode == HttpStatus.FORBIDDEN ->
+            statusCode.is5xxServerError -> {
+                securityLogger.error(logMessage, throwable)
+            }
+
+            statusCode == HttpStatus.UNAUTHORIZED || statusCode == HttpStatus.FORBIDDEN -> {
                 securityLogger.warn(logMessage)
-            else -> logger.info(logMessage)
+            }
+
+            else -> {
+                logger.info(logMessage)
+            }
         }
     }
 

@@ -91,18 +91,22 @@ class HttpErrorLoggingFilter(
                     securityLogger.error(logMessage)
                     incrementErrorCounter("5xx", status, method, uri)
                 }
+
                 status == 404 -> {
                     httpLogger.warn("$logMessage type=NOT_FOUND")
                     incrementErrorCounter("4xx", status, method, uri)
                 }
+
                 status == 403 -> {
                     securityLogger.warn("$logMessage type=FORBIDDEN")
                     incrementErrorCounter("4xx", status, method, uri)
                 }
+
                 status == 401 -> {
                     securityLogger.warn("$logMessage type=UNAUTHORIZED")
                     incrementErrorCounter("4xx", status, method, uri)
                 }
+
                 status >= 400 -> {
                     httpLogger.warn("$logMessage type=CLIENT_ERROR")
                     incrementErrorCounter("4xx", status, method, uri)

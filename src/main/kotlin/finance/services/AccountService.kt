@@ -137,7 +137,10 @@ class AccountService(
     fun insertAccount(account: Account): Account {
         val result = save(account)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             is ServiceResult.ValidationError -> {
                 val violations =
                     result.errors
@@ -173,6 +176,7 @@ class AccountService(
                         }.toSet()
                 throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
             }
+
             is ServiceResult.BusinessError -> {
                 if (result.message.contains("already exists")) {
                     throw DataIntegrityViolationException("Account not inserted as the account already exists ${account.accountNameOwner}.")
@@ -180,7 +184,10 @@ class AccountService(
                     throw RuntimeException("Failed to insert account: $result")
                 }
             }
-            else -> throw RuntimeException("Failed to insert account: $result")
+
+            else -> {
+                throw RuntimeException("Failed to insert account: $result")
+            }
         }
     }
 

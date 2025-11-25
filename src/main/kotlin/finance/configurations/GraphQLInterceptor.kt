@@ -51,12 +51,15 @@ class GraphQLInterceptor : WebGraphQlInterceptor {
                                         logger.warn("GraphQL: Query '$key' returned empty list - this may indicate serialization issues")
                                     }
                                 }
+
                                 is Map<*, *> -> {
                                     logger.debug("  - $key: Map with ${value.size} entries")
                                 }
+
                                 null -> {
                                     logger.warn("GraphQL: Query '$key' returned null - this may indicate an error")
                                 }
+
                                 else -> {
                                     logger.debug("  - $key: ${value::class.simpleName} = $value")
                                 }

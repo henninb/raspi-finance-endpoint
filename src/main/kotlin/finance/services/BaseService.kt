@@ -188,10 +188,12 @@ open class BaseService {
                     meterService.incrementExceptionThrownCounter("SQLException")
                     throw DataAccessResourceFailureException("Database operation failed", ex)
                 }
+
                 is DataAccessResourceFailureException -> {
                     meterService.incrementExceptionThrownCounter("DataAccessResourceFailureException")
                     throw ex
                 }
+
                 else -> {
                     meterService.incrementExceptionThrownCounter("DatabaseOperationTimeoutException")
                     throw DataAccessResourceFailureException("Database operation timeout", ex)

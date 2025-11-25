@@ -73,7 +73,7 @@ class TransferService(
 
     override fun update(entity: Transfer): ServiceResult<Transfer> =
         handleServiceOperation("update", entity.transferId) {
-            val existingTransfer = transferRepository.findByTransferId(entity.transferId!!)
+            val existingTransfer = transferRepository.findByTransferId(entity.transferId)
             if (existingTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: ${entity.transferId}")
             }
@@ -141,13 +141,18 @@ class TransferService(
                 transfer.guidSource = sourceResult.data.guid
                 logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
             }
+
             is ServiceResult.ValidationError -> {
                 throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
             }
+
             is ServiceResult.BusinessError -> {
                 throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
             }
-            else -> throw RuntimeException("Failed to create source transaction: $sourceResult")
+
+            else -> {
+                throw RuntimeException("Failed to create source transaction: $sourceResult")
+            }
         }
 
         // Create destination transaction using ServiceResult pattern
@@ -157,27 +162,39 @@ class TransferService(
                 transfer.guidDestination = destinationResult.data.guid
                 logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
             }
+
             is ServiceResult.ValidationError -> {
                 throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
             }
+
             is ServiceResult.BusinessError -> {
                 throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
             }
-            else -> throw RuntimeException("Failed to create destination transaction: $destinationResult")
+
+            else -> {
+                throw RuntimeException("Failed to create destination transaction: $destinationResult")
+            }
         }
 
         // Use the standardized save method and handle ServiceResult
         val result = save(transfer)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> {
+                result.data
+            }
+
             is ServiceResult.ValidationError -> {
                 throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
             }
+
             is ServiceResult.BusinessError -> {
                 // Handle data integrity violations (e.g., duplicate transfers)
                 throw org.springframework.dao.DataIntegrityViolationException(result.message)
             }
-            else -> throw RuntimeException("Failed to insert transfer: $result")
+
+            else -> {
+                throw RuntimeException("Failed to insert transfer: $result")
+            }
         }
     }
 
