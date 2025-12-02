@@ -40,33 +40,49 @@ open class CalculationService(
             var totalsOutstanding = ZERO_SCALE_2
 
             resultSet.forEach { row ->
-                val rowList = row as Array<*>
-                val amount = rowList[0] as? BigDecimal
-                val transactionState = rowList[2] as? String
-
-                if (transactionState != null && amount != null) {
-                    when (transactionState.lowercase()) {
-                        "future" -> {
-                            totalsFuture = amount.setScale(2, RoundingMode.HALF_UP)
-                            logger.debug("Future totals: $totalsFuture")
-                        }
-
-                        "cleared" -> {
-                            totalsCleared = amount.setScale(2, RoundingMode.HALF_UP)
-                            logger.debug("Cleared totals: $totalsCleared")
-                        }
-
-                        "outstanding" -> {
-                            totalsOutstanding = amount.setScale(2, RoundingMode.HALF_UP)
-                            logger.debug("Outstanding totals: $totalsOutstanding")
-                        }
-
-                        else -> {
-                            logger.debug("Unknown transaction state: $transactionState, amount: $amount")
-                        }
+                try {
+                    if (row !is Array<*>) {
+                        logger.warn("Unexpected row type: ${row?.javaClass?.simpleName}, expected Array")
+                        meterService.incrementExceptionCaughtCounter("UnexpectedRowType")
+                        return@forEach
                     }
-                } else {
-                    logger.debug("Skipping row with null values: state=$transactionState, amount=$amount")
+
+                    if (row.size < 3) {
+                        logger.warn("Row has insufficient columns: ${row.size}, expected at least 3")
+                        meterService.incrementExceptionCaughtCounter("InsufficientColumns")
+                        return@forEach
+                    }
+
+                    val amount = row[0] as? BigDecimal
+                    val transactionState = row[2] as? String
+
+                    if (transactionState != null && amount != null) {
+                        when (transactionState.lowercase()) {
+                            "future" -> {
+                                totalsFuture = amount.setScale(2, RoundingMode.HALF_UP)
+                                logger.debug("Future totals: $totalsFuture")
+                            }
+
+                            "cleared" -> {
+                                totalsCleared = amount.setScale(2, RoundingMode.HALF_UP)
+                                logger.debug("Cleared totals: $totalsCleared")
+                            }
+
+                            "outstanding" -> {
+                                totalsOutstanding = amount.setScale(2, RoundingMode.HALF_UP)
+                                logger.debug("Outstanding totals: $totalsOutstanding")
+                            }
+
+                            else -> {
+                                logger.debug("Unknown transaction state: $transactionState, amount: $amount")
+                            }
+                        }
+                    } else {
+                        logger.debug("Skipping row with null values: state=$transactionState, amount=$amount")
+                    }
+                } catch (ex: Exception) {
+                    logger.error("Error processing row in totals calculation: ${ex.message}", ex)
+                    meterService.incrementExceptionCaughtCounter("RowProcessingError")
                 }
             }
 

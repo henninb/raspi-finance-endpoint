@@ -65,17 +65,17 @@ data class Transfer(
     var amount: BigDecimal,
     @param:JsonProperty
     @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
-    @Column(name = "guid_source", nullable = false)
+    @Column(name = "guid_source", nullable = true)
     var guidSource: String?,
     @param:JsonProperty
     @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
-    @Column(name = "guid_destination", nullable = false)
+    @Column(name = "guid_destination", nullable = true)
     var guidDestination: String?,
     @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
-    constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal(0.00), "", "")
+    constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
 
     @JsonProperty
     @Column(name = "date_added", nullable = false)

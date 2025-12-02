@@ -21,10 +21,10 @@ import kotlin.system.measureTimeMillis
 
 open class BaseService {
     @Autowired
-    lateinit var meterService: MeterService
+    open lateinit var meterService: MeterService
 
     @Autowired
-    lateinit var validator: Validator
+    open lateinit var validator: Validator
 
     @Autowired(required = false)
     private var _databaseResilienceConfig: DatabaseResilienceConfiguration? = null

@@ -94,9 +94,9 @@ data class Account(
         AccountType.Undefined,
         true,
         "0000",
-        BigDecimal(0.0),
-        BigDecimal(0.0),
-        BigDecimal(0.0),
+        BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP),
+        BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP),
+        BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP),
     )
 
     @JsonIgnore

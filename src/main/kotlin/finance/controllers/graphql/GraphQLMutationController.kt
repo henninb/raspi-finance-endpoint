@@ -619,26 +619,64 @@ class GraphQLMutationController(
     ): MedicalExpense {
         logger.info("GraphQL - Creating medical expense via @MutationMapping")
 
+        // Validate required fields before force-unwrapping
+        if (medicalExpenseInput.serviceDate == null) {
+            logger.error("GraphQL - Missing required field: serviceDate")
+            throw IllegalArgumentException("serviceDate is required")
+        }
+        if (medicalExpenseInput.billedAmount == null) {
+            logger.error("GraphQL - Missing required field: billedAmount")
+            throw IllegalArgumentException("billedAmount is required")
+        }
+        if (medicalExpenseInput.insuranceDiscount == null) {
+            logger.error("GraphQL - Missing required field: insuranceDiscount")
+            throw IllegalArgumentException("insuranceDiscount is required")
+        }
+        if (medicalExpenseInput.insurancePaid == null) {
+            logger.error("GraphQL - Missing required field: insurancePaid")
+            throw IllegalArgumentException("insurancePaid is required")
+        }
+        if (medicalExpenseInput.patientResponsibility == null) {
+            logger.error("GraphQL - Missing required field: patientResponsibility")
+            throw IllegalArgumentException("patientResponsibility is required")
+        }
+        if (medicalExpenseInput.isOutOfNetwork == null) {
+            logger.error("GraphQL - Missing required field: isOutOfNetwork")
+            throw IllegalArgumentException("isOutOfNetwork is required")
+        }
+        if (medicalExpenseInput.claimNumber == null) {
+            logger.error("GraphQL - Missing required field: claimNumber")
+            throw IllegalArgumentException("claimNumber is required")
+        }
+        if (medicalExpenseInput.claimStatus == null) {
+            logger.error("GraphQL - Missing required field: claimStatus")
+            throw IllegalArgumentException("claimStatus is required")
+        }
+        if (medicalExpenseInput.paidAmount == null) {
+            logger.error("GraphQL - Missing required field: paidAmount")
+            throw IllegalArgumentException("paidAmount is required")
+        }
+
         val medicalExpense =
             MedicalExpense().apply {
                 this.medicalExpenseId = medicalExpenseInput.medicalExpenseId ?: 0L
                 this.transactionId = medicalExpenseInput.transactionId
                 this.providerId = medicalExpenseInput.providerId
                 this.familyMemberId = medicalExpenseInput.familyMemberId
-                this.serviceDate = medicalExpenseInput.serviceDate!!
+                this.serviceDate = medicalExpenseInput.serviceDate
                 this.serviceDescription = medicalExpenseInput.serviceDescription
                 this.procedureCode = medicalExpenseInput.procedureCode
                 this.diagnosisCode = medicalExpenseInput.diagnosisCode
-                this.billedAmount = medicalExpenseInput.billedAmount!!
-                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount!!
-                this.insurancePaid = medicalExpenseInput.insurancePaid!!
-                this.patientResponsibility = medicalExpenseInput.patientResponsibility!!
+                this.billedAmount = medicalExpenseInput.billedAmount
+                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount
+                this.insurancePaid = medicalExpenseInput.insurancePaid
+                this.patientResponsibility = medicalExpenseInput.patientResponsibility
                 this.paidDate = medicalExpenseInput.paidDate
-                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork!!
-                this.claimNumber = medicalExpenseInput.claimNumber!!
-                this.claimStatus = medicalExpenseInput.claimStatus!!
+                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork
+                this.claimNumber = medicalExpenseInput.claimNumber
+                this.claimStatus = medicalExpenseInput.claimStatus
                 this.activeStatus = medicalExpenseInput.activeStatus ?: true
-                this.paidAmount = medicalExpenseInput.paidAmount!!
+                this.paidAmount = medicalExpenseInput.paidAmount
             }
 
         return when (val result = medicalExpenseService.save(medicalExpense)) {
@@ -672,26 +710,68 @@ class GraphQLMutationController(
     ): MedicalExpense {
         logger.info("GraphQL - Updating medical expense id={}", medicalExpenseInput.medicalExpenseId)
 
+        // Validate required fields including medicalExpenseId for update
+        if (medicalExpenseInput.medicalExpenseId == null) {
+            logger.error("GraphQL - Missing required field for update: medicalExpenseId")
+            throw IllegalArgumentException("medicalExpenseId is required for update")
+        }
+        if (medicalExpenseInput.serviceDate == null) {
+            logger.error("GraphQL - Missing required field: serviceDate")
+            throw IllegalArgumentException("serviceDate is required")
+        }
+        if (medicalExpenseInput.billedAmount == null) {
+            logger.error("GraphQL - Missing required field: billedAmount")
+            throw IllegalArgumentException("billedAmount is required")
+        }
+        if (medicalExpenseInput.insuranceDiscount == null) {
+            logger.error("GraphQL - Missing required field: insuranceDiscount")
+            throw IllegalArgumentException("insuranceDiscount is required")
+        }
+        if (medicalExpenseInput.insurancePaid == null) {
+            logger.error("GraphQL - Missing required field: insurancePaid")
+            throw IllegalArgumentException("insurancePaid is required")
+        }
+        if (medicalExpenseInput.patientResponsibility == null) {
+            logger.error("GraphQL - Missing required field: patientResponsibility")
+            throw IllegalArgumentException("patientResponsibility is required")
+        }
+        if (medicalExpenseInput.isOutOfNetwork == null) {
+            logger.error("GraphQL - Missing required field: isOutOfNetwork")
+            throw IllegalArgumentException("isOutOfNetwork is required")
+        }
+        if (medicalExpenseInput.claimNumber == null) {
+            logger.error("GraphQL - Missing required field: claimNumber")
+            throw IllegalArgumentException("claimNumber is required")
+        }
+        if (medicalExpenseInput.claimStatus == null) {
+            logger.error("GraphQL - Missing required field: claimStatus")
+            throw IllegalArgumentException("claimStatus is required")
+        }
+        if (medicalExpenseInput.paidAmount == null) {
+            logger.error("GraphQL - Missing required field: paidAmount")
+            throw IllegalArgumentException("paidAmount is required")
+        }
+
         val medicalExpense =
             MedicalExpense().apply {
-                this.medicalExpenseId = medicalExpenseInput.medicalExpenseId!!
+                this.medicalExpenseId = medicalExpenseInput.medicalExpenseId
                 this.transactionId = medicalExpenseInput.transactionId
                 this.providerId = medicalExpenseInput.providerId
                 this.familyMemberId = medicalExpenseInput.familyMemberId
-                this.serviceDate = medicalExpenseInput.serviceDate!!
+                this.serviceDate = medicalExpenseInput.serviceDate
                 this.serviceDescription = medicalExpenseInput.serviceDescription
                 this.procedureCode = medicalExpenseInput.procedureCode
                 this.diagnosisCode = medicalExpenseInput.diagnosisCode
-                this.billedAmount = medicalExpenseInput.billedAmount!!
-                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount!!
-                this.insurancePaid = medicalExpenseInput.insurancePaid!!
-                this.patientResponsibility = medicalExpenseInput.patientResponsibility!!
+                this.billedAmount = medicalExpenseInput.billedAmount
+                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount
+                this.insurancePaid = medicalExpenseInput.insurancePaid
+                this.patientResponsibility = medicalExpenseInput.patientResponsibility
                 this.paidDate = medicalExpenseInput.paidDate
-                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork!!
-                this.claimNumber = medicalExpenseInput.claimNumber!!
-                this.claimStatus = medicalExpenseInput.claimStatus!!
+                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork
+                this.claimNumber = medicalExpenseInput.claimNumber
+                this.claimStatus = medicalExpenseInput.claimStatus
                 this.activeStatus = medicalExpenseInput.activeStatus ?: true
-                this.paidAmount = medicalExpenseInput.paidAmount!!
+                this.paidAmount = medicalExpenseInput.paidAmount
             }
 
         return when (val result = medicalExpenseService.update(medicalExpense)) {

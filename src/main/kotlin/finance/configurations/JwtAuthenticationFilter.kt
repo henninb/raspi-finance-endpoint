@@ -32,6 +32,21 @@ class JwtAuthenticationFilter(
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
     }
 
+    // Cache counters to avoid recreation on every request
+    private val authSuccessCounter: Counter by lazy {
+        Counter
+            .builder("authentication.success")
+            .description("Number of successful authentication attempts")
+            .register(meterRegistry)
+    }
+
+    private val authFailureCounter: Counter by lazy {
+        Counter
+            .builder("authentication.failure")
+            .description("Number of failed authentication attempts")
+            .register(meterRegistry)
+    }
+
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -61,16 +76,15 @@ class JwtAuthenticationFilter(
             if (tokenBlacklistService.isBlacklisted(token)) {
                 val clientIp = getClientIpAddress(request)
                 securityLogger.warn("Blacklisted token used from IP: {}", clientIp)
-                Counter
-                    .builder("authentication.failure")
-                    .description("Number of failed authentication attempts")
-                    .tags(
-                        listOfNotNull(
-                            Tag.of("reason", "BlacklistedToken"),
-                            Tag.of("ip_address", clientIp),
-                        ),
-                    ).register(meterRegistry)
-                    .increment()
+                authFailureCounter.increment()
+                meterRegistry
+                    .counter(
+                        "authentication.failure.details",
+                        "reason",
+                        "BlacklistedToken",
+                        "ip_address",
+                        clientIp,
+                    ).increment()
                 SecurityContextHolder.clearContext()
             } else {
                 try {
@@ -84,25 +98,31 @@ class JwtAuthenticationFilter(
                             .payload
 
                     val username = claims.get("username", String::class.java)
-                    val authorities =
-                        listOf(
-                            SimpleGrantedAuthority("ROLE_USER"),
-                            SimpleGrantedAuthority("USER"),
-                        )
-                    val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
-                    SecurityContextHolder.getContext().authentication = auth
+                    if (username.isNullOrBlank()) {
+                        securityLogger.warn("JWT token missing username claim from IP: {}", getClientIpAddress(request))
+                        authFailureCounter.increment()
+                        SecurityContextHolder.clearContext()
+                    } else {
+                        val authorities =
+                            listOf(
+                                SimpleGrantedAuthority("ROLE_USER"),
+                                SimpleGrantedAuthority("USER"),
+                            )
+                        val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
+                        SecurityContextHolder.getContext().authentication = auth
 
-                    securityLogger.info("Authentication successful for user: {} from IP: {}", username, getClientIpAddress(request))
-                    Counter
-                        .builder("authentication.success")
-                        .description("Number of successful authentication attempts")
-                        .tags(
-                            listOfNotNull(
-                                Tag.of("username", username ?: "unknown"),
-                                Tag.of("ip_address", getClientIpAddress(request)),
-                            ),
-                        ).register(meterRegistry)
-                        .increment()
+                        val clientIp = getClientIpAddress(request)
+                        securityLogger.info("Authentication successful for user: {} from IP: {}", username, clientIp)
+                        authSuccessCounter.increment()
+                        meterRegistry
+                            .counter(
+                                "authentication.success.details",
+                                "username",
+                                username.take(50),
+                                "ip_address",
+                                clientIp,
+                            ).increment()
+                    }
                 } catch (ex: JwtException) {
                     val clientIp = getClientIpAddress(request)
                     val userAgent = request.getHeader("User-Agent") ?: "unknown"
@@ -112,17 +132,27 @@ class JwtAuthenticationFilter(
                         userAgent,
                         ex.message,
                     )
-                    Counter
-                        .builder("authentication.failure")
-                        .description("Number of failed authentication attempts")
-                        .tags(
-                            listOfNotNull(
-                                Tag.of("reason", ex.javaClass.simpleName),
-                                Tag.of("ip_address", clientIp),
-                                Tag.of("user_agent", userAgent.take(100)),
-                            ),
-                        ).register(meterRegistry)
-                        .increment()
+                    authFailureCounter.increment()
+                    meterRegistry
+                        .counter(
+                            "authentication.failure.details",
+                            "reason",
+                            ex.javaClass.simpleName,
+                            "ip_address",
+                            clientIp,
+                            "user_agent",
+                            userAgent.take(50),
+                        ).increment()
+                    SecurityContextHolder.clearContext()
+                } catch (ex: Exception) {
+                    val clientIp = getClientIpAddress(request)
+                    securityLogger.error(
+                        "Unexpected error during JWT authentication from IP: {}. Error: {}",
+                        clientIp,
+                        ex.message,
+                        ex,
+                    )
+                    authFailureCounter.increment()
                     SecurityContextHolder.clearContext()
                 }
             }
