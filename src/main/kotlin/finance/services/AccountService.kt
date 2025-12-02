@@ -211,21 +211,34 @@ class AccountService(
         return true
     }
 
+    @org.springframework.transaction.annotation.Transactional
     fun renameAccountNameOwner(
         oldAccountNameOwner: String,
         newAccountNameOwner: String,
     ): Account {
+        logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
+
         val oldAccount =
             accountRepository
                 .findByAccountNameOwner(oldAccountNameOwner)
-                .orElseThrow { EntityNotFoundException("Account not found") }
+                .orElseThrow {
+                    logger.error("Account not found: $oldAccountNameOwner")
+                    EntityNotFoundException("Account not found: $oldAccountNameOwner")
+                }
 
-        logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
-        oldAccount.accountNameOwner = newAccountNameOwner
-        oldAccount.dateUpdated = Timestamp(System.currentTimeMillis())
-        val renamedAccount = accountRepository.saveAndFlush(oldAccount)
-        logger.info("Successfully renamed account to: $newAccountNameOwner")
-        return renamedAccount
+        try {
+            oldAccount.accountNameOwner = newAccountNameOwner
+            oldAccount.dateUpdated = Timestamp(System.currentTimeMillis())
+            val renamedAccount = accountRepository.saveAndFlush(oldAccount)
+            logger.info("Successfully renamed account to: $newAccountNameOwner (accountId: ${renamedAccount.accountId})")
+            return renamedAccount
+        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            logger.error("Cannot rename account: $newAccountNameOwner already exists or violates constraints", ex)
+            throw ex
+        } catch (ex: Exception) {
+            logger.error("Failed to rename account from $oldAccountNameOwner to $newAccountNameOwner: ${ex.message}", ex)
+            throw ex
+        }
     }
 
     fun deactivateAccount(accountNameOwner: String): Account {
