@@ -29,10 +29,22 @@ open class ImageProcessingService :
         return try {
             logger.debug("Creating thumbnail for image of size: ${rawImage.size} bytes, format: $imageFormatType")
 
+            if (rawImage.isEmpty()) {
+                logger.warn("Cannot create thumbnail from empty image data")
+                meterService.incrementExceptionCaughtCounter("EmptyImageData")
+                return byteArrayOf()
+            }
+
+            if (imageFormatType == ImageFormatType.Undefined) {
+                logger.warn("Cannot create thumbnail for undefined image format")
+                meterService.incrementExceptionCaughtCounter("UndefinedImageFormat")
+                return byteArrayOf()
+            }
+
             val bufferedImage = ImageIO.read(ByteArrayInputStream(rawImage))
 
             if (bufferedImage == null) {
-                logger.warn("Could not read image data for thumbnail creation")
+                logger.warn("Could not read image data for thumbnail creation (BufferedImage is null)")
                 meterService.incrementExceptionCaughtCounter("ImageReadFailure")
                 return byteArrayOf()
             }
@@ -44,7 +56,13 @@ open class ImageProcessingService :
                     .asBufferedImage()
 
             val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(thumbnail, imageFormatType.toString(), byteArrayOutputStream)
+            val writeSuccess = ImageIO.write(thumbnail, imageFormatType.toString(), byteArrayOutputStream)
+
+            if (!writeSuccess) {
+                logger.warn("Failed to write thumbnail image in format: $imageFormatType")
+                meterService.incrementExceptionCaughtCounter("ThumbnailWriteFailure")
+                return byteArrayOf()
+            }
 
             val thumbnailBytes = byteArrayOutputStream.toByteArray()
             logger.info("Successfully created thumbnail: ${thumbnailBytes.size} bytes from original ${rawImage.size} bytes")
@@ -67,31 +85,47 @@ open class ImageProcessingService :
             logger.debug("Detecting image format for image of size: ${rawImage.size} bytes")
 
             val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(rawImage))
-            val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
-            var format = ImageFormatType.Undefined
-
-            imageReaders.forEachRemaining { imageReader ->
-                format =
-                    when {
-                        imageReader.formatName.lowercase() == "jpeg" -> {
-                            logger.info("Detected image format: ${imageReader.formatName}")
-                            ImageFormatType.Jpeg
-                        }
-
-                        imageReader.formatName.lowercase() == "png" -> {
-                            logger.info("Detected image format: ${imageReader.formatName}")
-                            ImageFormatType.Png
-                        }
-
-                        else -> {
-                            logger.debug("Unsupported image format: ${imageReader.formatName}")
-                            ImageFormatType.Undefined
-                        }
-                    }
+            if (imageInputStream == null) {
+                logger.warn("Failed to create ImageInputStream for image format detection")
+                meterService.incrementExceptionCaughtCounter("ImageInputStreamCreationFailed")
+                return ImageFormatType.Undefined
             }
 
-            logger.debug("Final detected format: $format")
-            return format
+            try {
+                val imageReaders: Iterator<ImageReader> = ImageIO.getImageReaders(imageInputStream)
+                var format = ImageFormatType.Undefined
+
+                imageReaders.forEachRemaining { imageReader ->
+                    format =
+                        when {
+                            imageReader.formatName.lowercase() == "jpeg" -> {
+                                logger.info("Detected image format: ${imageReader.formatName}")
+                                ImageFormatType.Jpeg
+                            }
+
+                            imageReader.formatName.lowercase() == "png" -> {
+                                logger.info("Detected image format: ${imageReader.formatName}")
+                                ImageFormatType.Png
+                            }
+
+                            else -> {
+                                logger.debug("Unsupported image format: ${imageReader.formatName}")
+                                ImageFormatType.Undefined
+                            }
+                        }
+                }
+
+                logger.debug("Final detected format: $format")
+                return format
+            } finally {
+                // Always close the ImageInputStream to prevent resource leak
+                try {
+                    imageInputStream.close()
+                    logger.debug("ImageInputStream closed successfully")
+                } catch (ex: Exception) {
+                    logger.warn("Failed to close ImageInputStream: ${ex.message}")
+                }
+            }
         } catch (ex: Exception) {
             logger.error("Error detecting image format: ${ex.message}", ex)
             meterService.incrementExceptionCaughtCounter("ImageFormatDetectionError")

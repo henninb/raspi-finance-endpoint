@@ -103,7 +103,7 @@ data class Transaction(
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
-    var amount: BigDecimal = BigDecimal(0.00),
+    var amount: BigDecimal = BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP),
     @param:JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
@@ -132,7 +132,7 @@ data class Transaction(
         LocalDate.of(1970, 1, 1),
         "",
         "",
-        BigDecimal(0.00),
+        BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP),
         TransactionState.Undefined,
         true,
         ReoccurringType.Undefined,

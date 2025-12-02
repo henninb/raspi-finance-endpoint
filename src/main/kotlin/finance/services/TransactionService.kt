@@ -389,16 +389,25 @@ class TransactionService(
         transactionFromDatabase: Transaction,
         transaction: Transaction,
     ): Transaction {
+        logger.debug("Updating transaction: ${transaction.guid}")
         if (transactionFromDatabase.guid == transaction.guid) {
             processCategory(transaction)
-            val account = accountService.account(transaction.accountNameOwner).get()
+            val accountOptional = accountService.account(transaction.accountNameOwner)
+            if (accountOptional.isEmpty) {
+                logger.error("Account not found for transaction update: ${transaction.accountNameOwner}")
+                meterService.incrementExceptionThrownCounter("AccountNotFoundOnUpdate")
+                throw AccountValidationException("Account not found: ${transaction.accountNameOwner}")
+            }
+            val account = accountOptional.get()
             transaction.accountId = account.accountId
             transaction.dateAdded = transactionFromDatabase.dateAdded
             transaction.dateUpdated = Timestamp(System.currentTimeMillis())
             processDescription(transaction)
+            logger.info("Successfully updated transaction: ${transaction.guid}")
             return transactionRepository.saveAndFlush(transaction)
         }
         logger.warn("guid did not match any database records to update ${transaction.guid}.")
+        meterService.incrementExceptionThrownCounter("TransactionGuidMismatch")
         throw TransactionValidationException("guid did not match any database records to update ${transaction.guid}.")
     }
 
@@ -500,21 +509,28 @@ class TransactionService(
     // ===== Preserved Business Logic Methods =====
 
     fun processAccount(transaction: Transaction) {
+        logger.debug("Processing account for transaction: ${transaction.guid}, accountNameOwner: ${transaction.accountNameOwner}")
         var accountOptional = accountService.account(transaction.accountNameOwner)
         if (accountOptional.isPresent) {
             val existingAccount = accountOptional.get()
             transaction.accountId = existingAccount.accountId
             transaction.accountType = existingAccount.accountType
             meterService.incrementTransactionAlreadyExistsCounter(transaction.accountNameOwner)
-            logger.info("Using existing account: ${transaction.accountNameOwner}")
+            logger.info("Using existing account: ${transaction.accountNameOwner} with accountId: ${existingAccount.accountId}")
         } else {
-            logger.info("Creating new account: ${transaction.accountNameOwner}")
-            val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
-            val savedAccount = accountService.insertAccount(account)
-            meterService.incrementExceptionThrownCounter("AccountCreated")
-            logger.info("Created new account: ${transaction.accountNameOwner} with ID: ${savedAccount.accountId}")
-            transaction.accountId = savedAccount.accountId
-            transaction.accountType = savedAccount.accountType
+            logger.info("Account not found, creating new account: ${transaction.accountNameOwner}")
+            try {
+                val account = createDefaultAccount(transaction.accountNameOwner, transaction.accountType)
+                val savedAccount = accountService.insertAccount(account)
+                meterService.incrementExceptionThrownCounter("AccountCreated")
+                logger.info("Created new account: ${transaction.accountNameOwner} with ID: ${savedAccount.accountId}")
+                transaction.accountId = savedAccount.accountId
+                transaction.accountType = savedAccount.accountType
+            } catch (ex: Exception) {
+                logger.error("Failed to create account: ${transaction.accountNameOwner}", ex)
+                meterService.incrementExceptionCaughtCounter("AccountCreationFailed")
+                throw AccountValidationException("Failed to create account: ${transaction.accountNameOwner}: ${ex.message}")
+            }
         }
     }
 

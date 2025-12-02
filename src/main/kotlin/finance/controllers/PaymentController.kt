@@ -167,6 +167,11 @@ class PaymentController(
         @PathVariable("paymentId") id: Long,
         @Valid @RequestBody entity: Payment,
     ): ResponseEntity<Payment> {
+        logger.debug("Updating payment with ID: $id")
+
+        // Ensure the entity has the correct ID from the path
+        entity.paymentId = id
+
         @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = paymentService.update(entity)) {
             is ServiceResult.Success -> {
@@ -180,22 +185,22 @@ class PaymentController(
             }
 
             is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating payment: ${result.errors}")
+                logger.warn("Validation error updating payment $id: ${result.errors}")
                 ResponseEntity.badRequest().build<Payment>()
             }
 
             is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating payment: ${result.message}")
+                logger.warn("Business error updating payment $id: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build<Payment>()
             }
 
             is ServiceResult.SystemError -> {
-                logger.error("System error updating payment: ${result.exception.message}", result.exception)
+                logger.error("System error updating payment $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
 
             else -> {
-                logger.error("Unexpected result type: $result")
+                logger.error("Unexpected result type for payment update $id: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
         }

@@ -270,6 +270,7 @@ class PaymentService(
      * Legacy insertPayment method - now uses new behavior-aware logic.
      * @deprecated Consider using save() method instead
      */
+    @org.springframework.transaction.annotation.Transactional
     fun insertPayment(payment: Payment): Payment {
         logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
 
@@ -280,8 +281,21 @@ class PaymentService(
         processPaymentAccount(payment.sourceAccount)
 
         // Retrieve account types for behavior inference
-        val sourceAccount = accountService.account(payment.sourceAccount).get()
-        val destinationAccount = accountService.account(payment.destinationAccount).get()
+        val sourceAccountOpt = accountService.account(payment.sourceAccount)
+        if (sourceAccountOpt.isEmpty) {
+            logger.error("Source account not found after creation attempt: ${payment.sourceAccount}")
+            meterService.incrementExceptionThrownCounter("PaymentSourceAccountNotFound")
+            throw IllegalStateException("Source account not found: ${payment.sourceAccount}")
+        }
+        val destinationAccountOpt = accountService.account(payment.destinationAccount)
+        if (destinationAccountOpt.isEmpty) {
+            logger.error("Destination account not found after creation attempt: ${payment.destinationAccount}")
+            meterService.incrementExceptionThrownCounter("PaymentDestinationAccountNotFound")
+            throw IllegalStateException("Destination account not found: ${payment.destinationAccount}")
+        }
+
+        val sourceAccount = sourceAccountOpt.get()
+        val destinationAccount = destinationAccountOpt.get()
 
         // Infer payment behavior from account types
         val behavior =
@@ -409,15 +423,21 @@ class PaymentService(
      * Process payment account - create if missing (similar to TransactionService.processAccount)
      */
     private fun processPaymentAccount(accountNameOwner: String) {
-        logger.info("Finding account: $accountNameOwner")
+        logger.debug("Processing payment account: $accountNameOwner")
         val accountOptional = accountService.account(accountNameOwner)
         if (accountOptional.isPresent) {
-            logger.info("Using existing account: $accountNameOwner")
+            logger.info("Using existing account for payment: $accountNameOwner (accountId: ${accountOptional.get().accountId})")
         } else {
-            logger.info("Creating new account: $accountNameOwner")
-            val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
-            val savedAccount = accountService.insertAccount(account)
-            logger.info("Created new account: $accountNameOwner with ID: ${savedAccount.accountId}")
+            logger.info("Account not found for payment, creating new account: $accountNameOwner")
+            try {
+                val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
+                val savedAccount = accountService.insertAccount(account)
+                logger.info("Created new account for payment: $accountNameOwner with ID: ${savedAccount.accountId}")
+            } catch (ex: Exception) {
+                logger.error("Failed to create account for payment: $accountNameOwner", ex)
+                meterService.incrementExceptionCaughtCounter("PaymentAccountCreationFailed")
+                throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
+            }
         }
     }
 

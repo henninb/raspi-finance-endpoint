@@ -1,10 +1,12 @@
 package finance.services
 
+import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /**
@@ -15,7 +17,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class TokenBlacklistService {
     private val blacklistedTokens = ConcurrentHashMap<String, Long>()
-    private val cleanup = Executors.newScheduledThreadPool(1)
+    private val cleanup: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
 
     companion object {
         private val logger = LoggerFactory.getLogger(TokenBlacklistService::class.java)
@@ -25,6 +27,26 @@ class TokenBlacklistService {
         // Schedule cleanup task to run every hour
         cleanup.scheduleWithFixedDelay(::cleanupExpiredTokens, 1, 1, TimeUnit.HOURS)
         logger.info("TokenBlacklistService initialized with hourly cleanup schedule")
+    }
+
+    @PreDestroy
+    fun shutdown() {
+        logger.info("Shutting down TokenBlacklistService cleanup executor")
+        try {
+            cleanup.shutdown()
+            if (!cleanup.awaitTermination(5, TimeUnit.SECONDS)) {
+                logger.warn("Cleanup executor did not terminate in 5 seconds, forcing shutdown")
+                cleanup.shutdownNow()
+                if (!cleanup.awaitTermination(5, TimeUnit.SECONDS)) {
+                    logger.error("Cleanup executor did not terminate after forced shutdown")
+                }
+            }
+            logger.info("TokenBlacklistService cleanup executor shut down successfully")
+        } catch (ex: InterruptedException) {
+            logger.error("Interrupted while shutting down cleanup executor", ex)
+            cleanup.shutdownNow()
+            Thread.currentThread().interrupt()
+        }
     }
 
     /**

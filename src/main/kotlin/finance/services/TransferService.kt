@@ -109,6 +109,7 @@ class TransferService(
         }
     }
 
+    @org.springframework.transaction.annotation.Transactional
     fun insertTransfer(transfer: Transfer): Transfer {
         logger.info("Inserting new transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
         val transactionSource = Transaction()
