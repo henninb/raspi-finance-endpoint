@@ -117,6 +117,10 @@ spring:
         # Query plan cache
         query.plan_cache_max_size: 2048
         query.plan_parameter_metadata_max_size: 128
+        # SQL query statistics and logging
+        generate_statistics: true
+        use_sql_comments: true
+        format_sql: true
   #    properties:
   #      hibernate:
   #        jdbc:
@@ -224,6 +228,23 @@ management:
         step: 1m                                  # How often to publish metrics (1 minute)
         connect-timeout: 10s                      # Connection timeout
         read-timeout: 30s                         # Read timeout
+
+# ===============================
+# = Performance Monitoring
+# ===============================
+performance:
+  console-reporting:
+    enabled: true                                 # Enable console metrics reporting
+    interval-seconds: 60                          # Report every 60 seconds
+  sql-logging:
+    enabled: true                                 # Enable SQL query logging with execution times
+    slow-query-threshold-ms: 100                  # Warn on queries >100ms
+    very-slow-query-threshold-ms: 500             # Error on queries >500ms
+  method-timing:
+    enabled: true                                 # Enable AOP method timing
+    warn-threshold-ms: 500                        # Warn on methods >500ms
+    error-threshold-ms: 2000                      # Error on methods >2000ms
+
 debug: false
 
 # Circuit breaker and resilience patterns

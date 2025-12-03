@@ -27,11 +27,24 @@ class DescriptionService(
     override fun findAllActive(): ServiceResult<List<Description>> =
         handleServiceOperation("findAllActive", null) {
             val descriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
-            descriptions.map { description ->
-                val count = transactionRepository.countByDescriptionName(description.descriptionName)
-                description.descriptionCount = count
-                description
+
+            // Batch query to get all counts at once (prevents N+1 query problem)
+            val descriptionNames = descriptions.map { it.descriptionName }
+            val countMap =
+                if (descriptionNames.isNotEmpty()) {
+                    transactionRepository
+                        .countByDescriptionNameIn(descriptionNames)
+                        .associate { row -> row[0] as String to row[1] as Long }
+                } else {
+                    emptyMap()
+                }
+
+            // Apply counts to descriptions
+            descriptions.forEach { description ->
+                description.descriptionCount = countMap[description.descriptionName] ?: 0L
             }
+
+            descriptions
         }
 
     override fun findById(id: Long): ServiceResult<Description> =
