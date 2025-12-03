@@ -1,6 +1,9 @@
 import nu.studer.gradle.jooq.JooqEdition
 
 buildscript {
+    dependencies {
+        classpath "org.flywaydb:flyway-database-postgresql:11.17.2"
+    }
 }
 
 plugins {
@@ -43,6 +46,8 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    // Flyway plugin needs PostgreSQL driver at configuration time
+    flywayDriver
 }
 
 configurations.configureEach {
@@ -196,6 +201,10 @@ dependencies {
     implementation("org.flywaydb:flyway-core:${flywayVersion}")
     implementation("org.flywaydb:flyway-database-postgresql:${flywayVersion}")
 
+    // Flyway Gradle plugin dependencies (needed at configuration time)
+    flywayDriver("org.postgresql:postgresql:${postgresqlDriverVersion}")
+    flywayDriver("org.flywaydb:flyway-database-postgresql:${flywayVersion}")
+
 
     //influx
     implementation("io.micrometer:micrometer-registry-influx:${micrometerInfluxRegistryVersion}")
@@ -250,6 +259,19 @@ dependencies {
 jooq {
     version = "${jooqVersion}"  // the default (can be omitted)
     edition = JooqEdition.OSS  // the default (can be omitted)
+}
+
+// Flyway configuration for migrations
+flyway {
+    url = System.getenv('DATASOURCE') ?: 'jdbc:postgresql://localhost:5432/finance_db'
+    user = System.getenv('DATASOURCE_USERNAME') ?: 'postgres'
+    password = System.getenv('DATASOURCE_PASSWORD') ?: ''
+    locations = ["filesystem:${projectDir}/src/main/resources/db/migration/prod"]
+    baselineOnMigrate = false
+    validateOnMigrate = true
+    driver = 'org.postgresql.Driver'
+    // Use the flywayDriver configuration for JDBC driver
+    configurations = ['flywayDriver']
 }
 
 // Enable Gradle dependency locking for all configurations
