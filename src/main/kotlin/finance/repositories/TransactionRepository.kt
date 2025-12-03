@@ -33,10 +33,20 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         @Param("descriptionName") descriptionName: String,
     ): Long
 
+    @Query("SELECT t.description, COUNT(t) FROM Transaction t WHERE t.description IN :descriptionNames GROUP BY t.description")
+    fun countByDescriptionNameIn(
+        @Param("descriptionNames") descriptionNames: List<String>,
+    ): List<Array<Any>>
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.category = :categoryName")
     fun countByCategoryName(
         @Param("categoryName") categoryName: String,
     ): Long
+
+    @Query("SELECT t.category, COUNT(t) FROM Transaction t WHERE t.category IN :categoryNames GROUP BY t.category")
+    fun countByCategoryNameIn(
+        @Param("categoryNames") categoryNames: List<String>,
+    ): List<Array<Any>>
 
     // TODO: 6/27/20201 - add a default param for activeState
     // TODO: 6/27/20201 - what happens if the list is empty

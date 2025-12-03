@@ -14,7 +14,7 @@
             <totalSizeCap>140MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{correlationId:-NO-CORRELATION-ID}] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -22,7 +22,7 @@
         <!-- <withJansi>true</withJansi> -->
         <encoder>
             <pattern>
-                %blue(%d{yyyy-MM-dd HH:mm:ss}) %green([%thread]) - %yellow(%-5level) %cyan(%-36.36logger{36}) - %magenta(%msg) %n
+                %blue(%d{yyyy-MM-dd HH:mm:ss}) %green([%thread]) %red([%X{correlationId:-NO-CORRELATION-ID}]) - %yellow(%-5level) %cyan(%-36.36logger{36}) - %magenta(%msg) %n
             </pattern>
         </encoder>
     </appender>

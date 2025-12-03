@@ -156,6 +156,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
 
+    //AOP for performance monitoring
+    implementation("org.springframework:spring-aop:7.0.0")
+    implementation("org.aspectj:aspectjweaver:1.9.24")
+
     // Spring Boot 4.0 test dependencies
     // moved to test.gradle to centralize test deps
     implementation("org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}")

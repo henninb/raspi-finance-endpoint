@@ -25,11 +25,24 @@ class CategoryService(
     override fun findAllActive(): ServiceResult<List<Category>> =
         handleServiceOperation("findAllActive", null) {
             val categories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
-            categories.map { category ->
-                val count = transactionRepository.countByCategoryName(category.categoryName)
-                category.categoryCount = count
-                category
+
+            // Batch query to get all counts at once (prevents N+1 query problem)
+            val categoryNames = categories.map { it.categoryName }
+            val countMap =
+                if (categoryNames.isNotEmpty()) {
+                    transactionRepository
+                        .countByCategoryNameIn(categoryNames)
+                        .associate { row -> row[0] as String to row[1] as Long }
+                } else {
+                    emptyMap()
+                }
+
+            // Apply counts to categories
+            categories.forEach { category ->
+                category.categoryCount = countMap[category.categoryName] ?: 0L
             }
+
+            categories
         }
 
     override fun findById(id: Long): ServiceResult<Category> =
