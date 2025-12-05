@@ -134,6 +134,27 @@ class LoginControllerSpec extends Specification {
         password << ["weak", "password123", "Password!", "PASSWORD123"]
     }
 
+    @Unroll
+    def "register should reject pre-encoded BCrypt passwords '#encodedPassword'"() {
+        given: "a user attempting to register with a pre-encoded password"
+        def invalidUser = new User(username: "attackeruser", password: encodedPassword, firstName: "first", lastName: "last")
+        userRepository.findByUsername("attackeruser") >> Optional.empty()
+
+        when: "attempting to register with the pre-encoded password"
+        ResponseEntity<Map<String, String>> result = loginController.register(invalidUser, bindingResult, response)
+
+        then: "registration should be rejected"
+        result.statusCode == HttpStatus.BAD_REQUEST
+        result.body["error"] == "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
+
+        where: "testing various BCrypt hash prefixes"
+        encodedPassword << [
+            "\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",  // BCrypt $2a$
+            "\$2b\$10\$abcdefghijklmnopqrstuv.WXYZ01234567890123456789012",  // BCrypt $2b$
+            "\$2y\$10\$abcdefghijklmnopqrstuv.WXYZ01234567890123456789012"   // BCrypt $2y$
+        ]
+    }
+
     def "getCurrentUser should return user details for valid token"() {
         given:
         def user = new User(username: "testuser", password: "hashed_password")
