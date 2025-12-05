@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Parameter Management", description = "Operations for managing parameters")
 @RestController
 @RequestMapping("/api/parameter")
+@PreAuthorize("hasAuthority('USER')")
 class ParameterController(
     private val parameterService: ParameterService,
 ) : StandardizedBaseController(),
