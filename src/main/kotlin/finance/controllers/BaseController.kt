@@ -1,6 +1,7 @@
 package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.IpAddressValidator
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
@@ -143,15 +144,7 @@ open class BaseController {
 
     private fun getClientIpAddress(request: HttpServletRequest?): String {
         if (request == null) return "unknown"
-
-        val xForwardedFor = request.getHeader("X-Forwarded-For")
-        val xRealIp = request.getHeader("X-Real-IP")
-
-        return when {
-            !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
-            !xRealIp.isNullOrBlank() -> xRealIp
-            else -> request.remoteAddr ?: "unknown"
-        }
+        return IpAddressValidator.getClientIpAddress(request)
     }
 
     private fun sanitizeHeader(header: String?): String? = header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")

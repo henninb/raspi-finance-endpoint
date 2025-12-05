@@ -21,7 +21,7 @@ object Constants {
     const val ALPHA_NUMERIC_NO_SPACE_PATTERN = "^[a-z0-9_-]*$"
     const val ALPHA_UNDERSCORE_PATTERN = "^[a-z-]*_[a-z]*$"
     const val ASCII_PATTERN = "^[\\u0000-\\u007F]*$"
-    const val UUID_PATTERN = "^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$"
+    const val UUID_PATTERN = "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
 
     const val FIELD_MUST_BE_ASCII_MESSAGE = "must be ascii character set"
     const val FIELD_MUST_BE_UUID_MESSAGE = "must be uuid formatted"

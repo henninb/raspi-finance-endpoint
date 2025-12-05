@@ -352,9 +352,11 @@ class LoginController(
      * Validates raw password format before encoding
      */
     private fun isValidRawPassword(password: String): Boolean {
-        // Skip validation for already encoded passwords (BCrypt hashes start with $2a$ or $2b$)
-        if (password.startsWith("$2a$") || password.startsWith("$2b$")) {
-            return true
+        // SECURITY: Never accept pre-encoded passwords from user input
+        // Pre-encoded passwords would bypass complexity requirements
+        if (password.startsWith("$2a$") || password.startsWith("$2b$") || password.startsWith("$2y$")) {
+            logger.warn("SECURITY: Rejected pre-encoded password in registration attempt")
+            return false
         }
 
         val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$"
