@@ -17,6 +17,7 @@ import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.orm.jpa.JpaSystemException
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -36,6 +37,7 @@ import java.time.LocalDate
 @Tag(name = "Medical Expense Management", description = "Operations for managing medical expenses")
 @RestController
 @RequestMapping("/api/medical-expenses")
+@PreAuthorize("hasAuthority('USER')")
 class MedicalExpenseController(
     private val medicalExpenseService: MedicalExpenseService,
 ) : StandardizedBaseController(),

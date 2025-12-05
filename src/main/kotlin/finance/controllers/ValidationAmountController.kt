@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -27,6 +28,7 @@ import java.util.Locale
 @Tag(name = "Validation Amount Management", description = "Operations for managing validation amounts")
 @RestController
 @RequestMapping("/api/validation/amount")
+@PreAuthorize("hasAuthority('USER')")
 class ValidationAmountController(
     private var validationAmountService: ValidationAmountService,
 ) : StandardizedBaseController(),
