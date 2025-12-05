@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.utils.IpAddressValidator
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
@@ -31,7 +32,7 @@ class SecurityAuditFilter(
         val startTime = System.currentTimeMillis()
         val requestUri = request.requestURI
         val method = request.method
-        val clientIp = getClientIpAddress(request)
+        val clientIp = IpAddressValidator.getClientIpAddress(request)
 
         // Check if this is a sensitive endpoint access
         val isSensitiveEndpoint = SENSITIVE_ENDPOINTS.any { requestUri.contains(it) }
@@ -109,7 +110,7 @@ class SecurityAuditFilter(
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
         val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
-        val clientIp = getClientIpAddress(request)
+        val clientIp = IpAddressValidator.getClientIpAddress(request)
         val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
 
         val auditType = if (isAuthenticated) "AUTHORIZED_ACCESS" else "UNAUTHORIZED_ACCESS"
@@ -135,7 +136,7 @@ class SecurityAuditFilter(
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
         val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
-        val clientIp = getClientIpAddress(request)
+        val clientIp = IpAddressValidator.getClientIpAddress(request)
         val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
 
         val auditType =
@@ -173,17 +174,6 @@ class SecurityAuditFilter(
             responseTime,
             userAgent ?: "unknown",
         )
-    }
-
-    private fun getClientIpAddress(request: HttpServletRequest): String {
-        val xForwardedFor = request.getHeader("X-Forwarded-For")
-        val xRealIp = request.getHeader("X-Real-IP")
-
-        return when {
-            !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
-            !xRealIp.isNullOrBlank() -> xRealIp
-            else -> request.remoteAddr ?: "unknown"
-        }
     }
 
     private fun sanitizeUserAgent(userAgent: String?): String? = userAgent?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")

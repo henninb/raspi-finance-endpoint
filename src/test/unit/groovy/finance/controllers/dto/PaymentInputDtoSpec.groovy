@@ -207,8 +207,7 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             "invalid-guid",
             "12345678-1234-1234-1234-12345678901", // too short
             "12345678-1234-1234-1234-1234567890123", // too long
-            "12345678-1234-1234-1234-12345678901G", // invalid character
-            "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"  // uppercase
+            "12345678-1234-1234-1234-12345678901G" // invalid character
         ]
     }
 
@@ -239,12 +238,11 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
             "invalid-guid",
             "87654321-4321-4321-4321-21098765432", // too short
             "87654321-4321-4321-4321-2109876543213", // too long
-            "87654321-4321-4321-4321-21098765432G", // invalid character
-            "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"  // uppercase
+            "87654321-4321-4321-4321-21098765432G" // invalid character
         ]
     }
 
-    def "PaymentInputDto validation should pass for valid GUIDs"() {
+    def "PaymentInputDto validation should pass for valid lowercase GUIDs"() {
         given:
         def dto = new PaymentInputDto(
             null,
@@ -262,6 +260,34 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
 
         then:
         violations.isEmpty()
+    }
+
+    @Unroll
+    def "PaymentInputDto validation should pass for uppercase UUID: guidSource='#guidSource', guidDestination='#guidDestination'"() {
+        given: "a DTO with uppercase UUIDs"
+        def dto = new PaymentInputDto(
+            null,
+            "checking_primary",
+            "bills_payable",
+            LocalDate.of(2024, 1, 15),
+            new BigDecimal("100.00"),
+            guidSource,
+            guidDestination,
+            true
+        )
+
+        when: "validating the DTO"
+        Set<ConstraintViolation<PaymentInputDto>> violations = validator.validate(dto)
+
+        then: "validation should pass"
+        violations.isEmpty()
+
+        where: "testing various uppercase UUID formats"
+        guidSource                              | guidDestination
+        "550E8400-E29B-41D4-A716-446655440000" | "87654321-4321-4321-4321-210987654321"
+        "12345678-1234-1234-1234-123456789012" | "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
+        "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" | "550E8400-E29B-41D4-A716-446655440000"
+        "abcdef12-3456-7890-abcd-ef1234567890" | "ABCDEF12-3456-7890-ABCD-EF1234567890"
     }
 
     def "PaymentInputDto validation should pass when GUIDs are null"() {

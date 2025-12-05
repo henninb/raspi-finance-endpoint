@@ -1,6 +1,7 @@
 package finance.configurations
 
 import finance.services.TokenBlacklistService
+import finance.utils.IpAddressValidator
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
@@ -74,7 +75,7 @@ class JwtAuthenticationFilter(
         if (!token.isNullOrBlank()) {
             // Check if token is blacklisted before processing
             if (tokenBlacklistService.isBlacklisted(token)) {
-                val clientIp = getClientIpAddress(request)
+                val clientIp = IpAddressValidator.getClientIpAddress(request)
                 securityLogger.warn("Blacklisted token used from IP: {}", clientIp)
                 authFailureCounter.increment()
                 meterRegistry
@@ -99,7 +100,7 @@ class JwtAuthenticationFilter(
 
                     val username = claims.get("username", String::class.java)
                     if (username.isNullOrBlank()) {
-                        securityLogger.warn("JWT token missing username claim from IP: {}", getClientIpAddress(request))
+                        securityLogger.warn("JWT token missing username claim from IP: {}", IpAddressValidator.getClientIpAddress(request))
                         authFailureCounter.increment()
                         SecurityContextHolder.clearContext()
                     } else {
@@ -111,7 +112,7 @@ class JwtAuthenticationFilter(
                         val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
                         SecurityContextHolder.getContext().authentication = auth
 
-                        val clientIp = getClientIpAddress(request)
+                        val clientIp = IpAddressValidator.getClientIpAddress(request)
                         securityLogger.info("Authentication successful for user: {} from IP: {}", username, clientIp)
                         authSuccessCounter.increment()
                         meterRegistry
@@ -124,7 +125,7 @@ class JwtAuthenticationFilter(
                             ).increment()
                     }
                 } catch (ex: JwtException) {
-                    val clientIp = getClientIpAddress(request)
+                    val clientIp = IpAddressValidator.getClientIpAddress(request)
                     val userAgent = request.getHeader("User-Agent") ?: "unknown"
                     securityLogger.warn(
                         "JWT authentication failed from IP: {} with User-Agent: {}. Reason: {}",
@@ -145,7 +146,7 @@ class JwtAuthenticationFilter(
                         ).increment()
                     SecurityContextHolder.clearContext()
                 } catch (ex: Exception) {
-                    val clientIp = getClientIpAddress(request)
+                    val clientIp = IpAddressValidator.getClientIpAddress(request)
                     securityLogger.error(
                         "Unexpected error during JWT authentication from IP: {}. Error: {}",
                         clientIp,
@@ -159,15 +160,5 @@ class JwtAuthenticationFilter(
         }
 
         filterChain.doFilter(request, response)
-    }
-
-    private fun getClientIpAddress(request: HttpServletRequest): String {
-        val xForwardedFor = request.getHeader("X-Forwarded-For")
-        val xRealIp = request.getHeader("X-Real-IP")
-        return when {
-            !xForwardedFor.isNullOrBlank() -> xForwardedFor.split(",")[0].trim()
-            !xRealIp.isNullOrBlank() -> xRealIp
-            else -> request.remoteAddr ?: "unknown"
-        }
     }
 }
