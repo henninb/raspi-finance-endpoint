@@ -1,14 +1,15 @@
 package finance.controllers
 
-import finance.domain.MedicalExpense
 import finance.domain.ClaimStatus
+import finance.domain.MedicalExpense
 import finance.helpers.SmartMedicalExpenseBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-import org.springframework.http.*
-import spock.lang.Shared
+import org.springframework.aop.framework.AopProxyUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
+import org.springframework.http.*
+import spock.lang.Shared
 
 @Slf4j
 class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpec {
@@ -459,9 +460,10 @@ class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerF
     void 'should implement StandardRestController interface'() {
         when: 'checking controller inheritance'
         def controller = applicationContext.getBean('medicalExpenseController')
+        Class<?> controllerClass = AopProxyUtils.ultimateTargetClass(controller)
 
         then: 'should implement StandardRestController interface'
-        controller.class.interfaces.any { it.simpleName == 'StandardRestController' }
+        controllerClass.interfaces.any { it.simpleName == 'StandardRestController' }
 
         and: 'documents expected standardization'
         // Controller must implement StandardRestController<MedicalExpense, Long> interface
@@ -472,9 +474,10 @@ class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerF
     void 'should extend StandardizedBaseController'() {
         when: 'checking controller inheritance'
         def controller = applicationContext.getBean('medicalExpenseController')
+        Class<?> controllerClass = AopProxyUtils.ultimateTargetClass(controller)
 
         then: 'should extend StandardizedBaseController'
-        controller.class.superclass.simpleName == 'StandardizedBaseController'
+        controllerClass.superclass.simpleName == 'StandardizedBaseController'
 
         and: 'documents expected standardization'
         // Controller must extend StandardizedBaseController instead of BaseController
