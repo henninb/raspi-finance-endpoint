@@ -38,8 +38,10 @@ class StandardizedDescriptionControllerSpec extends Specification {
         Description d2 = desc(2L, "second")
         and:
         descriptionRepository.findByActiveStatusOrderByDescriptionName(true) >> [d1, d2]
-        transactionRepository.countByDescriptionName("first") >> 4L
-        transactionRepository.countByDescriptionName("second") >> 2L
+        transactionRepository.countByDescriptionNameIn(["first", "second"]) >> [
+            ["first", 4L] as Object[],
+            ["second", 2L] as Object[]
+        ]
 
         when:
         ResponseEntity<List<Description>> response = controller.findAllActive()

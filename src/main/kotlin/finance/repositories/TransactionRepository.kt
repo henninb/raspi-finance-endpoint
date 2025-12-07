@@ -80,4 +80,31 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         endDate: LocalDate,
         pageable: Pageable,
     ): Page<Transaction>
+
+    // Paginated queries for all active transactions
+    fun findByActiveStatus(
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    // Paginated queries for account-specific transactions
+    fun findByAccountNameOwnerAndActiveStatus(
+        accountNameOwner: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    // Paginated queries for category-specific transactions
+    fun findByCategoryAndActiveStatus(
+        category: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    // Paginated queries for description-specific transactions
+    fun findByDescriptionAndActiveStatus(
+        description: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
 }
