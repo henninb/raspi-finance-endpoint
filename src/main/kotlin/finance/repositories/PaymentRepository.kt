@@ -1,6 +1,8 @@
 package finance.repositories
 
 import finance.domain.Payment
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.Optional
 
@@ -20,6 +22,12 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
         guidSource: String,
         guidDestination: String,
     ): List<Payment>
+
+    // Paginated query for active payments (note: Payment uses activeStatus field)
+    fun findByActiveStatusOrderByTransactionDateDesc(
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Payment>
 
 //    @Transactional
 //    fun deleteByPaymentId(paymentId: Long)

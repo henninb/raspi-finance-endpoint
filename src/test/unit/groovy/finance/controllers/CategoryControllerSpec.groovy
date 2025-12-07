@@ -38,8 +38,10 @@ class StandardizedCategoryControllerSpec extends Specification {
         Category c2 = cat(2L, "utilities")
         and:
         categoryRepository.findByActiveStatusOrderByCategoryName(true) >> [c1, c2]
-        transactionRepository.countByCategoryName("groceries") >> 3L
-        transactionRepository.countByCategoryName("utilities") >> 1L
+        transactionRepository.countByCategoryNameIn(["groceries", "utilities"]) >> [
+            ["groceries", 3L] as Object[],
+            ["utilities", 1L] as Object[]
+        ]
 
         when:
         ResponseEntity<?> response = controller.findAllActive()

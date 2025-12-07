@@ -11,6 +11,8 @@ import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.InvalidDataAccessResourceUsageException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -107,6 +109,17 @@ class AccountService(
 
             accountRepository.delete(account)
             true
+        }
+
+    // ===== Paginated ServiceResult Methods =====
+
+    /**
+     * Find all active accounts with pagination.
+     * Sorted by accountNameOwner ascending.
+     */
+    fun findAllActive(pageable: Pageable): ServiceResult<Page<Account>> =
+        handleServiceOperation("findAllActive-paginated", null) {
+            accountRepository.findAllByActiveStatusOrderByAccountNameOwner(true, pageable)
         }
 
     // ===== Legacy Method Compatibility =====

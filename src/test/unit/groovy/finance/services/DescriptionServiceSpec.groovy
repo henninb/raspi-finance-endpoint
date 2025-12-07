@@ -39,8 +39,10 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
 
         then: "should return Success with descriptions"
         1 * descriptionRepositoryMock.findByActiveStatusOrderByDescriptionName(true) >> descriptions
-        1 * transactionRepositoryMock.countByDescriptionName("groceries") >> 5L
-        1 * transactionRepositoryMock.countByDescriptionName("utilities") >> 3L
+        1 * transactionRepositoryMock.countByDescriptionNameIn(["groceries", "utilities"]) >> [
+            ["groceries", 5L] as Object[],
+            ["utilities", 3L] as Object[]
+        ]
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].descriptionName == "groceries"
@@ -220,7 +222,9 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
 
         then: "should return description list"
         1 * descriptionRepositoryMock.findByActiveStatusOrderByDescriptionName(true) >> descriptions
-        1 * transactionRepositoryMock.countByDescriptionName("foo") >> 2L
+        1 * transactionRepositoryMock.countByDescriptionNameIn(["foo"]) >> [
+            ["foo", 2L] as Object[]
+        ]
         result.size() == 1
         result[0].descriptionCount == 2L
         0 * _

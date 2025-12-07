@@ -8,6 +8,8 @@ import finance.domain.TransactionState
 import finance.domain.Transfer
 import finance.repositories.TransferRepository
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.Optional
@@ -97,6 +99,17 @@ class TransferService(
             }
             transferRepository.delete(optionalTransfer.get())
             true
+        }
+
+    // ===== Paginated ServiceResult Methods =====
+
+    /**
+     * Find all active transfers with pagination.
+     * Sorted by transactionDate descending.
+     */
+    fun findAllActive(pageable: Pageable): ServiceResult<Page<Transfer>> =
+        handleServiceOperation("findAllActive-paginated", null) {
+            transferRepository.findByActiveStatusOrderByTransactionDateDesc(true, pageable)
         }
 
     // ===== Legacy Method Compatibility =====

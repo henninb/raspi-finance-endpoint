@@ -11,6 +11,8 @@ import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -191,6 +193,17 @@ class PaymentService(
             )
 
             true
+        }
+
+    // ===== Paginated ServiceResult Methods =====
+
+    /**
+     * Find all active payments with pagination.
+     * Sorted by transactionDate descending.
+     */
+    fun findAllActive(pageable: Pageable): ServiceResult<Page<Payment>> =
+        handleServiceOperation("findAllActive-paginated", null) {
+            paymentRepository.findByActiveStatusOrderByTransactionDateDesc(true, pageable)
         }
 
     /**

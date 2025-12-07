@@ -34,7 +34,7 @@ class ConstantsSpec extends Specification {
         Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN == "^[a-z0-9_-]*\$"
         Constants.ALPHA_UNDERSCORE_PATTERN == "^[a-z-]*_[a-z]*\$"
         Constants.ASCII_PATTERN == "^[\\u0000-\\u007F]*\$"
-        Constants.UUID_PATTERN == "^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\$"
+        Constants.UUID_PATTERN == "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\$"
     }
 
     def "Constants - validation messages are defined correctly"() {

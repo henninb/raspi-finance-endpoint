@@ -1,5 +1,7 @@
 package finance.controllers
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.server.ResponseStatusException
@@ -54,6 +56,15 @@ interface StandardRestController<T : Any, ID : Any> {
      * DELETE /api/{entity}/{id}
      */
     fun deleteById(id: ID): ResponseEntity<T>
+
+    /**
+     * Standard paginated collection retrieval - optional implementation
+     * GET /api/{entity}/active/paged?page=0&size=50
+     *
+     * Default implementation throws UnsupportedOperationException.
+     * Override this method to provide pagination support for the entity.
+     */
+    fun findAllActivePaged(pageable: Pageable): ResponseEntity<Page<T>> = throw UnsupportedOperationException("Pagination not implemented for this entity")
 }
 
 /**

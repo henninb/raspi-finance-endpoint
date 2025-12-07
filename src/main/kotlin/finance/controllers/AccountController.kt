@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -64,6 +66,46 @@ class AccountController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving active accounts: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
+
+    /**
+     * Paginated collection retrieval - GET /api/account/active/paged?page=0&size=50
+     * Returns Page<Account> with metadata
+     */
+    @Operation(summary = "Get all active accounts (paginated)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Page of accounts returned"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/active/paged", produces = ["application/json"])
+    override fun findAllActivePaged(
+        pageable: Pageable,
+    ): ResponseEntity<Page<Account>> {
+        logger.debug("Retrieving all active accounts (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
+        accountService.updateTotalsForAllAccounts()
+        return when (val result = accountService.findAllActive(pageable)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} accounts")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No accounts found")
+                ResponseEntity.ok(Page.empty(pageable))
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving accounts: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 

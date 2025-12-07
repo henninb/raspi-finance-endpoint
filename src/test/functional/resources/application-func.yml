@@ -9,6 +9,8 @@ server:
 spring:
   application:
     name: raspi-finance-endpoint
+  autoconfigure:
+    exclude: org.springframework.boot.actuate.autoconfigure.metrics.export.influx.InfluxMetricsExportAutoConfiguration
   graphql:
     path: /graphql
     graphiql:

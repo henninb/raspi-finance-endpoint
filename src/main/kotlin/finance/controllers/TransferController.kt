@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -67,6 +69,45 @@ class TransferController(
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
+
+    /**
+     * Paginated collection retrieval - GET /api/transfer/active/paged?page=0&size=50
+     * Returns Page<Transfer> with metadata
+     */
+    @Operation(summary = "Get all active transfers (paginated)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Page of transfers returned"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/active/paged", produces = ["application/json"])
+    override fun findAllActivePaged(
+        pageable: Pageable,
+    ): ResponseEntity<Page<Transfer>> {
+        logger.debug("Retrieving all active transfers (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
+        return when (val result = transferService.findAllActive(pageable)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} transfers")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No transfers found")
+                ResponseEntity.ok(Page.empty(pageable))
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transfers: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
 
     /**
      * Standardized single entity retrieval - GET /api/transfer/{transferId}

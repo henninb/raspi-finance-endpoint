@@ -67,6 +67,45 @@ class TransactionController(
         }
 
     /**
+     * Paginated collection retrieval - GET /api/transaction/active/paged?page=0&size=50
+     * Returns Page<Transaction> with metadata (totalElements, totalPages, etc.)
+     */
+    @Operation(summary = "Get all active transactions (paginated)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Page of transactions returned"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/active/paged", produces = ["application/json"])
+    override fun findAllActivePaged(
+        pageable: Pageable,
+    ): ResponseEntity<Page<Transaction>> {
+        logger.debug("Retrieving all active transactions (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
+        return when (val result = transactionService.findAllActive(pageable)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} transactions")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No transactions found")
+                ResponseEntity.ok(Page.empty(pageable))
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
+
+    /**
      * Standardized single entity retrieval - GET /api/transaction/{guid}
      * Uses camelCase parameter without @PathVariable annotation
      */
@@ -308,6 +347,47 @@ class TransactionController(
             logger.error("Failed to retrieve transactions for account $accountNameOwner: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions: ${ex.message}", ex)
         }
+
+    /**
+     * Paginated account transactions - GET /api/transaction/account/select/{accountNameOwner}/paged?page=0&size=50
+     * Returns Page<Transaction> with two-tier sorting (transactionState DESC, transactionDate DESC)
+     */
+    @Operation(summary = "List transactions for an account (paginated)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Page of transactions returned"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/account/select/{accountNameOwner}/paged", produces = ["application/json"])
+    fun selectByAccountNameOwnerPaged(
+        @PathVariable("accountNameOwner") accountNameOwner: String,
+        pageable: Pageable,
+    ): ResponseEntity<Page<Transaction>> {
+        logger.debug("Retrieving transactions for account: $accountNameOwner (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
+        return when (val result = transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner, pageable)) {
+            is ServiceResult.Success -> {
+                val page = result.data
+                logger.info("Retrieved page ${pageable.pageNumber} with ${page.numberOfElements} transactions for account: $accountNameOwner")
+                ResponseEntity.ok(page)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No transactions found for account: $accountNameOwner")
+                ResponseEntity.ok(Page.empty(pageable))
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions for $accountNameOwner: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
 
     // curl -k https://localhost:8443/transaction/account/totals/chase_brian
     @Operation(summary = "Get totals for an account")

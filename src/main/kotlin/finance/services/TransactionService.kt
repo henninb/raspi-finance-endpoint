@@ -21,7 +21,9 @@ import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
 import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -200,6 +202,89 @@ class TransactionService(
             }
             transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable)
         }
+
+    // ===== Paginated ServiceResult Methods =====
+
+    /**
+     * Find all active transactions with pagination.
+     * Applies two-tier sorting: transactionState DESC, transactionDate DESC.
+     */
+    fun findAllActive(pageable: Pageable): ServiceResult<Page<Transaction>> =
+        handleServiceOperation("findAllActive-paginated", null) {
+            val sortedPageable = applyTransactionSort(pageable)
+            transactionRepository.findByActiveStatus(true, sortedPageable)
+        }
+
+    /**
+     * Find transactions by account name owner with pagination.
+     * Applies two-tier sorting: transactionState DESC, transactionDate DESC.
+     */
+    fun findByAccountNameOwnerOrderByTransactionDateStandardized(
+        accountNameOwner: String,
+        pageable: Pageable,
+    ): ServiceResult<Page<Transaction>> =
+        handleServiceOperation("findByAccountNameOwner-paginated", accountNameOwner) {
+            val sortedPageable = applyTransactionSort(pageable)
+            val page =
+                executeWithResilienceSync(
+                    operation = {
+                        transactionRepository.findByAccountNameOwnerAndActiveStatus(
+                            accountNameOwner,
+                            true,
+                            sortedPageable,
+                        )
+                    },
+                    operationName = "findByAccountNameOwner-paginated-$accountNameOwner",
+                    timeoutSeconds = 60,
+                )
+
+            if (page.isEmpty) {
+                logger.warn("No active transactions found for account owner: $accountNameOwner")
+                meterService.incrementAccountListIsEmpty("non-existent-accounts")
+            }
+            page
+        }
+
+    /**
+     * Find transactions by category with pagination.
+     * Applies two-tier sorting: transactionState DESC, transactionDate DESC.
+     */
+    fun findTransactionsByCategoryStandardized(
+        categoryName: String,
+        pageable: Pageable,
+    ): ServiceResult<Page<Transaction>> =
+        handleServiceOperation("findTransactionsByCategory-paginated", categoryName) {
+            val sortedPageable = applyTransactionSort(pageable)
+            transactionRepository.findByCategoryAndActiveStatus(categoryName, true, sortedPageable)
+        }
+
+    /**
+     * Find transactions by description with pagination.
+     * Applies two-tier sorting: transactionState DESC, transactionDate DESC.
+     */
+    fun findTransactionsByDescriptionStandardized(
+        descriptionName: String,
+        pageable: Pageable,
+    ): ServiceResult<Page<Transaction>> =
+        handleServiceOperation("findTransactionsByDescription-paginated", descriptionName) {
+            val sortedPageable = applyTransactionSort(pageable)
+            transactionRepository.findByDescriptionAndActiveStatus(descriptionName, true, sortedPageable)
+        }
+
+    /**
+     * Apply two-tier sorting to Pageable for transactions.
+     * Enforces: transactionState DESC, transactionDate DESC
+     * This preserves the existing transaction ordering logic at database level.
+     */
+    private fun applyTransactionSort(pageable: Pageable): Pageable =
+        PageRequest.of(
+            pageable.pageNumber,
+            pageable.pageSize,
+            Sort.by(
+                Sort.Order.desc("transactionState"),
+                Sort.Order.desc("transactionDate"),
+            ),
+        )
 
     fun updateTransactionStateStandardized(
         guid: String,

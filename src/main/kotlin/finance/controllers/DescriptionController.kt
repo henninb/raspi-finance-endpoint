@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -69,6 +71,45 @@ class DescriptionController(
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
+
+    /**
+     * Paginated collection retrieval - GET /api/description/active/paged?page=0&size=50
+     * Returns Page<Description> with metadata
+     */
+    @Operation(summary = "Get all active descriptions (paginated)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Page of descriptions returned"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/active/paged", produces = ["application/json"])
+    override fun findAllActivePaged(
+        pageable: Pageable,
+    ): ResponseEntity<Page<Description>> {
+        logger.debug("Retrieving all active descriptions (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
+        return when (val result = descriptionService.findAllActive(pageable)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} descriptions")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No descriptions found")
+                ResponseEntity.ok(Page.empty(pageable))
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving descriptions: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
 
     /**
      * Standardized single entity retrieval - GET /api/description/{descriptionName}

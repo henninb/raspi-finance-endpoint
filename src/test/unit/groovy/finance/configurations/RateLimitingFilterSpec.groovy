@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.utils.IpAddressValidator
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -127,7 +128,7 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> "192.168.1.1" // Trusted private IP
 
         when:
-        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+        String clientIp = IpAddressValidator.INSTANCE.getClientIpAddress(requestMock)
 
         then:
         clientIp == "203.0.113.1"
@@ -140,7 +141,7 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> "192.168.1.1" // Trusted private IP
 
         when:
-        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+        String clientIp = IpAddressValidator.INSTANCE.getClientIpAddress(requestMock)
 
         then:
         clientIp == "198.51.100.1"
@@ -153,7 +154,7 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> "192.168.1.1"
 
         when:
-        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+        String clientIp = IpAddressValidator.INSTANCE.getClientIpAddress(requestMock)
 
         then:
         clientIp == "192.168.1.1"
@@ -166,7 +167,7 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> null
 
         when:
-        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+        String clientIp = IpAddressValidator.INSTANCE.getClientIpAddress(requestMock)
 
         then:
         clientIp == "unknown"
@@ -240,7 +241,7 @@ class RateLimitingFilterSpec extends Specification {
         then:
         1 * filterChainMock.doFilter(requestMock, responseMock)
         // Verify that the first IP from X-Forwarded-For is used
-        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+        IpAddressValidator.INSTANCE.getClientIpAddress(requestMock) == "203.0.113.1"
     }
 
     def "test proxy headers ignored from untrusted source"() {
@@ -250,7 +251,7 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> "203.0.113.5" // Public IP - untrusted
 
         when:
-        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+        String clientIp = IpAddressValidator.INSTANCE.getClientIpAddress(requestMock)
 
         then:
         clientIp == "203.0.113.5" // Should use remoteAddr, ignoring proxy headers
@@ -265,25 +266,25 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> "10.0.0.5"
 
         then:
-        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+        IpAddressValidator.INSTANCE.getClientIpAddress(requestMock) == "203.0.113.1"
 
         when: "request comes from trusted 172.16.x network"
         requestMock.remoteAddr >> "172.16.0.5"
 
         then:
-        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+        IpAddressValidator.INSTANCE.getClientIpAddress(requestMock) == "203.0.113.1"
 
         when: "request comes from trusted 192.168.x network"
         requestMock.remoteAddr >> "192.168.0.5"
 
         then:
-        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+        IpAddressValidator.INSTANCE.getClientIpAddress(requestMock) == "203.0.113.1"
 
         when: "request comes from localhost"
         requestMock.remoteAddr >> "127.0.0.1"
 
         then:
-        rateLimitingFilter.getClientIpAddress(requestMock) == "203.0.113.1"
+        IpAddressValidator.INSTANCE.getClientIpAddress(requestMock) == "203.0.113.1"
     }
 
     def "test invalid forwarded IP falls back to remoteAddr"() {
@@ -293,7 +294,7 @@ class RateLimitingFilterSpec extends Specification {
         requestMock.remoteAddr >> "192.168.1.1"
 
         when:
-        String clientIp = rateLimitingFilter.getClientIpAddress(requestMock)
+        String clientIp = IpAddressValidator.INSTANCE.getClientIpAddress(requestMock)
 
         then:
         clientIp == "192.168.1.1" // Should fall back to remoteAddr for invalid forwarded IP

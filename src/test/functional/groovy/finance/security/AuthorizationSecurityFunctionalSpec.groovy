@@ -2,21 +2,34 @@ package finance.security
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.web.client.RestTemplate
 import spock.lang.Specification
 
 @ActiveProfiles("func")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthorizationSecurityFunctionalSpec extends Specification {
 
-    @Autowired
-    TestRestTemplate restTemplate
+    @LocalServerPort
+    int port
+
+    RestTemplate restTemplate = new RestTemplate()
+
+    String getBaseUrl() {
+        "http://localhost:${port}"
+    }
 
     def "should deny access to account endpoint without JWT"() {
         when: "accessing protected account endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/account/select/active", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/account/select/active", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -24,7 +37,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to transaction endpoint without JWT"() {
         when: "accessing protected transaction endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/transaction", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/transaction", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -32,7 +50,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to category endpoint without JWT"() {
         when: "accessing protected category endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/category", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/category", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -40,7 +63,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to description endpoint without JWT"() {
         when: "accessing protected description endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/description", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/description", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -48,7 +76,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to parameter endpoint without JWT"() {
         when: "accessing protected parameter endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/parameter", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/parameter", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -56,7 +89,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to payment endpoint without JWT"() {
         when: "accessing protected payment endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/payment", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/payment", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -64,7 +102,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to validation amount endpoint without JWT"() {
         when: "accessing protected validation amount endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/validation/amount", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/validation/amount", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -72,7 +115,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to medical expense endpoint without JWT"() {
         when: "accessing protected medical expense endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/medical-expenses", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/medical-expenses", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
@@ -80,7 +128,12 @@ class AuthorizationSecurityFunctionalSpec extends Specification {
 
     def "should deny access to receipt image endpoint without JWT"() {
         when: "accessing protected receipt image endpoint without authentication"
-        def response = restTemplate.getForEntity("/api/receipt/image", String)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.getForEntity("${baseUrl}/api/receipt/image", String)
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response = new ResponseEntity<>(ex.responseBodyAsString, ex.statusCode)
+        }
 
         then: "should return 401 Unauthorized or 403 Forbidden"
         response.statusCode in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
