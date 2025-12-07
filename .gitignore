@@ -72,3 +72,4 @@ security-test-results/
 security-test-config.local.env
 *.local.env
 security-test-config.env
+.gradle-user/
