@@ -66,3 +66,9 @@ kls_database.db
 excel_in
 .DS_Store
 gradle.lockfile
+
+### Security Testing ###
+security-test-results/
+security-test-config.local.env
+*.local.env
+security-test-config.env
