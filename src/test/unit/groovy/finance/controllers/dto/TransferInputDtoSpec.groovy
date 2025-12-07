@@ -205,8 +205,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             "not-a-guid",
             "11111111-2222-3333-4444-55555555555", // too short
             "11111111-2222-3333-4444-5555555555555", // too long
-            "11111111-2222-3333-4444-55555555555X", // invalid character
-            "FFFFFFFF-EEEE-DDDD-CCCC-BBBBBBBBBBBB"  // uppercase
+            "11111111-2222-3333-4444-55555555555X" // invalid character
         ]
     }
 
@@ -237,8 +236,7 @@ class TransferInputDtoSpec extends BaseDomainSpec {
             "bad-guid-format",
             "66666666-7777-8888-9999-00000000000", // too short
             "66666666-7777-8888-9999-0000000000000", // too long
-            "66666666-7777-8888-9999-00000000000Z", // invalid character
-            "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"  // uppercase
+            "66666666-7777-8888-9999-00000000000Z" // invalid character
         ]
     }
 

@@ -39,8 +39,10 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
 
         then: "should return Success with categories"
         1 * categoryRepositoryMock.findByActiveStatusOrderByCategoryName(true) >> categories
-        1 * transactionRepositoryMock.countByCategoryName("groceries") >> 5L
-        1 * transactionRepositoryMock.countByCategoryName("utilities") >> 3L
+        1 * transactionRepositoryMock.countByCategoryNameIn(["groceries", "utilities"]) >> [
+            ["groceries", 5L] as Object[],
+            ["utilities", 3L] as Object[]
+        ]
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].categoryName == "groceries"

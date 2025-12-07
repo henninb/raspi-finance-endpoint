@@ -6,6 +6,8 @@ import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.Optional
@@ -96,6 +98,35 @@ class DescriptionService(
             }
             descriptionRepository.delete(optionalDescription.get())
             true
+        }
+
+    // ===== Paginated ServiceResult Methods =====
+
+    /**
+     * Find all active descriptions with pagination.
+     * Sorted by descriptionName ascending. Preserves transaction count batch loading.
+     */
+    fun findAllActive(pageable: Pageable): ServiceResult<Page<Description>> =
+        handleServiceOperation("findAllActive-paginated", null) {
+            val page = descriptionRepository.findAllByActiveStatusOrderByDescriptionName(true, pageable)
+
+            // Batch query to get all counts at once (prevents N+1 query problem)
+            val descriptionNames = page.content.map { it.descriptionName }
+            val countMap =
+                if (descriptionNames.isNotEmpty()) {
+                    transactionRepository
+                        .countByDescriptionNameIn(descriptionNames)
+                        .associate { row -> row[0] as String to row[1] as Long }
+                } else {
+                    emptyMap()
+                }
+
+            // Apply counts to descriptions
+            page.content.forEach { description ->
+                description.descriptionCount = countMap[description.descriptionName] ?: 0L
+            }
+
+            page
         }
 
     // ===== ServiceResult Business Methods for Controller =====

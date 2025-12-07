@@ -3,6 +3,8 @@ package finance.repositories
 import finance.domain.Account
 import finance.domain.AccountType
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -26,6 +28,12 @@ interface AccountRepository : JpaRepository<Account, Long> {
         activeStatus: Boolean,
         accountType: AccountType,
     ): List<Account>
+
+    // Paginated query for active accounts
+    fun findAllByActiveStatusOrderByAccountNameOwner(
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Account>
 
     @Modifying
     @Transactional

@@ -5,6 +5,8 @@ import finance.domain.ServiceResult
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
 import org.springframework.context.annotation.Primary
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
@@ -94,6 +96,35 @@ class CategoryService(
             }
             categoryRepository.delete(optionalCategory.get())
             true
+        }
+
+    // ===== Paginated ServiceResult Methods =====
+
+    /**
+     * Find all active categories with pagination.
+     * Sorted by categoryName ascending. Preserves transaction count batch loading.
+     */
+    fun findAllActive(pageable: Pageable): ServiceResult<Page<Category>> =
+        handleServiceOperation("findAllActive-paginated", null) {
+            val page = categoryRepository.findAllByActiveStatusOrderByCategoryName(true, pageable)
+
+            // Batch query to get all counts at once (prevents N+1 query problem)
+            val categoryNames = page.content.map { it.categoryName }
+            val countMap =
+                if (categoryNames.isNotEmpty()) {
+                    transactionRepository
+                        .countByCategoryNameIn(categoryNames)
+                        .associate { row -> row[0] as String to row[1] as Long }
+                } else {
+                    emptyMap()
+                }
+
+            // Apply counts to categories
+            page.content.forEach { category ->
+                category.categoryCount = countMap[category.categoryName] ?: 0L
+            }
+
+            page
         }
 
     fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =

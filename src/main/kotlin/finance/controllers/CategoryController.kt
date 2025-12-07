@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -69,6 +71,45 @@ class CategoryController(
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
+
+    /**
+     * Paginated collection retrieval - GET /api/category/active/paged?page=0&size=50
+     * Returns Page<Category> with metadata
+     */
+    @Operation(summary = "Get all active categories (paginated)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Page of categories returned"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/active/paged", produces = ["application/json"])
+    override fun findAllActivePaged(
+        pageable: Pageable,
+    ): ResponseEntity<Page<Category>> {
+        logger.debug("Retrieving all active categories (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
+        return when (val result = categoryService.findAllActive(pageable)) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} categories")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No categories found")
+                ResponseEntity.ok(Page.empty(pageable))
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving categories: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                logger.error("Unexpected result type: $result")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
 
     /**
      * Standardized single entity retrieval - GET /api/category/{categoryName}
