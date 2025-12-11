@@ -16,7 +16,8 @@ class StandardizedAccountControllerSpec extends Specification {
 
     finance.repositories.AccountRepository accountRepository = Mock()
     finance.repositories.ValidationAmountRepository validationAmountRepository = Mock()
-    AccountService accountService = new AccountService(accountRepository, validationAmountRepository)
+    finance.repositories.TransactionRepository transactionRepository = Mock()
+    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository)
 
     @Subject
     AccountController controller = new AccountController(accountService)
