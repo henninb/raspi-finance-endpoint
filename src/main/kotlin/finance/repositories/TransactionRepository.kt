@@ -2,9 +2,11 @@ package finance.repositories
 
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDate
@@ -107,4 +109,15 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         activeStatus: Boolean = true,
         pageable: Pageable,
     ): Page<Transaction>
+
+    // Bulk deactivate all transactions for an account
+    @Modifying
+    @Transactional
+    @Query(
+        value = "UPDATE t_transaction SET active_status = false, date_updated = now() WHERE account_name_owner = :accountNameOwner",
+        nativeQuery = true,
+    )
+    fun deactivateAllTransactionsByAccountNameOwner(
+        @Param("accountNameOwner") accountNameOwner: String,
+    ): Int
 }

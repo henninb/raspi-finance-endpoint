@@ -28,6 +28,7 @@ import java.util.Optional
 class AccountService(
     private val accountRepository: AccountRepository,
     private val validationAmountRepository: ValidationAmountRepository,
+    private val transactionRepository: finance.repositories.TransactionRepository,
 ) : CrudBaseService<Account, String>() {
     override fun getEntityName(): String = "Account"
 
@@ -254,6 +255,7 @@ class AccountService(
         }
     }
 
+    @org.springframework.transaction.annotation.Transactional
     fun deactivateAccount(accountNameOwner: String): Account {
         val account =
             accountRepository
@@ -261,7 +263,14 @@ class AccountService(
                 .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Deactivating account: $accountNameOwner")
+
+        // Deactivate all transactions for this account
+        val transactionsUpdated = transactionRepository.deactivateAllTransactionsByAccountNameOwner(accountNameOwner)
+        logger.info("Deactivated $transactionsUpdated transactions for account: $accountNameOwner")
+
+        // Deactivate the account
         account.activeStatus = false
+        account.dateClosed = Timestamp(System.currentTimeMillis())
         account.dateUpdated = Timestamp(System.currentTimeMillis())
         val updatedAccount = accountRepository.saveAndFlush(account)
         logger.info("Successfully deactivated account: $accountNameOwner")

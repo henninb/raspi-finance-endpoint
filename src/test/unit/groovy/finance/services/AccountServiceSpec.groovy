@@ -21,7 +21,8 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
 
     def accountRepositoryMock = Mock(AccountRepository)
     def validationAmountRepositoryMock = Mock(finance.repositories.ValidationAmountRepository)
-    def standardizedAccountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock)
+    def transactionRepositoryMock = Mock(finance.repositories.TransactionRepository)
+    def standardizedAccountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock)
 
     void setup() {
         standardizedAccountService.meterService = meterService
@@ -310,10 +311,12 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         when: "deactivating account"
         def result = standardizedAccountService.deactivateAccount("test_account")
 
-        then: "should return deactivated account"
+        then: "should return deactivated account and deactivate all transactions"
         1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
+        1 * transactionRepositoryMock.deactivateAllTransactionsByAccountNameOwner("test_account") >> 5
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.activeStatus == false
+            assert acc.dateClosed != null
             return deactivatedAccount
         }
         result.activeStatus == false
