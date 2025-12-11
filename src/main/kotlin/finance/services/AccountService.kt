@@ -241,6 +241,15 @@ class AccountService(
                 }
 
         try {
+            // First, update all transactions to use the new account name
+            val transactionsUpdated =
+                transactionRepository.updateAccountNameOwnerForAllTransactions(
+                    oldAccountNameOwner,
+                    newAccountNameOwner,
+                )
+            logger.info("Updated $transactionsUpdated transactions from $oldAccountNameOwner to $newAccountNameOwner")
+
+            // Then, rename the account itself
             oldAccount.accountNameOwner = newAccountNameOwner
             oldAccount.dateUpdated = Timestamp(System.currentTimeMillis())
             val renamedAccount = accountRepository.saveAndFlush(oldAccount)

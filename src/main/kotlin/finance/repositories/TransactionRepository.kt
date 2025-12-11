@@ -120,4 +120,16 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     fun deactivateAllTransactionsByAccountNameOwner(
         @Param("accountNameOwner") accountNameOwner: String,
     ): Int
+
+    // Bulk update accountNameOwner for all transactions (for account renaming)
+    @Modifying
+    @Transactional
+    @Query(
+        value = "UPDATE t_transaction SET account_name_owner = :newAccountNameOwner, date_updated = now() WHERE account_name_owner = :oldAccountNameOwner",
+        nativeQuery = true,
+    )
+    fun updateAccountNameOwnerForAllTransactions(
+        @Param("oldAccountNameOwner") oldAccountNameOwner: String,
+        @Param("newAccountNameOwner") newAccountNameOwner: String,
+    ): Int
 }
