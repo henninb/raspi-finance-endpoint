@@ -33,20 +33,20 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    # Initialize CodeQL tools for scanning
+    # Initialize CodeQL tools for scanning with manual build mode
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
-        build-mode: none
+        build-mode: manual
 
     # Manual build steps for Gradle/Kotlin project
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build with Gradle (compile only for CodeQL)
-      run: ./gradlew clean compileJava compileKotlin --no-daemon
+      run: ./gradlew clean compileJava compileKotlin --no-daemon --stacktrace
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
