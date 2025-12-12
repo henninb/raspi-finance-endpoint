@@ -196,3 +196,4 @@ implementation group: 'jakarta.persistence', name: 'jakarta.persistence-api', ve
     -d '{
       "query": "query GetTransfers { transfers { transactionDate sourceAccount destinationAccount amount } }"
     }'
+
