@@ -371,6 +371,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
 
         then: "should return renamed account"
         1 * accountRepositoryMock.findByAccountNameOwner("old_name") >> Optional.of(account)
+        1 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactions("old_name", "new_name") >> 5 // Returns number of updated transactions
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.accountNameOwner == "new_name"
             return renamedAccount

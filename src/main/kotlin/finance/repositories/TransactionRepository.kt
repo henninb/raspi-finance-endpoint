@@ -114,7 +114,7 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Modifying
     @Transactional
     @Query(
-        value = "UPDATE t_transaction SET active_status = false, date_updated = now() WHERE account_name_owner = :accountNameOwner",
+        value = "UPDATE {h-schema}t_transaction SET active_status = false, date_updated = now() WHERE account_name_owner = :accountNameOwner",
         nativeQuery = true,
     )
     fun deactivateAllTransactionsByAccountNameOwner(
@@ -125,7 +125,7 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Modifying
     @Transactional
     @Query(
-        value = "UPDATE t_transaction SET account_name_owner = :newAccountNameOwner, date_updated = now() WHERE account_name_owner = :oldAccountNameOwner",
+        value = "UPDATE {h-schema}t_transaction SET account_name_owner = :newAccountNameOwner, date_updated = now() WHERE account_name_owner = :oldAccountNameOwner",
         nativeQuery = true,
     )
     fun updateAccountNameOwnerForAllTransactions(
