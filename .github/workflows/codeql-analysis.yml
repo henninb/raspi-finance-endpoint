@@ -39,13 +39,14 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
+        build-mode: none
 
     # Manual build steps for Gradle/Kotlin project
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Build with Gradle
-      run: ./gradlew clean build -x test --no-daemon
+    - name: Build with Gradle (compile only for CodeQL)
+      run: ./gradlew clean compileJava compileKotlin --no-daemon
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
