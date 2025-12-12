@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: "CodeQL Alternative"
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main", "master" ]
   schedule:
-    - cron: '0 0 * * 1'  # Run every Monday at midnight
+    - cron: '0 0 * * 1'
 
 jobs:
   analyze:
@@ -16,11 +16,6 @@ jobs:
       actions: read
       contents: read
       security-events: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'java-kotlin' ]
 
     steps:
     - name: Checkout repository
@@ -33,22 +28,17 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    # Initialize CodeQL tools for scanning with manual build mode
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: ${{ matrix.language }}
-        queries: security-and-quality
-        build-mode: manual
+        languages: java-kotlin
 
-    # Manual build steps for Gradle/Kotlin project
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Build with Gradle (compile only for CodeQL)
-      run: ./gradlew clean compileJava compileKotlin --no-daemon --stacktrace
+    # Build the project for CodeQL scanning
+    - name: Build with Gradle
+      run: ./gradlew clean compileJava compileKotlin --no-daemon
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
