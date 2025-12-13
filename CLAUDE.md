@@ -99,6 +99,22 @@ export SPRING_PROFILES_ACTIVE="prod"
 - Jakarta validation throughout
 - HikariCP connection pooling
 
+#### CSRF Protection
+- **Enabled**: Cookie-based double-submit pattern (Spring Security CookieCsrfTokenRepository)
+- **Token Endpoint**: GET `/api/csrf` (public, no authentication required)
+- **Required Header**: `X-CSRF-TOKEN` for all mutations (POST/PUT/DELETE/PATCH)
+- **Exemptions**: `/api/login`, `/api/register`, `/graphiql`, `/graphql`
+- **Token Lifecycle**: Fetched on login, cached in memory, cleared on 403 errors
+- **Frontend Integration**:
+  - **Next.js**: `utils/csrf.ts` - automatic inclusion in `fetchUtils.ts` and `graphqlClient.ts`
+  - **Chrome Extension**: `csrf.js` - included in transaction imports via `auth.js`
+- **Implementation Files**:
+  - Backend: `SpaCsrfTokenRequestHandler.kt`, `CsrfController.kt`
+  - Config: `WebSecurityConfig.kt` (lines for CSRF setup)
+  - Tests: `src/test/integration/groovy/finance/security/CsrfControllerIntSpec.groovy`
+- **Testing**: `SPRING_PROFILES_ACTIVE=int ./gradlew integrationTest --tests "*Csrf*"`
+- **Defense-in-depth**: CSRF tokens + SameSite=Strict cookies + JWT authentication
+
 ## DTOs
 
 ### Available DTOs (in `finance.controllers.dto/`)
