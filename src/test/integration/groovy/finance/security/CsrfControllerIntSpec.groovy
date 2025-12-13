@@ -26,7 +26,7 @@ class CsrfControllerIntSpec extends BaseRestTemplateIntegrationSpec {
 
         and: 'response contains token details'
         response.body.token != null
-        response.body.headerName == 'X-XSRF-TOKEN'
+        response.body.headerName == 'X-CSRF-TOKEN'
         response.body.parameterName == '_csrf'
 
         and: 'XSRF-TOKEN cookie is set'
