@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
@@ -61,9 +62,28 @@ open class WebSecurityConfig(
                     // Minimal CSP for API-only service; adjust if serving web content
                     csp.policyDirectives("default-src 'none'")
                 }
-            }.csrf { it.disable() }
-            .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/api/login", "/api/register", "/api/logout").permitAll()
+            }
+            // CSRF Protection Strategy:
+            // 1. Cookie-based CSRF tokens (double-submit pattern via CookieCsrfTokenRepository)
+            // 2. SameSite=Strict cookies (browser-level protection in production)
+            // 3. JWT authentication via HttpOnly cookies
+            // 4. Exemptions: login/register (pre-authentication), GraphQL (for dev convenience)
+            // This provides defense-in-depth against CSRF attacks and resolves CodeQL alert #10
+            .csrf { csrf ->
+                val csrfTokenRepository =
+                    CookieCsrfTokenRepository
+                        .withHttpOnlyFalse()
+                        .apply {
+                            // Use X-CSRF-TOKEN header (instead of default X-XSRF-TOKEN)
+                            // This matches the standard CSRF header name used by most frameworks
+                            setHeaderName("X-CSRF-TOKEN")
+                        }
+                csrf
+                    .csrfTokenRepository(csrfTokenRepository)
+                    .csrfTokenRequestHandler(SpaCsrfTokenRequestHandler())
+                    .ignoringRequestMatchers("/api/login", "/api/register", "/graphiql", "/graphql")
+            }.authorizeHttpRequests { auth ->
+                auth.requestMatchers("/api/login", "/api/register", "/api/logout", "/api/csrf").permitAll()
                 auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
                 auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
@@ -134,7 +154,7 @@ open class WebSecurityConfig(
                         "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc",
                     )
                 allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key")
+                allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key", "X-CSRF-TOKEN")
                 allowCredentials = true
                 // Spring Framework version here expects seconds as Long
                 maxAge = 3600L
