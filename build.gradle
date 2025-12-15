@@ -21,7 +21,7 @@ plugins {
     id "org.flywaydb.flyway" version "${flywayVersion}"
     id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
     // Kotlin linter/formatter
-    id "org.jlleitschuh.gradle.ktlint" version "14.0.1"
+    id "org.jlleitschuh.gradle.ktlint" version "${ktlintPluginVersion}"
 }
 
 apply from: 'test.gradle'
@@ -99,7 +99,7 @@ tasks.named('check') { dependsOn 'codenarcMainRatchet' }
 
 // KtLint configuration: enforce rules for main sources
 ktlint {
-    version.set("1.8.0")
+    version.set("${ktlintVersion}")
     // Fail the build on style violations now that codebase is cleaned
     ignoreFailures.set(false)
 }
@@ -162,8 +162,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
 
     //AOP for performance monitoring
-    implementation("org.springframework:spring-aop:7.0.0")
-    implementation("org.aspectj:aspectjweaver:1.9.24")
+    implementation("org.springframework:spring-aop:${springAopVersion}")
+    implementation("org.aspectj:aspectjweaver:${aspectjVersion}")
 
     // Spring Boot 4.0 test dependencies
     // moved to test.gradle to centralize test deps
