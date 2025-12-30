@@ -2,7 +2,7 @@ import nu.studer.gradle.jooq.JooqEdition
 
 buildscript {
     dependencies {
-        classpath "org.flywaydb:flyway-database-postgresql:11.17.2"
+        classpath "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
     }
 }
 
