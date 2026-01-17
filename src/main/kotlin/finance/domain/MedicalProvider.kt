@@ -85,7 +85,7 @@ data class MedicalProvider(
     @field:Pattern(regexp = "^[0-9]{5}(-[0-9]{4})?$", message = "Zip code must be in format 12345 or 12345-6789")
     var zipCode: String? = null,
     @param:JsonProperty
-    @Column(name = "country", columnDefinition = "TEXT DEFAULT 'US'")
+    @Column(name = "country", nullable = false, columnDefinition = "TEXT DEFAULT 'US'")
     @field:Size(max = 50, message = "Country must be 50 characters or less")
     var country: String = "US",
     // Contact information
@@ -108,7 +108,7 @@ data class MedicalProvider(
     var website: String? = null,
     // Provider details
     @param:JsonProperty
-    @Column(name = "network_status", columnDefinition = "TEXT DEFAULT 'unknown'")
+    @Column(name = "network_status", nullable = false, columnDefinition = "TEXT DEFAULT 'unknown'")
     @Convert(converter = NetworkStatusConverter::class)
     var networkStatus: NetworkStatus = NetworkStatus.Unknown,
     @param:JsonProperty

@@ -65,23 +65,23 @@ data class Account(
     var activeStatus: Boolean = true,
     @param:JsonProperty
     @field:Pattern(regexp = "^[0-9]{4}$", message = FIELD_MUST_BE_FOUR_DIGITS_MESSAGE)
-    @Column(name = "moniker", columnDefinition = "TEXT DEFAULT '0000'")
+    @Column(name = "moniker", nullable = false, columnDefinition = "TEXT DEFAULT '0000'")
     var moniker: String,
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    @Column(name = "outstanding", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @Column(name = "outstanding", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var outstanding: BigDecimal,
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    @Column(name = "future", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @Column(name = "future", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var future: BigDecimal,
     @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    @Column(name = "cleared", precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
+    @Column(name = "cleared", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var cleared: BigDecimal,
 ) {
     @JsonIgnore
-    @Column(name = "date_closed")
+    @Column(name = "date_closed", nullable = false)
     var dateClosed: Timestamp = Timestamp(0)
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

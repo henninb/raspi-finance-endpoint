@@ -42,7 +42,7 @@ open class CalculationService(
             resultSet.forEach { row ->
                 try {
                     if (row !is Array<*>) {
-                        logger.warn("Unexpected row type: ${row?.javaClass?.simpleName}, expected Array")
+                        logger.warn("Unexpected row type: ${row.javaClass.simpleName}, expected Array")
                         meterService.incrementExceptionCaughtCounter("UnexpectedRowType")
                         return@forEach
                     }
