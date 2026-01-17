@@ -65,12 +65,12 @@ data class Transfer(
     var amount: BigDecimal,
     @param:JsonProperty
     @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
-    @Column(name = "guid_source", nullable = true)
-    var guidSource: String?,
+    @Column(name = "guid_source", nullable = false)
+    var guidSource: String,
     @param:JsonProperty
     @param:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
-    @Column(name = "guid_destination", nullable = true)
-    var guidDestination: String?,
+    @Column(name = "guid_destination", nullable = false)
+    var guidDestination: String,
     @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
