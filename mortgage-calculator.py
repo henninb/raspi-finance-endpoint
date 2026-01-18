@@ -82,20 +82,23 @@ def project_months(starting_balance: float, monthly_extra: float, num_months: in
 
 def print_single_month(result: dict):
     """Print a single month's calculation."""
+    total_principal = result['extra_payment'] + result['principal']
+
     print("\nMortgage Payment Calculation")
     print("=" * 50)
     print(f"Starting balance:        ${result['starting_balance']:>12,.2f}")
-    print(f"Extra payment:           ${result['extra_payment']:>12,.2f}")
-    print(f"Balance for interest:    ${result['balance_for_interest']:>12,.2f}")
     print(f"Monthly rate:            {MONTHLY_RATE * 100:>12.6f}%")
     print("-" * 50)
     print(f"Interest portion:        ${result['interest']:>12,.2f}")
     print(f"Principal portion:       ${result['principal']:>12,.2f}")
     print(f"Regular payment:         ${MONTHLY_PAYMENT:>12,.2f}")
-    print(f"Extra payment:           ${result['extra_payment']:>12,.2f}")
-    print(f"Total paid:              ${result['total_paid']:>12,.2f}")
     print("-" * 50)
-    print(f"New balance:             ${result['new_balance']:>12,.2f}")
+    print(f"Extra payment:           ${result['extra_payment']:>12,.2f}")
+    print(f"Total principal paid:    ${total_principal:>12,.2f}")
+    print(f"Total paid this month:   ${result['total_paid']:>12,.2f}")
+    print("=" * 50)
+    print(f"REMAINING BALANCE:       ${result['new_balance']:>12,.2f}")
+    print("=" * 50)
 
 
 def print_projection(results: list):
@@ -188,7 +191,7 @@ Examples:
             if args.verbose:
                 print_single_month(result)
             else:
-                print(f"${result['principal']:.2f}")
+                print(f"Principal: ${result['principal']:.2f}  |  Remaining Balance: ${result['new_balance']:,.2f}")
         else:
             results = project_months(args.balance, args.extra, args.months)
             print_projection(results)
