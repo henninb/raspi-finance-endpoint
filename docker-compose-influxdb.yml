@@ -20,17 +20,12 @@ services:
         reservations:
           cpus: '0.1'
           memory: 128M
-    # Security: Enhanced security context (reduced for InfluxDB data directory creation)
+    user: "1000:1000"
+    # Security: Enhanced security context
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - FOWNER    # Required for directory creation
-      - DAC_OVERRIDE  # Required for permission overrides
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
     # Health check for InfluxDB 2.x
