@@ -71,11 +71,11 @@ data class Payment(
     @param:JsonProperty
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     @Column(name = "guid_source", nullable = false)
-    var guidSource: String,
+    var guidSource: String? = null,
     @param:JsonProperty
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     @Column(name = "guid_destination", nullable = false)
-    var guidDestination: String,
+    var guidDestination: String? = null,
     @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,

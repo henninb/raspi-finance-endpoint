@@ -61,6 +61,7 @@ data class User(
     @field:NotBlank(message = "Password cannot be blank")
     @Column(name = "password", unique = true, nullable = false)
     @param:JsonProperty
+    @get:JsonIgnore
     var password: String,
 ) {
     constructor() : this(0L, true, "", "", "", "")

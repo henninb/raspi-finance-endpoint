@@ -22,6 +22,8 @@ plugins {
     id "com.github.ben-manes.versions" version "${gradleVersionsPluginVersion}"
     // Kotlin linter/formatter
     id "org.jlleitschuh.gradle.ktlint" version "${ktlintPluginVersion}"
+    // OWASP dependency vulnerability scanning
+    id "org.owasp.dependencycheck" version "${owaspDependencyCheckVersion}"
 }
 
 apply from: 'test.gradle'
@@ -102,6 +104,12 @@ ktlint {
     version.set("${ktlintVersion}")
     // Fail the build on style violations now that codebase is cleaned
     ignoreFailures.set(false)
+}
+
+// OWASP Dependency-Check configuration
+dependencyCheck {
+    failBuildOnCVSS = 7
+    formats = ['HTML', 'JSON']
 }
 
 // Use toolchains for Gradle 9 compatibility
