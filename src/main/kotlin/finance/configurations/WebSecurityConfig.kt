@@ -84,15 +84,19 @@ open class WebSecurityConfig(
                     .ignoringRequestMatchers("/api/login", "/api/register", "/graphiql", "/graphql")
             }.authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/login", "/api/register", "/api/logout", "/api/csrf").permitAll()
+                auth.requestMatchers("/graphiql").permitAll()
+                auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                auth.requestMatchers("/actuator/health", "/health").permitAll()
                 auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
-                auth.requestMatchers("/account/**", "/category/**", "/description/**", "/parameter/**").authenticated()
-                auth.anyRequest().permitAll()
+                auth.requestMatchers("/performance/**").authenticated()
+                auth.requestMatchers("/actuator/**").authenticated()
+                auth.anyRequest().denyAll()
             }.formLogin { it.disable() }
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter::class.java)
         val chain = http.build()
-        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/account/**','/category/**','/description/**','/parameter/**'] permit=['/api/login','/api/register','/api/logout']")
+        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/performance/**','/actuator/**'] permit=['/api/login','/api/register','/api/logout','/api/csrf','/graphiql','/swagger-ui/**','/actuator/health'] default=denyAll")
         return chain
     }
 
