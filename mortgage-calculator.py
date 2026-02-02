@@ -7,8 +7,8 @@ ServiceMac credits extra payments at the START of the month for interest calcula
 
 Usage:
     python mortgage-calculator.py                     # Interactive mode
-    python mortgage-calculator.py 95347.03 6042      # Single month
-    python mortgage-calculator.py 95347.03 6000 --months 12  # Project 12 months
+    python mortgage-calculator.py 88493.63 6042      # Single month
+    python mortgage-calculator.py 88493.63 6000 --months 12  # Project 12 months
 """
 
 import argparse
@@ -167,9 +167,10 @@ def main():
         epilog="""
 Examples:
   %(prog)s                          Interactive mode
-  %(prog)s 95347.03 6042            Calculate single month
-  %(prog)s 95347.03 6000 -m 12      Project 12 months with $6000/month extra
-  %(prog)s 95347.03 6000 -m 24 -v   Verbose projection
+  %(prog)s 88493.63 6042            Calculate single month
+  %(prog)s 88493.63 6000 -m 12      Project 12 months with $6000/month extra
+  %(prog)s 88493.63 6000 -m 24 -v   Verbose projection
+  %(prog)s 95347.03 0 -m 240 -v     Project full term with no extra payments
         """
     )
     parser.add_argument("balance", type=float, nargs="?", help="Current principal balance")
