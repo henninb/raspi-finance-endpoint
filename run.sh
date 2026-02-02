@@ -412,6 +412,28 @@ validate_env_secrets() {
   log "✓ All required environment secrets are properly configured."
 }
 
+# Decrypt env.secrets from SOPS-encrypted file
+if [ -f "env.secrets.enc" ]; then
+  if command -v sops >/dev/null 2>&1; then
+    log "Decrypting env.secrets.enc with SOPS..."
+    if sops -d --input-type dotenv --output-type dotenv env.secrets.enc > env.secrets; then
+      chmod 600 env.secrets
+      log "✓ env.secrets decrypted successfully"
+    else
+      log_error "SOPS decryption failed. Check that the age private key is available."
+      log_error "Expected at: ~/.config/sops/age/keys.txt (or set SOPS_AGE_KEY_FILE)"
+      exit 1
+    fi
+  else
+    log_error "sops is not installed but env.secrets.enc exists."
+    log_error "Install sops: https://github.com/getsops/sops/releases"
+    exit 1
+  fi
+elif [ ! -f "env.secrets" ]; then
+  log_error "Neither env.secrets.enc nor env.secrets found."
+  exit 1
+fi
+
 # Validate environment secrets before proceeding
 validate_env_secrets
 
