@@ -29,6 +29,31 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
         pageable: Pageable,
     ): Page<Payment>
 
-//    @Transactional
-//    fun deleteByPaymentId(paymentId: Long)
+    // --- Owner-scoped methods for multi-tenancy (Phase 4) ---
+
+    fun findByOwnerAndPaymentId(
+        owner: String,
+        paymentId: Long,
+    ): Optional<Payment>
+
+    fun findByOwnerAndDestinationAccountAndTransactionDateAndAmountAndPaymentIdNot(
+        owner: String,
+        destinationAccount: String,
+        transactionDate: java.sql.Date,
+        amount: java.math.BigDecimal,
+        paymentId: Long,
+    ): Optional<Payment>
+
+    fun findByOwnerAndGuidSourceOrOwnerAndGuidDestination(
+        owner1: String,
+        guidSource: String,
+        owner2: String,
+        guidDestination: String,
+    ): List<Payment>
+
+    fun findByOwnerAndActiveStatusOrderByTransactionDateDesc(
+        owner: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Payment>
 }

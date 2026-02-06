@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.Optional
-// import javax.transaction.Transactional
 
 interface DescriptionRepository : JpaRepository<Description, Long> {
     fun findByActiveStatusOrderByDescriptionName(activeStatus: Boolean): List<Description>
@@ -16,6 +15,29 @@ interface DescriptionRepository : JpaRepository<Description, Long> {
 
     // Paginated query for active descriptions
     fun findAllByActiveStatusOrderByDescriptionName(
+        activeStatus: Boolean,
+        pageable: Pageable,
+    ): Page<Description>
+
+    // --- Owner-scoped methods for multi-tenancy (Phase 4) ---
+
+    fun findByOwnerAndDescriptionName(
+        owner: String,
+        descriptionName: String,
+    ): Optional<Description>
+
+    fun findByOwnerAndDescriptionId(
+        owner: String,
+        descriptionId: Long,
+    ): Optional<Description>
+
+    fun findByOwnerAndActiveStatusOrderByDescriptionName(
+        owner: String,
+        activeStatus: Boolean,
+    ): List<Description>
+
+    fun findAllByOwnerAndActiveStatusOrderByDescriptionName(
+        owner: String,
         activeStatus: Boolean,
         pageable: Pageable,
     ): Page<Description>
