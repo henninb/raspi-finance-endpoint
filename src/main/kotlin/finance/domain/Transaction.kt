@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -59,74 +60,60 @@ data class Transaction(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_transaction_transaction_id_seq")
     @field:Min(value = 0L)
-    @param:JsonProperty
     @Column(name = "transaction_id")
     var transactionId: Long = 0L,
-    @param:JsonProperty
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
-    @param:JsonProperty
     @Column(name = "guid", unique = true, nullable = false)
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String = "",
-    @param:JsonProperty
     @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long = 0L,
-    @param:JsonProperty
     @Column(name = "account_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType = AccountType.Undefined,
-    @param:JsonProperty
     @Column(name = "transaction_type", columnDefinition = "TEXT", nullable = false)
     @field:Convert(converter = TransactionTypeConverter::class)
     var transactionType: TransactionType = TransactionType.Undefined,
-    @param:JsonProperty
     @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
     @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     @Column(name = "account_name_owner", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var accountNameOwner: String = "",
-    @param:JsonProperty
     @field:ValidDate
     @Column(name = "transaction_date", columnDefinition = "DATE", nullable = false)
     var transactionDate: LocalDate = LocalDate.of(1970, 1, 1),
-    @param:JsonProperty
     @field:Size(min = 1, max = 75, message = FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE)
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @Column(name = "description", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var description: String = "",
-    @param:JsonProperty
     @field:Size(max = 50, message = FILED_MUST_BE_BETWEEN_ZERO_AND_FIFTY_MESSAGE)
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @Column(name = "category", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     var category: String = "",
-    @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var amount: BigDecimal = BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP),
-    @param:JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
     var transactionState: TransactionState = TransactionState.Undefined,
-    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
-    @param:JsonProperty
     @Column(name = "reoccurring_type", nullable = true, columnDefinition = "TEXT")
     @field:Convert(converter = ReoccurringTypeConverter::class)
     var reoccurringType: ReoccurringType = ReoccurringType.Undefined,
-    @param:JsonProperty
     @field:Size(max = 100)
     @field:Pattern(regexp = ASCII_PATTERN, message = FIELD_MUST_BE_ASCII_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "notes", nullable = false)
     var notes: String = "",
 ) {
+    @JsonCreator
     constructor() : this(
         0L,
         "",

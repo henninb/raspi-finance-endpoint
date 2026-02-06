@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -49,38 +50,30 @@ data class Account(
     @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
-    @param:JsonProperty
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
-    @param:JsonProperty
     @Column(name = "account_name_owner", nullable = false)
     @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
     var accountNameOwner: String,
-    @param:JsonProperty
     // @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
     @Convert(converter = AccountTypeConverter::class)
     var accountType: AccountType,
-    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
-    @param:JsonProperty
     @field:Pattern(regexp = "^[0-9]{4}$", message = FIELD_MUST_BE_FOUR_DIGITS_MESSAGE)
     @Column(name = "moniker", nullable = false, columnDefinition = "TEXT DEFAULT '0000'")
     var moniker: String,
-    @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "outstanding", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var outstanding: BigDecimal,
-    @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "future", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var future: BigDecimal,
-    @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "cleared", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var cleared: BigDecimal,
@@ -93,6 +86,7 @@ data class Account(
     @Column(name = "validation_date", nullable = false)
     var validationDate: Timestamp = Timestamp(System.currentTimeMillis())
 
+    @JsonCreator
     constructor() : this(
         0L,
         "",

@@ -273,7 +273,7 @@ open class FamilyMemberController(
     @GetMapping("/owner/{owner}", produces = ["application/json"])
     fun byOwner(
         @PathVariable owner: String,
-    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(familyMemberService.findByOwner(owner))
+    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(familyMemberService.findByOwner())
 
     /**
      * GET /api/family-members/owner/{owner}/relationship/{relationship}
@@ -283,7 +283,7 @@ open class FamilyMemberController(
     fun byOwnerAndRelationship(
         @PathVariable owner: String,
         @PathVariable relationship: FamilyRelationship,
-    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(familyMemberService.findByOwnerAndRelationship(owner, relationship))
+    ): ResponseEntity<List<FamilyMember>> = ResponseEntity.ok(familyMemberService.findByOwnerAndRelationship(relationship))
 
     /**
      * PUT /api/family-members/{id}/activate

@@ -13,4 +13,8 @@ interface PendingTransactionRepository : JpaRepository<PendingTransaction, Long>
         owner: String,
         pendingTransactionId: Long,
     ): Optional<PendingTransaction>
+
+    fun findAllByOwner(owner: String): List<PendingTransaction>
+
+    fun deleteAllByOwner(owner: String)
 }

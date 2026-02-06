@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -44,7 +45,6 @@ data class MedicalExpense(
     @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "medical_expense_id")
     var medicalExpenseId: Long = 0L,
-    @param:JsonProperty
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
@@ -132,6 +132,13 @@ data class MedicalExpense(
     @field:Digits(integer = 10, fraction = 2, message = "Paid amount must have at most 10 integer digits and 2 decimal places")
     var paidAmount: BigDecimal = BigDecimal.ZERO,
 ) {
+    @JsonCreator
+    constructor() : this(
+        medicalExpenseId = 0L,
+        owner = "",
+        serviceDate = LocalDate.of(1900, 1, 1),
+    )
+
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
     @field:NotNull(message = "Date added cannot be null")

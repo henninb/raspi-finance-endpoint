@@ -7,6 +7,9 @@ spring:
     deserialization:
       FAIL_ON_NULL_FOR_PRIMITIVES: false
       FAIL_ON_UNKNOWN_PROPERTIES: false
+    module:
+      kotlin:
+        null-is-same-as-default: true
 
   # GraphQL Configuration for Spring Boot 4.0
   graphql:

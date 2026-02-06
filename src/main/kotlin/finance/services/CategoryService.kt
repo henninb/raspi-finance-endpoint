@@ -4,6 +4,7 @@ import finance.domain.Category
 import finance.domain.ServiceResult
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
+import finance.utils.TenantContext
 import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -26,14 +27,15 @@ class CategoryService(
 
     override fun findAllActive(): ServiceResult<List<Category>> =
         handleServiceOperation("findAllActive", null) {
-            val categories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
+            val owner = TenantContext.getCurrentOwner()
+            val categories = categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(owner, true)
 
             // Batch query to get all counts at once (prevents N+1 query problem)
             val categoryNames = categories.map { it.categoryName }
             val countMap =
                 if (categoryNames.isNotEmpty()) {
                     transactionRepository
-                        .countByCategoryNameIn(categoryNames)
+                        .countByOwnerAndCategoryNameIn(owner, categoryNames)
                         .associate { row -> row[0] as String to row[1] as Long }
                 } else {
                     emptyMap()
@@ -49,7 +51,8 @@ class CategoryService(
 
     override fun findById(id: Long): ServiceResult<Category> =
         handleServiceOperation("findById", id) {
-            val optionalCategory = categoryRepository.findByCategoryId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalCategory = categoryRepository.findByOwnerAndCategoryId(owner, id)
             if (optionalCategory.isPresent) {
                 optionalCategory.get()
             } else {
@@ -59,6 +62,9 @@ class CategoryService(
 
     override fun save(entity: Category): ServiceResult<Category> =
         handleServiceOperation("save", entity.categoryId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -74,7 +80,8 @@ class CategoryService(
 
     override fun update(entity: Category): ServiceResult<Category> =
         handleServiceOperation("update", entity.categoryId) {
-            val existingCategory = categoryRepository.findByCategoryId(entity.categoryId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingCategory = categoryRepository.findByOwnerAndCategoryId(owner, entity.categoryId)
             if (existingCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: ${entity.categoryId}")
             }
@@ -90,7 +97,8 @@ class CategoryService(
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalCategory = categoryRepository.findByCategoryId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalCategory = categoryRepository.findByOwnerAndCategoryId(owner, id)
             if (optionalCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $id")
             }
@@ -106,14 +114,15 @@ class CategoryService(
      */
     fun findAllActive(pageable: Pageable): ServiceResult<Page<Category>> =
         handleServiceOperation("findAllActive-paginated", null) {
-            val page = categoryRepository.findAllByActiveStatusOrderByCategoryName(true, pageable)
+            val owner = TenantContext.getCurrentOwner()
+            val page = categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(owner, true, pageable)
 
             // Batch query to get all counts at once (prevents N+1 query problem)
             val categoryNames = page.content.map { it.categoryName }
             val countMap =
                 if (categoryNames.isNotEmpty()) {
                     transactionRepository
-                        .countByCategoryNameIn(categoryNames)
+                        .countByOwnerAndCategoryNameIn(owner, categoryNames)
                         .associate { row -> row[0] as String to row[1] as Long }
                 } else {
                     emptyMap()
@@ -129,10 +138,11 @@ class CategoryService(
 
     fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =
         handleServiceOperation("findByCategoryName", null) {
-            val optionalCategory = categoryRepository.findByCategoryName(categoryName)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalCategory = categoryRepository.findByOwnerAndCategoryName(owner, categoryName)
             if (optionalCategory.isPresent) {
                 val category = optionalCategory.get()
-                val count = transactionRepository.countByCategoryName(category.categoryName)
+                val count = transactionRepository.countByOwnerAndCategoryName(owner, category.categoryName)
                 category.categoryCount = count
                 category
             } else {
@@ -142,7 +152,8 @@ class CategoryService(
 
     fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Boolean> =
         handleServiceOperation("deleteByCategoryName", null) {
-            val optionalCategory = categoryRepository.findByCategoryName(categoryName)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalCategory = categoryRepository.findByOwnerAndCategoryName(owner, categoryName)
             if (optionalCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
             }
@@ -156,20 +167,21 @@ class CategoryService(
         categoryName1: String,
         categoryName2: String,
     ): Category {
+        val owner = TenantContext.getCurrentOwner()
         // Find both categories by name
         val category1 =
-            categoryRepository.findByCategoryName(categoryName1).orElseThrow {
+            categoryRepository.findByOwnerAndCategoryName(owner, categoryName1).orElseThrow {
                 RuntimeException("Category $categoryName1 not found")
             }
         val category2 =
-            categoryRepository.findByCategoryName(categoryName2).orElseThrow {
+            categoryRepository.findByOwnerAndCategoryName(owner, categoryName2).orElseThrow {
                 RuntimeException("Category $categoryName2 not found")
             }
 
         logger.info("Merging categories: $categoryName2 into $categoryName1")
 
         // Reassign transactions from category2 to category1
-        val transactionsToUpdate = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName2)
+        val transactionsToUpdate = transactionRepository.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(owner, categoryName2, true)
         logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $categoryName2 to $categoryName1")
 
         transactionsToUpdate.forEach { transaction ->

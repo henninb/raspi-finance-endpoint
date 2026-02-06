@@ -185,7 +185,7 @@ class FamilyMemberServiceIntSpec extends Specification {
         familyMemberRepository.save(otherOwner)
 
         when:
-        List<FamilyMember> result = familyMemberService.findByOwner("owner_filter")
+        List<FamilyMember> result = familyMemberService.findByOwner()
 
         then:
         result.size() == 2
@@ -203,8 +203,8 @@ class FamilyMemberServiceIntSpec extends Specification {
         familyMemberRepository.save(child2)
 
         when:
-        List<FamilyMember> children = familyMemberService.findByOwnerAndRelationship("owner_rel", FamilyRelationship.Child)
-        List<FamilyMember> spouses = familyMemberService.findByOwnerAndRelationship("owner_rel", FamilyRelationship.Spouse)
+        List<FamilyMember> children = familyMemberService.findByOwnerAndRelationship(FamilyRelationship.Child)
+        List<FamilyMember> spouses = familyMemberService.findByOwnerAndRelationship(FamilyRelationship.Spouse)
 
         then:
         children.size() == 2

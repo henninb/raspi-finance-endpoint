@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -33,15 +34,12 @@ data class ValidationAmount(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_validation_amount_validation_id_seq")
     @field:Min(value = 0L)
-    @param:JsonProperty
     @Column(name = "validation_id", nullable = false)
     var validationId: Long,
-    @param:JsonProperty
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
-    @param:JsonProperty
     @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
@@ -49,22 +47,18 @@ data class ValidationAmount(
     @JoinColumn(name = "account_id", insertable = false, updatable = false)
     @JsonIgnore
     val account: Account? = null,
-    // @field:ValidTimestamp
     @Column(name = "validation_date", nullable = false)
-    @param:JsonProperty
     var validationDate: Timestamp,
-    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
-    @param:JsonProperty
     @field:Convert(converter = TransactionStateConverter::class)
     @Column(name = "transaction_state", nullable = false)
     var transactionState: TransactionState,
-    @param:JsonProperty
     @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
     @Column(name = "amount", nullable = false, precision = 10, scale = 2, columnDefinition = "NUMERIC(10,2) DEFAULT 0.00")
     var amount: BigDecimal,
 ) {
+    @JsonCreator
     constructor() : this(0L, "", 0L, null, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
 
     @JsonIgnore

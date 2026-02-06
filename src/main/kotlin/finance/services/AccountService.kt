@@ -6,6 +6,7 @@ import finance.domain.ServiceResult
 import finance.domain.TransactionState
 import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
+import finance.utils.TenantContext
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
@@ -36,12 +37,14 @@ class AccountService(
 
     override fun findAllActive(): ServiceResult<List<Account>> =
         handleServiceOperation("findAllActive", null) {
-            accountRepository.findByActiveStatusOrderByAccountNameOwner(true)
+            val owner = TenantContext.getCurrentOwner()
+            accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(owner, true)
         }
 
     override fun findById(id: String): ServiceResult<Account> =
         handleServiceOperation("findById", id) {
-            val optionalAccount = accountRepository.findByAccountNameOwner(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, id)
             if (optionalAccount.isPresent) {
                 optionalAccount.get()
             } else {
@@ -51,8 +54,11 @@ class AccountService(
 
     override fun save(entity: Account): ServiceResult<Account> =
         handleServiceOperation("save", entity.accountNameOwner) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             // Check if account already exists
-            val existingAccount = accountRepository.findByAccountNameOwner(entity.accountNameOwner)
+            val existingAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, entity.accountNameOwner)
             if (existingAccount.isPresent) {
                 throw org.springframework.dao.DataIntegrityViolationException("Account already exists: ${entity.accountNameOwner}")
             }
@@ -72,7 +78,8 @@ class AccountService(
 
     override fun update(entity: Account): ServiceResult<Account> =
         handleServiceOperation("update", entity.accountNameOwner) {
-            val existingAccount = accountRepository.findByAccountNameOwner(entity.accountNameOwner)
+            val owner = TenantContext.getCurrentOwner()
+            val existingAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, entity.accountNameOwner)
             if (existingAccount.isEmpty) {
                 throw EntityNotFoundException("Account not found: ${entity.accountNameOwner}")
             }
@@ -94,7 +101,8 @@ class AccountService(
 
     override fun deleteById(id: String): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalAccount = accountRepository.findByAccountNameOwner(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, id)
             if (optionalAccount.isEmpty) {
                 throw EntityNotFoundException("Account not found: $id")
             }
@@ -120,12 +128,16 @@ class AccountService(
      */
     fun findAllActive(pageable: Pageable): ServiceResult<Page<Account>> =
         handleServiceOperation("findAllActive-paginated", null) {
-            accountRepository.findAllByActiveStatusOrderByAccountNameOwner(true, pageable)
+            val owner = TenantContext.getCurrentOwner()
+            accountRepository.findAllByOwnerAndActiveStatusOrderByAccountNameOwner(owner, true, pageable)
         }
 
     // ===== Legacy Method Compatibility =====
 
-    fun account(accountNameOwner: String): Optional<Account> = accountRepository.findByAccountNameOwner(accountNameOwner)
+    fun account(accountNameOwner: String): Optional<Account> {
+        val owner = TenantContext.getCurrentOwner()
+        return accountRepository.findByOwnerAndAccountNameOwner(owner, accountNameOwner)
+    }
 
     fun accounts(): List<Account> {
         val result = findAllActive()
@@ -135,16 +147,21 @@ class AccountService(
         }
     }
 
-    fun accountsByType(accountType: AccountType): List<Account> = accountRepository.findByActiveStatusAndAccountType(true, accountType)
+    fun accountsByType(accountType: AccountType): List<Account> {
+        val owner = TenantContext.getCurrentOwner()
+        return accountRepository.findByOwnerAndActiveStatusAndAccountType(owner, true, accountType)
+    }
 
     fun findAccountsThatRequirePayment(): List<Account> {
+        val owner = TenantContext.getCurrentOwner()
         updateTotalsForAllAccounts()
         updateValidationDatesForAllAccounts()
-        return accountRepository.findAccountsThatRequirePayment()
+        return accountRepository.findAccountsThatRequirePaymentByOwner(owner, true, AccountType.Credit)
     }
 
     fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal {
-        val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionState(transactionState.toString())
+        val owner = TenantContext.getCurrentOwner()
+        val totals: BigDecimal = accountRepository.sumOfAllTransactionsByTransactionStateAndOwner(transactionState.toString(), owner)
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
@@ -206,8 +223,9 @@ class AccountService(
     }
 
     fun updateTotalsForAllAccounts(): Boolean {
+        val owner = TenantContext.getCurrentOwner()
         try {
-            accountRepository.updateTotalsForAllAccounts()
+            accountRepository.updateTotalsForAllAccountsByOwner(owner)
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
             meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
             logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
@@ -216,8 +234,9 @@ class AccountService(
     }
 
     fun updateValidationDatesForAllAccounts(): Boolean {
+        val owner = TenantContext.getCurrentOwner()
         try {
-            accountRepository.updateValidationDateForAllAccounts()
+            accountRepository.updateValidationDateForAllAccountsByOwner(owner)
         } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
             meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
             logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
@@ -230,11 +249,12 @@ class AccountService(
         oldAccountNameOwner: String,
         newAccountNameOwner: String,
     ): Account {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Renaming account from $oldAccountNameOwner to $newAccountNameOwner")
 
         val oldAccount =
             accountRepository
-                .findByAccountNameOwner(oldAccountNameOwner)
+                .findByOwnerAndAccountNameOwner(owner, oldAccountNameOwner)
                 .orElseThrow {
                     logger.error("Account not found: $oldAccountNameOwner")
                     EntityNotFoundException("Account not found: $oldAccountNameOwner")
@@ -243,7 +263,8 @@ class AccountService(
         try {
             // First, update all transactions to use the new account name
             val transactionsUpdated =
-                transactionRepository.updateAccountNameOwnerForAllTransactions(
+                transactionRepository.updateAccountNameOwnerForAllTransactionsByOwner(
+                    owner,
                     oldAccountNameOwner,
                     newAccountNameOwner,
                 )
@@ -266,15 +287,16 @@ class AccountService(
 
     @org.springframework.transaction.annotation.Transactional
     fun deactivateAccount(accountNameOwner: String): Account {
+        val owner = TenantContext.getCurrentOwner()
         val account =
             accountRepository
-                .findByAccountNameOwner(accountNameOwner)
+                .findByOwnerAndAccountNameOwner(owner, accountNameOwner)
                 .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Deactivating account: $accountNameOwner")
 
         // Deactivate all transactions for this account
-        val transactionsUpdated = transactionRepository.deactivateAllTransactionsByAccountNameOwner(accountNameOwner)
+        val transactionsUpdated = transactionRepository.deactivateAllTransactionsByOwnerAndAccountNameOwner(owner, accountNameOwner)
         logger.info("Deactivated $transactionsUpdated transactions for account: $accountNameOwner")
 
         // Deactivate the account
@@ -287,9 +309,10 @@ class AccountService(
     }
 
     fun activateAccount(accountNameOwner: String): Account {
+        val owner = TenantContext.getCurrentOwner()
         val account =
             accountRepository
-                .findByAccountNameOwner(accountNameOwner)
+                .findByOwnerAndAccountNameOwner(owner, accountNameOwner)
                 .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
         logger.info("Activating account: $accountNameOwner")

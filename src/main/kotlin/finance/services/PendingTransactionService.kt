@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
 import finance.repositories.PendingTransactionRepository
+import finance.utils.TenantContext
 import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpStatus
@@ -27,12 +28,14 @@ class PendingTransactionService(
 
     override fun findAllActive(): ServiceResult<List<PendingTransaction>> =
         handleServiceOperation("findAllActive", null) {
-            pendingTransactionRepository.findAll()
+            val owner = TenantContext.getCurrentOwner()
+            pendingTransactionRepository.findAllByOwner(owner)
         }
 
     override fun findById(id: Long): ServiceResult<PendingTransaction> =
         handleServiceOperation("findById", id) {
-            val optionalPendingTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalPendingTransaction = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(owner, id)
             if (optionalPendingTransaction.isPresent) {
                 optionalPendingTransaction.get()
             } else {
@@ -42,6 +45,9 @@ class PendingTransactionService(
 
     override fun save(entity: PendingTransaction): ServiceResult<PendingTransaction> =
         handleServiceOperation("save", entity.pendingTransactionId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -55,7 +61,8 @@ class PendingTransactionService(
 
     override fun update(entity: PendingTransaction): ServiceResult<PendingTransaction> =
         handleServiceOperation("update", entity.pendingTransactionId) {
-            val existingTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(entity.pendingTransactionId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingTransaction = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(owner, entity.pendingTransactionId)
             if (existingTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: ${entity.pendingTransactionId}")
             }
@@ -67,14 +74,14 @@ class PendingTransactionService(
             transactionToUpdate.description = entity.description
             transactionToUpdate.amount = entity.amount
             transactionToUpdate.reviewStatus = entity.reviewStatus
-            transactionToUpdate.owner = entity.owner
 
             pendingTransactionRepository.saveAndFlush(transactionToUpdate)
         }
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalTransaction = pendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalTransaction = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(owner, id)
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: $id")
             }
@@ -86,7 +93,8 @@ class PendingTransactionService(
 
     fun deleteAll(): ServiceResult<Boolean> =
         handleServiceOperation("deleteAll", null) {
-            pendingTransactionRepository.deleteAll()
+            val owner = TenantContext.getCurrentOwner()
+            pendingTransactionRepository.deleteAllByOwner(owner)
             true
         }
 

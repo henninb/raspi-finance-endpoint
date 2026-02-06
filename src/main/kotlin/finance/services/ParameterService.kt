@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.Parameter
 import finance.domain.ServiceResult
 import finance.repositories.ParameterRepository
+import finance.utils.TenantContext
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
@@ -21,12 +22,14 @@ class ParameterService(
 
     override fun findAllActive(): ServiceResult<List<Parameter>> =
         handleServiceOperation("findAllActive", null) {
-            parameterRepository.findByActiveStatusIsTrue()
+            val owner = TenantContext.getCurrentOwner()
+            parameterRepository.findByOwnerAndActiveStatusIsTrue(owner)
         }
 
     override fun findById(id: Long): ServiceResult<Parameter> =
         handleServiceOperation("findById", id) {
-            val optionalParameter = parameterRepository.findById(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalParameter = parameterRepository.findByOwnerAndParameterId(owner, id)
             if (optionalParameter.isPresent) {
                 optionalParameter.get()
             } else {
@@ -36,6 +39,9 @@ class ParameterService(
 
     override fun save(entity: Parameter): ServiceResult<Parameter> =
         handleServiceOperation("save", entity.parameterId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -45,7 +51,8 @@ class ParameterService(
 
     override fun update(entity: Parameter): ServiceResult<Parameter> =
         handleServiceOperation("update", entity.parameterId) {
-            val existingParameter = parameterRepository.findById(entity.parameterId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingParameter = parameterRepository.findByOwnerAndParameterId(owner, entity.parameterId)
             if (existingParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: ${entity.parameterId}")
             }
@@ -62,7 +69,8 @@ class ParameterService(
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalParameter = parameterRepository.findById(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalParameter = parameterRepository.findByOwnerAndParameterId(owner, id)
             if (optionalParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $id")
             }
@@ -75,7 +83,8 @@ class ParameterService(
      */
     fun findByParameterNameStandardized(parameterName: String): ServiceResult<Parameter> =
         handleServiceOperation("findByParameterName", null) {
-            val optionalParameter = parameterRepository.findByParameterName(parameterName)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalParameter = parameterRepository.findByOwnerAndParameterName(owner, parameterName)
             if (optionalParameter.isPresent) {
                 optionalParameter.get()
             } else {
@@ -88,7 +97,8 @@ class ParameterService(
      */
     fun deleteByParameterNameStandardized(parameterName: String): ServiceResult<Boolean> =
         handleServiceOperation("deleteByParameterName", null) {
-            val optionalParameter = parameterRepository.findByParameterName(parameterName)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalParameter = parameterRepository.findByOwnerAndParameterName(owner, parameterName)
             if (optionalParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $parameterName")
             }

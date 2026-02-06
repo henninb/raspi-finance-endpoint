@@ -27,6 +27,16 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
         memberName: String,
     ): FamilyMember?
 
+    fun findByOwnerAndFamilyMemberIdAndActiveStatusTrue(
+        owner: String,
+        familyMemberId: Long,
+    ): FamilyMember?
+
+    fun findByOwnerAndFamilyMemberId(
+        owner: String,
+        familyMemberId: Long,
+    ): FamilyMember?
+
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query(
@@ -45,11 +55,40 @@ interface FamilyMemberRepository : JpaRepository<FamilyMember, Long> {
     @Query(
         """
         UPDATE FamilyMember f
+        SET f.activeStatus = false, f.dateUpdated = CURRENT_TIMESTAMP
+        WHERE f.familyMemberId = :familyMemberId AND f.owner = :owner
+        """,
+    )
+    fun softDeleteByOwnerAndFamilyMemberId(
+        @Param("owner") owner: String,
+        @Param("familyMemberId") familyMemberId: Long,
+    ): Int
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(
+        """
+        UPDATE FamilyMember f
         SET f.activeStatus = :active, f.dateUpdated = CURRENT_TIMESTAMP
         WHERE f.familyMemberId = :familyMemberId
         """,
     )
     fun updateActiveStatus(
+        @Param("familyMemberId") familyMemberId: Long,
+        @Param("active") active: Boolean,
+    ): Int
+
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(
+        """
+        UPDATE FamilyMember f
+        SET f.activeStatus = :active, f.dateUpdated = CURRENT_TIMESTAMP
+        WHERE f.familyMemberId = :familyMemberId AND f.owner = :owner
+        """,
+    )
+    fun updateActiveStatusByOwner(
+        @Param("owner") owner: String,
         @Param("familyMemberId") familyMemberId: Long,
         @Param("active") active: Boolean,
     ): Int

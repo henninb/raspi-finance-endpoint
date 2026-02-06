@@ -19,6 +19,7 @@ import finance.domain.TransactionState
 import finance.domain.TransactionValidationException
 import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
+import finance.utils.TenantContext
 import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -54,12 +55,14 @@ class TransactionService(
 
     override fun findAllActive(): ServiceResult<List<Transaction>> =
         handleServiceOperation("findAllActive", null) {
-            transactionRepository.findAll().filter { it.activeStatus }
+            val owner = TenantContext.getCurrentOwner()
+            transactionRepository.findByOwnerAndActiveStatus(owner, true, Pageable.unpaged()).content
         }
 
     override fun findById(id: String): ServiceResult<Transaction> =
         handleServiceOperation("findById", id) {
-            val optionalTransaction = transactionRepository.findByGuid(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, id)
             if (optionalTransaction.isPresent) {
                 optionalTransaction.get()
             } else {
@@ -69,13 +72,16 @@ class TransactionService(
 
     override fun save(entity: Transaction): ServiceResult<Transaction> =
         handleServiceOperation("save", entity.guid) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
             }
 
             // Check for existing transaction
-            val existingOptional = transactionRepository.findByGuid(entity.guid)
+            val existingOptional = transactionRepository.findByOwnerAndGuid(owner, entity.guid)
             if (existingOptional.isPresent) {
                 throw org.springframework.dao.DataIntegrityViolationException("Transaction already exists: ${entity.guid}")
             }
@@ -95,7 +101,8 @@ class TransactionService(
 
     override fun update(entity: Transaction): ServiceResult<Transaction> =
         handleServiceOperation("update", entity.guid) {
-            val existingTransaction = transactionRepository.findByGuid(entity.guid)
+            val owner = TenantContext.getCurrentOwner()
+            val existingTransaction = transactionRepository.findByOwnerAndGuid(owner, entity.guid)
             if (existingTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: ${entity.guid}")
             }
@@ -111,7 +118,8 @@ class TransactionService(
 
     override fun deleteById(id: String): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalTransaction = transactionRepository.findByGuid(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, id)
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $id")
             }
@@ -119,7 +127,7 @@ class TransactionService(
             val transaction = optionalTransaction.get()
 
             // Check if transaction is referenced by any payments
-            val referencingPayments = paymentRepository.findByGuidSourceOrGuidDestination(transaction.guid, transaction.guid)
+            val referencingPayments = paymentRepository.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(owner, transaction.guid, owner, transaction.guid)
 
             if (referencingPayments.isNotEmpty()) {
                 val paymentCount = referencingPayments.size
@@ -140,7 +148,8 @@ class TransactionService(
      */
     fun deleteByIdInternal(id: String): ServiceResult<Boolean> =
         handleServiceOperation("deleteByIdInternal", id) {
-            val optionalTransaction = transactionRepository.findByGuid(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, id)
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $id")
             }
@@ -157,10 +166,11 @@ class TransactionService(
 
     fun findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner: String): ServiceResult<List<Transaction>> {
         return handleServiceOperation("findByAccountNameOwnerOrderByTransactionDate", accountNameOwner) {
+            val owner = TenantContext.getCurrentOwner()
             val transactions =
                 executeWithResilienceSync(
                     operation = {
-                        transactionRepository.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner)
+                        transactionRepository.findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(owner, accountNameOwner)
                     },
                     operationName = "findByAccountNameOwnerOrderByTransactionDate-$accountNameOwner",
                     timeoutSeconds = 60,
@@ -181,13 +191,15 @@ class TransactionService(
 
     fun findTransactionsByCategoryStandardized(categoryName: String): ServiceResult<List<Transaction>> =
         handleServiceOperation("findTransactionsByCategory", categoryName) {
-            val transactions = transactionRepository.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName)
+            val owner = TenantContext.getCurrentOwner()
+            val transactions = transactionRepository.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(owner, categoryName)
             transactions.ifEmpty { emptyList() }
         }
 
     fun findTransactionsByDescriptionStandardized(descriptionName: String): ServiceResult<List<Transaction>> =
         handleServiceOperation("findTransactionsByDescription", descriptionName) {
-            val transactions = transactionRepository.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName)
+            val owner = TenantContext.getCurrentOwner()
+            val transactions = transactionRepository.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(owner, descriptionName)
             transactions.ifEmpty { emptyList() }
         }
 
@@ -197,10 +209,11 @@ class TransactionService(
         pageable: Pageable,
     ): ServiceResult<Page<Transaction>> =
         handleServiceOperation("findTransactionsByDateRange", null) {
+            val owner = TenantContext.getCurrentOwner()
             if (startDate.isAfter(endDate)) {
                 throw IllegalStateException("startDate must be before or equal to endDate")
             }
-            transactionRepository.findByTransactionDateBetween(startDate, endDate, pageable)
+            transactionRepository.findByOwnerAndTransactionDateBetween(owner, startDate, endDate, pageable)
         }
 
     // ===== Paginated ServiceResult Methods =====
@@ -211,8 +224,9 @@ class TransactionService(
      */
     fun findAllActive(pageable: Pageable): ServiceResult<Page<Transaction>> =
         handleServiceOperation("findAllActive-paginated", null) {
+            val owner = TenantContext.getCurrentOwner()
             val sortedPageable = applyTransactionSort(pageable)
-            transactionRepository.findByActiveStatus(true, sortedPageable)
+            transactionRepository.findByOwnerAndActiveStatus(owner, true, sortedPageable)
         }
 
     /**
@@ -224,11 +238,13 @@ class TransactionService(
         pageable: Pageable,
     ): ServiceResult<Page<Transaction>> =
         handleServiceOperation("findByAccountNameOwner-paginated", accountNameOwner) {
+            val owner = TenantContext.getCurrentOwner()
             val sortedPageable = applyTransactionSort(pageable)
             val page =
                 executeWithResilienceSync(
                     operation = {
-                        transactionRepository.findByAccountNameOwnerAndActiveStatus(
+                        transactionRepository.findByOwnerAndAccountNameOwnerAndActiveStatus(
+                            owner,
                             accountNameOwner,
                             true,
                             sortedPageable,
@@ -254,8 +270,9 @@ class TransactionService(
         pageable: Pageable,
     ): ServiceResult<Page<Transaction>> =
         handleServiceOperation("findTransactionsByCategory-paginated", categoryName) {
+            val owner = TenantContext.getCurrentOwner()
             val sortedPageable = applyTransactionSort(pageable)
-            transactionRepository.findByCategoryAndActiveStatus(categoryName, true, sortedPageable)
+            transactionRepository.findByOwnerAndCategoryAndActiveStatus(owner, categoryName, true, sortedPageable)
         }
 
     /**
@@ -267,8 +284,9 @@ class TransactionService(
         pageable: Pageable,
     ): ServiceResult<Page<Transaction>> =
         handleServiceOperation("findTransactionsByDescription-paginated", descriptionName) {
+            val owner = TenantContext.getCurrentOwner()
             val sortedPageable = applyTransactionSort(pageable)
-            transactionRepository.findByDescriptionAndActiveStatus(descriptionName, true, sortedPageable)
+            transactionRepository.findByOwnerAndDescriptionAndActiveStatus(owner, descriptionName, true, sortedPageable)
         }
 
     /**
@@ -291,7 +309,8 @@ class TransactionService(
         transactionState: TransactionState,
     ): ServiceResult<Transaction> =
         handleServiceOperation("updateTransactionState", guid) {
-            val transactionOptional = transactionRepository.findByGuid(guid)
+            val owner = TenantContext.getCurrentOwner()
+            val transactionOptional = transactionRepository.findByOwnerAndGuid(owner, guid)
             if (transactionOptional.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: $guid")
             }
@@ -318,8 +337,9 @@ class TransactionService(
         guid: String,
     ): ServiceResult<Transaction> =
         handleServiceOperation("changeAccountNameOwner", guid) {
+            val owner = TenantContext.getCurrentOwner()
             val accountOptional = accountService.account(accountNameOwner)
-            val transactionOptional = transactionRepository.findByGuid(guid)
+            val transactionOptional = transactionRepository.findByOwnerAndGuid(owner, guid)
 
             if (transactionOptional.isEmpty || accountOptional.isEmpty) {
                 throw AccountValidationException("Cannot change accountNameOwner for a transaction that does not exist, guid='$guid'.")
@@ -338,12 +358,13 @@ class TransactionService(
         imageBase64Payload: String,
     ): ServiceResult<ReceiptImage> {
         return handleServiceOperation("updateTransactionReceiptImage", guid) {
+            val owner = TenantContext.getCurrentOwner()
             val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
             val rawImage = Base64.getDecoder().decode(imageBase64String)
             val imageFormatType = imageProcessingService.getImageFormatType(rawImage)
             val thumbnail = imageProcessingService.createThumbnail(rawImage, imageFormatType)
 
-            val optionalTransaction = transactionRepository.findByGuid(guid)
+            val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, guid)
             if (optionalTransaction.isEmpty) {
                 throw TransactionNotFoundException("Cannot save a image for a transaction that does not exist with guid = '$guid'.")
             }
@@ -392,10 +413,12 @@ class TransactionService(
 
     fun createFutureTransactionStandardized(transaction: Transaction): ServiceResult<Transaction> =
         handleServiceOperation("createFutureTransaction", transaction.guid) {
+            val owner = TenantContext.getCurrentOwner()
             // Calculate future transaction date using LocalDate
             val futureTransactionDate = calculateFutureLocalDate(transaction, transaction.transactionDate)
 
             val transactionFuture = Transaction()
+            transactionFuture.owner = owner
 
             // Calculate future due date if present
             if (transaction.dueDate != null) {
