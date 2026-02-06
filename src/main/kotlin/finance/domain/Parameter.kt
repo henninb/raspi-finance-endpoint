@@ -39,6 +39,11 @@ data class Parameter(
     @param:JsonProperty
     @Column(name = "parameter_id", nullable = false)
     var parameterId: Long = 0L,
+    @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", nullable = false)
@@ -53,13 +58,7 @@ data class Parameter(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
-    constructor() : this(0L, "", "", true)
+    constructor() : this(0L, "", "", "", true)
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

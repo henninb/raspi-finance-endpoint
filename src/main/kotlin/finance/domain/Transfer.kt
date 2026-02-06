@@ -44,6 +44,11 @@ data class Transfer(
     @Column(name = "transfer_id", nullable = false)
     var transferId: Long,
     @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+    @param:JsonProperty
     @Column(name = "source_account", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
     @param:Size(min = 3, max = 40)
@@ -75,13 +80,7 @@ data class Transfer(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
-    constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
+    constructor() : this(0L, "", "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
 
     @JsonProperty
     @Column(name = "date_added", nullable = false)

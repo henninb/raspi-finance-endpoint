@@ -44,6 +44,11 @@ data class MedicalExpense(
     @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "medical_expense_id")
     var medicalExpenseId: Long = 0L,
+    @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
     @Column(name = "transaction_id")
     @field:Min(value = 1, message = "Transaction ID must be positive when specified")
     var transactionId: Long? = null,
@@ -127,12 +132,6 @@ data class MedicalExpense(
     @field:Digits(integer = 10, fraction = 2, message = "Paid amount must have at most 10 integer digits and 2 decimal places")
     var paidAmount: BigDecimal = BigDecimal.ZERO,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
     @field:NotNull(message = "Date added cannot be null")

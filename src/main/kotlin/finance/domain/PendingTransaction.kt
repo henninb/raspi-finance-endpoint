@@ -68,18 +68,17 @@ data class PendingTransaction(
     @param:JsonProperty
     @Column(name = "review_status", nullable = false, columnDefinition = "TEXT DEFAULT 'pending'")
     var reviewStatus: String = "pending",
+    @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_name_owner", referencedColumnName = "account_name_owner", insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
-    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending")
+    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending", "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")

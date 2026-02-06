@@ -37,6 +37,11 @@ data class ValidationAmount(
     @Column(name = "validation_id", nullable = false)
     var validationId: Long,
     @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+    @param:JsonProperty
     @field:Min(value = 0L)
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
@@ -60,13 +65,7 @@ data class ValidationAmount(
     @Column(name = "amount", nullable = false, precision = 10, scale = 2, columnDefinition = "NUMERIC(10,2) DEFAULT 0.00")
     var amount: BigDecimal,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
-    constructor() : this(0L, 0L, null, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
+    constructor() : this(0L, "", 0L, null, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
