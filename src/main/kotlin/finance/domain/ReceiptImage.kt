@@ -35,6 +35,11 @@ data class ReceiptImage(
     @Column(name = "receipt_image_id", nullable = false)
     var receiptImageId: Long,
     @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+    @param:JsonProperty
     @field:Min(value = 0L)
     @Column(name = "transaction_id", nullable = false)
     var transactionId: Long,
@@ -42,13 +47,7 @@ data class ReceiptImage(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
-    constructor() : this(0L, 0L, true)
+    constructor() : this(0L, "", 0L, true)
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)

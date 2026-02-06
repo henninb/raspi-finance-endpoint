@@ -63,6 +63,11 @@ data class Transaction(
     @Column(name = "transaction_id")
     var transactionId: Long = 0L,
     @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+    @param:JsonProperty
     @Column(name = "guid", unique = true, nullable = false)
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)
     var guid: String = "",
@@ -122,14 +127,9 @@ data class Transaction(
     @Column(name = "notes", nullable = false)
     var notes: String = "",
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
     constructor() : this(
         0L,
+        "",
         "",
         0L,
         AccountType.Undefined,

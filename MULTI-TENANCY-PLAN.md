@@ -16,17 +16,17 @@ The application is currently single-tenant - all data is globally accessible to 
 
 ### 1a. Backfill existing data with default owner
 ```sql
-UPDATE t_account SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_transaction SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_category SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_description SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_payment SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_transfer SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_validation_amount SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_receipt_image SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_pending_transaction SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_parameter SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE t_transaction_categories SET owner = 'henninb' WHERE owner IS NULL;
+UPDATE t_account SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_transaction SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_category SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_description SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_payment SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_transfer SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_validation_amount SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_receipt_image SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_pending_transaction SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_parameter SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
+UPDATE t_transaction_categories SET owner = 'henninb@gmail.com' WHERE owner IS NULL;
 ```
 
 ### 1b. Make owner NOT NULL

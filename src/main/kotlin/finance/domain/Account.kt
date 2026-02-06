@@ -50,6 +50,11 @@ data class Account(
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
     @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+    @param:JsonProperty
     @Column(name = "account_name_owner", nullable = false)
     @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
@@ -80,12 +85,6 @@ data class Account(
     @Column(name = "cleared", nullable = false, precision = 8, scale = 2, columnDefinition = "NUMERIC(8,2) DEFAULT 0.00")
     var cleared: BigDecimal,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
     @JsonIgnore
     @Column(name = "date_closed", nullable = false)
     var dateClosed: Timestamp = Timestamp(0)
@@ -96,6 +95,7 @@ data class Account(
 
     constructor() : this(
         0L,
+        "",
         "",
         AccountType.Undefined,
         true,

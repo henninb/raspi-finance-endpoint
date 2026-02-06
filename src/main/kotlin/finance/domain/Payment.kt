@@ -47,6 +47,11 @@ data class Payment(
     @Column(name = "payment_id", nullable = false)
     var paymentId: Long,
     @param:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = "",
+    @param:JsonProperty
     // @Transient
     @Column(name = "source_account", nullable = false)
     @field:Convert(converter = LowerCaseConverter::class)
@@ -80,13 +85,7 @@ data class Payment(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
-    @get:JsonProperty
-    @Column(name = "owner", nullable = false)
-    @field:Size(max = 100, message = "Owner must be 100 characters or less")
-    @field:Convert(converter = LowerCaseConverter::class)
-    var owner: String = ""
-
-    constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
+    constructor() : this(0L, "", "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false)
