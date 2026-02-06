@@ -18,4 +18,27 @@ interface CategoryRepository : JpaRepository<Category, Long> {
         activeStatus: Boolean,
         pageable: Pageable,
     ): Page<Category>
+
+    // --- Owner-scoped methods for multi-tenancy (Phase 4) ---
+
+    fun findByOwnerAndCategoryName(
+        owner: String,
+        categoryName: String,
+    ): Optional<Category>
+
+    fun findByOwnerAndCategoryId(
+        owner: String,
+        categoryId: Long,
+    ): Optional<Category>
+
+    fun findByOwnerAndActiveStatusOrderByCategoryName(
+        owner: String,
+        activeStatus: Boolean,
+    ): List<Category>
+
+    fun findAllByOwnerAndActiveStatusOrderByCategoryName(
+        owner: String,
+        activeStatus: Boolean,
+        pageable: Pageable,
+    ): Page<Category>
 }

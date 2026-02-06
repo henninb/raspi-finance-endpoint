@@ -18,4 +18,26 @@ interface ValidationAmountRepository : JpaRepository<ValidationAmount, Long> {
     fun findByActiveStatusTrueOrderByValidationDateDesc(): List<ValidationAmount>
 
     fun findByValidationIdAndActiveStatusTrue(validationId: Long): Optional<ValidationAmount>
+
+    // --- Owner-scoped methods for multi-tenancy (Phase 4) ---
+
+    fun findByOwnerAndTransactionStateAndAccountId(
+        owner: String,
+        transactionState: TransactionState,
+        accountId: Long,
+    ): List<ValidationAmount>
+
+    fun findByOwnerAndAccountId(
+        owner: String,
+        accountId: Long,
+    ): List<ValidationAmount>
+
+    fun findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(
+        owner: String,
+    ): List<ValidationAmount>
+
+    fun findByOwnerAndValidationIdAndActiveStatusTrue(
+        owner: String,
+        validationId: Long,
+    ): Optional<ValidationAmount>
 }

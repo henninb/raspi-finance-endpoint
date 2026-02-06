@@ -106,6 +106,7 @@ type Mutation {
 # complete 7/17/2021
 type Account {
     accountId: ID
+    owner: String
     activeStatus: Boolean!
     accountNameOwner: String!
     accountType: AccountType!
@@ -122,6 +123,7 @@ type Account {
 # complete 7/17/2021
 type Category {
     categoryId: ID
+    owner: String
     activeStatus: Boolean!
     categoryName: String!
     categoryCount: Long
@@ -132,6 +134,7 @@ type Category {
 # complete 7/17/2021
 type Description {
     descriptionId: ID
+    owner: String
     activeStatus: Boolean!
     descriptionName: String!
     descriptionCount: Long
@@ -142,6 +145,7 @@ type Description {
 # complete 7/17/2021
 type Transaction {
     transactionId: ID
+    owner: String
     guid: String!
     accountId: ID
     accountType: AccountType!
@@ -165,6 +169,7 @@ type Transaction {
 # complete 7/17/2021
 type Payment {
     paymentId: ID
+    owner: String
     sourceAccount: String!
     destinationAccount: String!
     activeStatus: Boolean!
@@ -178,6 +183,7 @@ type Payment {
 
 input PaymentInput {
     paymentId: ID
+    owner: String
     sourceAccount: String!
     destinationAccount: String!
     transactionDate: Date!
@@ -190,6 +196,7 @@ input PaymentInput {
 # complete 7/17/2021
 type Transfer {
     transferId: ID
+    owner: String
     sourceAccount: String!
     destinationAccount: String!
     transactionDate: Date!
@@ -202,6 +209,7 @@ type Transfer {
 }
 
 input TransferInput {
+    owner: String
     sourceAccount: String!
     destinationAccount: String!
     transactionDate: Date!
@@ -213,6 +221,7 @@ input TransferInput {
 
 input AccountInput {
     accountId: ID
+    owner: String
     accountNameOwner: String!
     accountType: AccountType!
     activeStatus: Boolean
@@ -226,6 +235,7 @@ input AccountInput {
 
 input TransactionInput {
     transactionId: ID
+    owner: String
     guid: String
     accountId: ID
     accountType: AccountType!
@@ -245,6 +255,7 @@ input TransactionInput {
 
 input ParameterInput {
     parameterId: ID
+    owner: String
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean
@@ -252,12 +263,14 @@ input ParameterInput {
 
 input CategoryInput {
     categoryId: ID
+    owner: String
     categoryName: String!
     activeStatus: Boolean
 }
 
 input DescriptionInput {
     descriptionId: ID
+    owner: String
     descriptionName: String!
     activeStatus: Boolean
 }
@@ -283,6 +296,7 @@ type ReceiptImage {
 # complete 7/17/2021
 type Parameter {
     parameterId: ID
+    owner: String
     parameterName: String!
     parameterValue: String!
     activeStatus: Boolean!

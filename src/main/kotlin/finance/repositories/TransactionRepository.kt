@@ -132,4 +132,126 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         @Param("oldAccountNameOwner") oldAccountNameOwner: String,
         @Param("newAccountNameOwner") newAccountNameOwner: String,
     ): Int
+
+    // --- Owner-scoped methods for multi-tenancy (Phase 4) ---
+
+    fun findByOwnerAndGuid(
+        owner: String,
+        guid: String,
+    ): Optional<Transaction>
+
+    fun findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(
+        owner: String,
+        accountNameOwner: String,
+        activeStatus: Boolean = true,
+    ): List<Transaction>
+
+    fun findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(
+        owner: String,
+        category: String,
+        activeStatus: Boolean = true,
+    ): List<Transaction>
+
+    fun findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(
+        owner: String,
+        description: String,
+        activeStatus: Boolean = true,
+    ): List<Transaction>
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.owner = :owner AND t.description = :descriptionName")
+    fun countByOwnerAndDescriptionName(
+        @Param("owner") owner: String,
+        @Param("descriptionName") descriptionName: String,
+    ): Long
+
+    @Query("SELECT t.description, COUNT(t) FROM Transaction t WHERE t.owner = :owner AND t.description IN :descriptionNames GROUP BY t.description")
+    fun countByOwnerAndDescriptionNameIn(
+        @Param("owner") owner: String,
+        @Param("descriptionNames") descriptionNames: List<String>,
+    ): List<Array<Any>>
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.owner = :owner AND t.category = :categoryName")
+    fun countByOwnerAndCategoryName(
+        @Param("owner") owner: String,
+        @Param("categoryName") categoryName: String,
+    ): Long
+
+    @Query("SELECT t.category, COUNT(t) FROM Transaction t WHERE t.owner = :owner AND t.category IN :categoryNames GROUP BY t.category")
+    fun countByOwnerAndCategoryNameIn(
+        @Param("owner") owner: String,
+        @Param("categoryNames") categoryNames: List<String>,
+    ): List<Array<Any>>
+
+    @Query(
+        value = "SELECT SUM(amount), count(amount), transaction_state FROM t_transaction WHERE owner = :owner AND account_name_owner = :accountNameOwner AND active_status = true GROUP BY transaction_state",
+        nativeQuery = true,
+    )
+    fun sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(
+        @Param("owner") owner: String,
+        @Param("accountNameOwner") accountNameOwner: String,
+    ): List<Any>
+
+    fun findByOwnerAndAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
+        owner: String,
+        accountNameOwner: String,
+        activeStatus: Boolean = true,
+        transactionStates: List<TransactionState>,
+    ): List<Transaction>
+
+    fun findByOwnerAndTransactionDateBetween(
+        owner: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    fun findByOwnerAndActiveStatus(
+        owner: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    fun findByOwnerAndAccountNameOwnerAndActiveStatus(
+        owner: String,
+        accountNameOwner: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    fun findByOwnerAndCategoryAndActiveStatus(
+        owner: String,
+        category: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    fun findByOwnerAndDescriptionAndActiveStatus(
+        owner: String,
+        description: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transaction>
+
+    @Modifying
+    @Transactional
+    @Query(
+        value = "UPDATE {h-schema}t_transaction SET active_status = false, date_updated = now() WHERE account_name_owner = :accountNameOwner AND owner = :owner",
+        nativeQuery = true,
+    )
+    fun deactivateAllTransactionsByOwnerAndAccountNameOwner(
+        @Param("owner") owner: String,
+        @Param("accountNameOwner") accountNameOwner: String,
+    ): Int
+
+    @Modifying
+    @Transactional
+    @Query(
+        value = "UPDATE {h-schema}t_transaction SET account_name_owner = :newAccountNameOwner, date_updated = now() WHERE account_name_owner = :oldAccountNameOwner AND owner = :owner",
+        nativeQuery = true,
+    )
+    fun updateAccountNameOwnerForAllTransactionsByOwner(
+        @Param("owner") owner: String,
+        @Param("oldAccountNameOwner") oldAccountNameOwner: String,
+        @Param("newAccountNameOwner") newAccountNameOwner: String,
+    ): Int
 }

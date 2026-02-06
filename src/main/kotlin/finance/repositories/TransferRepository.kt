@@ -15,6 +15,16 @@ interface TransferRepository : JpaRepository<Transfer, Long> {
         pageable: Pageable,
     ): Page<Transfer>
 
-//    @Transactional
-//    fun deleteByPaymentId(paymentId: Long)
+    // --- Owner-scoped methods for multi-tenancy (Phase 4) ---
+
+    fun findByOwnerAndTransferId(
+        owner: String,
+        transferId: Long,
+    ): Optional<Transfer>
+
+    fun findByOwnerAndActiveStatusOrderByTransactionDateDesc(
+        owner: String,
+        activeStatus: Boolean = true,
+        pageable: Pageable,
+    ): Page<Transfer>
 }
