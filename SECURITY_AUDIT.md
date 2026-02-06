@@ -9,6 +9,7 @@ Audit Date: 2026-02-05 (updated from 2026-02-02)
 **Resolved:**
 - Item 6 (Overly permissive catch-all) - Now uses `anyRequest().denyAll()`
 - `env.secrets`, `security-test-config.env`, `ssl/` removed from git tracking
+- Item 4 (`@CrossOrigin` on every controller) - All `@CrossOrigin` annotations removed; centralized CORS policy is now the sole mechanism
 
 **New findings added:** Items 6, 7, 8, 9, 14, 15, 16, 17, 18
 **Removed:** IDOR finding - not applicable (single-user/household design, no per-user data ownership in schema)
@@ -73,24 +74,11 @@ If an attacker can influence the `USERNAME` or `HOST_IP` environment variables (
 
 ---
 
-## 4. CRITICAL - `@CrossOrigin` on Every Controller Bypasses CORS Policy
+## 4. ~~CRITICAL~~ RESOLVED - `@CrossOrigin` on Every Controller Bypasses CORS Policy
 
 **CWE-942** (Permissive Cross-domain Policy with Untrusted Domains)
 
-**NEW.** Every controller has a bare `@CrossOrigin` annotation with no origin restriction. This overrides the carefully configured CORS allowlist in `WebSecurityConfig.kt`, defaulting to **all origins allowed**:
-
-```
-AccountController.kt:32      CategoryController.kt:28     CsrfController.kt:19
-DescriptionController.kt:28  FamilyMemberController.kt:26 LoginController.kt:31
-MedicalExpenseController.kt:36 ParameterController.kt:24  PaymentController.kt:27
-PendingTransactionController.kt:24 ReceiptImageController.kt:24
-TransactionController.kt:34  TransferController.kt:27     UserController.kt:19
-ValidationAmountController.kt:27
-```
-
-An attacker on any domain can make authenticated cross-origin requests with credentials, completely defeating the centralized CORS allowlist.
-
-**Remediation:** Remove all `@CrossOrigin` annotations from controllers. The centralized `CorsConfiguration` in `WebSecurityConfig` is the correct and sole CORS mechanism.
+**Status: Remediated.** All `@CrossOrigin` annotations have been removed from controllers. The centralized `CorsConfiguration` in `WebSecurityConfig` is now the sole CORS mechanism.
 
 ---
 
@@ -331,9 +319,9 @@ Plaintext usernames in logs create PII exposure risk. The `HttpErrorLoggingFilte
 
 `src/main/kotlin/finance/configurations/WebSecurityConfig.kt:138-155` allows 10+ origins including `http://localhost:3000` and multiple subdomains. Combined with `allowCredentials=true`, a compromised origin can make authenticated cross-origin requests.
 
-Note: This finding is compounded by item 4 (`@CrossOrigin` on every controller) which bypasses this allowlist entirely.
+Note: Item 4 (`@CrossOrigin` on every controller) has been resolved, so the centralized allowlist is now effective.
 
-**Remediation:** Use profile-based CORS configuration. Restrict `localhost` origins to development profiles only. Fix item 4 first.
+**Remediation:** Use profile-based CORS configuration. Restrict `localhost` origins to development profiles only.
 
 ---
 
@@ -402,7 +390,8 @@ All native SQL queries use `@Param` bindings. No string concatenation, no raw JD
 
 | Severity | Count | Items |
 |----------|-------|-------|
-| CRITICAL | 4 | 1, 2, 3, 4 |
+| CRITICAL | 3 | 1, 2, 3 |
+| RESOLVED | 1 | 4 |
 | HIGH | 10 | 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 |
 | MEDIUM | 6 | 15, 16, 17, 18, 19, 20 |
 | LOW | 2 | 21, 22 |
@@ -411,7 +400,7 @@ All native SQL queries use `@Param` bindings. No string concatenation, no raw JD
 
 ## Priority Remediation Order
 
-1. **Remove `@CrossOrigin`** from all controllers (item 4) - quick fix, massive impact
+1. ~~**Remove `@CrossOrigin`** from all controllers (item 4)~~ - **DONE**
 2. **Rotate all secrets** and purge git history (item 1)
 3. **Restrict actuator exposure** to `health,metrics,info` (item 10)
 4. **Add `@DecimalMax`** to PaymentInputDto/TransferInputDto (item 7) - one-line fix

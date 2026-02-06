@@ -206,7 +206,7 @@ dependencies {
     implementation("org.apache.tomcat:tomcat-jdbc:${apacheTomcatJdbcVersion}")
 
     //Flyway
-    implementation("org.flywaydb:flyway-core:${flywayVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-flyway:${springBootVersion}")
     implementation("org.flywaydb:flyway-database-postgresql:${flywayVersion}")
 
     // Flyway Gradle plugin dependencies (needed at configuration time)
