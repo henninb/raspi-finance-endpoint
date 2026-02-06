@@ -5,6 +5,7 @@ import finance.domain.TransactionState
 import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
+import finance.utils.TenantContext
 import jakarta.validation.ValidationException
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -26,7 +27,8 @@ class ValidationAmountService(
 
     override fun findAllActive(): ServiceResult<List<ValidationAmount>> =
         handleServiceOperation("findAllActive", null) {
-            validationAmountRepository.findByActiveStatusTrueOrderByValidationDateDesc()
+            val owner = TenantContext.getCurrentOwner()
+            validationAmountRepository.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(owner)
         }
 
     /**
@@ -40,13 +42,14 @@ class ValidationAmountService(
         transactionState: TransactionState? = null,
     ): ServiceResult<List<ValidationAmount>> =
         handleServiceOperation("findAllActiveFiltered", null) {
-            val allActive = validationAmountRepository.findByActiveStatusTrueOrderByValidationDateDesc()
+            val owner = TenantContext.getCurrentOwner()
+            val allActive = validationAmountRepository.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(owner)
 
             // Apply filters if provided
             var filtered = allActive
 
             if (accountNameOwner != null) {
-                val account = accountRepository.findByAccountNameOwner(accountNameOwner)
+                val account = accountRepository.findByOwnerAndAccountNameOwner(owner, accountNameOwner)
                 if (account.isPresent) {
                     filtered = filtered.filter { it.accountId == account.get().accountId }
                 } else {
@@ -64,7 +67,8 @@ class ValidationAmountService(
 
     override fun findById(id: Long): ServiceResult<ValidationAmount> =
         handleServiceOperation("findById", id) {
-            val optionalValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
             if (optionalValidationAmount.isPresent) {
                 optionalValidationAmount.get()
             } else {
@@ -74,6 +78,9 @@ class ValidationAmountService(
 
     override fun save(entity: ValidationAmount): ServiceResult<ValidationAmount> =
         handleServiceOperation("save", entity.validationId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -87,7 +94,7 @@ class ValidationAmountService(
             val saved = validationAmountRepository.saveAndFlush(entity)
             // Keep Account.validationDate in sync with newest ValidationAmount row
             try {
-                accountRepository.updateValidationDateForAccount(saved.accountId)
+                accountRepository.updateValidationDateForAccountByOwner(saved.accountId, owner)
             } catch (ex: Exception) {
                 logger.warn("Failed to refresh account.validation_date for accountId=${saved.accountId}: ${ex.message}")
             }
@@ -96,7 +103,8 @@ class ValidationAmountService(
 
     override fun update(entity: ValidationAmount): ServiceResult<ValidationAmount> =
         handleServiceOperation("update", entity.validationId) {
-            val existingValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(entity.validationId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, entity.validationId)
             if (existingValidationAmount.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: ${entity.validationId}")
             }
@@ -113,7 +121,7 @@ class ValidationAmountService(
             val updated = validationAmountRepository.saveAndFlush(validationAmountToUpdate)
             // Refresh Account.validationDate projection
             try {
-                accountRepository.updateValidationDateForAccount(updated.accountId)
+                accountRepository.updateValidationDateForAccountByOwner(updated.accountId, owner)
             } catch (ex: Exception) {
                 logger.warn("Failed to refresh account.validation_date for accountId=${updated.accountId}: ${ex.message}")
             }
@@ -122,7 +130,8 @@ class ValidationAmountService(
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalValidationAmount = validationAmountRepository.findByValidationIdAndActiveStatusTrue(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
             if (optionalValidationAmount.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: $id")
             }
@@ -136,14 +145,15 @@ class ValidationAmountService(
         accountNameOwner: String,
         transactionState: TransactionState,
     ): ValidationAmount {
+        val owner = TenantContext.getCurrentOwner()
         // Find account by name owner
         val account =
-            accountRepository.findByAccountNameOwner(accountNameOwner).orElseThrow {
+            accountRepository.findByOwnerAndAccountNameOwner(owner, accountNameOwner).orElseThrow {
                 jakarta.persistence.EntityNotFoundException("Account not found: $accountNameOwner")
             }
 
         // Find validation amount by account ID and transaction state
-        val validationAmounts = validationAmountRepository.findByTransactionStateAndAccountId(transactionState, account.accountId)
+        val validationAmounts = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(owner, transactionState, account.accountId)
         if (validationAmounts.isEmpty()) {
             throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found for account: $accountNameOwner and transaction state: $transactionState")
         }
@@ -156,6 +166,7 @@ class ValidationAmountService(
         accountNameOwner: String,
         validationAmount: ValidationAmount,
     ): ValidationAmount {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Inserting validation amount for account: $accountNameOwner")
 
         // Determine the target accountId using request payload first, then fallback to path variable
@@ -168,7 +179,7 @@ class ValidationAmountService(
                 }
 
                 else -> {
-                    val byOwner = accountRepository.findByAccountNameOwner(accountNameOwner)
+                    val byOwner = accountRepository.findByOwnerAndAccountNameOwner(owner, accountNameOwner)
                     if (byOwner.isPresent) {
                         byOwner.get().accountId
                     } else {

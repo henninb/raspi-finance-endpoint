@@ -4,6 +4,7 @@ import finance.domain.Totals
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.TransactionRepository
+import finance.utils.TenantContext
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -24,12 +25,13 @@ open class CalculationService(
 
     override fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals {
         return try {
+            val owner = TenantContext.getCurrentOwner()
             logger.debug("Calculating active totals for account: $accountNameOwner")
 
             val resultSet =
                 executeWithResilienceSync(
                     operation = {
-                        transactionRepository.sumTotalsForActiveTransactionsByAccountNameOwner(accountNameOwner)
+                        transactionRepository.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(owner, accountNameOwner)
                     },
                     operationName = "calculateActiveTotalsByAccountNameOwner-$accountNameOwner",
                     timeoutSeconds = 45,

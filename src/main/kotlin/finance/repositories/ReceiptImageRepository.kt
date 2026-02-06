@@ -13,4 +13,11 @@ interface ReceiptImageRepository : JpaRepository<ReceiptImage, Long> {
         owner: String,
         transactionId: Long,
     ): Optional<ReceiptImage>
+
+    fun findByOwnerAndReceiptImageId(
+        owner: String,
+        receiptImageId: Long,
+    ): Optional<ReceiptImage>
+
+    fun findAllByOwner(owner: String): List<ReceiptImage>
 }

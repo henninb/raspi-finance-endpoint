@@ -4,6 +4,7 @@ import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.domain.ServiceResult
 import finance.repositories.FamilyMemberRepository
+import finance.utils.TenantContext
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
@@ -22,7 +23,8 @@ class FamilyMemberService(
 
     fun findAllActive(): ServiceResult<List<FamilyMember>> =
         try {
-            ServiceResult.Success(familyMemberRepository.findByActiveStatusTrue())
+            val owner = TenantContext.getCurrentOwner()
+            ServiceResult.Success(familyMemberRepository.findByOwnerAndActiveStatusTrue(owner))
         } catch (e: Exception) {
             logger.error("Error retrieving all family members", e)
             ServiceResult.SystemError(e)
@@ -30,7 +32,8 @@ class FamilyMemberService(
 
     fun findByIdServiceResult(id: Long): ServiceResult<FamilyMember> =
         try {
-            val fm = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+            val owner = TenantContext.getCurrentOwner()
+            val fm = familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, id)
             if (fm != null) ServiceResult.Success(fm) else ServiceResult.NotFound("FamilyMember not found: $id")
         } catch (e: Exception) {
             logger.error("Error retrieving family member by ID: $id", e)
@@ -39,7 +42,8 @@ class FamilyMemberService(
 
     fun findByIdAnyStatus(id: Long): ServiceResult<FamilyMember> =
         try {
-            val familyMember = familyMemberRepository.findById(id).orElse(null)
+            val owner = TenantContext.getCurrentOwner()
+            val familyMember = familyMemberRepository.findByOwnerAndFamilyMemberId(owner, id)
             if (familyMember != null) {
                 ServiceResult.Success(familyMember)
             } else {
@@ -52,8 +56,11 @@ class FamilyMemberService(
 
     fun save(entity: FamilyMember): ServiceResult<FamilyMember> {
         return try {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             // Check if family member already exists first (before validation for test compatibility)
-            val existingMember = familyMemberRepository.findByOwnerAndMemberName(entity.owner, entity.memberName)
+            val existingMember = familyMemberRepository.findByOwnerAndMemberName(owner, entity.memberName)
             if (existingMember != null) {
                 return ServiceResult.BusinessError(
                     "Family member already exists for owner='${entity.owner}', name='${entity.memberName}'",
@@ -87,8 +94,11 @@ class FamilyMemberService(
 
     fun update(entity: FamilyMember): ServiceResult<FamilyMember> {
         return try {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val existingMember =
-                familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(entity.familyMemberId)
+                familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, entity.familyMemberId)
                     ?: return ServiceResult.NotFound("FamilyMember not found: ${entity.familyMemberId}")
 
             // Keep immutable fields from existing if needed; for now, update timestamps only
@@ -103,11 +113,11 @@ class FamilyMemberService(
 
     fun deleteById(id: Long): ServiceResult<Boolean> {
         return try {
-            val existingMember =
-                familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
-                    ?: return ServiceResult.NotFound("FamilyMember not found: $id")
+            val owner = TenantContext.getCurrentOwner()
+            familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, id)
+                ?: return ServiceResult.NotFound("FamilyMember not found: $id")
 
-            val updatedRows = familyMemberRepository.softDeleteByFamilyMemberId(id)
+            val updatedRows = familyMemberRepository.softDeleteByOwnerAndFamilyMemberId(owner, id)
             ServiceResult.Success(updatedRows > 0)
         } catch (e: Exception) {
             logger.error("Error deleting family member", e)
@@ -121,11 +131,12 @@ class FamilyMemberService(
      */
     fun deleteByIdAnyStatus(id: Long): ServiceResult<Boolean> {
         return try {
-            val existingMember = familyMemberRepository.findById(id).orElse(null)
+            val owner = TenantContext.getCurrentOwner()
+            val existingMember = familyMemberRepository.findByOwnerAndFamilyMemberId(owner, id)
             if (existingMember == null) {
                 return ServiceResult.NotFound("FamilyMember not found: $id")
             }
-            val updatedRows = familyMemberRepository.softDeleteByFamilyMemberId(id)
+            val updatedRows = familyMemberRepository.softDeleteByOwnerAndFamilyMemberId(owner, id)
             ServiceResult.Success(updatedRows > 0)
         } catch (e: Exception) {
             logger.error("Error deleting family member (any status)", e)
@@ -136,11 +147,13 @@ class FamilyMemberService(
     // ===== Legacy Methods for Backward Compatibility =====
 
     fun findById(id: Long): FamilyMember? {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding family member by ID: $id")
-        return familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+        return familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, id)
     }
 
     fun insertFamilyMember(member: FamilyMember): FamilyMember {
+        member.owner = TenantContext.getCurrentOwner()
         logger.info("Inserting family member for owner: ${member.owner}")
 
         val result = save(member)
@@ -170,6 +183,7 @@ class FamilyMemberService(
     }
 
     fun updateFamilyMember(member: FamilyMember): FamilyMember {
+        member.owner = TenantContext.getCurrentOwner()
         logger.info("Updating family member with ID: ${member.familyMemberId}")
 
         val result = update(member)
@@ -199,41 +213,45 @@ class FamilyMemberService(
     }
 
     fun findFamilyMemberById(id: Long): FamilyMember? {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding family member by ID: $id")
-        return familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+        return familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, id)
     }
 
-    fun findByOwner(owner: String): List<FamilyMember> {
+    fun findByOwner(): List<FamilyMember> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding family members by owner: $owner")
         return familyMemberRepository.findByOwnerAndActiveStatusTrue(owner)
     }
 
     fun findByOwnerAndRelationship(
-        owner: String,
         relationship: FamilyRelationship,
     ): List<FamilyMember> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding family members by owner: $owner and relationship: $relationship")
         return familyMemberRepository.findByOwnerAndRelationshipAndActiveStatusTrue(owner, relationship)
     }
 
     fun findAll(): List<FamilyMember> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding all active family members")
-        return familyMemberRepository.findByActiveStatusTrue()
+        return familyMemberRepository.findByOwnerAndActiveStatusTrue(owner)
     }
 
     fun updateActiveStatus(
         id: Long,
         active: Boolean,
     ): Boolean {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Updating active status for family member ID: $id to: $active")
         return try {
             // Check if family member exists first
-            val existingMember = familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(id)
+            val existingMember = familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, id)
             if (existingMember == null) {
                 return false
             }
 
-            val updatedRows = familyMemberRepository.updateActiveStatus(id, active)
+            val updatedRows = familyMemberRepository.updateActiveStatusByOwner(owner, id, active)
             updatedRows > 0
         } catch (e: Exception) {
             logger.error("Error updating active status for family member ID: $id", e)
@@ -242,15 +260,16 @@ class FamilyMemberService(
     }
 
     fun softDelete(id: Long): Boolean {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Soft deleting family member with ID: $id")
         return try {
             // Check if family member exists first (regardless of active status)
-            val existingMember = familyMemberRepository.findById(id).orElse(null)
+            val existingMember = familyMemberRepository.findByOwnerAndFamilyMemberId(owner, id)
             if (existingMember == null) {
                 return false
             }
 
-            val updatedRows = familyMemberRepository.softDeleteByFamilyMemberId(id)
+            val updatedRows = familyMemberRepository.softDeleteByOwnerAndFamilyMemberId(owner, id)
             updatedRows > 0
         } catch (e: Exception) {
             logger.error("Error soft deleting family member with ID: $id", e)

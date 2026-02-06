@@ -7,6 +7,7 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.domain.Transfer
 import finance.repositories.TransferRepository
+import finance.utils.TenantContext
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -32,12 +33,14 @@ class TransferService(
 
     override fun findAllActive(): ServiceResult<List<Transfer>> =
         handleServiceOperation("findAllActive", null) {
-            transferRepository.findAll().sortedByDescending { transfer -> transfer.transactionDate }
+            val owner = TenantContext.getCurrentOwner()
+            transferRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, Pageable.unpaged()).content
         }
 
     override fun findById(id: Long): ServiceResult<Transfer> =
         handleServiceOperation("findById", id) {
-            val optionalTransfer = transferRepository.findByTransferId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalTransfer = transferRepository.findByOwnerAndTransferId(owner, id)
             if (optionalTransfer.isPresent) {
                 optionalTransfer.get()
             } else {
@@ -47,6 +50,9 @@ class TransferService(
 
     override fun save(entity: Transfer): ServiceResult<Transfer> =
         handleServiceOperation("save", entity.transferId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             // Detect new transfers: if transferId is 0 AND guidSource/guidDestination are missing
             // then use the full insertTransfer workflow to create transactions
             val isNewTransfer = (entity.transferId == 0L)
@@ -75,7 +81,8 @@ class TransferService(
 
     override fun update(entity: Transfer): ServiceResult<Transfer> =
         handleServiceOperation("update", entity.transferId) {
-            val existingTransfer = transferRepository.findByTransferId(entity.transferId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingTransfer = transferRepository.findByOwnerAndTransferId(owner, entity.transferId)
             if (existingTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: ${entity.transferId}")
             }
@@ -93,7 +100,8 @@ class TransferService(
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalTransfer = transferRepository.findByTransferId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalTransfer = transferRepository.findByOwnerAndTransferId(owner, id)
             if (optionalTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: $id")
             }
@@ -109,7 +117,8 @@ class TransferService(
      */
     fun findAllActive(pageable: Pageable): ServiceResult<Page<Transfer>> =
         handleServiceOperation("findAllActive-paginated", null) {
-            transferRepository.findByActiveStatusOrderByTransactionDateDesc(true, pageable)
+            val owner = TenantContext.getCurrentOwner()
+            transferRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, pageable)
         }
 
     // ===== Legacy Method Compatibility =====
@@ -124,6 +133,8 @@ class TransferService(
 
     @org.springframework.transaction.annotation.Transactional
     fun insertTransfer(transfer: Transfer): Transfer {
+        val owner = TenantContext.getCurrentOwner()
+        transfer.owner = owner
         logger.info("Inserting new transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
         val transactionSource = Transaction()
         val transactionDestination = Transaction()
@@ -221,10 +232,14 @@ class TransferService(
         }
     }
 
-    fun findByTransferId(transferId: Long): Optional<Transfer> = transferRepository.findByTransferId(transferId)
+    fun findByTransferId(transferId: Long): Optional<Transfer> {
+        val owner = TenantContext.getCurrentOwner()
+        return transferRepository.findByOwnerAndTransferId(owner, transferId)
+    }
 
     fun deleteByTransferId(transferId: Long): Boolean {
-        val optionalTransfer = transferRepository.findByTransferId(transferId)
+        val owner = TenantContext.getCurrentOwner()
+        val optionalTransfer = transferRepository.findByOwnerAndTransferId(owner, transferId)
         if (optionalTransfer.isPresent) {
             transferRepository.delete(optionalTransfer.get())
             return true

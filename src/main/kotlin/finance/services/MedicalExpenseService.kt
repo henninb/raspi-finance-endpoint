@@ -5,6 +5,7 @@ import finance.domain.MedicalExpense
 import finance.domain.ServiceResult
 import finance.exceptions.DuplicateMedicalExpenseException
 import finance.repositories.MedicalExpenseRepository
+import finance.utils.TenantContext
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
@@ -26,17 +27,22 @@ class MedicalExpenseService(
 
     override fun findAllActive(): ServiceResult<List<MedicalExpense>> =
         handleServiceOperation("findAllActive", null) {
-            medicalExpenseRepository.findByActiveStatusTrueOrderByServiceDateDesc()
+            val owner = TenantContext.getCurrentOwner()
+            medicalExpenseRepository.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(owner)
         }
 
     override fun findById(id: Long): ServiceResult<MedicalExpense> =
         handleServiceOperation("findById", id) {
-            val medicalExpense = medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(id)
+            val owner = TenantContext.getCurrentOwner()
+            val medicalExpense = medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, id)
             medicalExpense ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: $id")
         }
 
     override fun save(entity: MedicalExpense): ServiceResult<MedicalExpense> =
         handleServiceOperation("save", entity.medicalExpenseId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -45,7 +51,7 @@ class MedicalExpenseService(
             // Check for duplicates if transactionId is provided
             entity.transactionId?.let { transactionId ->
                 if (transactionId > 0) {
-                    val existingExpense = medicalExpenseRepository.findByTransactionId(transactionId)
+                    val existingExpense = medicalExpenseRepository.findByOwnerAndTransactionId(owner, transactionId)
                     if (existingExpense != null) {
                         throw DataIntegrityViolationException("Medical expense already exists for transaction ID: $transactionId")
                     }
@@ -57,16 +63,18 @@ class MedicalExpenseService(
 
     override fun update(entity: MedicalExpense): ServiceResult<MedicalExpense> =
         handleServiceOperation("update", entity.medicalExpenseId) {
-            val existingExpense =
-                medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(entity.medicalExpenseId)
-                    ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: ${entity.medicalExpenseId}")
+            val owner = TenantContext.getCurrentOwner()
+            medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, entity.medicalExpenseId)
+                ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: ${entity.medicalExpenseId}")
 
+            entity.owner = owner
             medicalExpenseRepository.save(entity)
         }
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val updatedRows = medicalExpenseRepository.softDeleteByMedicalExpenseId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val updatedRows = medicalExpenseRepository.softDeleteByOwnerAndMedicalExpenseId(owner, id)
             if (updatedRows == 0) {
                 throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: $id")
             }
@@ -90,12 +98,14 @@ class MedicalExpenseService(
     }
 
     fun insertMedicalExpense(medicalExpense: MedicalExpense): MedicalExpense {
+        val owner = TenantContext.getCurrentOwner()
+        medicalExpense.owner = owner
         logger.info("Inserting medical expense for transaction ID: ${medicalExpense.transactionId}")
 
         // Check for duplicates if transactionId is provided
         medicalExpense.transactionId?.let { transactionId ->
             if (transactionId > 0) {
-                val existingExpense = medicalExpenseRepository.findByTransactionId(transactionId)
+                val existingExpense = medicalExpenseRepository.findByOwnerAndTransactionId(owner, transactionId)
                 if (existingExpense != null) {
                     throw DuplicateMedicalExpenseException("Medical expense already exists for transaction ID: $transactionId")
                 }
@@ -158,26 +168,30 @@ class MedicalExpenseService(
     }
 
     fun findMedicalExpenseById(medicalExpenseId: Long): MedicalExpense? {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expense by ID: $medicalExpenseId")
-        return medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+        return medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, medicalExpenseId)
     }
 
     fun findMedicalExpenseByTransactionId(transactionId: Long): MedicalExpense? {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expense by transaction ID: $transactionId")
-        return medicalExpenseRepository.findByTransactionId(transactionId)
+        return medicalExpenseRepository.findByOwnerAndTransactionId(owner, transactionId)
     }
 
     fun findMedicalExpensesByAccountId(accountId: Long): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by account ID: $accountId")
-        return medicalExpenseRepository.findByAccountId(accountId)
+        return medicalExpenseRepository.findByOwnerAndAccountId(owner, accountId)
     }
 
     fun findMedicalExpensesByServiceDateRange(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by service date range: $startDate to $endDate")
-        return medicalExpenseRepository.findByServiceDateBetweenAndActiveStatusTrue(startDate, endDate)
+        return medicalExpenseRepository.findByOwnerAndServiceDateBetweenAndActiveStatusTrue(owner, startDate, endDate)
     }
 
     fun findMedicalExpensesByAccountIdAndDateRange(
@@ -185,18 +199,21 @@ class MedicalExpenseService(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by account ID: $accountId and date range: $startDate to $endDate")
-        return medicalExpenseRepository.findByAccountIdAndServiceDateBetween(accountId, startDate, endDate)
+        return medicalExpenseRepository.findByOwnerAndAccountIdAndServiceDateBetween(owner, accountId, startDate, endDate)
     }
 
     fun findMedicalExpensesByProviderId(providerId: Long): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by provider ID: $providerId")
-        return medicalExpenseRepository.findByProviderIdAndActiveStatusTrue(providerId)
+        return medicalExpenseRepository.findByOwnerAndProviderIdAndActiveStatusTrue(owner, providerId)
     }
 
     fun findMedicalExpensesByFamilyMemberId(familyMemberId: Long): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by family member ID: $familyMemberId")
-        return medicalExpenseRepository.findByFamilyMemberIdAndActiveStatusTrue(familyMemberId)
+        return medicalExpenseRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, familyMemberId)
     }
 
     fun findMedicalExpensesByFamilyMemberAndDateRange(
@@ -204,38 +221,44 @@ class MedicalExpenseService(
         startDate: LocalDate,
         endDate: LocalDate,
     ): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by family member ID: $familyMemberId and date range: $startDate to $endDate")
-        return medicalExpenseRepository.findByFamilyMemberIdAndServiceDateBetween(familyMemberId, startDate, endDate)
+        return medicalExpenseRepository.findByOwnerAndFamilyMemberIdAndServiceDateBetween(owner, familyMemberId, startDate, endDate)
     }
 
     fun findMedicalExpensesByClaimStatus(claimStatus: ClaimStatus): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by claim status: $claimStatus")
-        return medicalExpenseRepository.findByClaimStatusAndActiveStatusTrue(claimStatus)
+        return medicalExpenseRepository.findByOwnerAndClaimStatusAndActiveStatusTrue(owner, claimStatus)
     }
 
     fun findOutOfNetworkExpenses(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding out-of-network medical expenses")
-        return medicalExpenseRepository.findByIsOutOfNetworkAndActiveStatusTrue(true)
+        return medicalExpenseRepository.findByOwnerAndIsOutOfNetworkAndActiveStatusTrue(owner, true)
     }
 
     fun findOutstandingPatientBalances(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding outstanding patient balances")
-        return medicalExpenseRepository.findOutstandingPatientBalances()
+        return medicalExpenseRepository.findOutstandingPatientBalancesByOwner(owner)
     }
 
     fun findActiveOpenClaims(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding active open claims")
-        return medicalExpenseRepository.findActiveOpenClaims()
+        return medicalExpenseRepository.findActiveOpenClaimsByOwner(owner)
     }
 
     fun updateClaimStatus(
         medicalExpenseId: Long,
         claimStatus: ClaimStatus,
     ): Boolean {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Updating claim status for medical expense ID: $medicalExpenseId to: $claimStatus")
 
         return try {
-            val updatedRows = medicalExpenseRepository.updateClaimStatus(medicalExpenseId, claimStatus)
+            val updatedRows = medicalExpenseRepository.updateClaimStatusByOwner(owner, medicalExpenseId, claimStatus)
             val success = updatedRows > 0
             if (success) {
                 logger.info("Successfully updated claim status for medical expense ID: $medicalExpenseId")
@@ -250,10 +273,11 @@ class MedicalExpenseService(
     }
 
     fun softDeleteMedicalExpense(medicalExpenseId: Long): Boolean {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Soft deleting medical expense with ID: $medicalExpenseId")
 
         return try {
-            val updatedRows = medicalExpenseRepository.softDeleteByMedicalExpenseId(medicalExpenseId)
+            val updatedRows = medicalExpenseRepository.softDeleteByOwnerAndMedicalExpenseId(owner, medicalExpenseId)
             val success = updatedRows > 0
             if (success) {
                 logger.info("Successfully soft deleted medical expense with ID: $medicalExpenseId")
@@ -268,36 +292,42 @@ class MedicalExpenseService(
     }
 
     fun getTotalBilledAmountByYear(year: Int): BigDecimal {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Getting total billed amount for year: $year")
-        return medicalExpenseRepository.getTotalBilledAmountByYear(year) ?: BigDecimal.ZERO
+        return medicalExpenseRepository.getTotalBilledAmountByOwnerAndYear(owner, year) ?: BigDecimal.ZERO
     }
 
     fun getTotalPatientResponsibilityByYear(year: Int): BigDecimal {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Getting total patient responsibility for year: $year")
-        return medicalExpenseRepository.getTotalPatientResponsibilityByYear(year) ?: BigDecimal.ZERO
+        return medicalExpenseRepository.getTotalPatientResponsibilityByOwnerAndYear(owner, year) ?: BigDecimal.ZERO
     }
 
     fun getTotalInsurancePaidByYear(year: Int): BigDecimal {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Getting total insurance paid for year: $year")
-        return medicalExpenseRepository.getTotalInsurancePaidByYear(year) ?: BigDecimal.ZERO
+        return medicalExpenseRepository.getTotalInsurancePaidByOwnerAndYear(owner, year) ?: BigDecimal.ZERO
     }
 
     fun getClaimStatusCounts(): Map<ClaimStatus, Long> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Getting claim status counts")
 
         return ClaimStatus.values().associateWith { status ->
-            medicalExpenseRepository.countByClaimStatusAndActiveStatusTrue(status)
+            medicalExpenseRepository.countByOwnerAndClaimStatusAndActiveStatusTrue(owner, status)
         }
     }
 
     fun findMedicalExpensesByProcedureCode(procedureCode: String): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by procedure code: $procedureCode")
-        return medicalExpenseRepository.findByProcedureCodeAndActiveStatusTrue(procedureCode)
+        return medicalExpenseRepository.findByOwnerAndProcedureCodeAndActiveStatusTrue(owner, procedureCode)
     }
 
     fun findMedicalExpensesByDiagnosisCode(diagnosisCode: String): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses by diagnosis code: $diagnosisCode")
-        return medicalExpenseRepository.findByDiagnosisCodeAndActiveStatusTrue(diagnosisCode)
+        return medicalExpenseRepository.findByOwnerAndDiagnosisCodeAndActiveStatusTrue(owner, diagnosisCode)
     }
 
     // New payment-related methods for Phase 2.5
@@ -305,22 +335,21 @@ class MedicalExpenseService(
         medicalExpenseId: Long,
         transactionId: Long,
     ): MedicalExpense {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Linking payment transaction $transactionId to medical expense $medicalExpenseId")
 
         val medicalExpense =
-            medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+            medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, medicalExpenseId)
                 ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
 
         // Check if transaction already linked to another medical expense
-        val existingExpense = medicalExpenseRepository.findByTransactionId(transactionId)
+        val existingExpense = medicalExpenseRepository.findByOwnerAndTransactionId(owner, transactionId)
         if (existingExpense != null && existingExpense.medicalExpenseId != medicalExpenseId) {
             throw DuplicateMedicalExpenseException("Transaction $transactionId is already linked to medical expense ${existingExpense.medicalExpenseId}")
         }
 
         try {
             medicalExpense.transactionId = transactionId
-            // Note: In a full implementation, we would fetch the transaction amount and set paidAmount
-            // For now, we'll rely on the updatePaidAmount method to sync the amounts
             val savedExpense = medicalExpenseRepository.save(medicalExpense)
             logger.info("Successfully linked transaction $transactionId to medical expense $medicalExpenseId")
             return savedExpense
@@ -331,10 +360,11 @@ class MedicalExpenseService(
     }
 
     fun unlinkPaymentTransaction(medicalExpenseId: Long): MedicalExpense {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Unlinking payment transaction from medical expense $medicalExpenseId")
 
         val medicalExpense =
-            medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+            medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, medicalExpenseId)
                 ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
 
         try {
@@ -350,16 +380,15 @@ class MedicalExpenseService(
     }
 
     fun updatePaidAmount(medicalExpenseId: Long): MedicalExpense {
+        val owner = TenantContext.getCurrentOwner()
         logger.info("Updating paid amount for medical expense $medicalExpenseId")
 
         val medicalExpense =
-            medicalExpenseRepository.findByMedicalExpenseIdAndActiveStatusTrue(medicalExpenseId)
+            medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, medicalExpenseId)
                 ?: throw IllegalArgumentException("Medical expense not found with ID: $medicalExpenseId")
 
         try {
             medicalExpense.transactionId?.let { transactionId ->
-                // In a full implementation, we would fetch the transaction and sync the amount
-                // For now, we'll rely on the service layer or controller to provide the amount
                 logger.debug("Transaction ID exists: $transactionId, paid amount will be synced externally")
             } ?: run {
                 // If no transaction linked, ensure paid amount is zero
@@ -377,37 +406,44 @@ class MedicalExpenseService(
     }
 
     fun findUnpaidMedicalExpenses(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding unpaid medical expenses")
-        return medicalExpenseRepository.findUnpaidMedicalExpenses()
+        return medicalExpenseRepository.findUnpaidMedicalExpensesByOwner(owner)
     }
 
     fun findPartiallyPaidMedicalExpenses(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding partially paid medical expenses")
-        return medicalExpenseRepository.findPartiallyPaidMedicalExpenses()
+        return medicalExpenseRepository.findPartiallyPaidMedicalExpensesByOwner(owner)
     }
 
     fun findFullyPaidMedicalExpenses(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding fully paid medical expenses")
-        return medicalExpenseRepository.findFullyPaidMedicalExpenses()
+        return medicalExpenseRepository.findFullyPaidMedicalExpensesByOwner(owner)
     }
 
     fun findMedicalExpensesWithoutTransaction(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding medical expenses without linked transactions")
-        return medicalExpenseRepository.findMedicalExpensesWithoutTransaction()
+        return medicalExpenseRepository.findMedicalExpensesWithoutTransactionByOwner(owner)
     }
 
     fun findOverpaidMedicalExpenses(): List<MedicalExpense> {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Finding overpaid medical expenses")
-        return medicalExpenseRepository.findOverpaidMedicalExpenses()
+        return medicalExpenseRepository.findOverpaidMedicalExpensesByOwner(owner)
     }
 
     fun getTotalPaidAmountByYear(year: Int): BigDecimal {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Getting total paid amount for year: $year")
-        return medicalExpenseRepository.getTotalPaidAmountByYear(year) ?: BigDecimal.ZERO
+        return medicalExpenseRepository.getTotalPaidAmountByOwnerAndYear(owner, year) ?: BigDecimal.ZERO
     }
 
     fun getTotalUnpaidBalance(): BigDecimal {
+        val owner = TenantContext.getCurrentOwner()
         logger.debug("Getting total unpaid balance")
-        return medicalExpenseRepository.getTotalUnpaidBalance() ?: BigDecimal.ZERO
+        return medicalExpenseRepository.getTotalUnpaidBalanceByOwner(owner) ?: BigDecimal.ZERO
     }
 }

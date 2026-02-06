@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -37,23 +38,20 @@ data class Description(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_description_description_id_seq")
     @field:Min(value = 0L)
-    @param:JsonProperty
     @Column(name = "description_id", nullable = false)
     var descriptionId: Long,
-    @param:JsonProperty
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
-    @param:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "description_name", nullable = false)
-    @param:JsonProperty
     var descriptionName: String,
 ) {
+    @JsonCreator
     constructor() : this(0L, "", true, "")
 
     @JsonIgnore

@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.repositories.ReceiptImageRepository
+import finance.utils.TenantContext
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
@@ -21,12 +22,14 @@ open class ReceiptImageService(
 
     override fun findAllActive(): ServiceResult<List<ReceiptImage>> =
         handleServiceOperation("findAllActive", null) {
-            receiptImageRepository.findAll()
+            val owner = TenantContext.getCurrentOwner()
+            receiptImageRepository.findAllByOwner(owner)
         }
 
     override fun findById(id: Long): ServiceResult<ReceiptImage> =
         handleServiceOperation("findById", id) {
-            val optionalReceiptImage = receiptImageRepository.findById(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
             if (optionalReceiptImage.isPresent) {
                 optionalReceiptImage.get()
             } else {
@@ -36,6 +39,9 @@ open class ReceiptImageService(
 
     override fun save(entity: ReceiptImage): ServiceResult<ReceiptImage> =
         handleServiceOperation("save", entity.receiptImageId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -51,7 +57,8 @@ open class ReceiptImageService(
 
     override fun update(entity: ReceiptImage): ServiceResult<ReceiptImage> =
         handleServiceOperation("update", entity.receiptImageId) {
-            val existingReceiptImage = receiptImageRepository.findById(entity.receiptImageId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, entity.receiptImageId)
             if (existingReceiptImage.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: ${entity.receiptImageId}")
             }
@@ -64,7 +71,8 @@ open class ReceiptImageService(
 
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalReceiptImage = receiptImageRepository.findById(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
             if (optionalReceiptImage.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
             }
@@ -76,7 +84,8 @@ open class ReceiptImageService(
 
     fun findByTransactionId(transactionId: Long): ServiceResult<ReceiptImage> =
         handleServiceOperation("findByTransactionId", transactionId) {
-            val optionalReceiptImage = receiptImageRepository.findByTransactionId(transactionId)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalReceiptImage = receiptImageRepository.findByOwnerAndTransactionId(owner, transactionId)
             if (optionalReceiptImage.isPresent) {
                 optionalReceiptImage.get()
             } else {

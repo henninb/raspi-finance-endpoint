@@ -9,6 +9,7 @@ import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
+import finance.utils.TenantContext
 import jakarta.validation.ValidationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
@@ -37,12 +38,14 @@ class PaymentService(
 
     override fun findAllActive(): ServiceResult<List<Payment>> =
         handleServiceOperation("findAllActive", null) {
-            paymentRepository.findAll().sortedByDescending { payment -> payment.transactionDate }
+            val owner = TenantContext.getCurrentOwner()
+            paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, Pageable.unpaged()).content
         }
 
     override fun findById(id: Long): ServiceResult<Payment> =
         handleServiceOperation("findById", id) {
-            val optionalPayment = paymentRepository.findByPaymentId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
             if (optionalPayment.isPresent) {
                 optionalPayment.get()
             } else {
@@ -52,6 +55,9 @@ class PaymentService(
 
     override fun save(entity: Payment): ServiceResult<Payment> =
         handleServiceOperation("save", entity.paymentId) {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
+
             val violations = validator.validate(entity)
             if (violations.isNotEmpty()) {
                 throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -147,7 +153,8 @@ class PaymentService(
 
     override fun update(entity: Payment): ServiceResult<Payment> =
         handleServiceOperation("update", entity.paymentId) {
-            val existingPayment = paymentRepository.findByPaymentId(entity.paymentId)
+            val owner = TenantContext.getCurrentOwner()
+            val existingPayment = paymentRepository.findByOwnerAndPaymentId(owner, entity.paymentId)
             if (existingPayment.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
             }
@@ -169,7 +176,8 @@ class PaymentService(
     @Transactional
     override fun deleteById(id: Long): ServiceResult<Boolean> =
         handleServiceOperation("deleteById", id) {
-            val optionalPayment = paymentRepository.findByPaymentId(id)
+            val owner = TenantContext.getCurrentOwner()
+            val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
             if (optionalPayment.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
             }
@@ -203,7 +211,8 @@ class PaymentService(
      */
     fun findAllActive(pageable: Pageable): ServiceResult<Page<Payment>> =
         handleServiceOperation("findAllActive-paginated", null) {
-            paymentRepository.findByActiveStatusOrderByTransactionDateDesc(true, pageable)
+            val owner = TenantContext.getCurrentOwner()
+            paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, pageable)
         }
 
     /**
@@ -285,6 +294,8 @@ class PaymentService(
      */
     @org.springframework.transaction.annotation.Transactional
     fun insertPayment(payment: Payment): Payment {
+        val owner = TenantContext.getCurrentOwner()
+        payment.owner = owner
         logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
 
         // Process destination account - create if missing
@@ -419,10 +430,14 @@ class PaymentService(
         }
     }
 
-    fun findByPaymentId(paymentId: Long): Optional<Payment> = paymentRepository.findByPaymentId(paymentId)
+    fun findByPaymentId(paymentId: Long): Optional<Payment> {
+        val owner = TenantContext.getCurrentOwner()
+        return paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
+    }
 
     fun deleteByPaymentId(paymentId: Long): Boolean {
-        val optionalPayment = paymentRepository.findByPaymentId(paymentId)
+        val owner = TenantContext.getCurrentOwner()
+        val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
         if (optionalPayment.isPresent) {
             paymentRepository.delete(optionalPayment.get())
             return true
@@ -473,10 +488,6 @@ class PaymentService(
 
     /**
      * Calculates the transaction amount for the source account based on payment behavior.
-     *
-     * @param amount The absolute payment amount (always positive)
-     * @param behavior The payment behavior determining sign logic
-     * @return The signed transaction amount for the source account
      */
     private fun calculateSourceAmount(
         amount: BigDecimal,
@@ -484,26 +495,14 @@ class PaymentService(
     ): BigDecimal =
         when (behavior) {
             PaymentBehavior.BILL_PAYMENT -> -amount.abs()
-
-            // Asset decreases
             PaymentBehavior.TRANSFER -> -amount.abs()
-
-            // Asset decreases
             PaymentBehavior.CASH_ADVANCE -> amount.abs()
-
-            // Liability increases (more debt)
             PaymentBehavior.BALANCE_TRANSFER -> amount.abs()
-
-            // Liability increases (charging to pay another card)
-            else -> -amount.abs() // Default: negative (safest)
+            else -> -amount.abs()
         }
 
     /**
      * Calculates the transaction amount for the destination account based on payment behavior.
-     *
-     * @param amount The absolute payment amount (always positive)
-     * @param behavior The payment behavior determining sign logic
-     * @return The signed transaction amount for the destination account
      */
     private fun calculateDestinationAmount(
         amount: BigDecimal,
@@ -511,32 +510,14 @@ class PaymentService(
     ): BigDecimal =
         when (behavior) {
             PaymentBehavior.BILL_PAYMENT -> -amount.abs()
-
-            // Liability decreases (debt paid)
             PaymentBehavior.TRANSFER -> amount.abs()
-
-            // Asset increases
             PaymentBehavior.CASH_ADVANCE -> amount.abs()
-
-            // Asset increases (cash received)
             PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()
-
-            // Liability decreases (debt paid off)
-            else -> -amount.abs() // Default: negative (safest)
+            else -> -amount.abs()
         }
 
     // ===== Transaction Population Methods =====
 
-    /**
-     * Populates the source transaction for a payment.
-     * Uses payment behavior to determine correct transaction amount sign.
-     *
-     * @param transactionSource The transaction object to populate
-     * @param payment The payment entity
-     * @param sourceAccountNameOwner The source account name
-     * @param sourceAccountType The actual account type of the source account
-     * @param behavior The payment behavior determining amount logic
-     */
     fun populateSourceTransaction(
         transactionSource: finance.domain.Transaction,
         payment: Payment,
@@ -559,17 +540,12 @@ class PaymentService(
         transactionSource.dateAdded = timestamp
     }
 
-    /**
-     * Legacy method for backward compatibility.
-     * @deprecated Use populateSourceTransaction instead
-     */
     @Deprecated("Use populateSourceTransaction with behavior parameter")
     fun populateDebitTransaction(
         transactionDebit: finance.domain.Transaction,
         payment: Payment,
         paymentAccountNameOwner: String,
     ) {
-        // Legacy behavior: assume BILL_PAYMENT (asset to liability)
         populateSourceTransaction(
             transactionDebit,
             payment,
@@ -579,16 +555,6 @@ class PaymentService(
         )
     }
 
-    /**
-     * Populates the destination transaction for a payment.
-     * Uses payment behavior to determine correct transaction amount sign.
-     *
-     * @param transactionDestination The transaction object to populate
-     * @param payment The payment entity
-     * @param sourceAccountNameOwner The source account name (for notes)
-     * @param destinationAccountType The actual account type of the destination account
-     * @param behavior The payment behavior determining amount logic
-     */
     fun populateDestinationTransaction(
         transactionDestination: finance.domain.Transaction,
         payment: Payment,
@@ -611,17 +577,12 @@ class PaymentService(
         transactionDestination.dateAdded = timestamp
     }
 
-    /**
-     * Legacy method for backward compatibility.
-     * @deprecated Use populateDestinationTransaction instead
-     */
     @Deprecated("Use populateDestinationTransaction with behavior parameter")
     fun populateCreditTransaction(
         transactionCredit: finance.domain.Transaction,
         payment: Payment,
         paymentAccountNameOwner: String,
     ) {
-        // Legacy behavior: assume BILL_PAYMENT (asset to liability)
         populateDestinationTransaction(
             transactionCredit,
             payment,
