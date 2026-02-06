@@ -509,16 +509,10 @@ class TransactionService(
         }
     }
 
-    fun changeAccountNameOwner(map: Map<String, String>): Transaction {
-        val accountNameOwner = map["accountNameOwner"]
-        val guid = map["guid"]
-
-        if (guid == null || accountNameOwner == null) {
-            logger.error("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
-            meterService.incrementExceptionThrownCounter("AccountValidationException")
-            throw AccountValidationException("Cannot change accountNameOwner for an input that has a null 'accountNameOwner' or a null 'guid'")
-        }
-
+    fun changeAccountNameOwner(
+        accountNameOwner: String,
+        guid: String,
+    ): Transaction {
         val result = changeAccountNameOwnerStandardized(accountNameOwner, guid)
         return when (result) {
             is ServiceResult.Success -> result.data

@@ -1,5 +1,6 @@
 package finance.controllers
 
+import finance.controllers.dto.TransactionAccountChangeInputDto
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.domain.Totals
@@ -18,7 +19,6 @@ import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.util.Locale
 
-@CrossOrigin
 @Tag(name = "Transaction Management", description = "Operations for managing transactions")
 @RestController
 @RequestMapping("/api/transaction")
@@ -483,26 +482,37 @@ class TransactionController(
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transaction updated"), ApiResponse(responseCode = "400", description = "Missing fields"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PutMapping("/update/account", consumes = ["application/json"], produces = ["application/json"])
     fun changeTransactionAccountNameOwner(
-        @RequestBody payload: Map<String, String>,
-    ): ResponseEntity<Transaction> =
-        try {
-            val accountNameOwner = payload["accountNameOwner"]
-            val guid = payload["guid"]
-            logger.info("Changing transaction account for guid $guid to accountNameOwner $accountNameOwner")
+        @Valid @RequestBody payload: TransactionAccountChangeInputDto,
+    ): ResponseEntity<Transaction> {
+        logger.info("Changing transaction account for guid ${payload.guid} to accountNameOwner ${payload.accountNameOwner}")
 
-            if (accountNameOwner.isNullOrBlank() || guid.isNullOrBlank()) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Both accountNameOwner and guid are required")
+        @Suppress("REDUNDANT_ELSE_IN_WHEN")
+        return when (val result = transactionService.changeAccountNameOwnerStandardized(payload.accountNameOwner, payload.guid)) {
+            is ServiceResult.Success -> {
+                logger.info("Transaction account updated successfully for guid ${payload.guid}")
+                ResponseEntity.ok(result.data)
             }
 
-            val transactionResponse = transactionService.changeAccountNameOwner(payload)
-            logger.info("Transaction account updated successfully for guid $guid")
-            ResponseEntity.ok(transactionResponse)
-        } catch (ex: ResponseStatusException) {
-            throw ex
-        } catch (ex: Exception) {
-            logger.error("Failed to change transaction account: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction account: ${ex.message}", ex)
+            is ServiceResult.NotFound -> {
+                logger.warn("Transaction or account not found for guid ${payload.guid}")
+                ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error changing transaction account: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error changing transaction account: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            else -> {
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
+    }
 
     // curl -k --header "Content-Type: application/json" --request PUT --data 'base64encodedimagedata' https://localhost:8443/transaction/update/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f
     @Operation(summary = "Update receipt image for a transaction")

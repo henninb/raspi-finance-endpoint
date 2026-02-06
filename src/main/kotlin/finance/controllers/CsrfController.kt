@@ -1,7 +1,6 @@
 package finance.controllers
 
 import org.springframework.security.web.csrf.CsrfToken
-import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController
  * - Token is automatically set as XSRF-TOKEN cookie by Spring Security
  * - Clients should read the cookie and include it in X-CSRF-TOKEN header for mutations
  */
-@CrossOrigin
 @RestController
 @RequestMapping("/api")
 class CsrfController : BaseController() {

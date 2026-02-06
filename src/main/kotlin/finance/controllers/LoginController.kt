@@ -19,7 +19,6 @@ import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.CookieValue
-import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.Date
 import javax.crypto.SecretKey
 
-@CrossOrigin
 @Tag(name = "Authentication", description = "Login, logout, registration, and user info")
 @RestController
 @RequestMapping("/api")
