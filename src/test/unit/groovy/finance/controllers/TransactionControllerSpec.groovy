@@ -554,83 +554,50 @@ class TransactionControllerSpec extends Specification {
 
     def "changeTransactionAccountNameOwner updates account successfully"() {
         given:
-        Map<String, String> payload = [
-            "guid": "account-change-guid",
-            "accountNameOwner": "new_account_owner"
-        ]
-        Transaction result = createValidTransaction("account-change-guid", "new_account_owner")
+        def payload = new finance.controllers.dto.TransactionAccountChangeInputDto(
+            "340c315d-39ad-4a02-a294-84a74c1c7ddc", "new_account_owner"
+        )
+        Transaction result = createValidTransaction("340c315d-39ad-4a02-a294-84a74c1c7ddc", "new_account_owner")
         and:
-        standardizedTransactionService.changeAccountNameOwner(payload) >> result
+        standardizedTransactionService.changeAccountNameOwnerStandardized("new_account_owner", "340c315d-39ad-4a02-a294-84a74c1c7ddc") >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<Transaction> response = controller.changeTransactionAccountNameOwner(payload)
 
         then:
         response.statusCode == HttpStatus.OK
-        response.body.guid == "account-change-guid"
+        response.body.guid == "340c315d-39ad-4a02-a294-84a74c1c7ddc"
         response.body.accountNameOwner == "new_account_owner"
     }
 
-    def "changeTransactionAccountNameOwner throws 400 when guid is missing"() {
+    def "changeTransactionAccountNameOwner returns 404 when not found"() {
         given:
-        Map<String, String> payload = ["accountNameOwner": "new_account"]
-
-        when:
-        controller.changeTransactionAccountNameOwner(payload)
-
-        then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.BAD_REQUEST
-        ex.reason.contains("Both accountNameOwner and guid are required")
-    }
-
-    def "changeTransactionAccountNameOwner throws 400 when accountNameOwner is missing"() {
-        given:
-        Map<String, String> payload = ["guid": "some-guid"]
-
-        when:
-        controller.changeTransactionAccountNameOwner(payload)
-
-        then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.BAD_REQUEST
-        ex.reason.contains("Both accountNameOwner and guid are required")
-    }
-
-    def "changeTransactionAccountNameOwner throws 400 when values are blank"() {
-        given:
-        Map<String, String> payload = [
-            "guid": "",
-            "accountNameOwner": "   "
-        ]
-
-        when:
-        controller.changeTransactionAccountNameOwner(payload)
-
-        then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.BAD_REQUEST
-        ex.reason.contains("Both accountNameOwner and guid are required")
-    }
-
-    def "changeTransactionAccountNameOwner throws 500 on service error"() {
-        given:
-        Map<String, String> payload = [
-            "guid": "error-guid",
-            "accountNameOwner": "error_account"
-        ]
+        def payload = new finance.controllers.dto.TransactionAccountChangeInputDto(
+            "340c315d-39ad-4a02-a294-84a74c1c7ddc", "new_account_owner"
+        )
         and:
-        standardizedTransactionService.changeAccountNameOwner(payload) >> {
-            throw new RuntimeException("Account change failed")
-        }
+        standardizedTransactionService.changeAccountNameOwnerStandardized("new_account_owner", "340c315d-39ad-4a02-a294-84a74c1c7ddc") >> ServiceResult.NotFound.of("Transaction or account not found")
 
         when:
-        controller.changeTransactionAccountNameOwner(payload)
+        ResponseEntity<Transaction> response = controller.changeTransactionAccountNameOwner(payload)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        ex.reason.contains("Failed to update transaction account")
+        response.statusCode == HttpStatus.NOT_FOUND
+    }
+
+    def "changeTransactionAccountNameOwner returns 500 on system error"() {
+        given:
+        def payload = new finance.controllers.dto.TransactionAccountChangeInputDto(
+            "340c315d-39ad-4a02-a294-84a74c1c7ddc", "error_account"
+        )
+        and:
+        standardizedTransactionService.changeAccountNameOwnerStandardized("error_account", "340c315d-39ad-4a02-a294-84a74c1c7ddc") >> new ServiceResult.SystemError(new RuntimeException("Account change failed"))
+
+        when:
+        ResponseEntity<Transaction> response = controller.changeTransactionAccountNameOwner(payload)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "updateTransactionReceiptImageByGuid updates image successfully"() {

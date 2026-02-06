@@ -750,13 +750,12 @@ class TransactionServiceSpec extends BaseServiceSpec {
         given: "valid parameters"
         def accountNameOwner = "new_account"
         def guid = "test-guid-123"
-        def map = ["accountNameOwner": accountNameOwner, "guid": guid]
         def account = createTestAccount()
         account.accountNameOwner = accountNameOwner
         def transaction = createTestTransaction()
 
         when: "changeAccountNameOwner is called"
-        def result = standardizedTransactionService.changeAccountNameOwner(map)
+        def result = standardizedTransactionService.changeAccountNameOwner(accountNameOwner, guid)
 
         then: "services are called"
         1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
@@ -765,17 +764,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         and: "result is the updated transaction"
         result == transaction
-    }
-
-    def "changeAccountNameOwner should throw AccountValidationException when parameters are null"() {
-        given: "invalid parameters"
-        def map = ["accountNameOwner": null, "guid": "test-guid"]
-
-        when: "changeAccountNameOwner is called"
-        standardizedTransactionService.changeAccountNameOwner(map)
-
-        then: "AccountValidationException is thrown"
-        thrown(AccountValidationException)
     }
 
     def "updateTransactionState should delegate to standardized method and return transaction"() {
