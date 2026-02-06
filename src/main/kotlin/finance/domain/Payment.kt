@@ -34,7 +34,7 @@ import java.util.Calendar
 @Entity
 @Table(
     name = "t_payment",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["destination_account", "transaction_date", "amount"])],
+    uniqueConstraints = [UniqueConstraint(columnNames = ["owner", "destination_account", "transaction_date", "amount"])],
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -80,6 +80,12 @@ data class Payment(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
+    @get:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = ""
+
     constructor() : this(0L, "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
 
     @JsonIgnore

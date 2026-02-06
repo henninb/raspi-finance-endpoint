@@ -122,6 +122,12 @@ data class Transaction(
     @Column(name = "notes", nullable = false)
     var notes: String = "",
 ) {
+    @get:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = ""
+
     constructor() : this(
         0L,
         "",
