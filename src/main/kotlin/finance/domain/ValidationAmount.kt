@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
+import finance.utils.LowerCaseConverter
 import finance.utils.TransactionStateConverter
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
@@ -19,6 +20,7 @@ import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.Calendar
@@ -58,6 +60,12 @@ data class ValidationAmount(
     @Column(name = "amount", nullable = false, precision = 10, scale = 2, columnDefinition = "NUMERIC(10,2) DEFAULT 0.00")
     var amount: BigDecimal,
 ) {
+    @get:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = ""
+
     constructor() : this(0L, 0L, null, Timestamp(0L), true, TransactionState.Undefined, BigDecimal(0.0))
 
     @JsonIgnore

@@ -12,9 +12,11 @@ import finance.utils.Constants.ASCII_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_ASCII_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
+import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
@@ -66,15 +68,18 @@ data class PendingTransaction(
     @param:JsonProperty
     @Column(name = "review_status", nullable = false, columnDefinition = "TEXT DEFAULT 'pending'")
     var reviewStatus: String = "pending",
-    @param:JsonProperty
-    @Column(name = "owner", nullable = true)
-    var owner: String? = null,
     @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "account_name_owner", referencedColumnName = "account_name_owner", insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null,
 ) {
-    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending", "")
+    @get:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = ""
+
+    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending")
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")

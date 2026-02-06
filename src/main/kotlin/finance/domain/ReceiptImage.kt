@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.ImageFormatTypeConverter
+import finance.utils.LowerCaseConverter
 import finance.utils.ValidImage
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
@@ -16,6 +17,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Size
 import org.apache.logging.log4j.LogManager
 import java.sql.Timestamp
 import java.util.Base64
@@ -40,6 +42,12 @@ data class ReceiptImage(
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
 ) {
+    @get:JsonProperty
+    @Column(name = "owner", nullable = false)
+    @field:Size(max = 100, message = "Owner must be 100 characters or less")
+    @field:Convert(converter = LowerCaseConverter::class)
+    var owner: String = ""
+
     constructor() : this(0L, 0L, true)
 
     @JsonIgnore
