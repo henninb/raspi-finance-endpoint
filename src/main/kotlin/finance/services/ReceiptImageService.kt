@@ -58,6 +58,7 @@ open class ReceiptImageService(
     override fun update(entity: ReceiptImage): ServiceResult<ReceiptImage> =
         handleServiceOperation("update", entity.receiptImageId) {
             val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
             val existingReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, entity.receiptImageId)
             if (existingReceiptImage.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: ${entity.receiptImageId}")
