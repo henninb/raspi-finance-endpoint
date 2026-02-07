@@ -82,6 +82,7 @@ class TransferService(
     override fun update(entity: Transfer): ServiceResult<Transfer> =
         handleServiceOperation("update", entity.transferId) {
             val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
             val existingTransfer = transferRepository.findByOwnerAndTransferId(owner, entity.transferId)
             if (existingTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: ${entity.transferId}")

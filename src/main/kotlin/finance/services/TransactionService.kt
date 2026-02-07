@@ -102,6 +102,7 @@ class TransactionService(
     override fun update(entity: Transaction): ServiceResult<Transaction> =
         handleServiceOperation("update", entity.guid) {
             val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
             val existingTransaction = transactionRepository.findByOwnerAndGuid(owner, entity.guid)
             if (existingTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transaction not found: ${entity.guid}")

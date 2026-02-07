@@ -55,6 +55,9 @@ object IpAddressValidator {
     private fun isFromTrustedProxy(clientIp: String): Boolean {
         if (clientIp == "unknown") return false
 
+        // IPv6 loopback (::1 or full form)
+        if (clientIp == "::1" || clientIp == "0:0:0:0:0:0:0:1") return true
+
         val trustedNetworks =
             listOf(
                 "10.0.0.0/8", // Private Class A
