@@ -28,7 +28,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
     }
 
     private static Description desc(Long id = 0L, String name = "alpha", boolean active = true) {
-        new Description(descriptionId: id, descriptionName: name, activeStatus: active)
+        new Description(descriptionId: id, owner: "test_owner", descriptionName: name, activeStatus: active)
     }
 
     // ===== STANDARDIZED: findAllActive =====

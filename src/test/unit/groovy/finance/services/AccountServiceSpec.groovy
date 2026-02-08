@@ -42,7 +42,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.findAllActive()
 
         then: "should return Success with accounts"
-        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        1 * accountRepositoryMock.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> accounts
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].accountId == 1L
@@ -57,7 +57,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> []
+        1 * accountRepositoryMock.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> []
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -73,7 +73,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.findById("test_account")
 
         then: "should return Success with account"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
         result instanceof ServiceResult.Success
         result.data.accountNameOwner == "test_account"
         0 * _
@@ -84,7 +84,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.findById("non_existent")
 
         then: "should return NotFound result"
-        1 * accountRepositoryMock.findByAccountNameOwner("non_existent") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "non_existent") >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Account not found: non_existent")
         0 * _
@@ -102,7 +102,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.save(account)
 
         then: "should return Success with saved account"
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.empty()
         1 * validatorMock.validate(account) >> noViolations
         1 * accountRepositoryMock.saveAndFlush(account) >> savedAccount
         result instanceof ServiceResult.Success
@@ -124,7 +124,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.save(account)
 
         then: "should return ValidationError result"
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.empty()
         1 * validatorMock.validate(account) >> { throw new ConstraintViolationException("Validation failed", violations) }
         result instanceof ServiceResult.ValidationError
         result.errors.size() == 1
@@ -140,7 +140,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.save(account)
 
         then: "should return BusinessError result"
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(existingAccount)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.of(existingAccount)
         result instanceof ServiceResult.BusinessError
         result.message.toLowerCase().contains("account already exists")
         result.errorCode == "DATA_INTEGRITY_VIOLATION"
@@ -158,7 +158,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.update(updatedAccount)
 
         then: "should return Success with updated account"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(existingAccount)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(existingAccount)
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account account ->
             assert account.activeStatus == false
             return account
@@ -176,7 +176,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.update(account)
 
         then: "should return NotFound result"
-        1 * accountRepositoryMock.findByAccountNameOwner("foo_brian") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "foo_brian") >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Account not found: foo_brian")
         0 * _
@@ -192,7 +192,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.deleteById("test_account")
 
         then: "should return Success"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
         1 * validationAmountRepositoryMock.findByAccountId(100L) >> []
         1 * accountRepositoryMock.delete(account)
         result instanceof ServiceResult.Success
@@ -205,7 +205,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.deleteById("non_existent")
 
         then: "should return NotFound result"
-        1 * accountRepositoryMock.findByAccountNameOwner("non_existent") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "non_existent") >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Account not found: non_existent")
         0 * _
@@ -221,7 +221,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.accounts()
 
         then: "should return account list"
-        1 * accountRepositoryMock.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        1 * accountRepositoryMock.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> accounts
         result.size() == 1
         0 * _
     }
@@ -234,7 +234,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.account("test_account")
 
         then: "should return account optional"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
         result.isPresent()
         result.get().accountNameOwner == "test_account"
         0 * _
@@ -250,7 +250,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.insertAccount(account)
 
         then: "should return saved account"
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.empty()
         1 * validatorMock.validate(account) >> noViolations
         1 * accountRepositoryMock.saveAndFlush(account) >> savedAccount
         result.accountId == 1L
@@ -270,7 +270,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.sumOfAllTransactionsByTransactionState(transactionState)
 
         then: "should return calculated sum"
-        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionState(transactionState.toString()) >> expectedSum
+        1 * accountRepositoryMock.sumOfAllTransactionsByTransactionStateAndOwner(transactionState.toString(), TEST_OWNER) >> expectedSum
         result == expectedSum
         0 * _
     }
@@ -283,10 +283,10 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.findAccountsThatRequirePayment()
 
         then: "should return accounts"
-        1 * accountRepositoryMock.updateTotalsForAllAccounts()
+        1 * accountRepositoryMock.updateTotalsForAllAccountsByOwner(TEST_OWNER)
         // New behavior: refresh validation dates prior to computing payment required list
-        1 * accountRepositoryMock.updateValidationDateForAllAccounts()
-        1 * accountRepositoryMock.findAccountsThatRequirePayment(_, _) >> accounts
+        1 * accountRepositoryMock.updateValidationDateForAllAccountsByOwner(TEST_OWNER)
+        1 * accountRepositoryMock.findAccountsThatRequirePaymentByOwner(TEST_OWNER, _, _) >> accounts
         result.size() == 1
         0 * _
     }
@@ -296,7 +296,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.updateTotalsForAllAccounts()
 
         then: "should update totals and return true"
-        1 * accountRepositoryMock.updateTotalsForAllAccounts()
+        1 * accountRepositoryMock.updateTotalsForAllAccountsByOwner(TEST_OWNER)
         result == true
         0 * _
     }
@@ -312,8 +312,8 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.deactivateAccount("test_account")
 
         then: "should return deactivated account and deactivate all transactions"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
-        1 * transactionRepositoryMock.deactivateAllTransactionsByAccountNameOwner("test_account") >> 5
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
+        1 * transactionRepositoryMock.deactivateAllTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> 5
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.activeStatus == false
             assert acc.dateClosed != null
@@ -328,7 +328,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         standardizedAccountService.deactivateAccount("non_existent")
 
         then: "should throw EntityNotFoundException"
-        1 * accountRepositoryMock.findByAccountNameOwner("non_existent") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "non_existent") >> Optional.empty()
         thrown(EntityNotFoundException)
         0 * _
     }
@@ -342,7 +342,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.activateAccount("test_account")
 
         then: "should return activated account"
-        1 * accountRepositoryMock.findByAccountNameOwner("test_account") >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.activeStatus == true
             return activatedAccount
@@ -356,7 +356,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         standardizedAccountService.activateAccount("non_existent")
 
         then: "should throw EntityNotFoundException"
-        1 * accountRepositoryMock.findByAccountNameOwner("non_existent") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "non_existent") >> Optional.empty()
         thrown(EntityNotFoundException)
         0 * _
     }
@@ -370,8 +370,8 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         def result = standardizedAccountService.renameAccountNameOwner("old_name", "new_name")
 
         then: "should return renamed account"
-        1 * accountRepositoryMock.findByAccountNameOwner("old_name") >> Optional.of(account)
-        1 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactions("old_name", "new_name") >> 5 // Returns number of updated transactions
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "old_name") >> Optional.of(account)
+        1 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactionsByOwner(TEST_OWNER, "old_name", "new_name") >> 5 // Returns number of updated transactions
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.accountNameOwner == "new_name"
             return renamedAccount
@@ -385,7 +385,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         standardizedAccountService.renameAccountNameOwner("non_existent", "new_name")
 
         then: "should throw EntityNotFoundException"
-        1 * accountRepositoryMock.findByAccountNameOwner("non_existent") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "non_existent") >> Optional.empty()
         thrown(EntityNotFoundException)
         0 * _
     }
@@ -401,7 +401,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         standardizedAccountService.insertAccount(account)
 
         then: "should throw DataIntegrityViolationException"
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.of(existingAccount)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.of(existingAccount)
         thrown(DataIntegrityViolationException)
     }
 
@@ -417,7 +417,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         standardizedAccountService.insertAccount(account)
 
         then: "should throw ValidationException"
-        1 * accountRepositoryMock.findByAccountNameOwner(account.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.empty()
         1 * validatorMock.validate(account) >> { throw new ConstraintViolationException("Validation failed", violations) }
         thrown(jakarta.validation.ValidationException)
     }

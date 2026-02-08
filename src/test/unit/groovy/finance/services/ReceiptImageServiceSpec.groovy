@@ -38,7 +38,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def images = [image1, image2]
 
         when:
-        receiptImageRepositoryMock.findAll() >> images
+        receiptImageRepositoryMock.findAllByOwner(TEST_OWNER) >> images
         def result = standardizedReceiptImageService.findAllActive()
 
         then:
@@ -49,7 +49,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
     def "findAllActive should return ServiceResult.Success with empty list when no images"() {
         given:
-        receiptImageRepositoryMock.findAll() >> []
+        receiptImageRepositoryMock.findAllByOwner(TEST_OWNER) >> []
 
         when:
         def result = standardizedReceiptImageService.findAllActive()
@@ -61,7 +61,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
     def "findAllActive should return ServiceResult.SystemError on repository exception"() {
         given:
-        receiptImageRepositoryMock.findAll() >> { throw new RuntimeException("Database error") }
+        receiptImageRepositoryMock.findAllByOwner(TEST_OWNER) >> { throw new RuntimeException("Database error") }
 
         when:
         def result = standardizedReceiptImageService.findAllActive()
@@ -80,7 +80,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.of(image)
         def result = standardizedReceiptImageService.findById(imageId)
 
         then:
@@ -93,7 +93,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def imageId = 999L
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.empty()
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.empty()
         def result = standardizedReceiptImageService.findById(imageId)
 
         then:
@@ -104,7 +104,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
     def "findById should return ServiceResult.SystemError on repository exception"() {
         given:
         def imageId = 1L
-        receiptImageRepositoryMock.findById(imageId) >> { throw new RuntimeException("Database connection failed") }
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> { throw new RuntimeException("Database connection failed") }
 
         when:
         def result = standardizedReceiptImageService.findById(imageId)
@@ -182,7 +182,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         existingImage.receiptImageId = 1L
 
         when:
-        receiptImageRepositoryMock.findById(1L) >> Optional.of(existingImage)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, 1L) >> Optional.of(existingImage)
         receiptImageRepositoryMock.saveAndFlush(image) >> image
         def result = standardizedReceiptImageService.update(image)
 
@@ -197,7 +197,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         image.receiptImageId = 999L
 
         when:
-        receiptImageRepositoryMock.findById(999L) >> Optional.empty()
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, 999L) >> Optional.empty()
         def result = standardizedReceiptImageService.update(image)
 
         then:
@@ -210,7 +210,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def image = ReceiptImageBuilder.builder().build()
         image.receiptImageId = 1L
         def existingImage = ReceiptImageBuilder.builder().build()
-        receiptImageRepositoryMock.findById(1L) >> Optional.of(existingImage)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, 1L) >> Optional.of(existingImage)
         receiptImageRepositoryMock.saveAndFlush(image) >> { throw new RuntimeException("Update failed") }
 
         when:
@@ -230,7 +230,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.of(image)
         receiptImageRepositoryMock.deleteById(imageId) >> {}
         def result = standardizedReceiptImageService.deleteById(imageId)
 
@@ -244,7 +244,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def imageId = 999L
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.empty()
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.empty()
         def result = standardizedReceiptImageService.deleteById(imageId)
 
         then:
@@ -256,7 +256,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         given:
         def imageId = 1L
         def image = ReceiptImageBuilder.builder().build()
-        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.of(image)
         receiptImageRepositoryMock.deleteById(imageId) >> { throw new RuntimeException("Delete failed") }
 
         when:
@@ -275,7 +275,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def image = ReceiptImageBuilder.builder().withTransactionId(transactionId).build()
 
         when:
-        receiptImageRepositoryMock.findByTransactionId(transactionId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> Optional.of(image)
         def result = standardizedReceiptImageService.findByTransactionId(transactionId)
 
         then:
@@ -288,7 +288,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def transactionId = 999L
 
         when:
-        receiptImageRepositoryMock.findByTransactionId(transactionId) >> Optional.empty()
+        receiptImageRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> Optional.empty()
         def result = standardizedReceiptImageService.findByTransactionId(transactionId)
 
         then:
@@ -299,7 +299,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
     def "findByTransactionId should return ServiceResult.SystemError on repository exception"() {
         given:
         def transactionId = 123L
-        receiptImageRepositoryMock.findByTransactionId(transactionId) >> { throw new RuntimeException("Database error") }
+        receiptImageRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> { throw new RuntimeException("Database error") }
 
         when:
         def result = standardizedReceiptImageService.findByTransactionId(transactionId)
@@ -371,7 +371,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.of(image)
         def result = standardizedReceiptImageService.findById(imageId)
 
         then:
@@ -384,7 +384,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         def imageId = 999L
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.empty()
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.empty()
         def result = standardizedReceiptImageService.findById(imageId)
 
         then:
@@ -399,7 +399,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.of(image)
         receiptImageRepositoryMock.deleteById(imageId) >> {}
         def result = standardizedReceiptImageService.deleteById(imageId)
 
@@ -415,7 +415,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         image.receiptImageId = imageId
 
         when:
-        receiptImageRepositoryMock.findById(imageId) >> Optional.of(image)
+        receiptImageRepositoryMock.findByOwnerAndReceiptImageId(TEST_OWNER, imageId) >> Optional.of(image)
         receiptImageRepositoryMock.deleteById(imageId) >> { throw new RuntimeException("Delete failed") }
         def result = standardizedReceiptImageService.deleteById(imageId)
 

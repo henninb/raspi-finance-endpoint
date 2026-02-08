@@ -19,6 +19,9 @@ class PendingTransactionControllerSpec extends Specification {
     PendingTransactionController controller = new PendingTransactionController(pendingService)
 
     def setup() {
+        def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("test_owner", "password")
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
+
         def validator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([] as Set)
         }
@@ -29,16 +32,20 @@ class PendingTransactionControllerSpec extends Specification {
         pendingService.meterService = meterService
     }
 
+    def cleanup() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext()
+    }
+
     // ===== STANDARDIZED ENDPOINTS =====
 
     def "findAllActive returns list of pending transactions"() {
         given:
         List<PendingTransaction> items = [
-                new PendingTransaction(pendingTransactionId: 1L, accountNameOwner: "acct_one", transactionDate: LocalDate.of(2024, 1, 1), description: "desc1", amount: new BigDecimal("10.00"), reviewStatus: "pending", owner: null),
-                new PendingTransaction(pendingTransactionId: 2L, accountNameOwner: "acct_two", transactionDate: LocalDate.of(2024, 1, 2), description: "desc2", amount: new BigDecimal("20.00"), reviewStatus: "pending", owner: null)
+                new PendingTransaction(pendingTransactionId: 1L, accountNameOwner: "acct_one", transactionDate: LocalDate.of(2024, 1, 1), description: "desc1", amount: new BigDecimal("10.00"), reviewStatus: "pending", owner: "test_owner"),
+                new PendingTransaction(pendingTransactionId: 2L, accountNameOwner: "acct_two", transactionDate: LocalDate.of(2024, 1, 2), description: "desc2", amount: new BigDecimal("20.00"), reviewStatus: "pending", owner: "test_owner")
         ]
         and:
-        pendingRepo.findAll() >> items
+        pendingRepo.findAllByOwner("test_owner") >> items
 
         when:
         ResponseEntity<List<PendingTransaction>> response = controller.findAllActive()
@@ -51,7 +58,7 @@ class PendingTransactionControllerSpec extends Specification {
 
     def "findAllActive returns 500 on service error"() {
         given:
-        pendingRepo.findAll() >> { throw new RuntimeException("db") }
+        pendingRepo.findAllByOwner("test_owner") >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<List<PendingTransaction>> response = controller.findAllActive()
@@ -63,9 +70,9 @@ class PendingTransactionControllerSpec extends Specification {
     def "findById returns entity when found"() {
         given:
         long id = 10L
-        PendingTransaction pt = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_a", transactionDate: LocalDate.of(2024, 3, 1), description: "alpha", amount: new BigDecimal("33.33"), reviewStatus: "pending", owner: null)
+        PendingTransaction pt = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_a", transactionDate: LocalDate.of(2024, 3, 1), description: "alpha", amount: new BigDecimal("33.33"), reviewStatus: "pending", owner: "test_owner")
         and:
-        pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(pt)
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(pt)
 
         when:
         ResponseEntity<PendingTransaction> response = controller.findById(id)
@@ -79,7 +86,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 404L
         and:
-        pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.empty()
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.empty()
 
         when:
         ResponseEntity<PendingTransaction> response = controller.findById(id)
@@ -92,7 +99,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 500L
         and:
-        pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> { throw new RuntimeException("boom") }
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<PendingTransaction> response = controller.findById(id)
@@ -103,7 +110,7 @@ class PendingTransactionControllerSpec extends Specification {
 
     def "save creates pending transaction and returns 201"() {
         given:
-        PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 4, 1), description: "created", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: null)
+        PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 4, 1), description: "created", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: "test_owner")
         and:
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { PendingTransaction p -> p.pendingTransactionId = 99L; return p }
 
@@ -117,7 +124,7 @@ class PendingTransactionControllerSpec extends Specification {
 
     def "save returns 400 on validation error"() {
         given:
-        PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 4, 1), description: "bad", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: null)
+        PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 4, 1), description: "bad", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: "test_owner")
         and:
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
@@ -133,7 +140,7 @@ class PendingTransactionControllerSpec extends Specification {
 
     def "save returns 500 on system error"() {
         given:
-        PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 4, 1), description: "created", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: null)
+        PendingTransaction input = new PendingTransaction(pendingTransactionId: 0L, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 4, 1), description: "created", amount: new BigDecimal("12.34"), reviewStatus: "pending", owner: "test_owner")
         and:
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
@@ -147,10 +154,10 @@ class PendingTransactionControllerSpec extends Specification {
     def "update modifies existing pending transaction and returns 200"() {
         given:
         long id = 22L
-        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 1, 1), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: null)
-        PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null)
+        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 1, 1), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: "test_owner")
+        PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        1 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { PendingTransaction p -> p }
 
         when:
@@ -165,10 +172,10 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 23L
         and:
-        pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.empty()
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.empty()
 
         when:
-        ResponseEntity<PendingTransaction> response = controller.update(id, new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null))
+        ResponseEntity<PendingTransaction> response = controller.update(id, new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: "test_owner"))
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
@@ -177,10 +184,10 @@ class PendingTransactionControllerSpec extends Specification {
     def "update returns 500 on system error"() {
         given:
         long id = 24L
-        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 1, 1), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: null)
-        PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: null)
+        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 1, 1), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: "test_owner")
+        PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        1 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:
@@ -193,10 +200,10 @@ class PendingTransactionControllerSpec extends Specification {
     def "deleteById returns 200 with deleted entity when found"() {
         given:
         long id = 33L
-        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: null)
+        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: "test_owner")
         and:
         // find for handleDeleteOperation and again inside service.deleteById path
-        2 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
+        2 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
 
         when:
         ResponseEntity<PendingTransaction> response = controller.deleteById(id)
@@ -210,7 +217,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 34L
         and:
-        pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.empty()
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.empty()
 
         when:
         ResponseEntity<PendingTransaction> response = controller.deleteById(id)
@@ -222,9 +229,9 @@ class PendingTransactionControllerSpec extends Specification {
     def "deleteById throws 500 when delete fails"() {
         given:
         long id = 35L
-        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: null)
+        PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        2 * pendingRepo.findByPendingTransactionIdOrderByTransactionDateDesc(id) >> Optional.of(existing)
+        2 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
         pendingRepo.delete(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:
@@ -246,7 +253,7 @@ class PendingTransactionControllerSpec extends Specification {
 
     def "legacy deleteAllPendingTransactions returns 500 on error"() {
         given:
-        pendingRepo.deleteAll() >> { throw new RuntimeException("db") }
+        pendingRepo.deleteAllByOwner("test_owner") >> { throw new RuntimeException("db") }
 
         when:
         controller.deleteAllPendingTransactions()

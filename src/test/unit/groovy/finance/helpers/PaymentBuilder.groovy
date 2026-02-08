@@ -9,6 +9,7 @@ import java.util.*
 class PaymentBuilder {
 
     Long paymentId = 0L
+    String owner = 'test_owner'
     String sourceAccount = 'source_brian'
     String destinationAccount = 'dest_brian'
     BigDecimal amount = new BigDecimal("100.00")
@@ -26,6 +27,7 @@ class PaymentBuilder {
     Payment build() {
         Payment payment = new Payment().with {
             paymentId = this.paymentId
+            owner = this.owner
             sourceAccount = this.sourceAccount
             destinationAccount = this.destinationAccount
             amount = this.amount
@@ -40,6 +42,11 @@ class PaymentBuilder {
         payment
     }
 
+
+    PaymentBuilder withOwner(String owner) {
+        this.owner = owner
+        this
+    }
 
     PaymentBuilder withAmount(BigDecimal amount) {
         this.amount = amount

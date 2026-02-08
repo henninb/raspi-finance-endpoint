@@ -6,6 +6,7 @@ import java.util.*
 
 class CategoryBuilder {
     Long categoryId = 0L
+    String owner = 'test_owner'
     String categoryName = 'foo'
     Boolean activeStatus = true
     Timestamp dateUpdated = new Timestamp(Calendar.getInstance().time.time)
@@ -18,6 +19,7 @@ class CategoryBuilder {
     Category build() {
         Category category = new Category().with {
             categoryId = this.categoryId
+            owner = this.owner
             categoryName = this.categoryName
             activeStatus = this.activeStatus
             dateUpdated = this.dateUpdated
@@ -25,6 +27,11 @@ class CategoryBuilder {
             it
         }
         category
+    }
+
+    CategoryBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     CategoryBuilder withCategoryId(Long categoryId) {

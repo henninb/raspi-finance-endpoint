@@ -34,6 +34,7 @@ class StandardizedValidationAmountControllerSpec extends Specification {
     private static ValidationAmount va(Map args = [:]) {
         new ValidationAmount(
             validationId: (args.validationId ?: 0L) as Long,
+            owner: (args.owner ?: "test_owner") as String,
             accountId: (args.accountId ?: 1L) as Long,
             validationDate: (args.validationDate ?: new Timestamp(System.currentTimeMillis())) as Timestamp,
             activeStatus: (args.activeStatus ?: true) as Boolean,

@@ -13,6 +13,7 @@ class MedicalExpenseBuilder {
     private static final String AMOUNT_25 = "25.00"
 
     Long medicalExpenseId = 0L
+    String owner = 'test_owner'
     Long transactionId = null
     Long providerId = 1L
     Long familyMemberId = 1L
@@ -40,6 +41,7 @@ class MedicalExpenseBuilder {
     MedicalExpense build() {
         MedicalExpense expense = new MedicalExpense().with {
             medicalExpenseId = this.medicalExpenseId
+            owner = this.owner
             transactionId = this.transactionId
             providerId = this.providerId
             familyMemberId = this.familyMemberId
@@ -62,6 +64,11 @@ class MedicalExpenseBuilder {
             it
         }
         expense
+    }
+
+    MedicalExpenseBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     MedicalExpenseBuilder withMedicalExpenseId(Long medicalExpenseId) {

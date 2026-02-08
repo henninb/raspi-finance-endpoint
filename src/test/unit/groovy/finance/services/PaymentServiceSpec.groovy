@@ -41,7 +41,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findAllActive()
 
         then: "should return Success with payments"
-        1 * paymentRepositoryMock.findAll() >> payments
+        1 * paymentRepositoryMock.findByOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, true, _) >> new org.springframework.data.domain.PageImpl(payments)
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].paymentId == 1L
@@ -56,7 +56,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * paymentRepositoryMock.findAll() >> []
+        1 * paymentRepositoryMock.findByOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, true, _) >> new org.springframework.data.domain.PageImpl([])
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -72,7 +72,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findById(1L)
 
         then: "should return Success with payment"
-        1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
         result instanceof ServiceResult.Success
         result.data.paymentId == 1L
         0 * _
@@ -83,7 +83,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findById(999L)
 
         then: "should return NotFound result"
-        1 * paymentRepositoryMock.findByPaymentId(999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
@@ -158,7 +158,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.update(updatedPayment)
 
         then: "should return Success with updated payment"
-        1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(existingPayment)
         1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment payment ->
             assert payment.amount == new BigDecimal("200.00")
             return payment
@@ -176,7 +176,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.update(payment)
 
         then: "should return NotFound result"
-        1 * paymentRepositoryMock.findByPaymentId(999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
@@ -196,9 +196,10 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(1L)
 
         then: "should return Success"
-        1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
         0 * transactionServiceMock.deleteByIdInternal(_)  // No transactions to delete
         1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
         result instanceof ServiceResult.Success
         result.data == true
     }
@@ -208,7 +209,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * paymentRepositoryMock.findByPaymentId(999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
@@ -229,7 +230,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
 
         and: "transaction service deletes source transaction"
         1 * transactionServiceMock.deleteByIdInternal("source-guid-123") >>
@@ -241,6 +242,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         and: "payment repository deletes the payment"
         1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
 
         and: "result is Success"
         result instanceof ServiceResult.Success
@@ -260,7 +262,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
 
         and: "source transaction delete returns NotFound (logged as warning)"
         1 * transactionServiceMock.deleteByIdInternal("missing-source") >>
@@ -272,6 +274,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         and: "payment is still deleted"
         1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
 
         and: "result is Success"
         result instanceof ServiceResult.Success
@@ -290,13 +293,14 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
 
         and: "no transaction deletes are attempted"
         0 * transactionServiceMock.deleteByIdInternal(_)
 
         and: "payment is deleted"
         1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
 
         and: "result is Success"
         result instanceof ServiceResult.Success
@@ -315,7 +319,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
 
         and: "no transaction deletes are attempted"
         0 * transactionServiceMock.deleteByIdInternal(_)
@@ -340,7 +344,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
 
         and: "payment delete is attempted first (will be rolled back by transaction)"
         1 * paymentRepositoryMock.delete(payment)
@@ -372,7 +376,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByPaymentId(paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
 
         and: "payment delete is attempted first (will be rolled back by transaction)"
         1 * paymentRepositoryMock.delete(payment)
@@ -402,7 +406,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findAllPayments()
 
         then: "should return payment list"
-        1 * paymentRepositoryMock.findAll() >> payments
+        1 * paymentRepositoryMock.findByOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, true, _) >> new org.springframework.data.domain.PageImpl(payments)
         result.size() == 1
         0 * _
     }
@@ -438,8 +442,8 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then: "should return saved payment"
         // processPaymentAccount calls for both accounts (2 calls each for process + behavior inference)
-        2 * accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(mockDestAccount)
-        2 * accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(mockSourceAccount)
+        2 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.destinationAccount) >> Optional.of(mockDestAccount)
+        2 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.sourceAccount) >> Optional.of(mockSourceAccount)
         // Transaction service saves both transactions
         1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction1)
         1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction2)
@@ -458,7 +462,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.updatePayment(1L, updatedPayment)
 
         then: "should return updated payment"
-        1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(existingPayment)
         1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment payment -> return payment }
         result.amount == new BigDecimal("200.00")
         0 * _
@@ -472,7 +476,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findByPaymentId(1L)
 
         then: "should return payment optional"
-        1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
         result.isPresent()
         result.get().paymentId == 1L
         0 * _
@@ -486,7 +490,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteByPaymentId(1L)
 
         then: "should delete payment and return true"
-        1 * paymentRepositoryMock.findByPaymentId(1L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
         1 * paymentRepositoryMock.delete(payment)
         result == true
         0 * _
@@ -497,7 +501,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteByPaymentId(999L)
 
         then: "should return false"
-        1 * paymentRepositoryMock.findByPaymentId(999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
         result == false
         0 * _
     }
@@ -525,9 +529,9 @@ class PaymentServiceSpec extends BaseServiceSpec {
         existingSourceAccount.accountType = finance.domain.AccountType.Checking
         existingSourceAccount.accountId = 2L
 
-        // With behavior inference, we call findByAccountNameOwner for both source and dest accounts
-        accountRepositoryMock.findByAccountNameOwner(payment.destinationAccount) >> Optional.of(existingDestAccount)
-        accountRepositoryMock.findByAccountNameOwner(payment.sourceAccount) >> Optional.of(existingSourceAccount)
+        // With behavior inference, we call findByOwnerAndAccountNameOwner for both source and dest accounts
+        accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.destinationAccount) >> Optional.of(existingDestAccount)
+        accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.sourceAccount) >> Optional.of(existingSourceAccount)
 
         when: "calling legacy insertPayment with invalid data"
         standardizedPaymentService.insertPayment(payment)
@@ -547,7 +551,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         standardizedPaymentService.updatePayment(999L, payment)
 
         then: "should throw RuntimeException"
-        1 * paymentRepositoryMock.findByPaymentId(999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }

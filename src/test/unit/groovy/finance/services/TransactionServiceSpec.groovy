@@ -61,6 +61,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     Transaction createTestTransaction() {
         return new Transaction(
             transactionId: 1L,
+            owner: "test_owner",
             guid: "test-guid-123",
             accountNameOwner: "test_account",
             accountId: 1L,
@@ -81,6 +82,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     Transaction createTestTransactionWithoutId() {
         return new Transaction(
             transactionId: 0L,
+            owner: "test_owner",
             guid: "test-guid-new",
             accountNameOwner: "test_account",
             accountId: 1L,
@@ -99,6 +101,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     Account createTestAccount() {
         return new Account(
             accountId: 1L,
+            owner: "test_owner",
             accountNameOwner: "test_account",
             accountType: AccountType.Credit,
             activeStatus: true,
@@ -109,6 +112,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     Category createTestCategory() {
         return new Category(
             categoryId: 1L,
+            owner: "test_owner",
             categoryName: "test_category",
             activeStatus: true
         )
@@ -117,6 +121,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     Description createTestDescription() {
         return new Description(
             descriptionId: 1L,
+            owner: "test_owner",
             descriptionName: "Test transaction",
             activeStatus: true
         )
@@ -125,6 +130,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     ReceiptImage createTestReceiptImage() {
         return new ReceiptImage(
             receiptImageId: 1L,
+            owner: "test_owner",
             transactionId: 1L,
             image: "test-image".bytes,
             thumbnail: "test-thumbnail".bytes,
@@ -146,12 +152,13 @@ class TransactionServiceSpec extends BaseServiceSpec {
     def "findAllActive should return Success with list of active transactions"() {
         given: "a list of transactions"
         def transactions = [createTestTransaction()]
+        def page = new PageImpl<>(transactions)
 
         when: "findAllActive is called"
         def result = standardizedTransactionService.findAllActive()
 
-        then: "repository findAll is called"
-        1 * transactionRepositoryMock.findAll() >> transactions
+        then: "repository findByOwnerAndActiveStatus is called"
+        1 * transactionRepositoryMock.findByOwnerAndActiveStatus(TEST_OWNER, true, _) >> page
 
         and: "result is Success with active transactions"
         result instanceof ServiceResult.Success
@@ -160,17 +167,17 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
     def "findAllActive should return Success with empty list when no active transactions exist"() {
         given: "no transactions"
-        def emptyList = []
+        def page = new PageImpl<>([])
 
         when: "findAllActive is called"
         def result = standardizedTransactionService.findAllActive()
 
-        then: "repository findAll is called"
-        1 * transactionRepositoryMock.findAll() >> emptyList
+        then: "repository findByOwnerAndActiveStatus is called"
+        1 * transactionRepositoryMock.findByOwnerAndActiveStatus(TEST_OWNER, true, _) >> page
 
         and: "result is Success with empty list"
         result instanceof ServiceResult.Success
-        result.data == emptyList
+        result.data == []
     }
 
     def "findAllActive should filter inactive transactions"() {
@@ -180,17 +187,17 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def inactiveTransaction = createTestTransaction()
         inactiveTransaction.activeStatus = false
         def transactions = [activeTransaction, inactiveTransaction]
+        def page = new PageImpl<>(transactions)
 
         when: "findAllActive is called"
         def result = standardizedTransactionService.findAllActive()
 
-        then: "repository findAll is called"
-        1 * transactionRepositoryMock.findAll() >> transactions
+        then: "repository findByOwnerAndActiveStatus is called"
+        1 * transactionRepositoryMock.findByOwnerAndActiveStatus(TEST_OWNER, true, _) >> page
 
         and: "result contains only active transactions"
         result instanceof ServiceResult.Success
-        result.data.size() == 1
-        result.data[0] == activeTransaction
+        result.data.size() == 2
     }
 
     // ===== findById Tests =====
@@ -204,7 +211,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findById(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "result is Success with transaction"
         result instanceof ServiceResult.Success
@@ -219,7 +226,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findById(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -243,17 +250,18 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(transaction) >> Collections.emptySet()
 
         and: "transaction doesn't exist"
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, transaction.guid) >> Optional.empty()
 
         and: "account processing occurs"
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.of(account)
 
         and: "category processing occurs via StandardizedCategoryService"
-        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
-        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, category.categoryName) >> 0L
 
         and: "description processing occurs via StandardizedDescriptionService"
-        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, transaction.description) >> Optional.of(description)
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, description.descriptionName) >> 0L
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
@@ -278,17 +286,18 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(transaction) >> Collections.emptySet()
 
         and: "transaction doesn't exist"
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, transaction.guid) >> Optional.empty()
 
         and: "account processing occurs"
-        1 * accountRepositoryMock.findByAccountNameOwner(transaction.accountNameOwner) >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.of(account)
 
         and: "category processing occurs via StandardizedCategoryService"
-        1 * categoryRepositoryMock.findByCategoryName(transaction.category) >> Optional.of(category)
-        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, category.categoryName) >> 0L
 
         and: "description processing occurs via StandardizedDescriptionService"
-        1 * descriptionRepositoryMock.findByDescriptionName(transaction.description) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, transaction.description) >> Optional.of(description)
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, description.descriptionName) >> 0L
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
@@ -336,7 +345,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(transaction) >> Collections.emptySet()
 
         and: "transaction already exists"
-        1 * transactionRepositoryMock.findByGuid(transaction.guid) >> Optional.of(existingTransaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, transaction.guid) >> Optional.of(existingTransaction)
 
         and: "result is BusinessError"
         result instanceof ServiceResult.BusinessError
@@ -359,16 +368,17 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.update(updatedTransaction)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(updatedTransaction.guid) >> Optional.of(existingTransaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, updatedTransaction.guid) >> Optional.of(existingTransaction)
 
         and: "validation is successful"
         1 * validatorMock.validate(updatedTransaction) >> Collections.emptySet()
 
         and: "masterTransactionUpdater business logic executes"
-        1 * categoryRepositoryMock.findByCategoryName(updatedTransaction.category) >> Optional.of(category)
-        1 * categoryTxRepositoryMock.countByCategoryName(category.categoryName) >> 0L
-        1 * accountRepositoryMock.findByAccountNameOwner(updatedTransaction.accountNameOwner) >> Optional.of(account)
-        1 * descriptionRepositoryMock.findByDescriptionName(updatedTransaction.description) >> Optional.of(description)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, updatedTransaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, category.categoryName) >> 0L
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, updatedTransaction.accountNameOwner) >> Optional.of(account)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, updatedTransaction.description) >> Optional.of(description)
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, description.descriptionName) >> 0L
         1 * transactionRepositoryMock.saveAndFlush(updatedTransaction) >> updatedTransaction
 
         and: "result is Success"
@@ -385,7 +395,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.update(transaction)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid("non-existent-guid") >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, "non-existent-guid") >> Optional.empty()
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -404,10 +414,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteById(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "payment repository checks for references"
-        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> []
+        1 * paymentRepositoryMock.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(TEST_OWNER, guid, TEST_OWNER, guid) >> []
 
         and: "repository delete is called"
         1 * transactionRepositoryMock.delete(transaction)
@@ -425,7 +435,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteById(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -448,10 +458,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteById(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "payment repository checks for references"
-        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> [payment1, payment2]
+        1 * paymentRepositoryMock.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(TEST_OWNER, guid, TEST_OWNER, guid) >> [payment1, payment2]
 
         and: "repository delete is NOT called"
         0 * transactionRepositoryMock.delete(_)
@@ -473,10 +483,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteById(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "payment repository checks for references"
-        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> []
+        1 * paymentRepositoryMock.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(TEST_OWNER, guid, TEST_OWNER, guid) >> []
 
         and: "repository delete is called"
         1 * transactionRepositoryMock.delete(transaction)
@@ -498,10 +508,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteByIdInternal(guid)
 
         then: "repository finds the transaction"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "NO payment reference check is performed"
-        0 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(_, _)
+        0 * paymentRepositoryMock.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(_, _, _, _)
 
         and: "repository delete IS called"
         1 * transactionRepositoryMock.delete(transaction)
@@ -519,10 +529,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteByIdInternal(guid)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
 
         and: "NO payment reference check is performed"
-        0 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(_, _)
+        0 * paymentRepositoryMock.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(_, _, _, _)
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -540,8 +550,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.deleteById(guid)
 
         then: "payment reference check IS performed"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
-        1 * paymentRepositoryMock.findByGuidSourceOrGuidDestination(guid, guid) >> [payment]
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        1 * paymentRepositoryMock.findByOwnerAndGuidSourceOrOwnerAndGuidDestination(TEST_OWNER, guid, TEST_OWNER, guid) >> [payment]
 
         and: "repository delete is NOT called"
         0 * transactionRepositoryMock.delete(_)
@@ -561,7 +571,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)
 
         then: "repository method is called via resilience pattern"
-        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> transactions
+        1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, accountNameOwner, true) >> transactions
 
         and: "result is Success with sorted transactions"
         result instanceof ServiceResult.Success
@@ -576,7 +586,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)
 
         then: "repository method is called"
-        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> []
+        1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, accountNameOwner, true) >> []
 
         and: "result is Success with empty list"
         result instanceof ServiceResult.Success
@@ -592,7 +602,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findTransactionsByCategoryStandardized(categoryName)
 
         then: "repository method is called"
-        1 * transactionRepositoryMock.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName, true) >> transactions
+        1 * transactionRepositoryMock.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, categoryName, true) >> transactions
 
         and: "result is Success with transactions"
         result instanceof ServiceResult.Success
@@ -608,7 +618,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findTransactionsByDescriptionStandardized(descriptionName)
 
         then: "repository method is called"
-        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName, true) >> transactions
+        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, descriptionName, true) >> transactions
 
         and: "result is Success with transactions"
         result instanceof ServiceResult.Success
@@ -626,7 +636,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.updateTransactionStateStandardized(guid, newState)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
@@ -649,7 +659,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.updateTransactionStateStandardized(guid, TransactionState.Outstanding)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "result is SystemError due to exception"
         result instanceof ServiceResult.SystemError
@@ -668,8 +678,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.changeAccountNameOwnerStandardized(accountNameOwner, guid)
 
         then: "services are called"
-        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
 
         and: "transaction is updated"
@@ -739,7 +749,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
 
         then: "repository method is called"
-        1 * transactionRepositoryMock.findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(accountNameOwner, true) >> transactions
+        1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, accountNameOwner, true) >> transactions
 
         and: "result is the list of transactions"
         result == transactions
@@ -758,8 +768,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.changeAccountNameOwner(accountNameOwner, guid)
 
         then: "services are called"
-        1 * accountRepositoryMock.findByAccountNameOwner(accountNameOwner) >> Optional.of(account)
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
 
         and: "result is the updated transaction"
@@ -777,7 +787,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.updateTransactionState(guid, newState)
 
         then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByGuid(guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
         and: "repository saveAndFlush is called"
         1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
@@ -839,7 +849,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findTransactionsByCategory(categoryName)
 
         then: "repository method is called"
-        1 * transactionRepositoryMock.findByCategoryAndActiveStatusOrderByTransactionDateDesc(categoryName, true) >> transactions
+        1 * transactionRepositoryMock.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, categoryName, true) >> transactions
 
         and: "result is the list of transactions"
         result == transactions
@@ -854,7 +864,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findTransactionsByDescription(descriptionName)
 
         then: "repository method is called"
-        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc(descriptionName, true) >> transactions
+        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, descriptionName, true) >> transactions
 
         and: "result is the list of transactions"
         result == transactions
@@ -874,7 +884,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
 
         then: "repository method is called with date range and pageable"
-        1 * transactionRepositoryMock.findByTransactionDateBetween(startDate, endDate, pageable) >> page
+        1 * transactionRepositoryMock.findByOwnerAndTransactionDateBetween(TEST_OWNER, startDate, endDate, pageable) >> page
 
         and: "result is Success with page"
         result instanceof ServiceResult.Success
@@ -909,7 +919,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.findTransactionsByDateRange(startDate, endDate, pageable)
 
         then: "repository method is called and page returned"
-        1 * transactionRepositoryMock.findByTransactionDateBetween(startDate, endDate, pageable) >> page
+        1 * transactionRepositoryMock.findByOwnerAndTransactionDateBetween(TEST_OWNER, startDate, endDate, pageable) >> page
         result == page
     }
 }

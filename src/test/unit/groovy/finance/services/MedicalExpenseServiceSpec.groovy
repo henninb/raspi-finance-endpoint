@@ -39,7 +39,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenses = [expense1, expense2]
 
         when:
-        medicalExpenseRepositoryMock.findByActiveStatusTrueOrderByServiceDateDesc() >> expenses
+        medicalExpenseRepositoryMock.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> expenses
         def result = standardizedMedicalExpenseService.findAllActive()
 
         then:
@@ -50,7 +50,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
     def "findAllActive should return ServiceResult.Success with empty list when no expenses"() {
         given:
-        medicalExpenseRepositoryMock.findByActiveStatusTrueOrderByServiceDateDesc() >> []
+        medicalExpenseRepositoryMock.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> []
 
         when:
         def result = standardizedMedicalExpenseService.findAllActive()
@@ -62,7 +62,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
     def "findAllActive should return ServiceResult.SystemError on repository exception"() {
         given:
-        medicalExpenseRepositoryMock.findByActiveStatusTrueOrderByServiceDateDesc() >> { throw new RuntimeException("Database error") }
+        medicalExpenseRepositoryMock.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> { throw new RuntimeException("Database error") }
 
         when:
         def result = standardizedMedicalExpenseService.findAllActive()
@@ -80,7 +80,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(expenseId).build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
         def result = standardizedMedicalExpenseService.findById(expenseId)
 
         then:
@@ -93,7 +93,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenseId = 999L
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> null
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> null
         def result = standardizedMedicalExpenseService.findById(expenseId)
 
         then:
@@ -104,7 +104,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
     def "findById should return ServiceResult.SystemError on repository exception"() {
         given:
         def expenseId = 1L
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> { throw new RuntimeException("Database connection failed") }
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> { throw new RuntimeException("Database connection failed") }
 
         when:
         def result = standardizedMedicalExpenseService.findById(expenseId)
@@ -168,7 +168,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByTransactionId(123L) >> existingExpense
+        medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, 123L) >> existingExpense
         medicalExpenseRepositoryMock.save(expense) >> { throw new DataIntegrityViolationException("Duplicate transaction ID") }
         def result = standardizedMedicalExpenseService.save(expense)
 
@@ -206,7 +206,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(1L) >> existingExpense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingExpense
         medicalExpenseRepositoryMock.save(expense) >> updatedExpense
         def result = standardizedMedicalExpenseService.update(expense)
 
@@ -220,7 +220,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(999L).build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(999L) >> null
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         def result = standardizedMedicalExpenseService.update(expense)
 
         then:
@@ -232,7 +232,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         given:
         def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(1L).build()
         def existingExpense = MedicalExpenseBuilder.builder().withMedicalExpenseId(1L).build()
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(1L) >> existingExpense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingExpense
         medicalExpenseRepositoryMock.save(expense) >> { throw new RuntimeException("Update failed") }
 
         when:
@@ -250,7 +250,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenseId = 1L
 
         when:
-        medicalExpenseRepositoryMock.softDeleteByMedicalExpenseId(expenseId) >> 1
+        medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> 1
         def result = standardizedMedicalExpenseService.deleteById(expenseId)
 
         then:
@@ -263,7 +263,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenseId = 999L
 
         when:
-        medicalExpenseRepositoryMock.softDeleteByMedicalExpenseId(expenseId) >> 0
+        medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> 0
         def result = standardizedMedicalExpenseService.deleteById(expenseId)
 
         then:
@@ -274,7 +274,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
     def "deleteById should return ServiceResult.SystemError on repository exception"() {
         given:
         def expenseId = 1L
-        medicalExpenseRepositoryMock.softDeleteByMedicalExpenseId(expenseId) >> { throw new RuntimeException("Delete failed") }
+        medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> { throw new RuntimeException("Delete failed") }
 
         when:
         def result = standardizedMedicalExpenseService.deleteById(expenseId)
@@ -293,7 +293,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenses = [expense1, expense2]
 
         when:
-        medicalExpenseRepositoryMock.findByActiveStatusTrueOrderByServiceDateDesc() >> expenses
+        medicalExpenseRepositoryMock.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> expenses
         def result = standardizedMedicalExpenseService.findAllMedicalExpenses()
 
         then:
@@ -303,7 +303,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
     def "findAllMedicalExpenses should return empty list on ServiceResult failure"() {
         given:
-        medicalExpenseRepositoryMock.findByActiveStatusTrueOrderByServiceDateDesc() >> { throw new RuntimeException("Database error") }
+        medicalExpenseRepositoryMock.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> { throw new RuntimeException("Database error") }
 
         when:
         def result = standardizedMedicalExpenseService.findAllMedicalExpenses()
@@ -359,7 +359,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByTransactionId(123L) >> existingExpense
+        medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, 123L) >> existingExpense
         standardizedMedicalExpenseService.insertMedicalExpense(expense)
 
         then:
@@ -372,7 +372,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def existingExpense = MedicalExpenseBuilder.builder().withMedicalExpenseId(1L).build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(1L) >> existingExpense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingExpense
         medicalExpenseRepositoryMock.save(expense) >> expense
         def result = standardizedMedicalExpenseService.updateMedicalExpense(expense)
 
@@ -385,7 +385,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(999L).build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(999L) >> null
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         standardizedMedicalExpenseService.updateMedicalExpense(expense)
 
         then:
@@ -398,7 +398,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(expenseId).build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
         def result = standardizedMedicalExpenseService.findMedicalExpenseById(expenseId)
 
         then:
@@ -410,7 +410,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenseId = 999L
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> null
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> null
         def result = standardizedMedicalExpenseService.findMedicalExpenseById(expenseId)
 
         then:
@@ -423,7 +423,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expense = MedicalExpenseBuilder.builder().withTransactionId(transactionId).build()
 
         when:
-        medicalExpenseRepositoryMock.findByTransactionId(transactionId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> expense
         def result = standardizedMedicalExpenseService.findMedicalExpenseByTransactionId(transactionId)
 
         then:
@@ -461,7 +461,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenseId = 1L
 
         when:
-        medicalExpenseRepositoryMock.softDeleteByMedicalExpenseId(expenseId) >> 1
+        medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> 1
         def result = standardizedMedicalExpenseService.softDeleteMedicalExpense(expenseId)
 
         then:
@@ -473,7 +473,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def expenseId = 999L
 
         when:
-        medicalExpenseRepositoryMock.softDeleteByMedicalExpenseId(expenseId) >> 0
+        medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> 0
         def result = standardizedMedicalExpenseService.softDeleteMedicalExpense(expenseId)
 
         then:
@@ -510,12 +510,12 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def approvedCount = 10L
 
         when:
-        medicalExpenseRepositoryMock.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Submitted) >> 0L
-        medicalExpenseRepositoryMock.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Processing) >> processingCount
-        medicalExpenseRepositoryMock.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Approved) >> approvedCount
-        medicalExpenseRepositoryMock.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Denied) >> 0L
-        medicalExpenseRepositoryMock.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Paid) >> 0L
-        medicalExpenseRepositoryMock.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Closed) >> 0L
+        medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Submitted) >> 0L
+        medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Processing) >> processingCount
+        medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Approved) >> approvedCount
+        medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Denied) >> 0L
+        medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Paid) >> 0L
+        medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Closed) >> 0L
         def result = standardizedMedicalExpenseService.getClaimStatusCounts()
 
         then:
@@ -540,8 +540,8 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> expense
-        medicalExpenseRepositoryMock.findByTransactionId(transactionId) >> null
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> null
         medicalExpenseRepositoryMock.save(_ as MedicalExpense) >> savedExpense
         def result = standardizedMedicalExpenseService.linkPaymentTransaction(expenseId, transactionId)
 
@@ -560,8 +560,8 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> expense
-        medicalExpenseRepositoryMock.findByTransactionId(transactionId) >> existingExpense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> existingExpense
         standardizedMedicalExpenseService.linkPaymentTransaction(expenseId, transactionId)
 
         then:
@@ -582,7 +582,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
         medicalExpenseRepositoryMock.save(_ as MedicalExpense) >> savedExpense
         def result = standardizedMedicalExpenseService.unlinkPaymentTransaction(expenseId)
 
@@ -600,7 +600,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
                 .build()
 
         when:
-        medicalExpenseRepositoryMock.findByMedicalExpenseIdAndActiveStatusTrue(expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
         medicalExpenseRepositoryMock.save(expense) >> expense
         def result = standardizedMedicalExpenseService.updatePaidAmount(expenseId)
 

@@ -38,8 +38,8 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.findAllActive()
 
         then: "should return Success with categories"
-        1 * categoryRepositoryMock.findByActiveStatusOrderByCategoryName(true) >> categories
-        1 * transactionRepositoryMock.countByCategoryNameIn(["groceries", "utilities"]) >> [
+        1 * categoryRepositoryMock.findByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true) >> categories
+        1 * transactionRepositoryMock.countByOwnerAndCategoryNameIn(TEST_OWNER, ["groceries", "utilities"]) >> [
             ["groceries", 5L] as Object[],
             ["utilities", 3L] as Object[]
         ]
@@ -57,7 +57,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * categoryRepositoryMock.findByActiveStatusOrderByCategoryName(true) >> []
+        1 * categoryRepositoryMock.findByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true) >> []
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -73,7 +73,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.findById(1L)
 
         then: "should return Success with category"
-        1 * categoryRepositoryMock.findByCategoryId(1L) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 1L) >> Optional.of(category)
         result instanceof ServiceResult.Success
         result.data.categoryId == 1L
         0 * _
@@ -84,7 +84,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.findById(999L)
 
         then: "should return NotFound result"
-        1 * categoryRepositoryMock.findByCategoryId(999L) >> Optional.empty()
+        1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Category not found: 999")
         0 * _
@@ -159,7 +159,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.update(updatedCategory)
 
         then: "should return Success with updated category"
-        1 * categoryRepositoryMock.findByCategoryId(1L) >> Optional.of(existingCategory)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 1L) >> Optional.of(existingCategory)
         1 * categoryRepositoryMock.saveAndFlush(_ as Category) >> { Category cat ->
             assert cat.categoryName == "new"
             return cat
@@ -177,7 +177,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.update(category)
 
         then: "should return NotFound result"
-        1 * categoryRepositoryMock.findByCategoryId(999L) >> Optional.empty()
+        1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Category not found: 999")
         0 * _
@@ -193,7 +193,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.deleteById(1L)
 
         then: "should return Success"
-        1 * categoryRepositoryMock.findByCategoryId(1L) >> Optional.of(category)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 1L) >> Optional.of(category)
         1 * categoryRepositoryMock.delete(category)
         result instanceof ServiceResult.Success
         result.data == true
@@ -205,7 +205,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * categoryRepositoryMock.findByCategoryId(999L) >> Optional.empty()
+        1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Category not found: 999")
         0 * _
@@ -227,9 +227,9 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         def result = standardizedCategoryService.mergeCategories("category1", "category2")
 
         then: "should merge successfully"
-        1 * categoryRepositoryMock.findByCategoryName("category1") >> Optional.of(category1)
-        1 * categoryRepositoryMock.findByCategoryName("category2") >> Optional.of(category2)
-        1 * transactionRepositoryMock.findByCategoryAndActiveStatusOrderByTransactionDateDesc("category2", true) >> transactions
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "category1") >> Optional.of(category1)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "category2") >> Optional.of(category2)
+        1 * transactionRepositoryMock.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, "category2", true) >> transactions
         1 * categoryRepositoryMock.saveAndFlush(category1) >> category1
         result.categoryName == "category1"
         result.categoryCount == 8L // 5 + 3
@@ -245,7 +245,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         standardizedCategoryService.mergeCategories("missing1", "category2")
 
         then: "should throw RuntimeException"
-        1 * categoryRepositoryMock.findByCategoryName("missing1") >> Optional.empty()
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "missing1") >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }
@@ -258,8 +258,8 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         standardizedCategoryService.mergeCategories("category1", "missing2")
 
         then: "should throw RuntimeException"
-        1 * categoryRepositoryMock.findByCategoryName("category1") >> Optional.of(category1)
-        1 * categoryRepositoryMock.findByCategoryName("missing2") >> Optional.empty()
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "category1") >> Optional.of(category1)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "missing2") >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }

@@ -24,6 +24,7 @@ class PaymentControllerSpec extends Specification {
     private Payment createTestPayment(Long id = 1L, String sourceAccount = "checking_brian", String destinationAccount = "visa_brian", BigDecimal amount = new BigDecimal("100.00")) {
         return new Payment(
             id,
+            "test_owner",
             sourceAccount,
             destinationAccount,
             LocalDate.now(),

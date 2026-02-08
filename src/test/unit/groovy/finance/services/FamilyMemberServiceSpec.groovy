@@ -36,7 +36,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.findAllActive()
 
         then: "should return Success with family members"
-        1 * familyMemberRepositoryMock.findByActiveStatusTrue() >> members
+        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> members
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].familyMemberId == 1L
@@ -51,7 +51,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * familyMemberRepositoryMock.findByActiveStatusTrue() >> []
+        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> []
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -67,7 +67,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.findByIdServiceResult(1L)
 
         then: "should return Success with family member"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> member
         result instanceof ServiceResult.Success
         result.data.familyMemberId == 1L
         0 * _
@@ -78,7 +78,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.findByIdServiceResult(999L)
 
         then: "should return NotFound result"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         result instanceof ServiceResult.NotFound
         result.message.contains("FamilyMember not found: 999")
         0 * _
@@ -152,7 +152,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.update(updatedMember)
 
         then: "should return Success with updated family member"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> existingMember
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingMember
         1 * familyMemberRepositoryMock.save(_ as FamilyMember) >> { FamilyMember member ->
             assert member.memberName == "new_name"
             return member
@@ -170,7 +170,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.update(member)
 
         then: "should return NotFound result"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         result instanceof ServiceResult.NotFound
         result.message.contains("FamilyMember not found: 999")
         0 * _
@@ -186,8 +186,8 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.deleteById(1L)
 
         then: "should return Success"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
-        1 * familyMemberRepositoryMock.softDeleteByFamilyMemberId(1L) >> 1
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> member
+        1 * familyMemberRepositoryMock.softDeleteByOwnerAndFamilyMemberId(TEST_OWNER, 1L) >> 1
         result instanceof ServiceResult.Success
         result.data == true
         0 * _
@@ -198,7 +198,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         result instanceof ServiceResult.NotFound
         result.message.contains("FamilyMember not found: 999")
         0 * _
@@ -254,8 +254,8 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.updateActiveStatus(1L, false)
 
         then: "should return true"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
-        1 * familyMemberRepositoryMock.updateActiveStatus(1L, false) >> 1
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> member
+        1 * familyMemberRepositoryMock.updateActiveStatusByOwner(TEST_OWNER, 1L, false) >> 1
         result == true
         0 * _
     }
@@ -265,7 +265,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.updateActiveStatus(999L, false)
 
         then: "should return false"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         result == false
         0 * _
     }
@@ -280,7 +280,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.findAll()
 
         then: "should return family member list"
-        1 * familyMemberRepositoryMock.findByActiveStatusTrue() >> members
+        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> members
         result.size() == 1
         0 * _
     }
@@ -293,7 +293,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.findById(1L)
 
         then: "should return family member"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> member
         result.familyMemberId == 1L
         0 * _
     }
@@ -324,7 +324,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.updateFamilyMember(updatedMember)
 
         then: "should return updated family member"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> existingMember
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingMember
         1 * familyMemberRepositoryMock.save(_ as FamilyMember) >> { FamilyMember member -> return member }
         result.memberName == "new_name"
         0 * _
@@ -366,8 +366,8 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.updateActiveStatus(1L, false)
 
         then: "should return boolean result"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(1L) >> member
-        1 * familyMemberRepositoryMock.updateActiveStatus(1L, false) >> 1
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> member
+        1 * familyMemberRepositoryMock.updateActiveStatusByOwner(TEST_OWNER, 1L, false) >> 1
         result == true
         0 * _
     }
@@ -380,8 +380,8 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.softDelete(1L)
 
         then: "should return boolean result"
-        1 * familyMemberRepositoryMock.findById(1L) >> Optional.of(member)
-        1 * familyMemberRepositoryMock.softDeleteByFamilyMemberId(1L) >> 1
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 1L) >> member
+        1 * familyMemberRepositoryMock.softDeleteByOwnerAndFamilyMemberId(TEST_OWNER, 1L) >> 1
         result == true
         0 * _
     }
@@ -391,7 +391,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.softDelete(999L)
 
         then: "should return false"
-        1 * familyMemberRepositoryMock.findById(999L) >> Optional.empty()
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 999L) >> null
         result == false
         0 * _
     }
@@ -436,7 +436,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         standardizedFamilyMemberService.updateFamilyMember(member)
 
         then: "should throw IllegalArgumentException"
-        1 * familyMemberRepositoryMock.findByFamilyMemberIdAndActiveStatusTrue(999L) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
         thrown(IllegalArgumentException)
         0 * _
     }

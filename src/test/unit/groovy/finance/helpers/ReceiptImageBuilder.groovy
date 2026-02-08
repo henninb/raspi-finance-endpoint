@@ -13,6 +13,7 @@ import finance.domain.ReceiptImage
 class ReceiptImageBuilder {
     private static final String SAMPLE_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg=="
     Long receiptImageId = 0L
+    String owner = 'test_owner'
     Long transactionId = 22530
     Boolean activeStatus = true
     ImageFormatType imageFormatType = ImageFormatType.Png
@@ -27,6 +28,7 @@ class ReceiptImageBuilder {
     ReceiptImage build() {
         ReceiptImage receiptImage = new ReceiptImage().with {
             receiptImageId = this.receiptImageId
+            owner = this.owner
             transactionId = this.transactionId
             activeStatus = this.activeStatus
             imageFormatType = this.imageFormatType
@@ -35,6 +37,11 @@ class ReceiptImageBuilder {
             it
         }
         receiptImage
+    }
+
+    ReceiptImageBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     ReceiptImageBuilder withImage(String image) {

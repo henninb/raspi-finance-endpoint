@@ -40,7 +40,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findAllActive()
 
         then: "should return Success with validation amounts"
-        1 * validationAmountRepositoryMock.findByActiveStatusTrueOrderByValidationDateDesc() >> validationAmounts
+        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> validationAmounts
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].validationId == 1L
@@ -55,7 +55,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * validationAmountRepositoryMock.findByActiveStatusTrueOrderByValidationDateDesc() >> []
+        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> []
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -71,7 +71,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findById(1L)
 
         then: "should return Success with validation amount"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(1L) >> Optional.of(validationAmount)
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 1L) >> Optional.of(validationAmount)
         result instanceof ServiceResult.Success
         result.data.validationId == 1L
         0 * _
@@ -82,7 +82,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findById(999L)
 
         then: "should return NotFound result"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(999L) >> Optional.empty()
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("ValidationAmount not found: 999")
         0 * _
@@ -102,7 +102,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         then: "should return Success with saved validation amount"
         1 * validatorMock.validate(validationAmount) >> noViolations
         1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> savedValidationAmount
-        1 * accountRepositoryMock.updateValidationDateForAccount(_ as Long) >> 1
+        1 * accountRepositoryMock.updateValidationDateForAccountByOwner(_ as Long, TEST_OWNER) >> 1
         result instanceof ServiceResult.Success
         result.data.validationId == 1L
         0 * _
@@ -158,12 +158,12 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.update(updatedValidationAmount)
 
         then: "should return Success with updated validation amount"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(1L) >> Optional.of(existingValidationAmount)
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 1L) >> Optional.of(existingValidationAmount)
         1 * validationAmountRepositoryMock.saveAndFlush(_ as ValidationAmount) >> { ValidationAmount va ->
             assert va.amount == new BigDecimal("200.00")
             return va
         }
-        1 * accountRepositoryMock.updateValidationDateForAccount(_ as Long) >> 1
+        1 * accountRepositoryMock.updateValidationDateForAccountByOwner(_ as Long, TEST_OWNER) >> 1
         result instanceof ServiceResult.Success
         result.data.amount == new BigDecimal("200.00")
         0 * _
@@ -177,7 +177,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.update(validationAmount)
 
         then: "should return NotFound result"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(999L) >> Optional.empty()
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("ValidationAmount not found: 999")
         0 * _
@@ -193,7 +193,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.deleteById(1L)
 
         then: "should return Success"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(1L) >> Optional.of(validationAmount)
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 1L) >> Optional.of(validationAmount)
         1 * validationAmountRepositoryMock.delete(validationAmount)
         result instanceof ServiceResult.Success
         result.data == true
@@ -205,7 +205,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * validationAmountRepositoryMock.findByValidationIdAndActiveStatusTrue(999L) >> Optional.empty()
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("ValidationAmount not found: 999")
         0 * _
@@ -226,8 +226,8 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findValidationAmountByAccountNameOwner("testAccount", TransactionState.Cleared)
 
         then: "should return validation amount"
-        1 * accountRepositoryMock.findByAccountNameOwner("testAccount") >> Optional.of(account)
-        1 * validationAmountRepositoryMock.findByTransactionStateAndAccountId(TransactionState.Cleared, 1L) >> [validationAmount]
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "testAccount") >> Optional.of(account)
+        1 * validationAmountRepositoryMock.findByOwnerAndTransactionStateAndAccountId(TEST_OWNER, TransactionState.Cleared, 1L) >> [validationAmount]
         result.accountId == 1L
         result.transactionState == TransactionState.Cleared
         0 * _
@@ -238,7 +238,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         standardizedValidationAmountService.findValidationAmountByAccountNameOwner("missingAccount", TransactionState.Cleared)
 
         then: "should throw RuntimeException"
-        1 * accountRepositoryMock.findByAccountNameOwner("missingAccount") >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "missingAccount") >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }
@@ -281,9 +281,9 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         def result = standardizedValidationAmountService.findValidationAmountByAccountNameOwner("testAccount", TransactionState.Cleared)
 
         then: "should return the LATEST validation amount by date (not the first one)"
-        1 * accountRepositoryMock.findByAccountNameOwner("testAccount") >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "testAccount") >> Optional.of(account)
         // Repository returns in database order (oldest first) - this simulates the current behavior
-        1 * validationAmountRepositoryMock.findByTransactionStateAndAccountId(TransactionState.Cleared, 1L) >>
+        1 * validationAmountRepositoryMock.findByOwnerAndTransactionStateAndAccountId(TEST_OWNER, TransactionState.Cleared, 1L) >>
             [oldestValidationAmount, middleValidationAmount, newestValidationAmount]
 
         // This test will FAIL initially because current code returns .first() which is the oldest

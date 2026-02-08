@@ -742,6 +742,7 @@ class TransactionControllerSpec extends Specification {
     private Transaction createValidTransaction(String guid, String accountNameOwner) {
         Transaction transaction = new Transaction(
             0L,                                    // transactionId
+            "test_owner",                          // owner
             guid,                                  // guid
             1L,                                   // accountId
             AccountType.Credit,                   // accountType
@@ -774,7 +775,7 @@ class TransactionControllerSpec extends Specification {
     }
 
     private ReceiptImage createValidReceiptImage(Long receiptImageId, Long transactionId) {
-        ReceiptImage receiptImage = new ReceiptImage(receiptImageId, transactionId, true)
+        ReceiptImage receiptImage = new ReceiptImage(receiptImageId, "test_owner", transactionId, true)
         receiptImage.image = "test image data".bytes
         receiptImage.thumbnail = "test thumbnail data".bytes
         receiptImage.imageFormatType = ImageFormatType.Png
