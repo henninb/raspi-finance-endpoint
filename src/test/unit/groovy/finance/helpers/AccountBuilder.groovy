@@ -8,6 +8,7 @@ import java.sql.Timestamp
 class AccountBuilder {
 
     Long accountId = 0L
+    String owner = 'test_owner'
     String accountNameOwner = 'foo_brian'
     AccountType accountType = AccountType.Credit
     Boolean activeStatus = true
@@ -26,6 +27,7 @@ class AccountBuilder {
     Account build() {
         Account account = new Account().with {
             accountId = this.accountId
+            owner = this.owner
             accountNameOwner = this.accountNameOwner
             accountType = this.accountType
             activeStatus = this.activeStatus
@@ -39,6 +41,11 @@ class AccountBuilder {
             it
         }
         account
+    }
+
+    AccountBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     AccountBuilder withAccountNameOwner(String accountNameOwner) {

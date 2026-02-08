@@ -13,6 +13,17 @@ import jakarta.validation.Validator
 import static finance.utils.Constants.*
 
 class BaseServiceSpec extends Specification {
+    protected static final String TEST_OWNER = "test_owner"
+
+    def setup() {
+        def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
+    }
+
+    def cleanup() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext()
+    }
+
     protected AccountRepository accountRepositoryMock = GroovyMock(AccountRepository)
     protected Validator validatorMock = GroovyMock(Validator)
     protected MeterRegistry meterRegistryMock = Mock(MeterRegistry)

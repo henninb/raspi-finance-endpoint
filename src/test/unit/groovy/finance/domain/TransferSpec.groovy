@@ -36,7 +36,7 @@ class TransferSpec extends Specification {
         def guidDestination = "dest-guid"
 
         when:
-        def transfer = new Transfer(transferId, sourceAccount, destinationAccount,
+        def transfer = new Transfer(transferId, "test_owner", sourceAccount, destinationAccount,
                                   transactionDate, amount, guidSource, guidDestination, true)
 
         then:

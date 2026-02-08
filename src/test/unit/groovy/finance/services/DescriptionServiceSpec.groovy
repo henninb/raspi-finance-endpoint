@@ -38,8 +38,8 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.findAllActive()
 
         then: "should return Success with descriptions"
-        1 * descriptionRepositoryMock.findByActiveStatusOrderByDescriptionName(true) >> descriptions
-        1 * transactionRepositoryMock.countByDescriptionNameIn(["groceries", "utilities"]) >> [
+        1 * descriptionRepositoryMock.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> descriptions
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionNameIn(TEST_OWNER, ["groceries", "utilities"]) >> [
             ["groceries", 5L] as Object[],
             ["utilities", 3L] as Object[]
         ]
@@ -57,7 +57,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * descriptionRepositoryMock.findByActiveStatusOrderByDescriptionName(true) >> []
+        1 * descriptionRepositoryMock.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> []
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -73,7 +73,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.findById(1L)
 
         then: "should return Success with description"
-        1 * descriptionRepositoryMock.findByDescriptionId(1L) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 1L) >> Optional.of(description)
         result instanceof ServiceResult.Success
         result.data.descriptionId == 1L
         0 * _
@@ -84,7 +84,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.findById(999L)
 
         then: "should return NotFound result"
-        1 * descriptionRepositoryMock.findByDescriptionId(999L) >> Optional.empty()
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Description not found: 999")
         0 * _
@@ -159,7 +159,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.update(updatedDescription)
 
         then: "should return Success with updated description"
-        1 * descriptionRepositoryMock.findByDescriptionId(1L) >> Optional.of(existingDescription)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 1L) >> Optional.of(existingDescription)
         1 * descriptionRepositoryMock.saveAndFlush(_ as Description) >> { Description desc ->
             assert desc.descriptionName == "new"
             return desc
@@ -177,7 +177,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.update(description)
 
         then: "should return NotFound result"
-        1 * descriptionRepositoryMock.findByDescriptionId(999L) >> Optional.empty()
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Description not found: 999")
         0 * _
@@ -193,7 +193,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.deleteById(1L)
 
         then: "should return Success"
-        1 * descriptionRepositoryMock.findByDescriptionId(1L) >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 1L) >> Optional.of(description)
         1 * descriptionRepositoryMock.delete(description)
         result instanceof ServiceResult.Success
         result.data == true
@@ -205,7 +205,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * descriptionRepositoryMock.findByDescriptionId(999L) >> Optional.empty()
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Description not found: 999")
         0 * _
@@ -221,8 +221,8 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.fetchAllDescriptions()
 
         then: "should return description list"
-        1 * descriptionRepositoryMock.findByActiveStatusOrderByDescriptionName(true) >> descriptions
-        1 * transactionRepositoryMock.countByDescriptionNameIn(["foo"]) >> [
+        1 * descriptionRepositoryMock.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> descriptions
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionNameIn(TEST_OWNER, ["foo"]) >> [
             ["foo", 2L] as Object[]
         ]
         result.size() == 1
@@ -255,7 +255,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.findByDescriptionName("test")
 
         then: "should return description optional"
-        1 * descriptionRepositoryMock.findByDescriptionName("test") >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "test") >> Optional.of(description)
         result.isPresent()
         result.get().descriptionName == "test"
         0 * _
@@ -269,7 +269,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.description("test")
 
         then: "should return description optional"
-        1 * descriptionRepositoryMock.findByDescriptionName("test") >> Optional.of(description)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "test") >> Optional.of(description)
         result.isPresent()
         result.get().descriptionName == "test"
         0 * _
@@ -291,11 +291,11 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         def result = standardizedDescriptionService.mergeDescriptions("target", sourceNames)
 
         then: "should merge successfully"
-        1 * descriptionRepositoryMock.findByDescriptionName("target") >> Optional.of(targetDescription)
-        1 * descriptionRepositoryMock.findByDescriptionName("source1") >> Optional.of(sourceDescription1)
-        1 * descriptionRepositoryMock.findByDescriptionName("source2") >> Optional.of(sourceDescription2)
-        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc("source1", true) >> transactions1
-        1 * transactionRepositoryMock.findByDescriptionAndActiveStatusOrderByTransactionDateDesc("source2", true) >> transactions2
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> Optional.of(targetDescription)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "source1") >> Optional.of(sourceDescription1)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "source2") >> Optional.of(sourceDescription2)
+        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, "source1", true) >> transactions1
+        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, "source2", true) >> transactions2
         1 * descriptionRepositoryMock.saveAndFlush(sourceDescription1) >> sourceDescription1
         1 * descriptionRepositoryMock.saveAndFlush(sourceDescription2) >> sourceDescription2
         1 * descriptionRepositoryMock.saveAndFlush(targetDescription) >> targetDescription
@@ -330,7 +330,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         standardizedDescriptionService.mergeDescriptions("missingTarget", ["source1"])
 
         then: "should throw RuntimeException"
-        1 * descriptionRepositoryMock.findByDescriptionName("missingtarget") >> Optional.empty()
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "missingtarget") >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }
@@ -343,8 +343,8 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         standardizedDescriptionService.mergeDescriptions("target", ["missingSource"])
 
         then: "should throw RuntimeException"
-        1 * descriptionRepositoryMock.findByDescriptionName("target") >> Optional.of(targetDescription)
-        1 * descriptionRepositoryMock.findByDescriptionName("missingSource") >> Optional.empty()
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> Optional.of(targetDescription)
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "missingSource") >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }

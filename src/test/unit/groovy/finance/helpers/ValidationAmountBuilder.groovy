@@ -8,6 +8,7 @@ import java.util.*
 
 class ValidationAmountBuilder {
     Long validationId = 0L
+    String owner = 'test_owner'
     Long accountId = 1L
     TransactionState transactionState = TransactionState.Cleared
     Boolean activeStatus = true
@@ -23,6 +24,7 @@ class ValidationAmountBuilder {
     ValidationAmount build() {
         new ValidationAmount().with {
             validationId = this.validationId
+            owner = this.owner
             accountId = this.accountId
             amount = this.amount
             transactionState = this.transactionState
@@ -32,6 +34,11 @@ class ValidationAmountBuilder {
             dateUpdated = this.dateUpdated
             it
         }
+    }
+
+    ValidationAmountBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     ValidationAmountBuilder withValidationId(Long validationId) {

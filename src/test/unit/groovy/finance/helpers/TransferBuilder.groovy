@@ -8,6 +8,7 @@ import java.time.LocalDate
 class TransferBuilder {
 
     Long transferId = 0L
+    String owner = 'test_owner'
     String sourceAccount = 'test_source'
     String destinationAccount = 'test_destination'
     BigDecimal amount = new BigDecimal("100.00")
@@ -25,6 +26,7 @@ class TransferBuilder {
     Transfer build() {
         Transfer transfer = new Transfer().with {
             transferId = this.transferId
+            owner = this.owner
             sourceAccount = this.sourceAccount
             destinationAccount = this.destinationAccount
             amount = this.amount
@@ -37,6 +39,11 @@ class TransferBuilder {
             it
         }
         transfer
+    }
+
+    TransferBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     TransferBuilder withTransferId(Long transferId) {

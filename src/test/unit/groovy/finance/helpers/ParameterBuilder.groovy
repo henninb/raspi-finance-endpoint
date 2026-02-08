@@ -7,6 +7,7 @@ import java.util.*
 class ParameterBuilder {
 
     Long parameterId = 0L
+    String owner = 'test_owner'
     String parameterName = 'payment_account'
     String parameterValue = 'bank_brian'
     Boolean activeStatus = true
@@ -19,6 +20,7 @@ class ParameterBuilder {
     Parameter build() {
         Parameter parameter = new Parameter().with {
             parameterId = this.parameterId
+            owner = this.owner
             parameterName = this.parameterName
             parameterValue = this.parameterValue
             activeStatus = this.activeStatus
@@ -26,6 +28,11 @@ class ParameterBuilder {
             it
         }
         parameter
+    }
+
+    ParameterBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     ParameterBuilder withParameterId(Long parameterId) {

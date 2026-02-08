@@ -28,7 +28,7 @@ class StandardizedCategoryControllerSpec extends Specification {
     }
 
     private static Category cat(Long id = 0L, String name = "cat1", boolean active = true) {
-        new Category(categoryId: id, categoryName: name, activeStatus: active)
+        new Category(categoryId: id, owner: "test_owner", categoryName: name, activeStatus: active)
     }
 
     // ===== STANDARDIZED: findAllActive =====

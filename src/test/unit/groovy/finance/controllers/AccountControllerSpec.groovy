@@ -37,6 +37,7 @@ class StandardizedAccountControllerSpec extends Specification {
         // Helper to build a valid Account with defaults
         new Account(
             accountId: (args.accountId ?: 0L) as Long,
+            owner: (args.owner ?: "test_owner") as String,
             accountNameOwner: (args.accountNameOwner ?: "acct_test") as String,
             accountType: (args.accountType ?: AccountType.Credit) as AccountType,
             activeStatus: (args.activeStatus ?: true) as Boolean,

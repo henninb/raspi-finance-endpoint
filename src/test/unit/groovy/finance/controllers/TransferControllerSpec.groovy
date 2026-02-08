@@ -24,6 +24,7 @@ class TransferControllerSpec extends Specification {
     private Transfer createTestTransfer(Long id = 1L, String sourceAccount = "checking_brian", String destinationAccount = "savings_brian", BigDecimal amount = new BigDecimal("100.00")) {
         return new Transfer(
             id,
+            "test_owner",
             sourceAccount,
             destinationAccount,
             LocalDate.now(),

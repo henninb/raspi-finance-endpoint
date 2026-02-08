@@ -34,7 +34,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.findAllActive()
 
         then: "should return Success with parameters"
-        1 * parameterRepositoryMock.findByActiveStatusIsTrue() >> parameters
+        1 * parameterRepositoryMock.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> parameters
         result instanceof ServiceResult.Success
         result.data.size() == 2
         result.data[0].parameterName == "param1"
@@ -47,7 +47,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.findAllActive()
 
         then: "should return Success with empty list"
-        1 * parameterRepositoryMock.findByActiveStatusIsTrue() >> []
+        1 * parameterRepositoryMock.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> []
         result instanceof ServiceResult.Success
         result.data.isEmpty()
         0 * _
@@ -63,7 +63,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.findById(1L)
 
         then: "should return Success with parameter"
-        1 * parameterRepositoryMock.findById(1L) >> Optional.of(parameter)
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(parameter)
         result instanceof ServiceResult.Success
         result.data.parameterId == 1L
         0 * _
@@ -74,7 +74,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.findById(999L)
 
         then: "should return NotFound result"
-        1 * parameterRepositoryMock.findById(999L) >> Optional.empty()
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found: 999")
         0 * _
@@ -149,7 +149,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.update(updatedParameter)
 
         then: "should return Success with updated parameter"
-        1 * parameterRepositoryMock.findById(1L) >> Optional.of(existingParameter)
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(existingParameter)
         1 * parameterRepositoryMock.saveAndFlush(_ as Parameter) >> { Parameter param ->
             assert param.parameterName == "new"
             return param
@@ -167,7 +167,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.update(parameter)
 
         then: "should return NotFound result"
-        1 * parameterRepositoryMock.findById(999L) >> Optional.empty()
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found: 999")
         0 * _
@@ -183,7 +183,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.deleteById(1L)
 
         then: "should return Success"
-        1 * parameterRepositoryMock.findById(1L) >> Optional.of(parameter)
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(parameter)
         1 * parameterRepositoryMock.delete(parameter)
         result instanceof ServiceResult.Success
         result.data == true
@@ -195,7 +195,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * parameterRepositoryMock.findById(999L) >> Optional.empty()
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found: 999")
         0 * _
@@ -211,7 +211,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.findByParameterNameStandardized("test")
 
         then: "should return Success with parameter"
-        1 * parameterRepositoryMock.findByParameterName("test") >> Optional.of(parameter)
+        1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "test") >> Optional.of(parameter)
         result instanceof ServiceResult.Success
         result.data.parameterName == "test"
         0 * _
@@ -222,7 +222,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.findByParameterNameStandardized("missing")
 
         then: "should return NotFound result"
-        1 * parameterRepositoryMock.findByParameterName("missing") >> Optional.empty()
+        1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "missing") >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found")
         0 * _
@@ -238,7 +238,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.deleteByParameterNameStandardized("test")
 
         then: "should return Success"
-        1 * parameterRepositoryMock.findByParameterName("test") >> Optional.of(parameter)
+        1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "test") >> Optional.of(parameter)
         1 * parameterRepositoryMock.delete(parameter)
         result instanceof ServiceResult.Success
         result.data == true
@@ -250,7 +250,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.deleteByParameterNameStandardized("missing")
 
         then: "should return NotFound result"
-        1 * parameterRepositoryMock.findByParameterName("missing") >> Optional.empty()
+        1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "missing") >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found")
         0 * _

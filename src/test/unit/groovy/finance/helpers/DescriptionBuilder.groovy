@@ -7,6 +7,7 @@ import java.util.*
 class DescriptionBuilder {
 
     Long descriptionId = 0L
+    String owner = 'test_owner'
     String descriptionName = 'foo'
     Boolean activeStatus = true
     Timestamp dateAdded = new Timestamp(Calendar.getInstance().time.time)
@@ -20,6 +21,7 @@ class DescriptionBuilder {
     Description build() {
         Description description = new Description().with {
             descriptionId = this.descriptionId
+            owner = this.owner
             descriptionName = this.descriptionName
             activeStatus = this.activeStatus
             dateAdded = this.dateAdded
@@ -28,6 +30,11 @@ class DescriptionBuilder {
             it
         }
         description
+    }
+
+    DescriptionBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     DescriptionBuilder withDescriptionId(Long descriptionId) {

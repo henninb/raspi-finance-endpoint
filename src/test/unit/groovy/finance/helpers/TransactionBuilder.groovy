@@ -5,6 +5,7 @@ import java.time.LocalDate
 
 class TransactionBuilder {
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
+    String owner = 'test_owner'
     Long accountId = 0L
     AccountType accountType = AccountType.Credit
     TransactionType transactionType = TransactionType.Expense
@@ -28,6 +29,7 @@ class TransactionBuilder {
     Transaction build() {
         new Transaction().with {
             guid = this.guid
+            owner = this.owner
             accountId = this.accountId
             accountType = this.accountType
             transactionType = this.transactionType
@@ -46,6 +48,11 @@ class TransactionBuilder {
 
             it
         }
+    }
+
+    TransactionBuilder withOwner(String owner) {
+        this.owner = owner
+        this
     }
 
     TransactionBuilder withGuid(String guid) {

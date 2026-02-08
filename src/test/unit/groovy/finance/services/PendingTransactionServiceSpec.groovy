@@ -16,6 +16,8 @@ import java.time.LocalDate
 
 class PendingTransactionServiceSpec extends Specification {
 
+    protected static final String TEST_OWNER = "test_owner"
+
     PendingTransactionRepository mockPendingTransactionRepository = Mock()
     Validator mockValidator = Mock()
 
@@ -23,8 +25,14 @@ class PendingTransactionServiceSpec extends Specification {
     PendingTransactionService standardizedPendingTransactionService
 
     def setup() {
+        def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
         standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository)
         standardizedPendingTransactionService.validator = mockValidator
+    }
+
+    def cleanup() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext()
     }
 
     // ===== Test Data Builders =====
@@ -65,7 +73,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.findAllActive()
 
         then: "repository findAll is called"
-        1 * mockPendingTransactionRepository.findAll() >> pendingTransactions
+        1 * mockPendingTransactionRepository.findAllByOwner(TEST_OWNER) >> pendingTransactions
 
         and: "result is Success with pending transactions"
         result instanceof ServiceResult.Success
@@ -80,7 +88,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.findAllActive()
 
         then: "repository findAll is called"
-        1 * mockPendingTransactionRepository.findAll() >> emptyList
+        1 * mockPendingTransactionRepository.findAllByOwner(TEST_OWNER) >> emptyList
 
         and: "result is Success with empty list"
         result instanceof ServiceResult.Success
@@ -98,7 +106,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.findById(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.of(pendingTransaction)
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.of(pendingTransaction)
 
         and: "result is Success with pending transaction"
         result instanceof ServiceResult.Success
@@ -113,7 +121,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.findById(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.empty()
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.empty()
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -215,7 +223,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.update(updatedTransaction)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(updatedTransaction.pendingTransactionId) >> Optional.of(existingTransaction)
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, updatedTransaction.pendingTransactionId) >> Optional.of(existingTransaction)
 
         and: "repository saveAndFlush is called"
         1 * mockPendingTransactionRepository.saveAndFlush(existingTransaction) >> existingTransaction
@@ -237,7 +245,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.update(pendingTransaction)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(999L) >> Optional.empty()
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, 999L) >> Optional.empty()
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -255,7 +263,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.deleteById(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.of(pendingTransaction)
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.of(pendingTransaction)
 
         and: "repository delete is called"
         1 * mockPendingTransactionRepository.delete(pendingTransaction)
@@ -273,7 +281,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.deleteById(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.empty()
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.empty()
 
         and: "result is NotFound"
         result instanceof ServiceResult.NotFound
@@ -287,7 +295,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.deleteAll()
 
         then: "repository deleteAll is called"
-        1 * mockPendingTransactionRepository.deleteAll()
+        1 * mockPendingTransactionRepository.deleteAllByOwner(TEST_OWNER)
 
         and: "result is Success with true"
         result instanceof ServiceResult.Success
@@ -342,7 +350,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.deletePendingTransaction(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.of(pendingTransaction)
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.of(pendingTransaction)
 
         and: "repository delete is called"
         1 * mockPendingTransactionRepository.delete(pendingTransaction)
@@ -359,7 +367,7 @@ class PendingTransactionServiceSpec extends Specification {
         standardizedPendingTransactionService.deletePendingTransaction(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.empty()
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.empty()
 
         and: "ResponseStatusException is thrown"
         thrown(org.springframework.web.server.ResponseStatusException)
@@ -373,7 +381,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.getAllPendingTransactions()
 
         then: "repository findAll is called"
-        1 * mockPendingTransactionRepository.findAll() >> pendingTransactions
+        1 * mockPendingTransactionRepository.findAllByOwner(TEST_OWNER) >> pendingTransactions
 
         and: "result is the list of pending transactions"
         result == pendingTransactions
@@ -384,7 +392,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.deleteAllPendingTransactions()
 
         then: "repository deleteAll is called"
-        1 * mockPendingTransactionRepository.deleteAll()
+        1 * mockPendingTransactionRepository.deleteAllByOwner(TEST_OWNER)
 
         and: "result is true"
         result == true
@@ -399,7 +407,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.findByPendingTransactionId(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.of(pendingTransaction)
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.of(pendingTransaction)
 
         and: "result is Optional with pending transaction"
         result.isPresent()
@@ -414,7 +422,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.findByPendingTransactionId(pendingTransactionId)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(pendingTransactionId) >> Optional.empty()
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.empty()
 
         and: "result is empty Optional"
         result.isEmpty()
@@ -430,7 +438,7 @@ class PendingTransactionServiceSpec extends Specification {
         def result = standardizedPendingTransactionService.updatePendingTransaction(updatedTransaction)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(updatedTransaction.pendingTransactionId) >> Optional.of(existingTransaction)
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, updatedTransaction.pendingTransactionId) >> Optional.of(existingTransaction)
 
         and: "repository saveAndFlush is called"
         1 * mockPendingTransactionRepository.saveAndFlush(existingTransaction) >> existingTransaction
@@ -448,7 +456,7 @@ class PendingTransactionServiceSpec extends Specification {
         standardizedPendingTransactionService.updatePendingTransaction(pendingTransaction)
 
         then: "repository findByPendingTransactionIdOrderByTransactionDateDesc is called"
-        1 * mockPendingTransactionRepository.findByPendingTransactionIdOrderByTransactionDateDesc(999L) >> Optional.empty()
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, 999L) >> Optional.empty()
 
         and: "RuntimeException is thrown"
         thrown(RuntimeException)
