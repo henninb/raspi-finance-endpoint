@@ -5,6 +5,9 @@ import finance.domain.AccountType
 import finance.services.AccountService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -13,6 +16,8 @@ import java.sql.Timestamp
 import java.util.Optional
 
 class StandardizedAccountControllerSpec extends Specification {
+
+    private static final String TEST_OWNER = "test_owner"
 
     finance.repositories.AccountRepository accountRepository = Mock()
     finance.repositories.ValidationAmountRepository validationAmountRepository = Mock()
@@ -23,6 +28,11 @@ class StandardizedAccountControllerSpec extends Specification {
     AccountController controller = new AccountController(accountService)
 
     def setup() {
+        // Set SecurityContext so TenantContext.getCurrentOwner() works
+        def authorities = [new SimpleGrantedAuthority("USER")]
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
+
         def validator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([] as Set)
         }
@@ -33,11 +43,15 @@ class StandardizedAccountControllerSpec extends Specification {
         accountService.meterService = meterService
     }
 
+    def cleanup() {
+        SecurityContextHolder.clearContext()
+    }
+
     private static Account acct(Map args = [:]) {
         // Helper to build a valid Account with defaults
         new Account(
             accountId: (args.accountId ?: 0L) as Long,
-            owner: (args.owner ?: "test_owner") as String,
+            owner: (args.owner ?: TEST_OWNER) as String,
             accountNameOwner: (args.accountNameOwner ?: "acct_test") as String,
             accountType: (args.accountType ?: AccountType.Credit) as AccountType,
             activeStatus: (args.activeStatus ?: true) as Boolean,
@@ -56,8 +70,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         List<Account> accounts = [acct(accountNameOwner: "a_one"), acct(accountNameOwner: "a_two")]
         and:
-        // Controller calls service.updateTotalsForAllAccounts() then service.findAllActive()
-        accountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> accounts
+        accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> accounts
 
         when:
         ResponseEntity<List<Account>> response = controller.findAllActive()
@@ -70,7 +83,7 @@ class StandardizedAccountControllerSpec extends Specification {
 
     def "findAllActive returns empty list when none"() {
         given:
-        accountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> []
+        accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> []
 
         when:
         ResponseEntity<List<Account>> response = controller.findAllActive()
@@ -82,7 +95,7 @@ class StandardizedAccountControllerSpec extends Specification {
 
     def "findAllActive returns 500 on system error"() {
         given:
-        accountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> { throw new RuntimeException("db down") }
+        accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> { throw new RuntimeException("db down") }
 
         when:
         ResponseEntity<List<Account>> response = controller.findAllActive()
@@ -93,7 +106,7 @@ class StandardizedAccountControllerSpec extends Specification {
 
     def "findAllActive returns 500 on business error"() {
         given:
-        accountRepository.findByActiveStatusOrderByAccountNameOwner(true) >> { throw new IllegalStateException("bad state") }
+        accountRepository.findByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true) >> { throw new IllegalStateException("bad state") }
 
         when:
         ResponseEntity<List<Account>> response = controller.findAllActive()
@@ -107,7 +120,7 @@ class StandardizedAccountControllerSpec extends Specification {
         String id = "acct_alpha"
         Account acc = acct(accountNameOwner: id)
         and:
-        accountRepository.findByAccountNameOwner(id) >> Optional.of(acc)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(acc)
 
         when:
         ResponseEntity<Account> response = controller.findById(id)
@@ -121,7 +134,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         String id = "missing_acct"
         and:
-        accountRepository.findByAccountNameOwner(id) >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.empty()
 
         when:
         ResponseEntity<Account> response = controller.findById(id)
@@ -134,7 +147,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         String id = "acct_err"
         and:
-        accountRepository.findByAccountNameOwner(id) >> { throw new RuntimeException("boom") }
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<Account> response = controller.findById(id)
@@ -147,7 +160,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         String id = "acct_err2"
         and:
-        accountRepository.findByAccountNameOwner(id) >> { throw new IllegalStateException("bad") }
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> { throw new IllegalStateException("bad") }
 
         when:
         ResponseEntity<Account> response = controller.findById(id)
@@ -160,8 +173,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account toCreate = acct(accountId: 0L, accountNameOwner: "new_acct")
         and:
-        // Ensure not duplicate
-        accountRepository.findByAccountNameOwner("new_acct") >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "new_acct") >> Optional.empty()
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a.accountId = 42L; return a }
 
         when:
@@ -176,7 +188,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account dup = acct(accountId: 0L, accountNameOwner: "dup_acct")
         and:
-        accountRepository.findByAccountNameOwner("dup_acct") >> Optional.of(acct(accountNameOwner: "dup_acct"))
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "dup_acct") >> Optional.of(acct(accountNameOwner: "dup_acct"))
 
         when:
         ResponseEntity<Account> response = controller.save(dup)
@@ -193,7 +205,7 @@ class StandardizedAccountControllerSpec extends Specification {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
         accountService.validator = violatingValidator
-        accountRepository.findByAccountNameOwner("acct_bad") >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_bad") >> Optional.empty()
 
         when:
         ResponseEntity<Account> response = controller.save(invalid)
@@ -206,7 +218,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account toCreate = acct(accountId: 0L, accountNameOwner: "acct_sys")
         and:
-        accountRepository.findByAccountNameOwner("acct_sys") >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_sys") >> Optional.empty()
         accountRepository.saveAndFlush(_ as Account) >> { throw new RuntimeException("db") }
 
         when:
@@ -221,7 +233,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 9L, accountNameOwner: "acct_upd")
         Account patch = acct(accountId: 9L, accountNameOwner: "acct_upd", moniker: "5678")
         and:
-        accountRepository.findByAccountNameOwner("acct_upd") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_upd") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
 
         when:
@@ -236,7 +248,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account patch = acct(accountId: 888L, accountNameOwner: "nope")
         and:
-        accountRepository.findByAccountNameOwner("nope") >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "nope") >> Optional.empty()
 
         when:
         ResponseEntity<Account> response = controller.update("nope", patch)
@@ -250,7 +262,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 10L, accountNameOwner: "acct_val")
         Account patch = acct(accountId: 10L, accountNameOwner: "acct_val", moniker: "9999")
         and:
-        accountRepository.findByAccountNameOwner("acct_val") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_val") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new jakarta.validation.ConstraintViolationException("bad", [] as Set) }
 
         when:
@@ -265,7 +277,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 11L, accountNameOwner: "acct_conf")
         Account patch = acct(accountId: 11L, accountNameOwner: "acct_conf")
         and:
-        accountRepository.findByAccountNameOwner("acct_conf") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_conf") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
@@ -280,7 +292,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 12L, accountNameOwner: "acct_sys")
         Account patch = acct(accountId: 12L, accountNameOwner: "acct_sys")
         and:
-        accountRepository.findByAccountNameOwner("acct_sys") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_sys") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new RuntimeException("boom") }
 
         when:
@@ -295,8 +307,7 @@ class StandardizedAccountControllerSpec extends Specification {
         String id = "acct_del"
         Account existing = acct(accountId: 100L, accountNameOwner: id)
         and:
-        // First for controller pre-fetch, second for service delete path
-        2 * accountRepository.findByAccountNameOwner(id) >> Optional.of(existing)
+        2 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
         validationAmountRepository.findByAccountId(100L) >> []
 
         when:
@@ -311,7 +322,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         String id = "nope"
         and:
-        accountRepository.findByAccountNameOwner(id) >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.empty()
 
         when:
         ResponseEntity<Account> response = controller.deleteById(id)
@@ -325,7 +336,7 @@ class StandardizedAccountControllerSpec extends Specification {
         String id = "acct_err_del"
         Account existing = acct(accountNameOwner: id)
         and:
-        accountRepository.findByAccountNameOwner(id) >>> [Optional.of(existing), { throw new RuntimeException("db") }]
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >>> [Optional.of(existing), { throw new RuntimeException("db") }]
 
         when:
         ResponseEntity<Account> response = controller.deleteById(id)
@@ -339,7 +350,7 @@ class StandardizedAccountControllerSpec extends Specification {
         String id = "acct_bus_del"
         Account existing = acct(accountNameOwner: id)
         and:
-        2 * accountRepository.findByAccountNameOwner(id) >> Optional.of(existing)
+        2 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
         accountRepository.delete(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("conflict") }
 
         when:
@@ -352,9 +363,9 @@ class StandardizedAccountControllerSpec extends Specification {
     // ===== BUSINESS/LEGACY ENDPOINTS =====
     def "computeAccountTotals returns 200 with totals map"() {
         given:
-        accountRepository.sumOfAllTransactionsByTransactionState("cleared") >> new BigDecimal("1.00")
-        accountRepository.sumOfAllTransactionsByTransactionState("future") >> new BigDecimal("2.00")
-        accountRepository.sumOfAllTransactionsByTransactionState("outstanding") >> new BigDecimal("3.00")
+        accountRepository.sumOfAllTransactionsByTransactionStateAndOwner("cleared", TEST_OWNER) >> new BigDecimal("1.00")
+        accountRepository.sumOfAllTransactionsByTransactionStateAndOwner("future", TEST_OWNER) >> new BigDecimal("2.00")
+        accountRepository.sumOfAllTransactionsByTransactionStateAndOwner("outstanding", TEST_OWNER) >> new BigDecimal("3.00")
 
         when:
         ResponseEntity<Map<String, String>> response = controller.computeAccountTotals()
@@ -371,7 +382,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account existing = acct(accountId: 60L, accountNameOwner: "old")
         and:
-        accountRepository.findByAccountNameOwner("old") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "old") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
 
         when:
@@ -386,7 +397,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account existing = acct(accountId: 61L, accountNameOwner: "old")
         and:
-        accountRepository.findByAccountNameOwner("old") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "old") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
@@ -400,7 +411,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account existing = acct(accountId: 70L, accountNameOwner: "acct_d")
         and:
-        accountRepository.findByAccountNameOwner("acct_d") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_d") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
 
         when:
@@ -413,7 +424,7 @@ class StandardizedAccountControllerSpec extends Specification {
 
     def "deactivateAccount returns 404 when missing"() {
         given:
-        accountRepository.findByAccountNameOwner("missing") >> Optional.empty()
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "missing") >> Optional.empty()
 
         when:
         controller.deactivateAccount("missing")
@@ -427,7 +438,7 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account existing = acct(accountId: 80L, accountNameOwner: "acct_a", activeStatus: false)
         and:
-        accountRepository.findByAccountNameOwner("acct_a") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_a") >> Optional.of(existing)
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
 
         when:
@@ -449,7 +460,7 @@ class StandardizedAccountControllerSpec extends Specification {
 
     def "refreshValidationDates returns 500 on failure"() {
         given:
-        accountRepository.updateValidationDateForAllAccounts() >> { throw new RuntimeException("boom") }
+        accountRepository.updateValidationDateForAllAccountsByOwner(TEST_OWNER) >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<Void> response = controller.refreshValidationDates()

@@ -68,6 +68,7 @@ class SmartTransferBuilder {
 
     Transfer build() {
         Transfer transfer = new Transfer().with {
+            owner = this.testOwner
             transferId = 0L
             sourceAccount = this.sourceAccount
             destinationAccount = this.destinationAccount

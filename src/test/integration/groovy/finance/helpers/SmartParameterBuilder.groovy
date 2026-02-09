@@ -58,6 +58,7 @@ class SmartParameterBuilder {
 
     Parameter build() {
         Parameter parameter = new Parameter().with {
+            owner = this.testOwner
             parameterName = this.parameterName
             parameterValue = this.parameterValue
             activeStatus = this.activeStatus

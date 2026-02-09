@@ -32,6 +32,7 @@ class SmartDescriptionBuilder {
 
     Description build() {
         Description description = new Description().with {
+            owner = this.testOwner
             descriptionName = this.descriptionName
             activeStatus = this.activeStatus
             return it

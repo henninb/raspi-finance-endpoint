@@ -6,6 +6,9 @@ import finance.repositories.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
@@ -19,6 +22,8 @@ import java.util.Optional
 @SpringBootTest
 @ContextConfiguration(classes = Application)
 class ServiceLayerIntSpec extends Specification {
+
+    private static final String TEST_OWNER = "test-service-user"
 
     @Autowired
     TransactionService transactionService
@@ -51,9 +56,15 @@ class ServiceLayerIntSpec extends Specification {
     TransactionRepository transactionRepository
 
     void setup() {
+        // Set SecurityContext so TenantContext.getCurrentOwner() works
+        def authorities = [new SimpleGrantedAuthority("USER")]
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
+
         // Create commonly used test accounts
         Account checkingAccount = new Account(
             accountId: 0L,
+            owner: TEST_OWNER,
             accountNameOwner: "checking_brian",
             accountType: AccountType.Credit,
             activeStatus: true,
@@ -69,6 +80,7 @@ class ServiceLayerIntSpec extends Specification {
 
         Account savingsAccount = new Account(
             accountId: 0L,
+            owner: TEST_OWNER,
             accountNameOwner: "savings_brian",
             accountType: AccountType.Credit,
             activeStatus: true,
@@ -93,6 +105,10 @@ class ServiceLayerIntSpec extends Specification {
         } catch (Exception e) {
             // Account might already exist, ignore
         }
+    }
+
+    void cleanup() {
+        SecurityContextHolder.clearContext()
     }
 
     private static <T> T unwrapSuccess(def result) {

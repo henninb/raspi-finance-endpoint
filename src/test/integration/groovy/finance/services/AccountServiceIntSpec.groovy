@@ -5,6 +5,9 @@ import finance.domain.TransactionState
 import groovy.util.logging.Log
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Ignore
@@ -18,6 +21,16 @@ class AccountServiceIntSpec extends Specification {
 
     @Autowired
     AccountService accountService
+
+    void setup() {
+        def authorities = [new SimpleGrantedAuthority("USER")]
+        def auth = new UsernamePasswordAuthenticationToken("test-account-user", "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
+    }
+
+    void cleanup() {
+        SecurityContextHolder.clearContext()
+    }
 
     void 'computeTheGrandTotalForAllTransactions'() {
         when:

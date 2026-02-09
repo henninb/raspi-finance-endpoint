@@ -56,9 +56,9 @@ class TestDataManager {
         String categoryName = "test_category_${cleanOwner(testOwner)}".toLowerCase()
         try {
             jdbcTemplate.update("""
-                INSERT INTO t_category (category_name, active_status, date_updated, date_added)
-                VALUES (?, true, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-            """, categoryName)
+                INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added)
+                VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+            """, categoryName, testOwner)
         } catch (Exception e) {
             log.warn("Failed to create category ${categoryName} for integration test, possibly already exists: ${e.message}")
         }
@@ -72,12 +72,12 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO t_account(account_name_owner, account_type, active_status, moniker,
+                INSERT INTO t_account(account_name_owner, account_type, active_status, moniker, owner,
                                   date_closed, date_updated, date_added, validation_date, future, outstanding, cleared)
-                VALUES (?, ?, ?, '0000', '1969-12-31 18:00:00.000000',
+                VALUES (?, ?, ?, '0000', ?, '1969-12-31 18:00:00.000000',
                         '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330',
                         '2020-09-05 20:33:34.077330', 0.00, 0.00, 0.00)
-            """, accountName, accountType, activeStatus)
+            """, accountName, accountType, activeStatus, testOwner)
         } catch (Exception e) {
             // Account might already exist due to race conditions or incomplete cleanup
             log.warn("Failed to create account ${accountName} for integration test, possibly already exists: ${e.message}")
@@ -108,9 +108,9 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO t_category (category_name, active_status, date_updated, date_added)
-                VALUES (?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-            """, categoryName, activeStatus)
+                INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added)
+                VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+            """, categoryName, activeStatus, testOwner)
         } catch (Exception e) {
             // Category might already exist due to race conditions or incomplete cleanup
             log.warn("Failed to create category ${categoryName} for integration test, possibly already exists: ${e.message}")
@@ -143,9 +143,9 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO t_parameter (parameter_name, parameter_value, active_status, date_updated, date_added)
-            VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, parameterName, parameterValue, activeStatus)
+            INSERT INTO t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
+            VALUES (?, ?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, parameterName, parameterValue, activeStatus, testOwner)
 
         log.info("Created parameter: ${parameterName}=${parameterValue} (active: ${activeStatus}) for integration test owner: ${testOwner}")
         return parameterName
@@ -161,9 +161,9 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO t_description (description_name, active_status, date_updated, date_added)
-            VALUES (?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, descriptionName, activeStatus)
+            INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added)
+            VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, descriptionName, activeStatus, testOwner)
 
         log.info("Created description: ${descriptionName} (active: ${activeStatus}) for integration test owner: ${testOwner}")
         return descriptionName
@@ -187,13 +187,13 @@ class TestDataManager {
         jdbcTemplate.update("""
             INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
                                   description, category, amount, transaction_state, reoccurring_type,
-                                  active_status, notes, receipt_image_id, date_updated, date_added)
+                                  active_status, notes, receipt_image_id, owner, date_updated, date_added)
             VALUES ((select account_id from t_account where account_name_owner=?),
                     (select account_type from t_account where account_name_owner=?),
-                    ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null,
+                    ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
         """, accountName, accountName, accountName, guid, description,
-             categoryName, amount, transactionState)
+             categoryName, amount, transactionState, testOwner)
 
         log.info("Created integration test transaction ${guid} for ${accountName} with amount ${amount}")
         return guid
@@ -202,8 +202,8 @@ class TestDataManager {
     private void ensureAccountExists(String testOwner, String accountSuffix) {
         String accountName = "${accountSuffix}_${testOwner}".toLowerCase()
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM t_account WHERE account_name_owner = ?",
-            Integer.class, accountName
+            "SELECT COUNT(*) FROM t_account WHERE account_name_owner = ? AND owner = ?",
+            Integer.class, accountName, testOwner
         )
 
         if (count == 0) {
@@ -215,8 +215,8 @@ class TestDataManager {
     private void ensureCategoryExists(String testOwner, String categorySuffix) {
         String categoryName = "${categorySuffix}_${cleanOwner(testOwner)}".toLowerCase().replaceAll(/[^a-zA-Z0-9]/, '')
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM t_category WHERE category_name = ?",
-            Integer.class, categoryName
+            "SELECT COUNT(*) FROM t_category WHERE category_name = ? AND owner = ?",
+            Integer.class, categoryName, testOwner
         )
 
         if (count == 0) {
@@ -235,9 +235,9 @@ class TestDataManager {
 
         // Insert validation amount
         jdbcTemplate.update("""
-            INSERT INTO t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, date_updated, date_added)
-            VALUES (?, NOW(), true, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, accountId, transactionState, amount)
+            INSERT INTO t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, owner, date_updated, date_added)
+            VALUES (?, NOW(), true, ?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, accountId, transactionState, amount, testOwner)
 
         // Get the generated validation_id
         Long validationId = jdbcTemplate.queryForObject(

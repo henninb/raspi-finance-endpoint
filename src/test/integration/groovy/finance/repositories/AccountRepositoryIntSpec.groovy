@@ -317,4 +317,95 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         }
     }
 
+    // --- Owner-scoped repository method tests ---
+
+    void 'test findByOwnerAndAccountNameOwner returns account for correct owner'() {
+        given:
+        Account account = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("ownertest")
+            .asDebit()
+            .withMoniker("1300")
+            .withBalances(new BigDecimal("500.00"))
+            .buildAndValidate()
+
+        Account savedAccount = accountRepository.save(account)
+
+        when:
+        Optional<Account> foundAccount = accountRepository.findByOwnerAndAccountNameOwner(testOwner, savedAccount.accountNameOwner)
+        Optional<Account> wrongOwner = accountRepository.findByOwnerAndAccountNameOwner("nonexistent-owner", savedAccount.accountNameOwner)
+
+        then:
+        foundAccount.isPresent()
+        foundAccount.get().accountId == savedAccount.accountId
+        foundAccount.get().owner == testOwner
+        !wrongOwner.isPresent()
+    }
+
+    void 'test findByOwnerAndActiveStatus returns only accounts for owner'() {
+        given:
+        Account ownerAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("owneractive")
+            .asDebit()
+            .asActive()
+            .withMoniker("1400")
+            .withBalances(new BigDecimal("300.00"))
+            .buildAndValidate()
+
+        accountRepository.save(ownerAccount)
+
+        when:
+        List<Account> ownerAccounts = accountRepository.findByOwnerAndActiveStatus(testOwner, true)
+        List<Account> wrongOwnerAccounts = accountRepository.findByOwnerAndActiveStatus("nonexistent-owner", true)
+
+        then:
+        ownerAccounts.size() >= 1
+        ownerAccounts.every { it.owner == testOwner }
+        ownerAccounts.any { it.accountNameOwner == ownerAccount.accountNameOwner }
+        wrongOwnerAccounts.isEmpty()
+    }
+
+    void 'test findByOwnerAndActiveStatusAndAccountType filters by owner'() {
+        given:
+        Account creditAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("ownercredit")
+            .asCredit()
+            .asActive()
+            .withMoniker("1500")
+            .withBalances(new BigDecimal("750.00"))
+            .buildAndValidate()
+
+        accountRepository.save(creditAccount)
+
+        when:
+        List<Account> result = accountRepository.findByOwnerAndActiveStatusAndAccountType(testOwner, true, AccountType.Credit)
+        List<Account> wrongOwnerResult = accountRepository.findByOwnerAndActiveStatusAndAccountType("nonexistent-owner", true, AccountType.Credit)
+
+        then:
+        result.size() >= 1
+        result.every { it.owner == testOwner && it.accountType == AccountType.Credit && it.activeStatus }
+        result.any { it.accountNameOwner == creditAccount.accountNameOwner }
+        wrongOwnerResult.isEmpty()
+    }
+
+    void 'test findAccountsThatRequirePaymentByOwner filters by owner'() {
+        given:
+        Account payableAccount = SmartAccountBuilder.builderForOwner(testOwner)
+            .withUniqueAccountName("ownerpayable")
+            .asCredit()
+            .withOutstanding(new BigDecimal("200.00"))
+            .withMoniker("1600")
+            .buildAndValidate()
+
+        accountRepository.save(payableAccount)
+
+        when:
+        List<Account> result = accountRepository.findAccountsThatRequirePaymentByOwner(testOwner, true, AccountType.Credit)
+        List<Account> wrongOwnerResult = accountRepository.findAccountsThatRequirePaymentByOwner("nonexistent-owner", true, AccountType.Credit)
+
+        then:
+        result.size() >= 1
+        result.every { it.owner == testOwner }
+        result.any { it.accountNameOwner == payableAccount.accountNameOwner }
+        wrongOwnerResult.isEmpty()
+    }
 }

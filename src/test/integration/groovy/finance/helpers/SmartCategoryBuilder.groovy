@@ -52,6 +52,7 @@ class SmartCategoryBuilder {
 
     Category build() {
         Category category = new Category().with {
+            owner = this.testOwner
             categoryName = this.categoryName
             activeStatus = this.activeStatus
             return it

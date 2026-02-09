@@ -44,6 +44,11 @@ class BaseIntegrationSpec extends Specification {
         testDataManager.initializeIntegrationTestEnvironment(testOwner)
     }
 
+    def setup() {
+        // Set SecurityContext before each test so TenantContext.getCurrentOwner() returns testOwner
+        withUserRole(testOwner)
+    }
+
     def cleanupSpec() {
         log.info("Cleaning up integration test data for test owner: ${testOwner}")
         testDataManager.cleanupIntegrationTestsFor(testOwner)
