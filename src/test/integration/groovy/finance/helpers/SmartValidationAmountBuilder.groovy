@@ -26,6 +26,7 @@ class SmartValidationAmountBuilder {
 
     ValidationAmount build() {
         ValidationAmount va = new ValidationAmount().with {
+            owner = this.testOwner
             validationId = 0L
             accountId = this.accountId
             validationDate = this.validationDate

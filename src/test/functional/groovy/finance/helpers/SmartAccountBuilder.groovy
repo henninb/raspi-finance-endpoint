@@ -63,6 +63,7 @@ class SmartAccountBuilder {
 
     Account build() {
         Account account = new Account().with {
+            owner = this.testOwner
             accountNameOwner = this.accountNameOwner
             accountType = this.accountType
             activeStatus = this.activeStatus

@@ -9,6 +9,9 @@ import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
@@ -22,11 +25,27 @@ import java.sql.Timestamp
 @Transactional
 class FamilyMemberServiceIntSpec extends Specification {
 
+    private static final String TEST_OWNER = "owner_filter"
+
     @Autowired
     FamilyMemberService familyMemberService
 
     @Autowired
     FamilyMemberRepository familyMemberRepository
+
+    void setup() {
+        setSecurityContext(TEST_OWNER)
+    }
+
+    void cleanup() {
+        SecurityContextHolder.clearContext()
+    }
+
+    private void setSecurityContext(String username) {
+        def authorities = [new SimpleGrantedAuthority("USER")]
+        def auth = new UsernamePasswordAuthenticationToken(username, "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
+    }
 
     void 'test findAllActive returns active family members'() {
         given:
@@ -176,6 +195,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test findByOwner returns members for owner'() {
         given:
+        setSecurityContext("owner_filter")
         FamilyMember member1 = createFamilyMember("owner_filter", "Member1", FamilyRelationship.Spouse, true)
         FamilyMember member2 = createFamilyMember("owner_filter", "Member2", FamilyRelationship.Child, true)
         FamilyMember otherOwner = createFamilyMember("other_owner", "Member3", FamilyRelationship.Spouse, true)
@@ -194,6 +214,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test findByOwnerAndRelationship filters correctly'() {
         given:
+        setSecurityContext("owner_rel")
         FamilyMember spouse = createFamilyMember("owner_rel", "Spouse1", FamilyRelationship.Spouse, true)
         FamilyMember child1 = createFamilyMember("owner_rel", "Child1", FamilyRelationship.Child, true)
         FamilyMember child2 = createFamilyMember("owner_rel", "Child2", FamilyRelationship.Child, true)

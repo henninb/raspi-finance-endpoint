@@ -24,6 +24,7 @@ class SmartReceiptImageBuilder {
 
     ReceiptImage build() {
         ReceiptImage receiptImage = new ReceiptImage().with {
+            owner = this.testOwner
             receiptImageId = 0L
             transactionId = this.transactionId
             activeStatus = this.activeStatus

@@ -70,6 +70,7 @@ class SmartPaymentBuilder {
 
     Payment build() {
         Payment payment = new Payment().with {
+            owner = this.testOwner
             paymentId = 0L
             sourceAccount = this.sourceAccount
             destinationAccount = this.destinationAccount

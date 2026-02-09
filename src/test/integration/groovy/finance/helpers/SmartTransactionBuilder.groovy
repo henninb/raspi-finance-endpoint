@@ -136,6 +136,7 @@ class SmartTransactionBuilder {
 
     Transaction build() {
         Transaction transaction = new Transaction().with {
+            owner = this.testOwner
             guid = this.guid
             accountId = this.accountId
             accountType = this.accountType

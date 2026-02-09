@@ -122,6 +122,7 @@ class SmartMedicalExpenseBuilder {
 
     MedicalExpense build() {
         MedicalExpense medicalExpense = new MedicalExpense().with {
+            owner = this.testOwner
             transactionId = this.transactionId
             providerId = this.providerId
             familyMemberId = this.familyMemberId

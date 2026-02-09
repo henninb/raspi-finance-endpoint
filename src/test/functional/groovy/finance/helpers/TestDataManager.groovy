@@ -64,9 +64,9 @@ class TestDataManager {
         String categoryName = "test_category_${ownerClean}".toLowerCase()
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_category (category_name, active_status, date_updated, date_added)
-                VALUES (?, true, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-            """, categoryName)
+                INSERT INTO func.t_category (category_name, active_status, owner, date_updated, date_added)
+                VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+            """, categoryName, testOwner)
         } catch (Exception e) {
             log.warn("Skipping initial category insert, likely before migration: ${e.message}")
         }
@@ -80,11 +80,11 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
+                INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker, owner,
                                       date_closed, validation_date, date_updated, date_added)
-                VALUES (?, ?, ?, '0000', '1969-12-31 18:00:00.000000', '1970-01-01 00:00:00.000000',
+                VALUES (?, ?, ?, '0000', ?, '1969-12-31 18:00:00.000000', '1970-01-01 00:00:00.000000',
                         '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
-            """, accountName, accountType, activeStatus)
+            """, accountName, accountType, activeStatus, testOwner)
         } catch (Exception e) {
             // Account might already exist due to race conditions or incomplete cleanup
             log.warn("Failed to create account ${accountName}, possibly already exists: ${e.message}")
@@ -102,9 +102,9 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_category (category_name, active_status, date_updated, date_added)
-                VALUES (?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-            """, categoryName, activeStatus)
+                INSERT INTO func.t_category (category_name, active_status, owner, date_updated, date_added)
+                VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+            """, categoryName, activeStatus, testOwner)
         } catch (Exception e) {
             // Category might already exist due to race conditions or incomplete cleanup
             log.warn("Failed to create category ${categoryName}, possibly already exists: ${e.message}")
@@ -137,9 +137,9 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, date_updated, date_added)
-            VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, parameterName, parameterValue, activeStatus)
+            INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
+            VALUES (?, ?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, parameterName, parameterValue, activeStatus, testOwner)
 
         log.info("Created parameter: ${parameterName}=${parameterValue} (active: ${activeStatus}) for test owner: ${testOwner}")
         return parameterName
@@ -165,9 +165,9 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, date_updated, date_added)
-            VALUES (?, ?, true, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, parameterName, parameterValue)
+            INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
+            VALUES (?, ?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, parameterName, parameterValue, testOwner)
 
         log.info("Created payment account parameter: ${parameterName}=${parameterValue} for test owner: ${testOwner}")
         return parameterName
@@ -183,9 +183,9 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_description (description_name, active_status, date_updated, date_added)
-            VALUES (?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, descriptionName, activeStatus)
+            INSERT INTO func.t_description (description_name, active_status, owner, date_updated, date_added)
+            VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, descriptionName, activeStatus, testOwner)
 
         log.info("Created description: ${descriptionName} (active: ${activeStatus}) for test owner: ${testOwner}")
         return descriptionName
@@ -216,13 +216,13 @@ class TestDataManager {
         jdbcTemplate.update("""
             INSERT INTO func.t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
-                                      active_status, notes, receipt_image_id, date_updated, date_added)
+                                      active_status, notes, receipt_image_id, owner, date_updated, date_added)
             VALUES ((select account_id from func.t_account where account_name_owner=?),
                     (select account_type from func.t_account where account_name_owner=?),
-                    'expense', ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null,
+                    'expense', ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
         """, accountName, accountName, accountName, guid, description,
-             categoryName, amount, transactionState)
+             categoryName, amount, transactionState, testOwner)
 
         log.info("Created transaction ${guid} for ${accountName} with amount ${amount}")
         return guid
@@ -244,13 +244,13 @@ class TestDataManager {
         jdbcTemplate.update("""
             INSERT INTO func.t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
-                                      active_status, notes, receipt_image_id, date_updated, date_added, transaction_type)
+                                      active_status, notes, receipt_image_id, owner, date_updated, date_added, transaction_type)
             VALUES ((select account_id from func.t_account where account_name_owner=?),
                     (select account_type from func.t_account where account_name_owner=?),
-                    ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null,
+                    ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139', 'expense')
         """, accountName, accountName, accountName, guid, description,
-             categoryName, amount, transactionState)
+             categoryName, amount, transactionState, testOwner)
 
         log.info("Created transaction ${guid} for ${accountName} with description '${description}' and amount ${amount}")
         return guid
@@ -261,8 +261,8 @@ class TestDataManager {
         Integer count = 0
         try {
             count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM func.t_account WHERE account_name_owner = ?",
-                Integer.class, accountName
+                "SELECT COUNT(*) FROM func.t_account WHERE account_name_owner = ? AND owner = ?",
+                Integer.class, accountName, testOwner
             )
         } catch (Exception e) {
             log.warn("Account table not ready when ensuring account: ${e.message}")
@@ -281,8 +281,8 @@ class TestDataManager {
         Integer count = 0
         try {
             count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM func.t_category WHERE category_name = ?",
-                Integer.class, categoryName
+                "SELECT COUNT(*) FROM func.t_category WHERE category_name = ? AND owner = ?",
+                Integer.class, categoryName, testOwner
             )
         } catch (Exception e) {
             log.warn("Category table not ready when ensuring category: ${e.message}")
@@ -317,12 +317,12 @@ class TestDataManager {
         jdbcTemplate.update("""
             INSERT INTO func.t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
-                                      active_status, notes, receipt_image_id, date_updated, date_added, transaction_type)
+                                      active_status, notes, receipt_image_id, owner, date_updated, date_added, transaction_type)
             VALUES ((select account_id from func.t_account where account_name_owner=?),
-                    ?, ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null,
+                    ?, ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139', ?)
         """, accountName, accountType, accountName, guid, description,
-             categoryName, amount, transactionState, transactionType)
+             categoryName, amount, transactionState, testOwner, transactionType)
 
         log.info("Created complex transaction ${guid} for ${accountName}")
     }
@@ -339,28 +339,28 @@ class TestDataManager {
         jdbcTemplate.update("""
             INSERT INTO func.t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
-                                      active_status, notes, receipt_image_id, date_updated, date_added)
+                                      active_status, notes, receipt_image_id, owner, date_updated, date_added)
             VALUES ((select account_id from func.t_account where account_name_owner=?), 'credit', 'payment', ?, ?, '2020-12-31',
-                    'payment_source', ?, ?, 'cleared', 'undefined', true, '', null,
+                    'payment_source', ?, ?, 'cleared', 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
-        """, sourceAccount, sourceAccount, sourceGuid, "test_category_${testOwner}", amount.negate())
+        """, sourceAccount, sourceAccount, sourceGuid, "test_category_${testOwner}", amount.negate(), testOwner)
 
         // Destination transaction (debit account - positive amount)
         jdbcTemplate.update("""
             INSERT INTO func.t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
-                                      active_status, notes, receipt_image_id, date_updated, date_added)
+                                      active_status, notes, receipt_image_id, owner, date_updated, date_added)
             VALUES ((select account_id from func.t_account where account_name_owner=?), 'debit', 'payment', ?, ?, '2020-12-31',
-                    'payment_dest', ?, ?, 'cleared', 'undefined', true, '', null,
+                    'payment_dest', ?, ?, 'cleared', 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
-        """, destAccount, destAccount, destGuid, "test_category_${testOwner}", amount)
+        """, destAccount, destAccount, destGuid, "test_category_${testOwner}", amount, testOwner)
 
         // Create the payment record
         jdbcTemplate.update("""
             INSERT INTO func.t_payment (source_account, destination_account, transaction_date, amount,
-                                   guid_source, guid_destination, active_status, date_updated, date_added)
-            VALUES (?, ?, '2020-12-31', ?, ?, ?, true, '2021-01-09 14:26:26.739000', '2021-01-09 14:26:26.739000')
-        """, sourceAccount, destAccount, amount, sourceGuid, destGuid)
+                                   guid_source, guid_destination, active_status, owner, date_updated, date_added)
+            VALUES (?, ?, '2020-12-31', ?, ?, ?, true, ?, '2021-01-09 14:26:26.739000', '2021-01-09 14:26:26.739000')
+        """, sourceAccount, destAccount, amount, sourceGuid, destGuid, testOwner)
 
         log.info("Created payment from ${sourceAccount} to ${destAccount} with amount ${amount}")
     }
@@ -441,9 +441,9 @@ class TestDataManager {
 
         // Insert validation amount
         jdbcTemplate.update("""
-            INSERT INTO func.t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, date_updated, date_added)
-            VALUES (?, NOW(), true, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
-        """, accountId, transactionState, amount)
+            INSERT INTO func.t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, owner, date_updated, date_added)
+            VALUES (?, NOW(), true, ?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+        """, accountId, transactionState, amount, testOwner)
 
         // Get the generated validation_id
         Long validationId = jdbcTemplate.queryForObject(

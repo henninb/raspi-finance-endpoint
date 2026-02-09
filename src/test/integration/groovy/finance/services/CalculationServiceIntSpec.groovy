@@ -8,6 +8,9 @@ import finance.repositories.TransactionRepository
 import jakarta.persistence.EntityManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Propagation
@@ -23,6 +26,8 @@ import java.time.LocalDate
 @SpringBootTest
 @ContextConfiguration(classes = Application)
 class CalculationServiceIntSpec extends Specification {
+
+    private static final String TEST_OWNER = "test-calc-user"
 
     @Autowired
     CalculationService calculationService
@@ -47,9 +52,15 @@ class CalculationServiceIntSpec extends Specification {
 
     @Transactional
     void setup() {
+        // Set SecurityContext so TenantContext.getCurrentOwner() works
+        def authorities = [new SimpleGrantedAuthority("USER")]
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
+
         // Create test category first (required due to FK constraint)
         testCategory = new Category(
             0L,                           // categoryId
+            TEST_OWNER,                   // owner
             true,                         // activeStatus
             "testcategory"                // categoryName
         )
@@ -60,6 +71,7 @@ class CalculationServiceIntSpec extends Specification {
         // CRITICAL: Provide ALL constructor parameters when calling Kotlin data classes from Groovy
         testAccount = new Account(
             0L,                           // accountId
+            TEST_OWNER,                   // owner
             "calc_checking",              // accountNameOwner (must match pattern: ^[a-z-]*_[a-z]*$)
             AccountType.Credit,           // accountType
             true,                         // activeStatus
@@ -89,6 +101,7 @@ class CalculationServiceIntSpec extends Specification {
         if (testCategory != null && testCategory.categoryId != 0L) {
             categoryRepository.delete(testCategory)
         }
+        SecurityContextHolder.clearContext()
     }
 
     @Transactional
@@ -231,6 +244,7 @@ class CalculationServiceIntSpec extends Specification {
     private Transaction createTransaction(String description, double amount, TransactionState state) {
         // Use no-arg constructor and property assignment for Kotlin data class interop
         Transaction transaction = new Transaction()
+        transaction.owner = TEST_OWNER
         transaction.guid = UUID.randomUUID().toString()
         transaction.accountNameOwner = "calc_checking"
         transaction.accountId = testAccount.accountId
