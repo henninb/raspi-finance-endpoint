@@ -49,7 +49,7 @@ class DescriptionRepositoryIntSpec extends BaseIntegrationSpec {
         savedDescription.dateUpdated != null
 
         when:
-        Optional<Description> foundDescription = descriptionRepository.findByDescriptionName(savedDescription.descriptionName)
+        Optional<Description> foundDescription = descriptionRepository.findByOwnerAndDescriptionName(testOwner,savedDescription.descriptionName)
 
         then:
         foundDescription.isPresent()
@@ -66,7 +66,7 @@ class DescriptionRepositoryIntSpec extends BaseIntegrationSpec {
         Description savedDescription = descriptionRepository.save(description)
 
         when:
-        Optional<Description> foundDescription = descriptionRepository.findByDescriptionId(savedDescription.descriptionId)
+        Optional<Description> foundDescription = descriptionRepository.findByOwnerAndDescriptionId(testOwner,savedDescription.descriptionId)
 
         then:
         foundDescription.isPresent()
@@ -96,8 +96,8 @@ class DescriptionRepositoryIntSpec extends BaseIntegrationSpec {
         descriptionRepository.save(inactiveDescription)
 
         when:
-        List<Description> activeDescriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(true)
-        List<Description> inactiveDescriptions = descriptionRepository.findByActiveStatusOrderByDescriptionName(false)
+        List<Description> activeDescriptions = descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(testOwner,true)
+        List<Description> inactiveDescriptions = descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(testOwner,false)
 
         then:
         activeDescriptions.size() >= 2
@@ -184,7 +184,7 @@ class DescriptionRepositoryIntSpec extends BaseIntegrationSpec {
         updatedDescription.activeStatus == false
 
         when:
-        Optional<Description> refetchedDescription = descriptionRepository.findByDescriptionName(savedDescription.descriptionName)
+        Optional<Description> refetchedDescription = descriptionRepository.findByOwnerAndDescriptionName(testOwner,savedDescription.descriptionName)
 
         then:
         refetchedDescription.isPresent()
@@ -202,13 +202,13 @@ class DescriptionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         descriptionRepository.delete(savedDescription)
-        Optional<Description> deletedDescription = descriptionRepository.findByDescriptionName(savedDescription.descriptionName)
+        Optional<Description> deletedDescription = descriptionRepository.findByOwnerAndDescriptionName(testOwner,savedDescription.descriptionName)
 
         then:
         !deletedDescription.isPresent()
 
         when:
-        Optional<Description> deletedById = descriptionRepository.findByDescriptionId(savedDescription.descriptionId)
+        Optional<Description> deletedById = descriptionRepository.findByOwnerAndDescriptionId(testOwner,savedDescription.descriptionId)
 
         then:
         !deletedById.isPresent()
@@ -280,8 +280,8 @@ class DescriptionRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find non-existent description'() {
         when:
-        Optional<Description> nonExistentByName = descriptionRepository.findByDescriptionName("nonexistent_${testOwner}")
-        Optional<Description> nonExistentById = descriptionRepository.findByDescriptionId(-999L)
+        Optional<Description> nonExistentByName = descriptionRepository.findByOwnerAndDescriptionName(testOwner,"nonexistent_${testOwner}")
+        Optional<Description> nonExistentById = descriptionRepository.findByOwnerAndDescriptionId(testOwner,-999L)
 
         then:
         !nonExistentByName.isPresent()

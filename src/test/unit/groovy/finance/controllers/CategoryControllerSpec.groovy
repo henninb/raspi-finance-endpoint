@@ -4,10 +4,14 @@ import finance.domain.Category
 import finance.services.CategoryService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
 class StandardizedCategoryControllerSpec extends Specification {
+
+    static final String TEST_OWNER = "test_owner"
 
     finance.repositories.CategoryRepository categoryRepository = Mock()
     finance.repositories.TransactionRepository transactionRepository = Mock()
@@ -25,10 +29,18 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         categoryService.validator = validator
         categoryService.meterService = meterService
+
+        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
+        SecurityContextHolder.getContext().setAuthentication(auth)
+    }
+
+    def cleanup() {
+        SecurityContextHolder.clearContext()
     }
 
     private static Category cat(Long id = 0L, String name = "cat1", boolean active = true) {
-        new Category(categoryId: id, owner: "test_owner", categoryName: name, activeStatus: active)
+        new Category(categoryId: id, owner: TEST_OWNER, categoryName: name, activeStatus: active)
     }
 
     // ===== STANDARDIZED: findAllActive =====
@@ -37,8 +49,8 @@ class StandardizedCategoryControllerSpec extends Specification {
         Category c1 = cat(1L, "groceries")
         Category c2 = cat(2L, "utilities")
         and:
-        categoryRepository.findByActiveStatusOrderByCategoryName(true) >> [c1, c2]
-        transactionRepository.countByCategoryNameIn(["groceries", "utilities"]) >> [
+        categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true) >> [c1, c2]
+        transactionRepository.countByOwnerAndCategoryNameIn(TEST_OWNER, ["groceries", "utilities"]) >> [
             ["groceries", 3L] as Object[],
             ["utilities", 1L] as Object[]
         ]
@@ -55,21 +67,19 @@ class StandardizedCategoryControllerSpec extends Specification {
 
     def "findAllActive returns 404 when service returns NotFound"() {
         given:
-        // Force service to map to NotFound by throwing JPA EntityNotFoundException
-        categoryRepository.findByActiveStatusOrderByCategoryName(true) >> { throw new jakarta.persistence.EntityNotFoundException("none") }
+        categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true) >> { throw new jakarta.persistence.EntityNotFoundException("none") }
 
         when:
         ResponseEntity<?> response = controller.findAllActive()
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        // After standardization: empty body with status code only
         response.body == null
     }
 
     def "findAllActive returns 500 on system error"() {
         given:
-        categoryRepository.findByActiveStatusOrderByCategoryName(true) >> { throw new RuntimeException("db error") }
+        categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true) >> { throw new RuntimeException("db error") }
 
         when:
         ResponseEntity<?> response = controller.findAllActive()
@@ -83,8 +93,8 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category c = cat(10L, "groceries")
         and:
-        categoryRepository.findByCategoryName("groceries") >> Optional.of(c)
-        transactionRepository.countByCategoryName("groceries") >> 5L
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "groceries") >> Optional.of(c)
+        transactionRepository.countByOwnerAndCategoryName(TEST_OWNER, "groceries") >> 5L
 
         when:
         ResponseEntity<?> response = controller.findById("groceries")
@@ -97,20 +107,19 @@ class StandardizedCategoryControllerSpec extends Specification {
 
     def "findById returns 404 when missing"() {
         given:
-        categoryRepository.findByCategoryName("missing") >> Optional.empty()
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "missing") >> Optional.empty()
 
         when:
         ResponseEntity<?> response = controller.findById("missing")
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        // After standardization: empty body with status code only
         response.body == null
     }
 
     def "findById returns 500 on system error"() {
         given:
-        categoryRepository.findByCategoryName("boom") >> { throw new RuntimeException("boom") }
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "boom") >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<?> response = controller.findById("boom")
@@ -148,7 +157,6 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
-        // After standardization: empty body with status code only
         response.body == null
     }
 
@@ -163,7 +171,6 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.CONFLICT
-        // After standardization: empty body with status code only
         response.body == null
     }
 
@@ -186,7 +193,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         Category existing = cat(5L, "old")
         Category patch = cat(5L, "new")
         and:
-        categoryRepository.findByCategoryId(5L) >> Optional.of(existing)
+        categoryRepository.findByOwnerAndCategoryId(TEST_OWNER, 5L) >> Optional.of(existing)
         categoryRepository.saveAndFlush(_ as Category) >> { Category c -> c }
 
         when:
@@ -201,14 +208,13 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category patch = cat(999L, "nope")
         and:
-        categoryRepository.findByCategoryId(999L) >> Optional.empty()
+        categoryRepository.findByOwnerAndCategoryId(TEST_OWNER, 999L) >> Optional.empty()
 
         when:
         ResponseEntity<?> response = controller.update("nope", patch)
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        // After standardization: empty body with status code only
         response.body == null
     }
 
@@ -217,7 +223,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         Category existing = cat(6L, "uold")
         Category patch = cat(6L, "unew")
         and:
-        categoryRepository.findByCategoryId(6L) >> Optional.of(existing)
+        categoryRepository.findByOwnerAndCategoryId(TEST_OWNER, 6L) >> Optional.of(existing)
         categoryRepository.saveAndFlush(_ as Category) >> { throw new RuntimeException("db") }
 
         when:
@@ -232,7 +238,8 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category existing = cat(7L, "groceries")
         and:
-        2 * categoryRepository.findByCategoryName("groceries") >> Optional.of(existing)
+        2 * categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "groceries") >> Optional.of(existing)
+        transactionRepository.countByOwnerAndCategoryName(TEST_OWNER, "groceries") >> 0L
 
         when:
         ResponseEntity<?> response = controller.deleteById("groceries")
@@ -244,20 +251,19 @@ class StandardizedCategoryControllerSpec extends Specification {
 
     def "deleteById returns 404 when missing"() {
         given:
-        categoryRepository.findByCategoryName("missing") >> Optional.empty()
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "missing") >> Optional.empty()
 
         when:
         ResponseEntity<?> response = controller.deleteById("missing")
 
         then:
         response.statusCode == HttpStatus.NOT_FOUND
-        // After standardization: empty body with status code only
         response.body == null
     }
 
     def "deleteById returns 500 on system error during find"() {
         given:
-        categoryRepository.findByCategoryName("err") >> { throw new RuntimeException("db") }
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "err") >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<?> response = controller.deleteById("err")
@@ -270,7 +276,8 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category existing = cat(9L, "del")
         and:
-        2 * categoryRepository.findByCategoryName("del") >> Optional.of(existing)
+        2 * categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "del") >> Optional.of(existing)
+        transactionRepository.countByOwnerAndCategoryName(TEST_OWNER, "del") >> 0L
         categoryRepository.delete(_ as Category) >> { throw new RuntimeException("db") }
 
         when:
@@ -281,13 +288,11 @@ class StandardizedCategoryControllerSpec extends Specification {
     }
 
     // ===== DEFENSIVE PROGRAMMING TESTS =====
-    // These tests verify that our defensive else clauses handle unexpected service responses
 
     def "update handles null service response gracefully"() {
         given:
         Category input = cat(1L, "test")
         and:
-        // Mock the service to return null (simulating unexpected behavior)
         CategoryService mockService = Mock()
         mockService.update(_ as Category) >> null
         CategoryController controllerWithMockedService = new CategoryController(mockService)
@@ -297,12 +302,8 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        // After standardization: empty body with status code only (else clause handles null)
         response.body == null
     }
-
-    // Note: Testing "unexpected result types" is complex with Spock's type system
-    // The key success is that null-handling tests above prove our defensive else clauses work correctly
 
     def "save handles null service response gracefully"() {
         given:
@@ -317,7 +318,6 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        // After standardization: empty body with status code only (else clause handles null)
         response.body == null
     }
 
@@ -332,7 +332,6 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        // After standardization: empty body with status code only (else clause handles null)
         response.body == null
     }
 
@@ -347,7 +346,6 @@ class StandardizedCategoryControllerSpec extends Specification {
 
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        // After standardization: empty body with status code only (else clause handles null)
         response.body == null
     }
 }

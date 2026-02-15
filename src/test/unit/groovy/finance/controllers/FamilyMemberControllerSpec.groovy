@@ -10,6 +10,8 @@ import spock.lang.Subject
 
 class StandardizedFamilyMemberControllerSpec extends Specification {
 
+    private static final String TEST_OWNER = "test_owner"
+
     finance.repositories.FamilyMemberRepository familyRepo = Mock()
     FamilyMemberService service = new FamilyMemberService(familyRepo)
 
@@ -17,6 +19,9 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
     FamilyMemberController controller = new FamilyMemberController(service)
 
     def setup() {
+        def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
+
         def validator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([] as Set)
         }
@@ -25,6 +30,10 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
         service.validator = validator
         service.meterService = meterService
+    }
+
+    def cleanup() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext()
     }
 
     private static FamilyMember fm(Map args = [:]) {
@@ -46,7 +55,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         given:
         def list = [fm(familyMemberId: 1L), fm(familyMemberId: 2L)]
         and:
-        familyRepo.findByActiveStatusTrue() >> list
+        familyRepo.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> list
 
         when:
         ResponseEntity<List<FamilyMember>> response = controller.findAllActive()
@@ -58,7 +67,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
     def "findAllActive returns empty list and 200"() {
         given:
-        familyRepo.findByActiveStatusTrue() >> []
+        familyRepo.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> []
 
         when:
         ResponseEntity<List<FamilyMember>> response = controller.findAllActive()
@@ -70,7 +79,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
     def "findAllActive returns 500 on system error"() {
         given:
-        familyRepo.findByActiveStatusTrue() >> { throw new RuntimeException("db down") }
+        familyRepo.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> { throw new RuntimeException("db down") }
 
         when:
         ResponseEntity<List<FamilyMember>> response = controller.findAllActive()
@@ -82,9 +91,9 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
     // ===== STANDARDIZED: save =====
     def "save creates family member and returns 201"() {
         given:
-        FamilyMember input = fm(familyMemberId: 0L, owner: "alice", memberName: "bob")
+        FamilyMember input = fm(familyMemberId: 0L, owner: TEST_OWNER, memberName: "bob")
         and:
-        familyRepo.findByOwnerAndMemberName("alice", "bob") >> null
+        familyRepo.findByOwnerAndMemberName(TEST_OWNER, "bob") >> null
         familyRepo.save(_ as FamilyMember) >> { FamilyMember m -> m.familyMemberId = 99L; return m }
 
         when:
@@ -103,7 +112,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
         service.validator = violatingValidator
-        familyRepo.findByOwnerAndMemberName(_, _) >> null
+        familyRepo.findByOwnerAndMemberName(TEST_OWNER, _) >> null
 
         when:
         ResponseEntity<?> response = controller.save(invalid)
@@ -115,9 +124,9 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
     def "save returns 409 when duplicate"() {
         given:
-        FamilyMember dup = fm(owner: "alice", memberName: "bob")
+        FamilyMember dup = fm(owner: TEST_OWNER, memberName: "bob")
         and:
-        familyRepo.findByOwnerAndMemberName("alice", "bob") >> fm(owner: "alice", memberName: "bob")
+        familyRepo.findByOwnerAndMemberName(TEST_OWNER, "bob") >> fm(owner: TEST_OWNER, memberName: "bob")
 
         when:
         ResponseEntity<?> response = controller.save(dup)
@@ -129,9 +138,9 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
 
     def "save returns 500 on system error"() {
         given:
-        FamilyMember input = fm(familyMemberId: 0L, owner: "alice", memberName: "bob")
+        FamilyMember input = fm(familyMemberId: 0L, owner: TEST_OWNER, memberName: "bob")
         and:
-        familyRepo.findByOwnerAndMemberName("alice", "bob") >> null
+        familyRepo.findByOwnerAndMemberName(TEST_OWNER, "bob") >> null
         familyRepo.save(_ as FamilyMember) >> { throw new RuntimeException("db") }
 
         when:

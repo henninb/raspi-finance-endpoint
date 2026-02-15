@@ -118,7 +118,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         def result = standardizedFamilyMemberService.save(member)
 
         then: "should return ValidationError result"
-        1 * familyMemberRepositoryMock.findByOwnerAndMemberName(member.owner, member.memberName) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndMemberName(TEST_OWNER, member.memberName) >> null
         1 * validatorMock.validate(member) >> { throw new ConstraintViolationException("Validation failed", violations) }
         result instanceof ServiceResult.ValidationError
         result.errors.size() == 1
@@ -208,24 +208,24 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
 
     def "findByOwner should return family members when found"() {
         given: "existing family members for owner"
-        def members = [FamilyMemberBuilder.builder().withOwner("test_owner").build()]
+        def members = [FamilyMemberBuilder.builder().withOwner(TEST_OWNER).build()]
 
         when: "finding by owner"
-        def result = standardizedFamilyMemberService.findByOwner("test_owner")
+        def result = standardizedFamilyMemberService.findByOwner()
 
         then: "should return family members"
-        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue("test_owner") >> members
+        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> members
         result.size() == 1
-        result[0].owner == "test_owner"
+        result[0].owner == TEST_OWNER
         0 * _
     }
 
     def "findByOwner should return empty list when no family members found"() {
         when: "finding by owner with no family members"
-        def result = standardizedFamilyMemberService.findByOwner("unknown_owner")
+        def result = standardizedFamilyMemberService.findByOwner()
 
         then: "should return empty list"
-        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue("unknown_owner") >> []
+        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> []
         result.isEmpty()
         0 * _
     }
@@ -233,14 +233,14 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
     def "findByOwnerAndRelationship should return family members when found"() {
         given: "existing family members for owner and relationship"
         def members = [
-            FamilyMemberBuilder.builder().withOwner("test_owner").withRelationship(FamilyRelationship.Spouse).build()
+            FamilyMemberBuilder.builder().withOwner(TEST_OWNER).withRelationship(FamilyRelationship.Spouse).build()
         ]
 
         when: "finding by owner and relationship"
-        def result = standardizedFamilyMemberService.findByOwnerAndRelationship("test_owner", FamilyRelationship.Spouse)
+        def result = standardizedFamilyMemberService.findByOwnerAndRelationship(FamilyRelationship.Spouse)
 
         then: "should return family members"
-        1 * familyMemberRepositoryMock.findByOwnerAndRelationshipAndActiveStatusTrue("test_owner", FamilyRelationship.Spouse) >> members
+        1 * familyMemberRepositoryMock.findByOwnerAndRelationshipAndActiveStatusTrue(TEST_OWNER, FamilyRelationship.Spouse) >> members
         result.size() == 1
         result[0].relationship == FamilyRelationship.Spouse
         0 * _
@@ -332,13 +332,13 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
 
     def "findByOwner legacy method should return family member list"() {
         given: "existing family members for owner"
-        def members = [FamilyMemberBuilder.builder().withOwner("test_owner").build()]
+        def members = [FamilyMemberBuilder.builder().withOwner(TEST_OWNER).build()]
 
         when: "calling legacy findByOwner method"
-        def result = standardizedFamilyMemberService.findByOwner("test_owner")
+        def result = standardizedFamilyMemberService.findByOwner()
 
         then: "should return family member list"
-        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue("test_owner") >> members
+        1 * familyMemberRepositoryMock.findByOwnerAndActiveStatusTrue(TEST_OWNER) >> members
         result.size() == 1
         0 * _
     }
@@ -346,14 +346,14 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
     def "findByOwnerAndRelationship legacy method should return family member list"() {
         given: "existing family members for owner and relationship"
         def members = [
-            FamilyMemberBuilder.builder().withOwner("test_owner").withRelationship(FamilyRelationship.Child).build()
+            FamilyMemberBuilder.builder().withOwner(TEST_OWNER).withRelationship(FamilyRelationship.Child).build()
         ]
 
         when: "calling legacy findByOwnerAndRelationship method"
-        def result = standardizedFamilyMemberService.findByOwnerAndRelationship("test_owner", FamilyRelationship.Child)
+        def result = standardizedFamilyMemberService.findByOwnerAndRelationship(FamilyRelationship.Child)
 
         then: "should return family member list"
-        1 * familyMemberRepositoryMock.findByOwnerAndRelationshipAndActiveStatusTrue("test_owner", FamilyRelationship.Child) >> members
+        1 * familyMemberRepositoryMock.findByOwnerAndRelationshipAndActiveStatusTrue(TEST_OWNER, FamilyRelationship.Child) >> members
         result.size() == 1
         0 * _
     }
@@ -423,7 +423,7 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         standardizedFamilyMemberService.insertFamilyMember(member)
 
         then: "should throw ValidationException"
-        1 * familyMemberRepositoryMock.findByOwnerAndMemberName(member.owner, member.memberName) >> null
+        1 * familyMemberRepositoryMock.findByOwnerAndMemberName(TEST_OWNER, member.memberName) >> null
         1 * validatorMock.validate(member) >> { throw new ConstraintViolationException("Validation failed", violations) }
         thrown(jakarta.validation.ValidationException)
     }

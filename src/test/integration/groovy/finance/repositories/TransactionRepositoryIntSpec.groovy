@@ -42,7 +42,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
         repositoryContext = testFixtures.createRepositoryTestContext(testOwner)
         ownerAccountName = repositoryContext.primaryAccountName
         // Ensure account exists using repository; create via SmartBuilder if missing
-        Optional<Account> acc = accountRepository.findByAccountNameOwner(ownerAccountName)
+        Optional<Account> acc = accountRepository.findByOwnerAndAccountNameOwner(testOwner, ownerAccountName)
         if (!acc.isPresent()) {
             def acct = finance.helpers.SmartAccountBuilder.builderForOwner(testOwner)
                     .withAccountNameOwner(ownerAccountName)
@@ -78,7 +78,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
         saved.amount == new BigDecimal("100.50")
 
         when:
-        Optional<Transaction> found = transactionRepository.findByGuid(txn.guid)
+        Optional<Transaction> found = transactionRepository.findByOwnerAndGuid(testOwner, txn.guid)
 
         then:
         found.isPresent()
@@ -104,7 +104,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         List<Transaction> list = transactionRepository
-                .findByAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(ownerAccountName, true)
+                .findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(testOwner, ownerAccountName, true)
 
         then:
         list.size() >= 3
@@ -129,9 +129,9 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         List<Transaction> byCat = transactionRepository
-                .findByCategoryAndActiveStatusOrderByTransactionDateDesc("groceries", true)
+                .findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(testOwner, "groceries", true)
         List<Transaction> byDesc = transactionRepository
-                .findByDescriptionAndActiveStatusOrderByTransactionDateDesc("grocery shopping", true)
+                .findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(testOwner, "grocery shopping", true)
 
         then:
         byCat.any { it.category == "groceries" }
@@ -158,7 +158,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         List<Object[]> results = transactionRepository
-                .sumTotalsForActiveTransactionsByAccountNameOwner(ownerAccountName)
+                .sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(testOwner, ownerAccountName)
 
         then:
         results.size() >= 3
@@ -199,8 +199,8 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         List<Transaction> nonFuture = transactionRepository
-                .findByAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
-                        ownerAccountName, true, [TransactionState.Future])
+                .findByOwnerAndAccountNameOwnerAndActiveStatusAndTransactionStateNotInOrderByTransactionDateDesc(
+                        testOwner, ownerAccountName, true, [TransactionState.Future])
 
         then:
         nonFuture.size() >= 1
@@ -229,8 +229,8 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
         }
 
         when:
-        Long categoryCount = transactionRepository.countByCategoryName(uniqueCategory)
-        Long descriptionCount = transactionRepository.countByDescriptionName(uniqueDescription)
+        Long categoryCount = transactionRepository.countByOwnerAndCategoryName(testOwner, uniqueCategory)
+        Long descriptionCount = transactionRepository.countByOwnerAndDescriptionName(testOwner, uniqueDescription)
 
         then:
         categoryCount >= 3
@@ -332,7 +332,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         transactionRepository.delete(saved)
-        def found = transactionRepository.findByGuid(saved.guid)
+        def found = transactionRepository.findByOwnerAndGuid(testOwner, saved.guid)
 
         then:
         !found.isPresent()

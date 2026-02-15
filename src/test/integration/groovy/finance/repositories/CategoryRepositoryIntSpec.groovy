@@ -49,7 +49,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         savedCategory.dateUpdated != null
 
         when:
-        Optional<Category> foundCategory = categoryRepository.findByCategoryName(savedCategory.categoryName)
+        Optional<Category> foundCategory = categoryRepository.findByOwnerAndCategoryName(testOwner,savedCategory.categoryName)
 
         then:
         foundCategory.isPresent()
@@ -79,8 +79,8 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         categoryRepository.save(inactiveCategory)
 
         when:
-        List<Category> activeCategories = categoryRepository.findByActiveStatusOrderByCategoryName(true)
-        List<Category> inactiveCategories = categoryRepository.findByActiveStatusOrderByCategoryName(false)
+        List<Category> activeCategories = categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(testOwner,true)
+        List<Category> inactiveCategories = categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(testOwner,false)
 
         then:
         activeCategories.size() >= 2
@@ -111,7 +111,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         Category savedCategory = categoryRepository.save(category)
 
         when:
-        Optional<Category> foundCategory = categoryRepository.findByCategoryId(savedCategory.categoryId)
+        Optional<Category> foundCategory = categoryRepository.findByOwnerAndCategoryId(testOwner,savedCategory.categoryId)
 
         then:
         foundCategory.isPresent()
@@ -202,7 +202,7 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
         updatedCategory.activeStatus == false
 
         when:
-        Optional<Category> refetchedCategory = categoryRepository.findByCategoryName(savedCategory.categoryName)
+        Optional<Category> refetchedCategory = categoryRepository.findByOwnerAndCategoryName(testOwner,savedCategory.categoryName)
 
         then:
         refetchedCategory.isPresent()
@@ -236,13 +236,13 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         categoryRepository.delete(savedCategory)
-        Optional<Category> deletedCategory = categoryRepository.findByCategoryName(savedCategory.categoryName)
+        Optional<Category> deletedCategory = categoryRepository.findByOwnerAndCategoryName(testOwner,savedCategory.categoryName)
 
         then:
         !deletedCategory.isPresent()
 
         when:
-        Optional<Category> deletedById = categoryRepository.findByCategoryId(savedCategory.categoryId)
+        Optional<Category> deletedById = categoryRepository.findByOwnerAndCategoryId(testOwner,savedCategory.categoryId)
 
         then:
         !deletedById.isPresent()
@@ -310,8 +310,8 @@ class CategoryRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find non-existent category'() {
         when:
-        Optional<Category> nonExistentByName = categoryRepository.findByCategoryName("nonexistent_${testOwner}")
-        Optional<Category> nonExistentById = categoryRepository.findByCategoryId(-999L)
+        Optional<Category> nonExistentByName = categoryRepository.findByOwnerAndCategoryName(testOwner,"nonexistent_${testOwner}")
+        Optional<Category> nonExistentById = categoryRepository.findByOwnerAndCategoryId(testOwner,-999L)
 
         then:
         !nonExistentByName.isPresent()

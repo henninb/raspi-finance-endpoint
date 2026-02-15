@@ -28,7 +28,7 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
         saved.thumbnail != null && saved.thumbnail.length > 0
 
         when:
-        def found = receiptImageRepository.findByTransactionId(1L)
+        def found = receiptImageRepository.findByOwnerAndTransactionId(testOwner,1L)
 
         then:
         found.isPresent()
@@ -36,7 +36,7 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         receiptImageRepository.delete(saved)
-        def afterDelete = receiptImageRepository.findByTransactionId(1L)
+        def afterDelete = receiptImageRepository.findByOwnerAndTransactionId(testOwner,1L)
 
         then:
         !afterDelete.isPresent()

@@ -57,7 +57,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         repositoryContext = testFixtures.createRepositoryTestContext(testOwner)
         ownerAccountName = repositoryContext.primaryAccountName
         // Ensure account exists using repository; create via SmartBuilder if missing
-        Optional<Account> acc = accountRepository.findByAccountNameOwner(ownerAccountName)
+        Optional<Account> acc = accountRepository.findByOwnerAndAccountNameOwner(testOwner, ownerAccountName)
         if (!acc.isPresent()) {
             def acct = finance.helpers.SmartAccountBuilder.builderForOwner(testOwner)
                     .withAccountNameOwner(ownerAccountName)
@@ -96,7 +96,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         MedicalExpense savedExpense = createTestMedicalExpense(transactionId)
 
         when:
-        MedicalExpense found = medicalExpenseRepository.findByTransactionId(transactionId)
+        MedicalExpense found = medicalExpenseRepository.findByOwnerAndTransactionId(testOwner,transactionId)
 
         then:
         found != null
@@ -130,7 +130,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense3)
 
         when:
-        List<MedicalExpense> found = medicalExpenseRepository.findByServiceDateBetweenAndActiveStatusTrue(
+        List<MedicalExpense> found = medicalExpenseRepository.findByOwnerAndServiceDateBetweenAndActiveStatusTrue(testOwner,
             LocalDate.parse("2024-01-01"), LocalDate.parse("2024-02-28")
         )
 
@@ -159,7 +159,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense2)
 
         when:
-        List<MedicalExpense> found = medicalExpenseRepository.findByProviderIdAndActiveStatusTrue(null)
+        List<MedicalExpense> found = medicalExpenseRepository.findByOwnerAndProviderIdAndActiveStatusTrue(testOwner,null)
 
         then:
         found.size() >= 2
@@ -193,7 +193,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(submitted)
 
         when:
-        List<MedicalExpense> approvedExpenses = medicalExpenseRepository.findByClaimStatusAndActiveStatusTrue(ClaimStatus.Approved)
+        List<MedicalExpense> approvedExpenses = medicalExpenseRepository.findByOwnerAndClaimStatusAndActiveStatusTrue(testOwner,ClaimStatus.Approved)
 
         then:
         approvedExpenses.size() >= 2
@@ -220,7 +220,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(inNetwork)
 
         when:
-        List<MedicalExpense> found = medicalExpenseRepository.findByIsOutOfNetworkAndActiveStatusTrue(true)
+        List<MedicalExpense> found = medicalExpenseRepository.findByOwnerAndIsOutOfNetworkAndActiveStatusTrue(testOwner,true)
 
         then:
         found.size() >= 1
@@ -241,7 +241,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense)
 
         when:
-        MedicalExpense found = medicalExpenseRepository.findByClaimNumberAndActiveStatusTrue(uniqueClaimNumber)
+        MedicalExpense found = medicalExpenseRepository.findByOwnerAndClaimNumberAndActiveStatusTrue(testOwner,uniqueClaimNumber)
 
         then:
         found != null
@@ -269,7 +269,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense2024_2)
 
         when:
-        BigDecimal total = medicalExpenseRepository.getTotalBilledAmountByYear(2024)
+        BigDecimal total = medicalExpenseRepository.getTotalBilledAmountByOwnerAndYear(testOwner,2024)
 
         then:
         total >= new BigDecimal("800.00")  // At least our test data
@@ -299,7 +299,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense2)
 
         when:
-        BigDecimal total = medicalExpenseRepository.getTotalPatientResponsibilityByYear(2024)
+        BigDecimal total = medicalExpenseRepository.getTotalPatientResponsibilityByOwnerAndYear(testOwner,2024)
 
         then:
         total >= new BigDecimal("250.00")  // At least our test data
@@ -342,7 +342,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(zeroBalance)
 
         when:
-        List<MedicalExpense> outstanding = medicalExpenseRepository.findOutstandingPatientBalances()
+        List<MedicalExpense> outstanding = medicalExpenseRepository.findOutstandingPatientBalancesByOwner(testOwner)
 
         then:
         outstanding.size() >= 1
@@ -378,7 +378,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(paidClaim)
 
         when:
-        List<MedicalExpense> openClaims = medicalExpenseRepository.findActiveOpenClaims()
+        List<MedicalExpense> openClaims = medicalExpenseRepository.findActiveOpenClaimsByOwner(testOwner)
 
         then:
         openClaims.size() >= 2
@@ -397,7 +397,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         MedicalExpense saved = medicalExpenseRepository.save(expense)
 
         when:
-        int updatedRows = medicalExpenseRepository.updateClaimStatus(saved.medicalExpenseId, ClaimStatus.Approved)
+        int updatedRows = medicalExpenseRepository.updateClaimStatusByOwner(testOwner, saved.medicalExpenseId, ClaimStatus.Approved)
 
         then:
         updatedRows == 1
@@ -416,7 +416,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         MedicalExpense saved = medicalExpenseRepository.save(expense)
 
         when:
-        int updatedRows = medicalExpenseRepository.softDeleteByMedicalExpenseId(saved.medicalExpenseId)
+        int updatedRows = medicalExpenseRepository.softDeleteByOwnerAndMedicalExpenseId(testOwner, saved.medicalExpenseId)
 
         then:
         updatedRows == 1
@@ -451,7 +451,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense3)
 
         when:
-        List<MedicalExpense> found = medicalExpenseRepository.findByProcedureCodeAndActiveStatusTrue("99396")
+        List<MedicalExpense> found = medicalExpenseRepository.findByOwnerAndProcedureCodeAndActiveStatusTrue(testOwner,"99396")
 
         then:
         found.size() >= 2
@@ -485,7 +485,7 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
         medicalExpenseRepository.save(expense3)
 
         when:
-        Long count = medicalExpenseRepository.countByClaimStatusAndActiveStatusTrue(ClaimStatus.Approved)
+        Long count = medicalExpenseRepository.countByOwnerAndClaimStatusAndActiveStatusTrue(testOwner,ClaimStatus.Approved)
 
         then:
         count >= 2L
