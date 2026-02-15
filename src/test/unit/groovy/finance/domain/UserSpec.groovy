@@ -62,7 +62,7 @@ class UserSpec extends Specification {
         parsedUser.firstName == "john"
         parsedUser.lastName == "doe"
         parsedUser.username == "johndoe"
-        parsedUser.password == "password123"
+        parsedUser.password == null  // password is @get:JsonIgnore, excluded from serialization
     }
 
     def "User - properties can be modified"() {

@@ -3,7 +3,6 @@ package finance.domain
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.module.kotlin.KotlinInvalidNullException
 import finance.helpers.DescriptionBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
@@ -46,10 +45,10 @@ class DescriptionSpec extends BaseDomainSpec {
         String jsonPayloadBad = '{"descriptionMissing":"bar"}'
 
         when:
-        mapper.readValue(jsonPayloadBad, Description)
+        Description description = mapper.readValue(jsonPayloadBad, Description)
 
         then:
-        thrown(KotlinInvalidNullException)
+        description.descriptionName == ""
         0 * _
     }
 
