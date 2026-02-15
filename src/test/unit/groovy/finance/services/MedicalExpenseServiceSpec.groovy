@@ -436,7 +436,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def claimStatus = ClaimStatus.Processing
 
         when:
-        medicalExpenseRepositoryMock.updateClaimStatus(expenseId, claimStatus) >> 1
+        medicalExpenseRepositoryMock.updateClaimStatusByOwner(TEST_OWNER, expenseId, claimStatus) >> 1
         def result = standardizedMedicalExpenseService.updateClaimStatus(expenseId, claimStatus)
 
         then:
@@ -449,7 +449,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def claimStatus = ClaimStatus.Processing
 
         when:
-        medicalExpenseRepositoryMock.updateClaimStatus(expenseId, claimStatus) >> 0
+        medicalExpenseRepositoryMock.updateClaimStatusByOwner(TEST_OWNER, expenseId, claimStatus) >> 0
         def result = standardizedMedicalExpenseService.updateClaimStatus(expenseId, claimStatus)
 
         then:
@@ -485,7 +485,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def year = 2024
 
         when:
-        medicalExpenseRepositoryMock.getTotalBilledAmountByYear(year) >> new BigDecimal("1500.00")
+        medicalExpenseRepositoryMock.getTotalBilledAmountByOwnerAndYear(TEST_OWNER, year) >> new BigDecimal("1500.00")
         def result = standardizedMedicalExpenseService.getTotalBilledAmountByYear(year)
 
         then:
@@ -497,7 +497,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         def year = 2024
 
         when:
-        medicalExpenseRepositoryMock.getTotalBilledAmountByYear(year) >> null
+        medicalExpenseRepositoryMock.getTotalBilledAmountByOwnerAndYear(TEST_OWNER, year) >> null
         def result = standardizedMedicalExpenseService.getTotalBilledAmountByYear(year)
 
         then:

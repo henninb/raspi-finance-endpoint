@@ -9,16 +9,25 @@ import java.math.BigDecimal
 
 class CalculationServiceSpec extends Specification {
 
+    protected static final String TEST_OWNER = "test_owner"
+
     def repo = Mock(TransactionRepository)
 
     CalculationService service
     def registry
 
     def setup() {
+        def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
+
         service = new CalculationService(repo)
         // Provide a meter service with a real registry for counter assertions
         registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         service.meterService = new MeterService(registry, null)
+    }
+
+    def cleanup() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext()
     }
 
     private static Transaction tx(TransactionState state, BigDecimal amount) {
@@ -119,7 +128,7 @@ class CalculationServiceSpec extends Specification {
         ]
 
         and:
-        repo.sumTotalsForActiveTransactionsByAccountNameOwner(account) >> rows
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> rows
 
         when:
         def totals = service.calculateActiveTotalsByAccountNameOwner(account)
@@ -140,7 +149,7 @@ class CalculationServiceSpec extends Specification {
     def "calculateActiveTotalsByAccountNameOwner increments caught counter on exception"() {
         given:
         def account = 'owner_error'
-        repo.sumTotalsForActiveTransactionsByAccountNameOwner(account) >> { throw new RuntimeException('boom') }
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> { throw new RuntimeException('boom') }
 
         when:
         service.calculateActiveTotalsByAccountNameOwner(account)
@@ -166,7 +175,7 @@ class CalculationServiceSpec extends Specification {
 
         and: 'repository throws a SQLException inside the resilient operation'
         def account = 'resilience_case'
-        repo.sumTotalsForActiveTransactionsByAccountNameOwner(account) >> { throw new java.sql.SQLException('db down') }
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> { throw new java.sql.SQLException('db down') }
 
         when:
         service.calculateActiveTotalsByAccountNameOwner(account)
