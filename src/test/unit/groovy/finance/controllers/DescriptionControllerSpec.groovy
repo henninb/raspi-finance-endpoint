@@ -4,10 +4,14 @@ import finance.domain.Description
 import finance.services.DescriptionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
 class StandardizedDescriptionControllerSpec extends Specification {
+
+    static final String TEST_OWNER = "test_owner"
 
     finance.repositories.DescriptionRepository descriptionRepository = Mock()
     finance.repositories.TransactionRepository transactionRepository = Mock()
@@ -25,10 +29,18 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
         descriptionService.validator = validator
         descriptionService.meterService = meterService
+
+        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
+        SecurityContextHolder.getContext().setAuthentication(auth)
+    }
+
+    def cleanup() {
+        SecurityContextHolder.clearContext()
     }
 
     private static Description desc(Long id = 0L, String name = "alpha", boolean active = true) {
-        new Description(descriptionId: id, owner: "test_owner", descriptionName: name, activeStatus: active)
+        new Description(descriptionId: id, owner: TEST_OWNER, descriptionName: name, activeStatus: active)
     }
 
     // ===== STANDARDIZED: findAllActive =====
@@ -37,8 +49,8 @@ class StandardizedDescriptionControllerSpec extends Specification {
         Description d1 = desc(1L, "first")
         Description d2 = desc(2L, "second")
         and:
-        descriptionRepository.findByActiveStatusOrderByDescriptionName(true) >> [d1, d2]
-        transactionRepository.countByDescriptionNameIn(["first", "second"]) >> [
+        descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> [d1, d2]
+        transactionRepository.countByOwnerAndDescriptionNameIn(TEST_OWNER, ["first", "second"]) >> [
             ["first", 4L] as Object[],
             ["second", 2L] as Object[]
         ]
@@ -54,21 +66,19 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
     def "findAllActive returns empty list when none"() {
         given:
-        descriptionRepository.findByActiveStatusOrderByDescriptionName(true) >> []
+        descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> []
 
         when:
         ResponseEntity<List<Description>> response = controller.findAllActive()
 
         then:
-        // Controller currently returns 404 on NotFound, but service returns Success with empty list
-        // So expect 200 with empty list
         response.statusCode == HttpStatus.OK
         response.body.isEmpty()
     }
 
     def "findAllActive returns 500 on system error"() {
         given:
-        descriptionRepository.findByActiveStatusOrderByDescriptionName(true) >> { throw new RuntimeException("db down") }
+        descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> { throw new RuntimeException("db down") }
 
         when:
         ResponseEntity<List<Description>> response = controller.findAllActive()
@@ -82,8 +92,8 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         Description d = desc(10L, "target")
         and:
-        descriptionRepository.findByDescriptionName("target") >> Optional.of(d)
-        transactionRepository.countByDescriptionName("target") >> 7L
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> Optional.of(d)
+        transactionRepository.countByOwnerAndDescriptionName(TEST_OWNER, "target") >> 7L
 
         when:
         ResponseEntity<Description> response = controller.findById("target")
@@ -96,7 +106,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
     def "findById returns 404 when missing"() {
         given:
-        descriptionRepository.findByDescriptionName("missing") >> Optional.empty()
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "missing") >> Optional.empty()
 
         when:
         ResponseEntity<Description> response = controller.findById("missing")
@@ -107,7 +117,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
     def "findById returns 500 on system error"() {
         given:
-        descriptionRepository.findByDescriptionName("err") >> { throw new RuntimeException("boom") }
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "err") >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<Description> response = controller.findById("err")
@@ -179,7 +189,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         Description existing = desc(5L, "old")
         Description patch = desc(5L, "new")
         and:
-        descriptionRepository.findByDescriptionId(5L) >> Optional.of(existing)
+        descriptionRepository.findByOwnerAndDescriptionId(TEST_OWNER, 5L) >> Optional.of(existing)
         descriptionRepository.saveAndFlush(_ as Description) >> { Description x -> x }
 
         when:
@@ -194,7 +204,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         Description patch = desc(777L, "nope")
         and:
-        descriptionRepository.findByDescriptionId(777L) >> Optional.empty()
+        descriptionRepository.findByOwnerAndDescriptionId(TEST_OWNER, 777L) >> Optional.empty()
 
         when:
         ResponseEntity<Description> response = controller.update("nope", patch)
@@ -208,7 +218,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         Description existing = desc(6L, "oldv")
         Description patch = desc(6L, "newv")
         and:
-        descriptionRepository.findByDescriptionId(6L) >> Optional.of(existing)
+        descriptionRepository.findByOwnerAndDescriptionId(TEST_OWNER, 6L) >> Optional.of(existing)
         descriptionRepository.saveAndFlush(_ as Description) >> { throw new jakarta.validation.ConstraintViolationException("bad", [] as Set) }
 
         when:
@@ -223,7 +233,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         Description existing = desc(7L, "oldb")
         Description patch = desc(7L, "newb")
         and:
-        descriptionRepository.findByDescriptionId(7L) >> Optional.of(existing)
+        descriptionRepository.findByOwnerAndDescriptionId(TEST_OWNER, 7L) >> Optional.of(existing)
         descriptionRepository.saveAndFlush(_ as Description) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
@@ -238,7 +248,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         Description existing = desc(8L, "olds")
         Description patch = desc(8L, "news")
         and:
-        descriptionRepository.findByDescriptionId(8L) >> Optional.of(existing)
+        descriptionRepository.findByOwnerAndDescriptionId(TEST_OWNER, 8L) >> Optional.of(existing)
         descriptionRepository.saveAndFlush(_ as Description) >> { throw new RuntimeException("db") }
 
         when:
@@ -253,7 +263,8 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         Description existing = desc(8L, "gone")
         and:
-        2 * descriptionRepository.findByDescriptionName("gone") >> Optional.of(existing)
+        2 * descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "gone") >> Optional.of(existing)
+        transactionRepository.countByOwnerAndDescriptionName(TEST_OWNER, "gone") >> 0L
 
         when:
         ResponseEntity<Description> response = controller.deleteById("gone")
@@ -265,7 +276,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
     def "deleteById returns 404 when missing"() {
         given:
-        descriptionRepository.findByDescriptionName("missing") >> Optional.empty()
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "missing") >> Optional.empty()
 
         when:
         ResponseEntity<Description> response = controller.deleteById("missing")
@@ -276,7 +287,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
     def "deleteById returns 500 on system error during find"() {
         given:
-        descriptionRepository.findByDescriptionName("errs") >> { throw new RuntimeException("db") }
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "errs") >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<Description> response = controller.deleteById("errs")
@@ -289,7 +300,8 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         Description existing = desc(9L, "delb")
         and:
-        2 * descriptionRepository.findByDescriptionName("delb") >> Optional.of(existing)
+        2 * descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "delb") >> Optional.of(existing)
+        transactionRepository.countByOwnerAndDescriptionName(TEST_OWNER, "delb") >> 0L
         descriptionRepository.delete(_ as Description) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:

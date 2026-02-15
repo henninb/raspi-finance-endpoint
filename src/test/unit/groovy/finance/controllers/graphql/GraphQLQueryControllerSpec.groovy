@@ -384,8 +384,8 @@ class GraphQLQueryControllerSpec extends Specification {
     def "parameters should return list from service when successful"() {
         given: "a list of parameters"
         def parameters = [
-            new Parameter(1L, "param1", "value1", true),
-            new Parameter(2L, "param2", "value2", true)
+            new Parameter(1L, "", "param1", "value1", true),
+            new Parameter(2L, "", "param2", "value2", true)
         ]
 
         when: "parameters is called"
@@ -412,7 +412,7 @@ class GraphQLQueryControllerSpec extends Specification {
 
     def "parameter should return single parameter when present"() {
         given: "a parameter"
-        def parameter = new Parameter(123L, "test_param", "test_value", true)
+        def parameter = new Parameter(123L, "", "test_param", "test_value", true)
 
         when: "parameter is called"
         def result = controller.parameter(123L)
@@ -451,8 +451,8 @@ class GraphQLQueryControllerSpec extends Specification {
     def "validationAmounts should return list from service when successful"() {
         given: "a list of validation amounts"
         def validationAmounts = [
-            new ValidationAmount(1L, 123L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Cleared, new BigDecimal("100.00")),
-            new ValidationAmount(2L, 124L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Outstanding, new BigDecimal("200.00"))
+            new ValidationAmount(1L, "", 123L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Cleared, new BigDecimal("100.00")),
+            new ValidationAmount(2L, "", 124L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Outstanding, new BigDecimal("200.00"))
         ]
 
         when: "validationAmounts is called"
@@ -479,7 +479,7 @@ class GraphQLQueryControllerSpec extends Specification {
 
     def "validationAmount should return single validation amount when present"() {
         given: "a validation amount"
-        def validationAmount = new ValidationAmount(123L, 456L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Cleared, new BigDecimal("150.00"))
+        def validationAmount = new ValidationAmount(123L, "", 456L, null, new java.sql.Timestamp(System.currentTimeMillis()), true, finance.domain.TransactionState.Cleared, new BigDecimal("150.00"))
 
         when: "validationAmount is called"
         def result = controller.validationAmount(123L)

@@ -217,10 +217,10 @@ class GraphQLMutationControllerSpec extends Specification {
 
     def "createParameter should create parameter successfully"() {
         given: "a valid parameter"
-        def parameter = new Parameter(0L, "test_param", "test_value", true)
+        def parameter = new Parameter(0L, "", "test_param", "test_value", true)
 
         and: "a saved parameter"
-        def savedParameter = new Parameter(123L, "test_param", "test_value", true)
+        def savedParameter = new Parameter(123L, "", "test_param", "test_value", true)
 
         when: "createParameter is called"
         def result = controller.createParameter(parameter)
@@ -239,7 +239,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
     def "createParameter should handle validation errors"() {
         given: "an invalid parameter"
-        def parameter = new Parameter(0L, "", "test_value", true)
+        def parameter = new Parameter(0L, "", "", "test_value", true)
 
         when: "createParameter is called"
         controller.createParameter(parameter)
@@ -253,7 +253,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
     def "updateParameter should update parameter successfully"() {
         given: "an existing parameter"
-        def parameter = new Parameter(123L, "test_param", "updated_value", true)
+        def parameter = new Parameter(123L, "", "test_param", "updated_value", true)
 
         when: "updateParameter is called"
         def result = controller.updateParameter(parameter)
@@ -272,7 +272,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
     def "updateParameter should handle not found errors"() {
         given: "a non-existent parameter"
-        def parameter = new Parameter(999L, "test_param", "test_value", true)
+        def parameter = new Parameter(999L, "", "test_param", "test_value", true)
 
         when: "updateParameter is called"
         controller.updateParameter(parameter)

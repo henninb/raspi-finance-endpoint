@@ -4,10 +4,14 @@ import finance.domain.Parameter
 import finance.services.ParameterService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
 class StandardizedParameterControllerSpec extends Specification {
+
+    static final String TEST_OWNER = "test_owner"
 
     finance.repositories.ParameterRepository parameterRepository = Mock()
     ParameterService parameterService = new ParameterService(parameterRepository)
@@ -24,15 +28,27 @@ class StandardizedParameterControllerSpec extends Specification {
 
         parameterService.validator = validator
         parameterService.meterService = meterService
+
+        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
+        SecurityContextHolder.getContext().setAuthentication(auth)
+    }
+
+    def cleanup() {
+        SecurityContextHolder.clearContext()
+    }
+
+    private static Parameter param(Long id = 0L, String name = "p1", String value = "v1", boolean active = true) {
+        new Parameter(parameterId: id, owner: TEST_OWNER, parameterName: name, parameterValue: value, activeStatus: active)
     }
 
     // ===== STANDARDIZED ENDPOINTS =====
 
     def "findAllActive returns list when present"() {
         given:
-        List<Parameter> params = [ new Parameter(1L, "p1", "v1", true), new Parameter(2L, "p2", "v2", true) ]
+        List<Parameter> params = [param(1L, "p1", "v1"), param(2L, "p2", "v2")]
         and:
-        parameterRepository.findByActiveStatusIsTrue() >> params
+        parameterRepository.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> params
 
         when:
         ResponseEntity<?> response = controller.findAllActive()
@@ -45,7 +61,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "findAllActive returns empty list when none"() {
         given:
-        parameterRepository.findByActiveStatusIsTrue() >> []
+        parameterRepository.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> []
 
         when:
         ResponseEntity<?> response = controller.findAllActive()
@@ -57,7 +73,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "findAllActive returns empty list when service NotFound"() {
         given:
-        parameterRepository.findByActiveStatusIsTrue() >> { throw new jakarta.persistence.EntityNotFoundException("none") }
+        parameterRepository.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> { throw new jakarta.persistence.EntityNotFoundException("none") }
 
         when:
         ResponseEntity<?> response = controller.findAllActive()
@@ -69,7 +85,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "findAllActive returns 500 on system error"() {
         given:
-        parameterRepository.findByActiveStatusIsTrue() >> { throw new RuntimeException("db") }
+        parameterRepository.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<?> response = controller.findAllActive()
@@ -80,9 +96,9 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "findById returns parameter when found"() {
         given:
-        Parameter p = new Parameter(10L, "alpha", "one", true)
+        Parameter p = param(10L, "alpha", "one")
         and:
-        parameterRepository.findByParameterName("alpha") >> Optional.of(p)
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "alpha") >> Optional.of(p)
 
         when:
         ResponseEntity<?> response = controller.findById("alpha")
@@ -95,7 +111,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "findById returns 404 with error body when missing"() {
         given:
-        parameterRepository.findByParameterName("beta") >> Optional.empty()
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "beta") >> Optional.empty()
 
         when:
         ResponseEntity<?> response = controller.findById("beta")
@@ -107,7 +123,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "findById returns 500 on system error"() {
         given:
-        parameterRepository.findByParameterName("err") >> { throw new RuntimeException("boom") }
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "err") >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<?> response = controller.findById("err")
@@ -119,7 +135,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "save creates parameter and returns 201"() {
         given:
-        Parameter input = new Parameter(0L, "gamma", "three", true)
+        Parameter input = param(0L, "gamma", "three")
         and:
         parameterRepository.saveAndFlush(_ as Parameter) >> { Parameter x -> x.parameterId = 99L; return x }
 
@@ -133,7 +149,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "save handles validation errors with 400"() {
         given:
-        Parameter invalid = new Parameter(0L, "", "", true)
+        Parameter invalid = param(0L, "", "")
         and:
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
@@ -150,7 +166,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "save handles conflict with 409 when unique violation"() {
         given:
-        Parameter dup = new Parameter(0L, "delta", "four", true)
+        Parameter dup = param(0L, "delta", "four")
         and:
         parameterRepository.saveAndFlush(_ as Parameter) >> { throw new org.springframework.dao.DataIntegrityViolationException("duplicate") }
 
@@ -164,7 +180,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "save returns 500 on system error"() {
         given:
-        Parameter input = new Parameter(0L, "sys", "v", true)
+        Parameter input = param(0L, "sys", "v")
         and:
         parameterRepository.saveAndFlush(_ as Parameter) >> { throw new RuntimeException("db") }
 
@@ -178,11 +194,13 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "update returns 200 when parameter exists"() {
         given:
-        Parameter existing = new Parameter(7L, "epsilon", "old", true)
-        Parameter patch = new Parameter(7L, "epsilon", "new", true)
+        Parameter existing = param(7L, "epsilon", "old")
+        Parameter patch = param(7L, "epsilon", "new")
         and:
-        parameterRepository.findByParameterName("epsilon") >> Optional.of(existing)
-        parameterRepository.findById(7L) >> Optional.of(existing)
+        // Controller first calls findByParameterNameStandardized -> findByOwnerAndParameterName
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "epsilon") >> Optional.of(existing)
+        // Then calls update -> findByOwnerAndParameterId
+        parameterRepository.findByOwnerAndParameterId(TEST_OWNER, 7L) >> Optional.of(existing)
         parameterRepository.saveAndFlush(_ as Parameter) >> { Parameter p -> p }
 
         when:
@@ -195,9 +213,9 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "update returns 404 when parameter missing"() {
         given:
-        Parameter patch = new Parameter(0L, "zeta", "val", true)
+        Parameter patch = param(0L, "zeta", "val")
         and:
-        parameterRepository.findByParameterName("zeta") >> Optional.empty()
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "zeta") >> Optional.empty()
 
         when:
         ResponseEntity<?> response = controller.update("zeta", patch)
@@ -208,9 +226,9 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "update returns 500 when existence check errors"() {
         given:
-        Parameter patch = new Parameter(1L, "alpha", "val", true)
+        Parameter patch = param(1L, "alpha", "val")
         and:
-        parameterRepository.findByParameterName("alpha") >> { throw new RuntimeException("db") }
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "alpha") >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<?> response = controller.update("alpha", patch)
@@ -222,11 +240,11 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "update returns 400 when validation fails"() {
         given:
-        Parameter existing = new Parameter(7L, "epsilon", "old", true)
-        Parameter patch = new Parameter(7L, "epsilon", "new", true)
+        Parameter existing = param(7L, "epsilon", "old")
+        Parameter patch = param(7L, "epsilon", "new")
         and:
-        parameterRepository.findByParameterName("epsilon") >> Optional.of(existing)
-        parameterRepository.findById(7L) >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "epsilon") >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterId(TEST_OWNER, 7L) >> Optional.of(existing)
         parameterRepository.saveAndFlush(_ as Parameter) >> { throw new jakarta.validation.ConstraintViolationException("bad", [] as Set) }
 
         when:
@@ -239,11 +257,11 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "update returns 409 on business conflict"() {
         given:
-        Parameter existing = new Parameter(7L, "epsilon", "old", true)
-        Parameter patch = new Parameter(7L, "epsilon", "new", true)
+        Parameter existing = param(7L, "epsilon", "old")
+        Parameter patch = param(7L, "epsilon", "new")
         and:
-        parameterRepository.findByParameterName("epsilon") >> Optional.of(existing)
-        parameterRepository.findById(7L) >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "epsilon") >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterId(TEST_OWNER, 7L) >> Optional.of(existing)
         parameterRepository.saveAndFlush(_ as Parameter) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
@@ -256,11 +274,11 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "update returns 500 on system error"() {
         given:
-        Parameter existing = new Parameter(7L, "epsilon", "old", true)
-        Parameter patch = new Parameter(7L, "epsilon", "new", true)
+        Parameter existing = param(7L, "epsilon", "old")
+        Parameter patch = param(7L, "epsilon", "new")
         and:
-        parameterRepository.findByParameterName("epsilon") >> Optional.of(existing)
-        parameterRepository.findById(7L) >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "epsilon") >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterId(TEST_OWNER, 7L) >> Optional.of(existing)
         parameterRepository.saveAndFlush(_ as Parameter) >> { throw new RuntimeException("db") }
 
         when:
@@ -273,9 +291,10 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "deleteById returns 200 with deleted entity when found"() {
         given:
-        Parameter existing = new Parameter(8L, "eta", "val", true)
+        Parameter existing = param(8L, "eta", "val")
         and:
-        parameterRepository.findByParameterName("eta") >> Optional.of(existing)
+        // findByParameterNameStandardized (find) + deleteByParameterNameStandardized (delete) both call findByOwnerAndParameterName
+        2 * parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "eta") >> Optional.of(existing)
 
         when:
         ResponseEntity<?> response = controller.deleteById("eta")
@@ -287,7 +306,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "deleteById returns 404 when not found"() {
         given:
-        parameterRepository.findByParameterName("none") >> Optional.empty()
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "none") >> Optional.empty()
 
         when:
         ResponseEntity<?> response = controller.deleteById("none")
@@ -298,7 +317,7 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "deleteById returns 500 when find errors"() {
         given:
-        parameterRepository.findByParameterName("err") >> { throw new RuntimeException("db") }
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "err") >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<?> response = controller.deleteById("err")
@@ -309,9 +328,9 @@ class StandardizedParameterControllerSpec extends Specification {
 
     def "deleteById returns 500 when delete errors"() {
         given:
-        Parameter existing = new Parameter(9L, "gone", "v", true)
+        Parameter existing = param(9L, "gone", "v")
         and:
-        2 * parameterRepository.findByParameterName("gone") >> Optional.of(existing)
+        2 * parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "gone") >> Optional.of(existing)
         parameterRepository.delete(_ as Parameter) >> { throw new RuntimeException("db") }
 
         when:

@@ -56,13 +56,13 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
                 .asDebit()
                 .buildAndValidate()
 
-        Optional<Account> p = accountRepository.findByAccountNameOwner(primaryName)
+        Optional<Account> p = accountRepository.findByOwnerAndAccountNameOwner(testOwner,primaryName)
         if (!p.isPresent()) {
             p = Optional.of(accountRepository.save(primary))
         }
         primaryAccountId = p.get().accountId
 
-        Optional<Account> s = accountRepository.findByAccountNameOwner(secondaryName)
+        Optional<Account> s = accountRepository.findByOwnerAndAccountNameOwner(testOwner,secondaryName)
         if (!s.isPresent()) {
             s = Optional.of(accountRepository.save(secondary))
         }
@@ -128,7 +128,7 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
         when: 'Querying by date range 2023-01-01 to 2023-01-31'
         def start = LocalDate.parse('2023-01-01')
         def end = LocalDate.parse('2023-01-31')
-        def page = transactionRepository.findByTransactionDateBetween(start, end, pageable)
+        def page = transactionRepository.findByOwnerAndTransactionDateBetween(testOwner, start, end, pageable)
 
         then: 'Only the in-range transactions are returned, across both accounts'
         page.totalElements >= 2

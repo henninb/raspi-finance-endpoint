@@ -5,12 +5,16 @@ import finance.domain.MedicalExpense
 import finance.services.MedicalExpenseService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
 import java.math.BigDecimal
 
 class StandardizedMedicalExpenseControllerSpec extends Specification {
+
+    static final String TEST_OWNER = "test_owner"
 
     finance.repositories.MedicalExpenseRepository repo = Mock()
     MedicalExpenseService service = new MedicalExpenseService(repo)
@@ -24,16 +28,24 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         def meterService = new finance.services.MeterService(meterRegistry)
         service.validator = validator
         service.meterService = meterService
+
+        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
+        SecurityContextHolder.getContext().setAuthentication(auth)
+    }
+
+    def cleanup() {
+        SecurityContextHolder.clearContext()
     }
 
     private static MedicalExpense me(Long id = 0L) {
-        new MedicalExpense(medicalExpenseId: id)
+        new MedicalExpense(medicalExpenseId: id, owner: TEST_OWNER)
     }
 
     // ===== STANDARDIZED: findAllActive =====
     def "findAllActive returns 200 with list"() {
         given:
-        repo.findByActiveStatusTrueOrderByServiceDateDesc() >> [me(1L), me(2L)]
+        repo.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> [me(1L), me(2L)]
 
         when:
         ResponseEntity<List<MedicalExpense>> resp = controller.findAllActive()
@@ -45,7 +57,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "findAllActive returns 404 when none (service NotFound)"() {
         given:
-        repo.findByActiveStatusTrueOrderByServiceDateDesc() >> { throw new jakarta.persistence.EntityNotFoundException("none") }
+        repo.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> { throw new jakarta.persistence.EntityNotFoundException("none") }
 
         when:
         ResponseEntity<List<MedicalExpense>> resp = controller.findAllActive()
@@ -56,7 +68,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "findAllActive returns 500 on error"() {
         given:
-        repo.findByActiveStatusTrueOrderByServiceDateDesc() >> { throw new RuntimeException("db") }
+        repo.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<List<MedicalExpense>> resp = controller.findAllActive()
@@ -68,7 +80,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     // ===== STANDARDIZED: findById =====
     def "findById returns 200 when found"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(11L) >> me(11L)
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 11L) >> me(11L)
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.findById(11L)
@@ -80,7 +92,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "findById returns 404 when missing"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(404L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 404L) >> null
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.findById(404L)
@@ -91,7 +103,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "findById returns 500 on error"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(500L) >> { throw new RuntimeException("db") }
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 500L) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.findById(500L)
@@ -132,7 +144,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         given:
         MedicalExpense input = me(0L)
         input.transactionId = 10L
-        repo.findByTransactionId(10L) >> me(123L)
+        repo.findByOwnerAndTransactionId(TEST_OWNER, 10L) >> me(123L)
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.save(input)
@@ -158,7 +170,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         given:
         MedicalExpense existing = me(21L)
         MedicalExpense patch = me(21L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(21L) >> existing
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 21L) >> existing
         repo.save(_ as MedicalExpense) >> { MedicalExpense m -> m }
 
         when:
@@ -171,7 +183,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "update returns 404 when missing"() {
         given:
         MedicalExpense patch = me(22L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(22L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 22L) >> null
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.update(22L, patch)
@@ -184,7 +196,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         given:
         MedicalExpense existing = me(23L)
         MedicalExpense patch = me(23L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(23L) >> existing
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 23L) >> existing
         repo.save(_ as MedicalExpense) >> { throw new jakarta.validation.ConstraintViolationException("bad", [] as Set) }
 
         when:
@@ -198,7 +210,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         given:
         MedicalExpense existing = me(24L)
         MedicalExpense patch = me(24L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(24L) >> existing
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 24L) >> existing
         repo.save(_ as MedicalExpense) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
@@ -212,7 +224,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         given:
         MedicalExpense existing = me(25L)
         MedicalExpense patch = me(25L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(25L) >> existing
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 25L) >> existing
         repo.save(_ as MedicalExpense) >> { throw new RuntimeException("db") }
 
         when:
@@ -226,8 +238,8 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "deleteById returns 200 with deleted entity"() {
         given:
         MedicalExpense existing = me(31L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(31L) >> existing
-        repo.softDeleteByMedicalExpenseId(31L) >> 1
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 31L) >> existing
+        repo.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, 31L) >> 1
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.deleteById(31L)
@@ -239,7 +251,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "deleteById returns 404 when not found"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(32L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 32L) >> null
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.deleteById(32L)
@@ -251,8 +263,8 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "deleteById returns 500 on error"() {
         given:
         MedicalExpense existing = me(33L)
-        1 * repo.findByMedicalExpenseIdAndActiveStatusTrue(33L) >> existing
-        repo.softDeleteByMedicalExpenseId(33L) >> { throw new RuntimeException("db") }
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 33L) >> existing
+        repo.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, 33L) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.deleteById(33L)
@@ -264,7 +276,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     // ===== Claim status endpoints =====
     def "updateClaimStatusPatch returns 200 on success"() {
         given:
-        repo.updateClaimStatus(41L, ClaimStatus.Paid) >> 1
+        repo.updateClaimStatusByOwner(TEST_OWNER, 41L, ClaimStatus.Paid) >> 1
 
         when:
         ResponseEntity<Map<String,String>> resp = controller.updateClaimStatusPatch(41L, ClaimStatus.Paid)
@@ -276,7 +288,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "updateClaimStatusPut returns 404 when not found"() {
         given:
-        repo.updateClaimStatus(42L, ClaimStatus.Paid) >> 0
+        repo.updateClaimStatusByOwner(TEST_OWNER, 42L, ClaimStatus.Paid) >> 0
 
         when:
         ResponseEntity<Map<String,String>> resp = controller.updateClaimStatusPut(42L, ClaimStatus.Paid)
@@ -287,7 +299,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "updateClaimStatus returns 500 on error"() {
         given:
-        repo.updateClaimStatus(43L, ClaimStatus.Paid) >> { throw new RuntimeException("db") }
+        repo.updateClaimStatusByOwner(TEST_OWNER, 43L, ClaimStatus.Paid) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<Map<String,String>> resp = controller.updateClaimStatusPatch(43L, ClaimStatus.Paid)
@@ -300,8 +312,8 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "linkPaymentTransaction returns 200"() {
         given:
         MedicalExpense existing = me(51L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(51L) >> existing
-        repo.findByTransactionId(999L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 51L) >> existing
+        repo.findByOwnerAndTransactionId(TEST_OWNER, 999L) >> null
         repo.save(_ as MedicalExpense) >> { MedicalExpense m -> m }
 
         when:
@@ -314,8 +326,8 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "linkPaymentTransaction returns 409 on duplicate"() {
         given:
         MedicalExpense existing = me(52L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(52L) >> existing
-        repo.findByTransactionId(1000L) >> me(99L)
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 52L) >> existing
+        repo.findByOwnerAndTransactionId(TEST_OWNER, 1000L) >> me(99L)
 
         when:
         controller.linkPaymentTransaction(52L, 1000L)
@@ -327,7 +339,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "linkPaymentTransaction returns 400 on bad request"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(53L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 53L) >> null
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.linkPaymentTransaction(53L, 2000L)
@@ -339,7 +351,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "unlinkPaymentTransaction returns 200"() {
         given:
         MedicalExpense existing = me(61L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(61L) >> existing
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 61L) >> existing
         repo.save(_ as MedicalExpense) >> { MedicalExpense m -> m }
 
         when:
@@ -351,7 +363,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "unlinkPaymentTransaction returns 400 on bad request"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(62L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 62L) >> null
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.unlinkPaymentTransaction(62L)
@@ -363,7 +375,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "syncPaymentAmount returns 200"() {
         given:
         MedicalExpense existing = me(71L)
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(71L) >> existing
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 71L) >> existing
         repo.save(_ as MedicalExpense) >> { MedicalExpense m -> m }
 
         when:
@@ -375,7 +387,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "syncPaymentAmount returns 400 when not found"() {
         given:
-        repo.findByMedicalExpenseIdAndActiveStatusTrue(72L) >> null
+        repo.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 72L) >> null
 
         when:
         ResponseEntity<MedicalExpense> resp = controller.syncPaymentAmount(72L)
@@ -423,7 +435,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "findById handles null service response gracefully"() {
         given:
         MedicalExpenseService mockService = Mock()
-        mockService.findByIdStandardized(_ as Long) >> null
+        mockService.findById(_ as Long) >> null
         MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
 
         when:
@@ -437,7 +449,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "findAllActive handles null service response gracefully"() {
         given:
         MedicalExpenseService mockService = Mock()
-        mockService.findAllActiveStandardized() >> null
+        mockService.findAllActive() >> null
         MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
 
         when:

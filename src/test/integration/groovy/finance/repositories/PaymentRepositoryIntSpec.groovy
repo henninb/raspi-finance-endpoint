@@ -57,7 +57,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
         savedPayment.guidSource != savedPayment.guidDestination
 
         when:
-        Optional<Payment> foundPayment = paymentRepository.findByPaymentId(savedPayment.paymentId)
+        Optional<Payment> foundPayment = paymentRepository.findByOwnerAndPaymentId(testOwner,savedPayment.paymentId)
 
         then:
         foundPayment.isPresent()
@@ -68,7 +68,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find by payment ID with non-existent ID'() {
         when:
-        Optional<Payment> foundPayment = paymentRepository.findByPaymentId(99999L)
+        Optional<Payment> foundPayment = paymentRepository.findByOwnerAndPaymentId(testOwner,99999L)
 
         then:
         !foundPayment.isPresent()

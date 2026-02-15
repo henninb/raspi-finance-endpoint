@@ -51,7 +51,7 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
         savedParameter.dateUpdated != null
 
         when:
-        Optional<Parameter> foundParameter = parameterRepository.findByParameterName(savedParameter.parameterName)
+        Optional<Parameter> foundParameter = parameterRepository.findByOwnerAndParameterName(testOwner,savedParameter.parameterName)
 
         then:
         foundParameter.isPresent()
@@ -70,7 +70,7 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
         Parameter savedParameter = parameterRepository.save(parameter)
 
         when:
-        Optional<Parameter> foundParameter = parameterRepository.findByParameterId(savedParameter.parameterId)
+        Optional<Parameter> foundParameter = parameterRepository.findByOwnerAndParameterId(testOwner,savedParameter.parameterId)
 
         then:
         foundParameter.isPresent()
@@ -101,7 +101,7 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
         parameterRepository.save(inactiveParameter)
 
         when:
-        List<Parameter> activeParameters = parameterRepository.findByActiveStatusIsTrue()
+        List<Parameter> activeParameters = parameterRepository.findByOwnerAndActiveStatusIsTrue(testOwner)
 
         then:
         activeParameters.size() >= 2
@@ -194,7 +194,7 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
         updatedParameter.activeStatus == false
 
         when:
-        Optional<Parameter> refetchedParameter = parameterRepository.findByParameterName(savedParameter.parameterName)
+        Optional<Parameter> refetchedParameter = parameterRepository.findByOwnerAndParameterName(testOwner,savedParameter.parameterName)
 
         then:
         refetchedParameter.isPresent()
@@ -213,13 +213,13 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         parameterRepository.delete(savedParameter)
-        Optional<Parameter> deletedParameter = parameterRepository.findByParameterName(savedParameter.parameterName)
+        Optional<Parameter> deletedParameter = parameterRepository.findByOwnerAndParameterName(testOwner,savedParameter.parameterName)
 
         then:
         !deletedParameter.isPresent()
 
         when:
-        Optional<Parameter> deletedById = parameterRepository.findByParameterId(savedParameter.parameterId)
+        Optional<Parameter> deletedById = parameterRepository.findByOwnerAndParameterId(testOwner,savedParameter.parameterId)
 
         then:
         !deletedById.isPresent()
@@ -308,8 +308,8 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find non-existent parameter'() {
         when:
-        Optional<Parameter> nonExistentByName = parameterRepository.findByParameterName("nonexistent_${testOwner}")
-        Optional<Parameter> nonExistentById = parameterRepository.findByParameterId(-999L)
+        Optional<Parameter> nonExistentByName = parameterRepository.findByOwnerAndParameterName(testOwner,"nonexistent_${testOwner}")
+        Optional<Parameter> nonExistentById = parameterRepository.findByOwnerAndParameterId(testOwner,-999L)
 
         then:
         !nonExistentByName.isPresent()

@@ -4,12 +4,18 @@ import finance.Application
 import finance.domain.*
 import finance.helpers.SmartAccountBuilder
 import finance.helpers.SmartCategoryBuilder
+import finance.helpers.SmartDescriptionBuilder
+import finance.helpers.SmartParameterBuilder
 import finance.helpers.SmartTransactionBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
+import finance.repositories.DescriptionRepository
+import finance.repositories.ParameterRepository
 import finance.repositories.TransactionRepository
 import finance.services.AccountService
 import finance.services.CategoryService
+import finance.services.DescriptionService
+import finance.services.ParameterService
 import finance.services.TransactionService
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +52,12 @@ class TenantIsolationIntSpec extends Specification {
 
     @Autowired
     CategoryRepository categoryRepository
+
+    @Autowired
+    DescriptionRepository descriptionRepository
+
+    @Autowired
+    ParameterRepository parameterRepository
 
     @Autowired
     TransactionRepository transactionRepository
@@ -228,5 +240,151 @@ class TenantIsolationIntSpec extends Specification {
         foundA.get().owner == OWNER_A
         foundB.get().owner == OWNER_B
         foundA.get().categoryId != foundB.get().categoryId
+    }
+
+    void 'test descriptions created by user A are not visible to user B'() {
+        given:
+        setSecurityContext(OWNER_A)
+        Description descA = SmartDescriptionBuilder.builderForOwner(OWNER_A)
+            .withUniqueDescriptionName("isolationdesc")
+            .buildAndValidate()
+        descriptionRepository.save(descA)
+        descriptionRepository.flush()
+
+        when:
+        Optional<Description> foundByA = descriptionRepository.findByOwnerAndDescriptionName(OWNER_A, descA.descriptionName)
+        Optional<Description> foundByB = descriptionRepository.findByOwnerAndDescriptionName(OWNER_B, descA.descriptionName)
+
+        then: 'owner A can see the description'
+        foundByA.isPresent()
+        foundByA.get().owner == OWNER_A
+
+        and: 'owner B cannot see the description'
+        !foundByB.isPresent()
+    }
+
+    void 'test same description name can exist for different owners'() {
+        given:
+        String sharedDescName = "shareddescription"
+
+        setSecurityContext(OWNER_A)
+        Description descA = SmartDescriptionBuilder.builderForOwner(OWNER_A)
+            .withDescriptionName(sharedDescName)
+            .buildAndValidate()
+        descriptionRepository.save(descA)
+
+        setSecurityContext(OWNER_B)
+        Description descB = SmartDescriptionBuilder.builderForOwner(OWNER_B)
+            .withDescriptionName(sharedDescName)
+            .buildAndValidate()
+        descriptionRepository.save(descB)
+        descriptionRepository.flush()
+
+        when:
+        Optional<Description> foundA = descriptionRepository.findByOwnerAndDescriptionName(OWNER_A, sharedDescName)
+        Optional<Description> foundB = descriptionRepository.findByOwnerAndDescriptionName(OWNER_B, sharedDescName)
+
+        then:
+        foundA.isPresent()
+        foundB.isPresent()
+        foundA.get().owner == OWNER_A
+        foundB.get().owner == OWNER_B
+        foundA.get().descriptionId != foundB.get().descriptionId
+    }
+
+    void 'test parameters created by user A are not visible to user B'() {
+        given:
+        setSecurityContext(OWNER_A)
+        Parameter paramA = SmartParameterBuilder.builderForOwner(OWNER_A)
+            .withUniqueParameterName("isolationparam")
+            .withUniqueParameterValue("valueA")
+            .buildAndValidate()
+        parameterRepository.save(paramA)
+        parameterRepository.flush()
+
+        when:
+        Optional<Parameter> foundByA = parameterRepository.findByOwnerAndParameterName(OWNER_A, paramA.parameterName)
+        Optional<Parameter> foundByB = parameterRepository.findByOwnerAndParameterName(OWNER_B, paramA.parameterName)
+
+        then: 'owner A can see the parameter'
+        foundByA.isPresent()
+        foundByA.get().owner == OWNER_A
+
+        and: 'owner B cannot see the parameter'
+        !foundByB.isPresent()
+    }
+
+    void 'test transactions created by user A are not visible to user B via repository'() {
+        given: 'user A creates an account and transaction'
+        setSecurityContext(OWNER_A)
+        Account accountA = SmartAccountBuilder.builderForOwner(OWNER_A)
+            .withUniqueAccountName("txniso")
+            .asDebit()
+            .withMoniker("7000")
+            .buildAndValidate()
+        accountRepository.save(accountA)
+
+        Category catA = SmartCategoryBuilder.builderForOwner(OWNER_A)
+            .withUniqueCategoryName("txnisocat")
+            .buildAndValidate()
+        categoryRepository.save(catA)
+        categoryRepository.flush()
+
+        Transaction txnA = SmartTransactionBuilder.builderForOwner(OWNER_A)
+            .withAccountNameOwner(accountA.accountNameOwner)
+            .withAccountId(accountA.accountId)
+            .withAccountType(AccountType.Debit)
+            .withCategory(catA.categoryName)
+            .withDescription("isolation test txn")
+            .withAmount("50.00")
+            .buildAndValidate()
+        transactionRepository.save(txnA)
+        transactionRepository.flush()
+
+        when:
+        Optional<Transaction> foundByA = transactionRepository.findByOwnerAndGuid(OWNER_A, txnA.guid)
+        Optional<Transaction> foundByB = transactionRepository.findByOwnerAndGuid(OWNER_B, txnA.guid)
+
+        then: 'owner A can see the transaction'
+        foundByA.isPresent()
+        foundByA.get().owner == OWNER_A
+
+        and: 'owner B cannot see the transaction'
+        !foundByB.isPresent()
+    }
+
+    void 'test service-level category listing only returns current tenant data'() {
+        given: 'user A creates a category'
+        setSecurityContext(OWNER_A)
+        Category catA = SmartCategoryBuilder.builderForOwner(OWNER_A)
+            .withUniqueCategoryName("listcata")
+            .buildAndValidate()
+        categoryRepository.save(catA)
+
+        and: 'user B creates a category'
+        setSecurityContext(OWNER_B)
+        Category catB = SmartCategoryBuilder.builderForOwner(OWNER_B)
+            .withUniqueCategoryName("listcatb")
+            .buildAndValidate()
+        categoryRepository.save(catB)
+        categoryRepository.flush()
+
+        when: 'user A lists their categories'
+        setSecurityContext(OWNER_A)
+        List<Category> categoriesA = categoryService.categories()
+
+        then: 'user A only sees their own categories'
+        categoriesA.every { it.owner == OWNER_A }
+        categoriesA.any { it.categoryName == catA.categoryName }
+        !categoriesA.any { it.categoryName == catB.categoryName }
+
+        when: 'user B lists their categories'
+        setSecurityContext(OWNER_B)
+        List<Category> categoriesB = categoryService.categories()
+
+        then: 'user B only sees their own categories'
+        categoriesB.every { it.owner == OWNER_B }
+        categoriesB.any { it.categoryName == catB.categoryName }
+        !categoriesB.any { it.categoryName == catA.categoryName }
     }
 }

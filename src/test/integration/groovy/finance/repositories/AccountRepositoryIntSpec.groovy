@@ -35,7 +35,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         savedAccount.cleared == new BigDecimal("1500.50")
 
         when:
-        Optional<Account> foundAccount = accountRepository.findByAccountNameOwner(savedAccount.accountNameOwner)
+        Optional<Account> foundAccount = accountRepository.findByOwnerAndAccountNameOwner(testOwner, savedAccount.accountNameOwner)
 
         then:
         foundAccount.isPresent()
@@ -65,16 +65,16 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         accountRepository.save(inactiveAccount)
 
         when:
-        List<Account> activeAccounts = accountRepository.findByActiveStatus(true)
-        List<Account> inactiveAccounts = accountRepository.findByActiveStatus(false)
+        List<Account> activeAccounts = accountRepository.findByOwnerAndActiveStatus(testOwner, true)
+        List<Account> inactiveAccounts = accountRepository.findByOwnerAndActiveStatus(testOwner, false)
 
         then:
         activeAccounts.size() >= 1
-        activeAccounts.every { it.activeStatus == true }
+        activeAccounts.every { it.activeStatus == true && it.owner == testOwner }
         activeAccounts.any { it.accountNameOwner == activeAccount.accountNameOwner }
 
         inactiveAccounts.size() >= 1
-        inactiveAccounts.every { it.activeStatus == false }
+        inactiveAccounts.every { it.activeStatus == false && it.owner == testOwner }
         inactiveAccounts.any { it.accountNameOwner == inactiveAccount.accountNameOwner }
     }
 
@@ -98,16 +98,16 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         accountRepository.save(savingsAccount)
 
         when:
-        List<Account> debitAccounts = accountRepository.findByAccountType(AccountType.Debit)
-        List<Account> creditAccounts = accountRepository.findByAccountType(AccountType.Credit)
+        List<Account> debitAccounts = accountRepository.findByOwnerAndAccountType(testOwner, AccountType.Debit)
+        List<Account> creditAccounts = accountRepository.findByOwnerAndAccountType(testOwner, AccountType.Credit)
 
         then:
         debitAccounts.size() >= 1
-        debitAccounts.every { it.accountType == AccountType.Debit }
+        debitAccounts.every { it.accountType == AccountType.Debit && it.owner == testOwner }
         debitAccounts.any { it.accountNameOwner == checkingAccount.accountNameOwner }
 
         creditAccounts.size() >= 1
-        creditAccounts.every { it.accountType == AccountType.Credit }
+        creditAccounts.every { it.accountType == AccountType.Credit && it.owner == testOwner }
         creditAccounts.any { it.accountNameOwner == savingsAccount.accountNameOwner }
     }
 
@@ -134,12 +134,12 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         List<Account> activeCheckingAccounts = accountRepository
-            .findByActiveStatusAndAccountType(true, AccountType.Debit)
+            .findByOwnerAndActiveStatusAndAccountType(testOwner, true, AccountType.Debit)
 
         then:
         activeCheckingAccounts.size() >= 1
         activeCheckingAccounts.every {
-            it.activeStatus == true && it.accountType == AccountType.Debit
+            it.activeStatus == true && it.accountType == AccountType.Debit && it.owner == testOwner
         }
         activeCheckingAccounts.any { it.accountNameOwner == activeCheckingAccount.accountNameOwner }
         !activeCheckingAccounts.any { it.accountNameOwner == inactiveCheckingAccount.accountNameOwner }
@@ -228,7 +228,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         updatedAccount.accountNameOwner == savedAccount.accountNameOwner
 
         when:
-        Optional<Account> refetchedAccount = accountRepository.findByAccountNameOwner(savedAccount.accountNameOwner)
+        Optional<Account> refetchedAccount = accountRepository.findByOwnerAndAccountNameOwner(testOwner, savedAccount.accountNameOwner)
 
         then:
         refetchedAccount.isPresent()
@@ -249,7 +249,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         accountRepository.delete(savedAccount)
-        Optional<Account> deletedAccount = accountRepository.findByAccountNameOwner(savedAccount.accountNameOwner)
+        Optional<Account> deletedAccount = accountRepository.findByOwnerAndAccountNameOwner(testOwner, savedAccount.accountNameOwner)
 
         then:
         !deletedAccount.isPresent()
@@ -306,7 +306,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         accountRepository.save(creditAccount)
 
         when:
-        List<Account> accountsRequiringPayment = accountRepository.findAccountsThatRequirePayment(true, AccountType.Credit)
+        List<Account> accountsRequiringPayment = accountRepository.findAccountsThatRequirePaymentByOwner(testOwner, true, AccountType.Credit)
 
         then:
         accountsRequiringPayment.size() >= 1
