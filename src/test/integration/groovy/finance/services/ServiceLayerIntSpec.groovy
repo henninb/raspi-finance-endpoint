@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.TestPropertySource
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
 
@@ -21,6 +22,7 @@ import java.util.Optional
 @ActiveProfiles("int")
 @SpringBootTest
 @ContextConfiguration(classes = Application)
+@TestPropertySource(properties = ["spring.flyway.enabled=false"])
 class ServiceLayerIntSpec extends Specification {
 
     private static final String TEST_OWNER = "test-service-user"

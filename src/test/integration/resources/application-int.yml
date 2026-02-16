@@ -141,7 +141,7 @@ spring:
   # = Flyway
   # ===============================
   flyway:
-    enabled: true
+    enabled: false
     baseline-on-migrate: true
     baseline-version: 0
     validate-on-migrate: true
