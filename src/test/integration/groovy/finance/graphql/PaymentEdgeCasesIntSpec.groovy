@@ -20,7 +20,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle accounts with Undefined account type gracefully"() {
         given:
-        withUserRole()
         String undefinedSource = testDataManager.createAccountFor(testOwner, "undefined_src", "undefined", true)
         String checkingDest = testDataManager.createAccountFor(testOwner, "checking_dest", "checking", true)
 
@@ -46,7 +45,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle utility account type (expense category)"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_utility", "checking", true)
         String utilityAccount = testDataManager.createAccountFor(testOwner, "utility_test", "utility", true)
 
@@ -72,7 +70,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle payment with future date"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_future", "checking", true)
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_future", "savings", true)
 
@@ -99,7 +96,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle payment with past date (historical transaction)"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_past", "checking", true)
         String creditCardAccount = testDataManager.createAccountFor(testOwner, "credit_past", "credit_card", true)
 
@@ -126,7 +122,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with business account types should work correctly"() {
         given:
-        withUserRole()
         String businessChecking = testDataManager.createAccountFor(testOwner, "business_check", "business_checking", true)
         String businessSavings = testDataManager.createAccountFor(testOwner, "business_save", "business_savings", true)
 
@@ -152,7 +147,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with prepaid account type should work correctly"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_prepaid", "checking", true)
         String prepaidAccount = testDataManager.createAccountFor(testOwner, "prepaid_test", "prepaid", true)
 
@@ -178,7 +172,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with gift card account type should work correctly"() {
         given:
-        withUserRole()
         String cashAccount = testDataManager.createAccountFor(testOwner, "cash_gift", "cash", true)
         String giftCardAccount = testDataManager.createAccountFor(testOwner, "gift_card_test", "gift_card", true)
 
@@ -204,7 +197,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with student loan should work correctly"() {
         given:
-        withUserRole()
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_student", "savings", true)
         String studentLoanAccount = testDataManager.createAccountFor(testOwner, "student_loan_test", "student_loan", true)
 
@@ -230,7 +222,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with line of credit should work correctly"() {
         given:
-        withUserRole()
         String lineOfCreditAccount = testDataManager.createAccountFor(testOwner, "loc_test", "line_of_credit", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_loc", "checking", true)
 
@@ -256,7 +247,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with certificate of deposit should work correctly"() {
         given:
-        withUserRole()
         String certificateAccount = testDataManager.createAccountFor(testOwner, "cd_test", "certificate", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_cd", "checking", true)
 
@@ -282,7 +272,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with money market account should work correctly"() {
         given:
-        withUserRole()
         String moneyMarketAccount = testDataManager.createAccountFor(testOwner, "mm_test", "money_market", true)
         String autoLoanAccount = testDataManager.createAccountFor(testOwner, "auto_loan_test", "auto_loan", true)
 
@@ -308,7 +297,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with personal loan should work correctly"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_personal", "checking", true)
         String personalLoanAccount = testDataManager.createAccountFor(testOwner, "personal_loan_test", "personal_loan", true)
 
@@ -334,7 +322,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with retirement account types should work correctly"() {
         given:
-        withUserRole()
         String retirement401k = testDataManager.createAccountFor(testOwner, "401k_test", "retirement_401k", true)
         String retirementIRA = testDataManager.createAccountFor(testOwner, "ira_test", "retirement_ira", true)
 
@@ -360,7 +347,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with FSA account should work correctly"() {
         given:
-        withUserRole()
         String fsaAccount = testDataManager.createAccountFor(testOwner, "fsa_test", "fsa", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_fsa", "checking", true)
 
@@ -386,7 +372,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle escrow account correctly"() {
         given:
-        withUserRole()
         String escrowAccount = testDataManager.createAccountFor(testOwner, "escrow_test", "escrow", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_escrow", "checking", true)
 
@@ -412,7 +397,6 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle trust account correctly"() {
         given:
-        withUserRole()
         String trustAccount = testDataManager.createAccountFor(testOwner, "trust_test", "trust", true)
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_trust", "savings", true)
 

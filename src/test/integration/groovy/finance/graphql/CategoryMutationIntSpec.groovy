@@ -142,6 +142,7 @@ class CategoryMutationIntSpec extends BaseIntegrationSpec {
     private Category createTestCategory(String name) {
         Category category = new Category(
                 0L,
+                "",
                 true,
                 name
         )

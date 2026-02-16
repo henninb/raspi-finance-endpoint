@@ -118,8 +118,9 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test transfer with different amounts allows duplicate source, destination, and dates'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String sharedSource = "shared_src_${cleanOwner}"
-        String sharedDestination = "shared_dest_${cleanOwner}"
+        if (cleanOwner.isEmpty()) cleanOwner = "test"
+        String sharedSource = "sharedsrc_${cleanOwner}"
+        String sharedDestination = "shareddest_${cleanOwner}"
         LocalDate sharedDate = LocalDate.parse("2024-03-10")
 
         Transfer transfer1 = SmartTransferBuilder.builderForOwner(testOwner)
@@ -157,8 +158,9 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test transfer with different dates allows same source, destination, and amount'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String source = "date_src_${cleanOwner}"
-        String destination = "date_dest_${cleanOwner}"
+        if (cleanOwner.isEmpty()) cleanOwner = "test"
+        String source = "datesrc_${cleanOwner}"
+        String destination = "datedest_${cleanOwner}"
         BigDecimal amount = new BigDecimal("175.50")
 
         Transfer transfer1 = SmartTransferBuilder.builderForOwner(testOwner)
@@ -195,7 +197,8 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test transfer with different source accounts allows same destination, date, and amount'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
-        String sharedDestination = "shared_dest_${cleanOwner}"
+        if (cleanOwner.isEmpty()) cleanOwner = "test"
+        String sharedDestination = "shareddest_${cleanOwner}"
         LocalDate sharedDate = LocalDate.parse("2024-05-15")
         BigDecimal amount = new BigDecimal("225.00")
 

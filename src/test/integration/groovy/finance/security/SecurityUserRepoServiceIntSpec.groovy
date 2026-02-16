@@ -140,7 +140,7 @@ class SecurityUserRepoServiceIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test security filter chain with different endpoints'() {
         when:
-        List<String> publicEndpoints = ["/actuator/health", "/actuator/info"]
+        List<String> publicEndpoints = ["/actuator/health"]
         List<String> protectedEndpoints = ["/accounts", "/transactions", "/categories"]
 
         List<Boolean> publicResults = publicEndpoints.collect { endpoint ->

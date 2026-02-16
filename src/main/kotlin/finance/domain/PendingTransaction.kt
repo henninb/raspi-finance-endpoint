@@ -15,16 +15,12 @@ import finance.utils.Constants.FIELD_MUST_BE_ASCII_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import finance.utils.LowerCaseConverter
 import finance.utils.ValidDate
-import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.validation.constraints.Digits
@@ -67,13 +63,12 @@ data class PendingTransaction(
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
-    @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "account_name_owner", referencedColumnName = "account_name_owner", insertable = false, updatable = false)
+    @jakarta.persistence.Transient
     @JsonIgnore
     var account: Account? = null,
 ) {
     @JsonCreator
-    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending", "")
+    constructor() : this(0L, "", LocalDate.of(1970, 1, 1), "", BigDecimal(0.00), "pending", "", null)
 
     @JsonIgnore
     @Column(name = "date_added", nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")

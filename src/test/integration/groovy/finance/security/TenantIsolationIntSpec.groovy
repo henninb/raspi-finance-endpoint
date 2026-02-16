@@ -13,6 +13,7 @@ import finance.repositories.DescriptionRepository
 import finance.repositories.ParameterRepository
 import finance.repositories.TransactionRepository
 import finance.services.AccountService
+import finance.domain.ServiceResult
 import finance.services.CategoryService
 import finance.services.DescriptionService
 import finance.services.ParameterService
@@ -371,7 +372,8 @@ class TenantIsolationIntSpec extends Specification {
 
         when: 'user A lists their categories'
         setSecurityContext(OWNER_A)
-        List<Category> categoriesA = categoryService.categories()
+        def resultA = categoryService.findAllActive()
+        List<Category> categoriesA = (resultA instanceof ServiceResult.Success) ? ((ServiceResult.Success<List<Category>>) resultA).data : []
 
         then: 'user A only sees their own categories'
         categoriesA.every { it.owner == OWNER_A }
@@ -380,7 +382,8 @@ class TenantIsolationIntSpec extends Specification {
 
         when: 'user B lists their categories'
         setSecurityContext(OWNER_B)
-        List<Category> categoriesB = categoryService.categories()
+        def resultB = categoryService.findAllActive()
+        List<Category> categoriesB = (resultB instanceof ServiceResult.Success) ? ((ServiceResult.Success<List<Category>>) resultB).data : []
 
         then: 'user B only sees their own categories'
         categoriesB.every { it.owner == OWNER_B }

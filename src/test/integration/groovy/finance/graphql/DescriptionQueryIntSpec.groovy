@@ -52,6 +52,7 @@ class DescriptionQueryIntSpec extends BaseIntegrationSpec {
     private Description createTestDescription(String name) {
         Description description = new Description(
             0L,
+            "",
             true,
             name
         )

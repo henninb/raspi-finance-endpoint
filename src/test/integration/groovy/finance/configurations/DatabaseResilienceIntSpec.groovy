@@ -160,6 +160,7 @@ class DatabaseResilienceIntSpec extends Specification {
         given:
         Account testAccount = new Account(
             0L,  // accountId
+            "",  // owner
             "resilience_test",  // accountNameOwner
             AccountType.Debit,  // accountType
             true,  // activeStatus
@@ -200,6 +201,7 @@ class DatabaseResilienceIntSpec extends Specification {
             circuitBreaker.executeSupplier {
                 Account account = new Account(
                     0L,  // accountId
+                    "",  // owner
                     accountNames[i],  // accountNameOwner
                     AccountType.Credit,  // accountType
                     true,  // activeStatus
@@ -246,6 +248,7 @@ class DatabaseResilienceIntSpec extends Specification {
                 { ->
                     Account account = new Account(
                         0L,  // accountId
+                        "",  // owner
                         concurrentNames[index],  // accountNameOwner
                         AccountType.Credit,  // accountType
                         true,  // activeStatus
@@ -277,6 +280,7 @@ class DatabaseResilienceIntSpec extends Specification {
         for (int i = 0; i < 5; i++) {
             Account account = new Account(
                 0L,  // accountId
+                "",  // owner
                 batchNames[i],  // accountNameOwner
                 AccountType.Debit,  // accountType
                 true,  // activeStatus

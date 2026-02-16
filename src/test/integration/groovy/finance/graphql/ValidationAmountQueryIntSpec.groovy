@@ -119,6 +119,7 @@ class ValidationAmountQueryIntSpec extends BaseIntegrationSpec {
     private ValidationAmount createTestValidationAmount(Account account, BigDecimal amount, TransactionState state) {
         ValidationAmount validation = new ValidationAmount(
             0L,
+            "",  // owner
             account.accountId,
             null,  // account reference
             new Timestamp(System.currentTimeMillis()),

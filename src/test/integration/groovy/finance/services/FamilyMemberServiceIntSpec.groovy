@@ -49,9 +49,9 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test findAllActive returns active family members'() {
         given:
-        FamilyMember member1 = createFamilyMember("owner1", "John", FamilyRelationship.Spouse, true)
-        FamilyMember member2 = createFamilyMember("owner1", "Jane", FamilyRelationship.Child, true)
-        FamilyMember inactiveMember = createFamilyMember("owner1", "Inactive", FamilyRelationship.Child, false)
+        FamilyMember member1 = createFamilyMember(TEST_OWNER, "John", FamilyRelationship.Spouse, true)
+        FamilyMember member2 = createFamilyMember(TEST_OWNER, "Jane", FamilyRelationship.Child, true)
+        FamilyMember inactiveMember = createFamilyMember(TEST_OWNER, "Inactive", FamilyRelationship.Child, false)
 
         familyMemberRepository.save(member1)
         familyMemberRepository.save(member2)
@@ -69,7 +69,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test save family member with valid data'() {
         given:
-        FamilyMember newMember = createFamilyMember("owner_test", "TestMember", FamilyRelationship.Spouse, true)
+        FamilyMember newMember = createFamilyMember(TEST_OWNER, "TestMember", FamilyRelationship.Spouse, true)
         newMember.familyMemberId = 0L
 
         when:
@@ -80,17 +80,17 @@ class FamilyMemberServiceIntSpec extends Specification {
         def savedMember = (result as ServiceResult.Success<FamilyMember>).data
         savedMember.familyMemberId != null
         savedMember.memberName == "TestMember"
-        savedMember.owner == "owner_test"
+        savedMember.owner == TEST_OWNER
         savedMember.relationship == FamilyRelationship.Spouse
     }
 
     void 'test save family member with duplicate prevents creation'() {
         given:
-        FamilyMember member1 = createFamilyMember("owner_dup", "DupMember", FamilyRelationship.Spouse, true)
+        FamilyMember member1 = createFamilyMember(TEST_OWNER, "DupMember", FamilyRelationship.Spouse, true)
         member1.familyMemberId = 0L
         familyMemberService.save(member1)
 
-        FamilyMember member2 = createFamilyMember("owner_dup", "DupMember", FamilyRelationship.Spouse, true)
+        FamilyMember member2 = createFamilyMember(TEST_OWNER, "DupMember", FamilyRelationship.Spouse, true)
         member2.familyMemberId = 0L
 
         when:
@@ -102,7 +102,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test findByIdServiceResult returns existing family member'() {
         given:
-        FamilyMember member = createFamilyMember("owner_find", "FindMe", FamilyRelationship.Child, true)
+        FamilyMember member = createFamilyMember(TEST_OWNER, "FindMe", FamilyRelationship.Child, true)
         member.familyMemberId = 0L
         ServiceResult<FamilyMember> saveResult = familyMemberService.save(member)
         def savedId = (saveResult as ServiceResult.Success<FamilyMember>).data.familyMemberId
@@ -126,7 +126,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test update family member'() {
         given:
-        FamilyMember member = createFamilyMember("owner_update", "UpdateMe", FamilyRelationship.Spouse, true)
+        FamilyMember member = createFamilyMember(TEST_OWNER, "UpdateMe", FamilyRelationship.Spouse, true)
         member.familyMemberId = 0L
         ServiceResult<FamilyMember> saveResult = familyMemberService.save(member)
         FamilyMember savedMember = (saveResult as ServiceResult.Success<FamilyMember>).data
@@ -146,7 +146,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test deleteById soft deletes family member'() {
         given:
-        FamilyMember member = createFamilyMember("owner_delete", "DeleteMe", FamilyRelationship.Child, true)
+        FamilyMember member = createFamilyMember(TEST_OWNER, "DeleteMe", FamilyRelationship.Child, true)
         member.familyMemberId = 0L
         ServiceResult<FamilyMember> saveResult = familyMemberService.save(member)
         def savedId = (saveResult as ServiceResult.Success<FamilyMember>).data.familyMemberId
@@ -165,7 +165,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test insertFamilyMember legacy method'() {
         given:
-        FamilyMember member = createFamilyMember("owner_legacy", "LegacyInsert", FamilyRelationship.Spouse, true)
+        FamilyMember member = createFamilyMember(TEST_OWNER, "LegacyInsert", FamilyRelationship.Spouse, true)
         member.familyMemberId = 0L
 
         when:
@@ -179,11 +179,11 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test insertFamilyMember throws exception for duplicate'() {
         given:
-        FamilyMember member1 = createFamilyMember("owner_dup_legacy", "DupLegacy", FamilyRelationship.Spouse, true)
+        FamilyMember member1 = createFamilyMember(TEST_OWNER, "DupLegacy", FamilyRelationship.Spouse, true)
         member1.familyMemberId = 0L
         familyMemberService.insertFamilyMember(member1)
 
-        FamilyMember member2 = createFamilyMember("owner_dup_legacy", "DupLegacy", FamilyRelationship.Spouse, true)
+        FamilyMember member2 = createFamilyMember(TEST_OWNER, "DupLegacy", FamilyRelationship.Spouse, true)
         member2.familyMemberId = 0L
 
         when:
@@ -236,7 +236,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test updateActiveStatus changes status'() {
         given:
-        FamilyMember member = createFamilyMember("owner_status", "StatusMember", FamilyRelationship.Spouse, true)
+        FamilyMember member = createFamilyMember(TEST_OWNER, "StatusMember", FamilyRelationship.Spouse, true)
         member.familyMemberId = 0L
         ServiceResult<FamilyMember> saveResult = familyMemberService.save(member)
         def savedId = (saveResult as ServiceResult.Success<FamilyMember>).data.familyMemberId
@@ -254,7 +254,7 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test softDelete marks member as inactive'() {
         given:
-        FamilyMember member = createFamilyMember("owner_soft_delete", "SoftDelete", FamilyRelationship.Child, true)
+        FamilyMember member = createFamilyMember(TEST_OWNER, "SoftDelete", FamilyRelationship.Child, true)
         member.familyMemberId = 0L
         ServiceResult<FamilyMember> saveResult = familyMemberService.save(member)
         def savedId = (saveResult as ServiceResult.Success<FamilyMember>).data.familyMemberId
@@ -273,8 +273,8 @@ class FamilyMemberServiceIntSpec extends Specification {
 
     void 'test findAll returns all active members'() {
         given:
-        FamilyMember member1 = createFamilyMember("owner_all1", "All1", FamilyRelationship.Spouse, true)
-        FamilyMember member2 = createFamilyMember("owner_all2", "All2", FamilyRelationship.Child, true)
+        FamilyMember member1 = createFamilyMember(TEST_OWNER, "All1", FamilyRelationship.Spouse, true)
+        FamilyMember member2 = createFamilyMember(TEST_OWNER, "All2", FamilyRelationship.Child, true)
         familyMemberRepository.save(member1)
         familyMemberRepository.save(member2)
 

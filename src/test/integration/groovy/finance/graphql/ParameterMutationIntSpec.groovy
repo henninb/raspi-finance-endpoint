@@ -20,6 +20,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         withUserRole()
         def parameter = new Parameter(
                 0L,
+                "",
                 "test_create_param",
                 "test_create_value",
                 true
@@ -41,6 +42,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         withUserRole()
         def parameter = new Parameter(
                 0L,
+                "",
                 "",                     // invalid: empty
                 "test_value",
                 true
@@ -58,6 +60,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         withUserRole()
         def parameter = new Parameter(
                 0L,
+                "",
                 "a" * 51,               // invalid: exceeds 50 character limit
                 "test_value",
                 true
@@ -75,6 +78,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         withUserRole()
         def parameter = new Parameter(
                 0L,
+                "",
                 "test_param",
                 "",                     // invalid: empty
                 true
@@ -93,6 +97,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         def created = createTestParameter("test_update_param", "original_value")
         def updated = new Parameter(
                 created.parameterId,
+                "",
                 "test_update_param",
                 "updated_value",
                 true
@@ -114,6 +119,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         withUserRole()
         def parameter = new Parameter(
                 999999L,                // non-existent ID
+                "",
                 "test_param",
                 "test_value",
                 true
@@ -149,6 +155,7 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     private Parameter createTestParameter(String name, String value) {
         Parameter parameter = new Parameter(
                 0L,
+                "",
                 name,
                 value,
                 true

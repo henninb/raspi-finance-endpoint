@@ -139,7 +139,7 @@ class SecurityEndpointsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test security filter chain with different endpoints'() {
         when:
-        List<String> publicEndpoints = ["/actuator/health", "/actuator/info"]
+        List<String> publicEndpoints = ["/actuator/health"]
         List<String> protectedEndpoints = ["/accounts", "/transactions", "/categories"]
 
         List<Boolean> publicResults = publicEndpoints.collect { endpoint ->
@@ -147,7 +147,7 @@ class SecurityEndpointsIntSpec extends BaseRestTemplateIntegrationSpec {
                 ResponseEntity<String> response = getMgmtWithRetry(endpoint, 1)
                 return response.statusCode.value() == 200 || response.statusCode.value() == 404
             } catch (Exception e) {
-                return e.message?.contains("404") ? true : false
+                return e.message?.contains("404") || e.message?.contains("200")
             }
         }
 

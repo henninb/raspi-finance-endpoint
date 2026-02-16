@@ -37,8 +37,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
 
 
     def "createTransfer mutation succeeds with valid input"() {
-        given:
-        withUserRole()
+        given: "valid security context from setup()"
 
         when:
         def result = mutationController.createTransfer(
@@ -65,8 +64,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
     }
 
     def "createTransfer mutation fails validation for negative amount"() {
-        given:
-        withUserRole()
+        given: "valid security context from setup()"
 
         when:
         mutationController.createTransfer(
@@ -87,8 +85,7 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
     }
 
     def "createTransfer mutation fails when source account missing"() {
-        given:
-        withUserRole()
+        given: "valid security context from setup()"
 
         when:
         mutationController.createTransfer(
@@ -110,7 +107,6 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
 
     def "deleteTransfer mutation returns true for existing transfer"() {
         given:
-        withUserRole()
         def created = mutationController.createTransfer(
                 new finance.controllers.dto.TransferInputDto(
                         null,
