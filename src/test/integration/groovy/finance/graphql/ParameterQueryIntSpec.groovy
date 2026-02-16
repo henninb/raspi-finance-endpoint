@@ -70,6 +70,7 @@ class ParameterQueryIntSpec extends BaseIntegrationSpec {
     private Parameter createTestParameter(String name, String value) {
         Parameter parameter = new Parameter(
             0L,
+            "",
             name,
             value,
             true

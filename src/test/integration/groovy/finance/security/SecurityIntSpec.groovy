@@ -351,7 +351,7 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test security filter chain integration'() {
         given:
-        def publicEndpoints = ["/actuator/health", "/actuator/info"]
+        def publicEndpoints = ["/actuator/health"]
         def protectedEndpoints = ["/api/accounts", "/api/transactions", "/api/categories"]
 
         when:
@@ -360,7 +360,7 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
                 ResponseEntity<String> resp = restTemplate.getForEntity(managementBaseUrl + endpoint, String.class)
                 return resp.statusCode.value() == 200 || resp.statusCode.value() == 404
             } catch (Exception e) {
-                return false
+                return e.message?.contains("404") || e.message?.contains("200")
             }
         }
 

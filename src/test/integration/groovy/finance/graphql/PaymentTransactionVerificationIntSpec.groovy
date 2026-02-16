@@ -26,7 +26,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should create transactions with correct amount signs for BILL_PAYMENT"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_verify", "checking", true)
         String creditCardAccount = testDataManager.createAccountFor(testOwner, "credit_verify", "credit_card", true)
 
@@ -61,7 +60,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should create transactions with correct amount signs for TRANSFER"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_xfer", "checking", true)
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_xfer", "savings", true)
 
@@ -94,7 +92,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should create transactions with correct amount signs for CASH_ADVANCE"() {
         given:
-        withUserRole()
         String creditCardAccount = testDataManager.createAccountFor(testOwner, "credit_advance", "credit_card", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_advance", "checking", true)
 
@@ -127,7 +124,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should create transactions with correct amount signs for BALANCE_TRANSFER"() {
         given:
-        withUserRole()
         String creditCard1 = testDataManager.createAccountFor(testOwner, "credit_bal1", "credit_card", true)
         String creditCard2 = testDataManager.createAccountFor(testOwner, "credit_bal2", "credit_card", true)
 
@@ -160,7 +156,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should set accountType field to actual account type, not legacy Debit/Credit"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_type", "checking", true)
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_type", "savings", true)
 
@@ -195,7 +190,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should populate transaction notes with account references"() {
         given:
-        withUserRole()
         String sourceAcct = testDataManager.createAccountFor(testOwner, "source_notes", "checking", true)
         String destAcct = testDataManager.createAccountFor(testOwner, "dest_notes", "savings", true)
 
@@ -228,7 +222,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should set transaction description and category correctly"() {
         given:
-        withUserRole()
         String sourceAcct = testDataManager.createAccountFor(testOwner, "source_meta", "checking", true)
         String destAcct = testDataManager.createAccountFor(testOwner, "dest_meta", "credit_card", true)
 
@@ -264,7 +257,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle very small amounts correctly"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_small", "checking", true)
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_small", "savings", true)
 
@@ -297,7 +289,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should handle large amounts correctly"() {
         given:
-        withUserRole()
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_large", "checking", true)
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings_large", "savings", true)
 
@@ -330,7 +321,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with medical account types should use correct behavior"() {
         given:
-        withUserRole()
         String hsaAccount = testDataManager.createAccountFor(testOwner, "hsa_medical", "hsa", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking_medical", "checking", true)
 
@@ -364,7 +354,6 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment with investment account types should use correct behavior"() {
         given:
-        withUserRole()
         String brokerageAccount = testDataManager.createAccountFor(testOwner, "brokerage_inv", "brokerage", true)
         String mortgageAccount = testDataManager.createAccountFor(testOwner, "mortgage_inv", "mortgage", true)
 

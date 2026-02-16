@@ -38,7 +38,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation succeeds with valid input"() {
         given:
-        withUserRole()
         def dto = new PaymentInputDto(
                 null,                           // paymentId
                 srcName,                        // sourceAccount
@@ -65,7 +64,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation fails validation for negative amount"() {
         given:
-        withUserRole()
         def dto = new PaymentInputDto(
                 null,                           // paymentId
                 srcName,                        // sourceAccount
@@ -86,7 +84,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation fails when source account invalid format"() {
         given:
-        withUserRole()
         def dto = new PaymentInputDto(
                 null,
                 "ab",                         // invalid: too short / non-existent
@@ -107,7 +104,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation succeeds when destination is asset account (TRANSFER behavior)"() {
         given:
-        withUserRole()
         // Create a savings (asset/debit) account as destination
         String savingsAccount = testDataManager.createAccountFor(testOwner, "savings", "savings", true)
         def dto = new PaymentInputDto(
@@ -134,7 +130,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation succeeds with liability to asset (CASH_ADVANCE behavior)"() {
         given:
-        withUserRole()
         // Create credit card (liability) source and checking (asset) destination
         String creditCardAccount = testDataManager.createAccountFor(testOwner, "credit_card", "credit_card", true)
         String checkingAccount = testDataManager.createAccountFor(testOwner, "checking", "checking", true)
@@ -162,7 +157,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment mutation succeeds with liability to liability (BALANCE_TRANSFER behavior)"() {
         given:
-        withUserRole()
         // Create two credit card (liability) accounts
         String creditCard1 = testDataManager.createAccountFor(testOwner, "credit_card_1", "credit_card", true)
         String creditCard2 = testDataManager.createAccountFor(testOwner, "credit_card_2", "credit_card", true)
@@ -190,7 +184,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     def "deletePayment mutation returns true for existing payment"() {
         given:
-        withUserRole()
         def createDto = new PaymentInputDto(
                 null,                           // paymentId
                 srcName,                        // sourceAccount

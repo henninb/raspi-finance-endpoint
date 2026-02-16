@@ -53,21 +53,22 @@ class GraphQLIdSerializationIntSpec extends BaseRestTemplateIntegrationSpec {
     def "GraphQL returns ID-typed fields as strings"() {
         given:
         // Ensure @PreAuthorize(USER) passes for mutation
-        withUserRole()
+        def testUser = "graphqlid"
+        withUserRole(testUser)
         // Account names must match ^[a-z-]*_[a-z]*$ and 3-40 chars
         // Use a deterministic a-f suffix to avoid rare short UUID letter runs
         def suffix = safeSuffix(5)
         def src = "srcuser_${suffix}"
         def dest = "destuser_${suffix}"
         // Ensure accounts exist and satisfy constraints (debit src, credit dest)
-        def srcAccount = SmartAccountBuilder.builderForOwner("graphqlid")
+        def srcAccount = SmartAccountBuilder.builderForOwner(testUser)
                 .withAccountNameOwner(src)
                 .asDebit()
                 .withCleared(new BigDecimal("1000.00"))
                 .buildAndValidate()
         accountRepository.save(srcAccount)
 
-        def destAccount = SmartAccountBuilder.builderForOwner("graphqlid")
+        def destAccount = SmartAccountBuilder.builderForOwner(testUser)
                 .withAccountNameOwner(dest)
                 .asCredit()
                 .withCleared(new BigDecimal("-200.00"))
