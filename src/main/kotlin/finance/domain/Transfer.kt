@@ -73,7 +73,7 @@ data class Transfer(
     var activeStatus: Boolean = true,
 ) {
     @JsonCreator
-    constructor() : this(0L, "", "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), "", "")
+    constructor() : this(0L, "", "", "", LocalDate.of(1970, 1, 1), BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP), null, null)
 
     @JsonProperty
     @Column(name = "date_added", nullable = false)
