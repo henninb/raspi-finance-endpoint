@@ -14,13 +14,19 @@ import io.micrometer.core.instrument.Timer
 import io.micrometer.core.instrument.Counter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
+import org.springframework.http.client.ClientHttpRequestInterceptor
+import org.springframework.test.context.TestPropertySource
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.client.RestTemplate
 
 import java.sql.Date
 import java.sql.Timestamp
 import java.math.BigDecimal
 
 @Transactional
+@TestPropertySource(properties = [
+    "management.server.port="
+])
 class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
@@ -35,8 +41,18 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
     @Autowired
     AccountRepository accountRepository
 
+    private RestTemplate mgmtRestTemplate
+
     void setup() {
         setupTestData()
+        mgmtRestTemplate = new RestTemplate()
+        String token = createJwtToken()
+        mgmtRestTemplate.interceptors = [
+            { request, body, execution ->
+                request.headers.add("Authorization", "Bearer " + token)
+                execution.execute(request, body)
+            } as ClientHttpRequestInterceptor
+        ]
     }
 
     void setupTestData() {
@@ -66,7 +82,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test actuator metrics endpoint accessibility'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics", Map)
 
         then:
         response.statusCode.is2xxSuccessful()
@@ -76,7 +92,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test actuator health endpoint with detailed information'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/health", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/health", Map)
 
         then:
         response.statusCode.is2xxSuccessful()
@@ -87,7 +103,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test JVM metrics availability'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.memory.used", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.memory.used", Map)
 
         then:
         response.statusCode.is2xxSuccessful()
@@ -100,7 +116,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         int code
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/hikari.connections.active", Map)
+            ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/hikari.connections.active", Map)
             code = response.statusCode.value()
         } catch (Exception e) {
             code = e.message?.contains("404") ? 404 : 500
@@ -172,13 +188,13 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         // Make several HTTP requests to generate metrics
         ["/actuator/health", "/actuator/info", "/actuator/metrics"].each { ep ->
-            try { restTemplate.getForEntity(managementBaseUrl + ep, String) } catch (Exception ignore) {}
+            try { mgmtRestTemplate.getForEntity(managementBaseUrl + ep, String) } catch (Exception ignore) {}
         }
 
         int code
         Map body = null
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/http.server.requests", Map)
+            ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/http.server.requests", Map)
             code = response.statusCode.value()
             body = response.body
         } catch (Exception e) {
@@ -197,7 +213,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test actuator info endpoint'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/info", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/info", Map)
 
         then:
         response.statusCode.is2xxSuccessful()
@@ -209,7 +225,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         int code
         Map body = null
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/beans", Map)
+            ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/beans", Map)
             code = response.statusCode.value()
             body = response.body
         } catch (Exception e) {
@@ -229,7 +245,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         int code
         Map body = null
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/env", Map)
+            ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/env", Map)
             code = response.statusCode.value()
             body = response.body
         } catch (Exception e) {
@@ -288,7 +304,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         int code
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/resilience4j.circuitbreaker.state", Map)
+            ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/resilience4j.circuitbreaker.state", Map)
             code = response.statusCode.value()
         } catch (Exception e) {
             code = e.message?.contains("404") ? 404 : 500
@@ -301,7 +317,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test memory and garbage collection metrics'() {
         when:
-        ResponseEntity<Map> memoryResult = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.memory.max", Map)
+        ResponseEntity<Map> memoryResult = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.memory.max", Map)
 
         then:
         memoryResult.statusCode.is2xxSuccessful()
@@ -311,7 +327,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         // GC pause metrics may not be available with all GC configurations (e.g., ParallelGC in tests)
         def gcResponse = null
         try {
-            gcResponse = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.gc.pause", Map)
+            gcResponse = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.gc.pause", Map)
         } catch (Exception e) {
             // Expected with some GC configurations
         }
@@ -323,7 +339,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test thread pool metrics'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.threads.live", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.threads.live", Map)
 
         then:
         response.statusCode.is2xxSuccessful()
@@ -337,7 +353,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         int code
         try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/application.started.time", Map)
+            ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/application.started.time", Map)
             code = response.statusCode.value()
         } catch (Exception e) {
             code = e.message?.contains("404") ? 404 : 500
@@ -374,7 +390,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test metrics export configuration'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/metrics", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics", Map)
 
         then:
         response.statusCode.is2xxSuccessful()
@@ -393,7 +409,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         for (int i = 0; i < 5; i++) {
             long startTime = System.currentTimeMillis()
-            try { restTemplate.getForEntity(managementBaseUrl + "/actuator/health", String) } catch (Exception ignore) {}
+            try { mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/health", String) } catch (Exception ignore) {}
             long endTime = System.currentTimeMillis()
             responseTimes.add(endTime - startTime)
         }
@@ -414,7 +430,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test application health indicators integration'() {
         when:
-        ResponseEntity<Map> response = restTemplate.getForEntity(managementBaseUrl + "/actuator/health", Map)
+        ResponseEntity<Map> response = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/health", Map)
 
         then:
         response.statusCode.is2xxSuccessful()

@@ -18,8 +18,8 @@ class TransferSpec extends Specification {
         transfer.destinationAccount == ""
         transfer.transactionDate == LocalDate.ofEpochDay(0)
         transfer.amount == new BigDecimal("0.00")
-        transfer.guidSource == ""
-        transfer.guidDestination == ""
+        transfer.guidSource == null
+        transfer.guidDestination == null
         transfer.activeStatus == true
         transfer.dateAdded instanceof Timestamp
         transfer.dateUpdated instanceof Timestamp
