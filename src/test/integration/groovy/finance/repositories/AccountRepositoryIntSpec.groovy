@@ -167,7 +167,7 @@ class AccountRepositoryIntSpec extends BaseIntegrationSpec {
         // Try to create a second account with the exact same account name
         Account duplicateAccount = SmartAccountBuilder.builderForOwner(testOwner)
             .withAccountNameOwner(savedAccount.accountNameOwner)  // Use exact same name
-            .asCredit()  // Different type but same name violates unique constraint
+            .asDebit()  // Same owner + name + type violates composite unique constraint
             .withMoniker("9000")
             .withBalances(new BigDecimal("200.00"))
             .buildAndValidate()
