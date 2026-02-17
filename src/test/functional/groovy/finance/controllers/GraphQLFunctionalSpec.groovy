@@ -38,6 +38,7 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
 
     void 'simple GraphQL query test - to verify GraphQL endpoint is working'() {
         when: 'invoking the query controller directly'
+        withUserRole(testOwner)
         def list = queryController.descriptions()
 
         then: 'we get a response (even if empty)'
@@ -80,7 +81,7 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
         def jsonBuilder = new JsonBuilder(requestBody)
 
         when: 'calling the mutation controller directly'
-        withUserRole()
+        withUserRole(testOwner)
         def dto = new finance.controllers.dto.TransferInputDto(
                 null,
                 sourceAccount,

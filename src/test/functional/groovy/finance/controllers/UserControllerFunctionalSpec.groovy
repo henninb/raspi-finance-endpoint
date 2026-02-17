@@ -1,5 +1,6 @@
 package finance.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import finance.domain.User
 import finance.helpers.SmartUserBuilder
 import finance.helpers.UserTestContext
@@ -36,7 +37,10 @@ class UserControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        HttpEntity entity = new HttpEntity<>(uniqueUser.toString(), headers)
+        // Build JSON manually since password has WRITE_ONLY access and is excluded from toString()
+        Map userMap = [username: uniqueUser.username, password: uniqueUser.password, firstName: uniqueUser.firstName, lastName: uniqueUser.lastName, activeStatus: uniqueUser.activeStatus]
+        String jsonPayload = new ObjectMapper().writeValueAsString(userMap)
+        HttpEntity entity = new HttpEntity<>(jsonPayload, headers)
 
         when: "posting to user signup endpoint"
         ResponseEntity<String> response = restTemplate.exchange(
@@ -55,7 +59,10 @@ class UserControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         headers.setContentType(MediaType.APPLICATION_JSON)
         String token = generateJwtToken(username)
         headers.set("Cookie", "token=${token}")
-        HttpEntity entity = new HttpEntity<>(duplicateUser.toString(), headers)
+        // Build JSON manually since password has WRITE_ONLY access and is excluded from toString()
+        Map userMap = [username: duplicateUser.username, password: duplicateUser.password, firstName: duplicateUser.firstName, lastName: duplicateUser.lastName, activeStatus: duplicateUser.activeStatus]
+        String jsonPayload = new ObjectMapper().writeValueAsString(userMap)
+        HttpEntity entity = new HttpEntity<>(jsonPayload, headers)
 
         // First signup (should succeed)
         ResponseEntity<String> firstResponse = restTemplate.exchange(

@@ -1,7 +1,7 @@
 package finance.controllers
 
-import finance.helpers.SmartUserBuilder
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 
+@Slf4j
 @ActiveProfiles("func")
 class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
@@ -29,25 +30,42 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void setupSpec() {
         // Generate unique test username for this test run
         testUsername = "functional_test_${testOwner.split('_')[1]}"
+
+        // Register user via API endpoint (JDBC inserts are unreliable with ddl-auto:create)
+        try {
+            int p = environment.getProperty("local.server.port", Integer.class, 8080)
+            String base = "http://localhost:${p}"
+            HttpHeaders regHeaders = new HttpHeaders()
+            regHeaders.setContentType(MediaType.APPLICATION_JSON)
+            String regPayload = jsonMapper.writeValueAsString([
+                firstName: "functional",
+                lastName: "test",
+                username: testUsername,
+                password: testPassword,
+                activeStatus: true
+            ])
+            HttpEntity regEntity = new HttpEntity<>(regPayload, regHeaders)
+            ResponseEntity<String> resp = restTemplate.postForEntity(
+                base + "/api/register", regEntity, String)
+            if (resp.statusCode.is2xxSuccessful()) {
+                log.info("Test user registered: ${testUsername}")
+            } else {
+                log.warn("Test user registration failed: status=${resp.statusCode}")
+            }
+        } catch (Exception e) {
+            log.warn("Could not register test user: ${e.message}")
+        }
     }
 
     void 'should register new user successfully'() {
-        given: "a new user registration payload using SmartUserBuilder"
-        def user = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(testUsername)
-            .withPassword(testPassword)
-            .withFirstName("functional")
-            .withLastName("test")
-            .buildAndValidate()
-
-        // User.toString() excludes password via @get:JsonIgnore, so build payload as Map
+        given: "a new user registration payload with a unique username"
+        String registerUsername = "reg_new_${testOwner.split('_')[1]}"
         String payload = jsonMapper.writeValueAsString([
-            userId: user.userId,
-            activeStatus: user.activeStatus,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-            password: testPassword
+            firstName: "functional",
+            lastName: "test",
+            username: registerUsername,
+            password: testPassword,
+            activeStatus: true
         ])
 
         when: "posting to register endpoint"
@@ -71,21 +89,13 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     }
 
     void 'should reject registration with existing username'() {
-        given: "a user registration payload with existing username using SmartUserBuilder"
-        def user = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(testUsername)
-            .withPassword("ValidPass123!")
-            .withFirstName("functional")
-            .withLastName("test")
-            .buildAndValidate()
-
+        given: "a user registration payload with existing username"
         String payload = jsonMapper.writeValueAsString([
-            userId: user.userId,
-            activeStatus: user.activeStatus,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-            password: "ValidPass123!"
+            firstName: "functional",
+            lastName: "test",
+            username: testUsername,
+            password: "ValidPass123!",
+            activeStatus: true
         ])
 
         when: "posting to register endpoint"
@@ -242,30 +252,33 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'should blacklist token on logout and reject subsequent requests'() {
         given: "a registered user with valid credentials"
         String blacklistTestUser = "blacklist_test_${testOwner.split('_')[1]}"
-        String registerPayload = jsonMapper.writeValueAsString([
-            userId: 0,
-            activeStatus: true,
+        String blacklistTestPassword = "BlacklistPass1!"
+
+        // Register user via API (DB inserts in @Transactional tests are invisible to the server)
+        HttpHeaders regHeaders = new HttpHeaders()
+        regHeaders.setContentType(MediaType.APPLICATION_JSON)
+        String regPayload = jsonMapper.writeValueAsString([
             firstName: "blacklist",
             lastName: "test",
             username: blacklistTestUser,
-            password: testPassword
+            password: blacklistTestPassword,
+            activeStatus: true
         ])
-
-        // Register the user first
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity registerEntity = new HttpEntity<>(registerPayload, headers)
-        ResponseEntity<String> registerResponse = restTemplate.exchange(
+        HttpEntity regEntity = new HttpEntity<>(regPayload, regHeaders)
+        restTemplate.exchange(
             createURLWithPort("/api/register"),
-            HttpMethod.POST, registerEntity, String)
+            HttpMethod.POST, regEntity, String)
 
         and: "valid login credentials to obtain a fresh token"
         String payload = jsonMapper.writeValueAsString([
             username: blacklistTestUser,
-            password: testPassword
+            password: blacklistTestPassword
         ])
 
         when: "logging in to get a token"
-        HttpEntity loginEntity = new HttpEntity<>(payload, headers)
+        HttpHeaders loginHeaders = new HttpHeaders()
+        loginHeaders.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity loginEntity = new HttpEntity<>(payload, loginHeaders)
         ResponseEntity<String> loginResponse = restTemplate.exchange(
             createURLWithPort("/api/login"),
             HttpMethod.POST, loginEntity, String)
@@ -316,30 +329,33 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'should blacklist token when logging out via Authorization header'() {
         given: "a registered user with valid credentials"
         String authHeaderTestUser = "authheader_test_${testOwner.split('_')[1]}"
-        String registerPayload = jsonMapper.writeValueAsString([
-            userId: 0,
-            activeStatus: true,
+        String authHeaderTestPassword = "AuthHeaderPass1!"
+
+        // Register user via API (DB inserts in @Transactional tests are invisible to the server)
+        HttpHeaders regHeaders = new HttpHeaders()
+        regHeaders.setContentType(MediaType.APPLICATION_JSON)
+        String regPayload = jsonMapper.writeValueAsString([
             firstName: "authheader",
             lastName: "test",
             username: authHeaderTestUser,
-            password: testPassword
+            password: authHeaderTestPassword,
+            activeStatus: true
         ])
-
-        // Register the user first
-        headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity registerEntity = new HttpEntity<>(registerPayload, headers)
-        ResponseEntity<String> registerResponse = restTemplate.exchange(
+        HttpEntity regEntity = new HttpEntity<>(regPayload, regHeaders)
+        restTemplate.exchange(
             createURLWithPort("/api/register"),
-            HttpMethod.POST, registerEntity, String)
+            HttpMethod.POST, regEntity, String)
 
         and: "valid login credentials to obtain a fresh token"
         String payload = jsonMapper.writeValueAsString([
             username: authHeaderTestUser,
-            password: testPassword
+            password: authHeaderTestPassword
         ])
 
         when: "logging in to get a token"
-        HttpEntity loginEntity = new HttpEntity<>(payload, headers)
+        HttpHeaders loginHeaders = new HttpHeaders()
+        loginHeaders.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity loginEntity = new HttpEntity<>(payload, loginHeaders)
         ResponseEntity<String> loginResponse = restTemplate.exchange(
             createURLWithPort("/api/login"),
             HttpMethod.POST, loginEntity, String)
