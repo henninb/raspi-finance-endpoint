@@ -1,5 +1,6 @@
 package finance.domain
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -33,7 +34,7 @@ data class User(
     @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "user_id", nullable = false)
     var userId: Long,
-    @param:JsonProperty
+    @field:JsonProperty
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,
     @field:Size(min = 1, max = 40, message = "First name must be between 1 and 40 characters")
@@ -55,15 +56,15 @@ data class User(
     @field:Pattern(regexp = "^[a-zA-Z0-9._@+-]+$", message = "Username can only contain letters, numbers, dots, underscores, hyphens, @ and + symbols")
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "username", unique = true, nullable = false)
-    @param:JsonProperty
+    @field:JsonProperty
     var username: String,
     @field:Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
     @field:NotBlank(message = "Password cannot be blank")
     @Column(name = "password", unique = true, nullable = false)
-    @param:JsonProperty
-    @get:JsonIgnore
+    @field:JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     var password: String,
 ) {
+    @JsonCreator
     constructor() : this(0L, true, "", "", "", "")
 
     @JsonIgnore

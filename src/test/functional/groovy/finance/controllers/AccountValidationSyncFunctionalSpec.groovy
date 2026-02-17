@@ -296,7 +296,7 @@ class AccountValidationSyncFunctionalSpec extends BaseControllerFunctionalSpec {
 
     protected String generateJwtToken(String username) {
         return Jwts.builder()
-                .subject(username)
+                .claim("username", username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24 hours
                 .signWith(Keys.hmacShaKeyFor(jwtKey.bytes))
