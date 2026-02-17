@@ -40,7 +40,15 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
             .withLastName("test")
             .buildAndValidate()
 
-        String payload = user.toString()
+        // User.toString() excludes password via @get:JsonIgnore, so build payload as Map
+        String payload = jsonMapper.writeValueAsString([
+            userId: user.userId,
+            activeStatus: user.activeStatus,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            password: testPassword
+        ])
 
         when: "posting to register endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -71,7 +79,14 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
             .withLastName("test")
             .buildAndValidate()
 
-        String payload = user.toString()
+        String payload = jsonMapper.writeValueAsString([
+            userId: user.userId,
+            activeStatus: user.activeStatus,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            password: "ValidPass123!"
+        ])
 
         when: "posting to register endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -87,15 +102,11 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     }
 
     void 'should login with valid credentials'() {
-        given: "valid login credentials using SmartUserBuilder"
-        def user = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(testUsername)
-            .withPassword(testPassword)
-            .withFirstName("functional")
-            .withLastName("test")
-            .buildAndValidate()
-
-        String payload = user.toString()
+        given: "valid login credentials"
+        String payload = jsonMapper.writeValueAsString([
+            username: testUsername,
+            password: testPassword
+        ])
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -126,15 +137,11 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     }
 
     void 'should reject login with invalid credentials'() {
-        given: "invalid login credentials using SmartUserBuilder"
-        def user = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(testUsername)
-            .withPassword("WrongPass123!")
-            .withFirstName("functional")
-            .withLastName("test")
-            .buildAndValidate()
-
-        String payload = user.toString()
+        given: "invalid login credentials"
+        String payload = jsonMapper.writeValueAsString([
+            username: testUsername,
+            password: "WrongPass123!"
+        ])
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -150,16 +157,12 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     }
 
     void 'should reject login with non-existent user'() {
-        given: "non-existent user credentials using SmartUserBuilder"
+        given: "non-existent user credentials"
         String nonExistentUser = "non_existent_user_${testOwner.split('_')[1]}"
-        def user = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(nonExistentUser)
-            .withPassword("SomePass123!")
-            .withFirstName("non")
-            .withLastName("existent")
-            .buildAndValidate()
-
-        String payload = user.toString()
+        String payload = jsonMapper.writeValueAsString([
+            username: nonExistentUser,
+            password: "SomePass123!"
+        ])
 
         when: "posting to login endpoint"
         headers.setContentType(MediaType.APPLICATION_JSON)
@@ -239,29 +242,27 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'should blacklist token on logout and reject subsequent requests'() {
         given: "a registered user with valid credentials"
         String blacklistTestUser = "blacklist_test_${testOwner.split('_')[1]}"
-        def registerUser = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(blacklistTestUser)
-            .withPassword(testPassword)
-            .withFirstName("blacklist")
-            .withLastName("test")
-            .buildAndValidate()
+        String registerPayload = jsonMapper.writeValueAsString([
+            userId: 0,
+            activeStatus: true,
+            firstName: "blacklist",
+            lastName: "test",
+            username: blacklistTestUser,
+            password: testPassword
+        ])
 
         // Register the user first
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity registerEntity = new HttpEntity<>(registerUser.toString(), headers)
+        HttpEntity registerEntity = new HttpEntity<>(registerPayload, headers)
         ResponseEntity<String> registerResponse = restTemplate.exchange(
             createURLWithPort("/api/register"),
             HttpMethod.POST, registerEntity, String)
 
         and: "valid login credentials to obtain a fresh token"
-        def loginUser = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(blacklistTestUser)
-            .withPassword(testPassword)
-            .withFirstName("blacklist")
-            .withLastName("test")
-            .buildAndValidate()
-
-        String payload = loginUser.toString()
+        String payload = jsonMapper.writeValueAsString([
+            username: blacklistTestUser,
+            password: testPassword
+        ])
 
         when: "logging in to get a token"
         HttpEntity loginEntity = new HttpEntity<>(payload, headers)
@@ -315,29 +316,27 @@ class LoginControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'should blacklist token when logging out via Authorization header'() {
         given: "a registered user with valid credentials"
         String authHeaderTestUser = "authheader_test_${testOwner.split('_')[1]}"
-        def registerUser = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(authHeaderTestUser)
-            .withPassword(testPassword)
-            .withFirstName("authheader")
-            .withLastName("test")
-            .buildAndValidate()
+        String registerPayload = jsonMapper.writeValueAsString([
+            userId: 0,
+            activeStatus: true,
+            firstName: "authheader",
+            lastName: "test",
+            username: authHeaderTestUser,
+            password: testPassword
+        ])
 
         // Register the user first
         headers.setContentType(MediaType.APPLICATION_JSON)
-        HttpEntity registerEntity = new HttpEntity<>(registerUser.toString(), headers)
+        HttpEntity registerEntity = new HttpEntity<>(registerPayload, headers)
         ResponseEntity<String> registerResponse = restTemplate.exchange(
             createURLWithPort("/api/register"),
             HttpMethod.POST, registerEntity, String)
 
         and: "valid login credentials to obtain a fresh token"
-        def loginUser = SmartUserBuilder.builderForOwner(testOwner)
-            .withUsername(authHeaderTestUser)
-            .withPassword(testPassword)
-            .withFirstName("authheader")
-            .withLastName("test")
-            .buildAndValidate()
-
-        String payload = loginUser.toString()
+        String payload = jsonMapper.writeValueAsString([
+            username: authHeaderTestUser,
+            password: testPassword
+        ])
 
         when: "logging in to get a token"
         HttpEntity loginEntity = new HttpEntity<>(payload, headers)
