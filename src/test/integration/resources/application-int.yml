@@ -73,7 +73,7 @@ spring:
   # = DATA SOURCE
   # ===============================
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;LOCK_TIMEOUT=10000;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:testdb;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;LOCK_TIMEOUT=10000;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password: password
     driver-class-name: org.h2.Driver
@@ -85,6 +85,7 @@ spring:
       idle-timeout: 30000
       max-lifetime: 60000
       pool-name: IntegrationTestHikariPool
+      connection-init-sql: CREATE SCHEMA IF NOT EXISTS "int"; SET SCHEMA "int"
   sql:
     init:
       continue-on-error: false
@@ -108,9 +109,10 @@ spring:
     open-in-view: false
     generate-ddl: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate:
+        default_schema: int
         dialect: org.hibernate.dialect.H2Dialect
         # Query timeout for Hibernate queries (in milliseconds)
         query.timeout: 30000
@@ -141,7 +143,7 @@ spring:
   # = Flyway
   # ===============================
   flyway:
-    enabled: false
+    enabled: true
     baseline-on-migrate: true
     baseline-version: 0
     validate-on-migrate: true

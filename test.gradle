@@ -72,7 +72,7 @@ dependencies {
     testImplementation("com.squareup.retrofit2:retrofit:${squareRetrofitVersion}")
     testImplementation("com.squareup.retrofit2:retrofit-mock:${squareRetrofitVersion}")
     //h2 database
-    runtimeOnly("com.h2database:h2:${h2DatabaseVersion}")
+    testImplementation("com.h2database:h2:${h2DatabaseVersion}")
 }
 
 ////provide dependency scopes

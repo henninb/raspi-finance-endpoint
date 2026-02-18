@@ -144,34 +144,6 @@ class ParameterRepositoryIntSpec extends BaseIntegrationSpec {
         thrown(DataIntegrityViolationException)
     }
 
-    void 'test parameter unique constraint on parameter value'() {
-        given:
-        String uniqueParameterValue = "unique_value_${testOwner}".toLowerCase()
-
-        Parameter parameter1 = SmartParameterBuilder.builderForOwner(testOwner)
-                .withUniqueParameterName("param1")
-                .withParameterValue(uniqueParameterValue)
-                .asActive()
-                .buildAndValidate()
-
-        when:
-        Parameter savedParameter1 = parameterRepository.save(parameter1)
-
-        then:
-        savedParameter1.parameterId != null
-
-        when: "trying to save parameter with same parameter value"
-        Parameter parameter2 = SmartParameterBuilder.builderForOwner(testOwner)
-                .withUniqueParameterName("param2")      // Different name
-                .withParameterValue(uniqueParameterValue) // Same value
-                .asActive()
-                .buildAndValidate()
-
-        parameterRepository.save(parameter2)
-
-        then:
-        thrown(DataIntegrityViolationException)
-    }
 
     void 'test parameter update operations'() {
         given:

@@ -331,6 +331,12 @@ class TenantIsolationIntSpec extends Specification {
         categoryRepository.save(catA)
         categoryRepository.flush()
 
+        Description descA = SmartDescriptionBuilder.builderForOwner(OWNER_A)
+            .withDescriptionName("isolation test txn")
+            .buildAndValidate()
+        descriptionRepository.save(descA)
+        descriptionRepository.flush()
+
         Transaction txnA = SmartTransactionBuilder.builderForOwner(OWNER_A)
             .withAccountNameOwner(accountA.accountNameOwner)
             .withAccountId(accountA.accountId)

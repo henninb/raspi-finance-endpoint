@@ -120,6 +120,10 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
                 .withAmount('40.00')
                 .buildAndValidate()
 
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, 'range_test', 'date_range_in_1')
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, 'range_test', 'date_range_in_2')
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, 'range_test', 'date_range_out_1')
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, 'range_test', 'date_range_out_2')
         transactionRepository.saveAll([in1, in2, out1, out2])
 
         and: 'A pageable sorted by transactionDate desc'

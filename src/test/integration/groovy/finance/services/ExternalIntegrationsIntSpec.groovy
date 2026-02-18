@@ -19,6 +19,8 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
 
+import org.springframework.jdbc.core.JdbcTemplate
+
 import java.sql.Date
 import java.sql.Timestamp
 import java.math.BigDecimal
@@ -40,6 +42,9 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     AccountRepository accountRepository
+
+    @Autowired
+    JdbcTemplate jdbcTemplate
 
     private RestTemplate mgmtRestTemplate
 
@@ -67,6 +72,24 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         testAccount.dateClosed = new Timestamp(System.currentTimeMillis())
         testAccount.validationDate = new Timestamp(System.currentTimeMillis())
         accountRepository.save(testAccount)
+
+        // Insert categories/descriptions for transaction metrics tests.
+        // Transactions are built with no explicit owner, so owner defaults to empty string ''.
+        // The fk_category_name and fk_description_name FKs require matching rows.
+        ['metricstest', 'dbtest'].each { name ->
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added) VALUES (?, true, '', '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
+                    name
+                )
+            } catch (Exception ignored) {}
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added) VALUES (?, true, '', '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
+                    name
+                )
+            } catch (Exception ignored) {}
+        }
     }
 
     void 'test meter registry bean configuration'() {

@@ -495,17 +495,21 @@ class MedicalExpenseRepositoryIntSpec extends BaseIntegrationSpec {
 
     private Long createTestTransaction(String suffix = "medical") {
         // Create transaction using SmartBuilder pattern (like other migrated tests)
+        String descriptionLower = "medical test transaction ${suffix}".toLowerCase()
         Transaction transaction = SmartTransactionBuilder.builderForOwner(testOwner)
                 .withAccountId(primaryAccountId)
                 .withAccountType(AccountType.Credit)
                 .withTransactionType(TransactionType.Expense)
                 .withAccountNameOwner(ownerAccountName)
                 .withTransactionDate(LocalDate.parse("2024-01-15"))
-                .withDescription("Medical test transaction ${suffix}")
+                .withDescription(descriptionLower)
                 .withCategory(repositoryContext.categoryName)
                 .withAmount(new BigDecimal("350.00"))
                 .asCleared()
                 .buildAndValidate()
+
+        // Ensure category and description exist before JPA save (required by FKs)
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, repositoryContext.categoryName, descriptionLower)
 
         Transaction savedTransaction = transactionRepository.save(transaction)
         return savedTransaction.transactionId
