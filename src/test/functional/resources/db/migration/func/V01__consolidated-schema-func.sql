@@ -193,7 +193,16 @@ CREATE TABLE IF NOT EXISTS func.t_transaction
     CONSTRAINT t_transaction_category_lowercase_ck CHECK (category = lower(category)),
     CONSTRAINT t_transaction_notes_lowercase_ck CHECK (notes = lower(notes)),
     CONSTRAINT ck_transaction_transaction_state CHECK (transaction_state IN ('outstanding', 'future', 'cleared', 'undefined')),
-    CONSTRAINT ck_transaction_account_type CHECK (account_type IN ('debit', 'credit', 'undefined')),
+    CONSTRAINT ck_transaction_account_type CHECK (account_type IN (
+        'credit', 'debit', 'undefined',
+        'checking', 'savings', 'credit_card', 'certificate', 'money_market',
+        'brokerage', 'retirement_401k', 'retirement_ira', 'retirement_roth', 'pension',
+        'hsa', 'fsa', 'medical_savings',
+        'mortgage', 'auto_loan', 'student_loan', 'personal_loan', 'line_of_credit',
+        'utility', 'prepaid', 'gift_card',
+        'business_checking', 'business_savings', 'business_credit',
+        'cash', 'escrow', 'trust'
+    )),
     CONSTRAINT ck_transaction_type CHECK (transaction_type IN ('expense', 'income', 'transfer', 'undefined')),
     CONSTRAINT ck_reoccurring_type CHECK (reoccurring_type IN
                                           ('annually', 'biannually', 'fortnightly', 'monthly', 'quarterly', 'onetime',
@@ -336,7 +345,10 @@ CREATE TABLE IF NOT EXISTS func.t_medical_provider
         'in_network', 'out_of_network', 'unknown'
     )),
     CONSTRAINT ck_provider_name_lowercase CHECK (provider_name = lower(provider_name)),
-    CONSTRAINT ck_provider_name_not_empty CHECK (length(trim(provider_name)) > 0)
+    CONSTRAINT ck_provider_name_not_empty CHECK (length(trim(provider_name)) > 0),
+    CONSTRAINT ck_npi_format CHECK (npi IS NULL OR REGEXP_LIKE(npi, '^[0-9]{10}$')),
+    CONSTRAINT ck_zip_code_format CHECK (zip_code IS NULL OR REGEXP_LIKE(zip_code, '^[0-9]{5}(-[0-9]{4})?$')),
+    CONSTRAINT ck_phone_format CHECK (phone IS NULL OR length(phone) >= 10)
 );
 
 CREATE INDEX IF NOT EXISTS idx_medical_provider_name ON func.t_medical_provider(provider_name);
@@ -382,7 +394,8 @@ CREATE TABLE IF NOT EXISTS func.t_family_member
     CONSTRAINT ck_family_member_name_not_empty CHECK (length(trim(member_name)) > 0),
     CONSTRAINT ck_family_owner_not_empty CHECK (length(trim(owner)) > 0),
     CONSTRAINT ck_insurance_member_id_length CHECK (insurance_member_id IS NULL OR length(insurance_member_id) <= 50),
-    CONSTRAINT ck_medical_record_number_length CHECK (medical_record_number IS NULL OR length(medical_record_number) <= 50)
+    CONSTRAINT ck_medical_record_number_length CHECK (medical_record_number IS NULL OR length(medical_record_number) <= 50),
+    CONSTRAINT ck_ssn_last_four_format CHECK (ssn_last_four IS NULL OR REGEXP_LIKE(ssn_last_four, '^[0-9]{4}$'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_family_member_owner ON func.t_family_member(owner);
@@ -431,6 +444,7 @@ CREATE TABLE IF NOT EXISTS func.t_medical_expense
         patient_responsibility >= 0
     ),
     CONSTRAINT ck_paid_amount_non_negative CHECK (paid_amount >= 0),
+    CONSTRAINT ck_medical_expense_service_date_valid CHECK (service_date <= CURRENT_DATE),
     CONSTRAINT ck_medical_expense_financial_consistency CHECK (
         billed_amount >= (insurance_discount + insurance_paid + patient_responsibility)
     )

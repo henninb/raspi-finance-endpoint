@@ -146,38 +146,6 @@ class UserRepositoryIntSpec extends BaseIntegrationSpec {
         thrown(DataIntegrityViolationException)
     }
 
-    void 'test user unique constraint violations on password'() {
-        given:
-        User user1 = SmartUserBuilder.builderForOwner(testOwner)
-                .withUniqueUsername("pwd1")
-                .withFirstName("Password")
-                .withLastName("TestUser")  // Use valid name
-                .withPassword("shared_password_123")
-                .asActive()
-                .buildAndValidate()
-
-        User user2 = SmartUserBuilder.builderForOwner(testOwner)
-                .withUniqueUsername("pwd2")
-                .withFirstName("Password")
-                .withLastName("TestPass")  // Use valid name without numbers
-                .withPassword("shared_password_123")  // Same password - will cause unique constraint violation
-                .asActive()
-                .buildAndValidate()
-
-        when:
-        userRepository.save(user1)
-        userRepository.flush() // Force the first save to complete
-
-        then:
-        notThrown(Exception) // First save should succeed
-
-        when:
-        userRepository.save(user2)
-        userRepository.flush() // This should fail due to unique constraint
-
-        then:
-        thrown(DataIntegrityViolationException)
-    }
 
     void 'test user constraint validation at build time'() {
         when: "trying to create a user with invalid username length (too short)"

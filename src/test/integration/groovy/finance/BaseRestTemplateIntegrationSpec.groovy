@@ -29,7 +29,6 @@ import spock.lang.AutoCleanup
     "server.port=0",
     "management.server.port=0",
     "management.endpoints.web.exposure.include=*",
-    "spring.flyway.enabled=false",
     "management.influx.metrics.export.enabled=false",
     "management.endpoint.health.show-details=always"
 ])

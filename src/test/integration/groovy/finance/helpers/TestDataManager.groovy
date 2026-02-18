@@ -181,8 +181,11 @@ class TestDataManager {
         // Ensure account exists
         ensureAccountExists(testOwner, accountSuffix)
 
-        // Ensure category exists
-        ensureCategoryExists(testOwner, "test_category")
+        // Ensure category exists (use exact name to match the FK requirement)
+        ensureCategoryExistsExact(testOwner, categoryName)
+
+        // Ensure description exists (required by fk_description_name FK)
+        ensureDescriptionExists(testOwner, description)
 
         jdbcTemplate.update("""
             INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
@@ -200,7 +203,7 @@ class TestDataManager {
     }
 
     private void ensureAccountExists(String testOwner, String accountSuffix) {
-        String accountName = "${accountSuffix}_${testOwner}".toLowerCase()
+        String accountName = accountNameFor(testOwner, accountSuffix)
         Integer count = jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM t_account WHERE account_name_owner = ? AND owner = ?",
             Integer.class, accountName, testOwner
@@ -210,6 +213,60 @@ class TestDataManager {
             log.info("Account ${accountName} doesn't exist, creating it for integration test")
             createAccountFor(testOwner, accountSuffix, 'credit', true)
         }
+    }
+
+    private void ensureCategoryExistsExact(String owner, String categoryName) {
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM t_category WHERE category_name = ? AND owner = ?",
+            Integer.class, categoryName, owner
+        )
+        if (count == 0) {
+            try {
+                jdbcTemplate.update("""
+                    INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added)
+                    VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+                """, categoryName, owner)
+            } catch (Exception e) {
+                log.warn("Category ${categoryName} already exists: ${e.message}")
+            }
+        }
+    }
+
+    private void ensureDescriptionExists(String owner, String descriptionName) {
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM t_description WHERE description_name = ? AND owner = ?",
+            Integer.class, descriptionName, owner
+        )
+        if (count == 0) {
+            try {
+                jdbcTemplate.update("""
+                    INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added)
+                    VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
+                """, descriptionName, owner)
+            } catch (Exception e) {
+                log.warn("Description ${descriptionName} already exists: ${e.message}")
+            }
+        }
+    }
+
+    void ensureCategoryAndDescriptionExist(String owner, String category, String description) {
+        if (category && category.length() <= 50 && category == category.toLowerCase() && category.matches(/^[a-z0-9_-]*$/)) {
+            ensureCategoryExistsExact(owner, category)
+        }
+        if (description && description.length() <= 75 && description == description.toLowerCase()) {
+            ensureDescriptionExists(owner, description)
+        }
+    }
+
+    Long createTransactionAndGetId(String testOwner, String accountSuffix = "primary",
+                                   String description = "integration_test_transaction",
+                                   BigDecimal amount = new BigDecimal("10.00"),
+                                   String transactionState = "cleared") {
+        String guid = createTransactionFor(testOwner, accountSuffix, description, amount, transactionState)
+        return jdbcTemplate.queryForObject(
+            "SELECT transaction_id FROM t_transaction WHERE guid = ?",
+            Long.class, guid
+        )
     }
 
     private void ensureCategoryExists(String testOwner, String categorySuffix) {
@@ -303,9 +360,11 @@ class TestDataManager {
         jdbcTemplate.update("DELETE FROM t_parameter WHERE parameter_name LIKE ?", "%${testOwner}")
         jdbcTemplate.update("DELETE FROM t_parameter WHERE parameter_name LIKE ?", "%${clean}")
 
-        // Delete test-specific descriptions
+        // Delete test-specific descriptions (by name pattern and by owner)
         jdbcTemplate.update("DELETE FROM t_description WHERE description_name LIKE ?", "%${testOwner}")
         jdbcTemplate.update("DELETE FROM t_description WHERE description_name LIKE ?", "%${clean}")
+        jdbcTemplate.update("DELETE FROM t_description WHERE owner = ?", testOwner)
+        jdbcTemplate.update("DELETE FROM t_description WHERE owner = ?", clean)
 
         // Delete test-specific users
         jdbcTemplate.update("DELETE FROM t_user WHERE username LIKE ?", "%${testOwner}")

@@ -108,6 +108,7 @@ class ValidationAmountQueryIntSpec extends BaseIntegrationSpec {
         account.accountType = AccountType.Debit
         account.activeStatus = true
         account.moniker = "0000"
+        account.owner = testOwner
         account.outstanding = BigDecimal.ZERO
         account.future = BigDecimal.ZERO
         account.cleared = BigDecimal.ZERO
@@ -119,7 +120,7 @@ class ValidationAmountQueryIntSpec extends BaseIntegrationSpec {
     private ValidationAmount createTestValidationAmount(Account account, BigDecimal amount, TransactionState state) {
         ValidationAmount validation = new ValidationAmount(
             0L,
-            "",  // owner
+            account.owner,
             account.accountId,
             null,  // account reference
             new Timestamp(System.currentTimeMillis()),

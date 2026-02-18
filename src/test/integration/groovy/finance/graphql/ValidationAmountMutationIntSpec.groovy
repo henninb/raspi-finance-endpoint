@@ -10,6 +10,7 @@ import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
 import finance.services.ValidationAmountService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.core.context.SecurityContextHolder
 import jakarta.validation.ConstraintViolationException
 
 import java.sql.Timestamp
@@ -192,6 +193,9 @@ class ValidationAmountMutationIntSpec extends BaseIntegrationSpec {
         account.cleared = BigDecimal.ZERO
         account.dateClosed = new Timestamp(System.currentTimeMillis())
         account.validationDate = new Timestamp(System.currentTimeMillis())
+        // owner must match TenantContext.getCurrentOwner() which reads from SecurityContext
+        String currentOwner = SecurityContextHolder.getContext().authentication?.principal?.toString()?.toLowerCase() ?: testOwner
+        account.owner = currentOwner
         return accountRepository.saveAndFlush(account)
     }
 

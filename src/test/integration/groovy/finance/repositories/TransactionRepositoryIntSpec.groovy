@@ -68,6 +68,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAmount("100.50")
                 .asCleared()
                 .buildAndValidate()
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, txn.category, txn.description)
 
         when:
         Transaction saved = transactionRepository.save(txn)
@@ -99,6 +100,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                     .withAmount(new BigDecimal(100 + i))
                     .asCleared()
                     .buildAndValidate()
+            testDataManager.ensureCategoryAndDescriptionExist(testOwner, t.category, t.description)
             transactionRepository.save(t)
         }
 
@@ -125,6 +127,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAmount("85.50")
                 .asCleared()
                 .buildAndValidate()
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, t.category, t.description)
         transactionRepository.save(t)
 
         when:
@@ -153,6 +156,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                     .withTransactionState(state)
                     .asActive()
                     .buildAndValidate()
+            testDataManager.ensureCategoryAndDescriptionExist(testOwner, t.category, t.description)
             transactionRepository.save(t)
         }
 
@@ -194,6 +198,8 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .asFuture()
                 .buildAndValidate()
 
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, cleared.category, cleared.description)
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, future.category, future.description)
         transactionRepository.save(cleared)
         transactionRepository.save(future)
 
@@ -213,13 +219,14 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
         String uniqueCategory = "count_test_category_${testOwner.replaceAll(/[^a-z]/, '')}"
         String uniqueDescription = "count_test_description_${testOwner.replaceAll(/[^a-z]/, '')}"
 
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, uniqueCategory, uniqueDescription)
         for (int i = 0; i < 3; i++) {
             Transaction t = SmartTransactionBuilder.builderForOwner(testOwner)
                     .withAccountId(primaryAccountId)
                     .withAccountType(AccountType.Debit)
                     .withTransactionType(TransactionType.Expense)
                     .withAccountNameOwner(ownerAccountName)
-                    .withTransactionDate(LocalDate.parse("2023-01-01"))
+                    .withTransactionDate(LocalDate.parse("2023-01-01").plusDays(i))
                     .withDescription(uniqueDescription)
                     .withCategory(uniqueCategory)
                     .withAmount("10.00")
@@ -251,6 +258,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAmount("10.00")
                 .withGuid(duplicateGuid)
                 .buildAndValidate()
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, t1.category, t1.description)
         transactionRepository.save(t1)
 
         def t2 = SmartTransactionBuilder.builderForOwner(testOwner)
@@ -328,6 +336,7 @@ class TransactionRepositoryIntSpec extends BaseIntegrationSpec {
                 .withAmount("5.00")
                 .asCleared()
                 .buildAndValidate()
+        testDataManager.ensureCategoryAndDescriptionExist(testOwner, t.category, t.description)
         def saved = transactionRepository.save(t)
 
         when:
