@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS public.t_account
 
 CREATE INDEX IF NOT EXISTS idx_account_type ON public.t_account(account_type);
 CREATE INDEX IF NOT EXISTS idx_account_active_type ON public.t_account(active_status, account_type) WHERE active_status = true;
+CREATE INDEX IF NOT EXISTS idx_account_active_status ON public.t_account(active_status) WHERE active_status = true;
 CREATE INDEX IF NOT EXISTS idx_account_owner ON public.t_account(owner);
 
 ----------------------------
@@ -117,6 +118,7 @@ CREATE TABLE IF NOT EXISTS public.t_category
 );
 
 CREATE INDEX IF NOT EXISTS idx_category_owner ON public.t_category(owner);
+CREATE INDEX IF NOT EXISTS idx_category_active_status ON public.t_category(active_status) WHERE active_status = true;
 
 -----------------
 -- Description --
@@ -224,6 +226,10 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_transaction_owner ON public.t_transaction(owner);
 CREATE INDEX IF NOT EXISTS idx_transaction_account_lookup ON public.t_transaction(account_name_owner, active_status, transaction_date DESC);
+CREATE INDEX IF NOT EXISTS idx_transaction_account_name_owner ON public.t_transaction(account_name_owner);
+CREATE INDEX IF NOT EXISTS idx_transaction_active_status ON public.t_transaction(active_status) WHERE active_status = true;
+CREATE INDEX IF NOT EXISTS idx_transaction_date ON public.t_transaction(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_transaction_transaction_state ON public.t_transaction(transaction_state);
 
 --------------------------
 -- Pending Transaction  --
