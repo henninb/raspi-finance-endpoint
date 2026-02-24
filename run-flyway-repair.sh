@@ -53,7 +53,7 @@ validate_env_secrets() {
 validate_env_secrets
 
 rm -rf env.flyway-repair
-sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.flyway-repair
+sed "s/\/opt\/raspi-finance-endpoint/./g;s/postgresql-server/192.168.10.10/g" env.prod > env.flyway-repair
 
 set -a
 # shellcheck disable=SC1091
