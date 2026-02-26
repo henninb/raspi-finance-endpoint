@@ -166,8 +166,38 @@ validate_env_secrets() {
     return 0
 }
 
+# Function to validate required tools are installed
+validate_required_tools() {
+    local missing_tools=""
+
+    if ! command -v age >/dev/null 2>&1; then
+        missing_tools="$missing_tools age"
+        log_error "'age' is not installed. Please install it (e.g., 'pkg install age' or 'brew install age')."
+    else
+        log_info "✓ age is installed: $(age --version 2>/dev/null | head -1)"
+    fi
+
+    if ! command -v sops >/dev/null 2>&1; then
+        missing_tools="$missing_tools sops"
+        log_error "'sops' is not installed. Please install it (e.g., 'pkg install sops' or 'brew install sops')."
+    else
+        log_info "✓ sops is installed: $(sops --version 2>/dev/null | head -1)"
+    fi
+
+    if [ -n "$missing_tools" ]; then
+        log_error "Missing required tools:$missing_tools"
+        log_error "Please install the missing tools before running this script."
+        return 1
+    fi
+
+    return 0
+}
+
 log_info "Starting raspi-finance-endpoint boot run script..."
 log_info "Working directory: $(pwd)"
+
+# Validate required tools are installed
+validate_required_tools
 
 # Validate environment secrets before proceeding
 validate_env_secrets
