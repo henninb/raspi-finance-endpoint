@@ -193,6 +193,9 @@ validate_required_tools() {
     return 0
 }
 
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk
+export PATH="$JAVA_HOME/bin:$PATH"
+
 log_info "Starting raspi-finance-endpoint boot run script..."
 log_info "Working directory: $(pwd)"
 

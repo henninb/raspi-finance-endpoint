@@ -69,14 +69,18 @@ services:
       - influxdb-server
 
   influxdb-server:
-    image: influxdb:2.7.10-alpine  # Security: InfluxDB 2.x with Alpine for minimal attack surface
+    image: influxdb:3-core
     container_name: influxdb-server
     hostname: influxdb-server
     restart: unless-stopped
     ports:
       - "127.0.0.1:8086:8086"  # Security: GCP localhost-only binding (matches app container pattern)
     volumes:
-      - influxdb-gcp-data:/var/lib/influxdb2:rw
+      - influxdb-gcp-data:/var/lib/influxdb3:rw
+      - /opt/influxdb3/admin-token:/run/influxdb3/admin-token:ro
+    command: serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping
+    environment:
+      INFLUXDB3_ADMIN_TOKEN_FILE: /run/influxdb3/admin-token
     env_file:
       - env.influx.gcp
       - env.secrets
@@ -94,17 +98,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - FOWNER         # Required for InfluxDB data directory creation
-      - DAC_OVERRIDE   # Required for permission overrides
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
-    # Health check for InfluxDB 2.x
+    # Health check for InfluxDB 3.x
     healthcheck:
-      test: ["CMD", "influx", "ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:8086/ping"]
       interval: 30s
       timeout: 10s
       retries: 5

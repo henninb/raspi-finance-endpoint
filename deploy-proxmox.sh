@@ -133,22 +133,23 @@ validate_and_create_keystore() {
 }
 
 # Function to set up SSH connectivity and get user info for Proxmox
+PROXMOX_HOST="debian-dockerserver"
+
 setup_proxmox_ssh() {
-    local PROXMOX_HOST="192.168.10.10"
     local KEY_PATH="$HOME/.ssh/id_rsa"
 
     log "Setting up SSH connectivity to Proxmox host..."
 
-    # Test SSH port connectivity using bash built-in (more portable than nc)
-    if ! timeout 3 bash -c "cat < /dev/null > /dev/tcp/$PROXMOX_HOST/22" 2>/dev/null; then
-        log_error "Cannot connect to SSH port 22 on $PROXMOX_HOST"
+    # Test SSH connectivity using ~/.ssh/config alias
+    if ! ssh -q -o BatchMode=yes -o ConnectTimeout=5 "$PROXMOX_HOST" exit 2>/dev/null; then
+        log_error "Cannot connect to $PROXMOX_HOST via SSH"
         log "Please ensure:"
-        log "1. Proxmox server is running at $PROXMOX_HOST"
-        log "2. SSH service is enabled and accessible"
-        log "3. Network connectivity is working"
+        log "1. $PROXMOX_HOST is defined in ~/.ssh/config"
+        log "2. SSH service is running on the target host"
+        log "3. SSH key authentication is configured"
         exit 1
     fi
-    log "✓ SSH port 22 is accessible on $PROXMOX_HOST"
+    log "✓ SSH connectivity verified for $PROXMOX_HOST"
 
     # Check SSH agent or key availability
     if ! ssh-add -l >/dev/null 2>&1; then
@@ -258,6 +259,15 @@ log "✓ SSL keystore validation completed successfully"
 
 # Step 1: Set up SSH connectivity and get user info
 setup_proxmox_ssh
+
+# Step 1.5: Deploy InfluxDB admin token file to remote server
+log "Step 1.5: Deploying InfluxDB admin token to debian-dockerserver..."
+if [ -z "$INFLUXDB_TOKEN" ]; then
+    log_error "INFLUXDB_TOKEN is not set in env.secrets"
+    exit 1
+fi
+ssh debian-dockerserver "sudo mkdir -p /opt/influxdb3 && sudo rm -f /opt/influxdb3/admin-token && printf '{\"token\": \"%s\", \"name\": \"_admin\"}' '${INFLUXDB_TOKEN}' | sudo tee /opt/influxdb3/admin-token > /dev/null && sudo chown 1000:1000 /opt/influxdb3/admin-token && sudo chmod 600 /opt/influxdb3/admin-token"
+log "✓ InfluxDB admin token deployed to debian-dockerserver:/opt/influxdb3/admin-token"
 
 # Step 2: Set up database configuration
 log "Step 2: Configuring Proxmox environment..."

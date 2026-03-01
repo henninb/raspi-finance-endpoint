@@ -198,12 +198,11 @@ management:
     export:
       influx:
         enabled: false
-        auto-create-db: true
-        db: metrics
-        compressed: false
+        api-version: v2
         uri: http://hornsup:8086
-        user-name: admin
-        password:
+        bucket: metrics
+        org: hornsup
+        token: ${INFLUXDB_TOKEN:}
   endpoints:
     web:
       exposure:

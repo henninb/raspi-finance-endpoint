@@ -164,8 +164,6 @@ validate_compose_syntax() {
 
     local compose_files=(
         "docker-compose-base.yml"
-        "docker-compose-postgresql.yml"
-        "docker-compose-nginx.yml"
         "docker-compose-influxdb.yml"
         "docker-compose-secure.yml"
         "docker-compose-gcp.yml"
@@ -223,7 +221,7 @@ main() {
     validate_compose_syntax
 
     # Test specific compose files
-    for file in docker-compose-base.yml docker-compose-postgresql.yml docker-compose-nginx.yml docker-compose-influxdb.yml; do
+    for file in docker-compose-base.yml docker-compose-influxdb.yml; do
         if [[ -f "$file" ]]; then
             validate_compose_security "$file"
         fi
