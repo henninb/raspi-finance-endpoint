@@ -789,7 +789,7 @@ if [ -x "$(command -v docker)" ]; then
       log "Stopping and removing existing influxdb-server container..."
       docker stop "${influxdb_container}"
       docker rm -f "${influxdb_container}" 2> /dev/null
-      docker rmi -f influxdb:1.11.8
+      docker rmi -f influxdb:3-core 2> /dev/null || true
     fi
 
     log "Running Docker security validation for Proxmox deployment..."
@@ -825,7 +825,7 @@ if [ -x "$(command -v docker)" ]; then
       log "Stopping and removing existing influxdb-server container..."
       docker stop "${influxdb_container}"
       docker rm -f "${influxdb_container}" 2> /dev/null
-      docker rmi -f influxdb:1.11.8
+      docker rmi -f influxdb:3-core 2> /dev/null || true
     fi
 
     log "GCP environment detected. Cleaning up existing nginx-gcp-proxy..."

@@ -107,6 +107,11 @@ management:
     export:
       influx:
         enabled: false
+        api-version: v2
+        uri: http://hornsup:8086
+        bucket: metrics-func
+        org: hornsup
+        token: ${INFLUXDB_TOKEN:}
 
 # Circuit breaker and resilience patterns
 resilience4j:
