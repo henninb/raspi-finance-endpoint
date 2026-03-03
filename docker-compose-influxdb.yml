@@ -9,7 +9,7 @@ services:
     volumes:
       - influxdb-data:/var/lib/influxdb3:rw
       - /opt/influxdb3/admin-token:/run/influxdb3/admin-token:ro
-    command: serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping
+    command: serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
     environment:
       INFLUXDB3_ADMIN_TOKEN_FILE: /run/influxdb3/admin-token
     env_file:
@@ -19,10 +19,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: '1.5'
           memory: 512M
         reservations:
-          cpus: '0.1'
+          cpus: '0.25'
           memory: 128M
     user: "1000:1000"
     # Security: Enhanced security context
