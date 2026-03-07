@@ -198,15 +198,6 @@ log "✓ SSL keystore validation completed"
 log "Step 1: SSH Setup"
 setup_ssh
 
-# --- Step 1.5: InfluxDB admin token ---
-log "Step 1.5: Deploying InfluxDB admin token to ${REMOTE_HOST}..."
-if [ -z "$INFLUXDB_TOKEN" ]; then
-  log_error "INFLUXDB_TOKEN is not set in env.secrets"
-  exit 1
-fi
-ssh "${REMOTE_HOST}" "sudo mkdir -p /opt/influxdb3 && sudo rm -f /opt/influxdb3/admin-token && printf '{\"token\": \"%s\", \"name\": \"_admin\"}' '${INFLUXDB_TOKEN}' | sudo tee /opt/influxdb3/admin-token > /dev/null && sudo chown 1000:1000 /opt/influxdb3/admin-token && sudo chmod 600 /opt/influxdb3/admin-token"
-log "✓ InfluxDB admin token deployed to ${REMOTE_HOST}:/opt/influxdb3/admin-token"
-
 # --- Step 2: Gradle build ---
 log "Step 2: Building application with Gradle..."
 if ! ./gradlew clean build -x test; then
@@ -226,6 +217,8 @@ rsync -av \
   --exclude='build/' \
   --exclude='.gradle/' \
   ./ "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
+ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}/build/libs"
+rsync -av build/libs/raspi-finance-endpoint.jar "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/build/libs/"
 log "✓ Files synced to ${REMOTE_DIR}"
 
 # --- Step 4: Remote deployment ---
@@ -268,24 +261,22 @@ if [ -n "${dangling}" ]; then
   podman rmi -f ${dangling} 2>/dev/null || true
 fi
 
-echo "Deploying with podman-compose..."
-export CURRENT_UID="${CURRENT_UID}"
-export CURRENT_GID="${CURRENT_GID}"
-export USERNAME="${USERNAME}"
-export HOST_IP="${HOST_IP}"
-export ENV_FILE="${ENV_FILE}"
-
-if ! podman-compose -f docker-compose-base.yml -f docker-compose-prod.yml -f docker-compose-influxdb.yml up -d; then
-  echo "ERROR: podman-compose failed"
+echo "Building raspi-finance-endpoint image..."
+if ! podman build \
+  --build-arg APP=raspi-finance-endpoint \
+  --build-arg TIMEZONE=America/Chicago \
+  --build-arg USERNAME="${USERNAME}" \
+  --build-arg CURRENT_UID="${CURRENT_UID}" \
+  --build-arg CURRENT_GID="${CURRENT_GID}" \
+  -t raspi-finance-endpoint .; then
+  echo "ERROR: podman build failed"
   exit 1
 fi
-echo "✓ podman-compose up succeeded"
+echo "✓ Image built: raspi-finance-endpoint"
 
-echo "Discovering influxdb volume name..."
-INFLUXDB_VOLUME=$(podman volume ls --format "{{.Name}}" | grep "influxdb" | head -1)
-if [ -z "${INFLUXDB_VOLUME}" ]; then
-  INFLUXDB_VOLUME="raspi-finance-endpoint_influxdb-data"
-fi
+echo "Creating influxdb volume..."
+podman volume create influxdb-data 2>/dev/null || true
+INFLUXDB_VOLUME="influxdb-data"
 echo "  Using influxdb volume: ${INFLUXDB_VOLUME}"
 
 echo "Writing Quadlet files for auto-start on boot..."
@@ -302,9 +293,7 @@ ContainerName=influxdb-server
 HostName=influxdb-server
 PublishPort=192.168.10.10:8086:8086
 Volume=${INFLUXDB_VOLUME}:/var/lib/influxdb3:rw
-Volume=/opt/influxdb3/admin-token:/run/influxdb3/admin-token:ro
 Network=finance-lan
-Environment=INFLUXDB3_ADMIN_TOKEN_FILE=/run/influxdb3/admin-token
 EnvironmentFile=${REMOTE_DIR}/env.influx
 EnvironmentFile=${REMOTE_DIR}/env.secrets
 Exec=serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
@@ -339,6 +328,7 @@ EnvironmentFile=${REMOTE_DIR}/env.prod
 AddHost=hornsup:${HOST_IP}
 AddHost=raspi:192.168.10.25
 AddHost=finance-db.lan:${HOST_IP}
+AddHost=postgresql-server:169.254.1.2
 PullPolicy=never
 NoNewPrivileges=true
 DropCapability=ALL
@@ -362,6 +352,53 @@ export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 export DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/$(id -u)/bus}
 systemctl --user daemon-reload 2>/dev/null || true
 echo "✓ Systemd user daemon reloaded"
+
+echo "Starting influxdb-server..."
+podman run -d \
+  --name influxdb-server \
+  --hostname influxdb-server \
+  -p 192.168.10.10:8086:8086 \
+  -v influxdb-data:/var/lib/influxdb3:rw \
+  --network finance-lan \
+  --env-file "${REMOTE_DIR}/env.influx" \
+  --env-file "${REMOTE_DIR}/env.secrets" \
+  --security-opt no-new-privileges:true \
+  --cap-drop ALL \
+  --user 1000:1000 \
+  --tmpfs /tmp:noexec,nosuid,size=50m \
+  --restart unless-stopped \
+  influxdb:3-core \
+  serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
+echo "✓ influxdb-server started"
+sleep 5
+
+mkdir -p "${REMOTE_DIR}/json_in"
+echo "Starting raspi-finance-endpoint..."
+podman run -d \
+  --name raspi-finance-endpoint \
+  --hostname hornsup-endpoint \
+  -p 192.168.10.10:8443:8443 \
+  -v "${REMOTE_DIR}/json_in:/opt/raspi-finance-endpoint/json_in:rw" \
+  -v "${REMOTE_DIR}/ssl:/opt/raspi-finance-endpoint/ssl:ro" \
+  --network finance-lan \
+  --env-file "${REMOTE_DIR}/env.secrets" \
+  --env-file "${REMOTE_DIR}/env.prod" \
+  --add-host "hornsup:${HOST_IP}" \
+  --add-host "raspi:192.168.10.25" \
+  --add-host "finance-db.lan:${HOST_IP}" \
+  --add-host "postgresql-server:169.254.1.2" \
+  --pull never \
+  --security-opt no-new-privileges:true \
+  --cap-drop ALL \
+  --cap-add CHOWN \
+  --cap-add SETGID \
+  --cap-add SETUID \
+  --user "${CURRENT_UID}:${CURRENT_GID}" \
+  --tmpfs /tmp:noexec,nosuid,size=100m \
+  --restart unless-stopped \
+  localhost/raspi-finance-endpoint
+echo "✓ raspi-finance-endpoint started"
+
 echo "NOTE: Run 'sudo loginctl enable-linger ${USERNAME}' on this host to enable auto-start on reboot."
 
 podman ps -a
