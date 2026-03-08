@@ -313,7 +313,7 @@ EOF
 cat > ~/.config/containers/systemd/raspi-finance-endpoint.container << EOF
 [Unit]
 Description=Raspi Finance Endpoint
-After=network-online.target influxdb-server.service
+After=network-online.target influxdb-server.service postgresql-server.service
 
 [Container]
 Image=localhost/raspi-finance-endpoint
@@ -328,8 +328,6 @@ EnvironmentFile=${REMOTE_DIR}/env.prod
 AddHost=hornsup:${HOST_IP}
 AddHost=raspi:192.168.10.25
 AddHost=finance-db.lan:${HOST_IP}
-AddHost=postgresql-server:169.254.1.2
-PullPolicy=never
 NoNewPrivileges=true
 DropCapability=ALL
 AddCapability=CHOWN
@@ -386,7 +384,6 @@ podman run -d \
   --add-host "hornsup:${HOST_IP}" \
   --add-host "raspi:192.168.10.25" \
   --add-host "finance-db.lan:${HOST_IP}" \
-  --add-host "postgresql-server:169.254.1.2" \
   --pull never \
   --security-opt no-new-privileges:true \
   --cap-drop ALL \
