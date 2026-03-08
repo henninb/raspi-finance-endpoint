@@ -221,6 +221,15 @@ ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}/build/libs"
 rsync -av build/libs/raspi-finance-endpoint.jar "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/build/libs/"
 log "✓ Files synced to ${REMOTE_DIR}"
 
+# --- Step 3.5: Deploy InfluxDB admin token file ---
+log "Step 3.5: Deploying InfluxDB admin token to ${REMOTE_HOST}..."
+if [ -z "$INFLUXDB_TOKEN" ]; then
+  log_error "INFLUXDB_TOKEN is not set in env.secrets"
+  exit 1
+fi
+ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}/influxdb3 && printf '{\"token\": \"%s\", \"name\": \"_admin\"}' '${INFLUXDB_TOKEN}' > ${REMOTE_DIR}/influxdb3/admin-token && chmod 644 ${REMOTE_DIR}/influxdb3/admin-token"
+log "✓ InfluxDB admin token deployed to ${REMOTE_HOST}:${REMOTE_DIR}/influxdb3/admin-token"
+
 # --- Step 4: Remote deployment ---
 log "Step 4: Building and deploying containers on ${REMOTE_HOST}..."
 ssh -T "${REMOTE_USER}@${REMOTE_HOST}" \
@@ -293,13 +302,15 @@ ContainerName=influxdb-server
 HostName=influxdb-server
 PublishPort=192.168.10.10:8086:8086
 Volume=${INFLUXDB_VOLUME}:/var/lib/influxdb3:rw
+Volume=${REMOTE_DIR}/influxdb3/admin-token:/run/influxdb3/admin-token:ro
 Network=finance-lan
+Environment=INFLUXDB3_ADMIN_TOKEN_FILE=/run/influxdb3/admin-token
+Environment=INFLUXDB3_DB_DIR=/var/lib/influxdb3
 EnvironmentFile=${REMOTE_DIR}/env.influx
 EnvironmentFile=${REMOTE_DIR}/env.secrets
 Exec=serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
 NoNewPrivileges=true
 DropCapability=ALL
-User=1000:1000
 Tmpfs=/tmp:noexec,nosuid,size=50m
 
 [Service]
@@ -357,12 +368,14 @@ podman run -d \
   --hostname influxdb-server \
   -p 192.168.10.10:8086:8086 \
   -v influxdb-data:/var/lib/influxdb3:rw \
+  -v "${REMOTE_DIR}/influxdb3/admin-token:/run/influxdb3/admin-token:ro" \
   --network finance-lan \
   --env-file "${REMOTE_DIR}/env.influx" \
   --env-file "${REMOTE_DIR}/env.secrets" \
+  -e INFLUXDB3_ADMIN_TOKEN_FILE=/run/influxdb3/admin-token \
+  -e INFLUXDB3_DB_DIR=/var/lib/influxdb3 \
   --security-opt no-new-privileges:true \
   --cap-drop ALL \
-  --user 1000:1000 \
   --tmpfs /tmp:noexec,nosuid,size=50m \
   --restart unless-stopped \
   influxdb:3-core \
