@@ -143,8 +143,20 @@ wrapper {
 
 // Configure bootRun to pass environment variables from shell
 bootRun {
-    // Pass all environment variables to the Spring Boot application
     doFirst {
+        // Read env.bootrun directly to bypass Gradle daemon's stale environment cache
+        def envFile = file('env.bootrun')
+        if (envFile.exists()) {
+            envFile.eachLine { line ->
+                line = line.trim()
+                if (line && !line.startsWith('#')) {
+                    def eqIdx = line.indexOf('=')
+                    if (eqIdx > 0) {
+                        environment line.substring(0, eqIdx), line.substring(eqIdx + 1)
+                    }
+                }
+            }
+        }
         System.getenv().each { key, value ->
             environment key, value
         }
