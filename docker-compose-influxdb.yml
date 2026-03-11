@@ -9,21 +9,36 @@ services:
     volumes:
       - influxdb-data:/var/lib/influxdb3:rw
       - /opt/influxdb3/admin-token:/run/influxdb3/admin-token:ro
-    command: serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
+    command: >
+      serve
+      --node-id influxdb-server
+      --http-bind 0.0.0.0:8086
+      --package-manager disabled
+      --disable-authz ping
+      --wal-snapshot-size 300
+      --exec-mem-pool-bytes 256MB
+      --parquet-mem-cache-size 128MB
+      --datafusion-num-threads 1
+      --wal-max-write-buffer-size 10000
+      --query-log-size 100
     environment:
       INFLUXDB3_ADMIN_TOKEN_FILE: /run/influxdb3/admin-token
     env_file:
       - env.influx
       - env.secrets
-    # Security: Resource limits
+    # Resource limits aligned with tuned influxdb3 memory flags:
+    #   --exec-mem-pool-bytes 256MB  (query execution pool)
+    #   --parquet-mem-cache-size 128MB  (parquet cache)
+    #   base process overhead ~150MB (observed ~271MB at cold start)
+    #   total ceiling: ~534MB → limit set to 640MB with headroom
     deploy:
       resources:
         limits:
-          cpus: '1.5'
-          memory: 512M
+          cpus: '1.0'
+          memory: 640M
         reservations:
           cpus: '0.25'
-          memory: 128M
+          memory: 256M
     user: "1000:1000"
     # Security: Enhanced security context
     security_opt:

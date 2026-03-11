@@ -258,9 +258,37 @@ set -a
 set +a
 log_info "✓ Environment variables loaded successfully"
 
+# Function to check and update dependency lock files if out of sync
+check_and_update_dependency_locks() {
+    log_info "Checking dependency lock files..."
+
+    local needs_update=0
+
+    if [ ! -f "gradle.lockfile" ]; then
+        log_warn "gradle.lockfile not found, generating..."
+        needs_update=1
+    elif [ "gradle.properties" -nt "gradle.lockfile" ] || [ "build.gradle.kts" -nt "gradle.lockfile" ] || [ "settings.gradle.kts" -nt "gradle.lockfile" ]; then
+        log_warn "Build files are newer than gradle.lockfile, updating dependency locks..."
+        needs_update=1
+    fi
+
+    if [ "$needs_update" -eq 1 ]; then
+        if ! ./gradlew dependencies --write-locks; then
+            log_error "Failed to update dependency lock files!"
+            return 1
+        fi
+        log_info "✓ Dependency lock files updated"
+    else
+        log_info "✓ Dependency lock files are up to date"
+    fi
+}
+
 log_info "Starting Spring Boot application..."
 log_info "Command: ./gradlew clean build bootRun -x test"
 log_info "Note: V09 checksum has been permanently fixed in database"
+
+# Check and update dependency locks before building
+check_and_update_dependency_locks
 
 # Set Spring Boot property for JWT key
 export custom_project_jwt_key="$JWT_KEY"
