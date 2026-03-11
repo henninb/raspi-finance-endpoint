@@ -364,6 +364,7 @@ echo "✓ Systemd user daemon reloaded"
 
 echo "Starting influxdb-server..."
 podman run -d \
+  --replace \
   --name influxdb-server \
   --hostname influxdb-server \
   -p 192.168.10.10:8086:8086 \
@@ -386,6 +387,7 @@ sleep 5
 mkdir -p "${REMOTE_DIR}/json_in"
 echo "Starting raspi-finance-endpoint..."
 podman run -d \
+  --replace \
   --name raspi-finance-endpoint \
   --hostname hornsup-endpoint \
   -p 192.168.10.10:8443:8443 \
