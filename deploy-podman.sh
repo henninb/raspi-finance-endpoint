@@ -314,7 +314,7 @@ DropCapability=ALL
 Tmpfs=/tmp:noexec,nosuid,size=50m
 
 [Service]
-Restart=always
+Restart=no
 TimeoutStartSec=120
 
 [Install]
@@ -348,7 +348,7 @@ User=${CURRENT_UID}:${CURRENT_GID}
 Tmpfs=/tmp:noexec,nosuid,size=100m
 
 [Service]
-Restart=always
+Restart=no
 TimeoutStartSec=120
 
 [Install]
