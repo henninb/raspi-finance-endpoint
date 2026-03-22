@@ -115,17 +115,17 @@ dependencyCheck {
 // Use toolchains for Gradle 9 compatibility
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(26)
     }
 }
 
 // Configure Kotlin toolchain instead of per-task compatibility
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain(26)
 
     // Gradle 9 preparation: explicit compilation configurations
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24)
     }
 }
 
@@ -135,6 +135,7 @@ sourceSets {
 
 compileJava {
     options.annotationProcessorPath = configurations.annotationProcessor
+    options.release = 24
 }
 
 wrapper {
