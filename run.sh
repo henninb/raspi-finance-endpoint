@@ -345,7 +345,7 @@ validate_and_create_keystore() {
 validate_env_secrets() {
   local env_file="env.secrets"
   local missing_keys=""
-  local required_keys="DATASOURCE_PASSWORD INFLUXDB_ADMIN_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD SYS_PASSWORD BASIC_AUTH_PASSWORD JWT_KEY"
+  local required_keys="DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN"
 
   log "Validating environment secrets..."
 
@@ -369,18 +369,16 @@ validate_env_secrets() {
     case $key in
       "DATASOURCE_PASSWORD")
         value="$DATASOURCE_PASSWORD" ;;
-      "INFLUXDB_ADMIN_PASSWORD")
-        value="$INFLUXDB_ADMIN_PASSWORD" ;;
       "SSL_KEY_PASSWORD")
         value="$SSL_KEY_PASSWORD" ;;
       "SSL_KEY_STORE_PASSWORD")
         value="$SSL_KEY_STORE_PASSWORD" ;;
-      "SYS_PASSWORD")
-        value="$SYS_PASSWORD" ;;
       "BASIC_AUTH_PASSWORD")
         value="$BASIC_AUTH_PASSWORD" ;;
       "JWT_KEY")
         value="$JWT_KEY" ;;
+      "INFLUXDB_TOKEN")
+        value="$INFLUXDB_TOKEN" ;;
       *)
         value="" ;;
     esac
