@@ -1,56 +1,14 @@
 #!/usr/bin/env bash
 
-# Function to validate environment secrets
-validate_env_secrets() {
-  local env_file="env.secrets"
-  local missing_keys=()
-  local required_keys=(
-    "DATASOURCE_PASSWORD"
-  )
-
-  echo "Validating environment secrets for Flyway..."
-
-  # Check if env.secrets file exists
-  if [ ! -f "$env_file" ]; then
-    echo "ERROR: $env_file file not found!"
-    echo "Please create $env_file with the required environment variables."
-    exit 1
-  fi
-
-  # Source the env.secrets file to check values
-  set -a
-  # shellcheck disable=SC1090
-  source "$env_file"
-  set +a
-
-  # Check each required key
-  for key in "${required_keys[@]}"; do
-    # Use indirect variable expansion to get the value
-    value="${!key}"
-    if [ -z "$value" ] || [ "$value" = "" ]; then
-      missing_keys+=("$key")
-    fi
-  done
-
-  # If any keys are missing, prompt user and exit
-  if [ ${#missing_keys[@]} -gt 0 ]; then
-    echo "ERROR: The following required environment variables are missing or empty in $env_file:"
-    for key in "${missing_keys[@]}"; do
-      echo "  - $key"
-    done
-    echo ""
-    echo "Please set values for these variables in $env_file before running Flyway."
-    echo "Example format:"
-    echo "  DATASOURCE_PASSWORD=your_database_password"
-    echo ""
-    exit 1
-  fi
-
-  echo "✓ All required environment secrets for Flyway are properly configured."
-}
-
-# Validate environment secrets before proceeding
-validate_env_secrets
+# Load secrets from gopass
+if ! command -v gopass >/dev/null 2>&1; then
+  echo "ERROR: gopass is not installed."
+  exit 1
+fi
+echo "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+export DATASOURCE_PASSWORD
+echo "✓ Secrets loaded from gopass"
 
 rm -rf env.flyway
 sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.flyway
@@ -58,8 +16,6 @@ sed "s/\/opt\/raspi-finance-endpoint/./g" env.prod > env.flyway
 set -a
 # shellcheck disable=SC1091
 source env.flyway
-# shellcheck disable=SC1091
-source env.secrets
 set +a
 
 echo "Running Flyway migration with prod profile..."

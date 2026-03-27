@@ -98,7 +98,7 @@ validate_and_create_keystore() {
     log_error "Please check:"
     log_error "  1. OpenSSL is installed and accessible"
     log_error "  2. Certificate and key files are readable"
-    log_error "  3. SSL_KEY_STORE_PASSWORD is set correctly in env.secrets"
+    log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
     return 1
   fi
 
@@ -204,14 +204,24 @@ setup_gcp_ssh() {
 
 log "=== Complete GCP Deployment ==="
 
+# Load secrets from gopass
+if ! command -v gopass >/dev/null 2>&1; then
+  log_error "gopass is not installed."
+  exit 1
+fi
+log "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
+       BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
+log "✓ Secrets loaded from gopass"
+
 # Validate SSL certificates and keystore first
 log "Step 0: SSL Certificate and Keystore Validation"
-if [ -f "env.secrets" ]; then
-  # Source env.secrets to get SSL_KEY_STORE_PASSWORD
-  set -a
-  . "./env.secrets"
-  set +a
-fi
 
 if ! validate_and_create_keystore; then
   log_error "SSL keystore validation/creation failed!"
@@ -222,7 +232,7 @@ if ! validate_and_create_keystore; then
   log_error "  2. Certificate files exist in ssl/ directory:"
   log_error "     - ssl/bhenning.fullchain.pem"
   log_error "     - ssl/bhenning.privkey.pem"
-  log_error "  3. SSL_KEY_STORE_PASSWORD is set in env.secrets"
+  log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
   log_error "  4. OpenSSL and keytool are installed"
   log_error ""
   log_error "To fix Let's Encrypt certificates, run:"
@@ -240,7 +250,7 @@ log "Step 2: Configuring database connection..."
 if [ -z "$GCP_DB_HOST" ]; then
     log "⚠ GCP_DB_HOST not set in environment"
     log "Using default: postgresql-server (Docker container)"
-    log "Set GCP_DB_HOST in env.secrets if you need a different database host"
+    log "Set GCP_DB_HOST in env.prod if you need a different database host"
     export GCP_DB_HOST="postgresql-server"
 else
     log "✓ Using database host: $GCP_DB_HOST"
@@ -256,7 +266,7 @@ if ! ./run.sh gcp; then
     log "Troubleshooting:"
     log "1. Check application container logs: ./diagnose-gcp-deployment.sh"
     log "2. Verify database connectivity from GCP instance"
-    log "3. Check environment variables in env.secrets"
+    log "3. Check environment variables in env.prod"
     log "4. Review Docker logs: ssh gcp-api 'docker logs raspi-finance-endpoint'"
     exit 1
 fi

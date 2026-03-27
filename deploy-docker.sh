@@ -98,7 +98,7 @@ validate_and_create_keystore() {
     log_error "Please check:"
     log_error "  1. OpenSSL is installed and accessible"
     log_error "  2. Certificate and key files are readable"
-    log_error "  3. SSL_KEY_STORE_PASSWORD is set correctly in env.secrets"
+    log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
     return 1
   fi
 
@@ -207,36 +207,24 @@ setup_proxmox_ssh() {
 
 log "=== Complete Proxmox Deployment ==="
 
-# Decrypt env.secrets from SOPS-encrypted file
-if [ -f "env.secrets.enc" ]; then
-  if command -v sops >/dev/null 2>&1; then
-    log "Decrypting env.secrets.enc with SOPS..."
-    if sops -d --input-type dotenv --output-type dotenv env.secrets.enc > env.secrets; then
-      chmod 600 env.secrets
-      log "✓ env.secrets decrypted successfully"
-    else
-      log_error "SOPS decryption failed. Check that the age private key is available."
-      log_error "Expected at: ~/.config/sops/age/keys.txt (or set SOPS_AGE_KEY_FILE)"
-      exit 1
-    fi
-  else
-    log_error "sops is not installed but env.secrets.enc exists."
-    log_error "Install sops: https://github.com/getsops/sops/releases"
-    exit 1
-  fi
-elif [ ! -f "env.secrets" ]; then
-  log_error "Neither env.secrets.enc nor env.secrets found."
+# Load secrets from gopass
+if ! command -v gopass >/dev/null 2>&1; then
+  log_error "gopass is not installed."
   exit 1
 fi
+log "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
+       BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
+log "✓ Secrets loaded from gopass"
 
 # Validate SSL certificates and keystore first
 log "Step 0: SSL Certificate and Keystore Validation"
-if [ -f "env.secrets" ]; then
-  # Source env.secrets to get SSL_KEY_STORE_PASSWORD
-  set -a
-  . "./env.secrets"
-  set +a
-fi
 
 if ! validate_and_create_keystore; then
   log_error "SSL keystore validation/creation failed!"
@@ -247,7 +235,7 @@ if ! validate_and_create_keystore; then
   log_error "  2. Certificate files exist in ssl/ directory:"
   log_error "     - ssl/bhenning.fullchain.pem"
   log_error "     - ssl/bhenning.privkey.pem"
-  log_error "  3. SSL_KEY_STORE_PASSWORD is set in env.secrets"
+  log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
   log_error "  4. OpenSSL and keytool are installed"
   log_error ""
   log_error "To fix Let's Encrypt certificates, run:"
@@ -263,7 +251,7 @@ setup_proxmox_ssh
 # Step 1.5: Deploy InfluxDB admin token file to remote server
 log "Step 1.5: Deploying InfluxDB admin token to debian-dockerserver..."
 if [ -z "$INFLUXDB_TOKEN" ]; then
-    log_error "INFLUXDB_TOKEN is not set in env.secrets"
+    log_error "INFLUXDB_TOKEN is not set"
     exit 1
 fi
 ssh debian-dockerserver "sudo mkdir -p /opt/influxdb3 && sudo rm -f /opt/influxdb3/admin-token && printf '{\"token\": \"%s\", \"name\": \"_admin\"}' '${INFLUXDB_TOKEN}' | sudo tee /opt/influxdb3/admin-token > /dev/null && sudo chown 1000:1000 /opt/influxdb3/admin-token && sudo chmod 600 /opt/influxdb3/admin-token"
@@ -289,7 +277,7 @@ if ! ./run.sh proxmox; then
     log "2. Verify PostgreSQL container: ssh $PROXMOX_HOST 'docker logs postgresql-server'"
     log "3. Check InfluxDB metrics: ssh $PROXMOX_HOST 'docker logs influxdb-server'"
     log "4. Verify network connectivity: ssh $PROXMOX_HOST 'docker network inspect finance-lan'"
-    log "5. Check environment variables in env.secrets and env.prod"
+    log "5. Check environment variables in env.prod"
     exit 1
 fi
 
