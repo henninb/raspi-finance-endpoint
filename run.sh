@@ -307,7 +307,7 @@ validate_and_create_keystore() {
     log_error "Please check:"
     log_error "  1. OpenSSL is installed and accessible"
     log_error "  2. Certificate and key files are readable"
-    log_error "  3. SSL_KEY_STORE_PASSWORD is set correctly in env.secrets"
+    log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
     return 1
   fi
 
@@ -341,99 +341,21 @@ validate_and_create_keystore() {
   return 0
 }
 
-# Function to validate environment secrets
-validate_env_secrets() {
-  local env_file="env.secrets"
-  local missing_keys=""
-  local required_keys="DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN"
-
-  log "Validating environment secrets..."
-
-  # Check if env.secrets file exists
-  if [ ! -f "$env_file" ]; then
-    log "ERROR: $env_file file not found!"
-    log "Please create $env_file with the required environment variables."
-    exit 1
-  fi
-
-  # Source the env.secrets file to check values and export variables
-  # shellcheck disable=SC1090
-  if [ -f "$env_file" ]; then
-    set -a  # Automatically export all variables
-    . "./$env_file"
-    set +a  # Disable automatic export
-  fi
-
-  # Check each required key (using sh-compatible approach)
-  for key in $required_keys; do
-    case $key in
-      "DATASOURCE_PASSWORD")
-        value="$DATASOURCE_PASSWORD" ;;
-      "SSL_KEY_PASSWORD")
-        value="$SSL_KEY_PASSWORD" ;;
-      "SSL_KEY_STORE_PASSWORD")
-        value="$SSL_KEY_STORE_PASSWORD" ;;
-      "BASIC_AUTH_PASSWORD")
-        value="$BASIC_AUTH_PASSWORD" ;;
-      "JWT_KEY")
-        value="$JWT_KEY" ;;
-      "INFLUXDB_TOKEN")
-        value="$INFLUXDB_TOKEN" ;;
-      *)
-        value="" ;;
-    esac
-
-    if [ -z "$value" ] || [ "$value" = "" ]; then
-      if [ -z "$missing_keys" ]; then
-        missing_keys="$key"
-      else
-        missing_keys="$missing_keys $key"
-      fi
-    fi
-  done
-
-  # If any keys are missing, prompt user and exit
-  if [ -n "$missing_keys" ]; then
-    log "ERROR: The following required environment variables are missing or empty in $env_file:"
-    for key in $missing_keys; do
-      log "  - $key"
-    done
-    log ""
-    log "Please set values for these variables in $env_file before running the application."
-    log "Example format:"
-    log "  DATASOURCE_PASSWORD=your_database_password"
-    log "  JWT_KEY=your_jwt_secret_key"
-    log ""
-    exit 1
-  fi
-
-  log "✓ All required environment secrets are properly configured."
-}
-
-# Decrypt env.secrets from SOPS-encrypted file
-if [ -f "env.secrets.enc" ]; then
-  if command -v sops >/dev/null 2>&1; then
-    log "Decrypting env.secrets.enc with SOPS..."
-    if sops -d --input-type dotenv --output-type dotenv env.secrets.enc > env.secrets; then
-      chmod 600 env.secrets
-      log "✓ env.secrets decrypted successfully"
-    else
-      log_error "SOPS decryption failed. Check that the age private key is available."
-      log_error "Expected at: ~/.config/sops/age/keys.txt (or set SOPS_AGE_KEY_FILE)"
-      exit 1
-    fi
-  else
-    log_error "sops is not installed but env.secrets.enc exists."
-    log_error "Install sops: https://github.com/getsops/sops/releases"
-    exit 1
-  fi
-elif [ ! -f "env.secrets" ]; then
-  log_error "Neither env.secrets.enc nor env.secrets found."
+# Load secrets from gopass
+if ! command -v gopass >/dev/null 2>&1; then
+  log_error "gopass is not installed."
   exit 1
 fi
-
-# Validate environment secrets before proceeding
-validate_env_secrets
+log "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
+       BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
+log "✓ Secrets loaded from gopass"
 
 # Validate and create SSL keystore before building
 log "Step 1: SSL Certificate and Keystore Validation"
@@ -446,7 +368,7 @@ if ! validate_and_create_keystore; then
   log_error "  2. Certificate files exist in ssl/ directory:"
   log_error "     - ssl/bhenning.fullchain.pem"
   log_error "     - ssl/bhenning.privkey.pem"
-  log_error "  3. SSL_KEY_STORE_PASSWORD is set in env.secrets"
+  log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
   log_error "  4. Certificate and private key files are readable"
   log_error ""
   log_error "To fix Let's Encrypt certificates, run:"
@@ -672,9 +594,6 @@ copy_pem "/etc/letsencrypt/live/bhenning.com/privkey.pem"   "ssl/bhenning.privke
 copy_pem "/etc/letsencrypt/live/brianhenning.com/fullchain.pem" "ssl/brianhenning.fullchain.pem"
 copy_pem "/etc/letsencrypt/live/brianhenning.com/privkey.pem"   "ssl/brianhenning.privkey.pem"
 
-# Preserve local secret changes
-log "Preserving local secret changes..."
-git update-index --assume-unchanged env.secrets
 
 chmod +x gradle/wrapper/gradle-wrapper.jar
 

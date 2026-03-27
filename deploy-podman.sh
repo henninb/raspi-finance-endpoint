@@ -151,32 +151,34 @@ setup_ssh() {
   log "✓ Remote user: ${USERNAME} (UID=${CURRENT_UID}, GID=${CURRENT_GID})"
 }
 
+create_remote_secrets() {
+  log "Creating Podman secrets on ${REMOTE_HOST}..."
+  printf '%s' "$DATASOURCE_PASSWORD"    | ssh "${REMOTE_USER}@${REMOTE_HOST}" "podman secret create --replace DATASOURCE_PASSWORD -"
+  printf '%s' "$SSL_KEY_PASSWORD"       | ssh "${REMOTE_USER}@${REMOTE_HOST}" "podman secret create --replace SSL_KEY_PASSWORD -"
+  printf '%s' "$SSL_KEY_STORE_PASSWORD" | ssh "${REMOTE_USER}@${REMOTE_HOST}" "podman secret create --replace SSL_KEY_STORE_PASSWORD -"
+  printf '%s' "$BASIC_AUTH_PASSWORD"    | ssh "${REMOTE_USER}@${REMOTE_HOST}" "podman secret create --replace BASIC_AUTH_PASSWORD -"
+  printf '%s' "$JWT_KEY"                | ssh "${REMOTE_USER}@${REMOTE_HOST}" "podman secret create --replace JWT_KEY -"
+  printf '%s' "$INFLUXDB_TOKEN"         | ssh "${REMOTE_USER}@${REMOTE_HOST}" "podman secret create --replace INFLUXDB_TOKEN -"
+  log "✓ All Podman secrets created on ${REMOTE_HOST}"
+}
+
 log "=== Podman Deployment to ${REMOTE_HOST} ==="
 
-# --- Decrypt env.secrets ---
-if [ -f "env.secrets.enc" ]; then
-  if command -v sops >/dev/null 2>&1; then
-    log "Decrypting env.secrets.enc with SOPS..."
-    if sops -d --input-type dotenv --output-type dotenv env.secrets.enc > env.secrets; then
-      chmod 600 env.secrets
-      log "✓ env.secrets decrypted successfully"
-    else
-      log_error "SOPS decryption failed. Check that the age private key is available."
-      log_error "Expected at: ~/.config/sops/age/keys.txt (or set SOPS_AGE_KEY_FILE)"
-      exit 1
-    fi
-  else
-    log_error "sops is not installed but env.secrets.enc exists."
-    exit 1
-  fi
-elif [ ! -f "env.secrets" ]; then
-  log_error "Neither env.secrets.enc nor env.secrets found."
+# --- Load secrets from gopass ---
+if ! command -v gopass >/dev/null 2>&1; then
+  log_error "gopass is not installed."
   exit 1
 fi
-
-set -a
-. "./env.secrets"
-set +a
+log "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
+       BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
+log "✓ Secrets loaded from gopass"
 
 # --- Step 0: SSL validation ---
 log "Step 0: SSL Certificate and Keystore Validation"
@@ -188,7 +190,7 @@ if ! validate_and_create_keystore; then
   log_error "  2. Certificate files exist in ssl/ directory:"
   log_error "     - ssl/bhenning.fullchain.pem"
   log_error "     - ssl/bhenning.privkey.pem"
-  log_error "  3. SSL_KEY_STORE_PASSWORD is set in env.secrets"
+  log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
   log_error "  4. OpenSSL and keytool are installed"
   exit 1
 fi
@@ -221,10 +223,13 @@ ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}/build/libs"
 rsync -av build/libs/raspi-finance-endpoint.jar "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/build/libs/"
 log "✓ Files synced to ${REMOTE_DIR}"
 
-# --- Step 3.5: Deploy InfluxDB admin token file ---
-log "Step 3.5: Deploying InfluxDB admin token to ${REMOTE_HOST}..."
+# --- Step 3.5: Create Podman secrets on remote ---
+create_remote_secrets
+
+# --- Step 3.6: Deploy InfluxDB admin token file ---
+log "Step 3.6: Deploying InfluxDB admin token to ${REMOTE_HOST}..."
 if [ -z "$INFLUXDB_TOKEN" ]; then
-  log_error "INFLUXDB_TOKEN is not set in env.secrets"
+  log_error "INFLUXDB_TOKEN is not set"
   exit 1
 fi
 ssh "${REMOTE_USER}@${REMOTE_HOST}" "mkdir -p ${REMOTE_DIR}/influxdb3 && printf '{\"token\": \"%s\", \"name\": \"_admin\"}' '${INFLUXDB_TOKEN}' > ${REMOTE_DIR}/influxdb3/admin-token && chmod 644 ${REMOTE_DIR}/influxdb3/admin-token"
@@ -307,7 +312,7 @@ Network=finance-lan
 Environment=INFLUXDB3_ADMIN_TOKEN_FILE=/run/influxdb3/admin-token
 Environment=INFLUXDB3_DB_DIR=/var/lib/influxdb3
 EnvironmentFile=${REMOTE_DIR}/env.influx
-EnvironmentFile=${REMOTE_DIR}/env.secrets
+Secret=INFLUXDB_TOKEN,type=env
 Exec=serve --node-id influxdb-server --http-bind 0.0.0.0:8086 --package-manager disabled --disable-authz ping --wal-snapshot-size 300
 NoNewPrivileges=true
 DropCapability=ALL
@@ -334,10 +339,14 @@ PublishPort=192.168.10.10:8443:8443
 Volume=${REMOTE_DIR}/json_in:/opt/raspi-finance-endpoint/json_in:rw
 Volume=${REMOTE_DIR}/ssl:/opt/raspi-finance-endpoint/ssl:ro
 Network=finance-lan
-EnvironmentFile=${REMOTE_DIR}/env.secrets
+Secret=DATASOURCE_PASSWORD,type=env
+Secret=SSL_KEY_PASSWORD,type=env
+Secret=SSL_KEY_STORE_PASSWORD,type=env
+Secret=BASIC_AUTH_PASSWORD,type=env
+Secret=JWT_KEY,type=env
+Secret=INFLUXDB_TOKEN,type=env
 EnvironmentFile=${REMOTE_DIR}/env.prod
 AddHost=hornsup:${HOST_IP}
-AddHost=raspi:192.168.10.25
 AddHost=finance-db.lan:${HOST_IP}
 NoNewPrivileges=true
 DropCapability=ALL
@@ -372,7 +381,7 @@ podman run -d \
   -v "${REMOTE_DIR}/influxdb3/admin-token:/run/influxdb3/admin-token:ro" \
   --network finance-lan \
   --env-file "${REMOTE_DIR}/env.influx" \
-  --env-file "${REMOTE_DIR}/env.secrets" \
+  --secret INFLUXDB_TOKEN,type=env \
   -e INFLUXDB3_ADMIN_TOKEN_FILE=/run/influxdb3/admin-token \
   -e INFLUXDB3_DB_DIR=/var/lib/influxdb3 \
   --security-opt no-new-privileges:true \
@@ -394,10 +403,14 @@ podman run -d \
   -v "${REMOTE_DIR}/json_in:/opt/raspi-finance-endpoint/json_in:rw" \
   -v "${REMOTE_DIR}/ssl:/opt/raspi-finance-endpoint/ssl:ro" \
   --network finance-lan \
-  --env-file "${REMOTE_DIR}/env.secrets" \
+  --secret DATASOURCE_PASSWORD,type=env \
+  --secret SSL_KEY_PASSWORD,type=env \
+  --secret SSL_KEY_STORE_PASSWORD,type=env \
+  --secret BASIC_AUTH_PASSWORD,type=env \
+  --secret JWT_KEY,type=env \
+  --secret INFLUXDB_TOKEN,type=env \
   --env-file "${REMOTE_DIR}/env.prod" \
   --add-host "hornsup:${HOST_IP}" \
-  --add-host "raspi:192.168.10.25" \
   --add-host "finance-db.lan:${HOST_IP}" \
   --pull never \
   --security-opt no-new-privileges:true \

@@ -26,13 +26,24 @@ ENV_FILE="env.raspi"
 
 log "=== Raspberry Pi Podman Deployment ==="
 
+# Load secrets from gopass
+if ! command -v gopass >/dev/null 2>&1; then
+  log_error "gopass is not installed."
+  exit 1
+fi
+log "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
+       BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
+log "✓ Secrets loaded from gopass"
+
 # Step 0: Validate SSL certificates and keystore
 log "Step 0: SSL Certificate and Keystore Validation"
-if [ -f "env.secrets" ]; then
-  set -a
-  . "./env.secrets"
-  set +a
-fi
 
 # Function to validate and create SSL keystore
 validate_and_create_keystore() {
@@ -232,10 +243,19 @@ fi
 
 # Transfer environment files
 log "  Transferring environment files..."
-if ! scp env.raspi env.secrets "${RASPI_HOST}:~/raspi-finance-endpoint/"; then
+if ! scp env.raspi "${RASPI_HOST}:~/raspi-finance-endpoint/"; then
   log_error "Failed to transfer environment files"
   exit 1
 fi
+
+log "Creating Podman secrets on ${RASPI_HOST}..."
+printf '%s' "$DATASOURCE_PASSWORD"    | ssh "${RASPI_HOST}" "podman secret create --replace DATASOURCE_PASSWORD -"
+printf '%s' "$SSL_KEY_PASSWORD"       | ssh "${RASPI_HOST}" "podman secret create --replace SSL_KEY_PASSWORD -"
+printf '%s' "$SSL_KEY_STORE_PASSWORD" | ssh "${RASPI_HOST}" "podman secret create --replace SSL_KEY_STORE_PASSWORD -"
+printf '%s' "$BASIC_AUTH_PASSWORD"    | ssh "${RASPI_HOST}" "podman secret create --replace BASIC_AUTH_PASSWORD -"
+printf '%s' "$JWT_KEY"                | ssh "${RASPI_HOST}" "podman secret create --replace JWT_KEY -"
+printf '%s' "$INFLUXDB_TOKEN"         | ssh "${RASPI_HOST}" "podman secret create --replace INFLUXDB_TOKEN -"
+log "✓ All Podman secrets created on ${RASPI_HOST}"
 
 log "✓ Build artifacts transferred successfully"
 
@@ -358,7 +378,6 @@ cd ~/raspi-finance-endpoint
 # Load environment variables
 set -a
 . ./env.raspi
-. ./env.secrets
 set +a
 
 # Check if image exists in user's podman storage
@@ -385,7 +404,12 @@ $USE_SUDO podman run -d \
   -v ~/raspi-finance-endpoint/logs:/opt/raspi-finance-endpoint/logs \
   -v ~/raspi-finance-endpoint/json_in:/opt/raspi-finance-endpoint/json_in \
   --env-file ~/raspi-finance-endpoint/env.raspi \
-  --env-file ~/raspi-finance-endpoint/env.secrets \
+  --secret DATASOURCE_PASSWORD,type=env \
+  --secret SSL_KEY_PASSWORD,type=env \
+  --secret SSL_KEY_STORE_PASSWORD,type=env \
+  --secret BASIC_AUTH_PASSWORD,type=env \
+  --secret JWT_KEY,type=env \
+  --secret INFLUXDB_TOKEN,type=env \
   raspi-finance-endpoint:latest
 
 if [ $? -ne 0 ]; then

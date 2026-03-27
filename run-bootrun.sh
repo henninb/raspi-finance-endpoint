@@ -118,7 +118,7 @@ validate_and_create_keystore() {
     log_error "Please check:"
     log_error "  1. OpenSSL is installed and accessible"
     log_error "  2. Certificate and key files are readable"
-    log_error "  3. SSL_KEY_STORE_PASSWORD is set correctly in env.secrets"
+    log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
     return 1
   fi
 
@@ -152,46 +152,6 @@ validate_and_create_keystore() {
   return 0
 }
 
-# Function to validate environment secrets
-validate_env_secrets() {
-    log_info "Validating environment secrets from env.secrets..."
-
-    if [ ! -f "env.secrets" ]; then
-        log_error "env.secrets file not found!"
-        log_error "Please create env.secrets with the required environment variables."
-        return 1
-    fi
-
-    log_info "✓ All required environment secrets are properly configured."
-    return 0
-}
-
-# Function to validate required tools are installed
-validate_required_tools() {
-    local missing_tools=""
-
-    if ! command -v age >/dev/null 2>&1; then
-        missing_tools="$missing_tools age"
-        log_error "'age' is not installed. Please install it (e.g., 'pkg install age' or 'brew install age')."
-    else
-        log_info "✓ age is installed: $(age --version 2>/dev/null | head -1)"
-    fi
-
-    if ! command -v sops >/dev/null 2>&1; then
-        missing_tools="$missing_tools sops"
-        log_error "'sops' is not installed. Please install it (e.g., 'pkg install sops' or 'brew install sops')."
-    else
-        log_info "✓ sops is installed: $(sops --version 2>/dev/null | head -1)"
-    fi
-
-    if [ -n "$missing_tools" ]; then
-        log_error "Missing required tools:$missing_tools"
-        log_error "Please install the missing tools before running this script."
-        return 1
-    fi
-
-    return 0
-}
 
 export JAVA_HOME=/usr/lib/jvm/java-26-openjdk
 export PATH="$JAVA_HOME/bin:$PATH"
@@ -199,18 +159,21 @@ export PATH="$JAVA_HOME/bin:$PATH"
 log_info "Starting raspi-finance-endpoint boot run script..."
 log_info "Working directory: $(pwd)"
 
-# Validate required tools are installed
-validate_required_tools
-
-# Validate environment secrets before proceeding
-validate_env_secrets
-
-# Load env.secrets early to get SSL_KEY_STORE_PASSWORD for keystore validation
-log_info "Loading environment secrets for SSL validation..."
-set -a
-# shellcheck disable=SC1091
-. ./env.secrets
-set +a
+# Load secrets from gopass
+if ! command -v gopass >/dev/null 2>&1; then
+    log_error "gopass is not installed."
+    exit 1
+fi
+log_info "Loading secrets from gopass..."
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
+       BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
+log_info "✓ Secrets loaded from gopass"
 
 # Validate and create SSL keystore before building
 log_info "SSL Certificate and Keystore Validation"
@@ -223,7 +186,7 @@ if ! validate_and_create_keystore; then
   log_error "  2. Certificate files exist in ssl/ directory:"
   log_error "     - ssl/bhenning.fullchain.pem"
   log_error "     - ssl/bhenning.privkey.pem"
-  log_error "  3. SSL_KEY_STORE_PASSWORD is set in env.secrets"
+  log_error "  3. SSL_KEY_STORE_PASSWORD is available in gopass"
   log_error "  4. Certificate and private key files are readable"
   log_error ""
   log_error "To fix Let's Encrypt certificates, run:"
@@ -254,7 +217,6 @@ log_info "Loading environment variables..."
 set -a
 # shellcheck disable=SC1091
 . ./env.bootrun
-# Note: env.secrets already loaded earlier for SSL validation
 set +a
 log_info "✓ Environment variables loaded successfully"
 

@@ -1,6 +1,6 @@
 # Use specific version for security and reproducibility
 # Eclipse Temurin is the official OpenJDK distribution (replaces deprecated openjdk images)
-FROM eclipse-temurin:26-jdk-jammy
+FROM eclipse-temurin:24-jdk-noble
 
 ARG TIMEZONE="set the time zone at build time"
 ENV TIMEZONE ${TIMEZONE}
@@ -13,10 +13,12 @@ ENV CURRENT_GID ${CURRENT_GID}
 ARG CURRENT_UID="set the uid"
 ENV CURRENT_UID ${CURRENT_UID}
 
-RUN groupadd -g ${CURRENT_GID} ${USERNAME}
-# RUN useradd -l ${USERNAME} -u ${CURRENT_UID} -g ${CURRENT_GID}
-# RUN useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} -s /bin/bash -c "" ${USERNAME}
-RUN useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} ${USERNAME}
+RUN getent group ${CURRENT_GID} >/dev/null 2>&1 \
+    && groupmod -n ${USERNAME} "$(getent group ${CURRENT_GID} | cut -d: -f1)" \
+    || groupadd -g ${CURRENT_GID} ${USERNAME}
+RUN getent passwd ${CURRENT_UID} >/dev/null 2>&1 \
+    && usermod -l ${USERNAME} "$(getent passwd ${CURRENT_UID} | cut -d: -f1)" \
+    || useradd -m -u ${CURRENT_UID} -g ${CURRENT_GID} ${USERNAME}
 
 # Use Fedora's user and group management commands
 # RUN groupadd -g ${CURRENT_GID} ${USERNAME}
