@@ -229,7 +229,7 @@ check_and_update_dependency_locks() {
     if [ ! -f "gradle.lockfile" ]; then
         log_warn "gradle.lockfile not found, generating..."
         needs_update=1
-    elif [ "gradle.properties" -nt "gradle.lockfile" ] || [ "build.gradle.kts" -nt "gradle.lockfile" ] || [ "settings.gradle.kts" -nt "gradle.lockfile" ]; then
+    elif [ "gradle.properties" -nt "gradle.lockfile" ] || [ "build.gradle" -nt "gradle.lockfile" ] || [ "settings.gradle" -nt "gradle.lockfile" ]; then
         log_warn "Build files are newer than gradle.lockfile, updating dependency locks..."
         needs_update=1
     fi

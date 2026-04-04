@@ -13,10 +13,11 @@ echo "✓ Secrets loaded from gopass"
 rm -rf env.flyway-repair
 sed "s/\/opt\/raspi-finance-endpoint/./g;s/postgresql-server/192.168.10.10/g" env.prod > env.flyway-repair
 
-set -a
-# shellcheck disable=SC1091
-source env.flyway-repair
-set +a
+# Read each variable explicitly to avoid & in URLs being treated as shell background operator
+while IFS='=' read -r key value; do
+  [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+  export "$key=$value"
+done < env.flyway-repair
 
 echo "Running Flyway repair to fix schema history..."
 echo "Database URL: $DATASOURCE"
