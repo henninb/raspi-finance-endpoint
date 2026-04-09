@@ -74,3 +74,6 @@ security-test-config.local.env
 security-test-config.env
 .gradle-user/
 env.secrets.old
+
+# Claude Code local settings
+.claude/settings.local.json
