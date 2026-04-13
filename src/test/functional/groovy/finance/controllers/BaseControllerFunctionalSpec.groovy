@@ -2,11 +2,13 @@ package finance.controllers
 
 import finance.Application
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.domain.Account
 import finance.domain.MedicalExpense
 import finance.domain.Payment
 import finance.domain.PendingTransaction
 import finance.domain.Transaction
 import finance.domain.Transfer
+import finance.domain.ValidationAmount
 import finance.helpers.TestDataManager
 import finance.helpers.TestFixtures
 import groovy.util.logging.Slf4j
@@ -206,7 +208,7 @@ class BaseControllerFunctionalSpec extends Specification {
         testDataManager.createMinimalAccountsFor(testOwner)
 
         def jsonFn = { -> jsonMapper.writeValueAsString(delegate) }
-        [Payment, Transaction, PendingTransaction, Transfer, MedicalExpense].each { clazz ->
+        [Account, ValidationAmount, Payment, Transaction, PendingTransaction, Transfer, MedicalExpense].each { clazz ->
             clazz.metaClass.toString = jsonFn
         }
 
