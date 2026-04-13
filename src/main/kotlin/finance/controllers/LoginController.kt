@@ -107,7 +107,7 @@ class LoginController(
                 .signWith(key)
                 .compact()
 
-        val cookieBuilder =
+        val cookie =
             ResponseCookie
                 .from("token", token)
                 .path("/")
@@ -115,13 +115,7 @@ class LoginController(
                 .httpOnly(true)
                 .secure(isSecureCookie)
                 .sameSite(if (isSecureCookie) "Strict" else "Lax")
-
-        val cookie =
-            if (isSecureCookie) {
-                cookieBuilder.domain(".bhenning.com").build()
-            } else {
-                cookieBuilder.build()
-            }
+                .build()
 
         response.addHeader("Set-Cookie", cookie.toString())
         logger.info("LOGIN_SUCCESS username=${loginRequest.username}")
@@ -183,7 +177,7 @@ class LoginController(
             }
         }
 
-        val cookieBuilder =
+        val cookie =
             ResponseCookie
                 .from("token", "")
                 .path("/")
@@ -191,13 +185,7 @@ class LoginController(
                 .httpOnly(true)
                 .secure(isSecureCookie)
                 .sameSite(if (isSecureCookie) "Strict" else "Lax")
-
-        val cookie =
-            if (isSecureCookie) {
-                cookieBuilder.domain(".bhenning.com").build()
-            } else {
-                cookieBuilder.build()
-            }
+                .build()
 
         response.addHeader("Set-Cookie", cookie.toString())
         logger.info("Logout successful, cookie cleared")
@@ -260,7 +248,7 @@ class LoginController(
                 .signWith(key)
                 .compact()
 
-        val cookieBuilder =
+        val cookie =
             ResponseCookie
                 .from("token", token)
                 .httpOnly(true)
@@ -268,13 +256,7 @@ class LoginController(
                 .maxAge(JWT_EXPIRY_SECONDS)
                 .sameSite(if (isSecureCookie) "Strict" else "Lax")
                 .path("/")
-
-        val cookie =
-            if (isSecureCookie) {
-                cookieBuilder.domain(".bhenning.com").build()
-            } else {
-                cookieBuilder.build()
-            }
+                .build()
 
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Registration successful"))
