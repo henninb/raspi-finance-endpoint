@@ -73,6 +73,9 @@ dependencies {
     testImplementation("com.squareup.retrofit2:retrofit-mock:${squareRetrofitVersion}")
     //h2 database
     testImplementation("com.h2database:h2:${h2DatabaseVersion}")
+    // LatencyUtils is an optional transitive dep of HdrHistogram (used by Micrometer timers);
+    // Groovy's metaclass reflection triggers NoClassDefFoundError without it on the classpath.
+    testRuntimeOnly("org.latencyutils:LatencyUtils:2.0.3")
 }
 
 ////provide dependency scopes

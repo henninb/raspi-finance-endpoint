@@ -32,7 +32,7 @@ open class BaseController {
     fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.BAD_REQUEST
         logSecureError("BAD_REQUEST", throwable, status)
-        val body = buildErrorBody(status, "BAD_REQUEST", throwable.javaClass.simpleName)
+        val body = buildErrorBody(status, "BAD_REQUEST", "Invalid request")
         return ResponseEntity(body, status)
     }
 
@@ -40,7 +40,7 @@ open class BaseController {
     fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.BAD_REQUEST
         logSecureError("VALIDATION_EXCEPTION", throwable, status)
-        val body = buildErrorBody(status, "BAD_REQUEST", throwable.javaClass.simpleName)
+        val body = buildErrorBody(status, "BAD_REQUEST", "Validation failed")
         return ResponseEntity(body, status)
     }
 
@@ -48,8 +48,7 @@ open class BaseController {
     fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, Any>> {
         val httpStatus = HttpStatus.valueOf(throwable.statusCode.value())
         logSecureError("RESPONSE_STATUS_EXCEPTION", throwable, httpStatus)
-        val errorMessage = throwable.reason ?: "${throwable.javaClass.simpleName}"
-        val body = buildErrorBody(httpStatus, httpStatus.name, errorMessage)
+        val body = buildErrorBody(httpStatus, httpStatus.name, httpStatus.reasonPhrase)
         return ResponseEntity(body, httpStatus)
     }
 
@@ -57,7 +56,7 @@ open class BaseController {
     fun handleUnauthorized(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.UNAUTHORIZED
         logSecureError("UNAUTHORIZED", throwable, status)
-        val body = buildErrorBody(status, "UNAUTHORIZED", throwable.javaClass.simpleName)
+        val body = buildErrorBody(status, "UNAUTHORIZED", "Authentication required")
         return ResponseEntity(body, status)
     }
 
@@ -65,7 +64,7 @@ open class BaseController {
     fun handleServiceUnavailable(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.SERVICE_UNAVAILABLE
         logSecureError("SERVICE_UNAVAILABLE", throwable, status)
-        val body = buildErrorBody(status, "SERVICE_UNAVAILABLE", throwable.javaClass.simpleName)
+        val body = buildErrorBody(status, "SERVICE_UNAVAILABLE", "Service temporarily unavailable")
         return ResponseEntity(body, status)
     }
 
@@ -73,7 +72,7 @@ open class BaseController {
     fun handleHttpInternalError(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.INTERNAL_SERVER_ERROR
         logSecureError("INTERNAL_SERVER_ERROR", throwable, status)
-        val body = buildErrorBody(status, "INTERNAL_SERVER_ERROR", throwable.javaClass.simpleName)
+        val body = buildErrorBody(status, "INTERNAL_SERVER_ERROR", "An internal error occurred")
         return ResponseEntity(body, status)
     }
 

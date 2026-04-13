@@ -3,6 +3,7 @@ package finance.configurations
 import finance.services.TokenBlacklistService
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -25,6 +26,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 open class WebSecurityConfig(
     private val environment: Environment,
 ) {
+    @Value("\${custom.project.chrome-extension-id:}")
+    private var chromeExtensionId: String = ""
+
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${WebSecurityConfig::class.java.simpleName}")
     }
@@ -138,8 +142,8 @@ open class WebSecurityConfig(
     open fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration =
             CorsConfiguration().apply {
-                allowedOrigins =
-                    listOf(
+                val origins =
+                    mutableListOf(
                         "http://localhost:3000",
                         "https://www.bhenning.com",
                         "https://www.brianhenning.com",
@@ -153,10 +157,13 @@ open class WebSecurityConfig(
                         "https://netlify.brianhenning.com",
                         "https://finance.bhenning.com",
                         "https://finance.brianhenning.com",
-                        "http://dev.finance.bhenning.com:3000",
-                        "http://dev.finance.bhenning.com:3001",
-                        "chrome-extension://ldehlkfgenjholjmakdlmgbchmebdinc",
+                        "https://dev.finance.bhenning.com:3000",
+                        "https://dev.finance.bhenning.com:3001",
                     )
+                if (chromeExtensionId.isNotBlank()) {
+                    origins.add("chrome-extension://$chromeExtensionId")
+                }
+                allowedOrigins = origins
                 allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key", "X-CSRF-TOKEN")
                 allowCredentials = true
