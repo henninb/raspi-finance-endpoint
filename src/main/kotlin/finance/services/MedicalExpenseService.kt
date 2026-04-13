@@ -7,6 +7,7 @@ import finance.exceptions.DuplicateMedicalExpenseException
 import finance.repositories.MedicalExpenseRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -17,10 +18,11 @@ import java.time.LocalDate
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-@org.springframework.context.annotation.Primary
 class MedicalExpenseService(
     private val medicalExpenseRepository: MedicalExpenseRepository,
-) : CrudBaseService<MedicalExpense, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<MedicalExpense, Long>(meterService, validator) {
     override fun getEntityName(): String = "MedicalExpense"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -71,14 +73,17 @@ class MedicalExpenseService(
             medicalExpenseRepository.save(entity)
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<MedicalExpense> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
+            val medicalExpense =
+                medicalExpenseRepository.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(owner, id)
+                    ?: throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: $id")
             val updatedRows = medicalExpenseRepository.softDeleteByOwnerAndMedicalExpenseId(owner, id)
             if (updatedRows == 0) {
                 throw jakarta.persistence.EntityNotFoundException("MedicalExpense not found: $id")
             }
-            true
+            medicalExpense
         }
 
     // ===== Legacy Method Compatibility =====

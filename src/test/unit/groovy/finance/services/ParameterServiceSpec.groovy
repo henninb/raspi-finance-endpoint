@@ -14,12 +14,7 @@ import jakarta.persistence.EntityNotFoundException
  */
 class StandardizedParameterServiceSpec extends BaseServiceSpec {
 
-    def standardizedParameterService = new ParameterService(parameterRepositoryMock)
-
-    void setup() {
-        standardizedParameterService.meterService = meterService
-        standardizedParameterService.validator = validatorMock
-    }
+    def standardizedParameterService = new ParameterService(parameterRepositoryMock, meterService, validatorMock)
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -103,7 +98,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         given: "invalid parameter"
         def parameter = ParameterBuilder.builder().withParameterName("").build()
         ConstraintViolation<Parameter> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "parameterName"
         violation.propertyPath >> mockPath
         violation.message >> "size must be between 1 and 50"
@@ -186,7 +181,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(parameter)
         1 * parameterRepositoryMock.delete(parameter)
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
         0 * _
     }
 
@@ -241,7 +236,7 @@ class StandardizedParameterServiceSpec extends BaseServiceSpec {
         1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "test") >> Optional.of(parameter)
         1 * parameterRepositoryMock.delete(parameter)
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
         0 * _
     }
 

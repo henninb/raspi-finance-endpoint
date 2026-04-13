@@ -46,25 +46,15 @@ class BaseServiceSpec extends Specification {
     protected CategoryService categoryServiceMock = GroovyMock(CategoryService)
     protected AccountService accountServiceMock = GroovyMock(AccountService)
 
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
-    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock)
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock)
-    protected ImageProcessingService imageProcessingService = new ImageProcessingService() {
-        {
-            validator = validatorMock
-            meterService = BaseServiceSpec.this.meterService
-        }
-    }
-    protected CalculationService calculationService = new CalculationService(transactionRepositoryMock) {
-        {
-            validator = validatorMock
-            meterService = BaseServiceSpec.this.meterService
-        }
-    }
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator)
+    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validator)
+    protected AccountService accountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock, meterService, validator)
+    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validator)
+    protected ImageProcessingService imageProcessingService = new ImageProcessingService(meterService, validatorMock)
+    protected CalculationService calculationService = new CalculationService(transactionRepositoryMock, meterService, validatorMock)
     protected TransactionService transactionServiceMock = Mock(TransactionService)
-    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock)
-    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService)
+    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, meterService, validator)
+    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validator)
 
     //TODO: turn this into a method
     protected Tag validationExceptionTag = Tag.of(EXCEPTION_NAME_TAG, 'ValidationException')

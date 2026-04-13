@@ -4,7 +4,7 @@ import finance.domain.Parameter
 import finance.domain.ServiceResult
 import finance.repositories.ParameterRepository
 import finance.utils.TenantContext
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.stereotype.Service
 
 /**
@@ -12,10 +12,11 @@ import org.springframework.stereotype.Service
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-@Primary
 class ParameterService(
     private val parameterRepository: ParameterRepository,
-) : CrudBaseService<Parameter, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Parameter, Long>(meterService, validator) {
     override fun getEntityName(): String = "Parameter"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -67,15 +68,16 @@ class ParameterService(
             parameterRepository.saveAndFlush(parameterToUpdate)
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<Parameter> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalParameter = parameterRepository.findByOwnerAndParameterId(owner, id)
             if (optionalParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $id")
             }
-            parameterRepository.delete(optionalParameter.get())
-            true
+            val parameter = optionalParameter.get()
+            parameterRepository.delete(parameter)
+            parameter
         }
 
     /**
@@ -95,14 +97,15 @@ class ParameterService(
     /**
      * ServiceResult version of deleteByParameterName for modern controller usage
      */
-    fun deleteByParameterNameStandardized(parameterName: String): ServiceResult<Boolean> =
+    fun deleteByParameterNameStandardized(parameterName: String): ServiceResult<Parameter> =
         handleServiceOperation("deleteByParameterName", null) {
             val owner = TenantContext.getCurrentOwner()
             val optionalParameter = parameterRepository.findByOwnerAndParameterName(owner, parameterName)
             if (optionalParameter.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Parameter not found: $parameterName")
             }
-            parameterRepository.delete(optionalParameter.get())
-            true
+            val parameter = optionalParameter.get()
+            parameterRepository.delete(parameter)
+            parameter
         }
 }

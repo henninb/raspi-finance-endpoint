@@ -257,20 +257,11 @@ class ValidationAmountController(
     @DeleteMapping("/{validationId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("validationId") id: Long,
-    ): ResponseEntity<ValidationAmount> {
-        // First check if the validation amount exists
-        val findResult = validationAmountService.findById(id)
-        if (findResult !is ServiceResult.Success) {
-            logger.warn("Validation amount not found for deletion: $id")
-            return ResponseEntity.notFound().build<ValidationAmount>()
-        }
-
-        val validationAmountToDelete = findResult.data
-
-        return when (val result = validationAmountService.deleteById(id)) {
+    ): ResponseEntity<ValidationAmount> =
+        when (val result = validationAmountService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Validation amount deleted successfully: $id")
-                ResponseEntity.ok(validationAmountToDelete)
+                ResponseEntity.ok(result.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -278,17 +269,21 @@ class ValidationAmountController(
                 ResponseEntity.notFound().build<ValidationAmount>()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting validation amount: ${result.errors}")
+                ResponseEntity.badRequest().build<ValidationAmount>()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting validation amount: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<ValidationAmount>()
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting validation amount $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<ValidationAmount>()
-            }
         }
-    }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 

@@ -14,22 +14,15 @@ class StandardizedParameterControllerSpec extends Specification {
     static final String TEST_OWNER = "test_owner"
 
     finance.repositories.ParameterRepository parameterRepository = Mock()
-    ParameterService parameterService = new ParameterService(parameterRepository)
+    jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    ParameterService parameterService = new ParameterService(parameterRepository, meterService, validator)
 
     @Subject
     ParameterController controller = new ParameterController(parameterService)
 
     def setup() {
-        def validator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([] as Set)
-        }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-
-        parameterService.validator = validator
-        parameterService.meterService = meterService
-
-        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        validator.validate(_ as Object) >> ([] as Set)
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
         SecurityContextHolder.getContext().setAuthentication(auth)
     }
@@ -151,13 +144,13 @@ class StandardizedParameterControllerSpec extends Specification {
         given:
         Parameter invalid = param(0L, "", "")
         and:
-        def violatingValidator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        }
-        parameterService.validator = violatingValidator
+        def violatingValidator = GroovyMock(jakarta.validation.Validator)
+        violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
+        def localService = new ParameterService(parameterRepository, meterService, violatingValidator)
+        def localController = new ParameterController(localService)
 
         when:
-        ResponseEntity<?> response = controller.save(invalid)
+        ResponseEntity<?> response = localController.save(invalid)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -293,8 +286,7 @@ class StandardizedParameterControllerSpec extends Specification {
         given:
         Parameter existing = param(8L, "eta", "val")
         and:
-        // findByParameterNameStandardized (find) + deleteByParameterNameStandardized (delete) both call findByOwnerAndParameterName
-        2 * parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "eta") >> Optional.of(existing)
+        1 * parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "eta") >> Optional.of(existing)
 
         when:
         ResponseEntity<?> response = controller.deleteById("eta")
@@ -330,7 +322,7 @@ class StandardizedParameterControllerSpec extends Specification {
         given:
         Parameter existing = param(9L, "gone", "v")
         and:
-        2 * parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "gone") >> Optional.of(existing)
+        1 * parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "gone") >> Optional.of(existing)
         parameterRepository.delete(_ as Parameter) >> { throw new RuntimeException("db") }
 
         when:

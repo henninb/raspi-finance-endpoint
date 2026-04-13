@@ -2,8 +2,10 @@ package finance.controllers
 
 import finance.domain.User
 import finance.repositories.UserRepository
+import finance.services.MeterService
 import finance.services.TokenBlacklistService
 import finance.services.UserService
+import jakarta.validation.Validator
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import spock.lang.Specification
@@ -18,7 +20,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 class LoginControllerSpec extends Specification {
     private UserRepository userRepository = Mock()
-    private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder())
+    private Validator validator = Mock()
+    private MeterService meterService = new MeterService()
+    private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder(), meterService, validator)
     private TokenBlacklistService tokenBlacklistService = Mock()
     private LoginController loginController = new LoginController(userService, tokenBlacklistService)
     private HttpServletResponse response = Mock()

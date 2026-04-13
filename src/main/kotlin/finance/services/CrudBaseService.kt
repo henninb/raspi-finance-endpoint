@@ -3,6 +3,7 @@ package finance.services
 import finance.domain.ServiceResult
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ConstraintViolationException
+import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 
 /**
@@ -12,8 +13,10 @@ import org.springframework.dao.DataIntegrityViolationException
  * @param T The entity type
  * @param ID The entity identifier type
  */
-abstract class CrudBaseService<T, ID> :
-    BaseService(),
+abstract class CrudBaseService<T, ID>(
+    meterService: MeterService,
+    validator: Validator,
+) : BaseService(meterService, validator),
     StandardServiceInterface<T, ID> {
     /**
      * Abstract method to get entity name for logging and error messages
@@ -79,27 +82,10 @@ abstract class CrudBaseService<T, ID> :
      * @return Map of field names to error messages
      */
     private fun extractValidationErrors(ex: ConstraintViolationException): Map<String, String> {
-        val errors = mutableMapOf<String, String>()
-
-        try {
-            ex.constraintViolations?.forEach { violation ->
-                val fieldName =
-                    try {
-                        violation.propertyPath?.toString() ?: "unknown"
-                    } catch (e: Exception) {
-                        "unknown"
-                    }
-                val errorMessage = violation.message ?: "Validation failed"
-                errors[fieldName] = errorMessage
+        val errors =
+            ex.constraintViolations.associate { violation ->
+                (violation.propertyPath?.toString() ?: "unknown") to (violation.message ?: "Validation failed")
             }
-        } catch (e: Exception) {
-            logger.warn("Failed to extract validation errors: ${e.message}")
-        }
-
-        return if (errors.isEmpty()) {
-            mapOf("validation" to "Validation failed")
-        } else {
-            errors
-        }
+        return errors.ifEmpty { mapOf("validation" to "Validation failed") }
     }
 }

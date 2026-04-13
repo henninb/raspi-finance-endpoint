@@ -18,12 +18,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
 
     def categoryRepositoryMock = Mock(CategoryRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def standardizedCategoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock)
-
-    void setup() {
-        standardizedCategoryService.meterService = meterService
-        standardizedCategoryService.validator = validatorMock
-    }
+    def standardizedCategoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -113,7 +108,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         given: "invalid category"
         def category = CategoryBuilder.builder().withCategoryName("").build()
         ConstraintViolation<Category> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "categoryName"
         violation.propertyPath >> mockPath
         violation.message >> "size must be between 1 and 50"
@@ -196,7 +191,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByOwnerAndCategoryId(TEST_OWNER, 1L) >> Optional.of(category)
         1 * categoryRepositoryMock.delete(category)
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
         0 * _
     }
 

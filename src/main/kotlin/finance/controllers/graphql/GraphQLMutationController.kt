@@ -263,7 +263,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.parameter.delete.success").increment()
                 logger.info("GraphQL - Deleted parameter id={}", parameterId)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {
@@ -430,7 +430,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.category.delete.success").increment()
                 logger.info("GraphQL - Deleted category: {}", categoryName)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {
@@ -597,7 +597,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.description.delete.success").increment()
                 logger.info("GraphQL - Deleted description: {}", descriptionName)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {
@@ -813,7 +813,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.medicalExpense.delete.success").increment()
                 logger.info("GraphQL - Deleted medical expense id={}", medicalExpenseId)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {
@@ -925,7 +925,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.validationAmount.delete.success").increment()
                 logger.info("GraphQL - Deleted validation amount id={}", validationId)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {
@@ -1106,7 +1106,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.account.delete.success").increment()
                 logger.info("GraphQL - Deleted account: {}", accountNameOwner)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {
@@ -1240,7 +1240,7 @@ class GraphQLMutationController(
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.transaction.delete.success").increment()
                 logger.info("GraphQL - Deleted transaction: {}", guid)
-                result.data
+                true
             }
 
             is ServiceResult.NotFound -> {

@@ -252,32 +252,11 @@ class DescriptionController(
     @DeleteMapping("/{descriptionName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("descriptionName") id: String,
-    ): ResponseEntity<Description> {
-        // First find the description to return it
-        return when (val findResult = descriptionService.findByDescriptionNameStandardized(id)) {
+    ): ResponseEntity<Description> =
+        when (val deleteResult = descriptionService.deleteByDescriptionNameStandardized(id)) {
             is ServiceResult.Success -> {
-                val description = findResult.data
-                when (val deleteResult = descriptionService.deleteByDescriptionNameStandardized(id)) {
-                    is ServiceResult.Success -> {
-                        logger.info("Description deleted successfully: $id")
-                        ResponseEntity.ok(description)
-                    }
-
-                    is ServiceResult.NotFound -> {
-                        logger.warn("Description not found for deletion: $id")
-                        ResponseEntity.notFound().build<Description>()
-                    }
-
-                    is ServiceResult.SystemError -> {
-                        logger.error("System error deleting description $id: ${deleteResult.exception.message}", deleteResult.exception)
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
-                    }
-
-                    else -> {
-                        logger.error("Unexpected delete result type: $deleteResult")
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                    }
-                }
+                logger.info("Description deleted successfully: $id")
+                ResponseEntity.ok(deleteResult.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -285,17 +264,21 @@ class DescriptionController(
                 ResponseEntity.notFound().build<Description>()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error finding description $id: ${findResult.exception.message}", findResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting description: ${deleteResult.errors}")
+                ResponseEntity.badRequest().build<Description>()
             }
 
-            else -> {
-                logger.error("Unexpected find result type: $findResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting description: ${deleteResult.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting description $id: ${deleteResult.exception.message}", deleteResult.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
             }
         }
-    }
 
     // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
 

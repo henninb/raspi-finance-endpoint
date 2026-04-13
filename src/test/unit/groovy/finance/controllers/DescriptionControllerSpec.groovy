@@ -15,22 +15,15 @@ class StandardizedDescriptionControllerSpec extends Specification {
 
     finance.repositories.DescriptionRepository descriptionRepository = Mock()
     finance.repositories.TransactionRepository transactionRepository = Mock()
-    DescriptionService descriptionService = new DescriptionService(descriptionRepository, transactionRepository)
+    jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    DescriptionService descriptionService = new DescriptionService(descriptionRepository, transactionRepository, meterService, validator)
 
     @Subject
     DescriptionController controller = new DescriptionController(descriptionService)
 
     def setup() {
-        def validator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([] as Set)
-        }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-
-        descriptionService.validator = validator
-        descriptionService.meterService = meterService
-
-        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        validator.validate(_ as Object) >> ([] as Set)
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
         SecurityContextHolder.getContext().setAuthentication(auth)
     }
@@ -145,13 +138,13 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         Description invalid = desc(0L, "")
         and:
-        def violatingValidator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        }
-        descriptionService.validator = violatingValidator
+        def violatingValidator = GroovyMock(jakarta.validation.Validator)
+        violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
+        def localService = new DescriptionService(descriptionRepository, transactionRepository, meterService, violatingValidator)
+        def localController = new DescriptionController(localService)
 
         when:
-        ResponseEntity<Description> response = controller.save(invalid)
+        ResponseEntity<Description> response = localController.save(invalid)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -263,8 +256,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         Description existing = desc(8L, "gone")
         and:
-        2 * descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "gone") >> Optional.of(existing)
-        transactionRepository.countByOwnerAndDescriptionName(TEST_OWNER, "gone") >> 0L
+        1 * descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "gone") >> Optional.of(existing)
 
         when:
         ResponseEntity<Description> response = controller.deleteById("gone")
@@ -296,18 +288,17 @@ class StandardizedDescriptionControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
-    def "deleteById returns 500 on business error during delete"() {
+    def "deleteById returns 409 on business error during delete"() {
         given:
         Description existing = desc(9L, "delb")
         and:
-        2 * descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "delb") >> Optional.of(existing)
-        transactionRepository.countByOwnerAndDescriptionName(TEST_OWNER, "delb") >> 0L
+        1 * descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "delb") >> Optional.of(existing)
         descriptionRepository.delete(_ as Description) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
         ResponseEntity<Description> response = controller.deleteById("delb")
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
     }
 }

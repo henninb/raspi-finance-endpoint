@@ -260,30 +260,11 @@ class TransferController(
     @DeleteMapping("/{transferId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("transferId") id: Long,
-    ): ResponseEntity<Transfer> {
-        // First, retrieve the transfer to return it
-        val transferToDelete =
-            when (val findResult = transferService.findById(id)) {
-                is ServiceResult.Success -> {
-                    findResult.data
-                }
-
-                is ServiceResult.NotFound -> {
-                    logger.warn("Transfer not found for deletion: $id")
-                    return ResponseEntity.notFound().build()
-                }
-
-                else -> {
-                    logger.error("Error retrieving transfer for deletion: $id")
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                }
-            }
-
-        // Then delete it
-        return when (val deleteResult = transferService.deleteById(id)) {
+    ): ResponseEntity<Transfer> =
+        when (val deleteResult = transferService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer deleted successfully: $id")
-                ResponseEntity.ok(transferToDelete)
+                ResponseEntity.ok(deleteResult.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -291,15 +272,19 @@ class TransferController(
                 ResponseEntity.notFound().build()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting transfer: ${deleteResult.errors}")
+                ResponseEntity.badRequest().build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting transfer: ${deleteResult.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting transfer $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $deleteResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
         }
-    }
 }

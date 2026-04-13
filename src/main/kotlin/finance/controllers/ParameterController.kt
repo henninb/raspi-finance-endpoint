@@ -240,28 +240,11 @@ class ParameterController(
     @DeleteMapping("/{parameterName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("parameterName") id: String,
-    ): ResponseEntity<Parameter> {
-        // First get the parameter to return it after deletion
-        return when (val findResult = parameterService.findByParameterNameStandardized(id)) {
+    ): ResponseEntity<Parameter> =
+        when (val deleteResult = parameterService.deleteByParameterNameStandardized(id)) {
             is ServiceResult.Success -> {
-                val parameterToDelete = findResult.data
-
-                when (val deleteResult = parameterService.deleteByParameterNameStandardized(id)) {
-                    is ServiceResult.Success -> {
-                        logger.info("Parameter deleted successfully: $id")
-                        ResponseEntity.ok(parameterToDelete)
-                    }
-
-                    is ServiceResult.SystemError -> {
-                        logger.error("System error deleting parameter: ${deleteResult.exception.message}", deleteResult.exception)
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                    }
-
-                    else -> {
-                        logger.error("Unexpected result type: $deleteResult")
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                    }
-                }
+                logger.info("Parameter deleted successfully: $id")
+                ResponseEntity.ok(deleteResult.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -269,15 +252,19 @@ class ParameterController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error finding parameter for deletion: ${findResult.exception.message}", findResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting parameter: ${deleteResult.errors}")
+                ResponseEntity.badRequest().build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $findResult")
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting parameter: ${deleteResult.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting parameter: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 }

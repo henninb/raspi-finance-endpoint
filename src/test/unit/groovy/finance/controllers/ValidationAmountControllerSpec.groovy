@@ -19,21 +19,14 @@ class StandardizedValidationAmountControllerSpec extends Specification {
 
     finance.repositories.ValidationAmountRepository validationRepo = Mock()
     finance.repositories.AccountRepository accountRepository = Mock()
-    ValidationAmountService service = new ValidationAmountService(validationRepo, accountRepository)
+    jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    ValidationAmountService service = new ValidationAmountService(validationRepo, accountRepository, meterService, validator)
 
     @Subject
     ValidationAmountController controller = new ValidationAmountController(service)
 
     def setup() {
-        def validator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([] as Set)
-        }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-
-        service.validator = validator
-        service.meterService = meterService
-
         // Set up SecurityContext for TenantContext.getCurrentOwner()
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
         SecurityContextHolder.getContext().setAuthentication(auth)
@@ -168,10 +161,11 @@ class StandardizedValidationAmountControllerSpec extends Specification {
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
-        service.validator = violatingValidator
+        def localService = new ValidationAmountService(validationRepo, accountRepository, meterService, violatingValidator)
+        def localController = new ValidationAmountController(localService)
 
         when:
-        ResponseEntity<ValidationAmount> response = controller.save(invalid)
+        ResponseEntity<ValidationAmount> response = localController.save(invalid)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -290,8 +284,7 @@ class StandardizedValidationAmountControllerSpec extends Specification {
         long id = 31L
         ValidationAmount existing = va(validationId: id)
         and:
-        // findById (controller pre-check) + deleteById both call findByOwnerAndValidationIdAndActiveStatusTrue
-        2 * validationRepo.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, id) >> Optional.of(existing)
+        1 * validationRepo.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, id) >> Optional.of(existing)
 
         when:
         ResponseEntity<ValidationAmount> response = controller.deleteById(id)
@@ -319,7 +312,7 @@ class StandardizedValidationAmountControllerSpec extends Specification {
         long id = 33L
         ValidationAmount existing = va(validationId: id)
         and:
-        2 * validationRepo.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, id) >> Optional.of(existing)
+        1 * validationRepo.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, id) >> Optional.of(existing)
         validationRepo.delete(_ as ValidationAmount) >> { throw new RuntimeException("db") }
 
         when:

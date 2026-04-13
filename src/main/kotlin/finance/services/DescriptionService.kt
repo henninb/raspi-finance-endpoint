@@ -6,23 +6,20 @@ import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.util.Optional
 
-/**
- * Standardized Description Service implementing ServiceResult pattern
- * Provides both new standardized methods and legacy compatibility
- */
 @Service
-@Primary
 class DescriptionService(
     private val descriptionRepository: DescriptionRepository,
     private val transactionRepository: TransactionRepository,
-) : CrudBaseService<Description, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Description, Long>(meterService, validator) {
     override fun getEntityName(): String = "Description"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -97,15 +94,16 @@ class DescriptionService(
             descriptionRepository.saveAndFlush(descriptionToUpdate)
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<Description> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
             if (optionalDescription.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
             }
-            descriptionRepository.delete(optionalDescription.get())
-            true
+            val description = optionalDescription.get()
+            descriptionRepository.delete(description)
+            description
         }
 
     // ===== Paginated ServiceResult Methods =====
@@ -154,15 +152,16 @@ class DescriptionService(
             }
         }
 
-    fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Boolean> =
+    fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
         handleServiceOperation("deleteByDescriptionName", null) {
             val owner = TenantContext.getCurrentOwner()
             val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
             if (optionalDescription.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
             }
-            descriptionRepository.delete(optionalDescription.get())
-            true
+            val description = optionalDescription.get()
+            descriptionRepository.delete(description)
+            description
         }
 
     // ===== Legacy Method Compatibility =====
@@ -175,47 +174,14 @@ class DescriptionService(
         }
     }
 
-    fun insertDescription(description: Description): Description {
-        val result = save(description)
-        return when (result) {
+    fun insertDescription(description: Description): Description =
+        when (val result = save(description)) {
             is ServiceResult.Success -> {
                 result.data
             }
 
             is ServiceResult.ValidationError -> {
-                val violations =
-                    result.errors
-                        .map { (field, message) ->
-                            object : jakarta.validation.ConstraintViolation<Description> {
-                                override fun getMessage(): String = message
-
-                                override fun getMessageTemplate(): String = message
-
-                                override fun getRootBean(): Description = description
-
-                                override fun getRootBeanClass(): Class<Description> = Description::class.java
-
-                                override fun getLeafBean(): Any = description
-
-                                override fun getExecutableParameters(): Array<Any> = emptyArray()
-
-                                override fun getExecutableReturnValue(): Any? = null
-
-                                override fun getPropertyPath(): jakarta.validation.Path =
-                                    object : jakarta.validation.Path {
-                                        override fun toString(): String = field
-
-                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                    }
-
-                                override fun getInvalidValue(): Any? = null
-
-                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                            }
-                        }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+                throw ValidationException("Validation failed: ${result.errors}")
             }
 
             is ServiceResult.BusinessError -> {
@@ -226,11 +192,14 @@ class DescriptionService(
                 }
             }
 
-            else -> {
-                throw RuntimeException("Failed to insert description: $result")
+            is ServiceResult.NotFound -> {
+                throw jakarta.persistence.EntityNotFoundException("Description not found")
+            }
+
+            is ServiceResult.SystemError -> {
+                throw RuntimeException("Failed to insert description", result.exception)
             }
         }
-    }
 
     fun findByDescriptionName(descriptionName: String): Optional<Description> {
         val owner = TenantContext.getCurrentOwner()

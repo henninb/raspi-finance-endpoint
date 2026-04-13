@@ -215,23 +215,21 @@ class ReceiptImageController(
     @DeleteMapping("/{receiptImageId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("receiptImageId") id: Long,
-    ): ResponseEntity<ReceiptImage> {
-        // First get the receipt image to return it
-        val receiptImageResult = receiptImageService.findById(id)
-        if (receiptImageResult !is ServiceResult.Success) {
-            logger.warn("Receipt image not found for deletion: $id")
-            return ResponseEntity.notFound().build()
-        }
-
-        return when (val result = receiptImageService.deleteById(id)) {
+    ): ResponseEntity<ReceiptImage> =
+        when (val result = receiptImageService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Receipt image deleted successfully: $id")
-                ResponseEntity.ok(receiptImageResult.data)
+                ResponseEntity.ok(result.data)
             }
 
             is ServiceResult.NotFound -> {
                 logger.warn("Receipt image not found for deletion: $id")
                 ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting receipt image: ${result.errors}")
+                ResponseEntity.badRequest().build()
             }
 
             is ServiceResult.BusinessError -> {
@@ -243,11 +241,5 @@ class ReceiptImageController(
                 logger.error("System error deleting receipt image: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
         }
-    }
 }

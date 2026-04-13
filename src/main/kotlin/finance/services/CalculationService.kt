@@ -5,6 +5,7 @@ import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.TransactionRepository
 import finance.utils.TenantContext
+import jakarta.validation.Validator
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -16,7 +17,9 @@ import java.math.RoundingMode
 @Service
 open class CalculationService(
     private val transactionRepository: TransactionRepository,
-) : BaseService(),
+    meterService: MeterService,
+    validator: Validator,
+) : BaseService(meterService, validator),
     ICalculationService {
     companion object {
         private const val MAX_REASONABLE_AMOUNT = 999999999.99

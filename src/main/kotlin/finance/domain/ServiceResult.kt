@@ -114,7 +114,7 @@ sealed class ServiceResult<T> {
                 action(exception.message ?: "System error occurred")
             }
 
-            else -> {
+            is Success -> {
                 // Success case - do nothing
             }
         }

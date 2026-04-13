@@ -259,31 +259,11 @@ class CategoryController(
     @DeleteMapping("/{categoryName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("categoryName") id: String,
-    ): ResponseEntity<Category> {
-        // First get the category to return it after deletion
-        return when (val findResult = categoryService.findByCategoryNameStandardized(id)) {
+    ): ResponseEntity<Category> =
+        when (val deleteResult = categoryService.deleteByCategoryNameStandardized(id)) {
             is ServiceResult.Success -> {
-                when (val deleteResult = categoryService.deleteByCategoryNameStandardized(id)) {
-                    is ServiceResult.Success -> {
-                        logger.info("Category deleted successfully: $id")
-                        ResponseEntity.ok(findResult.data)
-                    }
-
-                    is ServiceResult.NotFound -> {
-                        logger.warn("Category not found for deletion: $id")
-                        ResponseEntity.notFound().build()
-                    }
-
-                    is ServiceResult.SystemError -> {
-                        logger.error("System error deleting category: ${deleteResult.exception.message}", deleteResult.exception)
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                    }
-
-                    else -> {
-                        logger.error("Unexpected delete result type: $deleteResult")
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                    }
-                }
+                logger.info("Category deleted successfully: $id")
+                ResponseEntity.ok(deleteResult.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -291,17 +271,21 @@ class CategoryController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error finding category for deletion: ${findResult.exception.message}", findResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting category: ${deleteResult.errors}")
+                ResponseEntity.badRequest().build()
             }
 
-            else -> {
-                logger.error("Unexpected find result type: $findResult")
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting category: ${deleteResult.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting category: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
 

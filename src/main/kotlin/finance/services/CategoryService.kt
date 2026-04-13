@@ -5,22 +5,19 @@ import finance.domain.ServiceResult
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
 import finance.utils.TenantContext
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
-/**
- * Standardized Category Service implementing ServiceResult pattern
- * Provides both new standardized methods and legacy compatibility
- */
 @Service
-@Primary
 class CategoryService(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
-) : CrudBaseService<Category, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Category, Long>(meterService, validator) {
     override fun getEntityName(): String = "Category"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -95,15 +92,16 @@ class CategoryService(
             categoryRepository.saveAndFlush(categoryToUpdate)
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<Category> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalCategory = categoryRepository.findByOwnerAndCategoryId(owner, id)
             if (optionalCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $id")
             }
-            categoryRepository.delete(optionalCategory.get())
-            true
+            val category = optionalCategory.get()
+            categoryRepository.delete(category)
+            category
         }
 
     // ===== Paginated ServiceResult Methods =====
@@ -150,15 +148,16 @@ class CategoryService(
             }
         }
 
-    fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Boolean> =
+    fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =
         handleServiceOperation("deleteByCategoryName", null) {
             val owner = TenantContext.getCurrentOwner()
             val optionalCategory = categoryRepository.findByOwnerAndCategoryName(owner, categoryName)
             if (optionalCategory.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
             }
-            categoryRepository.delete(optionalCategory.get())
-            true
+            val category = optionalCategory.get()
+            categoryRepository.delete(category)
+            category
         }
 
     // ===== Business Logic Methods =====

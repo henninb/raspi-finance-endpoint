@@ -1,14 +1,14 @@
 package finance.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.DatabaseResilienceConfiguration
+import finance.domain.Account
+import finance.domain.AccountType
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.timelimiter.TimeLimiter
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataAccessResourceFailureException
@@ -19,57 +19,28 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
-open class BaseService {
-    @Autowired
-    open lateinit var meterService: MeterService
-
-    @Autowired
-    open lateinit var validator: Validator
-
-    @Autowired(required = false)
-    private var _databaseResilienceConfig: DatabaseResilienceConfiguration? = null
-    open var databaseResilienceConfig: DatabaseResilienceConfiguration?
-        get() = _databaseResilienceConfig
-        set(value) {
-            _databaseResilienceConfig = value
-        }
+open class BaseService(
+    open val meterService: MeterService,
+    open val validator: Validator,
+) {
+    protected val logger get() = LoggerFactory.getLogger(javaClass)
 
     @Autowired(required = false)
-    private var _circuitBreaker: CircuitBreaker? = null
-    open var circuitBreaker: CircuitBreaker?
-        get() = _circuitBreaker
-        set(value) {
-            _circuitBreaker = value
-        }
+    var databaseResilienceConfig: DatabaseResilienceConfiguration? = null
 
     @Autowired(required = false)
-    private var _retry: Retry? = null
-    open var retry: Retry?
-        get() = _retry
-        set(value) {
-            _retry = value
-        }
+    var circuitBreaker: CircuitBreaker? = null
 
     @Autowired(required = false)
-    private var _timeLimiter: TimeLimiter? = null
-    open var timeLimiter: TimeLimiter?
-        get() = _timeLimiter
-        set(value) {
-            _timeLimiter = value
-        }
+    var retry: Retry? = null
 
     @Autowired(required = false)
-    private var _scheduledExecutorService: ScheduledExecutorService? = null
-    open var scheduledExecutorService: ScheduledExecutorService?
-        get() = _scheduledExecutorService
-        set(value) {
-            _scheduledExecutorService = value
-        }
+    var timeLimiter: TimeLimiter? = null
 
-    open fun handleConstraintViolations(
-        constraintViolations: Set<ConstraintViolation<*>>,
-        meterService: MeterService,
-    ) {
+    @Autowired(required = false)
+    var scheduledExecutorService: ScheduledExecutorService? = null
+
+    open fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>) {
         if (constraintViolations.isNotEmpty()) {
             var details = ""
             constraintViolations.forEach { constraintViolation ->
@@ -80,6 +51,18 @@ open class BaseService {
             meterService.incrementExceptionThrownCounter("ValidationException")
             throw ValidationException("Cannot insert record because of constraint violation(s): $details")
         }
+    }
+
+    fun createDefaultAccount(
+        accountNameOwner: String,
+        accountType: AccountType,
+    ): Account {
+        val account = Account()
+        account.accountNameOwner = accountNameOwner
+        account.moniker = "0000"
+        account.accountType = accountType
+        account.activeStatus = true
+        return account
     }
 
     /**
@@ -233,10 +216,5 @@ open class BaseService {
             }
             throw ex
         }
-    }
-
-    companion object {
-        val mapper = ObjectMapper()
-        val logger: Logger = LoggerFactory.getLogger(BaseService::class.java)
     }
 }

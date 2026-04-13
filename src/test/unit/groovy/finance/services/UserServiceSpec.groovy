@@ -15,8 +15,7 @@ class UserServiceSpec extends BaseServiceSpec {
     UserService userService
 
     def setup() {
-        userService = new UserService(userRepositoryMock, passwordEncoderMock)
-        userService.meterService = meterService
+        userService = new UserService(userRepositoryMock, passwordEncoderMock, meterService, validator)
     }
 
     def "signIn - success with valid credentials"() {

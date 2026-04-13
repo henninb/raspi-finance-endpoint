@@ -17,12 +17,7 @@ import java.util.Optional
 class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
     def receiptImageRepositoryMock = Mock(ReceiptImageRepository)
-    def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock)
-
-    void setup() {
-        standardizedReceiptImageService.meterService = meterService
-        standardizedReceiptImageService.validator = validator
-    }
+    def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator)
 
     def "should have correct entity name"() {
         expect:
@@ -148,11 +143,11 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         violation.propertyPath >> mockPath
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<ReceiptImage>> violations = [violation] as Set
+        validatorMock.validate(image) >> violations
+        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock)
 
         when:
-        standardizedReceiptImageService.validator = validatorMock
-        validatorMock.validate(image) >> violations
-        def result = standardizedReceiptImageService.save(image)
+        def result = localService.save(image)
 
         then:
         result instanceof ServiceResult.ValidationError
@@ -236,7 +231,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
         then:
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should return ServiceResult.NotFound when receipt image does not exist"() {
@@ -340,11 +335,11 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         violation.propertyPath >> mockPath
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<ReceiptImage>> violations = [violation] as Set
+        validatorMock.validate(image) >> violations
+        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock)
 
         when:
-        standardizedReceiptImageService.validator = validatorMock
-        validatorMock.validate(image) >> violations
-        def result = standardizedReceiptImageService.save(image)
+        def result = localService.save(image)
 
         then:
         result instanceof ServiceResult.ValidationError
@@ -405,7 +400,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
         then:
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should return ServiceResult.SystemError on exception"() {

@@ -263,22 +263,21 @@ class PaymentController(
     override fun deleteById(
         @PathVariable("paymentId") id: Long,
     ): ResponseEntity<Payment> {
-        // First get the payment to return it
-        val paymentResult = paymentService.findById(id)
-        if (paymentResult !is ServiceResult.Success) {
-            logger.warn("Payment not found for deletion: $id")
-            return ResponseEntity.notFound().build()
-        }
-
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive: handle null or unexpected ServiceResult types
         return when (val result = paymentService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Payment deleted successfully: $id")
-                ResponseEntity.ok(paymentResult.data)
+                ResponseEntity.ok(result.data)
             }
 
             is ServiceResult.NotFound -> {
                 logger.warn("Payment not found for deletion: $id")
                 ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting payment: ${result.errors}")
+                ResponseEntity.badRequest().build<Payment>()
             }
 
             is ServiceResult.BusinessError -> {
@@ -292,7 +291,7 @@ class PaymentController(
             }
 
             else -> {
-                logger.error("Unexpected result type: $result")
+                logger.error("Unexpected result type for payment delete $id: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
         }

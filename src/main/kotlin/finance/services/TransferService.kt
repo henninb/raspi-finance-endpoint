@@ -8,6 +8,7 @@ import finance.domain.TransactionState
 import finance.domain.Transfer
 import finance.repositories.TransferRepository
 import finance.utils.TenantContext
+import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -21,12 +22,13 @@ import java.util.UUID
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-@org.springframework.context.annotation.Primary
 class TransferService(
     private val transferRepository: TransferRepository,
     private val transactionService: TransactionService,
     private val accountService: AccountService,
-) : CrudBaseService<Transfer, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Transfer, Long>(meterService, validator) {
     override fun getEntityName(): String = "Transfer"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -99,15 +101,16 @@ class TransferService(
             transferRepository.save(entity)
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<Transfer> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalTransfer = transferRepository.findByOwnerAndTransferId(owner, id)
             if (optionalTransfer.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("Transfer not found: $id")
             }
-            transferRepository.delete(optionalTransfer.get())
-            true
+            val transfer = optionalTransfer.get()
+            transferRepository.delete(transfer)
+            transfer
         }
 
     // ===== Paginated ServiceResult Methods =====

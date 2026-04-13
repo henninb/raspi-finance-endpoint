@@ -14,7 +14,7 @@ import java.io.ByteArrayOutputStream
  */
 class ImageProcessingServiceSpec extends BaseServiceSpec {
 
-    protected ImageProcessingService imageProcessingService = new ImageProcessingService()
+    ImageProcessingService localImageProcessingService
 
     @Shared
     byte[] validJpegImage
@@ -26,8 +26,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
     byte[] invalidImageData
 
     void setup() {
-        imageProcessingService.meterService = meterService
-        imageProcessingService.validator = validatorMock
+        localImageProcessingService = new ImageProcessingService(meterService, validatorMock)
     }
 
     def setupSpec() {
@@ -44,7 +43,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] jpegImage = validJpegImage
 
         when: "creating thumbnail"
-        byte[] thumbnail = imageProcessingService.createThumbnail(jpegImage, ImageFormatType.Jpeg)
+        byte[] thumbnail = localImageProcessingService.createThumbnail(jpegImage, ImageFormatType.Jpeg)
 
         then: "thumbnail should be created successfully"
         thumbnail != null
@@ -58,7 +57,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] pngImage = validPngImage
 
         when: "creating thumbnail"
-        byte[] thumbnail = imageProcessingService.createThumbnail(pngImage, ImageFormatType.Png)
+        byte[] thumbnail = localImageProcessingService.createThumbnail(pngImage, ImageFormatType.Png)
 
         then: "thumbnail should be created successfully"
         thumbnail != null
@@ -72,7 +71,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] invalidImage = invalidImageData
 
         when: "creating thumbnail"
-        byte[] thumbnail = imageProcessingService.createThumbnail(invalidImage, ImageFormatType.Jpeg)
+        byte[] thumbnail = localImageProcessingService.createThumbnail(invalidImage, ImageFormatType.Jpeg)
 
         then: "should return empty byte array"
         thumbnail != null
@@ -87,7 +86,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] jpegImage = validJpegImage
 
         when: "detecting image format"
-        ImageFormatType format = imageProcessingService.getImageFormatType(jpegImage)
+        ImageFormatType format = localImageProcessingService.getImageFormatType(jpegImage)
 
         then: "should return JPEG format"
         format == ImageFormatType.Jpeg
@@ -98,7 +97,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] pngImage = validPngImage
 
         when: "detecting image format"
-        ImageFormatType format = imageProcessingService.getImageFormatType(pngImage)
+        ImageFormatType format = localImageProcessingService.getImageFormatType(pngImage)
 
         then: "should return PNG format"
         format == ImageFormatType.Png
@@ -109,7 +108,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] invalidImage = invalidImageData
 
         when: "detecting image format"
-        ImageFormatType format = imageProcessingService.getImageFormatType(invalidImage)
+        ImageFormatType format = localImageProcessingService.getImageFormatType(invalidImage)
 
         then: "should return Undefined format"
         format == ImageFormatType.Undefined
@@ -123,7 +122,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] testImage = new byte[imageSize]
 
         when: "validating image size"
-        boolean isValid = imageProcessingService.validateImageSize(testImage)
+        boolean isValid = localImageProcessingService.validateImageSize(testImage)
 
         then: "validation result should be #expectedResult"
         isValid == expectedResult
@@ -144,7 +143,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] jpegImage = validJpegImage
 
         when: "processing image"
-        ImageProcessingResult result = imageProcessingService.processImage(jpegImage)
+        ImageProcessingResult result = localImageProcessingService.processImage(jpegImage)
 
         then: "should return complete processing result"
         result != null
@@ -162,7 +161,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         byte[] invalidImage = invalidImageData
 
         when: "processing image"
-        ImageProcessingResult result = imageProcessingService.processImage(invalidImage)
+        ImageProcessingResult result = localImageProcessingService.processImage(invalidImage)
 
         then: "should return failed processing result"
         result != null
@@ -179,10 +178,10 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
     def "should maintain compatibility with existing thumbnail creation logic"() {
         given: "image data similar to what TransactionService would use"
         byte[] imageData = validJpegImage
-        ImageFormatType detectedFormat = imageProcessingService.getImageFormatType(imageData)
+        ImageFormatType detectedFormat = localImageProcessingService.getImageFormatType(imageData)
 
         when: "creating thumbnail using the same pattern as TransactionService"
-        byte[] thumbnail = imageProcessingService.createThumbnail(imageData, detectedFormat)
+        byte[] thumbnail = localImageProcessingService.createThumbnail(imageData, detectedFormat)
 
         then: "should produce equivalent results to original TransactionService logic"
         thumbnail != null

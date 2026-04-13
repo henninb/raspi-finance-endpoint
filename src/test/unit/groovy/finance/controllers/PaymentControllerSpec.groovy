@@ -269,8 +269,7 @@ class PaymentControllerSpec extends Specification {
         given:
         Payment existingPayment = createTestPayment(1L)
         and:
-        paymentService.findById(1L) >> ServiceResult.Success.of(existingPayment)
-        paymentService.deleteById(1L) >> ServiceResult.Success.of(true)
+        paymentService.deleteById(1L) >> ServiceResult.Success.of(existingPayment)
 
         when:
         ResponseEntity<Payment> response = controller.deleteById(1L)
@@ -283,7 +282,7 @@ class PaymentControllerSpec extends Specification {
 
     def "deleteById returns 404 when not found"() {
         given:
-        paymentService.findById(999L) >> ServiceResult.NotFound.of("Payment not found: 999")
+        paymentService.deleteById(999L) >> ServiceResult.NotFound.of("Payment not found: 999")
 
         when:
         ResponseEntity<Payment> response = controller.deleteById(999L)
@@ -295,13 +294,13 @@ class PaymentControllerSpec extends Specification {
 
     def "deleteById returns 500 when find errors"() {
         given:
-        paymentService.findById(1L) >> ServiceResult.SystemError.of(new RuntimeException("Database error"))
+        paymentService.deleteById(1L) >> ServiceResult.SystemError.of(new RuntimeException("Database error"))
 
         when:
         ResponseEntity<Payment> response = controller.deleteById(1L)
 
         then:
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         response.body == null
     }
 
@@ -348,7 +347,7 @@ class PaymentControllerSpec extends Specification {
 
     def "deleteById handles maximum Long value"() {
         given:
-        paymentService.findById(Long.MAX_VALUE) >> ServiceResult.NotFound.of("Payment not found: ${Long.MAX_VALUE}")
+        paymentService.deleteById(Long.MAX_VALUE) >> ServiceResult.NotFound.of("Payment not found: ${Long.MAX_VALUE}")
 
         when:
         ResponseEntity<Payment> response = controller.deleteById(Long.MAX_VALUE)
@@ -412,13 +411,13 @@ class PaymentControllerSpec extends Specification {
 
     def "controller handles null service responses gracefully for deleteById"() {
         given:
-        paymentService.findById(1L) >> null
+        paymentService.deleteById(1L) >> null
 
         when:
         ResponseEntity<Payment> response = controller.deleteById(1L)
 
         then:
-        response.statusCode == HttpStatus.NOT_FOUND
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         response.body == null
     }
 }

@@ -9,7 +9,7 @@ import finance.repositories.ValidationAmountRepository
 import finance.utils.TenantContext
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.data.domain.Page
@@ -20,17 +20,14 @@ import java.math.RoundingMode
 import java.sql.Timestamp
 import java.util.Optional
 
-/**
- * Standardized Account Service implementing ServiceResult pattern
- * Provides both new standardized methods and legacy compatibility
- */
 @Service
-@Primary
 class AccountService(
     private val accountRepository: AccountRepository,
     private val validationAmountRepository: ValidationAmountRepository,
     private val transactionRepository: finance.repositories.TransactionRepository,
-) : CrudBaseService<Account, String>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Account, String>(meterService, validator) {
     override fun getEntityName(): String = "Account"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -99,7 +96,7 @@ class AccountService(
             accountRepository.saveAndFlush(accountToUpdate)
         }
 
-    override fun deleteById(id: String): ServiceResult<Boolean> =
+    override fun deleteById(id: String): ServiceResult<Account> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, id)
@@ -117,7 +114,7 @@ class AccountService(
             }
 
             accountRepository.delete(account)
-            true
+            account
         }
 
     // ===== Paginated ServiceResult Methods =====
@@ -165,62 +162,32 @@ class AccountService(
         return totals.setScale(2, RoundingMode.HALF_UP)
     }
 
-    fun insertAccount(account: Account): Account {
-        val result = save(account)
-        return when (result) {
+    fun insertAccount(account: Account): Account =
+        when (val result = save(account)) {
             is ServiceResult.Success -> {
                 result.data
             }
 
             is ServiceResult.ValidationError -> {
-                val violations =
-                    result.errors
-                        .map { (field, message) ->
-                            object : jakarta.validation.ConstraintViolation<Account> {
-                                override fun getMessage(): String = message
-
-                                override fun getMessageTemplate(): String = message
-
-                                override fun getRootBean(): Account = account
-
-                                override fun getRootBeanClass(): Class<Account> = Account::class.java
-
-                                override fun getLeafBean(): Any = account
-
-                                override fun getExecutableParameters(): Array<Any> = emptyArray()
-
-                                override fun getExecutableReturnValue(): Any? = null
-
-                                override fun getPropertyPath(): jakarta.validation.Path =
-                                    object : jakarta.validation.Path {
-                                        override fun toString(): String = field
-
-                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                    }
-
-                                override fun getInvalidValue(): Any? = null
-
-                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                            }
-                        }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+                throw ValidationException("Validation failed: ${result.errors}")
             }
 
             is ServiceResult.BusinessError -> {
                 if (result.message.contains("already exists")) {
                     throw DataIntegrityViolationException("Account not inserted as the account already exists ${account.accountNameOwner}.")
                 } else {
-                    throw RuntimeException("Failed to insert account: $result")
+                    throw RuntimeException("Failed to insert account: ${result.message}")
                 }
             }
 
-            else -> {
-                throw RuntimeException("Failed to insert account: $result")
+            is ServiceResult.NotFound -> {
+                throw EntityNotFoundException("Account not found: ${account.accountNameOwner}")
+            }
+
+            is ServiceResult.SystemError -> {
+                throw RuntimeException("Failed to insert account", result.exception)
             }
         }
-    }
 
     fun updateTotalsForAllAccounts(): Boolean {
         val owner = TenantContext.getCurrentOwner()

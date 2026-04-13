@@ -18,12 +18,7 @@ import java.math.BigDecimal
 class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
     def medicalExpenseRepositoryMock = Mock(MedicalExpenseRepository)
-    def standardizedMedicalExpenseService = new MedicalExpenseService(medicalExpenseRepositoryMock)
-
-    void setup() {
-        standardizedMedicalExpenseService.meterService = meterService
-        standardizedMedicalExpenseService.validator = validator
-    }
+    def standardizedMedicalExpenseService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validator)
 
     def "should have correct entity name"() {
         expect:
@@ -146,11 +141,11 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         violation.propertyPath >> mockPath
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<MedicalExpense>> violations = [violation] as Set
+        validatorMock.validate(expense) >> violations
+        def localService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validatorMock)
 
         when:
-        standardizedMedicalExpenseService.validator = validatorMock
-        validatorMock.validate(expense) >> violations
-        def result = standardizedMedicalExpenseService.save(expense)
+        def result = localService.save(expense)
 
         then:
         result instanceof ServiceResult.ValidationError
@@ -248,14 +243,16 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
     def "deleteById should return ServiceResult.Success when medical expense exists"() {
         given:
         def expenseId = 1L
+        def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(expenseId).build()
 
         when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
         medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> 1
         def result = standardizedMedicalExpenseService.deleteById(expenseId)
 
         then:
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should return ServiceResult.NotFound when medical expense does not exist"() {
@@ -274,6 +271,8 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
     def "deleteById should return ServiceResult.SystemError on repository exception"() {
         given:
         def expenseId = 1L
+        def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(expenseId).build()
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
         medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, expenseId) >> { throw new RuntimeException("Delete failed") }
 
         when:
@@ -338,11 +337,11 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         violation.propertyPath >> mockPath
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<MedicalExpense>> violations = [violation] as Set
+        validatorMock.validate(expense) >> violations
+        def localService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validatorMock)
 
         when:
-        standardizedMedicalExpenseService.validator = validatorMock
-        validatorMock.validate(expense) >> violations
-        standardizedMedicalExpenseService.insertMedicalExpense(expense)
+        localService.insertMedicalExpense(expense)
 
         then:
         thrown(jakarta.validation.ValidationException)

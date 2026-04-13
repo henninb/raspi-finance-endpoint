@@ -6,6 +6,7 @@ import finance.domain.ServiceResult
 import finance.repositories.FamilyMemberRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
@@ -15,10 +16,11 @@ import java.sql.Timestamp
  * Provides enhanced error handling and standardized CRUD operations
  */
 @Service
-@org.springframework.context.annotation.Primary
 class FamilyMemberService(
     private val familyMemberRepository: FamilyMemberRepository,
-) : BaseService() {
+    meterService: MeterService,
+    validator: Validator,
+) : BaseService(meterService, validator) {
     // ===== ServiceResult Methods =====
 
     fun findAllActive(): ServiceResult<List<FamilyMember>> =

@@ -20,10 +20,10 @@ class CalculationServiceSpec extends Specification {
         def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
 
-        service = new CalculationService(repo)
         // Provide a meter service with a real registry for counter assertions
         registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        service.meterService = new MeterService(registry, null)
+        def meterService = new MeterService(registry)
+        service = new CalculationService(repo, meterService, GroovyMock(jakarta.validation.Validator))
     }
 
     def cleanup() {

@@ -18,12 +18,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
 
     def descriptionRepositoryMock = Mock(DescriptionRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def standardizedDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
-
-    void setup() {
-        standardizedDescriptionService.meterService = meterService
-        standardizedDescriptionService.validator = validatorMock
-    }
+    def standardizedDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -113,7 +108,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         given: "invalid description"
         def description = DescriptionBuilder.builder().withDescriptionName("").build()
         ConstraintViolation<Description> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "descriptionName"
         violation.propertyPath >> mockPath
         violation.message >> "size must be between 1 and 50"
@@ -196,7 +191,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         1 * descriptionRepositoryMock.findByOwnerAndDescriptionId(TEST_OWNER, 1L) >> Optional.of(description)
         1 * descriptionRepositoryMock.delete(description)
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
         0 * _
     }
 

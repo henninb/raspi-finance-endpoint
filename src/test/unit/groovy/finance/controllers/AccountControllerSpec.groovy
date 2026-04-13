@@ -22,25 +22,18 @@ class StandardizedAccountControllerSpec extends Specification {
     finance.repositories.AccountRepository accountRepository = Mock()
     finance.repositories.ValidationAmountRepository validationAmountRepository = Mock()
     finance.repositories.TransactionRepository transactionRepository = Mock()
-    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository)
+    jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, validator)
 
     @Subject
     AccountController controller = new AccountController(accountService)
 
     def setup() {
-        // Set SecurityContext so TenantContext.getCurrentOwner() works
+        validator.validate(_ as Object) >> ([] as Set)
         def authorities = [new SimpleGrantedAuthority("USER")]
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
         SecurityContextHolder.getContext().setAuthentication(auth)
-
-        def validator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([] as Set)
-        }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-
-        accountService.validator = validator
-        accountService.meterService = meterService
     }
 
     def cleanup() {
@@ -201,14 +194,14 @@ class StandardizedAccountControllerSpec extends Specification {
         given:
         Account invalid = acct(accountId: 0L, accountNameOwner: "acct_bad")
         and:
-        def violatingValidator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        }
-        accountService.validator = violatingValidator
+        def violatingValidator = GroovyMock(jakarta.validation.Validator)
+        violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
+        def localService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, violatingValidator)
+        def localController = new AccountController(localService)
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_bad") >> Optional.empty()
 
         when:
-        ResponseEntity<Account> response = controller.save(invalid)
+        ResponseEntity<Account> response = localController.save(invalid)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -307,7 +300,7 @@ class StandardizedAccountControllerSpec extends Specification {
         String id = "acct_del"
         Account existing = acct(accountId: 100L, accountNameOwner: id)
         and:
-        2 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
+        1 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
         validationAmountRepository.findByAccountId(100L) >> []
 
         when:
@@ -345,19 +338,20 @@ class StandardizedAccountControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
-    def "deleteById returns 500 on business error"() {
+    def "deleteById returns 409 on business error"() {
         given:
         String id = "acct_bus_del"
         Account existing = acct(accountNameOwner: id)
         and:
-        2 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
+        1 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
+        validationAmountRepository.findByAccountId(_) >> []
         accountRepository.delete(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("conflict") }
 
         when:
         ResponseEntity<Account> response = controller.deleteById(id)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
     }
 
     // ===== BUSINESS/LEGACY ENDPOINTS =====
