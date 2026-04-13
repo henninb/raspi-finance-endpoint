@@ -39,7 +39,7 @@ data class Description(
     @SequenceGenerator(name = "t_description_description_id_seq")
     @field:Min(value = 0L)
     @Column(name = "description_id", nullable = false)
-    var descriptionId: Long,
+    var descriptionId: Long = 0L,
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
@@ -49,7 +49,7 @@ data class Description(
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "description_name", nullable = false)
-    var descriptionName: String,
+    var descriptionName: String = "",
 ) {
     @JsonCreator
     constructor() : this(0L, "", true, "")

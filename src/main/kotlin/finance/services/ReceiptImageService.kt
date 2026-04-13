@@ -4,6 +4,7 @@ import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.repositories.ReceiptImageRepository
 import finance.utils.TenantContext
+import jakarta.validation.Validator
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
@@ -12,10 +13,11 @@ import java.sql.Timestamp
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-@org.springframework.context.annotation.Primary
 open class ReceiptImageService(
     private val receiptImageRepository: ReceiptImageRepository,
-) : CrudBaseService<ReceiptImage, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<ReceiptImage, Long>(meterService, validator) {
     override fun getEntityName(): String = "ReceiptImage"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -70,15 +72,16 @@ open class ReceiptImageService(
             receiptImageRepository.saveAndFlush(entity)
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<ReceiptImage> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
             if (optionalReceiptImage.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
             }
+            val receiptImage = optionalReceiptImage.get()
             receiptImageRepository.deleteById(id)
-            true
+            receiptImage
         }
 
     // ===== Additional ServiceResult Methods =====

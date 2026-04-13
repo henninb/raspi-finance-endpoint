@@ -6,8 +6,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
 import org.apache.catalina.connector.ClientAbortException
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
@@ -151,7 +150,7 @@ open class BaseController {
 
     companion object {
         val mapper = ObjectMapper()
-        val logger: Logger = LogManager.getLogger()
+        val logger: Logger = LoggerFactory.getLogger(BaseController::class.java)
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${BaseController::class.java.simpleName}")
     }
 }

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSetter
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
@@ -45,7 +44,6 @@ import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import org.apache.logging.log4j.LogManager
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -173,17 +171,7 @@ data class Transaction(
     @JsonIgnore
     var categories = mutableListOf<Category>()
 
-    override fun toString(): String = mapper.writeValueAsString(this)
-
-    companion object {
-        @JsonIgnore
-        private val mapper =
-            ObjectMapper().apply {
-                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
-                findAndRegisterModules()
-            }
-
-        @JsonIgnore
-        private val logger = LogManager.getLogger()
-    }
+    override fun toString(): String =
+        "Transaction(guid=$guid, accountNameOwner=$accountNameOwner, amount=$amount, " +
+            "transactionDate=$transactionDate, transactionState=$transactionState)"
 }

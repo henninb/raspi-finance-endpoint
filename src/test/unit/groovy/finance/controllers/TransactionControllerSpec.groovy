@@ -253,8 +253,7 @@ class TransactionControllerSpec extends Specification {
         String guid = "delete-guid-101"
         Transaction existingTransaction = createValidTransaction(guid, "to_delete_account")
         and:
-        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(existingTransaction)
-        standardizedTransactionService.deleteById(guid) >> ServiceResult.Success.of(true)
+        standardizedTransactionService.deleteById(guid) >> ServiceResult.Success.of(existingTransaction)
 
         when:
         ResponseEntity<Transaction> response = controller.deleteById(guid)
@@ -269,7 +268,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String guid = "non-existent-delete"
         and:
-        standardizedTransactionService.findById(guid) >> ServiceResult.NotFound.of("Transaction not found")
+        standardizedTransactionService.deleteById(guid) >> ServiceResult.NotFound.of("Transaction not found")
 
         when:
         ResponseEntity<Transaction> response = controller.deleteById(guid)
@@ -277,7 +276,6 @@ class TransactionControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         response.body == null
-        0 * standardizedTransactionService.deleteById(_) // Should not attempt deletion
     }
 
     def "deleteById returns 404 when delete operation finds no entity"() {
@@ -315,10 +313,8 @@ class TransactionControllerSpec extends Specification {
     def "deleteById handles unexpected result type with 500"() {
         given:
         String guid = "delete-unexpected"
-        Transaction existingTransaction = createValidTransaction(guid, "unexpected_account")
         and:
-        standardizedTransactionService.findById(guid) >> ServiceResult.Success.of(existingTransaction)
-        standardizedTransactionService.deleteById(guid) >> ServiceResult.ValidationError.of([:])
+        standardizedTransactionService.deleteById(guid) >> null
 
         when:
         ResponseEntity<Transaction> response = controller.deleteById(guid)

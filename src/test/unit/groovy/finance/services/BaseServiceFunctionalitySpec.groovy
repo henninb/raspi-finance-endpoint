@@ -8,11 +8,8 @@ import jakarta.validation.ValidationException
 class BaseServiceFunctionalitySpec extends Specification {
 
     def meterService = new MeterService(new io.micrometer.core.instrument.simple.SimpleMeterRegistry())
-    def baseService = new BaseService()
-
-    void setup() {
-        baseService.meterService = meterService
-    }
+    def validator = GroovyMock(jakarta.validation.Validator)
+    def baseService = new TestableBaseService(meterService, validator)
 
     def "handleConstraintViolations should throw ValidationException"() {
         given:
@@ -23,7 +20,7 @@ class BaseServiceFunctionalitySpec extends Specification {
         def violations = [violation] as Set
 
         when:
-        baseService.handleConstraintViolations(violations, meterService)
+        baseService.handleConstraintViolations(violations)
 
         then:
         thrown(ValidationException)
@@ -45,4 +42,8 @@ class BaseServiceFunctionalitySpec extends Specification {
 }
 
 // Test helper to expose protected methods
-class TestableBaseService extends BaseService { }
+class TestableBaseService extends BaseService {
+    TestableBaseService(meterService, validator) {
+        super(meterService, validator)
+    }
+}

@@ -11,6 +11,7 @@ import finance.domain.TransactionState
 import finance.repositories.PaymentRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
+import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -21,17 +22,14 @@ import java.sql.Timestamp
 import java.util.Optional
 import java.util.UUID
 
-/**
- * Standardized Payment Service implementing ServiceResult pattern
- * Provides both new standardized methods and legacy compatibility
- */
 @Service
-@org.springframework.context.annotation.Primary
 class PaymentService(
     private val paymentRepository: PaymentRepository,
     private val transactionService: TransactionService,
     private val accountService: AccountService,
-) : CrudBaseService<Payment, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Payment, Long>(meterService, validator) {
     override fun getEntityName(): String = "Payment"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -174,7 +172,7 @@ class PaymentService(
         }
 
     @Transactional
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<Payment> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
@@ -200,7 +198,7 @@ class PaymentService(
                     "source=$savedGuidSource, destination=$savedGuidDestination",
             )
 
-            true
+            payment
         }
 
     // ===== Paginated ServiceResult Methods =====
@@ -238,14 +236,17 @@ class PaymentService(
                 }
 
                 is ServiceResult.BusinessError -> {
-                    logger.error("Failed to delete source transaction: ${result.message}")
-                    throw org.springframework.dao.DataIntegrityViolationException(
+                    throw DataIntegrityViolationException(
                         "Cannot delete payment because source transaction $guidSource could not be deleted: ${result.message}",
                     )
                 }
 
-                else -> {
-                    throw RuntimeException("Unexpected error deleting source transaction: $result")
+                is ServiceResult.ValidationError -> {
+                    throw DataIntegrityViolationException("Validation error deleting source transaction $guidSource")
+                }
+
+                is ServiceResult.SystemError -> {
+                    throw RuntimeException("System error deleting source transaction: $guidSource", result.exception)
                 }
             }
         }
@@ -263,14 +264,17 @@ class PaymentService(
                 }
 
                 is ServiceResult.BusinessError -> {
-                    logger.error("Failed to delete destination transaction: ${result.message}")
-                    throw org.springframework.dao.DataIntegrityViolationException(
+                    throw DataIntegrityViolationException(
                         "Cannot delete payment because destination transaction $guidDestination could not be deleted: ${result.message}",
                     )
                 }
 
-                else -> {
-                    throw RuntimeException("Unexpected error deleting destination transaction: $result")
+                is ServiceResult.ValidationError -> {
+                    throw DataIntegrityViolationException("Validation error deleting destination transaction $guidDestination")
+                }
+
+                is ServiceResult.SystemError -> {
+                    throw RuntimeException("System error deleting destination transaction: $guidDestination", result.exception)
                 }
             }
         }
@@ -467,21 +471,6 @@ class PaymentService(
                 throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
             }
         }
-    }
-
-    /**
-     * Create a default account (similar to TransactionService.createDefaultAccount)
-     */
-    private fun createDefaultAccount(
-        accountNameOwner: String,
-        accountType: AccountType,
-    ): Account {
-        val account = Account()
-        account.accountNameOwner = accountNameOwner
-        account.moniker = "0000"
-        account.accountType = accountType
-        account.activeStatus = true
-        return account
     }
 
     // ===== Payment Behavior and Amount Calculation Methods =====

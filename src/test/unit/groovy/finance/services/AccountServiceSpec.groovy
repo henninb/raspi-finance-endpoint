@@ -22,12 +22,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
     def accountRepositoryMock = Mock(AccountRepository)
     def validationAmountRepositoryMock = Mock(finance.repositories.ValidationAmountRepository)
     def transactionRepositoryMock = Mock(finance.repositories.TransactionRepository)
-    def standardizedAccountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock)
-
-    void setup() {
-        standardizedAccountService.meterService = meterService
-        standardizedAccountService.validator = validatorMock
-    }
+    def standardizedAccountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -114,7 +109,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         given: "invalid account"
         def account = AccountBuilder.builder().withAccountNameOwner("").build()
         ConstraintViolation<Account> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "accountNameOwner"
         violation.propertyPath >> mockPath
         violation.message >> "must not be blank"
@@ -196,7 +191,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         1 * validationAmountRepositoryMock.findByAccountId(100L) >> []
         1 * accountRepositoryMock.delete(account)
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
         0 * _
     }
 

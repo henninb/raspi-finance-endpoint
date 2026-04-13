@@ -26,34 +26,31 @@ class TransactionServiceSpec extends BaseServiceSpec {
     // Use a real CategoryService wired with repository mocks
     def categoryRepositoryMock = Mock(CategoryRepository)
     def categoryTxRepositoryMock = Mock(TransactionRepository)
-    def categoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock)
-    // Use a real DescriptionService wired with repository mocks
-    def descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock)
     def standardizedReceiptImageServiceMock = Mock(ReceiptImageService)
     def imageProcessingServiceMock = Mock(ImageProcessingService)
     def calculationServiceMock = Mock(CalculationService)
+
+    CategoryService localCategoryService
+    DescriptionService localDescriptionService
 
     @Subject
     TransactionService standardizedTransactionService
 
     def setup() {
+        localCategoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock, meterService, validatorMock)
+        localDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
         standardizedTransactionService = new TransactionService(
             transactionRepositoryMock,
             accountService,
-            categoryService,
-            descriptionService,
+            localCategoryService,
+            localDescriptionService,
             standardizedReceiptImageServiceMock,
             imageProcessingServiceMock,
             calculationServiceMock,
-            paymentRepositoryMock
+            paymentRepositoryMock,
+            meterService,
+            validatorMock
         )
-        standardizedTransactionService.validator = validatorMock
-        standardizedTransactionService.meterService = meterService
-        // also wire shared test collaborators into the category and description services
-        categoryService.validator = validatorMock
-        categoryService.meterService = meterService
-        descriptionService.validator = validatorMock
-        descriptionService.meterService = meterService
     }
 
     // ===== Test Data Builders =====
@@ -424,7 +421,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         and: "result is Success with true"
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should return NotFound when transaction does not exist"() {
@@ -493,7 +490,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         and: "result is Success"
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     // ===== TDD Tests for deleteByIdInternal() (Cascade Delete Support) =====
@@ -518,7 +515,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         and: "result is Success"
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteByIdInternal should return NotFound when transaction does not exist"() {

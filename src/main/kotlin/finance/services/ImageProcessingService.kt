@@ -1,6 +1,7 @@
 package finance.services
 
 import finance.domain.ImageFormatType
+import jakarta.validation.Validator
 import net.coobird.thumbnailator.Thumbnails
 import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
@@ -14,8 +15,10 @@ import javax.imageio.ImageReader
  * Extracted from TransactionService for better separation of concerns and testability
  */
 @Service
-open class ImageProcessingService :
-    BaseService(),
+open class ImageProcessingService(
+    meterService: MeterService,
+    validator: Validator,
+) : BaseService(meterService, validator),
     IImageProcessingService {
     companion object {
         private const val THUMBNAIL_SIZE = 100

@@ -21,12 +21,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
     def paymentRepositoryMock = Mock(PaymentRepository)
     def transactionServiceMock = Mock(TransactionService)
-    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService)
-
-    void setup() {
-        standardizedPaymentService.meterService = meterService
-        standardizedPaymentService.validator = validatorMock
-    }
+    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validatorMock)
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -112,7 +107,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         given: "invalid payment"
         def payment = PaymentBuilder.builder().withAmount(new BigDecimal("-100.00")).build()
         ConstraintViolation<Payment> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "amount"
         violation.propertyPath >> mockPath
         violation.message >> "must be greater than or equal to 0"
@@ -201,7 +196,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         1 * paymentRepositoryMock.delete(payment)
         1 * paymentRepositoryMock.flush()
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should return NotFound when payment does not exist"() {
@@ -246,7 +241,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         and: "result is Success"
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should handle missing source transaction gracefully"() {

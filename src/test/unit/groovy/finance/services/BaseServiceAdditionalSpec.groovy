@@ -9,13 +9,19 @@ class BaseServiceAdditionalSpec extends Specification {
 
     MeterService meterService
     SimpleMeterRegistry registry
-    BaseService base
+    BaseServiceAdditionalSpec.ExposedBaseService base
 
     void setup() {
         registry = new SimpleMeterRegistry()
         meterService = new MeterService(registry)
-        base = new BaseService()
-        base.meterService = meterService
+        base = new BaseServiceAdditionalSpec.ExposedBaseService(meterService, GroovyMock(jakarta.validation.Validator))
+    }
+
+    // Concrete subclass needed because BaseService constructor requires meterService + validator
+    static class ExposedBaseService extends BaseService {
+        ExposedBaseService(meterService, validator) {
+            super(meterService, validator)
+        }
     }
 
     void "executeWithResilienceSync direct path returns result"() {

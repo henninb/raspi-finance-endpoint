@@ -25,6 +25,10 @@ class StandardizedBaseServiceSpec extends Specification {
         private Map<Long, TestEntity> mockData = [:]
         private Long nextId = 1L
 
+        TestStandardizedService(meterService, validator) {
+            super(meterService, validator)
+        }
+
         @Override
         protected String getEntityName() {
             return "TestEntity"
@@ -54,7 +58,7 @@ class StandardizedBaseServiceSpec extends Specification {
                 if (entity.name?.trim()?.isEmpty()) {
                     // Simulate constraint violation
                     Set<ConstraintViolation<TestEntity>> violations = [
-                        [getMessage: { "Name cannot be empty" }, getInvalidValue: { entity.name }] as ConstraintViolation<TestEntity>
+                        [getMessage: { "Name cannot be empty" }, getInvalidValue: { entity.name }, getPropertyPath: { null }] as ConstraintViolation<TestEntity>
                     ] as Set<ConstraintViolation<TestEntity>>
                     throw new ConstraintViolationException("Validation failed", violations)
                 }
@@ -78,7 +82,7 @@ class StandardizedBaseServiceSpec extends Specification {
         }
 
         @Override
-        ServiceResult<Boolean> deleteById(Long id) {
+        ServiceResult<TestEntity> deleteById(Long id) {
             return handleServiceOperation("Delete", id) {
                 if (!mockData.containsKey(id)) {
                     throw new EntityNotFoundException("TestEntity not found for deletion: $id")
@@ -87,8 +91,8 @@ class StandardizedBaseServiceSpec extends Specification {
                     // Simulate data integrity violation
                     throw new DataIntegrityViolationException("Cannot delete entity with dependencies")
                 }
-                mockData.remove(id)
-                true
+                TestEntity entity = mockData.remove(id)
+                entity
             }
         }
 
@@ -112,13 +116,12 @@ class StandardizedBaseServiceSpec extends Specification {
         }
     }
 
-    def testService = new TestStandardizedService()
-
-    def setup() {
-        // Set up test service with proper dependencies (following BaseServiceSpec pattern)
-        testService.meterService = new MeterService(new io.micrometer.core.instrument.simple.SimpleMeterRegistry())
-        testService.validator = GroovyMock(jakarta.validation.Validator)
-    }
+    def meterService = new MeterService(new io.micrometer.core.instrument.simple.SimpleMeterRegistry())
+    def validator = GroovyMock(jakarta.validation.Validator)
+    def testService = new TestStandardizedService(
+        new MeterService(new io.micrometer.core.instrument.simple.SimpleMeterRegistry()),
+        GroovyMock(jakarta.validation.Validator)
+    )
 
     // ===== TDD Tests for handleServiceOperation() Success Cases =====
 
@@ -251,9 +254,10 @@ class StandardizedBaseServiceSpec extends Specification {
         when: "deleting by ID"
         def result = testService.deleteById(entityId)
 
-        then: "should return Success"
+        then: "should return Success with the deleted entity"
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data instanceof TestEntity
+        result.data.name == "To Delete"
     }
 
     // ===== TDD Tests for getEntityName() Abstract Method =====

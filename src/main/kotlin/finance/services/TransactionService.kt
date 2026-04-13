@@ -20,7 +20,7 @@ import finance.domain.TransactionValidationException
 import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
 import finance.utils.TenantContext
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -29,16 +29,9 @@ import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.Base64
-import java.util.Calendar
 import java.util.UUID
 
-/**
- * Standardized Transaction Service implementing ServiceResult pattern
- * Provides both new standardized methods and legacy compatibility
- * Uses extracted services from Phase 1: ImageProcessingService and CalculationService
- */
 @Service
-@Primary
 class TransactionService(
     private val transactionRepository: TransactionRepository,
     private val accountService: AccountService,
@@ -48,7 +41,9 @@ class TransactionService(
     private val imageProcessingService: ImageProcessingService,
     private val calculationService: CalculationService,
     private val paymentRepository: PaymentRepository,
-) : CrudBaseService<Transaction, String>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<Transaction, String>(meterService, validator) {
     override fun getEntityName(): String = "Transaction"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -117,7 +112,7 @@ class TransactionService(
             masterTransactionUpdater(existingTransaction.get(), entity)
         }
 
-    override fun deleteById(id: String): ServiceResult<Boolean> =
+    override fun deleteById(id: String): ServiceResult<Transaction> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, id)
@@ -140,14 +135,14 @@ class TransactionService(
             }
 
             transactionRepository.delete(transaction)
-            true
+            transaction
         }
 
     /**
      * Internal delete method for cascade operations - bypasses payment reference check
      * This method should only be called from payment cascade delete logic
      */
-    fun deleteByIdInternal(id: String): ServiceResult<Boolean> =
+    fun deleteByIdInternal(id: String): ServiceResult<Transaction> =
         handleServiceOperation("deleteByIdInternal", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, id)
@@ -160,7 +155,7 @@ class TransactionService(
             // Flush to surface FK violations immediately and ensure operation order
             transactionRepository.flush()
             logger.info("Transaction deleted (cascade): ${transaction.guid}")
-            true
+            transaction
         }
 
     // ===== Business-Specific ServiceResult Methods =====
@@ -638,26 +633,24 @@ class TransactionService(
     }
 
     fun processCategory(transaction: Transaction) {
-        when {
-            transaction.category != "" -> {
-                when (val result = categoryService.findByCategoryNameStandardized(transaction.category)) {
-                    is ServiceResult.Success -> {
-                        transaction.categories.add(result.data)
-                        logger.info("Using existing category: ${transaction.category}")
-                    }
+        if (transaction.category.isNotEmpty()) {
+            when (val result = categoryService.findByCategoryNameStandardized(transaction.category)) {
+                is ServiceResult.Success -> {
+                    transaction.categories.add(result.data)
+                    logger.info("Using existing category: ${transaction.category}")
+                }
 
-                    else -> {
-                        logger.info("Creating new category: ${transaction.category}")
-                        val category = createDefaultCategory(transaction.category)
-                        when (val saveResult = categoryService.save(category)) {
-                            is ServiceResult.Success -> {
-                                logger.info("Created new category: ${transaction.category}")
-                                transaction.categories.add(saveResult.data)
-                            }
+                is ServiceResult.NotFound, is ServiceResult.BusinessError, is ServiceResult.SystemError, is ServiceResult.ValidationError -> {
+                    logger.info("Creating new category: ${transaction.category}")
+                    val category = createDefaultCategory(transaction.category)
+                    when (val saveResult = categoryService.save(category)) {
+                        is ServiceResult.Success -> {
+                            logger.info("Created new category: ${transaction.category}")
+                            transaction.categories.add(saveResult.data)
+                        }
 
-                            else -> {
-                                logger.error("Failed to create category: ${transaction.category}")
-                            }
+                        else -> {
+                            logger.error("Failed to create category: ${transaction.category}")
                         }
                     }
                 }
@@ -666,22 +659,20 @@ class TransactionService(
     }
 
     fun processDescription(transaction: Transaction) {
-        when {
-            transaction.description != "" -> {
-                when (val findResult = descriptionService.findByDescriptionNameStandardized(transaction.description)) {
-                    is ServiceResult.Success -> {
-                        // Found existing description; nothing to do here
-                    }
+        if (transaction.description.isNotEmpty()) {
+            when (val findResult = descriptionService.findByDescriptionNameStandardized(transaction.description)) {
+                is ServiceResult.Success -> {
+                    // Found existing description; nothing to do here
+                }
 
-                    else -> {
-                        logger.info("Creating new description: ${transaction.description}")
-                        val description = createDefaultDescription(transaction.description)
-                        val saveResult = descriptionService.save(description)
-                        if (saveResult is ServiceResult.Success) {
-                            logger.info("Created new description: ${transaction.description}")
-                        } else {
-                            logger.warn("Failed to create description: ${transaction.description} -> $saveResult")
-                        }
+                is ServiceResult.NotFound, is ServiceResult.BusinessError, is ServiceResult.SystemError, is ServiceResult.ValidationError -> {
+                    logger.info("Creating new description: ${transaction.description}")
+                    val description = createDefaultDescription(transaction.description)
+                    val saveResult = descriptionService.save(description)
+                    if (saveResult is ServiceResult.Success) {
+                        logger.info("Created new description: ${transaction.description}")
+                    } else {
+                        logger.warn("Failed to create description: ${transaction.description} -> $saveResult")
                     }
                 }
             }
@@ -700,39 +691,7 @@ class TransactionService(
         return description
     }
 
-    fun createDefaultAccount(
-        accountNameOwner: String,
-        accountType: AccountType,
-    ): Account {
-        val account = Account()
-        account.accountNameOwner = accountNameOwner
-        account.moniker = "0000"
-        account.accountType = accountType
-        account.activeStatus = true
-        return account
-    }
-
     // ===== Private Helper Methods =====
-
-    private fun calculateFutureDate(
-        transaction: Transaction,
-        calendar: Calendar,
-    ) {
-        if (transaction.reoccurringType == ReoccurringType.FortNightly) {
-            calendar.add(Calendar.DATE, 14)
-        } else {
-            if (transaction.accountType == AccountType.Debit) {
-                if (transaction.reoccurringType == ReoccurringType.Monthly) {
-                    calendar.add(Calendar.MONTH, 1)
-                } else {
-                    logger.warn("debit transaction ReoccurringType needs to be configured.")
-                    throw InvalidReoccurringTypeException("debit transaction ReoccurringType needs to be configured.")
-                }
-            } else {
-                calendar.add(Calendar.YEAR, 1)
-            }
-        }
-    }
 
     private fun calculateFutureLocalDate(
         transaction: Transaction,

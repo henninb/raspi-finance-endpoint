@@ -211,7 +211,7 @@ class BaseControllerSpec extends Specification {
 
         then:
         logger != null
-        logger instanceof org.apache.logging.log4j.Logger
+        logger instanceof org.slf4j.Logger
     }
 
     def cleanup() {

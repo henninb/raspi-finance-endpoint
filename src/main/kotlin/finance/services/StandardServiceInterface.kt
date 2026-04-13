@@ -40,7 +40,7 @@ interface StandardServiceInterface<T, ID> {
     /**
      * Deletes entity by its identifier
      * @param id The entity identifier
-     * @return ServiceResult containing true if deleted successfully, NotFound if entity doesn't exist, or appropriate error
+     * @return ServiceResult containing the deleted entity, NotFound if entity doesn't exist, or appropriate error
      */
-    fun deleteById(id: ID): ServiceResult<Boolean>
+    fun deleteById(id: ID): ServiceResult<T>
 }

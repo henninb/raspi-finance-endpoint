@@ -5,7 +5,7 @@ import finance.domain.ServiceResult
 import finance.repositories.PendingTransactionRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,10 +19,11 @@ import java.util.Optional
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-@Primary
 class PendingTransactionService(
     private val pendingTransactionRepository: PendingTransactionRepository,
-) : CrudBaseService<PendingTransaction, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<PendingTransaction, Long>(meterService, validator) {
     override fun getEntityName(): String = "PendingTransaction"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -80,15 +81,16 @@ class PendingTransactionService(
         }
 
     @Transactional
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<PendingTransaction> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalTransaction = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(owner, id)
             if (optionalTransaction.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found: $id")
             }
-            pendingTransactionRepository.delete(optionalTransaction.get())
-            true
+            val pendingTransaction = optionalTransaction.get()
+            pendingTransactionRepository.delete(pendingTransaction)
+            pendingTransaction
         }
 
     // ===== Business-Specific ServiceResult Methods =====
@@ -104,62 +106,38 @@ class PendingTransactionService(
     // ===== Legacy Method Compatibility (Deprecated - Use ServiceResult methods instead) =====
 
     @Deprecated("Use save() with ServiceResult instead", ReplaceWith("save(pendingTransaction)"))
-    fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction {
-        val result = save(pendingTransaction)
-        return when (result) {
+    fun insertPendingTransaction(pendingTransaction: PendingTransaction): PendingTransaction =
+        when (val result = save(pendingTransaction)) {
             is ServiceResult.Success -> {
                 result.data
             }
 
             is ServiceResult.ValidationError -> {
-                val violations =
-                    result.errors
-                        .map { (field, message) ->
-                            object : jakarta.validation.ConstraintViolation<PendingTransaction> {
-                                override fun getMessage(): String = message
-
-                                override fun getMessageTemplate(): String = message
-
-                                override fun getRootBean(): PendingTransaction = pendingTransaction
-
-                                override fun getRootBeanClass(): Class<PendingTransaction> = PendingTransaction::class.java
-
-                                override fun getLeafBean(): Any = pendingTransaction
-
-                                override fun getExecutableParameters(): Array<Any> = emptyArray()
-
-                                override fun getExecutableReturnValue(): Any? = null
-
-                                override fun getPropertyPath(): jakarta.validation.Path =
-                                    object : jakarta.validation.Path {
-                                        override fun toString(): String = field
-
-                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                    }
-
-                                override fun getInvalidValue(): Any? = null
-
-                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                            }
-                        }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+                throw ValidationException("Validation failed: ${result.errors}")
             }
 
-            else -> {
-                throw RuntimeException("Failed to insert pending transaction: $result")
+            is ServiceResult.BusinessError -> {
+                throw RuntimeException("Business error inserting pending transaction: ${result.message}")
+            }
+
+            is ServiceResult.NotFound -> {
+                throw jakarta.persistence.EntityNotFoundException("PendingTransaction not found")
+            }
+
+            is ServiceResult.SystemError -> {
+                throw RuntimeException("Failed to insert pending transaction", result.exception)
             }
         }
-    }
 
     @Deprecated("Use deleteById() with ServiceResult instead", ReplaceWith("deleteById(pendingTransactionId)"))
     fun deletePendingTransaction(pendingTransactionId: Long): Boolean {
         val result = deleteById(pendingTransactionId)
         return when (result) {
-            is ServiceResult.Success -> result.data
+            is ServiceResult.Success -> true
             is ServiceResult.NotFound -> throw ResponseStatusException(HttpStatus.NOT_FOUND, "PendingTransaction not found: $pendingTransactionId")
-            else -> throw RuntimeException("Failed to delete pending transaction: $result")
+            is ServiceResult.ValidationError -> throw RuntimeException("Validation error deleting pending transaction: ${result.errors}")
+            is ServiceResult.BusinessError -> throw RuntimeException("Business error deleting pending transaction: ${result.message}")
+            is ServiceResult.SystemError -> throw RuntimeException("Failed to delete pending transaction", result.exception)
         }
     }
 

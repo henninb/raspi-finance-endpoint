@@ -20,12 +20,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
 
     def validationAmountRepositoryMock = Mock(ValidationAmountRepository)
     def accountRepositoryMock = Mock(AccountRepository)
-    def standardizedValidationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock)
-
-    void setup() {
-        standardizedValidationAmountService.meterService = meterService
-        standardizedValidationAmountService.validator = validatorMock
-    }
+    def standardizedValidationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock, meterService, validatorMock)
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -112,7 +107,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         given: "invalid validation amount"
         def validationAmount = ValidationAmountBuilder.builder().withAmount(new BigDecimal("-100.00")).build()
         ConstraintViolation<ValidationAmount> violation = Mock(ConstraintViolation)
-        def mockPath = Mock(javax.validation.Path)
+        def mockPath = Mock(jakarta.validation.Path)
         mockPath.toString() >> "amount"
         violation.propertyPath >> mockPath
         violation.message >> "must be greater than or equal to 0"
@@ -196,7 +191,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 1L) >> Optional.of(validationAmount)
         1 * validationAmountRepositoryMock.delete(validationAmount)
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
         0 * _
     }
 

@@ -259,22 +259,26 @@ class TransactionController(
     override fun deleteById(
         @PathVariable("guid") id: String,
     ): ResponseEntity<Transaction> {
-        // First find the entity to return it after deletion
-        val entityResult = transactionService.findById(id)
-        if (entityResult !is ServiceResult.Success) {
-            logger.warn("Transaction not found for deletion: $id")
-            return ResponseEntity.notFound().build()
-        }
-
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive: handle null or unexpected ServiceResult types
         return when (val deleteResult = transactionService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction deleted successfully: $id")
-                ResponseEntity.ok(entityResult.data)
+                ResponseEntity.ok(deleteResult.data)
             }
 
             is ServiceResult.NotFound -> {
                 logger.warn("Transaction not found for deletion: $id")
                 ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting transaction: ${deleteResult.errors}")
+                ResponseEntity.badRequest().build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting transaction: ${deleteResult.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
             }
 
             is ServiceResult.SystemError -> {
@@ -283,7 +287,7 @@ class TransactionController(
             }
 
             else -> {
-                logger.error("Unexpected result type: $deleteResult")
+                logger.error("Unexpected result type for transaction delete $id: $deleteResult")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }

@@ -41,7 +41,7 @@ data class Category(
     @SequenceGenerator(name = "t_category_category_id_seq")
     @field:Min(value = 0L)
     @Column(name = "category_id", nullable = false)
-    var categoryId: Long,
+    var categoryId: Long = 0L,
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
@@ -52,7 +52,7 @@ data class Category(
     @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "category_name", nullable = false)
-    var categoryName: String,
+    var categoryName: String = "",
 ) {
     @JsonCreator
     constructor() : this(0L, "", true, "")

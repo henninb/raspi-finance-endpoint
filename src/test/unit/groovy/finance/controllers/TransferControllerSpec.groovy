@@ -322,8 +322,7 @@ class TransferControllerSpec extends Specification {
         given:
         Transfer existingTransfer = createTestTransfer(1L)
         and:
-        transferService.findById(1L) >> ServiceResult.Success.of(existingTransfer)
-        transferService.deleteById(1L) >> ServiceResult.Success.of(true)
+        transferService.deleteById(1L) >> ServiceResult.Success.of(existingTransfer)
 
         when:
         ResponseEntity<Transfer> response = controller.deleteById(1L)
@@ -334,9 +333,9 @@ class TransferControllerSpec extends Specification {
         response.body.sourceAccount == "checking_brian"
     }
 
-    def "deleteById returns 404 when not found during find"() {
+    def "deleteById returns 404 when not found"() {
         given:
-        transferService.findById(999L) >> ServiceResult.NotFound.of("Transfer not found: 999")
+        transferService.deleteById(999L) >> ServiceResult.NotFound.of("Transfer not found: 999")
 
         when:
         ResponseEntity<Transfer> response = controller.deleteById(999L)
@@ -346,50 +345,8 @@ class TransferControllerSpec extends Specification {
         response.body == null
     }
 
-    def "deleteById returns 500 when find operation errors"() {
-        given:
-        transferService.findById(1L) >> ServiceResult.SystemError.of(new RuntimeException("Database error"))
-
-        when:
-        ResponseEntity<Transfer> response = controller.deleteById(1L)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
-    def "deleteById returns 500 when find returns unexpected result type"() {
-        given:
-        transferService.findById(1L) >> ServiceResult.ValidationError.of([field: "error"])
-
-        when:
-        ResponseEntity<Transfer> response = controller.deleteById(1L)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
-    def "deleteById returns 404 when delete operation returns NotFound"() {
-        given:
-        Transfer existingTransfer = createTestTransfer(1L)
-        and:
-        transferService.findById(1L) >> ServiceResult.Success.of(existingTransfer)
-        transferService.deleteById(1L) >> ServiceResult.NotFound.of("Transfer not found: 1")
-
-        when:
-        ResponseEntity<Transfer> response = controller.deleteById(1L)
-
-        then:
-        response.statusCode == HttpStatus.NOT_FOUND
-        response.body == null
-    }
-
     def "deleteById returns 500 when delete operation errors"() {
         given:
-        Transfer existingTransfer = createTestTransfer(1L)
-        and:
-        transferService.findById(1L) >> ServiceResult.Success.of(existingTransfer)
         transferService.deleteById(1L) >> ServiceResult.SystemError.of(new RuntimeException("Delete failed"))
 
         when:
@@ -400,18 +357,27 @@ class TransferControllerSpec extends Specification {
         response.body == null
     }
 
-    def "deleteById returns 500 when delete returns unexpected result type"() {
+    def "deleteById returns 400 when delete returns ValidationError"() {
         given:
-        Transfer existingTransfer = createTestTransfer(1L)
-        and:
-        transferService.findById(1L) >> ServiceResult.Success.of(existingTransfer)
         transferService.deleteById(1L) >> ServiceResult.ValidationError.of([field: "error"])
 
         when:
         ResponseEntity<Transfer> response = controller.deleteById(1L)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
+        response.body == null
+    }
+
+    def "deleteById returns 409 when delete returns BusinessError"() {
+        given:
+        transferService.deleteById(1L) >> ServiceResult.BusinessError.of("Cannot delete transfer with linked transactions", "BUSINESS_LOGIC_ERROR")
+
+        when:
+        ResponseEntity<Transfer> response = controller.deleteById(1L)
+
+        then:
+        response.statusCode == HttpStatus.CONFLICT
         response.body == null
     }
 }

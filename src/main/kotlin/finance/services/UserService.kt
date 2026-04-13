@@ -2,6 +2,7 @@ package finance.services
 
 import finance.domain.User
 import finance.repositories.UserRepository
+import jakarta.validation.Validator
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.Optional
@@ -10,7 +11,9 @@ import java.util.Optional
 class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
-) : BaseService() {
+    meterService: MeterService,
+    validator: Validator,
+) : BaseService(meterService, validator) {
     fun signIn(user: User): Optional<User> {
         // Retrieve the user by username
         val userOptional = userRepository.findByUsername(user.username)

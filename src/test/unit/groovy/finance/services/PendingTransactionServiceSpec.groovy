@@ -20,6 +20,7 @@ class PendingTransactionServiceSpec extends Specification {
 
     PendingTransactionRepository mockPendingTransactionRepository = Mock()
     Validator mockValidator = Mock()
+    finance.services.MeterService meterService = new finance.services.MeterService()
 
     @Subject
     PendingTransactionService standardizedPendingTransactionService
@@ -27,8 +28,7 @@ class PendingTransactionServiceSpec extends Specification {
     def setup() {
         def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
-        standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository)
-        standardizedPendingTransactionService.validator = mockValidator
+        standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository, meterService, mockValidator)
     }
 
     def cleanup() {
@@ -268,9 +268,9 @@ class PendingTransactionServiceSpec extends Specification {
         and: "repository delete is called"
         1 * mockPendingTransactionRepository.delete(pendingTransaction)
 
-        and: "result is Success with true"
+        and: "result is Success with pending transaction entity"
         result instanceof ServiceResult.Success
-        result.data == true
+        result.data != null
     }
 
     def "deleteById should return NotFound when pending transaction does not exist"() {

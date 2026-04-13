@@ -7,7 +7,7 @@ import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
-import org.springframework.context.annotation.Primary
+import jakarta.validation.Validator
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
@@ -16,11 +16,12 @@ import java.sql.Timestamp
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-@Primary
 class ValidationAmountService(
     private val validationAmountRepository: ValidationAmountRepository,
     private val accountRepository: AccountRepository,
-) : CrudBaseService<ValidationAmount, Long>() {
+    meterService: MeterService,
+    validator: Validator,
+) : CrudBaseService<ValidationAmount, Long>(meterService, validator) {
     override fun getEntityName(): String = "ValidationAmount"
 
     // ===== New Standardized ServiceResult Methods =====
@@ -128,15 +129,16 @@ class ValidationAmountService(
             updated
         }
 
-    override fun deleteById(id: Long): ServiceResult<Boolean> =
+    override fun deleteById(id: Long): ServiceResult<ValidationAmount> =
         handleServiceOperation("deleteById", id) {
             val owner = TenantContext.getCurrentOwner()
             val optionalValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
             if (optionalValidationAmount.isEmpty) {
                 throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: $id")
             }
-            validationAmountRepository.delete(optionalValidationAmount.get())
-            true
+            val validationAmount = optionalValidationAmount.get()
+            validationAmountRepository.delete(validationAmount)
+            validationAmount
         }
 
     // ===== Legacy methods still needed by controller =====
@@ -207,43 +209,19 @@ class ValidationAmountService(
             }
 
             is ServiceResult.ValidationError -> {
-                val violations =
-                    result.errors
-                        .map { (field, message) ->
-                            object : jakarta.validation.ConstraintViolation<ValidationAmount> {
-                                override fun getMessage(): String = message
-
-                                override fun getMessageTemplate(): String = message
-
-                                override fun getRootBean(): ValidationAmount = validationAmount
-
-                                override fun getRootBeanClass(): Class<ValidationAmount> = ValidationAmount::class.java
-
-                                override fun getLeafBean(): Any = validationAmount
-
-                                override fun getExecutableParameters(): Array<Any> = emptyArray()
-
-                                override fun getExecutableReturnValue(): Any? = null
-
-                                override fun getPropertyPath(): jakarta.validation.Path =
-                                    object : jakarta.validation.Path {
-                                        override fun toString(): String = field
-
-                                        override fun iterator(): MutableIterator<jakarta.validation.Path.Node> = mutableListOf<jakarta.validation.Path.Node>().iterator()
-                                    }
-
-                                override fun getInvalidValue(): Any? = null
-
-                                override fun getConstraintDescriptor(): jakarta.validation.metadata.ConstraintDescriptor<*>? = null
-
-                                override fun <U : Any?> unwrap(type: Class<U>?): U = throw UnsupportedOperationException()
-                            }
-                        }.toSet()
-                throw ValidationException(jakarta.validation.ConstraintViolationException("Validation failed", violations))
+                throw ValidationException("Validation failed: ${result.errors}")
             }
 
-            else -> {
-                throw RuntimeException("Failed to insert validation amount: $result")
+            is ServiceResult.BusinessError -> {
+                throw RuntimeException("Business error inserting validation amount: ${result.message}")
+            }
+
+            is ServiceResult.NotFound -> {
+                throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found")
+            }
+
+            is ServiceResult.SystemError -> {
+                throw RuntimeException("Failed to insert validation amount", result.exception)
             }
         }
     }

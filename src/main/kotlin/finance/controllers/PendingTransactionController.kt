@@ -211,34 +211,11 @@ class PendingTransactionController(
     @DeleteMapping("/{pendingTransactionId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("pendingTransactionId") id: Long,
-    ): ResponseEntity<PendingTransaction> {
-        // First get the entity to return it
-        val entityResult = pendingTransactionService.findById(id)
-        if (entityResult !is ServiceResult.Success) {
-            return when (entityResult) {
-                is ServiceResult.NotFound -> {
-                    logger.warn("Pending transaction not found for deletion: $id")
-                    ResponseEntity.notFound().build()
-                }
-
-                is ServiceResult.SystemError -> {
-                    logger.error("System error retrieving pending transaction for deletion $id: ${entityResult.exception.message}", entityResult.exception)
-                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                }
-
-                else -> {
-                    logger.error("Unexpected result type retrieving entity: $entityResult")
-                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-                }
-            }
-        }
-
-        val entityToDelete = entityResult.data
-
-        return when (val result = pendingTransactionService.deleteById(id)) {
+    ): ResponseEntity<PendingTransaction> =
+        when (val result = pendingTransactionService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Pending transaction deleted successfully: $id")
-                ResponseEntity.ok(entityToDelete)
+                ResponseEntity.ok(result.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -246,17 +223,21 @@ class PendingTransactionController(
                 ResponseEntity.notFound().build()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting pending transaction: ${result.errors}")
+                ResponseEntity.badRequest().build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting pending transaction: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build()
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting pending transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
         }
-    }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 

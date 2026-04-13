@@ -15,22 +15,15 @@ class StandardizedCategoryControllerSpec extends Specification {
 
     finance.repositories.CategoryRepository categoryRepository = Mock()
     finance.repositories.TransactionRepository transactionRepository = Mock()
-    CategoryService categoryService = new CategoryService(categoryRepository, transactionRepository)
+    jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    CategoryService categoryService = new CategoryService(categoryRepository, transactionRepository, meterService, validator)
 
     @Subject
     CategoryController controller = new CategoryController(categoryService)
 
     def setup() {
-        def validator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([] as Set)
-        }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-
-        categoryService.validator = validator
-        categoryService.meterService = meterService
-
-        // Set up SecurityContext for TenantContext.getCurrentOwner()
+        validator.validate(_ as Object) >> ([] as Set)
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
         SecurityContextHolder.getContext().setAuthentication(auth)
     }
@@ -147,13 +140,13 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category invalid = cat(0L, "")
         and:
-        def violatingValidator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        }
-        categoryService.validator = violatingValidator
+        def violatingValidator = GroovyMock(jakarta.validation.Validator)
+        violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
+        def localService = new CategoryService(categoryRepository, transactionRepository, meterService, violatingValidator)
+        def localController = new CategoryController(localService)
 
         when:
-        ResponseEntity<?> response = controller.save(invalid)
+        ResponseEntity<?> response = localController.save(invalid)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -238,8 +231,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category existing = cat(7L, "groceries")
         and:
-        2 * categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "groceries") >> Optional.of(existing)
-        transactionRepository.countByOwnerAndCategoryName(TEST_OWNER, "groceries") >> 0L
+        1 * categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "groceries") >> Optional.of(existing)
 
         when:
         ResponseEntity<?> response = controller.deleteById("groceries")
@@ -276,8 +268,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         Category existing = cat(9L, "del")
         and:
-        2 * categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "del") >> Optional.of(existing)
-        transactionRepository.countByOwnerAndCategoryName(TEST_OWNER, "del") >> 0L
+        1 * categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "del") >> Optional.of(existing)
         categoryRepository.delete(_ as Category) >> { throw new RuntimeException("db") }
 
         when:

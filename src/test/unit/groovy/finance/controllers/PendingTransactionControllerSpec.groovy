@@ -13,7 +13,9 @@ import java.time.LocalDate
 class PendingTransactionControllerSpec extends Specification {
 
     finance.repositories.PendingTransactionRepository pendingRepo = Mock()
-    PendingTransactionService pendingService = new PendingTransactionService(pendingRepo)
+    jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    PendingTransactionService pendingService = new PendingTransactionService(pendingRepo, meterService, validator)
 
     @Subject
     PendingTransactionController controller = new PendingTransactionController(pendingService)
@@ -21,15 +23,6 @@ class PendingTransactionControllerSpec extends Specification {
     def setup() {
         def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("test_owner", "password")
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
-
-        def validator = Mock(jakarta.validation.Validator) {
-            validate(_ as Object) >> ([] as Set)
-        }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-
-        pendingService.validator = validator
-        pendingService.meterService = meterService
     }
 
     def cleanup() {
@@ -129,10 +122,11 @@ class PendingTransactionControllerSpec extends Specification {
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
-        pendingService.validator = violatingValidator
+        def localService = new PendingTransactionService(pendingRepo, meterService, violatingValidator)
+        def localController = new PendingTransactionController(localService)
 
         when:
-        ResponseEntity<PendingTransaction> response = controller.save(input)
+        ResponseEntity<PendingTransaction> response = localController.save(input)
 
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
@@ -202,8 +196,7 @@ class PendingTransactionControllerSpec extends Specification {
         long id = 33L
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        // find for handleDeleteOperation and again inside service.deleteById path
-        2 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
 
         when:
         ResponseEntity<PendingTransaction> response = controller.deleteById(id)
@@ -231,7 +224,7 @@ class PendingTransactionControllerSpec extends Specification {
         long id = 35L
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        2 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
         pendingRepo.delete(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:

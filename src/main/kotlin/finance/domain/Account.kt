@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.AccountTypeConverter
 import finance.utils.Constants.ALPHA_UNDERSCORE_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE
@@ -122,17 +121,5 @@ data class Account(
     @Column(name = "billing_cycle_weekend_shift", nullable = true)
     var billingCycleWeekendShift: String? = null
 
-    override fun toString(): String {
-        // mapper.setTimeZone(TimeZone.getDefault())
-        return mapper.writeValueAsString(this)
-    }
-
-    companion object {
-        @JsonIgnore
-        private val mapper =
-            ObjectMapper().apply {
-                setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)
-                findAndRegisterModules()
-            }
-    }
+    override fun toString(): String = "Account(accountNameOwner=$accountNameOwner, accountType=$accountType, activeStatus=$activeStatus)"
 }

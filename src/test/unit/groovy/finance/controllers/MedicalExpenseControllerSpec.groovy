@@ -2,6 +2,7 @@ package finance.controllers
 
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
+import finance.domain.ServiceResult
 import finance.services.MedicalExpenseService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -17,18 +18,14 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     static final String TEST_OWNER = "test_owner"
 
     finance.repositories.MedicalExpenseRepository repo = Mock()
-    MedicalExpenseService service = new MedicalExpenseService(repo)
+    jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
+    finance.services.MeterService meterService = new finance.services.MeterService()
+    MedicalExpenseService service = new MedicalExpenseService(repo, meterService, validator)
 
     @Subject
     MedicalExpenseController controller = new MedicalExpenseController(service)
 
     def setup() {
-        def validator = Mock(jakarta.validation.Validator) { validate(_ as Object) >> ([] as Set) }
-        def meterRegistry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new finance.services.MeterService(meterRegistry)
-        service.validator = validator
-        service.meterService = meterService
-
         // Set up SecurityContext for TenantContext.getCurrentOwner()
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, null, [])
         SecurityContextHolder.getContext().setAuthentication(auth)
@@ -131,10 +128,11 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         MedicalExpense invalid = me(0L)
         and:
         def violatingValidator = Mock(jakarta.validation.Validator) { validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set) }
-        service.validator = violatingValidator
+        def localService = new MedicalExpenseService(repo, meterService, violatingValidator)
+        def localController = new MedicalExpenseController(localService)
 
         when:
-        ResponseEntity<MedicalExpense> resp = controller.save(invalid)
+        ResponseEntity<MedicalExpense> resp = localController.save(invalid)
 
         then:
         resp.statusCode == HttpStatus.BAD_REQUEST
@@ -463,7 +461,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     def "deleteById handles null findById service response gracefully"() {
         given:
         MedicalExpenseService mockService = Mock()
-        mockService.findById(_ as Long) >> null  // This causes 404, not 500
+        mockService.deleteById(_ as Long) >> ServiceResult.NotFound.of("not found")
         MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
 
         when:
@@ -476,11 +474,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "deleteById handles null deleteById service response gracefully"() {
         given:
-        // Mock service to return success for findById but null for deleteById
         MedicalExpenseService mockService = Mock()
-        MedicalExpense existingEntity = me(1L)
-        def successResult = new finance.domain.ServiceResult.Success<MedicalExpense>(existingEntity)
-        mockService.findById(_ as Long) >> successResult
         mockService.deleteById(_ as Long) >> null  // This hits the defensive else clause
         MedicalExpenseController controllerWithMockedService = new MedicalExpenseController(mockService)
 

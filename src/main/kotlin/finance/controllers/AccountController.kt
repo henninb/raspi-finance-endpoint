@@ -261,18 +261,11 @@ class AccountController(
     @DeleteMapping("/{accountNameOwner}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("accountNameOwner") id: String,
-    ): ResponseEntity<Account> {
-        // First get the account to return it
-        val accountResult = accountService.findById(id)
-        if (accountResult !is ServiceResult.Success) {
-            logger.warn("Account not found for deletion: $id")
-            return ResponseEntity.notFound().build()
-        }
-
-        return when (val result = accountService.deleteById(id)) {
+    ): ResponseEntity<Account> =
+        when (val result = accountService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Account deleted successfully: $id")
-                ResponseEntity.ok(accountResult.data)
+                ResponseEntity.ok(result.data)
             }
 
             is ServiceResult.NotFound -> {
@@ -280,17 +273,21 @@ class AccountController(
                 ResponseEntity.notFound().build()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting account: ${result.errors}")
+                ResponseEntity.badRequest().build<Account>()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error deleting account: ${result.message}")
+                ResponseEntity.status(HttpStatus.CONFLICT).build<Account>()
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error deleting account: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Account>()
-            }
         }
-    }
 
     // ===== BUSINESS LOGIC ENDPOINTS (SPECIALIZED) =====
 
