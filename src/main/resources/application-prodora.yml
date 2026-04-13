@@ -110,7 +110,7 @@ logging:
 management:
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
   metrics:
     distribution:
       percentiles:
@@ -131,5 +131,5 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info,metrics,prometheus"
 debug: false

@@ -40,6 +40,14 @@ class LoginController(
     @Value("\${spring.profiles.active:dev}")
     private lateinit var activeProfile: String
 
+    companion object {
+        private const val JWT_EXPIRY_MS = 60 * 60 * 1000L // 1 hour
+        private const val JWT_EXPIRY_SECONDS = 3600L
+    }
+
+    private val isSecureCookie: Boolean
+        get() = activeProfile != "dev" && activeProfile != "development"
+
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
     @Operation(summary = "Authenticate and issue JWT cookie")
     @ApiResponses(
@@ -88,7 +96,7 @@ class LoginController(
 
         // Generate JWT after validating credentials.
         val now = Date()
-        val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
+        val expiration = Date(now.time + JWT_EXPIRY_MS)
         val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token =
             Jwts
@@ -99,28 +107,20 @@ class LoginController(
                 .signWith(key)
                 .compact()
 
-        // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev =
-            System.getenv("USERNAME")?.contains("henninb") == true ||
-                System.getenv("HOST_IP")?.contains("192.168") == true ||
-                activeProfile == "dev" ||
-                activeProfile == "development"
-
         val cookieBuilder =
             ResponseCookie
                 .from("token", token)
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60)
-                .httpOnly(true) // Prevent XSS token theft
-                .secure(!isLocalDev) // Require HTTPS in production
-                .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
+                .maxAge(JWT_EXPIRY_SECONDS)
+                .httpOnly(true)
+                .secure(isSecureCookie)
+                .sameSite(if (isSecureCookie) "Strict" else "Lax")
 
-        // Configure domain based on environment
         val cookie =
-            if (isLocalDev) {
-                cookieBuilder.build() // No domain restriction for local development
+            if (isSecureCookie) {
+                cookieBuilder.domain(".bhenning.com").build()
             } else {
-                cookieBuilder.domain(".bhenning.com").build() // Domain for production
+                cookieBuilder.build()
             }
 
         response.addHeader("Set-Cookie", cookie.toString())
@@ -183,28 +183,20 @@ class LoginController(
             }
         }
 
-        // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev =
-            System.getenv("USERNAME")?.contains("henninb") == true ||
-                System.getenv("HOST_IP")?.contains("192.168") == true ||
-                activeProfile == "dev" ||
-                activeProfile == "development"
-
         val cookieBuilder =
             ResponseCookie
                 .from("token", "")
                 .path("/")
                 .maxAge(0)
-                .httpOnly(true) // Prevent XSS token theft
-                .secure(!isLocalDev) // Require HTTPS in production
-                .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
+                .httpOnly(true)
+                .secure(isSecureCookie)
+                .sameSite(if (isSecureCookie) "Strict" else "Lax")
 
-        // Configure domain based on environment
         val cookie =
-            if (isLocalDev) {
-                cookieBuilder.build() // No domain restriction for local development
+            if (isSecureCookie) {
+                cookieBuilder.domain(".bhenning.com").build()
             } else {
-                cookieBuilder.domain(".bhenning.com").build() // Domain for production
+                cookieBuilder.build()
             }
 
         response.addHeader("Set-Cookie", cookie.toString())
@@ -256,7 +248,7 @@ class LoginController(
         // Auto-login: generate a JWT token for the new user.
         logger.info("User registered, generating JWT")
         val now = Date()
-        val expiration = Date(now.time + 60 * 60 * 1000) // 1 hour expiration
+        val expiration = Date(now.time + JWT_EXPIRY_MS)
 
         val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token =
@@ -268,28 +260,20 @@ class LoginController(
                 .signWith(key)
                 .compact()
 
-        // Check if we're in a local development context (even if profile is prod)
-        val isLocalDev =
-            System.getenv("USERNAME")?.contains("henninb") == true ||
-                System.getenv("HOST_IP")?.contains("192.168") == true ||
-                activeProfile == "dev" ||
-                activeProfile == "development"
-
         val cookieBuilder =
             ResponseCookie
                 .from("token", token)
-                .httpOnly(true) // Prevent XSS token theft
-                .secure(!isLocalDev) // Require HTTPS in production
-                .maxAge(24 * 60 * 60)
-                .sameSite(if (isLocalDev) "Lax" else "Strict") // Strict CSRF protection in production
+                .httpOnly(true)
+                .secure(isSecureCookie)
+                .maxAge(JWT_EXPIRY_SECONDS)
+                .sameSite(if (isSecureCookie) "Strict" else "Lax")
                 .path("/")
 
-        // Configure domain based on environment
         val cookie =
-            if (isLocalDev) {
-                cookieBuilder.build() // No domain restriction for local development
+            if (isSecureCookie) {
+                cookieBuilder.domain(".bhenning.com").build()
             } else {
-                cookieBuilder.domain(".bhenning.com").build() // Domain for production
+                cookieBuilder.build()
             }
 
         response.addHeader("Set-Cookie", cookie.toString())

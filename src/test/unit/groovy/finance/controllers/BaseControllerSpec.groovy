@@ -36,7 +36,7 @@ class BaseControllerSpec extends Specification {
         response.body["status"] == HttpStatus.BAD_REQUEST.value()
         response.body["error"] == HttpStatus.BAD_REQUEST.reasonPhrase
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("ConstraintViolationException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle NumberFormatException"() {
@@ -49,7 +49,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("NumberFormatException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle EmptyResultDataAccessException"() {
@@ -62,7 +62,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("EmptyResultDataAccessException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle MethodArgumentTypeMismatchException"() {
@@ -75,7 +75,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("MethodArgumentTypeMismatchException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle HttpMessageNotReadableException"() {
@@ -88,7 +88,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("HttpMessageNotReadableException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle HttpMediaTypeNotSupportedException"() {
@@ -101,7 +101,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("HttpMediaTypeNotSupportedException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle IllegalArgumentException"() {
@@ -114,7 +114,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("IllegalArgumentException")
+        response.body["message"] == "Invalid request"
     }
 
     def "should handle ValidationException"() {
@@ -127,7 +127,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.BAD_REQUEST
         response.body["code"] == "BAD_REQUEST"
-        response.body["message"].toString().contains("ValidationException")
+        response.body["message"] == "Validation failed"
     }
 
     def "should handle ResponseStatusException with custom reason"() {
@@ -140,7 +140,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.NOT_FOUND
         response.body["code"] == "NOT_FOUND"
-        response.body["message"] == "Resource not found"
+        response.body["message"] == HttpStatus.NOT_FOUND.reasonPhrase
     }
 
     def "should handle ResponseStatusException without reason"() {
@@ -153,7 +153,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.CONFLICT
         response.body["code"] == "CONFLICT"
-        response.body["message"].toString().contains("ResponseStatusException")
+        response.body["message"] == HttpStatus.CONFLICT.reasonPhrase
     }
 
     def "should handle AuthenticationException"() {
@@ -180,7 +180,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.SERVICE_UNAVAILABLE
         response.body["code"] == "SERVICE_UNAVAILABLE"
-        response.body["message"].toString().contains("ClientAbortException")
+        response.body["message"] == "Service temporarily unavailable"
     }
 
     def "should handle generic Exception"() {
@@ -193,7 +193,7 @@ class BaseControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
         response.body["code"] == "INTERNAL_SERVER_ERROR"
-        response.body["message"].toString().contains("RuntimeException")
+        response.body["message"] == "An internal error occurred"
     }
 
     def "should have ObjectMapper in companion object"() {

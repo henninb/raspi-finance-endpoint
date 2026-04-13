@@ -23,20 +23,6 @@ class UserController
     constructor(
         private var userService: UserService,
     ) : BaseController() {
-        // curl -X POST -H "Content-Type: application/json"  -d '{"username":"user","password":"pass"}' http://localhost:8443/user/signin
-        @Operation(summary = "Sign in with username/password")
-        @ApiResponses(
-            value = [
-                ApiResponse(responseCode = "200", description = "Signed in"),
-                ApiResponse(responseCode = "401", description = "Invalid credentials"),
-                ApiResponse(responseCode = "500", description = "Internal server error"),
-            ],
-        )
-        @PostMapping("/signin")
-        fun signIn(
-            @RequestBody user: User,
-        ): ResponseEntity<User> = ResponseEntity.ok(user)
-
         @Operation(summary = "Register new user")
         @ApiResponses(
             value = [

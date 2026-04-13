@@ -445,10 +445,10 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         responseTimes.size() == 5
         responseTimes.every { it > 0 && it < 5000 }
 
-        // Verify meter exists and recordings were made (measurement shows value for step meters)
+        // Verify meter exists and recordings were made
         meterRegistry.find("performance.health.endpoint").timer() != null
-        performanceTimer.measure().find { it.statistic.toString() == 'COUNT' }?.value >= 0
-        performanceTimer.measure().find { it.statistic.toString() == 'TOTAL_TIME' }?.value >= 0
+        performanceTimer.count() >= 0
+        performanceTimer.totalTime(java.util.concurrent.TimeUnit.MILLISECONDS) >= 0
     }
 
     void 'test application health indicators integration'() {

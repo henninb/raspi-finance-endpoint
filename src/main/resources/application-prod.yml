@@ -18,7 +18,7 @@ spring:
   graphql:
     path: /graphql
     graphiql:
-      enabled: true
+      enabled: false
       path: /graphiql
     schema:
       printer:
@@ -149,6 +149,7 @@ custom:
   project:
     jwt:
       key: ${JWT_KEY}
+    chrome-extension-id: ${CHROME_EXTENSION_ID:}
     allowed:
       origins:
         - https://hornsup:3000
@@ -209,11 +210,11 @@ custom:
 management:
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info,metrics,prometheus"
   metrics:
     export:
       # InfluxDB 2.x native configuration (modern approach)
