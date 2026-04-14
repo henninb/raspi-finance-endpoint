@@ -16,7 +16,7 @@ class StandardizedParameterControllerSpec extends Specification {
     finance.repositories.ParameterRepository parameterRepository = Mock()
     jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
     finance.services.MeterService meterService = new finance.services.MeterService()
-    ParameterService parameterService = new ParameterService(parameterRepository, meterService, validator)
+    ParameterService parameterService = new ParameterService(parameterRepository, meterService, validator, null)
 
     @Subject
     ParameterController controller = new ParameterController(parameterService)
@@ -146,7 +146,7 @@ class StandardizedParameterControllerSpec extends Specification {
         and:
         def violatingValidator = GroovyMock(jakarta.validation.Validator)
         violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        def localService = new ParameterService(parameterRepository, meterService, violatingValidator)
+        def localService = new ParameterService(parameterRepository, meterService, violatingValidator, null)
         def localController = new ParameterController(localService)
 
         when:

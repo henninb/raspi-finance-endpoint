@@ -18,7 +18,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
 
     def categoryRepositoryMock = Mock(CategoryRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def standardizedCategoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
+    def standardizedCategoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validatorMock, null)
 
     // ===== TDD Tests for findAllActive() =====
 

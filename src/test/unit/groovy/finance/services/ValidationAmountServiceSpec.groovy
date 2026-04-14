@@ -20,7 +20,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
 
     def validationAmountRepositoryMock = Mock(ValidationAmountRepository)
     def accountRepositoryMock = Mock(AccountRepository)
-    def standardizedValidationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock, meterService, validatorMock)
+    def standardizedValidationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock, meterService, validatorMock, null)
 
     // ===== TDD Tests for findAllActive() =====
 

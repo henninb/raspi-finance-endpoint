@@ -14,7 +14,7 @@ import jakarta.persistence.EntityNotFoundException
  */
 class StandardizedParameterServiceSpec extends BaseServiceSpec {
 
-    def standardizedParameterService = new ParameterService(parameterRepositoryMock, meterService, validatorMock)
+    def standardizedParameterService = new ParameterService(parameterRepositoryMock, meterService, validatorMock, null)
 
     // ===== TDD Tests for findAllActive() =====
 

@@ -26,7 +26,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
     byte[] invalidImageData
 
     void setup() {
-        localImageProcessingService = new ImageProcessingService(meterService, validatorMock)
+        localImageProcessingService = new ImageProcessingService(meterService, validatorMock, null)
     }
 
     def setupSpec() {

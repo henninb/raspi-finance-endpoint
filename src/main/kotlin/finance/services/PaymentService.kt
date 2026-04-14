@@ -1,5 +1,6 @@
 package finance.services
 
+import finance.configurations.ResilienceComponents
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Payment
@@ -23,561 +24,563 @@ import java.util.Optional
 import java.util.UUID
 
 @Service
-class PaymentService(
-    private val paymentRepository: PaymentRepository,
-    private val transactionService: TransactionService,
-    private val accountService: AccountService,
-    meterService: MeterService,
-    validator: Validator,
-) : CrudBaseService<Payment, Long>(meterService, validator) {
-    override fun getEntityName(): String = "Payment"
+class PaymentService
+    constructor(
+        private val paymentRepository: PaymentRepository,
+        private val transactionService: TransactionService,
+        private val accountService: AccountService,
+        meterService: MeterService,
+        validator: Validator,
+        resilienceComponents: ResilienceComponents? = null,
+    ) : CrudBaseService<Payment, Long>(meterService, validator, resilienceComponents) {
+        override fun getEntityName(): String = "Payment"
 
-    // ===== New Standardized ServiceResult Methods =====
+        // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Payment>> =
-        handleServiceOperation("findAllActive", null) {
-            val owner = TenantContext.getCurrentOwner()
-            paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, Pageable.unpaged()).content
-        }
-
-    override fun findById(id: Long): ServiceResult<Payment> =
-        handleServiceOperation("findById", id) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
-            if (optionalPayment.isPresent) {
-                optionalPayment.get()
-            } else {
-                throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
-            }
-        }
-
-    override fun save(entity: Payment): ServiceResult<Payment> =
-        handleServiceOperation("save", entity.paymentId) {
-            val owner = TenantContext.getCurrentOwner()
-            entity.owner = owner
-
-            val violations = validator.validate(entity)
-            if (violations.isNotEmpty()) {
-                throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+        override fun findAllActive(): ServiceResult<List<Payment>> =
+            handleServiceOperation("findAllActive", null) {
+                val owner = TenantContext.getCurrentOwner()
+                paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, Pageable.unpaged()).content
             }
 
-            // If GUIDs are not set, we need to create transactions first
-            // This prevents foreign key constraint violations
-            if (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank()) {
-                logger.info("Creating transactions for payment: ${entity.sourceAccount} -> ${entity.destinationAccount}")
+        override fun findById(id: Long): ServiceResult<Payment> =
+            handleServiceOperation("findById", id) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
+                if (optionalPayment.isPresent) {
+                    optionalPayment.get()
+                } else {
+                    throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
+                }
+            }
 
-                // Process accounts (create if missing)
-                processPaymentAccount(entity.destinationAccount)
-                processPaymentAccount(entity.sourceAccount)
+        override fun save(entity: Payment): ServiceResult<Payment> =
+            handleServiceOperation("save", entity.paymentId) {
+                val owner = TenantContext.getCurrentOwner()
+                entity.owner = owner
 
-                // Retrieve account types for behavior inference
-                val sourceAccount = accountService.account(entity.sourceAccount).get()
-                val destinationAccount = accountService.account(entity.destinationAccount).get()
+                val violations = validator.validate(entity)
+                if (violations.isNotEmpty()) {
+                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+                }
 
-                // Infer payment behavior from account types
-                val behavior =
-                    PaymentBehavior.inferBehavior(
-                        sourceAccount.accountType,
+                // If GUIDs are not set, we need to create transactions first
+                // This prevents foreign key constraint violations
+                if (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank()) {
+                    logger.info("Creating transactions for payment: ${entity.sourceAccount} -> ${entity.destinationAccount}")
+
+                    // Process accounts (create if missing)
+                    processPaymentAccount(entity.destinationAccount)
+                    processPaymentAccount(entity.sourceAccount)
+
+                    // Retrieve account types for behavior inference
+                    val sourceAccount = accountService.account(entity.sourceAccount).get()
+                    val destinationAccount = accountService.account(entity.destinationAccount).get()
+
+                    // Infer payment behavior from account types
+                    val behavior =
+                        PaymentBehavior.inferBehavior(
+                            sourceAccount.accountType,
+                            destinationAccount.accountType,
+                        )
+                    logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
+
+                    // Create destination transaction
+                    val transactionDestination = Transaction()
+                    populateDestinationTransaction(
+                        transactionDestination,
+                        entity,
+                        entity.sourceAccount,
                         destinationAccount.accountType,
+                        behavior,
                     )
-                logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
+                    val destinationResult = transactionService.save(transactionDestination)
+                    when (destinationResult) {
+                        is ServiceResult.Success -> {
+                            entity.guidDestination = destinationResult.data.guid
+                            logger.debug("Destination transaction created: ${destinationResult.data.guid}")
+                        }
 
-                // Create destination transaction
-                val transactionDestination = Transaction()
-                populateDestinationTransaction(
-                    transactionDestination,
-                    entity,
-                    entity.sourceAccount,
-                    destinationAccount.accountType,
-                    behavior,
-                )
-                val destinationResult = transactionService.save(transactionDestination)
-                when (destinationResult) {
-                    is ServiceResult.Success -> {
-                        entity.guidDestination = destinationResult.data.guid
-                        logger.debug("Destination transaction created: ${destinationResult.data.guid}")
+                        is ServiceResult.ValidationError -> {
+                            throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
+                        }
+
+                        is ServiceResult.BusinessError -> {
+                            throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
+                        }
+
+                        else -> {
+                            throw RuntimeException("Failed to create destination transaction: $destinationResult")
+                        }
                     }
 
-                    is ServiceResult.ValidationError -> {
-                        throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
-                    }
+                    // Create source transaction
+                    val transactionSource = Transaction()
+                    populateSourceTransaction(
+                        transactionSource,
+                        entity,
+                        entity.sourceAccount,
+                        sourceAccount.accountType,
+                        behavior,
+                    )
+                    val sourceResult = transactionService.save(transactionSource)
+                    when (sourceResult) {
+                        is ServiceResult.Success -> {
+                            entity.guidSource = sourceResult.data.guid
+                            logger.debug("Source transaction created: ${sourceResult.data.guid}")
+                        }
 
-                    is ServiceResult.BusinessError -> {
-                        throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
-                    }
+                        is ServiceResult.ValidationError -> {
+                            throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
+                        }
 
-                    else -> {
-                        throw RuntimeException("Failed to create destination transaction: $destinationResult")
+                        is ServiceResult.BusinessError -> {
+                            throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
+                        }
+
+                        else -> {
+                            throw RuntimeException("Failed to create source transaction: $sourceResult")
+                        }
                     }
                 }
 
-                // Create source transaction
-                val transactionSource = Transaction()
-                populateSourceTransaction(
-                    transactionSource,
-                    entity,
-                    entity.sourceAccount,
+                // Set timestamps
+                val timestamp = Timestamp(System.currentTimeMillis())
+                entity.dateAdded = timestamp
+                entity.dateUpdated = timestamp
+
+                paymentRepository.saveAndFlush(entity)
+            }
+
+        override fun update(entity: Payment): ServiceResult<Payment> =
+            handleServiceOperation("update", entity.paymentId) {
+                val owner = TenantContext.getCurrentOwner()
+                val existingPayment = paymentRepository.findByOwnerAndPaymentId(owner, entity.paymentId)
+                if (existingPayment.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
+                }
+
+                // Update fields from the provided entity
+                val paymentToUpdate = existingPayment.get()
+                paymentToUpdate.sourceAccount = entity.sourceAccount
+                paymentToUpdate.destinationAccount = entity.destinationAccount
+                paymentToUpdate.amount = entity.amount
+                paymentToUpdate.transactionDate = entity.transactionDate
+                paymentToUpdate.guidSource = entity.guidSource
+                paymentToUpdate.guidDestination = entity.guidDestination
+                paymentToUpdate.activeStatus = entity.activeStatus
+                paymentToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
+
+                paymentRepository.saveAndFlush(paymentToUpdate)
+            }
+
+        @Transactional
+        override fun deleteById(id: Long): ServiceResult<Payment> =
+            handleServiceOperation("deleteById", id) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
+                if (optionalPayment.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
+                }
+
+                val payment = optionalPayment.get()
+
+                // Save GUIDs before removing the payment
+                val savedGuidSource = payment.guidSource
+                val savedGuidDestination = payment.guidDestination
+
+                // Step 1: Delete the payment first to break FK references
+                paymentRepository.delete(payment)
+                paymentRepository.flush()
+                logger.info("Payment deleted (flushed) to allow cascade transaction deletes: $id")
+
+                // Step 2: Delete associated transactions (cascade delete)
+                val transactionsDeleted = deleteAssociatedTransactions(savedGuidSource, savedGuidDestination)
+                logger.info(
+                    "Deleted $transactionsDeleted transaction(s) for payment $id: " +
+                        "source=$savedGuidSource, destination=$savedGuidDestination",
+                )
+
+                payment
+            }
+
+        // ===== Paginated ServiceResult Methods =====
+
+        /**
+         * Find all active payments with pagination.
+         * Sorted by transactionDate descending.
+         */
+        fun findAllActive(pageable: Pageable): ServiceResult<Page<Payment>> =
+            handleServiceOperation("findAllActive-paginated", null) {
+                val owner = TenantContext.getCurrentOwner()
+                paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, pageable)
+            }
+
+        /**
+         * Delete transactions associated with a payment (cascade delete helper)
+         * Returns the number of transactions successfully deleted
+         */
+        private fun deleteAssociatedTransactions(
+            guidSource: String?,
+            guidDestination: String?,
+        ): Int {
+            var deletedCount = 0
+
+            // Delete source transaction
+            if (!guidSource.isNullOrBlank()) {
+                when (val result = transactionService.deleteByIdInternal(guidSource)) {
+                    is ServiceResult.Success -> {
+                        deletedCount++
+                        logger.info("Deleted source transaction: $guidSource")
+                    }
+
+                    is ServiceResult.NotFound -> {
+                        logger.warn("Source transaction not found: $guidSource")
+                    }
+
+                    is ServiceResult.BusinessError -> {
+                        throw DataIntegrityViolationException(
+                            "Cannot delete payment because source transaction $guidSource could not be deleted: ${result.message}",
+                        )
+                    }
+
+                    is ServiceResult.ValidationError -> {
+                        throw DataIntegrityViolationException("Validation error deleting source transaction $guidSource")
+                    }
+
+                    is ServiceResult.SystemError -> {
+                        throw RuntimeException("System error deleting source transaction: $guidSource", result.exception)
+                    }
+                }
+            }
+
+            // Delete destination transaction
+            if (!guidDestination.isNullOrBlank()) {
+                when (val result = transactionService.deleteByIdInternal(guidDestination)) {
+                    is ServiceResult.Success -> {
+                        deletedCount++
+                        logger.info("Deleted destination transaction: $guidDestination")
+                    }
+
+                    is ServiceResult.NotFound -> {
+                        logger.warn("Destination transaction not found: $guidDestination")
+                    }
+
+                    is ServiceResult.BusinessError -> {
+                        throw DataIntegrityViolationException(
+                            "Cannot delete payment because destination transaction $guidDestination could not be deleted: ${result.message}",
+                        )
+                    }
+
+                    is ServiceResult.ValidationError -> {
+                        throw DataIntegrityViolationException("Validation error deleting destination transaction $guidDestination")
+                    }
+
+                    is ServiceResult.SystemError -> {
+                        throw RuntimeException("System error deleting destination transaction: $guidDestination", result.exception)
+                    }
+                }
+            }
+
+            return deletedCount
+        }
+
+        // ===== Legacy Method Compatibility =====
+
+        fun findAllPayments(): List<Payment> {
+            val result = findAllActive()
+            return when (result) {
+                is ServiceResult.Success -> result.data
+                else -> emptyList()
+            }
+        }
+
+        /**
+         * Legacy insertPayment method - now uses new behavior-aware logic.
+         * @deprecated Consider using save() method instead
+         */
+        @org.springframework.transaction.annotation.Transactional
+        fun insertPayment(payment: Payment): Payment {
+            val owner = TenantContext.getCurrentOwner()
+            payment.owner = owner
+            logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
+
+            // Process destination account - create if missing
+            processPaymentAccount(payment.destinationAccount)
+
+            // Process source account - create if missing
+            processPaymentAccount(payment.sourceAccount)
+
+            // Retrieve account types for behavior inference
+            val sourceAccountOpt = accountService.account(payment.sourceAccount)
+            if (sourceAccountOpt.isEmpty) {
+                logger.error("Source account not found after creation attempt: ${payment.sourceAccount}")
+                meterService.incrementExceptionThrownCounter("PaymentSourceAccountNotFound")
+                throw IllegalStateException("Source account not found: ${payment.sourceAccount}")
+            }
+            val destinationAccountOpt = accountService.account(payment.destinationAccount)
+            if (destinationAccountOpt.isEmpty) {
+                logger.error("Destination account not found after creation attempt: ${payment.destinationAccount}")
+                meterService.incrementExceptionThrownCounter("PaymentDestinationAccountNotFound")
+                throw IllegalStateException("Destination account not found: ${payment.destinationAccount}")
+            }
+
+            val sourceAccount = sourceAccountOpt.get()
+            val destinationAccount = destinationAccountOpt.get()
+
+            // Infer payment behavior from account types
+            val behavior =
+                PaymentBehavior.inferBehavior(
                     sourceAccount.accountType,
-                    behavior,
+                    destinationAccount.accountType,
                 )
-                val sourceResult = transactionService.save(transactionSource)
-                when (sourceResult) {
-                    is ServiceResult.Success -> {
-                        entity.guidSource = sourceResult.data.guid
-                        logger.debug("Source transaction created: ${sourceResult.data.guid}")
-                    }
+            logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
 
-                    is ServiceResult.ValidationError -> {
-                        throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
-                    }
+            // Create transactions
+            val transactionDestination = Transaction()
+            val transactionSource = Transaction()
 
-                    is ServiceResult.BusinessError -> {
-                        throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
-                    }
-
-                    else -> {
-                        throw RuntimeException("Failed to create source transaction: $sourceResult")
-                    }
-                }
-            }
-
-            // Set timestamps
-            val timestamp = Timestamp(System.currentTimeMillis())
-            entity.dateAdded = timestamp
-            entity.dateUpdated = timestamp
-
-            paymentRepository.saveAndFlush(entity)
-        }
-
-    override fun update(entity: Payment): ServiceResult<Payment> =
-        handleServiceOperation("update", entity.paymentId) {
-            val owner = TenantContext.getCurrentOwner()
-            val existingPayment = paymentRepository.findByOwnerAndPaymentId(owner, entity.paymentId)
-            if (existingPayment.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
-            }
-
-            // Update fields from the provided entity
-            val paymentToUpdate = existingPayment.get()
-            paymentToUpdate.sourceAccount = entity.sourceAccount
-            paymentToUpdate.destinationAccount = entity.destinationAccount
-            paymentToUpdate.amount = entity.amount
-            paymentToUpdate.transactionDate = entity.transactionDate
-            paymentToUpdate.guidSource = entity.guidSource
-            paymentToUpdate.guidDestination = entity.guidDestination
-            paymentToUpdate.activeStatus = entity.activeStatus
-            paymentToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
-
-            paymentRepository.saveAndFlush(paymentToUpdate)
-        }
-
-    @Transactional
-    override fun deleteById(id: Long): ServiceResult<Payment> =
-        handleServiceOperation("deleteById", id) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
-            if (optionalPayment.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
-            }
-
-            val payment = optionalPayment.get()
-
-            // Save GUIDs before removing the payment
-            val savedGuidSource = payment.guidSource
-            val savedGuidDestination = payment.guidDestination
-
-            // Step 1: Delete the payment first to break FK references
-            paymentRepository.delete(payment)
-            paymentRepository.flush()
-            logger.info("Payment deleted (flushed) to allow cascade transaction deletes: $id")
-
-            // Step 2: Delete associated transactions (cascade delete)
-            val transactionsDeleted = deleteAssociatedTransactions(savedGuidSource, savedGuidDestination)
-            logger.info(
-                "Deleted $transactionsDeleted transaction(s) for payment $id: " +
-                    "source=$savedGuidSource, destination=$savedGuidDestination",
-            )
-
-            payment
-        }
-
-    // ===== Paginated ServiceResult Methods =====
-
-    /**
-     * Find all active payments with pagination.
-     * Sorted by transactionDate descending.
-     */
-    fun findAllActive(pageable: Pageable): ServiceResult<Page<Payment>> =
-        handleServiceOperation("findAllActive-paginated", null) {
-            val owner = TenantContext.getCurrentOwner()
-            paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, pageable)
-        }
-
-    /**
-     * Delete transactions associated with a payment (cascade delete helper)
-     * Returns the number of transactions successfully deleted
-     */
-    private fun deleteAssociatedTransactions(
-        guidSource: String?,
-        guidDestination: String?,
-    ): Int {
-        var deletedCount = 0
-
-        // Delete source transaction
-        if (!guidSource.isNullOrBlank()) {
-            when (val result = transactionService.deleteByIdInternal(guidSource)) {
-                is ServiceResult.Success -> {
-                    deletedCount++
-                    logger.info("Deleted source transaction: $guidSource")
-                }
-
-                is ServiceResult.NotFound -> {
-                    logger.warn("Source transaction not found: $guidSource")
-                }
-
-                is ServiceResult.BusinessError -> {
-                    throw DataIntegrityViolationException(
-                        "Cannot delete payment because source transaction $guidSource could not be deleted: ${result.message}",
-                    )
-                }
-
-                is ServiceResult.ValidationError -> {
-                    throw DataIntegrityViolationException("Validation error deleting source transaction $guidSource")
-                }
-
-                is ServiceResult.SystemError -> {
-                    throw RuntimeException("System error deleting source transaction: $guidSource", result.exception)
-                }
-            }
-        }
-
-        // Delete destination transaction
-        if (!guidDestination.isNullOrBlank()) {
-            when (val result = transactionService.deleteByIdInternal(guidDestination)) {
-                is ServiceResult.Success -> {
-                    deletedCount++
-                    logger.info("Deleted destination transaction: $guidDestination")
-                }
-
-                is ServiceResult.NotFound -> {
-                    logger.warn("Destination transaction not found: $guidDestination")
-                }
-
-                is ServiceResult.BusinessError -> {
-                    throw DataIntegrityViolationException(
-                        "Cannot delete payment because destination transaction $guidDestination could not be deleted: ${result.message}",
-                    )
-                }
-
-                is ServiceResult.ValidationError -> {
-                    throw DataIntegrityViolationException("Validation error deleting destination transaction $guidDestination")
-                }
-
-                is ServiceResult.SystemError -> {
-                    throw RuntimeException("System error deleting destination transaction: $guidDestination", result.exception)
-                }
-            }
-        }
-
-        return deletedCount
-    }
-
-    // ===== Legacy Method Compatibility =====
-
-    fun findAllPayments(): List<Payment> {
-        val result = findAllActive()
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            else -> emptyList()
-        }
-    }
-
-    /**
-     * Legacy insertPayment method - now uses new behavior-aware logic.
-     * @deprecated Consider using save() method instead
-     */
-    @org.springframework.transaction.annotation.Transactional
-    fun insertPayment(payment: Payment): Payment {
-        val owner = TenantContext.getCurrentOwner()
-        payment.owner = owner
-        logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
-
-        // Process destination account - create if missing
-        processPaymentAccount(payment.destinationAccount)
-
-        // Process source account - create if missing
-        processPaymentAccount(payment.sourceAccount)
-
-        // Retrieve account types for behavior inference
-        val sourceAccountOpt = accountService.account(payment.sourceAccount)
-        if (sourceAccountOpt.isEmpty) {
-            logger.error("Source account not found after creation attempt: ${payment.sourceAccount}")
-            meterService.incrementExceptionThrownCounter("PaymentSourceAccountNotFound")
-            throw IllegalStateException("Source account not found: ${payment.sourceAccount}")
-        }
-        val destinationAccountOpt = accountService.account(payment.destinationAccount)
-        if (destinationAccountOpt.isEmpty) {
-            logger.error("Destination account not found after creation attempt: ${payment.destinationAccount}")
-            meterService.incrementExceptionThrownCounter("PaymentDestinationAccountNotFound")
-            throw IllegalStateException("Destination account not found: ${payment.destinationAccount}")
-        }
-
-        val sourceAccount = sourceAccountOpt.get()
-        val destinationAccount = destinationAccountOpt.get()
-
-        // Infer payment behavior from account types
-        val behavior =
-            PaymentBehavior.inferBehavior(
-                sourceAccount.accountType,
+            val paymentAccountNameOwner = payment.sourceAccount
+            populateDestinationTransaction(
+                transactionDestination,
+                payment,
+                paymentAccountNameOwner,
                 destinationAccount.accountType,
+                behavior,
             )
-        logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
+            populateSourceTransaction(
+                transactionSource,
+                payment,
+                paymentAccountNameOwner,
+                sourceAccount.accountType,
+                behavior,
+            )
 
-        // Create transactions
-        val transactionDestination = Transaction()
-        val transactionSource = Transaction()
+            logger.info("Creating source and destination transactions for payment")
 
-        val paymentAccountNameOwner = payment.sourceAccount
-        populateDestinationTransaction(
-            transactionDestination,
-            payment,
-            paymentAccountNameOwner,
-            destinationAccount.accountType,
-            behavior,
-        )
-        populateSourceTransaction(
-            transactionSource,
-            payment,
-            paymentAccountNameOwner,
-            sourceAccount.accountType,
-            behavior,
-        )
+            // Create destination transaction using ServiceResult pattern
+            val destinationResult = transactionService.save(transactionDestination)
+            when (destinationResult) {
+                is ServiceResult.Success -> {
+                    payment.guidDestination = destinationResult.data.guid
+                    logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
+                }
 
-        logger.info("Creating source and destination transactions for payment")
+                is ServiceResult.ValidationError -> {
+                    throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
+                }
 
-        // Create destination transaction using ServiceResult pattern
-        val destinationResult = transactionService.save(transactionDestination)
-        when (destinationResult) {
-            is ServiceResult.Success -> {
-                payment.guidDestination = destinationResult.data.guid
-                logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
+                is ServiceResult.BusinessError -> {
+                    throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
+                }
+
+                else -> {
+                    throw RuntimeException("Failed to create destination transaction: $destinationResult")
+                }
             }
 
-            is ServiceResult.ValidationError -> {
-                throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
+            // Create source transaction using ServiceResult pattern
+            val sourceResult = transactionService.save(transactionSource)
+            when (sourceResult) {
+                is ServiceResult.Success -> {
+                    payment.guidSource = sourceResult.data.guid
+                    logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
+                }
+
+                is ServiceResult.ValidationError -> {
+                    throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
+                }
+
+                is ServiceResult.BusinessError -> {
+                    throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
+                }
+
+                else -> {
+                    throw RuntimeException("Failed to create source transaction: $sourceResult")
+                }
             }
 
-            is ServiceResult.BusinessError -> {
-                throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
-            }
+            // Use the standardized save method and handle ServiceResult
+            // GUIDs are now set, so save() won't try to create transactions again
+            val result = save(payment)
+            return when (result) {
+                is ServiceResult.Success -> {
+                    result.data
+                }
 
-            else -> {
-                throw RuntimeException("Failed to create destination transaction: $destinationResult")
+                is ServiceResult.ValidationError -> {
+                    throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
+                }
+
+                is ServiceResult.BusinessError -> {
+                    // Handle data integrity violations (e.g., duplicate payments)
+                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
+                }
+
+                else -> {
+                    throw RuntimeException("Failed to insert payment: $result")
+                }
+            }
+        }
+
+        fun updatePayment(
+            paymentId: Long,
+            patch: Payment,
+        ): Payment {
+            // Set the ID for the update operation
+            patch.paymentId = paymentId
+            val result = update(patch)
+            return when (result) {
+                is ServiceResult.Success -> result.data
+                is ServiceResult.NotFound -> throw RuntimeException("Payment not updated as the payment does not exist: $paymentId.")
+                else -> throw RuntimeException("Failed to update payment: $result")
             }
         }
 
-        // Create source transaction using ServiceResult pattern
-        val sourceResult = transactionService.save(transactionSource)
-        when (sourceResult) {
-            is ServiceResult.Success -> {
-                payment.guidSource = sourceResult.data.guid
-                logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
-            }
+        fun findByPaymentId(paymentId: Long): Optional<Payment> {
+            val owner = TenantContext.getCurrentOwner()
+            return paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
+        }
 
-            is ServiceResult.ValidationError -> {
-                throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
+        fun deleteByPaymentId(paymentId: Long): Boolean {
+            val owner = TenantContext.getCurrentOwner()
+            val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
+            if (optionalPayment.isPresent) {
+                paymentRepository.delete(optionalPayment.get())
+                return true
             }
+            return false
+        }
 
-            is ServiceResult.BusinessError -> {
-                throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
-            }
+        // ===== Helper Methods for Payment Processing =====
 
-            else -> {
-                throw RuntimeException("Failed to create source transaction: $sourceResult")
+        /**
+         * Process payment account - create if missing (similar to TransactionService.processAccount)
+         */
+        private fun processPaymentAccount(accountNameOwner: String) {
+            logger.debug("Processing payment account: $accountNameOwner")
+            val accountOptional = accountService.account(accountNameOwner)
+            if (accountOptional.isPresent) {
+                logger.info("Using existing account for payment: $accountNameOwner (accountId: ${accountOptional.get().accountId})")
+            } else {
+                logger.info("Account not found for payment, creating new account: $accountNameOwner")
+                try {
+                    val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
+                    val savedAccount = accountService.insertAccount(account)
+                    logger.info("Created new account for payment: $accountNameOwner with ID: ${savedAccount.accountId}")
+                } catch (ex: Exception) {
+                    logger.error("Failed to create account for payment: $accountNameOwner", ex)
+                    meterService.incrementExceptionCaughtCounter("PaymentAccountCreationFailed")
+                    throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
+                }
             }
         }
 
-        // Use the standardized save method and handle ServiceResult
-        // GUIDs are now set, so save() won't try to create transactions again
-        val result = save(payment)
-        return when (result) {
-            is ServiceResult.Success -> {
-                result.data
+        // ===== Payment Behavior and Amount Calculation Methods =====
+
+        /**
+         * Calculates the transaction amount for the source account based on payment behavior.
+         */
+        private fun calculateSourceAmount(
+            amount: BigDecimal,
+            behavior: PaymentBehavior,
+        ): BigDecimal =
+            when (behavior) {
+                PaymentBehavior.BILL_PAYMENT -> -amount.abs()
+                PaymentBehavior.TRANSFER -> -amount.abs()
+                PaymentBehavior.CASH_ADVANCE -> amount.abs()
+                PaymentBehavior.BALANCE_TRANSFER -> amount.abs()
+                else -> -amount.abs()
             }
 
-            is ServiceResult.ValidationError -> {
-                throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
+        /**
+         * Calculates the transaction amount for the destination account based on payment behavior.
+         */
+        private fun calculateDestinationAmount(
+            amount: BigDecimal,
+            behavior: PaymentBehavior,
+        ): BigDecimal =
+            when (behavior) {
+                PaymentBehavior.BILL_PAYMENT -> -amount.abs()
+                PaymentBehavior.TRANSFER -> amount.abs()
+                PaymentBehavior.CASH_ADVANCE -> amount.abs()
+                PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()
+                else -> -amount.abs()
             }
 
-            is ServiceResult.BusinessError -> {
-                // Handle data integrity violations (e.g., duplicate payments)
-                throw org.springframework.dao.DataIntegrityViolationException(result.message)
-            }
+        // ===== Transaction Population Methods =====
 
-            else -> {
-                throw RuntimeException("Failed to insert payment: $result")
-            }
-        }
-    }
-
-    fun updatePayment(
-        paymentId: Long,
-        patch: Payment,
-    ): Payment {
-        // Set the ID for the update operation
-        patch.paymentId = paymentId
-        val result = update(patch)
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            is ServiceResult.NotFound -> throw RuntimeException("Payment not updated as the payment does not exist: $paymentId.")
-            else -> throw RuntimeException("Failed to update payment: $result")
-        }
-    }
-
-    fun findByPaymentId(paymentId: Long): Optional<Payment> {
-        val owner = TenantContext.getCurrentOwner()
-        return paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
-    }
-
-    fun deleteByPaymentId(paymentId: Long): Boolean {
-        val owner = TenantContext.getCurrentOwner()
-        val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
-        if (optionalPayment.isPresent) {
-            paymentRepository.delete(optionalPayment.get())
-            return true
-        }
-        return false
-    }
-
-    // ===== Helper Methods for Payment Processing =====
-
-    /**
-     * Process payment account - create if missing (similar to TransactionService.processAccount)
-     */
-    private fun processPaymentAccount(accountNameOwner: String) {
-        logger.debug("Processing payment account: $accountNameOwner")
-        val accountOptional = accountService.account(accountNameOwner)
-        if (accountOptional.isPresent) {
-            logger.info("Using existing account for payment: $accountNameOwner (accountId: ${accountOptional.get().accountId})")
-        } else {
-            logger.info("Account not found for payment, creating new account: $accountNameOwner")
-            try {
-                val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
-                val savedAccount = accountService.insertAccount(account)
-                logger.info("Created new account for payment: $accountNameOwner with ID: ${savedAccount.accountId}")
-            } catch (ex: Exception) {
-                logger.error("Failed to create account for payment: $accountNameOwner", ex)
-                meterService.incrementExceptionCaughtCounter("PaymentAccountCreationFailed")
-                throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
-            }
-        }
-    }
-
-    // ===== Payment Behavior and Amount Calculation Methods =====
-
-    /**
-     * Calculates the transaction amount for the source account based on payment behavior.
-     */
-    private fun calculateSourceAmount(
-        amount: BigDecimal,
-        behavior: PaymentBehavior,
-    ): BigDecimal =
-        when (behavior) {
-            PaymentBehavior.BILL_PAYMENT -> -amount.abs()
-            PaymentBehavior.TRANSFER -> -amount.abs()
-            PaymentBehavior.CASH_ADVANCE -> amount.abs()
-            PaymentBehavior.BALANCE_TRANSFER -> amount.abs()
-            else -> -amount.abs()
+        fun populateSourceTransaction(
+            transactionSource: finance.domain.Transaction,
+            payment: Payment,
+            sourceAccountNameOwner: String,
+            sourceAccountType: AccountType,
+            behavior: PaymentBehavior,
+        ) {
+            transactionSource.guid = UUID.randomUUID().toString()
+            transactionSource.transactionDate = payment.transactionDate
+            transactionSource.description = "payment"
+            transactionSource.category = "bill_pay"
+            transactionSource.notes = "to ${payment.destinationAccount}"
+            transactionSource.amount = calculateSourceAmount(payment.amount, behavior)
+            transactionSource.transactionState = TransactionState.Outstanding
+            transactionSource.reoccurringType = ReoccurringType.Onetime
+            transactionSource.accountType = sourceAccountType
+            transactionSource.accountNameOwner = sourceAccountNameOwner
+            val timestamp = Timestamp(System.currentTimeMillis())
+            transactionSource.dateUpdated = timestamp
+            transactionSource.dateAdded = timestamp
         }
 
-    /**
-     * Calculates the transaction amount for the destination account based on payment behavior.
-     */
-    private fun calculateDestinationAmount(
-        amount: BigDecimal,
-        behavior: PaymentBehavior,
-    ): BigDecimal =
-        when (behavior) {
-            PaymentBehavior.BILL_PAYMENT -> -amount.abs()
-            PaymentBehavior.TRANSFER -> amount.abs()
-            PaymentBehavior.CASH_ADVANCE -> amount.abs()
-            PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()
-            else -> -amount.abs()
+        @Deprecated("Use populateSourceTransaction with behavior parameter")
+        fun populateDebitTransaction(
+            transactionDebit: finance.domain.Transaction,
+            payment: Payment,
+            paymentAccountNameOwner: String,
+        ) {
+            populateSourceTransaction(
+                transactionDebit,
+                payment,
+                paymentAccountNameOwner,
+                AccountType.Debit,
+                PaymentBehavior.BILL_PAYMENT,
+            )
         }
 
-    // ===== Transaction Population Methods =====
+        fun populateDestinationTransaction(
+            transactionDestination: finance.domain.Transaction,
+            payment: Payment,
+            sourceAccountNameOwner: String,
+            destinationAccountType: AccountType,
+            behavior: PaymentBehavior,
+        ) {
+            transactionDestination.guid = UUID.randomUUID().toString()
+            transactionDestination.transactionDate = payment.transactionDate
+            transactionDestination.description = "payment"
+            transactionDestination.category = "bill_pay"
+            transactionDestination.notes = "from $sourceAccountNameOwner"
+            transactionDestination.amount = calculateDestinationAmount(payment.amount, behavior)
+            transactionDestination.transactionState = TransactionState.Outstanding
+            transactionDestination.reoccurringType = ReoccurringType.Onetime
+            transactionDestination.accountType = destinationAccountType
+            transactionDestination.accountNameOwner = payment.destinationAccount
+            val timestamp = Timestamp(System.currentTimeMillis())
+            transactionDestination.dateUpdated = timestamp
+            transactionDestination.dateAdded = timestamp
+        }
 
-    fun populateSourceTransaction(
-        transactionSource: finance.domain.Transaction,
-        payment: Payment,
-        sourceAccountNameOwner: String,
-        sourceAccountType: AccountType,
-        behavior: PaymentBehavior,
-    ) {
-        transactionSource.guid = UUID.randomUUID().toString()
-        transactionSource.transactionDate = payment.transactionDate
-        transactionSource.description = "payment"
-        transactionSource.category = "bill_pay"
-        transactionSource.notes = "to ${payment.destinationAccount}"
-        transactionSource.amount = calculateSourceAmount(payment.amount, behavior)
-        transactionSource.transactionState = TransactionState.Outstanding
-        transactionSource.reoccurringType = ReoccurringType.Onetime
-        transactionSource.accountType = sourceAccountType
-        transactionSource.accountNameOwner = sourceAccountNameOwner
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transactionSource.dateUpdated = timestamp
-        transactionSource.dateAdded = timestamp
+        @Deprecated("Use populateDestinationTransaction with behavior parameter")
+        fun populateCreditTransaction(
+            transactionCredit: finance.domain.Transaction,
+            payment: Payment,
+            paymentAccountNameOwner: String,
+        ) {
+            populateDestinationTransaction(
+                transactionCredit,
+                payment,
+                paymentAccountNameOwner,
+                AccountType.Credit,
+                PaymentBehavior.BILL_PAYMENT,
+            )
+        }
     }
-
-    @Deprecated("Use populateSourceTransaction with behavior parameter")
-    fun populateDebitTransaction(
-        transactionDebit: finance.domain.Transaction,
-        payment: Payment,
-        paymentAccountNameOwner: String,
-    ) {
-        populateSourceTransaction(
-            transactionDebit,
-            payment,
-            paymentAccountNameOwner,
-            AccountType.Debit,
-            PaymentBehavior.BILL_PAYMENT,
-        )
-    }
-
-    fun populateDestinationTransaction(
-        transactionDestination: finance.domain.Transaction,
-        payment: Payment,
-        sourceAccountNameOwner: String,
-        destinationAccountType: AccountType,
-        behavior: PaymentBehavior,
-    ) {
-        transactionDestination.guid = UUID.randomUUID().toString()
-        transactionDestination.transactionDate = payment.transactionDate
-        transactionDestination.description = "payment"
-        transactionDestination.category = "bill_pay"
-        transactionDestination.notes = "from $sourceAccountNameOwner"
-        transactionDestination.amount = calculateDestinationAmount(payment.amount, behavior)
-        transactionDestination.transactionState = TransactionState.Outstanding
-        transactionDestination.reoccurringType = ReoccurringType.Onetime
-        transactionDestination.accountType = destinationAccountType
-        transactionDestination.accountNameOwner = payment.destinationAccount
-        val timestamp = Timestamp(System.currentTimeMillis())
-        transactionDestination.dateUpdated = timestamp
-        transactionDestination.dateAdded = timestamp
-    }
-
-    @Deprecated("Use populateDestinationTransaction with behavior parameter")
-    fun populateCreditTransaction(
-        transactionCredit: finance.domain.Transaction,
-        payment: Payment,
-        paymentAccountNameOwner: String,
-    ) {
-        populateDestinationTransaction(
-            transactionCredit,
-            payment,
-            paymentAccountNameOwner,
-            AccountType.Credit,
-            PaymentBehavior.BILL_PAYMENT,
-        )
-    }
-}

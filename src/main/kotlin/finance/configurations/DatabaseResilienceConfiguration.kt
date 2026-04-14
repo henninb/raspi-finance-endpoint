@@ -178,6 +178,16 @@ open class DatabaseResilienceConfiguration {
         return "connectionPoolMetricsConfigured"
     }
 
+    @Bean
+    open fun resilienceComponents(): ResilienceComponents =
+        ResilienceComponents(
+            databaseResilienceConfig = this,
+            circuitBreaker = databaseCircuitBreaker(),
+            retry = databaseRetry(),
+            timeLimiter = databaseTimeLimiter(),
+            scheduledExecutorService = scheduledExecutorService(),
+        )
+
     /**
      * Utility function to execute database operations with resilience patterns
      */

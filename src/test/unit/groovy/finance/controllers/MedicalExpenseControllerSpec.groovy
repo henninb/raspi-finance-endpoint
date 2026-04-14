@@ -20,7 +20,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
     finance.repositories.MedicalExpenseRepository repo = Mock()
     jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
     finance.services.MeterService meterService = new finance.services.MeterService()
-    MedicalExpenseService service = new MedicalExpenseService(repo, meterService, validator)
+    MedicalExpenseService service = new MedicalExpenseService(repo, meterService, validator, null)
 
     @Subject
     MedicalExpenseController controller = new MedicalExpenseController(service)
@@ -128,7 +128,7 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
         MedicalExpense invalid = me(0L)
         and:
         def violatingValidator = Mock(jakarta.validation.Validator) { validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set) }
-        def localService = new MedicalExpenseService(repo, meterService, violatingValidator)
+        def localService = new MedicalExpenseService(repo, meterService, violatingValidator, null)
         def localController = new MedicalExpenseController(localService)
 
         when:

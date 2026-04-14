@@ -29,9 +29,6 @@ class BaseServiceFunctionalitySpec extends Specification {
     // Removed sync variant test since method is protected; covered by async variant.
 
     def "executeWithResilience should execute directly when resilience components are null"() {
-        given:
-        baseService.databaseResilienceConfig = null
-
         when:
         def future = baseService.executeWithResilience({ "success" }, "test-op")
         def result = future.get()
@@ -44,6 +41,6 @@ class BaseServiceFunctionalitySpec extends Specification {
 // Test helper to expose protected methods
 class TestableBaseService extends BaseService {
     TestableBaseService(meterService, validator) {
-        super(meterService, validator)
+        super(meterService, validator, null)
     }
 }
