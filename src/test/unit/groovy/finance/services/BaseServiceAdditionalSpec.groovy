@@ -20,7 +20,7 @@ class BaseServiceAdditionalSpec extends Specification {
     // Concrete subclass needed because BaseService constructor requires meterService + validator
     static class ExposedBaseService extends BaseService {
         ExposedBaseService(meterService, validator) {
-            super(meterService, validator)
+            super(meterService, validator, null)
         }
     }
 

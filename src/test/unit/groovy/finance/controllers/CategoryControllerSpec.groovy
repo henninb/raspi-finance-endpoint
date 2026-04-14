@@ -17,7 +17,7 @@ class StandardizedCategoryControllerSpec extends Specification {
     finance.repositories.TransactionRepository transactionRepository = Mock()
     jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
     finance.services.MeterService meterService = new finance.services.MeterService()
-    CategoryService categoryService = new CategoryService(categoryRepository, transactionRepository, meterService, validator)
+    CategoryService categoryService = new CategoryService(categoryRepository, transactionRepository, meterService, validator, null)
 
     @Subject
     CategoryController controller = new CategoryController(categoryService)
@@ -142,7 +142,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         and:
         def violatingValidator = GroovyMock(jakarta.validation.Validator)
         violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        def localService = new CategoryService(categoryRepository, transactionRepository, meterService, violatingValidator)
+        def localService = new CategoryService(categoryRepository, transactionRepository, meterService, violatingValidator, null)
         def localController = new CategoryController(localService)
 
         when:

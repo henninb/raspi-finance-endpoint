@@ -17,7 +17,7 @@ import java.util.Optional
 class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
     def receiptImageRepositoryMock = Mock(ReceiptImageRepository)
-    def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator)
+    def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator, null)
 
     def "should have correct entity name"() {
         expect:
@@ -144,7 +144,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<ReceiptImage>> violations = [violation] as Set
         validatorMock.validate(image) >> violations
-        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock)
+        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock, null)
 
         when:
         def result = localService.save(image)
@@ -336,7 +336,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<ReceiptImage>> violations = [violation] as Set
         validatorMock.validate(image) >> violations
-        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock)
+        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock, null)
 
         when:
         def result = localService.save(image)

@@ -147,8 +147,10 @@ open class BaseController {
 
     private fun sanitizeHeader(header: String?): String? = header?.take(200)?.replace(Regex("[\\r\\n\\t]"), " ")
 
+    protected fun writeJson(obj: Any): String = mapper.writeValueAsString(obj)
+
     companion object {
-        val mapper = ObjectMapper()
+        private val mapper: ObjectMapper = ObjectMapper().apply { findAndRegisterModules() }
         val logger: Logger = LoggerFactory.getLogger(BaseController::class.java)
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${BaseController::class.java.simpleName}")
     }

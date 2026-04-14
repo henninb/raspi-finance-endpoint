@@ -1,5 +1,6 @@
 package finance.services
 
+import finance.configurations.ResilienceComponents
 import finance.domain.User
 import finance.repositories.UserRepository
 import jakarta.validation.Validator
@@ -8,49 +9,51 @@ import org.springframework.stereotype.Service
 import java.util.Optional
 
 @Service
-class UserService(
-    private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
-    meterService: MeterService,
-    validator: Validator,
-) : BaseService(meterService, validator) {
-    fun signIn(user: User): Optional<User> {
-        // Retrieve the user by username
-        val userOptional = userRepository.findByUsername(user.username)
+class UserService
+    constructor(
+        private val userRepository: UserRepository,
+        private val passwordEncoder: PasswordEncoder,
+        meterService: MeterService,
+        validator: Validator,
+        resilienceComponents: ResilienceComponents? = null,
+    ) : BaseService(meterService, validator, resilienceComponents) {
+        fun signIn(user: User): Optional<User> {
+            // Retrieve the user by username
+            val userOptional = userRepository.findByUsername(user.username)
 
-        // Always perform password check to prevent timing attacks
-        val dbUser =
-            userOptional.orElse(
-                User().apply {
-                    password = "\$2a\$12\$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing"
-                },
-            )
+            // Always perform password check to prevent timing attacks
+            val dbUser =
+                userOptional.orElse(
+                    User().apply {
+                        password = "\$2a\$12\$dummy.hash.to.prevent.timing.attacks.with.constant.time.processing"
+                    },
+                )
 
-        // Always perform password check regardless of user existence
-        val passwordMatches = passwordEncoder.matches(user.password, dbUser.password)
+            // Always perform password check regardless of user existence
+            val passwordMatches = passwordEncoder.matches(user.password, dbUser.password)
 
-        return if (userOptional.isPresent && passwordMatches) {
-            userOptional
-        } else {
-            Optional.empty()
-        }
-    }
-
-    fun signUp(user: User): User {
-        // Check if the username is already taken
-        if (userRepository.findByUsername(user.username).isPresent) {
-            throw IllegalArgumentException("Username already exists")
+            return if (userOptional.isPresent && passwordMatches) {
+                userOptional
+            } else {
+                Optional.empty()
+            }
         }
 
-        // Hash the raw password securely using BCrypt
-        val hashedPassword = passwordEncoder.encode(user.password)
-        user.password = hashedPassword ?: throw IllegalStateException("Password encoding failed")
-        return userRepository.saveAndFlush(user)
-    }
+        fun signUp(user: User): User {
+            // Check if the username is already taken
+            if (userRepository.findByUsername(user.username).isPresent) {
+                throw IllegalArgumentException("Username already exists")
+            }
 
-    fun findUserByUsername(username: String): User? =
-        userRepository
-            .findByUsername(username)
-            .orElse(null)
-            ?.apply { password = "" }
-}
+            // Hash the raw password securely using BCrypt
+            val hashedPassword = passwordEncoder.encode(user.password)
+            user.password = hashedPassword ?: throw IllegalStateException("Password encoding failed")
+            return userRepository.saveAndFlush(user)
+        }
+
+        fun findUserByUsername(username: String): User? =
+            userRepository
+                .findByUsername(username)
+                .orElse(null)
+                ?.apply { password = "" }
+    }

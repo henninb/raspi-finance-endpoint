@@ -37,8 +37,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
     TransactionService standardizedTransactionService
 
     def setup() {
-        localCategoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock, meterService, validatorMock)
-        localDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
+        localCategoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock, meterService, validatorMock, null)
+        localDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock, null)
         standardizedTransactionService = new TransactionService(
             transactionRepositoryMock,
             accountService,
@@ -49,7 +49,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
             calculationServiceMock,
             paymentRepositoryMock,
             meterService,
-            validatorMock
+            validatorMock,
+            null
         )
     }
 

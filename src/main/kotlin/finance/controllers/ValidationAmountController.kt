@@ -301,7 +301,7 @@ class ValidationAmountController(
                 validationAmountService.insertValidationAmount(accountNameOwner, validationAmount)
 
             logger.info("ValidationAmount inserted successfully")
-            logger.info(mapper.writeValueAsString(validationAmountResponse))
+            logger.info(writeJson(validationAmountResponse))
 
             ResponseEntity.ok(validationAmountResponse)
         } catch (ex: jakarta.validation.ValidationException) {
@@ -338,7 +338,7 @@ class ValidationAmountController(
                     accountNameOwner,
                     TransactionState.valueOf(newTransactionStateValue),
                 )
-            logger.info(mapper.writeValueAsString(validationAmount))
+            logger.info(writeJson(validationAmount))
             validationAmount
         }
 }

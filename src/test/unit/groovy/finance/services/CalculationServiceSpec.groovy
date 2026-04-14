@@ -14,6 +14,7 @@ class CalculationServiceSpec extends Specification {
     def repo = Mock(TransactionRepository)
 
     CalculationService service
+    MeterService meterService
     def registry
 
     def setup() {
@@ -22,8 +23,8 @@ class CalculationServiceSpec extends Specification {
 
         // Provide a meter service with a real registry for counter assertions
         registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
-        def meterService = new MeterService(registry)
-        service = new CalculationService(repo, meterService, GroovyMock(jakarta.validation.Validator))
+        meterService = new MeterService(registry)
+        service = new CalculationService(repo, meterService, GroovyMock(jakarta.validation.Validator), null)
     }
 
     def cleanup() {
@@ -165,20 +166,23 @@ class CalculationServiceSpec extends Specification {
     }
 
     def "calculateActiveTotalsByAccountNameOwner wraps SQLException as DataAccessResourceFailureException via resilience"() {
-        given: 'enable resilience path in BaseService'
+        given: 'a service with resilience components enabled'
         def cfg = new finance.configurations.DatabaseResilienceConfiguration()
-        service.databaseResilienceConfig = cfg
-        service.circuitBreaker = cfg.databaseCircuitBreaker()
-        service.retry = cfg.databaseRetry()
-        service.timeLimiter = cfg.databaseTimeLimiter()
-        service.scheduledExecutorService = cfg.scheduledExecutorService()
+        def resilienceComponents = new finance.configurations.ResilienceComponents(
+            cfg,
+            cfg.databaseCircuitBreaker(),
+            cfg.databaseRetry(),
+            cfg.databaseTimeLimiter(),
+            cfg.scheduledExecutorService()
+        )
+        def resilientService = new CalculationService(repo, meterService, GroovyMock(jakarta.validation.Validator), resilienceComponents)
 
         and: 'repository throws a SQLException inside the resilient operation'
         def account = 'resilience_case'
         repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> { throw new java.sql.SQLException('db down') }
 
         when:
-        service.calculateActiveTotalsByAccountNameOwner(account)
+        resilientService.calculateActiveTotalsByAccountNameOwner(account)
 
         then:
         thrown(org.springframework.dao.DataAccessResourceFailureException)

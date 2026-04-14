@@ -1,5 +1,6 @@
 package finance.services
 
+import finance.configurations.ResilienceComponents
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.repositories.ReceiptImageRepository
@@ -13,87 +14,89 @@ import java.sql.Timestamp
  * Provides both new standardized methods and legacy compatibility
  */
 @Service
-open class ReceiptImageService(
-    private val receiptImageRepository: ReceiptImageRepository,
-    meterService: MeterService,
-    validator: Validator,
-) : CrudBaseService<ReceiptImage, Long>(meterService, validator) {
-    override fun getEntityName(): String = "ReceiptImage"
+open class ReceiptImageService
+    constructor(
+        private val receiptImageRepository: ReceiptImageRepository,
+        meterService: MeterService,
+        validator: Validator,
+        resilienceComponents: ResilienceComponents? = null,
+    ) : CrudBaseService<ReceiptImage, Long>(meterService, validator, resilienceComponents) {
+        override fun getEntityName(): String = "ReceiptImage"
 
-    // ===== New Standardized ServiceResult Methods =====
+        // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<ReceiptImage>> =
-        handleServiceOperation("findAllActive", null) {
-            val owner = TenantContext.getCurrentOwner()
-            receiptImageRepository.findAllByOwner(owner)
-        }
-
-    override fun findById(id: Long): ServiceResult<ReceiptImage> =
-        handleServiceOperation("findById", id) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
-            if (optionalReceiptImage.isPresent) {
-                optionalReceiptImage.get()
-            } else {
-                throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
-            }
-        }
-
-    override fun save(entity: ReceiptImage): ServiceResult<ReceiptImage> =
-        handleServiceOperation("save", entity.receiptImageId) {
-            val owner = TenantContext.getCurrentOwner()
-            entity.owner = owner
-
-            val violations = validator.validate(entity)
-            if (violations.isNotEmpty()) {
-                throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+        override fun findAllActive(): ServiceResult<List<ReceiptImage>> =
+            handleServiceOperation("findAllActive", null) {
+                val owner = TenantContext.getCurrentOwner()
+                receiptImageRepository.findAllByOwner(owner)
             }
 
-            // Set timestamps
-            val timestamp = Timestamp(System.currentTimeMillis())
-            entity.dateAdded = timestamp
-            entity.dateUpdated = timestamp
-
-            receiptImageRepository.saveAndFlush(entity)
-        }
-
-    override fun update(entity: ReceiptImage): ServiceResult<ReceiptImage> =
-        handleServiceOperation("update", entity.receiptImageId) {
-            val owner = TenantContext.getCurrentOwner()
-            entity.owner = owner
-            val existingReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, entity.receiptImageId)
-            if (existingReceiptImage.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: ${entity.receiptImageId}")
+        override fun findById(id: Long): ServiceResult<ReceiptImage> =
+            handleServiceOperation("findById", id) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
+                if (optionalReceiptImage.isPresent) {
+                    optionalReceiptImage.get()
+                } else {
+                    throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
+                }
             }
 
-            // Update timestamp
-            entity.dateUpdated = Timestamp(System.currentTimeMillis())
+        override fun save(entity: ReceiptImage): ServiceResult<ReceiptImage> =
+            handleServiceOperation("save", entity.receiptImageId) {
+                val owner = TenantContext.getCurrentOwner()
+                entity.owner = owner
 
-            receiptImageRepository.saveAndFlush(entity)
-        }
+                val violations = validator.validate(entity)
+                if (violations.isNotEmpty()) {
+                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+                }
 
-    override fun deleteById(id: Long): ServiceResult<ReceiptImage> =
-        handleServiceOperation("deleteById", id) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
-            if (optionalReceiptImage.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
+                // Set timestamps
+                val timestamp = Timestamp(System.currentTimeMillis())
+                entity.dateAdded = timestamp
+                entity.dateUpdated = timestamp
+
+                receiptImageRepository.saveAndFlush(entity)
             }
-            val receiptImage = optionalReceiptImage.get()
-            receiptImageRepository.deleteById(id)
-            receiptImage
-        }
 
-    // ===== Additional ServiceResult Methods =====
+        override fun update(entity: ReceiptImage): ServiceResult<ReceiptImage> =
+            handleServiceOperation("update", entity.receiptImageId) {
+                val owner = TenantContext.getCurrentOwner()
+                entity.owner = owner
+                val existingReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, entity.receiptImageId)
+                if (existingReceiptImage.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: ${entity.receiptImageId}")
+                }
 
-    fun findByTransactionId(transactionId: Long): ServiceResult<ReceiptImage> =
-        handleServiceOperation("findByTransactionId", transactionId) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalReceiptImage = receiptImageRepository.findByOwnerAndTransactionId(owner, transactionId)
-            if (optionalReceiptImage.isPresent) {
-                optionalReceiptImage.get()
-            } else {
-                throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found for transaction: $transactionId")
+                // Update timestamp
+                entity.dateUpdated = Timestamp(System.currentTimeMillis())
+
+                receiptImageRepository.saveAndFlush(entity)
             }
-        }
-}
+
+        override fun deleteById(id: Long): ServiceResult<ReceiptImage> =
+            handleServiceOperation("deleteById", id) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalReceiptImage = receiptImageRepository.findByOwnerAndReceiptImageId(owner, id)
+                if (optionalReceiptImage.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found: $id")
+                }
+                val receiptImage = optionalReceiptImage.get()
+                receiptImageRepository.deleteById(id)
+                receiptImage
+            }
+
+        // ===== Additional ServiceResult Methods =====
+
+        fun findByTransactionId(transactionId: Long): ServiceResult<ReceiptImage> =
+            handleServiceOperation("findByTransactionId", transactionId) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalReceiptImage = receiptImageRepository.findByOwnerAndTransactionId(owner, transactionId)
+                if (optionalReceiptImage.isPresent) {
+                    optionalReceiptImage.get()
+                } else {
+                    throw jakarta.persistence.EntityNotFoundException("ReceiptImage not found for transaction: $transactionId")
+                }
+            }
+    }

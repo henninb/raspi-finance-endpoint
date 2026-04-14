@@ -26,7 +26,7 @@ class StandardizedBaseServiceSpec extends Specification {
         private Long nextId = 1L
 
         TestStandardizedService(meterService, validator) {
-            super(meterService, validator)
+            super(meterService, validator, null)
         }
 
         @Override

@@ -28,7 +28,7 @@ class PendingTransactionServiceSpec extends Specification {
     def setup() {
         def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
-        standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository, meterService, mockValidator)
+        standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository, meterService, mockValidator, null)
     }
 
     def cleanup() {

@@ -18,7 +18,7 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
 
     def descriptionRepositoryMock = Mock(DescriptionRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def standardizedDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock)
+    def standardizedDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock, null)
 
     // ===== TDD Tests for findAllActive() =====
 

@@ -21,7 +21,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
     def paymentRepositoryMock = Mock(PaymentRepository)
     def transactionServiceMock = Mock(TransactionService)
-    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validatorMock)
+    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validatorMock, null)
 
     // ===== TDD Tests for findAllActive() =====
 

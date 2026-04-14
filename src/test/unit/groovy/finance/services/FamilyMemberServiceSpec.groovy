@@ -16,7 +16,7 @@ import org.springframework.dao.DataIntegrityViolationException
 class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
 
     def familyMemberRepositoryMock = Mock(FamilyMemberRepository)
-    def standardizedFamilyMemberService = new FamilyMemberService(familyMemberRepositoryMock, meterService, validatorMock)
+    def standardizedFamilyMemberService = new FamilyMemberService(familyMemberRepositoryMock, meterService, validatorMock, null)
 
     // ===== TDD Tests for findAllActive() =====
 

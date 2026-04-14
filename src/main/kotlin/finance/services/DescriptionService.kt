@@ -1,5 +1,6 @@
 package finance.services
 
+import finance.configurations.ResilienceComponents
 import finance.domain.Description
 import finance.domain.ServiceResult
 import finance.repositories.DescriptionRepository
@@ -14,257 +15,259 @@ import java.sql.Timestamp
 import java.util.Optional
 
 @Service
-class DescriptionService(
-    private val descriptionRepository: DescriptionRepository,
-    private val transactionRepository: TransactionRepository,
-    meterService: MeterService,
-    validator: Validator,
-) : CrudBaseService<Description, Long>(meterService, validator) {
-    override fun getEntityName(): String = "Description"
+class DescriptionService
+    constructor(
+        private val descriptionRepository: DescriptionRepository,
+        private val transactionRepository: TransactionRepository,
+        meterService: MeterService,
+        validator: Validator,
+        resilienceComponents: ResilienceComponents? = null,
+    ) : CrudBaseService<Description, Long>(meterService, validator, resilienceComponents) {
+        override fun getEntityName(): String = "Description"
 
-    // ===== New Standardized ServiceResult Methods =====
+        // ===== New Standardized ServiceResult Methods =====
 
-    override fun findAllActive(): ServiceResult<List<Description>> =
-        handleServiceOperation("findAllActive", null) {
-            val owner = TenantContext.getCurrentOwner()
-            val descriptions = descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(owner, true)
+        override fun findAllActive(): ServiceResult<List<Description>> =
+            handleServiceOperation("findAllActive", null) {
+                val owner = TenantContext.getCurrentOwner()
+                val descriptions = descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(owner, true)
 
-            // Batch query to get all counts at once (prevents N+1 query problem)
-            val descriptionNames = descriptions.map { it.descriptionName }
-            val countMap =
-                if (descriptionNames.isNotEmpty()) {
-                    transactionRepository
-                        .countByOwnerAndDescriptionNameIn(owner, descriptionNames)
-                        .associate { row -> row[0] as String to row[1] as Long }
-                } else {
-                    emptyMap()
+                // Batch query to get all counts at once (prevents N+1 query problem)
+                val descriptionNames = descriptions.map { it.descriptionName }
+                val countMap =
+                    if (descriptionNames.isNotEmpty()) {
+                        transactionRepository
+                            .countByOwnerAndDescriptionNameIn(owner, descriptionNames)
+                            .associate { row -> row[0] as String to row[1] as Long }
+                    } else {
+                        emptyMap()
+                    }
+
+                // Apply counts to descriptions
+                descriptions.forEach { description ->
+                    description.descriptionCount = countMap[description.descriptionName] ?: 0L
                 }
 
-            // Apply counts to descriptions
-            descriptions.forEach { description ->
-                description.descriptionCount = countMap[description.descriptionName] ?: 0L
+                descriptions
             }
 
-            descriptions
-        }
-
-    override fun findById(id: Long): ServiceResult<Description> =
-        handleServiceOperation("findById", id) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
-            if (optionalDescription.isPresent) {
-                optionalDescription.get()
-            } else {
-                throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
-            }
-        }
-
-    override fun save(entity: Description): ServiceResult<Description> =
-        handleServiceOperation("save", entity.descriptionId) {
-            val owner = TenantContext.getCurrentOwner()
-            entity.owner = owner
-
-            val violations = validator.validate(entity)
-            if (violations.isNotEmpty()) {
-                throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-            }
-
-            // Set timestamps
-            val timestamp = Timestamp(System.currentTimeMillis())
-            entity.dateAdded = timestamp
-            entity.dateUpdated = timestamp
-
-            descriptionRepository.saveAndFlush(entity)
-        }
-
-    override fun update(entity: Description): ServiceResult<Description> =
-        handleServiceOperation("update", entity.descriptionId) {
-            val owner = TenantContext.getCurrentOwner()
-            val existingDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, entity.descriptionId)
-            if (existingDescription.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("Description not found: ${entity.descriptionId}")
-            }
-
-            // Update fields from the provided entity
-            val descriptionToUpdate = existingDescription.get()
-            descriptionToUpdate.descriptionName = entity.descriptionName
-            descriptionToUpdate.activeStatus = entity.activeStatus
-            descriptionToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
-
-            descriptionRepository.saveAndFlush(descriptionToUpdate)
-        }
-
-    override fun deleteById(id: Long): ServiceResult<Description> =
-        handleServiceOperation("deleteById", id) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
-            if (optionalDescription.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
-            }
-            val description = optionalDescription.get()
-            descriptionRepository.delete(description)
-            description
-        }
-
-    // ===== Paginated ServiceResult Methods =====
-
-    /**
-     * Find all active descriptions with pagination.
-     * Sorted by descriptionName ascending. Preserves transaction count batch loading.
-     */
-    fun findAllActive(pageable: Pageable): ServiceResult<Page<Description>> =
-        handleServiceOperation("findAllActive-paginated", null) {
-            val owner = TenantContext.getCurrentOwner()
-            val page = descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(owner, true, pageable)
-
-            // Batch query to get all counts at once (prevents N+1 query problem)
-            val descriptionNames = page.content.map { it.descriptionName }
-            val countMap =
-                if (descriptionNames.isNotEmpty()) {
-                    transactionRepository
-                        .countByOwnerAndDescriptionNameIn(owner, descriptionNames)
-                        .associate { row -> row[0] as String to row[1] as Long }
+        override fun findById(id: Long): ServiceResult<Description> =
+            handleServiceOperation("findById", id) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
+                if (optionalDescription.isPresent) {
+                    optionalDescription.get()
                 } else {
-                    emptyMap()
+                    throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
+                }
+            }
+
+        override fun save(entity: Description): ServiceResult<Description> =
+            handleServiceOperation("save", entity.descriptionId) {
+                val owner = TenantContext.getCurrentOwner()
+                entity.owner = owner
+
+                val violations = validator.validate(entity)
+                if (violations.isNotEmpty()) {
+                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
                 }
 
-            // Apply counts to descriptions
-            page.content.forEach { description ->
-                description.descriptionCount = countMap[description.descriptionName] ?: 0L
+                // Set timestamps
+                val timestamp = Timestamp(System.currentTimeMillis())
+                entity.dateAdded = timestamp
+                entity.dateUpdated = timestamp
+
+                descriptionRepository.saveAndFlush(entity)
             }
 
-            page
-        }
+        override fun update(entity: Description): ServiceResult<Description> =
+            handleServiceOperation("update", entity.descriptionId) {
+                val owner = TenantContext.getCurrentOwner()
+                val existingDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, entity.descriptionId)
+                if (existingDescription.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("Description not found: ${entity.descriptionId}")
+                }
 
-    // ===== ServiceResult Business Methods for Controller =====
+                // Update fields from the provided entity
+                val descriptionToUpdate = existingDescription.get()
+                descriptionToUpdate.descriptionName = entity.descriptionName
+                descriptionToUpdate.activeStatus = entity.activeStatus
+                descriptionToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
 
-    fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
-        handleServiceOperation("findByDescriptionName", null) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
-            if (optionalDescription.isPresent) {
+                descriptionRepository.saveAndFlush(descriptionToUpdate)
+            }
+
+        override fun deleteById(id: Long): ServiceResult<Description> =
+            handleServiceOperation("deleteById", id) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
+                if (optionalDescription.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
+                }
                 val description = optionalDescription.get()
-                val count = transactionRepository.countByOwnerAndDescriptionName(owner, description.descriptionName)
-                description.descriptionCount = count
+                descriptionRepository.delete(description)
                 description
-            } else {
-                throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
-            }
-        }
-
-    fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
-        handleServiceOperation("deleteByDescriptionName", null) {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
-            if (optionalDescription.isEmpty) {
-                throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
-            }
-            val description = optionalDescription.get()
-            descriptionRepository.delete(description)
-            description
-        }
-
-    // ===== Legacy Method Compatibility =====
-
-    fun fetchAllDescriptions(): List<Description> {
-        val result = findAllActive()
-        return when (result) {
-            is ServiceResult.Success -> result.data
-            else -> emptyList()
-        }
-    }
-
-    fun insertDescription(description: Description): Description =
-        when (val result = save(description)) {
-            is ServiceResult.Success -> {
-                result.data
             }
 
-            is ServiceResult.ValidationError -> {
-                throw ValidationException("Validation failed: ${result.errors}")
+        // ===== Paginated ServiceResult Methods =====
+
+        /**
+         * Find all active descriptions with pagination.
+         * Sorted by descriptionName ascending. Preserves transaction count batch loading.
+         */
+        fun findAllActive(pageable: Pageable): ServiceResult<Page<Description>> =
+            handleServiceOperation("findAllActive-paginated", null) {
+                val owner = TenantContext.getCurrentOwner()
+                val page = descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(owner, true, pageable)
+
+                // Batch query to get all counts at once (prevents N+1 query problem)
+                val descriptionNames = page.content.map { it.descriptionName }
+                val countMap =
+                    if (descriptionNames.isNotEmpty()) {
+                        transactionRepository
+                            .countByOwnerAndDescriptionNameIn(owner, descriptionNames)
+                            .associate { row -> row[0] as String to row[1] as Long }
+                    } else {
+                        emptyMap()
+                    }
+
+                // Apply counts to descriptions
+                page.content.forEach { description ->
+                    description.descriptionCount = countMap[description.descriptionName] ?: 0L
+                }
+
+                page
             }
 
-            is ServiceResult.BusinessError -> {
-                if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
-                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
+        // ===== ServiceResult Business Methods for Controller =====
+
+        fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
+            handleServiceOperation("findByDescriptionName", null) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
+                if (optionalDescription.isPresent) {
+                    val description = optionalDescription.get()
+                    val count = transactionRepository.countByOwnerAndDescriptionName(owner, description.descriptionName)
+                    description.descriptionCount = count
+                    description
                 } else {
-                    throw RuntimeException("Business error: ${result.message}")
+                    throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
                 }
             }
 
-            is ServiceResult.NotFound -> {
-                throw jakarta.persistence.EntityNotFoundException("Description not found")
+        fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
+            handleServiceOperation("deleteByDescriptionName", null) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
+                if (optionalDescription.isEmpty) {
+                    throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
+                }
+                val description = optionalDescription.get()
+                descriptionRepository.delete(description)
+                description
             }
 
-            is ServiceResult.SystemError -> {
-                throw RuntimeException("Failed to insert description", result.exception)
+        // ===== Legacy Method Compatibility =====
+
+        fun fetchAllDescriptions(): List<Description> {
+            val result = findAllActive()
+            return when (result) {
+                is ServiceResult.Success -> result.data
+                else -> emptyList()
             }
         }
 
-    fun findByDescriptionName(descriptionName: String): Optional<Description> {
-        val owner = TenantContext.getCurrentOwner()
-        return descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
-    }
-
-    fun description(descriptionName: String): Optional<Description> = findByDescriptionName(descriptionName)
-
-    fun mergeDescriptions(
-        targetName: String,
-        sourceNames: List<String>,
-    ): Description {
-        val owner = TenantContext.getCurrentOwner()
-        // Normalize target name (trim whitespace and convert to lowercase)
-        val normalizedTargetName = targetName.trim().lowercase()
-
-        // Find target description by normalized name
-        val targetDescription =
-            descriptionRepository.findByOwnerAndDescriptionName(owner, normalizedTargetName).orElseThrow {
-                RuntimeException("Target description $normalizedTargetName not found")
-            }
-
-        logger.info("Merging descriptions: ${sourceNames.joinToString(", ")} into $normalizedTargetName")
-
-        var totalMergedCount = targetDescription.descriptionCount
-
-        // Process each source description, with normalization for self-merge detection
-        sourceNames.forEach { sourceName ->
-            val normalizedSourceName = sourceName.trim().lowercase()
-
-            // Skip self-merge when normalized source equals normalized target
-            if (normalizedSourceName == normalizedTargetName) {
-                logger.info("Skipping self-merge: $sourceName normalizes to same as target $normalizedTargetName")
-                return@forEach
-            }
-
-            val sourceDescription =
-                descriptionRepository.findByOwnerAndDescriptionName(owner, sourceName).orElseThrow {
-                    RuntimeException("Source description $sourceName not found")
+        fun insertDescription(description: Description): Description =
+            when (val result = save(description)) {
+                is ServiceResult.Success -> {
+                    result.data
                 }
 
-            // Reassign transactions from source to target
-            val transactionsToUpdate = transactionRepository.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(owner, sourceName, true)
-            logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $sourceName to $normalizedTargetName")
+                is ServiceResult.ValidationError -> {
+                    throw ValidationException("Validation failed: ${result.errors}")
+                }
 
-            transactionsToUpdate.forEach { transaction ->
-                transaction.description = normalizedTargetName
-                transactionRepository.saveAndFlush(transaction)
+                is ServiceResult.BusinessError -> {
+                    if (result.errorCode == "DATA_INTEGRITY_VIOLATION") {
+                        throw org.springframework.dao.DataIntegrityViolationException(result.message)
+                    } else {
+                        throw RuntimeException("Business error: ${result.message}")
+                    }
+                }
+
+                is ServiceResult.NotFound -> {
+                    throw jakarta.persistence.EntityNotFoundException("Description not found")
+                }
+
+                is ServiceResult.SystemError -> {
+                    throw RuntimeException("Failed to insert description", result.exception)
+                }
             }
 
-            // Merge description counts
-            totalMergedCount += sourceDescription.descriptionCount
-
-            // Mark source description as inactive
-            sourceDescription.activeStatus = false
-            descriptionRepository.saveAndFlush(sourceDescription)
+        fun findByDescriptionName(descriptionName: String): Optional<Description> {
+            val owner = TenantContext.getCurrentOwner()
+            return descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
         }
 
-        // Update target description with merged count
-        targetDescription.descriptionCount = totalMergedCount
+        fun description(descriptionName: String): Optional<Description> = findByDescriptionName(descriptionName)
 
-        // Save the updated target description
-        val mergedDescription = descriptionRepository.saveAndFlush(targetDescription)
-        logger.info("Successfully merged descriptions ${sourceNames.joinToString(", ")} into $normalizedTargetName")
+        fun mergeDescriptions(
+            targetName: String,
+            sourceNames: List<String>,
+        ): Description {
+            val owner = TenantContext.getCurrentOwner()
+            // Normalize target name (trim whitespace and convert to lowercase)
+            val normalizedTargetName = targetName.trim().lowercase()
 
-        return mergedDescription
+            // Find target description by normalized name
+            val targetDescription =
+                descriptionRepository.findByOwnerAndDescriptionName(owner, normalizedTargetName).orElseThrow {
+                    RuntimeException("Target description $normalizedTargetName not found")
+                }
+
+            logger.info("Merging descriptions: ${sourceNames.joinToString(", ")} into $normalizedTargetName")
+
+            var totalMergedCount = targetDescription.descriptionCount
+
+            // Process each source description, with normalization for self-merge detection
+            sourceNames.forEach { sourceName ->
+                val normalizedSourceName = sourceName.trim().lowercase()
+
+                // Skip self-merge when normalized source equals normalized target
+                if (normalizedSourceName == normalizedTargetName) {
+                    logger.info("Skipping self-merge: $sourceName normalizes to same as target $normalizedTargetName")
+                    return@forEach
+                }
+
+                val sourceDescription =
+                    descriptionRepository.findByOwnerAndDescriptionName(owner, sourceName).orElseThrow {
+                        RuntimeException("Source description $sourceName not found")
+                    }
+
+                // Reassign transactions from source to target
+                val transactionsToUpdate = transactionRepository.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(owner, sourceName, true)
+                logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $sourceName to $normalizedTargetName")
+
+                transactionsToUpdate.forEach { transaction ->
+                    transaction.description = normalizedTargetName
+                    transactionRepository.saveAndFlush(transaction)
+                }
+
+                // Merge description counts
+                totalMergedCount += sourceDescription.descriptionCount
+
+                // Mark source description as inactive
+                sourceDescription.activeStatus = false
+                descriptionRepository.saveAndFlush(sourceDescription)
+            }
+
+            // Update target description with merged count
+            targetDescription.descriptionCount = totalMergedCount
+
+            // Save the updated target description
+            val mergedDescription = descriptionRepository.saveAndFlush(targetDescription)
+            logger.info("Successfully merged descriptions ${sourceNames.joinToString(", ")} into $normalizedTargetName")
+
+            return mergedDescription
+        }
     }
-}

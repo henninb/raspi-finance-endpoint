@@ -71,4 +71,20 @@ class RequestLoggingFilterSpec extends Specification {
         then:
         noExceptionThrown()
     }
+
+    def "sensitive path still passes through to filter chain"() {
+        given:
+        def body = '{"username":"user","password":"secret"}'.getBytes("UTF-8")
+        requestMock.getInputStream() >> inputStreamWith(body)
+        requestMock.getRequestURI() >> sensitiveUri
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, responseMock)
+
+        where:
+        sensitiveUri << ["/api/login", "/api/register"]
+    }
 }

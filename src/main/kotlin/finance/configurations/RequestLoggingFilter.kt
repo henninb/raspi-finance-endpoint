@@ -10,6 +10,10 @@ import java.nio.charset.StandardCharsets
 
 @Component
 open class RequestLoggingFilter : OncePerRequestFilter() {
+    companion object {
+        private val SENSITIVE_PATHS = setOf("/api/login", "/api/register")
+    }
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -30,6 +34,10 @@ open class RequestLoggingFilter : OncePerRequestFilter() {
     }
 
     private fun logRequest(request: ContentCachingRequestWrapper) {
+        if (SENSITIVE_PATHS.any { request.requestURI.startsWith(it) }) {
+            logger.info("Request URI: ${request.requestURI} [body suppressed]")
+            return
+        }
         val requestBody = String(request.contentAsByteArray, StandardCharsets.UTF_8)
         if (requestBody.isNotEmpty()) {
             logger.info("Request URI: ${request.requestURI}, Request Body: $requestBody")

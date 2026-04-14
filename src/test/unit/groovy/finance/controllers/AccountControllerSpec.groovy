@@ -24,7 +24,7 @@ class StandardizedAccountControllerSpec extends Specification {
     finance.repositories.TransactionRepository transactionRepository = Mock()
     jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
     finance.services.MeterService meterService = new finance.services.MeterService()
-    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, validator)
+    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, validator, null)
 
     @Subject
     AccountController controller = new AccountController(accountService)
@@ -196,7 +196,7 @@ class StandardizedAccountControllerSpec extends Specification {
         and:
         def violatingValidator = GroovyMock(jakarta.validation.Validator)
         violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        def localService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, violatingValidator)
+        def localService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, violatingValidator, null)
         def localController = new AccountController(localService)
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_bad") >> Optional.empty()
 
