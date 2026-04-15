@@ -190,7 +190,7 @@ class ServiceLayerIntSpec extends Specification {
         )
         unwrapSuccess(transactionService.save(categoryTransaction))
 
-        List<Transaction> categoryTransactions = transactionService.findTransactionsByCategory(savedCategory.categoryName)
+        List<Transaction> categoryTransactions = unwrapSuccess(transactionService.findTransactionsByCategoryStandardized(savedCategory.categoryName)) as List<Transaction>
 
         then:
         categoryTransactions.size() >= 1
@@ -232,7 +232,7 @@ class ServiceLayerIntSpec extends Specification {
         )
         unwrapSuccess(transactionService.save(descriptionTransaction))
 
-        List<Transaction> descriptionTransactions = transactionService.findTransactionsByDescription(savedDescription.descriptionName)
+        List<Transaction> descriptionTransactions = unwrapSuccess(transactionService.findTransactionsByDescriptionStandardized(savedDescription.descriptionName)) as List<Transaction>
 
         then:
         descriptionTransactions.size() >= 1
@@ -246,8 +246,6 @@ class ServiceLayerIntSpec extends Specification {
             paymentId: 0L,
             sourceAccount: "checking_brian",
             destinationAccount: "savings_brian",
-            guidSource: UUID.randomUUID().toString(),
-            guidDestination: UUID.randomUUID().toString(),
             amount: 300.00,
             transactionDate: LocalDate.parse("2023-05-30"),
             activeStatus: true,
@@ -256,23 +254,22 @@ class ServiceLayerIntSpec extends Specification {
         )
 
         when:
-        Payment savedPayment = paymentService.insertPayment(testPayment)
+        Payment savedPayment = unwrapSuccess(paymentService.save(testPayment))
 
         then:
         savedPayment != null
         savedPayment.paymentId != null
         savedPayment.amount == 300.00
-        savedPayment.amount == 300.00
 
         when:
-        List<Payment> allPayments = paymentService.findAllPayments()
+        List<Payment> allPayments = unwrapSuccess(paymentService.findAllActive()) as List<Payment>
         Optional<Payment> foundPayment = paymentService.findByPaymentId(savedPayment.paymentId)
 
         then:
         allPayments.size() >= 1
         allPayments.any { it.paymentId == savedPayment.paymentId }
         foundPayment.isPresent()
-        foundPayment.get().guidSource == testPayment.guidSource
+        foundPayment.get().guidSource == savedPayment.guidSource
     }
 
     void 'test transfer service integration'() {
@@ -406,7 +403,7 @@ class ServiceLayerIntSpec extends Specification {
 
         when:
         unwrapSuccess(transactionService.save(largeTransaction))
-        List<Transaction> accountTransactions = transactionService.findByAccountNameOwnerOrderByTransactionDate("checking_brian")
+        List<Transaction> accountTransactions = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
 
         then:
         accountTransactions.size() >= 1
@@ -417,7 +414,7 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test service layer transaction rollback on failure'() {
         given:
-        List<Transaction> transactionsBefore = transactionService.findByAccountNameOwnerOrderByTransactionDate("checking_brian")
+        List<Transaction> transactionsBefore = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
         int initialCount = transactionsBefore.size()
 
         Transaction validTransaction = new Transaction(
@@ -445,7 +442,7 @@ class ServiceLayerIntSpec extends Specification {
             // Exception caught - transaction should be rolled back
         }
 
-        List<Transaction> transactionsAfter = transactionService.findByAccountNameOwnerOrderByTransactionDate("checking_brian")
+        List<Transaction> transactionsAfter = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
 
         then:
         // Due to @Transactional annotation, the transaction should be rolled back
@@ -481,7 +478,7 @@ class ServiceLayerIntSpec extends Specification {
         }
         long endTime = System.currentTimeMillis()
 
-        List<Transaction> allAccountTransactions = transactionService.findByAccountNameOwnerOrderByTransactionDate("checking_brian")
+        List<Transaction> allAccountTransactions = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
 
         then:
         (endTime - startTime) < 30000  // Should complete within 30 seconds

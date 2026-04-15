@@ -335,20 +335,31 @@ class TransactionController(
     fun selectByAccountNameOwner(
         @PathVariable("accountNameOwner") accountNameOwner: String,
     ): ResponseEntity<List<Transaction>> =
-        try {
-            logger.debug("Retrieving transactions for account: $accountNameOwner")
-            val transactions: List<Transaction> =
-                transactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
-
-            if (transactions.isEmpty()) {
-                logger.info("No transactions found for account: $accountNameOwner")
-            } else {
-                logger.info("Retrieved ${transactions.size} transactions for account: $accountNameOwner")
+        when (val result = transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)) {
+            is ServiceResult.Success -> {
+                val transactions = result.data
+                if (transactions.isEmpty()) {
+                    logger.info("No transactions found for account: $accountNameOwner")
+                } else {
+                    logger.info("Retrieved ${transactions.size} transactions for account: $accountNameOwner")
+                }
+                ResponseEntity.ok(transactions)
             }
-            ResponseEntity.ok(transactions)
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve transactions for account $accountNameOwner: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions: ${ex.message}", ex)
+
+            is ServiceResult.NotFound -> {
+                logger.info("No transactions found for account: $accountNameOwner")
+                ResponseEntity.ok(emptyList())
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions for $accountNameOwner: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions: ${result.exception.message}", result.exception)
+            }
+
+            else -> {
+                logger.error("Unexpected result retrieving transactions for $accountNameOwner: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions")
+            }
         }
 
     /**
@@ -422,24 +433,46 @@ class TransactionController(
     fun updateTransactionState(
         @PathVariable("guid") guid: String,
         @PathVariable("transactionStateValue") transactionStateValue: String,
-    ): ResponseEntity<Transaction> =
-        try {
-            logger.info("Updating transaction state for $guid to $transactionStateValue")
-            val newTransactionStateValue =
-                transactionStateValue
-                    .lowercase()
-                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-            val transactionResponse =
-                transactionService.updateTransactionState(guid, TransactionState.valueOf(newTransactionStateValue))
-            logger.info("Transaction state updated successfully for $guid to $newTransactionStateValue")
-            ResponseEntity.ok(transactionResponse)
-        } catch (ex: IllegalArgumentException) {
-            logger.error("Invalid transaction state value: $transactionStateValue for transaction $guid", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid transaction state: $transactionStateValue", ex)
-        } catch (ex: Exception) {
-            logger.error("Failed to update transaction state for $guid: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state: ${ex.message}", ex)
+    ): ResponseEntity<Transaction> {
+        logger.info("Updating transaction state for $guid to $transactionStateValue")
+        val newTransactionStateValue =
+            transactionStateValue
+                .lowercase()
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        val transactionState =
+            try {
+                TransactionState.valueOf(newTransactionStateValue)
+            } catch (ex: IllegalArgumentException) {
+                logger.error("Invalid transaction state value: $transactionStateValue for transaction $guid", ex)
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid transaction state: $transactionStateValue", ex)
+            }
+        return when (val result = transactionService.updateTransactionStateStandardized(guid, transactionState)) {
+            is ServiceResult.Success -> {
+                logger.info("Transaction state updated successfully for $guid to $newTransactionStateValue")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("Transaction not found for state update: $guid")
+                ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error updating transaction state: ${result.message}")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, result.message)
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error updating transaction state for $guid: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state: ${result.exception.message}", result.exception)
+            }
+
+            else -> {
+                logger.error("Unexpected result updating transaction state for $guid: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state")
+            }
         }
+    }
 
     // Modern business logic endpoint - POST /api/transaction/future
     // curl -k --header "Content-Type: application/json" --request POST --data '{"accountNameOwner":"test_brian", "description":"future transaction", "category":"misc", "amount": 15.00, "reoccurringType":"monthly"}' https://localhost:8443/transaction/future
@@ -450,8 +483,25 @@ class TransactionController(
         @RequestBody transaction: Transaction,
     ): ResponseEntity<Transaction> {
         logger.info("Inserting future transaction for account: ${transaction.accountNameOwner}")
-        val futureTransaction = transactionService.createFutureTransaction(transaction)
-        logger.debug("Created future transaction with date: ${futureTransaction.transactionDate}")
+        val futureTransaction =
+            when (val futureResult = transactionService.createFutureTransactionStandardized(transaction)) {
+                is ServiceResult.Success -> {
+                    logger.debug("Created future transaction with date: ${futureResult.data.transactionDate}")
+                    futureResult.data
+                }
+
+                is ServiceResult.BusinessError -> {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, futureResult.message)
+                }
+
+                is ServiceResult.SystemError -> {
+                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create future transaction: ${futureResult.exception.message}", futureResult.exception)
+                }
+
+                else -> {
+                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error creating future transaction")
+                }
+            }
 
         return when (val result = transactionService.save(futureTransaction)) {
             is ServiceResult.Success -> {
@@ -525,16 +575,30 @@ class TransactionController(
     fun updateTransactionReceiptImageByGuid(
         @PathVariable("guid") guid: String,
         @RequestBody payload: String,
-    ): ResponseEntity<ReceiptImage> =
-        try {
-            logger.info("Updating receipt image for transaction: $guid")
-            val receiptImage = transactionService.updateTransactionReceiptImageByGuid(guid, payload)
-            logger.info("Receipt image updated successfully for transaction: $guid")
-            ResponseEntity.ok(receiptImage)
-        } catch (ex: Exception) {
-            logger.error("Failed to update receipt image for transaction $guid: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${ex.message}", ex)
+    ): ResponseEntity<ReceiptImage> {
+        logger.info("Updating receipt image for transaction: $guid")
+        return when (val result = transactionService.updateTransactionReceiptImageByGuidStandardized(guid, payload)) {
+            is ServiceResult.Success -> {
+                logger.info("Receipt image updated successfully for transaction: $guid")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("Transaction not found for receipt image update: $guid")
+                ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error updating receipt image for $guid: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${result.exception.message}", result.exception)
+            }
+
+            else -> {
+                logger.error("Unexpected result updating receipt image for $guid: $result")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image")
+            }
         }
+    }
 
 //    //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
 //    @GetMapping("/payment/required", produces = ["application/json"])
@@ -554,18 +618,25 @@ class TransactionController(
     fun selectTransactionsByCategory(
         @PathVariable("category_name") categoryName: String,
     ): ResponseEntity<List<Transaction>> =
-        try {
-            logger.debug("Retrieving transactions for category: $categoryName")
-            val transactions = transactionService.findTransactionsByCategory(categoryName)
-            if (transactions.isEmpty()) {
-                logger.info("No transactions found for category: $categoryName")
-            } else {
-                logger.info("Retrieved ${transactions.size} transactions for category: $categoryName")
+        when (val result = transactionService.findTransactionsByCategoryStandardized(categoryName)) {
+            is ServiceResult.Success -> {
+                val transactions = result.data
+                if (transactions.isEmpty()) {
+                    logger.info("No transactions found for category: $categoryName")
+                } else {
+                    logger.info("Retrieved ${transactions.size} transactions for category: $categoryName")
+                }
+                ResponseEntity.ok(transactions)
             }
-            ResponseEntity.ok(transactions)
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve transactions for category $categoryName: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by category: ${ex.message}", ex)
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions for category $categoryName: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by category: ${result.exception.message}", result.exception)
+            }
+
+            else -> {
+                ResponseEntity.ok(emptyList())
+            }
         }
 
     // curl -k https://localhost:8443/transaction/description/amazon
@@ -575,17 +646,24 @@ class TransactionController(
     fun selectTransactionsByDescription(
         @PathVariable("description_name") descriptionName: String,
     ): ResponseEntity<List<Transaction>> =
-        try {
-            logger.debug("Retrieving transactions for description: $descriptionName")
-            val transactions = transactionService.findTransactionsByDescription(descriptionName)
-            if (transactions.isEmpty()) {
-                logger.info("No transactions found for description: $descriptionName")
-            } else {
-                logger.info("Retrieved ${transactions.size} transactions for description: $descriptionName")
+        when (val result = transactionService.findTransactionsByDescriptionStandardized(descriptionName)) {
+            is ServiceResult.Success -> {
+                val transactions = result.data
+                if (transactions.isEmpty()) {
+                    logger.info("No transactions found for description: $descriptionName")
+                } else {
+                    logger.info("Retrieved ${transactions.size} transactions for description: $descriptionName")
+                }
+                ResponseEntity.ok(transactions)
             }
-            ResponseEntity.ok(transactions)
-        } catch (ex: Exception) {
-            logger.error("Failed to retrieve transactions for description $descriptionName: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by description: ${ex.message}", ex)
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions for description $descriptionName: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by description: ${result.exception.message}", result.exception)
+            }
+
+            else -> {
+                ResponseEntity.ok(emptyList())
+            }
         }
 }

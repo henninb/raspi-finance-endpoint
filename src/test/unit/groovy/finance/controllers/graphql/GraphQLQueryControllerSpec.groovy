@@ -249,7 +249,7 @@ class GraphQLQueryControllerSpec extends Specification {
         def result = controller.payments()
 
         then: "service returns all payments"
-        1 * mockPaymentService.findAllPayments() >> payments
+        1 * mockPaymentService.findAllActive() >> new ServiceResult.Success(payments)
 
         and: "payments are returned"
         result == payments

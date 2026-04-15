@@ -91,15 +91,13 @@ class GraphQLMutationControllerSpec extends Specification {
         when: "createPayment is called"
         def result = controller.createPayment(inputDto)
 
-        then: "service inserts the payment"
-        1 * mockPaymentService.insertPayment(_) >> { Payment payment ->
+        then: "service saves the payment"
+        1 * mockPaymentService.save(_) >> { Payment payment ->
             assert payment.sourceAccount == "checking_primary"
             assert payment.destinationAccount == "bills_payable"
             assert payment.amount == new BigDecimal("100.00")
-            assert payment.guidSource != null
-            assert payment.guidDestination != null
             assert payment.activeStatus == true
-            return savedPayment
+            return new ServiceResult.Success(savedPayment)
         }
 
         and: "meter is incremented"
@@ -119,7 +117,7 @@ class GraphQLMutationControllerSpec extends Specification {
         def result = controller.deletePayment(paymentId)
 
         then: "service deletes the payment"
-        1 * mockPaymentService.deleteByPaymentId(123L) >> true
+        1 * mockPaymentService.deleteById(123L) >> new ServiceResult.Success(new Payment(paymentId: 123L))
 
         and: "deletion success is returned"
         result == true
@@ -132,8 +130,8 @@ class GraphQLMutationControllerSpec extends Specification {
         when: "deletePayment is called"
         def result = controller.deletePayment(paymentId)
 
-        then: "service returns false"
-        1 * mockPaymentService.deleteByPaymentId(999L) >> false
+        then: "service returns not found"
+        1 * mockPaymentService.deleteById(999L) >> new ServiceResult.NotFound("Payment not found: 999")
 
         and: "deletion failure is returned"
         result == false
