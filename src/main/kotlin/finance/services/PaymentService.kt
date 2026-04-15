@@ -75,8 +75,14 @@ class PaymentService
                     processPaymentAccount(entity.sourceAccount)
 
                     // Retrieve account types for behavior inference
-                    val sourceAccount = accountService.account(entity.sourceAccount).get()
-                    val destinationAccount = accountService.account(entity.destinationAccount).get()
+                    val sourceAccount =
+                        accountService
+                            .account(entity.sourceAccount)
+                            .orElseThrow { jakarta.persistence.EntityNotFoundException("Source account not found after creation: ${entity.sourceAccount}") }
+                    val destinationAccount =
+                        accountService
+                            .account(entity.destinationAccount)
+                            .orElseThrow { jakarta.persistence.EntityNotFoundException("Destination account not found after creation: ${entity.destinationAccount}") }
 
                     // Infer payment behavior from account types
                     val behavior =
@@ -110,8 +116,12 @@ class PaymentService
                             throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
                         }
 
-                        else -> {
-                            throw RuntimeException("Failed to create destination transaction: $destinationResult")
+                        is ServiceResult.NotFound -> {
+                            throw RuntimeException("Unexpected not-found saving destination transaction: ${destinationResult.message}")
+                        }
+
+                        is ServiceResult.SystemError -> {
+                            throw destinationResult.exception
                         }
                     }
 
@@ -139,8 +149,12 @@ class PaymentService
                             throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
                         }
 
-                        else -> {
-                            throw RuntimeException("Failed to create source transaction: $sourceResult")
+                        is ServiceResult.NotFound -> {
+                            throw RuntimeException("Unexpected not-found saving source transaction: ${sourceResult.message}")
+                        }
+
+                        is ServiceResult.SystemError -> {
+                            throw sourceResult.exception
                         }
                     }
                 }
@@ -296,7 +310,9 @@ class PaymentService
             return when (result) {
                 is ServiceResult.Success -> result.data
                 is ServiceResult.NotFound -> throw RuntimeException("Payment not updated as the payment does not exist: $paymentId.")
-                else -> throw RuntimeException("Failed to update payment: $result")
+                is ServiceResult.ValidationError -> throw RuntimeException("Validation error updating payment $paymentId: ${result.errors}")
+                is ServiceResult.BusinessError -> throw RuntimeException("Business error updating payment $paymentId: ${result.message}")
+                is ServiceResult.SystemError -> throw result.exception
             }
         }
 
@@ -363,7 +379,7 @@ class PaymentService
 
         // ===== Transaction Population Methods =====
 
-        fun populateSourceTransaction(
+        private fun populateSourceTransaction(
             transactionSource: finance.domain.Transaction,
             payment: Payment,
             sourceAccountNameOwner: String,
@@ -385,22 +401,7 @@ class PaymentService
             transactionSource.dateAdded = timestamp
         }
 
-        @Deprecated("Use populateSourceTransaction with behavior parameter")
-        fun populateDebitTransaction(
-            transactionDebit: finance.domain.Transaction,
-            payment: Payment,
-            paymentAccountNameOwner: String,
-        ) {
-            populateSourceTransaction(
-                transactionDebit,
-                payment,
-                paymentAccountNameOwner,
-                AccountType.Debit,
-                PaymentBehavior.BILL_PAYMENT,
-            )
-        }
-
-        fun populateDestinationTransaction(
+        private fun populateDestinationTransaction(
             transactionDestination: finance.domain.Transaction,
             payment: Payment,
             sourceAccountNameOwner: String,
@@ -420,20 +421,5 @@ class PaymentService
             val timestamp = Timestamp(System.currentTimeMillis())
             transactionDestination.dateUpdated = timestamp
             transactionDestination.dateAdded = timestamp
-        }
-
-        @Deprecated("Use populateDestinationTransaction with behavior parameter")
-        fun populateCreditTransaction(
-            transactionCredit: finance.domain.Transaction,
-            payment: Payment,
-            paymentAccountNameOwner: String,
-        ) {
-            populateDestinationTransaction(
-                transactionCredit,
-                payment,
-                paymentAccountNameOwner,
-                AccountType.Credit,
-                PaymentBehavior.BILL_PAYMENT,
-            )
         }
     }

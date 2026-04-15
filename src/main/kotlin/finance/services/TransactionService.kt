@@ -410,6 +410,13 @@ class TransactionService
             }
         }
 
+        @org.springframework.transaction.annotation.Transactional
+        fun createAndSaveFutureTransaction(transaction: Transaction): ServiceResult<Transaction> {
+            val futureResult = createFutureTransactionStandardized(transaction)
+            if (futureResult !is ServiceResult.Success) return futureResult
+            return save(futureResult.data)
+        }
+
         fun createFutureTransactionStandardized(transaction: Transaction): ServiceResult<Transaction> =
             handleServiceOperation("createFutureTransaction", transaction.guid) {
                 val owner = TenantContext.getCurrentOwner()
@@ -452,7 +459,7 @@ class TransactionService
 
         fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals = calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
 
-        fun masterTransactionUpdater(
+        private fun masterTransactionUpdater(
             transactionFromDatabase: Transaction,
             transaction: Transaction,
         ): Transaction {
@@ -487,7 +494,7 @@ class TransactionService
 
         // ===== Preserved Business Logic Methods =====
 
-        fun processAccount(transaction: Transaction) {
+        private fun processAccount(transaction: Transaction) {
             logger.debug("Processing account for transaction: ${transaction.guid}, accountNameOwner: ${transaction.accountNameOwner}")
             var accountOptional = accountService.account(transaction.accountNameOwner)
             if (accountOptional.isPresent) {
@@ -513,7 +520,7 @@ class TransactionService
             }
         }
 
-        fun processCategory(transaction: Transaction) {
+        private fun processCategory(transaction: Transaction) {
             if (transaction.category.isNotEmpty()) {
                 when (val result = categoryService.findByCategoryNameStandardized(transaction.category)) {
                     is ServiceResult.Success -> {
@@ -539,7 +546,7 @@ class TransactionService
             }
         }
 
-        fun processDescription(transaction: Transaction) {
+        private fun processDescription(transaction: Transaction) {
             if (transaction.description.isNotEmpty()) {
                 when (val findResult = descriptionService.findByDescriptionNameStandardized(transaction.description)) {
                     is ServiceResult.Success -> {
@@ -560,13 +567,13 @@ class TransactionService
             }
         }
 
-        fun createDefaultCategory(categoryName: String): Category {
+        private fun createDefaultCategory(categoryName: String): Category {
             val category = Category()
             category.categoryName = categoryName
             return category
         }
 
-        fun createDefaultDescription(descriptionName: String): Description {
+        private fun createDefaultDescription(descriptionName: String): Description {
             val description = Description()
             description.descriptionName = descriptionName
             return description

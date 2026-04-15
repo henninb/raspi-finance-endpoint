@@ -5,4 +5,4 @@ package finance.domain
  */
 class TransactionValidationException(
     message: String,
-) : RuntimeException(message)
+) : DomainException(message)

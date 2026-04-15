@@ -5,4 +5,4 @@ package finance.domain
  */
 class ReceiptImageException(
     message: String,
-) : RuntimeException(message)
+) : DomainException(message)

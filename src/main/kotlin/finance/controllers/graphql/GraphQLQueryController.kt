@@ -46,7 +46,7 @@ class GraphQLQueryController(
     private val validationAmountService: ValidationAmountService,
 ) {
     companion object {
-        val logger: Logger = LogManager.getLogger()
+        private val logger: Logger = LogManager.getLogger()
     }
 
     @QueryMapping(name = "accounts")
@@ -66,7 +66,10 @@ class GraphQLQueryController(
         @Argument accountNameOwner: String,
     ): Account? {
         logger.info("GraphQL - Fetching account: $accountNameOwner")
-        return accountService.account(accountNameOwner).orElse(null)
+        return when (val result = accountService.findById(accountNameOwner)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping
@@ -123,13 +126,19 @@ class GraphQLQueryController(
         @Argument paymentId: Long,
     ): Payment? {
         logger.info("GraphQL - Fetching payment: $paymentId")
-        return paymentService.findByPaymentId(paymentId).orElse(null)
+        return when (val result = paymentService.findById(paymentId)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping
     fun transfers(): List<Transfer> {
         logger.info("GraphQL - Fetching all transfers")
-        return transferService.findAllTransfers()
+        return when (val result = transferService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
@@ -203,17 +212,23 @@ class GraphQLQueryController(
     }
 
     @QueryMapping
-    fun receiptImages(): List<Any> {
-        logger.info("GraphQL - Fetching all receipt images (stub)")
-        return emptyList()
+    fun receiptImages(): List<ReceiptImage> {
+        logger.info("GraphQL - Fetching all receipt images")
+        return when (val result = receiptImageService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping
     fun receiptImage(
         @Argument receiptImageId: Long,
-    ): Any? {
-        logger.info("GraphQL - Fetching receipt image: $receiptImageId (stub)")
-        return null
+    ): ReceiptImage? {
+        logger.info("GraphQL - Fetching receipt image: $receiptImageId")
+        return when (val result = receiptImageService.findById(receiptImageId)) {
+            is ServiceResult.Success -> result.data
+            else -> null
+        }
     }
 
     @QueryMapping

@@ -44,25 +44,43 @@ class TransactionController(
 
     /**
      * Standardized collection retrieval - GET /api/transaction/active
-     * Returns empty list (standardized behavior) - use business endpoints for meaningful queries
-     * Note: Transactions are typically queried by account, category, or other criteria
+     * Returns all active transactions for the authenticated owner.
      */
-    @Operation(summary = "Get all active transactions (empty by design)")
+    @Operation(summary = "Get all active transactions")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Empty list returned by design"),
+            ApiResponse(responseCode = "200", description = "Active transactions retrieved"),
+            ApiResponse(responseCode = "404", description = "No transactions found"),
             ApiResponse(responseCode = "500", description = "Internal server error"),
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
     override fun findAllActive(): ResponseEntity<List<Transaction>> =
-        handleCrudOperation("Find all active transactions", null) {
-            logger.debug("Retrieving all active transactions (standardized endpoint)")
-            // For standardization compliance, return empty list
-            // Business logic endpoints like /account/select/{account} should be used for actual queries
-            val transactions: List<Transaction> = emptyList()
-            logger.info("Standardized endpoint - returning empty list. Use business endpoints for data.")
-            transactions
+        when (val result = transactionService.findAllActive()) {
+            is ServiceResult.Success -> {
+                logger.info("Retrieved ${result.data.size} active transactions")
+                ResponseEntity.ok(result.data)
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("No active transactions found")
+                ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving active transactions: ${result.errors}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving active transactions: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving active transactions: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
         }
 
     /**
@@ -92,13 +110,18 @@ class TransactionController(
                 ResponseEntity.ok(Page.empty(pageable))
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transactions: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transactions: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transactions: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -132,13 +155,18 @@ class TransactionController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transaction $id: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transaction $id: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transaction $id: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -166,6 +194,11 @@ class TransactionController(
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.error("Unexpected not-found creating transaction: ${entity.guid}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
+            }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating transaction: ${result.errors}")
                 ResponseEntity.badRequest().build<Transaction>()
@@ -179,11 +212,6 @@ class TransactionController(
             is ServiceResult.SystemError -> {
                 logger.error("System error creating transaction: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -208,8 +236,6 @@ class TransactionController(
     ): ResponseEntity<Transaction> {
         // Ensure the guid matches the path parameter
         val updatedTransaction = entity.copy(guid = id)
-
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = transactionService.update(updatedTransaction)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction updated successfully: $id")
@@ -235,11 +261,6 @@ class TransactionController(
                 logger.error("System error updating transaction $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Transaction>()
-            }
         }
     }
 
@@ -258,9 +279,8 @@ class TransactionController(
     @DeleteMapping("/{guid}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("guid") id: String,
-    ): ResponseEntity<Transaction> {
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive: handle null or unexpected ServiceResult types
-        return when (val deleteResult = transactionService.deleteById(id)) {
+    ): ResponseEntity<Transaction> =
+        when (val deleteResult = transactionService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction deleted successfully: $id")
                 ResponseEntity.ok(deleteResult.data)
@@ -285,13 +305,7 @@ class TransactionController(
                 logger.error("System error deleting transaction $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
-
-            else -> {
-                logger.error("Unexpected result type for transaction delete $id: $deleteResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
         }
-    }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 
@@ -319,9 +333,10 @@ class TransactionController(
             )
         return when (val result = transactionService.findTransactionsByDateRangeStandardized(start, end, pageable)) {
             is ServiceResult.Success -> ResponseEntity.ok(result.data)
+            is ServiceResult.NotFound -> ResponseEntity.ok(Page.empty(pageable))
+            is ServiceResult.ValidationError -> ResponseEntity.badRequest().build()
             is ServiceResult.BusinessError -> ResponseEntity.badRequest().build()
             is ServiceResult.SystemError -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            else -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
 
@@ -351,14 +366,19 @@ class TransactionController(
                 ResponseEntity.ok(emptyList())
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transactions for $accountNameOwner: ${result.errors}")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions")
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transactions for $accountNameOwner: ${result.message}")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions")
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transactions for $accountNameOwner: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions: ${result.exception.message}", result.exception)
-            }
-
-            else -> {
-                logger.error("Unexpected result retrieving transactions for $accountNameOwner: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions")
             }
         }
 
@@ -391,13 +411,18 @@ class TransactionController(
                 ResponseEntity.ok(Page.empty(pageable))
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transactions for $accountNameOwner: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transactions for $accountNameOwner: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transactions for $accountNameOwner: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transactions for $accountNameOwner: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -457,6 +482,11 @@ class TransactionController(
                 ResponseEntity.notFound().build()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error updating transaction state: ${result.errors}")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
+            }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error updating transaction state: ${result.message}")
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, result.message)
@@ -465,11 +495,6 @@ class TransactionController(
             is ServiceResult.SystemError -> {
                 logger.error("System error updating transaction state for $guid: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state: ${result.exception.message}", result.exception)
-            }
-
-            else -> {
-                logger.error("Unexpected result updating transaction state for $guid: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state")
             }
         }
     }
@@ -483,50 +508,30 @@ class TransactionController(
         @RequestBody transaction: Transaction,
     ): ResponseEntity<Transaction> {
         logger.info("Inserting future transaction for account: ${transaction.accountNameOwner}")
-        val futureTransaction =
-            when (val futureResult = transactionService.createFutureTransactionStandardized(transaction)) {
-                is ServiceResult.Success -> {
-                    logger.debug("Created future transaction with date: ${futureResult.data.transactionDate}")
-                    futureResult.data
-                }
-
-                is ServiceResult.BusinessError -> {
-                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, futureResult.message)
-                }
-
-                is ServiceResult.SystemError -> {
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create future transaction: ${futureResult.exception.message}", futureResult.exception)
-                }
-
-                else -> {
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error creating future transaction")
-                }
-            }
-
-        return when (val result = transactionService.save(futureTransaction)) {
+        return when (val result = transactionService.createAndSaveFutureTransaction(transaction)) {
             is ServiceResult.Success -> {
                 logger.info("Future transaction inserted successfully: ${result.data.guid}")
                 ResponseEntity(result.data, HttpStatus.CREATED)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.error("Unexpected not-found creating future transaction: ${result.message}")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error creating future transaction")
+            }
+
             is ServiceResult.ValidationError -> {
-                logger.error("Validation error inserting future transaction: ${result.errors}")
+                logger.error("Validation error creating future transaction: ${result.errors}")
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
             }
 
             is ServiceResult.BusinessError -> {
-                logger.error("Failed to insert future transaction due to data integrity violation: ${result.message}")
+                logger.error("Business error creating future transaction: ${result.message}")
                 throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate future transaction found.")
             }
 
             is ServiceResult.SystemError -> {
-                logger.error("Unexpected error inserting future transaction: ${result.exception.message}", result.exception)
+                logger.error("Unexpected error creating future transaction: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${result.exception.message}", result.exception)
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred")
             }
         }
     }
@@ -539,8 +544,6 @@ class TransactionController(
         @Valid @RequestBody payload: TransactionAccountChangeInputDto,
     ): ResponseEntity<Transaction> {
         logger.info("Changing transaction account for guid ${payload.guid} to accountNameOwner ${payload.accountNameOwner}")
-
-        @Suppress("REDUNDANT_ELSE_IN_WHEN")
         return when (val result = transactionService.changeAccountNameOwnerStandardized(payload.accountNameOwner, payload.guid)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction account updated successfully for guid ${payload.guid}")
@@ -552,6 +555,11 @@ class TransactionController(
                 ResponseEntity.notFound().build()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error changing transaction account: ${result.errors}")
+                ResponseEntity.badRequest().build()
+            }
+
             is ServiceResult.BusinessError -> {
                 logger.warn("Business error changing transaction account: ${result.message}")
                 ResponseEntity.status(HttpStatus.CONFLICT).build()
@@ -559,10 +567,6 @@ class TransactionController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error changing transaction account: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -588,28 +592,22 @@ class TransactionController(
                 ResponseEntity.notFound().build()
             }
 
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error updating receipt image for $guid: ${result.errors}")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image")
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.error("Business error updating receipt image for $guid: ${result.message}")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${result.message}")
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error updating receipt image for $guid: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${result.exception.message}", result.exception)
             }
-
-            else -> {
-                logger.error("Unexpected result updating receipt image for $guid: $result")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image")
-            }
         }
     }
-
-//    //curl --header "Content-Type: application/json" https://hornsup:8443/transaction/payment/required
-//    @GetMapping("/payment/required", produces = ["application/json"])
-//    fun selectPaymentRequired(): ResponseEntity<List<Account>> {
-//
-//        val accountNameOwners = transactionService.findAccountsThatRequirePayment()
-//        if (accountNameOwners.isEmpty()) {
-//            logger.error("no accountNameOwners found.")
-//        }
-//        return ResponseEntity.ok(accountNameOwners)
-//    }
 
     // curl -k https://localhost:8443/transaction/category/ach
     @Operation(summary = "List transactions by category name")
@@ -629,13 +627,24 @@ class TransactionController(
                 ResponseEntity.ok(transactions)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.info("No transactions found for category: $categoryName")
+                ResponseEntity.ok(emptyList())
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error retrieving transactions for category $categoryName: ${result.errors}")
+                ResponseEntity.ok(emptyList())
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error retrieving transactions for category $categoryName: ${result.message}")
+                ResponseEntity.ok(emptyList())
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transactions for category $categoryName: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by category: ${result.exception.message}", result.exception)
-            }
-
-            else -> {
-                ResponseEntity.ok(emptyList())
             }
         }
 
@@ -657,13 +666,24 @@ class TransactionController(
                 ResponseEntity.ok(transactions)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.info("No transactions found for description: $descriptionName")
+                ResponseEntity.ok(emptyList())
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.warn("Validation error retrieving transactions for description $descriptionName: ${result.errors}")
+                ResponseEntity.ok(emptyList())
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.warn("Business error retrieving transactions for description $descriptionName: ${result.message}")
+                ResponseEntity.ok(emptyList())
+            }
+
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transactions for description $descriptionName: ${result.exception.message}", result.exception)
                 throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by description: ${result.exception.message}", result.exception)
-            }
-
-            else -> {
-                ResponseEntity.ok(emptyList())
             }
         }
 }

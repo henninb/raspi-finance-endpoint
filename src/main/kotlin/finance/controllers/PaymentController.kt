@@ -57,13 +57,18 @@ class PaymentController(
                 ResponseEntity.ok(emptyList())
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving active payments: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving active payments: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving active payments: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving active payments: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -95,13 +100,18 @@ class PaymentController(
                 ResponseEntity.ok(Page.empty(pageable))
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving payments: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving payments: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving payments: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving payments: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -134,13 +144,18 @@ class PaymentController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving payment $id: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving payment $id: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving payment $id: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving payment $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -168,6 +183,11 @@ class PaymentController(
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.warn("Not found during payment save: ${entity.sourceAccount} -> ${entity.destinationAccount}")
+                ResponseEntity.notFound().build<Payment>()
+            }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating payment: ${result.errors}")
                 ResponseEntity.badRequest().build<Payment>()
@@ -180,11 +200,6 @@ class PaymentController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error creating payment: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
         }
@@ -213,7 +228,6 @@ class PaymentController(
         // Ensure the entity has the correct ID from the path
         entity.paymentId = id
 
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = paymentService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Payment updated successfully: $id (standardized)")
@@ -239,11 +253,6 @@ class PaymentController(
                 logger.error("System error updating payment $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
-
-            else -> {
-                logger.error("Unexpected result type for payment update $id: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
-            }
         }
     }
 
@@ -262,9 +271,8 @@ class PaymentController(
     @DeleteMapping("/{paymentId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("paymentId") id: Long,
-    ): ResponseEntity<Payment> {
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive: handle null or unexpected ServiceResult types
-        return when (val result = paymentService.deleteById(id)) {
+    ): ResponseEntity<Payment> =
+        when (val result = paymentService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Payment deleted successfully: $id")
                 ResponseEntity.ok(result.data)
@@ -289,11 +297,5 @@ class PaymentController(
                 logger.error("System error deleting payment: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
             }
-
-            else -> {
-                logger.error("Unexpected result type for payment delete $id: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
-            }
         }
-    }
 }

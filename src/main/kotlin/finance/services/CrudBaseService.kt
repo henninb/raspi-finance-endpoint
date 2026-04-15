@@ -1,6 +1,7 @@
 package finance.services
 
 import finance.configurations.ResilienceComponents
+import finance.domain.DomainException
 import finance.domain.ServiceResult
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ConstraintViolationException
@@ -65,6 +66,11 @@ abstract class CrudBaseService<T, ID>
                 logger.error(message, ex)
                 meterService.incrementExceptionThrownCounter("BusinessLogicError")
                 ServiceResult.BusinessError.of(message, "BUSINESS_LOGIC_ERROR")
+            } catch (ex: DomainException) {
+                val message = "Business rule violated in $operation for ${getEntityName()}: ${ex.message}"
+                logger.warn(message)
+                meterService.incrementExceptionThrownCounter("DomainRuleViolation")
+                ServiceResult.BusinessError.of(message, "DOMAIN_RULE_VIOLATION")
             } catch (ex: RuntimeException) {
                 // Handle system-level exceptions (database failures, etc.)
                 val message = "System error in $operation for ${getEntityName()}: ${ex.message}"

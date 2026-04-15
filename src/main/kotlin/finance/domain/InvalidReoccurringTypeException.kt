@@ -5,4 +5,4 @@ package finance.domain
  */
 class InvalidReoccurringTypeException(
     message: String,
-) : RuntimeException(message)
+) : DomainException(message)

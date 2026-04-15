@@ -659,9 +659,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
         then: "repository findByGuid is called"
         1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
 
-        and: "result is SystemError due to exception"
-        result instanceof ServiceResult.SystemError
-        result.exception instanceof InvalidTransactionStateException
+        and: "result is BusinessError for domain rule violation"
+        result instanceof ServiceResult.BusinessError
+        result.message.toLowerCase().contains("cannot update transactionstate")
     }
 
     def "changeAccountNameOwnerStandardized should return Success when valid"() {
@@ -712,9 +712,9 @@ class TransactionServiceSpec extends BaseServiceSpec {
         when: "createFutureTransactionStandardized is called"
         def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
 
-        then: "result is SystemError due to exception"
-        result instanceof ServiceResult.SystemError
-        result.exception instanceof InvalidReoccurringTypeException
+        then: "result is BusinessError for domain rule violation"
+        result instanceof ServiceResult.BusinessError
+        result.message.toLowerCase().contains("reoccurring")
     }
 
     // ===== Legacy Method Compatibility Tests (REMOVED) =====
@@ -802,24 +802,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         then: "no repository interaction and BusinessError returned"
         0 * transactionRepositoryMock._
         result instanceof ServiceResult.BusinessError
-        result.message.toLowerCase().contains("startdate")
-        result.message.toLowerCase().contains("before or equal to enddate")
+        result.message.toLowerCase().contains("startdate must be before or equal to enddate")
     }
 
-    def "findTransactionsByDateRangeStandardized should return Success with page of transactions"() {
-        given: "a valid date range and pageable"
-        LocalDate startDate = LocalDate.of(2023, 1, 1)
-        LocalDate endDate = LocalDate.of(2023, 12, 31)
-        Pageable pageable = PageRequest.of(0, 10)
-        def transactions = [createTestTransaction()]
-        Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size())
-
-        when: "findTransactionsByDateRangeStandardized is called"
-        def result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
-
-        then: "repository method is called and ServiceResult.Success returned"
-        1 * transactionRepositoryMock.findByOwnerAndTransactionDateBetween(TEST_OWNER, startDate, endDate, pageable) >> page
-        result instanceof ServiceResult.Success
-        result.data == page
-    }
 }

@@ -144,36 +144,4 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
-    // ===== DEFENSIVE PROGRAMMING TESTS =====
-    // These tests verify that our defensive else clauses handle unexpected service responses
-
-    def "save handles null service response gracefully"() {
-        given:
-        FamilyMember input = fm(familyMemberId: 0L, memberName: "test")
-        and:
-        FamilyMemberService mockService = Mock()
-        mockService.save(_ as FamilyMember) >> null
-        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
-
-        when:
-        ResponseEntity<?> response = controllerWithMockedService.save(input)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
-    def "findAllActive handles null service response gracefully"() {
-        given:
-        FamilyMemberService mockService = Mock()
-        mockService.findAllActive() >> null
-        FamilyMemberController controllerWithMockedService = new FamilyMemberController(mockService)
-
-        when:
-        ResponseEntity<List<FamilyMember>> response = controllerWithMockedService.findAllActive()
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
 }
