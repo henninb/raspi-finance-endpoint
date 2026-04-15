@@ -1,5 +1,6 @@
 package finance.controllers.graphql
 
+import finance.controllers.dto.ParameterInputDto
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransferInputDto
 import finance.domain.Category
@@ -214,17 +215,20 @@ class GraphQLMutationControllerSpec extends Specification {
     }
 
     def "createParameter should create parameter successfully"() {
-        given: "a valid parameter"
-        def parameter = new Parameter(0L, "", "test_param", "test_value", true)
+        given: "a valid parameter DTO"
+        def parameterDto = new ParameterInputDto(null, "test_param", "test_value", true)
 
-        and: "a saved parameter"
+        and: "the expected domain object the controller will construct (parameterId=0 since null DTO id)"
+        def expectedDomain = new Parameter(0L, "", "test_param", "test_value", true)
+
+        and: "a saved parameter returned from the service"
         def savedParameter = new Parameter(123L, "", "test_param", "test_value", true)
 
         when: "createParameter is called"
-        def result = controller.createParameter(parameter)
+        def result = controller.createParameter(parameterDto)
 
-        then: "service returns success result"
-        1 * mockParameterService.save(parameter) >> ServiceResult.Success.of(savedParameter)
+        then: "service saves the exact mapped domain object"
+        1 * mockParameterService.save(expectedDomain) >> ServiceResult.Success.of(savedParameter)
 
         and: "meter registry is called"
         1 * mockMeterRegistry.counter("graphql.parameter.create.success") >> mockCounter
@@ -236,47 +240,56 @@ class GraphQLMutationControllerSpec extends Specification {
     }
 
     def "createParameter should handle validation errors"() {
-        given: "an invalid parameter"
-        def parameter = new Parameter(0L, "", "", "test_value", true)
+        given: "a parameter DTO"
+        def parameterDto = new ParameterInputDto(null, "test_param", "test_value", true)
+
+        and: "the expected domain object the controller will construct"
+        def expectedDomain = new Parameter(0L, "", "test_param", "test_value", true)
 
         when: "createParameter is called"
-        controller.createParameter(parameter)
+        controller.createParameter(parameterDto)
 
-        then: "service returns validation error"
-        1 * mockParameterService.save(parameter) >> ServiceResult.ValidationError.of(["parameterName": "must not be blank"])
+        then: "service returns validation error for that domain object"
+        1 * mockParameterService.save(expectedDomain) >> ServiceResult.ValidationError.of(["parameterName": "must not be blank"])
 
         and: "exception is thrown"
         thrown(IllegalArgumentException)
     }
 
     def "updateParameter should update parameter successfully"() {
-        given: "an existing parameter"
-        def parameter = new Parameter(123L, "", "test_param", "updated_value", true)
+        given: "an existing parameter DTO"
+        def parameterDto = new ParameterInputDto(123L, "test_param", "updated_value", true)
+
+        and: "the expected domain object the controller will construct"
+        def expectedDomain = new Parameter(123L, "", "test_param", "updated_value", true)
 
         when: "updateParameter is called"
-        def result = controller.updateParameter(parameter)
+        def result = controller.updateParameter(parameterDto)
 
-        then: "service returns success result"
-        1 * mockParameterService.update(parameter) >> ServiceResult.Success.of(parameter)
+        then: "service updates the exact mapped domain object"
+        1 * mockParameterService.update(expectedDomain) >> ServiceResult.Success.of(expectedDomain)
 
         and: "meter registry is called"
         1 * mockMeterRegistry.counter("graphql.parameter.update.success") >> mockCounter
         1 * mockCounter.increment()
 
         and: "updated parameter is returned"
-        result == parameter
+        result == expectedDomain
         result.parameterValue == "updated_value"
     }
 
     def "updateParameter should handle not found errors"() {
-        given: "a non-existent parameter"
-        def parameter = new Parameter(999L, "", "test_param", "test_value", true)
+        given: "a non-existent parameter DTO"
+        def parameterDto = new ParameterInputDto(999L, "test_param", "test_value", true)
+
+        and: "the expected domain object the controller will construct"
+        def expectedDomain = new Parameter(999L, "", "test_param", "test_value", true)
 
         when: "updateParameter is called"
-        controller.updateParameter(parameter)
+        controller.updateParameter(parameterDto)
 
-        then: "service returns not found"
-        1 * mockParameterService.update(parameter) >> ServiceResult.NotFound.of("Parameter not found")
+        then: "service returns not found for that domain object"
+        1 * mockParameterService.update(expectedDomain) >> ServiceResult.NotFound.of("Parameter not found")
 
         and: "exception is thrown"
         thrown(IllegalArgumentException)

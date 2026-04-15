@@ -54,13 +54,18 @@ class ReceiptImageController(
                 ResponseEntity.ok(emptyList())
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving active receipt images: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving active receipt images: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving active receipt images: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving active receipt images: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -92,13 +97,18 @@ class ReceiptImageController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving receipt image $id: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving receipt image $id: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving receipt image $id: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving receipt image $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -126,6 +136,11 @@ class ReceiptImageController(
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.warn("Not found during receipt image save: ${entity.receiptImageId}")
+                ResponseEntity.notFound().build()
+            }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating receipt image: ${result.errors}")
                 ResponseEntity.badRequest().build()
@@ -138,11 +153,6 @@ class ReceiptImageController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error creating receipt image: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -165,9 +175,8 @@ class ReceiptImageController(
     override fun update(
         @PathVariable("receiptImageId") id: Long,
         @Valid @RequestBody entity: ReceiptImage,
-    ): ResponseEntity<ReceiptImage> {
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
-        return when (val result = receiptImageService.update(entity)) {
+    ): ResponseEntity<ReceiptImage> =
+        when (val result = receiptImageService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Receipt image updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)
@@ -192,13 +201,7 @@ class ReceiptImageController(
                 logger.error("System error updating receipt image: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
         }
-    }
 
     /**
      * Standardized entity deletion - DELETE /api/receipt/image/{receiptImageId}

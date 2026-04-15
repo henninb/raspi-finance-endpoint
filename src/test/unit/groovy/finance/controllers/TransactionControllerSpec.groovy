@@ -21,14 +21,42 @@ class TransactionControllerSpec extends Specification {
 
     // ===== STANDARDIZED ENDPOINTS TESTS =====
 
-    def "findAllActive returns empty list for standardization compliance"() {
+    def "findAllActive returns list of transactions and 200"() {
+        given:
+        def transactions = [createValidTransaction("guid-1", "checking_brian"), createValidTransaction("guid-2", "checking_brian")]
+        and:
+        standardizedTransactionService.findAllActive() >> ServiceResult.Success.of(transactions)
+
         when:
         ResponseEntity<List<Transaction>> response = controller.findAllActive()
 
         then:
         response.statusCode == HttpStatus.OK
-        response.body.isEmpty()
-        0 * standardizedTransactionService._ // No service calls should be made
+        response.body.size() == 2
+    }
+
+    def "findAllActive returns 404 when no active transactions found"() {
+        given:
+        standardizedTransactionService.findAllActive() >> ServiceResult.NotFound.of("No transactions found")
+
+        when:
+        ResponseEntity<List<Transaction>> response = controller.findAllActive()
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body == null
+    }
+
+    def "findAllActive returns 500 on system error"() {
+        given:
+        standardizedTransactionService.findAllActive() >> ServiceResult.SystemError.of(new RuntimeException("db down"))
+
+        when:
+        ResponseEntity<List<Transaction>> response = controller.findAllActive()
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
     }
 
     def "findById returns transaction when found"() {
@@ -232,22 +260,6 @@ class TransactionControllerSpec extends Specification {
         response.body == null
     }
 
-    def "update handles unexpected result type with 500"() {
-        given:
-        Transaction input = createValidTransaction("unexpected-update", "test_account")
-        and:
-        // Mock a service result that doesn't match any known ServiceResult types
-        // This will trigger the else branch in the controller's when expression
-        standardizedTransactionService.update(_ as Transaction) >> null
-
-        when:
-        ResponseEntity<Transaction> response = controller.update("unexpected-update", input)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
     def "deleteById returns deleted transaction with 200"() {
         given:
         String guid = "delete-guid-101"
@@ -310,17 +322,20 @@ class TransactionControllerSpec extends Specification {
         response.body == null
     }
 
-    def "deleteById handles unexpected result type with 500"() {
+    def "deleteById returns 409 when transaction is referenced by a payment"() {
         given:
-        String guid = "delete-unexpected"
+        String guid = "delete-payment-ref"
         and:
-        standardizedTransactionService.deleteById(guid) >> null
+        standardizedTransactionService.deleteById(guid) >> ServiceResult.BusinessError.of(
+            "Cannot delete transaction $guid because it is referenced by 1 payment. Please delete the related payments first.",
+            "DATA_INTEGRITY_VIOLATION"
+        )
 
         when:
         ResponseEntity<Transaction> response = controller.deleteById(guid)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
         response.body == null
     }
 
@@ -477,13 +492,10 @@ class TransactionControllerSpec extends Specification {
     def "insertFutureTransaction creates future transaction with 201"() {
         given:
         Transaction input = createValidTransaction("future-insert", "future_account")
-        Transaction futureTransaction = createValidTransaction("future-insert", "future_account")
-        futureTransaction.transactionDate = LocalDate.of(2024, 12, 31)
         Transaction result = createValidTransaction("future-insert", "future_account")
         result.transactionId = 888L
         and:
-        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.Success.of(futureTransaction)
-        standardizedTransactionService.save(futureTransaction) >> ServiceResult.Success.of(result)
+        standardizedTransactionService.createAndSaveFutureTransaction(input) >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<Transaction> response = controller.insertFutureTransaction(input)
@@ -497,10 +509,8 @@ class TransactionControllerSpec extends Specification {
     def "insertFutureTransaction throws 409 on data integrity violation"() {
         given:
         Transaction input = createValidTransaction("future-dup", "future_dup_account")
-        Transaction futureTransaction = createValidTransaction("future-dup", "future_dup_account")
         and:
-        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.Success.of(futureTransaction)
-        standardizedTransactionService.save(futureTransaction) >> ServiceResult.BusinessError.of("Duplicate future transaction", "DUPLICATE_ENTITY")
+        standardizedTransactionService.createAndSaveFutureTransaction(input) >> ServiceResult.BusinessError.of("Duplicate future transaction", "DUPLICATE_ENTITY")
 
         when:
         controller.insertFutureTransaction(input)
@@ -514,10 +524,8 @@ class TransactionControllerSpec extends Specification {
     def "insertFutureTransaction throws 400 on validation error"() {
         given:
         Transaction input = createValidTransaction("future-validation", "future_validation_account")
-        Transaction futureTransaction = createValidTransaction("future-validation", "future_validation_account")
         and:
-        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.Success.of(futureTransaction)
-        standardizedTransactionService.save(futureTransaction) >> ServiceResult.ValidationError.of(["future": "Future transaction validation failed"])
+        standardizedTransactionService.createAndSaveFutureTransaction(input) >> ServiceResult.ValidationError.of(["future": "Future transaction validation failed"])
 
         when:
         controller.insertFutureTransaction(input)
@@ -532,7 +540,7 @@ class TransactionControllerSpec extends Specification {
         given:
         Transaction input = createValidTransaction("future-error", "future_error_account")
         and:
-        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.SystemError.of(new RuntimeException("Future transaction creation failed"))
+        standardizedTransactionService.createAndSaveFutureTransaction(input) >> ServiceResult.SystemError.of(new RuntimeException("Future transaction creation failed"))
 
         when:
         controller.insertFutureTransaction(input)

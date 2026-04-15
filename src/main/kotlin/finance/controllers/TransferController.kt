@@ -59,13 +59,18 @@ class TransferController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transfers: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transfers: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transfers: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transfers: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -97,13 +102,18 @@ class TransferController(
                 ResponseEntity.ok(Page.empty(pageable))
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transfers: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transfers: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transfers: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transfers: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -136,13 +146,18 @@ class TransferController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving transfer $id: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving transfer $id: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving transfer $id: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving transfer $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -170,6 +185,11 @@ class TransferController(
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.warn("Not found during transfer save: ${entity.transferId}")
+                ResponseEntity.notFound().build()
+            }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating transfer: ${result.errors}")
                 ResponseEntity.badRequest().build()
@@ -182,11 +202,6 @@ class TransferController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error creating transfer: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -213,7 +228,6 @@ class TransferController(
         // Ensure the path ID matches the entity ID
         entity.transferId = id
 
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = transferService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transfer updated successfully: $id")
@@ -237,11 +251,6 @@ class TransferController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error updating transfer $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }

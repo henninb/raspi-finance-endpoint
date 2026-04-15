@@ -4,6 +4,7 @@ import finance.controllers.dto.AccountInputDto
 import finance.controllers.dto.CategoryInputDto
 import finance.controllers.dto.DescriptionInputDto
 import finance.controllers.dto.MedicalExpenseInputDto
+import finance.controllers.dto.ParameterInputDto
 import finance.controllers.dto.PaymentInputDto
 import finance.controllers.dto.TransactionInputDto
 import finance.controllers.dto.TransferInputDto
@@ -43,6 +44,7 @@ import java.util.UUID
 
 @Controller
 @Validated
+@PreAuthorize("hasAuthority('USER')")
 class GraphQLMutationController(
     private val accountService: AccountService,
     private val categoryService: CategoryService,
@@ -56,10 +58,9 @@ class GraphQLMutationController(
     private val meterRegistry: MeterRegistry,
 ) {
     companion object {
-        val logger: Logger = LogManager.getLogger()
+        private val logger: Logger = LogManager.getLogger()
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createPayment(
         @Argument("payment") @Valid payment: PaymentInputDto,
@@ -100,7 +101,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updatePayment(
         @Argument id: Long,
@@ -132,7 +132,6 @@ class GraphQLMutationController(
         return updated
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deletePayment(
         @Argument id: Long,
@@ -146,7 +145,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createTransfer(
         @Argument("transfer") @Valid transfer: TransferInputDto,
@@ -168,7 +166,6 @@ class GraphQLMutationController(
         return saved
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateTransfer(
         @Argument id: Long,
@@ -201,7 +198,6 @@ class GraphQLMutationController(
         return updated
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteTransfer(
         @Argument id: Long,
@@ -210,13 +206,18 @@ class GraphQLMutationController(
         return transferService.deleteByTransferId(id)
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createParameter(
-        @Argument("parameter") @Valid parameter: Parameter,
+        @Argument("parameter") @Valid parameter: ParameterInputDto,
     ): Parameter {
         logger.info("GraphQL - Creating parameter via @MutationMapping")
-        return when (val result = parameterService.save(parameter)) {
+        val domain =
+            Parameter().apply {
+                this.parameterName = parameter.parameterName
+                this.parameterValue = parameter.parameterValue
+                this.activeStatus = parameter.activeStatus ?: true
+            }
+        return when (val result = parameterService.save(domain)) {
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.parameter.create.success").increment()
                 logger.info("GraphQL - Created parameter id={}", result.data.parameterId)
@@ -240,13 +241,19 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateParameter(
-        @Argument("parameter") @Valid parameter: Parameter,
+        @Argument("parameter") @Valid parameter: ParameterInputDto,
     ): Parameter {
         logger.info("GraphQL - Updating parameter id={}", parameter.parameterId)
-        return when (val result = parameterService.update(parameter)) {
+        val domain =
+            Parameter().apply {
+                this.parameterId = parameter.parameterId ?: 0L
+                this.parameterName = parameter.parameterName
+                this.parameterValue = parameter.parameterValue
+                this.activeStatus = parameter.activeStatus ?: true
+            }
+        return when (val result = parameterService.update(domain)) {
             is ServiceResult.Success -> {
                 meterRegistry.counter("graphql.parameter.update.success").increment()
                 logger.info("GraphQL - Updated parameter id={}", result.data.parameterId)
@@ -254,8 +261,8 @@ class GraphQLMutationController(
             }
 
             is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Parameter not found: {}", parameter.parameterId)
-                throw IllegalArgumentException("Parameter not found: ${parameter.parameterId}")
+                logger.warn("GraphQL - Parameter not found: {}", domain.parameterId)
+                throw IllegalArgumentException("Parameter not found: ${domain.parameterId}")
             }
 
             is ServiceResult.ValidationError -> {
@@ -275,7 +282,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteParameter(
         @Argument parameterId: Long,
@@ -300,7 +306,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createCategory(
         @Argument("category") @Valid categoryInput: CategoryInputDto,
@@ -338,7 +343,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateCategory(
         @Argument("category") @Valid categoryInput: CategoryInputDto,
@@ -442,7 +446,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteCategory(
         @Argument categoryName: String,
@@ -467,7 +470,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createDescription(
         @Argument("description") @Valid descriptionInput: DescriptionInputDto,
@@ -505,7 +507,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateDescription(
         @Argument("description") @Valid descriptionInput: DescriptionInputDto,
@@ -609,7 +610,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteDescription(
         @Argument descriptionName: String,
@@ -634,7 +634,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createMedicalExpense(
         @Argument("medicalExpense") @Valid medicalExpenseInput: MedicalExpenseInputDto,
@@ -725,7 +724,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateMedicalExpense(
         @Argument("medicalExpense") @Valid medicalExpenseInput: MedicalExpenseInputDto,
@@ -825,7 +823,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteMedicalExpense(
         @Argument medicalExpenseId: Long,
@@ -850,7 +847,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createValidationAmount(
         @Argument("validationAmount") @Valid validationAmountInput: ValidationAmountInputDto,
@@ -891,7 +887,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateValidationAmount(
         @Argument("validationAmount") @Valid validationAmountInput: ValidationAmountInputDto,
@@ -937,7 +932,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteValidationAmount(
         @Argument validationId: Long,
@@ -962,7 +956,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createAccount(
         @Argument("account") @Valid accountInput: AccountInputDto,
@@ -1007,7 +1000,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateAccount(
         @Argument("account") @Valid accountInput: AccountInputDto,
@@ -1118,7 +1110,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteAccount(
         @Argument accountNameOwner: String,
@@ -1143,7 +1134,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun createTransaction(
         @Argument("transaction") @Valid transactionInput: TransactionInputDto,
@@ -1196,7 +1186,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun updateTransaction(
         @Argument("transaction") @Valid transactionInput: TransactionInputDto,
@@ -1252,7 +1241,6 @@ class GraphQLMutationController(
         }
     }
 
-    @PreAuthorize("hasAuthority('USER')")
     @MutationMapping
     fun deleteTransaction(
         @Argument guid: String,

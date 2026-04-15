@@ -5,4 +5,4 @@ package finance.domain
  */
 class InvalidTransactionStateException(
     message: String,
-) : RuntimeException(message)
+) : DomainException(message)

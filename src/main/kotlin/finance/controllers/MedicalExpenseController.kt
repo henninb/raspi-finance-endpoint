@@ -71,13 +71,18 @@ class MedicalExpenseController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving medical expenses: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving medical expenses: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving medical expenses: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving medical expenses: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -109,13 +114,18 @@ class MedicalExpenseController(
                 ResponseEntity.notFound().build()
             }
 
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving medical expense $id: ${result.exception.message}", result.exception)
+            is ServiceResult.ValidationError -> {
+                logger.error("Unexpected validation error retrieving medical expense $id: ${result.errors}")
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
 
-            else -> {
-                logger.error("Unexpected result type: $result")
+            is ServiceResult.BusinessError -> {
+                logger.error("Unexpected business error retrieving medical expense $id: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error retrieving medical expense $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
@@ -143,6 +153,11 @@ class MedicalExpenseController(
                 ResponseEntity.status(HttpStatus.CREATED).body(result.data)
             }
 
+            is ServiceResult.NotFound -> {
+                logger.warn("Not found during medical expense save: ${entity.medicalExpenseId}")
+                ResponseEntity.notFound().build<MedicalExpense>()
+            }
+
             is ServiceResult.ValidationError -> {
                 logger.warn("Validation error creating medical expense: ${result.errors}")
                 ResponseEntity.badRequest().build<MedicalExpense>()
@@ -156,11 +171,6 @@ class MedicalExpenseController(
             is ServiceResult.SystemError -> {
                 logger.error("System error creating medical expense: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
 
@@ -186,7 +196,6 @@ class MedicalExpenseController(
         // Ensure the ID matches the path parameter
         entity.medicalExpenseId = id
 
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive programming: handle unexpected ServiceResult types
         return when (val result = medicalExpenseService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense updated successfully: $id")
@@ -212,11 +221,6 @@ class MedicalExpenseController(
                 logger.error("System error updating medical expense $id: ${result.exception.message}", result.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
             }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
-            }
         }
     }
 
@@ -235,9 +239,8 @@ class MedicalExpenseController(
     @DeleteMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("medicalExpenseId") id: Long,
-    ): ResponseEntity<MedicalExpense> {
-        @Suppress("REDUNDANT_ELSE_IN_WHEN") // Defensive: handle null or unexpected ServiceResult types
-        return when (val deleteResult = medicalExpenseService.deleteById(id)) {
+    ): ResponseEntity<MedicalExpense> =
+        when (val deleteResult = medicalExpenseService.deleteById(id)) {
             is ServiceResult.Success -> {
                 logger.info("Medical expense deleted successfully: $id")
                 ResponseEntity.ok(deleteResult.data)
@@ -262,13 +265,7 @@ class MedicalExpenseController(
                 logger.error("System error deleting medical expense $id: ${deleteResult.exception.message}", deleteResult.exception)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
-
-            else -> {
-                logger.error("Unexpected result type for medical expense delete $id: $deleteResult")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
         }
-    }
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 

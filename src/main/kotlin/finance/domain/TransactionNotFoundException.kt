@@ -5,4 +5,4 @@ package finance.domain
  */
 class TransactionNotFoundException(
     message: String,
-) : RuntimeException(message)
+) : DomainException(message)

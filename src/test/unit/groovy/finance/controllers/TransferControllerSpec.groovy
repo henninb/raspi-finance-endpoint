@@ -218,17 +218,17 @@ class TransferControllerSpec extends Specification {
         response.body == null
     }
 
-    def "save returns 500 on unexpected result type"() {
+    def "save returns 404 when service returns not found"() {
         given:
         Transfer newTransfer = createTestTransfer(0L)
         and:
-        transferService.save(newTransfer) >> ServiceResult.NotFound.of("Unexpected")
+        transferService.save(newTransfer) >> ServiceResult.NotFound.of("Transfer dependency not found")
 
         when:
         ResponseEntity<Transfer> response = controller.save(newTransfer)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.NOT_FOUND
         response.body == null
     }
 
@@ -295,20 +295,6 @@ class TransferControllerSpec extends Specification {
         Transfer patchTransfer = createTestTransfer(1L)
         and:
         transferService.update(patchTransfer) >> ServiceResult.SystemError.of(new RuntimeException("Database error"))
-
-        when:
-        ResponseEntity<Transfer> response = controller.update(1L, patchTransfer)
-
-        then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        response.body == null
-    }
-
-    def "update returns 500 on unexpected result type"() {
-        given:
-        Transfer patchTransfer = createTestTransfer(1L)
-        and:
-        transferService.update(patchTransfer) >> null
 
         when:
         ResponseEntity<Transfer> response = controller.update(1L, patchTransfer)

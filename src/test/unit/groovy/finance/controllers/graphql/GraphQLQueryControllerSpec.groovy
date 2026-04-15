@@ -110,7 +110,7 @@ class GraphQLQueryControllerSpec extends Specification {
         def result = controller.account("checking_primary")
 
         then: "service returns the account"
-        1 * mockAccountService.account("checking_primary") >> Optional.of(account)
+        1 * mockAccountService.findById("checking_primary") >> new ServiceResult.Success(account)
 
         and: "account is returned"
         result == account
@@ -121,8 +121,8 @@ class GraphQLQueryControllerSpec extends Specification {
         when: "account is called with non-existent accountNameOwner"
         def result = controller.account("nonexistent_account")
 
-        then: "service returns empty optional"
-        1 * mockAccountService.account("nonexistent_account") >> Optional.empty()
+        then: "service returns not found"
+        1 * mockAccountService.findById("nonexistent_account") >> ServiceResult.NotFound.of("Account not found")
 
         and: "null is returned"
         result == null
@@ -264,7 +264,7 @@ class GraphQLQueryControllerSpec extends Specification {
         def result = controller.payment(123L)
 
         then: "service returns the payment"
-        1 * mockPaymentService.findByPaymentId(123L) >> Optional.of(payment)
+        1 * mockPaymentService.findById(123L) >> new ServiceResult.Success(payment)
 
         and: "payment is returned"
         result == payment
@@ -275,8 +275,8 @@ class GraphQLQueryControllerSpec extends Specification {
         when: "payment is called with non-existent paymentId"
         def result = controller.payment(999L)
 
-        then: "service returns empty optional"
-        1 * mockPaymentService.findByPaymentId(999L) >> Optional.empty()
+        then: "service returns not found"
+        1 * mockPaymentService.findById(999L) >> ServiceResult.NotFound.of("Payment not found")
 
         and: "null is returned"
         result == null
@@ -293,7 +293,7 @@ class GraphQLQueryControllerSpec extends Specification {
         def result = controller.transfers()
 
         then: "service returns all transfers"
-        1 * mockTransferService.findAllTransfers() >> transfers
+        1 * mockTransferService.findAllActive() >> new ServiceResult.Success(transfers)
 
         and: "transfers are returned"
         result == transfers
