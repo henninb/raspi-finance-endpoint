@@ -391,63 +391,6 @@ class PaymentServiceSpec extends BaseServiceSpec {
         result.message.contains("locked-dest")
     }
 
-    // ===== TDD Tests for Legacy Method Support =====
-
-    def "findAllPayments should delegate to findAllActive and return data"() {
-        given: "existing payments"
-        def payments = [PaymentBuilder.builder().build()]
-
-        when: "calling legacy findAllPayments method"
-        def result = standardizedPaymentService.findAllPayments()
-
-        then: "should return payment list"
-        1 * paymentRepositoryMock.findByOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, true, _) >> new org.springframework.data.domain.PageImpl(payments)
-        result.size() == 1
-        0 * _
-    }
-
-    def "insertPayment should delegate to save and return data"() {
-        given: "valid payment with null GUIDs to trigger transaction creation"
-        def payment = PaymentBuilder.builder()
-                .withGuidSource(null)
-                .withGuidDestination(null)
-                .build()
-        def savedPayment = PaymentBuilder.builder().withPaymentId(1L).build()
-        Set<ConstraintViolation<Payment>> noViolations = [] as Set
-
-        // Create real Account objects with actual account types
-        def mockDestAccount = new finance.domain.Account()
-        mockDestAccount.accountNameOwner = payment.destinationAccount
-        mockDestAccount.accountType = finance.domain.AccountType.CreditCard
-        mockDestAccount.accountId = 1L
-
-        def mockSourceAccount = new finance.domain.Account()
-        mockSourceAccount.accountNameOwner = payment.sourceAccount
-        mockSourceAccount.accountType = finance.domain.AccountType.Checking
-        mockSourceAccount.accountId = 2L
-
-        // Create actual Transaction objects with GUIDs set
-        def transaction1 = new finance.domain.Transaction()
-        transaction1.guid = "test-guid-dest"
-        def transaction2 = new finance.domain.Transaction()
-        transaction2.guid = "test-guid-source"
-
-        when: "calling legacy insertPayment method"
-        def result = standardizedPaymentService.insertPayment(payment)
-
-        then: "should return saved payment"
-        // processPaymentAccount calls for both accounts (2 calls each for process + behavior inference)
-        2 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.destinationAccount) >> Optional.of(mockDestAccount)
-        2 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.sourceAccount) >> Optional.of(mockSourceAccount)
-        // Transaction service saves both transactions
-        1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction1)
-        1 * transactionServiceMock.save(_) >> new ServiceResult.Success(transaction2)
-        // save() is called after GUIDs are set, so it validates and saves without creating new transactions
-        1 * validatorMock.validate(payment) >> noViolations
-        1 * paymentRepositoryMock.saveAndFlush(payment) >> savedPayment
-        result.paymentId == 1L
-    }
-
     def "updatePayment should delegate to update and return data"() {
         given: "existing payment to update"
         def existingPayment = PaymentBuilder.builder().withPaymentId(1L).withAmount(new BigDecimal("100.00")).build()
@@ -477,66 +420,6 @@ class PaymentServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "deleteByPaymentId should delete payment when exists"() {
-        given: "existing payment"
-        def payment = PaymentBuilder.builder().withPaymentId(1L).build()
-
-        when: "deleting by payment ID"
-        def result = standardizedPaymentService.deleteByPaymentId(1L)
-
-        then: "should delete payment and return true"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
-        1 * paymentRepositoryMock.delete(payment)
-        result == true
-        0 * _
-    }
-
-    def "deleteByPaymentId should return false when payment does not exist"() {
-        when: "deleting non-existent payment"
-        def result = standardizedPaymentService.deleteByPaymentId(999L)
-
-        then: "should return false"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
-        result == false
-        0 * _
-    }
-
-    // ===== TDD Tests for Error Handling in Legacy Methods =====
-
-    //@spock.lang.Ignore("TODO: Fix test interaction with interface mocking")
-    def "insertPayment should throw ValidationException for invalid payment"() {
-        given: "invalid payment"
-        def payment = PaymentBuilder.builder().withAmount(new BigDecimal("-100.00")).build()
-        ConstraintViolation<Payment> violation = Mock(ConstraintViolation)
-        violation.invalidValue >> new BigDecimal("-100.00")
-        violation.message >> "must be greater than or equal to 0"
-        Set<ConstraintViolation<Payment>> violations = [violation] as Set
-
-        and: "account service returns existing accounts with proper accountType"
-        // Create real Account objects instead of GroovyMock so accountType can be accessed
-        def existingDestAccount = new finance.domain.Account()
-        existingDestAccount.accountNameOwner = payment.destinationAccount
-        existingDestAccount.accountType = finance.domain.AccountType.CreditCard
-        existingDestAccount.accountId = 1L
-
-        def existingSourceAccount = new finance.domain.Account()
-        existingSourceAccount.accountNameOwner = payment.sourceAccount
-        existingSourceAccount.accountType = finance.domain.AccountType.Checking
-        existingSourceAccount.accountId = 2L
-
-        // With behavior inference, we call findByOwnerAndAccountNameOwner for both source and dest accounts
-        accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.destinationAccount) >> Optional.of(existingDestAccount)
-        accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER,payment.sourceAccount) >> Optional.of(existingSourceAccount)
-
-        when: "calling legacy insertPayment with invalid data"
-        standardizedPaymentService.insertPayment(payment)
-
-        then: "should mock transaction service calls and repository save"
-        2 * transactionServiceMock.save(_) >> { new ServiceResult.Success(GroovyMock(finance.domain.Transaction) { getGuid() >> "test-guid" }) }
-        and: "should throw ConstraintViolationException from save method"
-        1 * validatorMock.validate(payment) >> violations
-        thrown(ConstraintViolationException)
-    }
 
     def "updatePayment should throw RuntimeException when payment not found"() {
         given: "payment with non-existent ID"

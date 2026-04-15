@@ -241,7 +241,7 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
         def categoriesResult = categoryService.findAllActive()
         List<Category> categories = unwrapList(categoriesResult)
         List<Description> descriptions = descriptionService.fetchAllDescriptions()
-        List<Payment> payments = paymentService.findAllPayments()
+        List<Payment> payments = paymentService.findAllActive().getDataOrNull() ?: []
 
         then:
         accounts != null

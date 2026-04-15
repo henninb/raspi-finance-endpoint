@@ -72,15 +72,32 @@ class GraphQLMutationController(
                 this.destinationAccount = payment.destinationAccount
                 this.transactionDate = payment.transactionDate
                 this.amount = payment.amount
-                this.guidSource = UUID.randomUUID().toString()
-                this.guidDestination = UUID.randomUUID().toString()
                 this.activeStatus = payment.activeStatus ?: true
             }
 
-        val saved = paymentService.insertPayment(domain)
-        meterRegistry.counter("graphql.payment.create.success").increment()
-        logger.info("GraphQL - Created payment id={}", saved.paymentId)
-        return saved
+        return when (val result = paymentService.save(domain)) {
+            is ServiceResult.Success -> {
+                meterRegistry.counter("graphql.payment.create.success").increment()
+                logger.info("GraphQL - Created payment id={}", result.data.paymentId)
+                result.data
+            }
+
+            is ServiceResult.ValidationError -> {
+                throw IllegalArgumentException("Validation failed: ${result.errors}")
+            }
+
+            is ServiceResult.BusinessError -> {
+                throw IllegalArgumentException(result.message)
+            }
+
+            is ServiceResult.SystemError -> {
+                throw result.exception
+            }
+
+            else -> {
+                throw RuntimeException("Unexpected error creating payment: $result")
+            }
+        }
     }
 
     @PreAuthorize("hasAuthority('USER')")
@@ -121,7 +138,12 @@ class GraphQLMutationController(
         @Argument id: Long,
     ): Boolean {
         logger.info("GraphQL - Deleting payment id={}", id)
-        return paymentService.deleteByPaymentId(id)
+        return when (val result = paymentService.deleteById(id)) {
+            is ServiceResult.Success -> true
+            is ServiceResult.NotFound -> false
+            is ServiceResult.SystemError -> throw result.exception
+            else -> throw RuntimeException("Unexpected error deleting payment: $result")
+        }
     }
 
     @PreAuthorize("hasAuthority('USER')")

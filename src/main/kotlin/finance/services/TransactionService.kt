@@ -450,47 +450,7 @@ class TransactionService
 
         // ===== Legacy Method Compatibility =====
 
-        fun deleteReceiptImage(transaction: Transaction): Boolean {
-            val receiptImageId = transaction.receiptImageId
-            if (receiptImageId == null) {
-                logger.warn("No receipt image ID found for transaction GUID: ${transaction.guid}")
-                return false
-            }
-            logger.info("Deleting receipt image with ID: $receiptImageId for transaction GUID: ${transaction.guid}")
-            val receiptImageResult = receiptImageService.findById(receiptImageId)
-            when (receiptImageResult) {
-                is ServiceResult.Success -> {
-                    val deleteResult = receiptImageService.deleteById(receiptImageId)
-                    when (deleteResult) {
-                        is ServiceResult.Success -> {
-                            meterService.incrementExceptionThrownCounter("ReceiptImageDeleted")
-                            logger.info("Successfully deleted receipt image for transaction GUID: ${transaction.guid}")
-                            return true
-                        }
-
-                        else -> {
-                            logger.warn("Failed to delete receipt image with ID: $receiptImageId: $deleteResult")
-                            return false
-                        }
-                    }
-                }
-
-                else -> {
-                    logger.warn("Receipt image not found with ID: $receiptImageId: $receiptImageResult")
-                    return false
-                }
-            }
-        }
-
         fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals = calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
-
-        fun findByAccountNameOwnerOrderByTransactionDate(accountNameOwner: String): List<Transaction> {
-            val result = findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                else -> emptyList()
-            }
-        }
 
         fun masterTransactionUpdater(
             transactionFromDatabase: Transaction,
@@ -518,94 +478,12 @@ class TransactionService
             throw TransactionValidationException("guid did not match any database records to update ${transaction.guid}.")
         }
 
-        fun updateTransactionReceiptImageByGuid(
-            guid: String,
-            imageBase64Payload: String,
-        ): ReceiptImage {
-            val result = updateTransactionReceiptImageByGuidStandardized(guid, imageBase64Payload)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                is ServiceResult.NotFound -> throw TransactionNotFoundException("Cannot save a image for a transaction that does not exist with guid = '$guid'.")
-                is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                else -> throw RuntimeException("Failed to update receipt image: $result")
-            }
-        }
-
-        fun changeAccountNameOwner(
-            accountNameOwner: String,
-            guid: String,
-        ): Transaction {
-            val result = changeAccountNameOwnerStandardized(accountNameOwner, guid)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                is ServiceResult.NotFound -> throw AccountValidationException("Cannot change accountNameOwner for a transaction that does not exist, guid='$guid'.")
-                is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                else -> throw RuntimeException("Failed to change account name owner: $result")
-            }
-        }
-
-        fun updateTransactionState(
-            guid: String,
-            transactionState: TransactionState,
-        ): Transaction {
-            val result = updateTransactionStateStandardized(guid, transactionState)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                is ServiceResult.NotFound -> throw TransactionNotFoundException("Cannot update transaction - the transaction is not found with guid = '$guid'")
-                is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                else -> throw RuntimeException("Failed to update transaction state: $result")
-            }
-        }
-
         fun createThumbnail(
             rawImage: ByteArray,
             imageFormatType: ImageFormatType,
         ): ByteArray = imageProcessingService.createThumbnail(rawImage, imageFormatType)
 
         fun getImageFormatType(rawImage: ByteArray): ImageFormatType = imageProcessingService.getImageFormatType(rawImage)
-
-        fun createFutureTransaction(transaction: Transaction): Transaction {
-            val result = createFutureTransactionStandardized(transaction)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                is ServiceResult.BusinessError -> throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                else -> throw RuntimeException("Failed to create future transaction: $result")
-            }
-        }
-
-        fun findTransactionsByCategory(categoryName: String): List<Transaction> {
-            val result = findTransactionsByCategoryStandardized(categoryName)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                else -> emptyList()
-            }
-        }
-
-        fun findTransactionsByDescription(descriptionName: String): List<Transaction> {
-            val result = findTransactionsByDescriptionStandardized(descriptionName)
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                else -> emptyList()
-            }
-        }
-
-        fun findTransactionsByDateRange(
-            startDate: LocalDate,
-            endDate: LocalDate,
-            pageable: Pageable,
-        ): Page<Transaction> {
-            val result = findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
-            return when (result) {
-                is ServiceResult.Success -> {
-                    result.data
-                }
-
-                else -> {
-                    org.springframework.data.domain.Page
-                        .empty(pageable)
-                }
-            }
-        }
 
         // ===== Preserved Business Logic Methods =====
 

@@ -334,7 +334,7 @@ class TransactionControllerSpec extends Specification {
             createValidTransaction("legacy-guid-2", accountNameOwner)
         ]
         and:
-        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner) >> transactions
+        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner) >> ServiceResult.Success.of(transactions)
 
         when:
         ResponseEntity<List<Transaction>> response = controller.selectByAccountNameOwner(accountNameOwner)
@@ -350,7 +350,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String accountNameOwner = "empty_account"
         and:
-        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner) >> []
+        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner) >> ServiceResult.Success.of([])
 
         when:
         ResponseEntity<List<Transaction>> response = controller.selectByAccountNameOwner(accountNameOwner)
@@ -364,9 +364,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String accountNameOwner = "error_account"
         and:
-        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner) >> {
-            throw new RuntimeException("Service error")
-        }
+        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner) >> ServiceResult.SystemError.of(new RuntimeException("Service error"))
 
         when:
         controller.selectByAccountNameOwner(accountNameOwner)
@@ -418,7 +416,7 @@ class TransactionControllerSpec extends Specification {
         Transaction result = createValidTransaction(guid, "state_account")
         result.transactionState = TransactionState.Cleared
         and:
-        standardizedTransactionService.updateTransactionState(guid, TransactionState.Cleared) >> result
+        standardizedTransactionService.updateTransactionStateStandardized(guid, TransactionState.Cleared) >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<Transaction> response = controller.updateTransactionState(guid, stateValue)
@@ -436,7 +434,7 @@ class TransactionControllerSpec extends Specification {
         Transaction result = createValidTransaction(guid, "case_account")
         result.transactionState = TransactionState.Outstanding
         and:
-        standardizedTransactionService.updateTransactionState(guid, TransactionState.Outstanding) >> result
+        standardizedTransactionService.updateTransactionStateStandardized(guid, TransactionState.Outstanding) >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<Transaction> response = controller.updateTransactionState(guid, stateValue)
@@ -465,9 +463,7 @@ class TransactionControllerSpec extends Specification {
         String guid = "state-error-guid"
         String stateValue = "future"
         and:
-        standardizedTransactionService.updateTransactionState(guid, TransactionState.Future) >> {
-            throw new RuntimeException("State update failed")
-        }
+        standardizedTransactionService.updateTransactionStateStandardized(guid, TransactionState.Future) >> ServiceResult.SystemError.of(new RuntimeException("State update failed"))
 
         when:
         controller.updateTransactionState(guid, stateValue)
@@ -486,7 +482,7 @@ class TransactionControllerSpec extends Specification {
         Transaction result = createValidTransaction("future-insert", "future_account")
         result.transactionId = 888L
         and:
-        standardizedTransactionService.createFutureTransaction(input) >> futureTransaction
+        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.Success.of(futureTransaction)
         standardizedTransactionService.save(futureTransaction) >> ServiceResult.Success.of(result)
 
         when:
@@ -503,7 +499,7 @@ class TransactionControllerSpec extends Specification {
         Transaction input = createValidTransaction("future-dup", "future_dup_account")
         Transaction futureTransaction = createValidTransaction("future-dup", "future_dup_account")
         and:
-        standardizedTransactionService.createFutureTransaction(input) >> futureTransaction
+        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.Success.of(futureTransaction)
         standardizedTransactionService.save(futureTransaction) >> ServiceResult.BusinessError.of("Duplicate future transaction", "DUPLICATE_ENTITY")
 
         when:
@@ -520,7 +516,7 @@ class TransactionControllerSpec extends Specification {
         Transaction input = createValidTransaction("future-validation", "future_validation_account")
         Transaction futureTransaction = createValidTransaction("future-validation", "future_validation_account")
         and:
-        standardizedTransactionService.createFutureTransaction(input) >> futureTransaction
+        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.Success.of(futureTransaction)
         standardizedTransactionService.save(futureTransaction) >> ServiceResult.ValidationError.of(["future": "Future transaction validation failed"])
 
         when:
@@ -536,16 +532,14 @@ class TransactionControllerSpec extends Specification {
         given:
         Transaction input = createValidTransaction("future-error", "future_error_account")
         and:
-        standardizedTransactionService.createFutureTransaction(input) >> {
-            throw new RuntimeException("Future transaction creation failed")
-        }
+        standardizedTransactionService.createFutureTransactionStandardized(input) >> ServiceResult.SystemError.of(new RuntimeException("Future transaction creation failed"))
 
         when:
         controller.insertFutureTransaction(input)
 
         then:
-        def ex = thrown(RuntimeException)
-        ex.message == "Future transaction creation failed"
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
     def "changeTransactionAccountNameOwner updates account successfully"() {
@@ -602,7 +596,7 @@ class TransactionControllerSpec extends Specification {
         String payload = "base64encodedimagedata"
         ReceiptImage result = createValidReceiptImage(123L, 456L)
         and:
-        standardizedTransactionService.updateTransactionReceiptImageByGuid(guid, payload) >> result
+        standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, payload) >> ServiceResult.Success.of(result)
 
         when:
         ResponseEntity<ReceiptImage> response = controller.updateTransactionReceiptImageByGuid(guid, payload)
@@ -618,9 +612,7 @@ class TransactionControllerSpec extends Specification {
         String guid = "image-error-guid"
         String payload = "invalidimagedata"
         and:
-        standardizedTransactionService.updateTransactionReceiptImageByGuid(guid, payload) >> {
-            throw new RuntimeException("Image processing failed")
-        }
+        standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, payload) >> ServiceResult.SystemError.of(new RuntimeException("Image processing failed"))
 
         when:
         controller.updateTransactionReceiptImageByGuid(guid, payload)
@@ -639,7 +631,7 @@ class TransactionControllerSpec extends Specification {
             createValidTransaction("cat-guid-2", "cat_account_2")
         ]
         and:
-        standardizedTransactionService.findTransactionsByCategory(categoryName) >> transactions
+        standardizedTransactionService.findTransactionsByCategoryStandardized(categoryName) >> ServiceResult.Success.of(transactions)
 
         when:
         ResponseEntity<List<Transaction>> response = controller.selectTransactionsByCategory(categoryName)
@@ -655,7 +647,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String categoryName = "empty_category"
         and:
-        standardizedTransactionService.findTransactionsByCategory(categoryName) >> []
+        standardizedTransactionService.findTransactionsByCategoryStandardized(categoryName) >> ServiceResult.Success.of([])
 
         when:
         ResponseEntity<List<Transaction>> response = controller.selectTransactionsByCategory(categoryName)
@@ -669,9 +661,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String categoryName = "error_category"
         and:
-        standardizedTransactionService.findTransactionsByCategory(categoryName) >> {
-            throw new RuntimeException("Category search failed")
-        }
+        standardizedTransactionService.findTransactionsByCategoryStandardized(categoryName) >> ServiceResult.SystemError.of(new RuntimeException("Category search failed"))
 
         when:
         controller.selectTransactionsByCategory(categoryName)
@@ -690,7 +680,7 @@ class TransactionControllerSpec extends Specification {
             createValidTransaction("desc-guid-2", "desc_account_2")
         ]
         and:
-        standardizedTransactionService.findTransactionsByDescription(descriptionName) >> transactions
+        standardizedTransactionService.findTransactionsByDescriptionStandardized(descriptionName) >> ServiceResult.Success.of(transactions)
 
         when:
         ResponseEntity<List<Transaction>> response = controller.selectTransactionsByDescription(descriptionName)
@@ -706,7 +696,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String descriptionName = "empty_description"
         and:
-        standardizedTransactionService.findTransactionsByDescription(descriptionName) >> []
+        standardizedTransactionService.findTransactionsByDescriptionStandardized(descriptionName) >> ServiceResult.Success.of([])
 
         when:
         ResponseEntity<List<Transaction>> response = controller.selectTransactionsByDescription(descriptionName)
@@ -720,9 +710,7 @@ class TransactionControllerSpec extends Specification {
         given:
         String descriptionName = "error_description"
         and:
-        standardizedTransactionService.findTransactionsByDescription(descriptionName) >> {
-            throw new RuntimeException("Description search failed")
-        }
+        standardizedTransactionService.findTransactionsByDescriptionStandardized(descriptionName) >> ServiceResult.SystemError.of(new RuntimeException("Description search failed"))
 
         when:
         controller.selectTransactionsByDescription(descriptionName)

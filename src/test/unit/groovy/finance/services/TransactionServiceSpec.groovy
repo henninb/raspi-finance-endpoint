@@ -738,62 +738,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result == totals
     }
 
-    def "findByAccountNameOwnerOrderByTransactionDate should delegate to standardized method and return list"() {
-        given: "an account name owner"
-        def accountNameOwner = "test_account"
-        def transactions = [createTestTransaction()]
-
-        when: "findByAccountNameOwnerOrderByTransactionDate is called"
-        def result = standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDate(accountNameOwner)
-
-        then: "repository method is called"
-        1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, accountNameOwner, true) >> transactions
-
-        and: "result is the list of transactions"
-        result == transactions
-    }
-
-
-    def "changeAccountNameOwner should delegate to standardized method and return transaction"() {
-        given: "valid parameters"
-        def accountNameOwner = "new_account"
-        def guid = "test-guid-123"
-        def account = createTestAccount()
-        account.accountNameOwner = accountNameOwner
-        def transaction = createTestTransaction()
-
-        when: "changeAccountNameOwner is called"
-        def result = standardizedTransactionService.changeAccountNameOwner(accountNameOwner, guid)
-
-        then: "services are called"
-        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.of(account)
-        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-
-        and: "result is the updated transaction"
-        result == transaction
-    }
-
-    def "updateTransactionState should delegate to standardized method and return transaction"() {
-        given: "valid parameters"
-        def guid = "test-guid-123"
-        def transaction = createTestTransaction()
-        transaction.transactionState = TransactionState.Outstanding
-        def newState = TransactionState.Cleared
-
-        when: "updateTransactionState is called"
-        def result = standardizedTransactionService.updateTransactionState(guid, newState)
-
-        then: "repository findByGuid is called"
-        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
-
-        and: "repository saveAndFlush is called"
-        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
-
-        and: "result is the updated transaction"
-        result == transaction
-    }
-
     def "createThumbnail should delegate to imageProcessingService"() {
         given: "image data"
         def rawImage = "test-image".bytes
@@ -823,49 +767,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         and: "result is the image format type"
         result == imageFormatType
-    }
-
-    def "createFutureTransaction should delegate to standardized method and return transaction"() {
-        given: "a valid transaction"
-        def transaction = createTestTransaction()
-        transaction.reoccurringType = ReoccurringType.Monthly
-
-        when: "createFutureTransaction is called"
-        def result = standardizedTransactionService.createFutureTransaction(transaction)
-
-        then: "result is a future transaction"
-        result.transactionState == TransactionState.Future
-        result.guid != transaction.guid
-    }
-
-    def "findTransactionsByCategory should delegate to standardized method and return list"() {
-        given: "a category name"
-        def categoryName = "test_category"
-        def transactions = [createTestTransaction()]
-
-        when: "findTransactionsByCategory is called"
-        def result = standardizedTransactionService.findTransactionsByCategory(categoryName)
-
-        then: "repository method is called"
-        1 * transactionRepositoryMock.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, categoryName, true) >> transactions
-
-        and: "result is the list of transactions"
-        result == transactions
-    }
-
-    def "findTransactionsByDescription should delegate to standardized method and return list"() {
-        given: "a description name"
-        def descriptionName = "Test transaction"
-        def transactions = [createTestTransaction()]
-
-        when: "findTransactionsByDescription is called"
-        def result = standardizedTransactionService.findTransactionsByDescription(descriptionName)
-
-        then: "repository method is called"
-        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, descriptionName, true) >> transactions
-
-        and: "result is the list of transactions"
-        result == transactions
     }
 
     // ===== findTransactionsByDateRange Tests =====
@@ -905,7 +806,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result.message.toLowerCase().contains("before or equal to enddate")
     }
 
-    def "findTransactionsByDateRange should delegate and return page"() {
+    def "findTransactionsByDateRangeStandardized should return Success with page of transactions"() {
         given: "a valid date range and pageable"
         LocalDate startDate = LocalDate.of(2023, 1, 1)
         LocalDate endDate = LocalDate.of(2023, 12, 31)
@@ -913,11 +814,12 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def transactions = [createTestTransaction()]
         Page<Transaction> page = new PageImpl<>(transactions, pageable, transactions.size())
 
-        when: "findTransactionsByDateRange is called"
-        def result = standardizedTransactionService.findTransactionsByDateRange(startDate, endDate, pageable)
+        when: "findTransactionsByDateRangeStandardized is called"
+        def result = standardizedTransactionService.findTransactionsByDateRangeStandardized(startDate, endDate, pageable)
 
-        then: "repository method is called and page returned"
+        then: "repository method is called and ServiceResult.Success returned"
         1 * transactionRepositoryMock.findByOwnerAndTransactionDateBetween(TEST_OWNER, startDate, endDate, pageable) >> page
-        result == page
+        result instanceof ServiceResult.Success
+        result.data == page
     }
 }

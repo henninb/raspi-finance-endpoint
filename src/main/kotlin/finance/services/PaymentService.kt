@@ -54,6 +54,7 @@ class PaymentService
                 }
             }
 
+        @Transactional
         override fun save(entity: Payment): ServiceResult<Payment> =
             handleServiceOperation("save", entity.paymentId) {
                 val owner = TenantContext.getCurrentOwner()
@@ -285,144 +286,6 @@ class PaymentService
             return deletedCount
         }
 
-        // ===== Legacy Method Compatibility =====
-
-        fun findAllPayments(): List<Payment> {
-            val result = findAllActive()
-            return when (result) {
-                is ServiceResult.Success -> result.data
-                else -> emptyList()
-            }
-        }
-
-        /**
-         * Legacy insertPayment method - now uses new behavior-aware logic.
-         * @deprecated Consider using save() method instead
-         */
-        @org.springframework.transaction.annotation.Transactional
-        fun insertPayment(payment: Payment): Payment {
-            val owner = TenantContext.getCurrentOwner()
-            payment.owner = owner
-            logger.info("Inserting new payment to destination account: ${payment.destinationAccount}")
-
-            // Process destination account - create if missing
-            processPaymentAccount(payment.destinationAccount)
-
-            // Process source account - create if missing
-            processPaymentAccount(payment.sourceAccount)
-
-            // Retrieve account types for behavior inference
-            val sourceAccountOpt = accountService.account(payment.sourceAccount)
-            if (sourceAccountOpt.isEmpty) {
-                logger.error("Source account not found after creation attempt: ${payment.sourceAccount}")
-                meterService.incrementExceptionThrownCounter("PaymentSourceAccountNotFound")
-                throw IllegalStateException("Source account not found: ${payment.sourceAccount}")
-            }
-            val destinationAccountOpt = accountService.account(payment.destinationAccount)
-            if (destinationAccountOpt.isEmpty) {
-                logger.error("Destination account not found after creation attempt: ${payment.destinationAccount}")
-                meterService.incrementExceptionThrownCounter("PaymentDestinationAccountNotFound")
-                throw IllegalStateException("Destination account not found: ${payment.destinationAccount}")
-            }
-
-            val sourceAccount = sourceAccountOpt.get()
-            val destinationAccount = destinationAccountOpt.get()
-
-            // Infer payment behavior from account types
-            val behavior =
-                PaymentBehavior.inferBehavior(
-                    sourceAccount.accountType,
-                    destinationAccount.accountType,
-                )
-            logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
-
-            // Create transactions
-            val transactionDestination = Transaction()
-            val transactionSource = Transaction()
-
-            val paymentAccountNameOwner = payment.sourceAccount
-            populateDestinationTransaction(
-                transactionDestination,
-                payment,
-                paymentAccountNameOwner,
-                destinationAccount.accountType,
-                behavior,
-            )
-            populateSourceTransaction(
-                transactionSource,
-                payment,
-                paymentAccountNameOwner,
-                sourceAccount.accountType,
-                behavior,
-            )
-
-            logger.info("Creating source and destination transactions for payment")
-
-            // Create destination transaction using ServiceResult pattern
-            val destinationResult = transactionService.save(transactionDestination)
-            when (destinationResult) {
-                is ServiceResult.Success -> {
-                    payment.guidDestination = destinationResult.data.guid
-                    logger.debug("Destination transaction created successfully: ${destinationResult.data.guid}")
-                }
-
-                is ServiceResult.ValidationError -> {
-                    throw jakarta.validation.ConstraintViolationException("Destination transaction validation failed: ${destinationResult.errors}", emptySet())
-                }
-
-                is ServiceResult.BusinessError -> {
-                    throw org.springframework.dao.DataIntegrityViolationException("Destination transaction business error: ${destinationResult.message}")
-                }
-
-                else -> {
-                    throw RuntimeException("Failed to create destination transaction: $destinationResult")
-                }
-            }
-
-            // Create source transaction using ServiceResult pattern
-            val sourceResult = transactionService.save(transactionSource)
-            when (sourceResult) {
-                is ServiceResult.Success -> {
-                    payment.guidSource = sourceResult.data.guid
-                    logger.debug("Source transaction created successfully: ${sourceResult.data.guid}")
-                }
-
-                is ServiceResult.ValidationError -> {
-                    throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
-                }
-
-                is ServiceResult.BusinessError -> {
-                    throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
-                }
-
-                else -> {
-                    throw RuntimeException("Failed to create source transaction: $sourceResult")
-                }
-            }
-
-            // Use the standardized save method and handle ServiceResult
-            // GUIDs are now set, so save() won't try to create transactions again
-            val result = save(payment)
-            return when (result) {
-                is ServiceResult.Success -> {
-                    result.data
-                }
-
-                is ServiceResult.ValidationError -> {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
-                }
-
-                is ServiceResult.BusinessError -> {
-                    // Handle data integrity violations (e.g., duplicate payments)
-                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                }
-
-                else -> {
-                    throw RuntimeException("Failed to insert payment: $result")
-                }
-            }
-        }
-
         fun updatePayment(
             paymentId: Long,
             patch: Payment,
@@ -440,16 +303,6 @@ class PaymentService
         fun findByPaymentId(paymentId: Long): Optional<Payment> {
             val owner = TenantContext.getCurrentOwner()
             return paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
-        }
-
-        fun deleteByPaymentId(paymentId: Long): Boolean {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, paymentId)
-            if (optionalPayment.isPresent) {
-                paymentRepository.delete(optionalPayment.get())
-                return true
-            }
-            return false
         }
 
         // ===== Helper Methods for Payment Processing =====

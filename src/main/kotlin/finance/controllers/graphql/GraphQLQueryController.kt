@@ -112,7 +112,10 @@ class GraphQLQueryController(
     @QueryMapping
     fun payments(): List<Payment> {
         logger.info("GraphQL - Fetching all payments")
-        return paymentService.findAllPayments()
+        return when (val result = paymentService.findAllActive()) {
+            is ServiceResult.Success -> result.data
+            else -> emptyList()
+        }
     }
 
     @QueryMapping

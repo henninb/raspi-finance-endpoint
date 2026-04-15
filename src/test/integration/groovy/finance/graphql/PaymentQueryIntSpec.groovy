@@ -92,9 +92,7 @@ class PaymentQueryIntSpec extends BaseIntegrationSpec {
         payment.destinationAccount = destinationAccount
         payment.transactionDate = LocalDate.parse("2024-01-01")
         payment.amount = amount
-        payment.guidSource = UUID.randomUUID().toString()
-        payment.guidDestination = UUID.randomUUID().toString()
         payment.activeStatus = true
-        paymentService.insertPayment(payment)
+        paymentService.save(payment).getDataOrNull()
     }
 }
