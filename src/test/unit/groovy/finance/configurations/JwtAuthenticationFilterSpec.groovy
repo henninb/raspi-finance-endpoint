@@ -23,20 +23,13 @@ class JwtAuthenticationFilterSpec extends Specification {
         SecurityContextHolder.clearContext()
     }
 
-    private void setJwtKey(JwtAuthenticationFilter filter, String key) {
-        def f = JwtAuthenticationFilter.class.getDeclaredField('jwtKey')
-        f.accessible = true
-        f.set(filter, key)
-    }
-
     def "sets authentication from valid Bearer token"() {
         given:
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'a' * 64 // 64-byte key
-        setJwtKey(filter, secret)
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret)
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().claim('username', 'alice').signWith(key).compact()
 
@@ -62,9 +55,8 @@ class JwtAuthenticationFilterSpec extends Specification {
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'b' * 64
-        setJwtKey(filter, secret)
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret)
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().claim('username', 'bob').signWith(key).compact()
 
@@ -91,9 +83,8 @@ class JwtAuthenticationFilterSpec extends Specification {
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'c' * 64
-        setJwtKey(filter, secret)
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret)
         // Malformed token
         String token = 'not.a.valid.token'
 
@@ -120,9 +111,8 @@ class JwtAuthenticationFilterSpec extends Specification {
         given:
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService)
         String secret = 'd' * 64
-        setJwtKey(filter, secret)
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret)
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().claim('username', 'charlie').signWith(key).compact()
 

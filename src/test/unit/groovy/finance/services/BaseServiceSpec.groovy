@@ -1,6 +1,7 @@
 package finance.services
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.configurations.ResilienceComponents
 import finance.repositories.*
 import finance.utils.Constants
 import io.micrometer.core.instrument.*
@@ -46,15 +47,15 @@ class BaseServiceSpec extends Specification {
     protected CategoryService categoryServiceMock = GroovyMock(CategoryService)
     protected AccountService accountServiceMock = GroovyMock(AccountService)
 
-    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator, null)
-    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validator, null)
-    protected AccountService accountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock, meterService, validator, null)
-    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validator, null)
-    protected ImageProcessingService imageProcessingService = new ImageProcessingService(meterService, validatorMock, null)
-    protected CalculationService calculationService = new CalculationService(transactionRepositoryMock, meterService, validatorMock, null)
+    protected ReceiptImageService receiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator, ResilienceComponents.noOp())
+    protected DescriptionService descriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validator, ResilienceComponents.noOp())
+    protected AccountService accountService = new AccountService(accountRepositoryMock, validationAmountRepositoryMock, transactionRepositoryMock, meterService, validator, ResilienceComponents.noOp())
+    protected CategoryService categoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validator, ResilienceComponents.noOp())
+    protected ImageProcessingService imageProcessingService = new ImageProcessingService(meterService, validatorMock, ResilienceComponents.noOp())
+    protected CalculationService calculationService = new CalculationService(transactionRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
     protected TransactionService transactionServiceMock = Mock(TransactionService)
-    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, meterService, validator, null)
-    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validator, null)
+    protected ParameterService parameterService = new ParameterService(parameterRepositoryMock, meterService, validator, ResilienceComponents.noOp())
+    protected PaymentService paymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validator, ResilienceComponents.noOp())
 
     //TODO: turn this into a method
     protected Tag validationExceptionTag = Tag.of(EXCEPTION_NAME_TAG, 'ValidationException')

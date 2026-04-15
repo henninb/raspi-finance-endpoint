@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
@@ -15,7 +16,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
     finance.repositories.FamilyMemberRepository familyRepo = Mock()
     jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
     finance.services.MeterService meterService = new finance.services.MeterService()
-    FamilyMemberService service = new FamilyMemberService(familyRepo, meterService, validator, null)
+    FamilyMemberService service = new FamilyMemberService(familyRepo, meterService, validator, ResilienceComponents.noOp())
 
     @Subject
     FamilyMemberController controller = new FamilyMemberController(service)
@@ -104,7 +105,7 @@ class StandardizedFamilyMemberControllerSpec extends Specification {
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
-        def localService = new FamilyMemberService(familyRepo, meterService, violatingValidator, null)
+        def localService = new FamilyMemberService(familyRepo, meterService, violatingValidator, ResilienceComponents.noOp())
         def localController = new FamilyMemberController(localService)
         familyRepo.findByOwnerAndMemberName(TEST_OWNER, _) >> null
 

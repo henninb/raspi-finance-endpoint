@@ -45,7 +45,7 @@ class TransactionService
         private val paymentRepository: PaymentRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Transaction, String>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Transaction"
 

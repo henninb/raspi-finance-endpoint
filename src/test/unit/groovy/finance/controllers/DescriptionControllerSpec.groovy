@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Description
 import finance.services.DescriptionService
@@ -17,7 +18,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
     finance.repositories.TransactionRepository transactionRepository = Mock()
     jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
     finance.services.MeterService meterService = new finance.services.MeterService()
-    DescriptionService descriptionService = new DescriptionService(descriptionRepository, transactionRepository, meterService, validator, null)
+    DescriptionService descriptionService = new DescriptionService(descriptionRepository, transactionRepository, meterService, validator, ResilienceComponents.noOp())
 
     @Subject
     DescriptionController controller = new DescriptionController(descriptionService)
@@ -140,7 +141,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         and:
         def violatingValidator = GroovyMock(jakarta.validation.Validator)
         violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        def localService = new DescriptionService(descriptionRepository, transactionRepository, meterService, violatingValidator, null)
+        def localService = new DescriptionService(descriptionRepository, transactionRepository, meterService, violatingValidator, ResilienceComponents.noOp())
         def localController = new DescriptionController(localService)
 
         when:

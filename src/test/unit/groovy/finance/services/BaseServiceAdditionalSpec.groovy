@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.springframework.jdbc.CannotGetJdbcConnectionException
@@ -20,7 +21,7 @@ class BaseServiceAdditionalSpec extends Specification {
     // Concrete subclass needed because BaseService constructor requires meterService + validator
     static class ExposedBaseService extends BaseService {
         ExposedBaseService(meterService, validator) {
-            super(meterService, validator, null)
+            super(meterService, validator, ResilienceComponents.noOp())
         }
     }
 
@@ -41,16 +42,16 @@ class BaseServiceAdditionalSpec extends Specification {
         // metric assertion omitted to avoid flakiness across environments
     }
 
-    void "executeWithResilienceSync direct path SQLException increments metric and rethrows"() {
+    void "executeWithResilienceSync SQLException is wrapped in DataAccessResourceFailureException"() {
         when:
         base.executeWithResilienceSync({ throw new java.sql.SQLException('db down') }, 'sql-fail', 30L)
 
         then:
-        def ex = thrown(java.lang.reflect.UndeclaredThrowableException)
+        def ex = thrown(DataAccessResourceFailureException)
         assert ex.cause instanceof java.sql.SQLException
     }
 
-    void "executeWithResilienceSync direct path CannotGetJdbcConnectionException increments metric and rethrows"() {
+    void "executeWithResilienceSync CannotGetJdbcConnectionException is rethrown directly"() {
         when:
         base.executeWithResilienceSync({ throw new CannotGetJdbcConnectionException('cannot connect') }, 'conn-fail', 30L)
 

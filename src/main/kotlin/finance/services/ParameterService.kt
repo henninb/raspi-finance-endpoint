@@ -18,7 +18,7 @@ class ParameterService
         private val parameterRepository: ParameterRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Parameter, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Parameter"
 

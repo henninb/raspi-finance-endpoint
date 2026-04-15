@@ -24,7 +24,7 @@ class MedicalExpenseService
         private val medicalExpenseRepository: MedicalExpenseRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<MedicalExpense, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "MedicalExpense"
 

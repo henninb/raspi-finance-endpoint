@@ -19,7 +19,7 @@ class CategoryService
         private val transactionRepository: TransactionRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Category, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Category"
 

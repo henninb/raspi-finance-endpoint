@@ -29,7 +29,7 @@ class AccountService
         private val transactionRepository: finance.repositories.TransactionRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Account, String>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Account"
 

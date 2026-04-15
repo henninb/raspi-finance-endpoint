@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Category
 import finance.services.CategoryService
@@ -17,7 +18,7 @@ class StandardizedCategoryControllerSpec extends Specification {
     finance.repositories.TransactionRepository transactionRepository = Mock()
     jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
     finance.services.MeterService meterService = new finance.services.MeterService()
-    CategoryService categoryService = new CategoryService(categoryRepository, transactionRepository, meterService, validator, null)
+    CategoryService categoryService = new CategoryService(categoryRepository, transactionRepository, meterService, validator, ResilienceComponents.noOp())
 
     @Subject
     CategoryController controller = new CategoryController(categoryService)
@@ -142,7 +143,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         and:
         def violatingValidator = GroovyMock(jakarta.validation.Validator)
         violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        def localService = new CategoryService(categoryRepository, transactionRepository, meterService, violatingValidator, null)
+        def localService = new CategoryService(categoryRepository, transactionRepository, meterService, violatingValidator, ResilienceComponents.noOp())
         def localController = new CategoryController(localService)
 
         when:

@@ -21,7 +21,7 @@ open class CalculationService
         private val transactionRepository: TransactionRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : BaseService(meterService, validator, resilienceComponents),
         ICalculationService {
         companion object {

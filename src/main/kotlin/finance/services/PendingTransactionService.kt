@@ -25,7 +25,7 @@ class PendingTransactionService
         private val pendingTransactionRepository: PendingTransactionRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<PendingTransaction, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "PendingTransaction"
 

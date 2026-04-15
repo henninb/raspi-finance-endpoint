@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Account
 import finance.domain.AccountType
@@ -21,7 +22,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
     def paymentRepositoryMock = Mock(PaymentRepository)
     def transactionServiceMock = Mock(TransactionService)
-    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validatorMock, null)
+    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validatorMock, ResilienceComponents.noOp())
 
     // ===== TDD Tests for findAllActive() =====
 

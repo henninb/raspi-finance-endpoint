@@ -23,7 +23,7 @@ class ValidationAmountService
         private val accountRepository: AccountRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<ValidationAmount, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "ValidationAmount"
 

@@ -19,7 +19,7 @@ abstract class CrudBaseService<T, ID>
     constructor(
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : BaseService(meterService, validator, resilienceComponents),
         StandardServiceInterface<T, ID> {
         /**

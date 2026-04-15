@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.ValidationAmount
 import finance.domain.ServiceResult
@@ -20,7 +21,7 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
 
     def validationAmountRepositoryMock = Mock(ValidationAmountRepository)
     def accountRepositoryMock = Mock(AccountRepository)
-    def standardizedValidationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock, meterService, validatorMock, null)
+    def standardizedValidationAmountService = new ValidationAmountService(validationAmountRepositoryMock, accountRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
     // ===== TDD Tests for findAllActive() =====
 

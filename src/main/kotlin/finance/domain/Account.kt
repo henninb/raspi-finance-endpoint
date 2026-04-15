@@ -41,7 +41,7 @@ import java.util.Calendar
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class Account(
+class Account(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_account_account_id_seq")
@@ -120,6 +120,17 @@ data class Account(
 
     @Column(name = "billing_cycle_weekend_shift", nullable = true)
     var billingCycleWeekendShift: String? = null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Account) return false
+        return owner.isNotEmpty() && accountNameOwner.isNotEmpty() &&
+            owner == other.owner &&
+            accountNameOwner == other.accountNameOwner &&
+            accountType == other.accountType
+    }
+
+    override fun hashCode(): Int = 31 * (31 * owner.hashCode() + accountNameOwner.hashCode()) + accountType.hashCode()
 
     override fun toString(): String = "Account(accountNameOwner=$accountNameOwner, accountType=$accountType, activeStatus=$activeStatus)"
 }

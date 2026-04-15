@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Transaction
 import finance.domain.TransactionState
@@ -24,7 +25,7 @@ class CalculationServiceSpec extends Specification {
         // Provide a meter service with a real registry for counter assertions
         registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
         meterService = new MeterService(registry)
-        service = new CalculationService(repo, meterService, GroovyMock(jakarta.validation.Validator), null)
+        service = new CalculationService(repo, meterService, GroovyMock(jakarta.validation.Validator), ResilienceComponents.noOp())
     }
 
     def cleanup() {

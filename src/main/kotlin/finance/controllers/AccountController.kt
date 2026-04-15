@@ -215,10 +215,9 @@ class AccountController(
         @PathVariable("accountNameOwner") id: String,
         @Valid @RequestBody entity: Account,
     ): ResponseEntity<Account> {
-        // Ensure the accountNameOwner matches the path parameter (similar to Transaction controller pattern)
-        val updatedEntity = entity.copy(accountNameOwner = id)
-
-        return when (val result = accountService.update(updatedEntity)) {
+        // Ensure the accountNameOwner matches the path parameter
+        entity.accountNameOwner = id
+        return when (val result = accountService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Account updated successfully: $id (standardized)")
                 ResponseEntity.ok(result.data)

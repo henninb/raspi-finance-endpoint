@@ -15,7 +15,7 @@ class UserService
         private val passwordEncoder: PasswordEncoder,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : BaseService(meterService, validator, resilienceComponents) {
         fun signIn(user: User): Optional<User> {
             // Retrieve the user by username

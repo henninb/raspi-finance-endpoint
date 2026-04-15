@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.*
 import finance.repositories.TransactionRepository
@@ -37,8 +38,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
     TransactionService standardizedTransactionService
 
     def setup() {
-        localCategoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock, meterService, validatorMock, null)
-        localDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock, null)
+        localCategoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
+        localDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
         standardizedTransactionService = new TransactionService(
             transactionRepositoryMock,
             accountService,
@@ -50,7 +51,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             paymentRepositoryMock,
             meterService,
             validatorMock,
-            null
+            ResilienceComponents.noOp()
         )
     }
 

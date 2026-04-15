@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Account
 import finance.domain.AccountType
@@ -24,7 +25,7 @@ class StandardizedAccountControllerSpec extends Specification {
     finance.repositories.TransactionRepository transactionRepository = Mock()
     jakarta.validation.Validator validator = GroovyMock(jakarta.validation.Validator)
     finance.services.MeterService meterService = new finance.services.MeterService()
-    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, validator, null)
+    AccountService accountService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, validator, ResilienceComponents.noOp())
 
     @Subject
     AccountController controller = new AccountController(accountService)
@@ -196,7 +197,7 @@ class StandardizedAccountControllerSpec extends Specification {
         and:
         def violatingValidator = GroovyMock(jakarta.validation.Validator)
         violatingValidator.validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
-        def localService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, violatingValidator, null)
+        def localService = new AccountService(accountRepository, validationAmountRepository, transactionRepository, meterService, violatingValidator, ResilienceComponents.noOp())
         def localController = new AccountController(localService)
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "acct_bad") >> Optional.empty()
 

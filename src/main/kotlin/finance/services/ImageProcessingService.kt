@@ -20,7 +20,7 @@ open class ImageProcessingService
     constructor(
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : BaseService(meterService, validator, resilienceComponents),
         IImageProcessingService {
         companion object {

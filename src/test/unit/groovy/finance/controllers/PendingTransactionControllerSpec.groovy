@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.PendingTransaction
 import finance.services.PendingTransactionService
@@ -15,7 +16,7 @@ class PendingTransactionControllerSpec extends Specification {
     finance.repositories.PendingTransactionRepository pendingRepo = Mock()
     jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
     finance.services.MeterService meterService = new finance.services.MeterService()
-    PendingTransactionService pendingService = new PendingTransactionService(pendingRepo, meterService, validator, null)
+    PendingTransactionService pendingService = new PendingTransactionService(pendingRepo, meterService, validator, ResilienceComponents.noOp())
 
     @Subject
     PendingTransactionController controller = new PendingTransactionController(pendingService)
@@ -122,7 +123,7 @@ class PendingTransactionControllerSpec extends Specification {
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
-        def localService = new PendingTransactionService(pendingRepo, meterService, violatingValidator, null)
+        def localService = new PendingTransactionService(pendingRepo, meterService, violatingValidator, ResilienceComponents.noOp())
         def localController = new PendingTransactionController(localService)
 
         when:

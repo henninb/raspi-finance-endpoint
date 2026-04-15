@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.User
 import finance.repositories.UserRepository
@@ -15,7 +16,7 @@ class UserServiceSpec extends BaseServiceSpec {
     UserService userService
 
     def setup() {
-        userService = new UserService(userRepositoryMock, passwordEncoderMock, meterService, validator, null)
+        userService = new UserService(userRepositoryMock, passwordEncoderMock, meterService, validator, ResilienceComponents.noOp())
     }
 
     def "signIn - success with valid credentials"() {
