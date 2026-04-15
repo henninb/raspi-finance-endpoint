@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Parameter
 import finance.domain.ServiceResult
@@ -14,7 +15,7 @@ import jakarta.persistence.EntityNotFoundException
  */
 class StandardizedParameterServiceSpec extends BaseServiceSpec {
 
-    def standardizedParameterService = new ParameterService(parameterRepositoryMock, meterService, validatorMock, null)
+    def standardizedParameterService = new ParameterService(parameterRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
     // ===== TDD Tests for findAllActive() =====
 

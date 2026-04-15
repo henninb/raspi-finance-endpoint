@@ -19,7 +19,7 @@ open class ReceiptImageService
         private val receiptImageRepository: ReceiptImageRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<ReceiptImage, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "ReceiptImage"
 

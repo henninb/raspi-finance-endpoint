@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
@@ -17,7 +18,7 @@ import java.util.Optional
 class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
 
     def receiptImageRepositoryMock = Mock(ReceiptImageRepository)
-    def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator, null)
+    def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator, ResilienceComponents.noOp())
 
     def "should have correct entity name"() {
         expect:
@@ -144,7 +145,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<ReceiptImage>> violations = [violation] as Set
         validatorMock.validate(image) >> violations
-        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock, null)
+        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
         when:
         def result = localService.save(image)
@@ -336,7 +337,7 @@ class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<ReceiptImage>> violations = [violation] as Set
         validatorMock.validate(image) >> violations
-        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock, null)
+        def localService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
         when:
         def result = localService.save(image)

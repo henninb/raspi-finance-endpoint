@@ -22,7 +22,7 @@ class FamilyMemberService
         private val familyMemberRepository: FamilyMemberRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : BaseService(meterService, validator, resilienceComponents) {
         // ===== ServiceResult Methods =====
 

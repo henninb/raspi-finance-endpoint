@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.ServiceResult
 import jakarta.persistence.EntityNotFoundException
@@ -26,7 +27,7 @@ class StandardizedBaseServiceSpec extends Specification {
         private Long nextId = 1L
 
         TestStandardizedService(meterService, validator) {
-            super(meterService, validator, null)
+            super(meterService, validator, ResilienceComponents.noOp())
         }
 
         @Override

@@ -25,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableMethodSecurity(prePostEnabled = true)
 open class WebSecurityConfig(
     private val environment: Environment,
+    @Value("\${custom.project.jwt.key}") private val jwtKey: String,
 ) {
     @Value("\${custom.project.chrome-extension-id:}")
     private var chromeExtensionId: String = ""
@@ -120,7 +121,7 @@ open class WebSecurityConfig(
     open fun jwtAuthenticationFilter(
         meterRegistry: MeterRegistry,
         tokenBlacklistService: TokenBlacklistService,
-    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService)
+    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, jwtKey)
 
     // Prevent Boot from auto-registering these filters with the servlet container; they are managed by SecurityFilterChain
     @Bean

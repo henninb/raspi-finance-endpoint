@@ -13,8 +13,7 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.apache.logging.log4j.LogManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -25,12 +24,10 @@ import javax.crypto.SecretKey
 class JwtAuthenticationFilter(
     private val meterRegistry: MeterRegistry,
     private val tokenBlacklistService: TokenBlacklistService,
+    private val jwtKey: String,
 ) : OncePerRequestFilter() {
-    @Value("\${custom.project.jwt.key}")
-    private lateinit var jwtKey: String
-
     companion object {
-        private val securityLogger = LoggerFactory.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
+        private val securityLogger = LogManager.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
     }
 
     // Cache counters to avoid recreation on every request

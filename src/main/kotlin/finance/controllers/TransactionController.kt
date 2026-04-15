@@ -235,8 +235,8 @@ class TransactionController(
         @Valid @RequestBody entity: Transaction,
     ): ResponseEntity<Transaction> {
         // Ensure the guid matches the path parameter
-        val updatedTransaction = entity.copy(guid = id)
-        return when (val result = transactionService.update(updatedTransaction)) {
+        entity.guid = id
+        return when (val result = transactionService.update(entity)) {
             is ServiceResult.Success -> {
                 logger.info("Transaction updated successfully: $id")
                 ResponseEntity.ok(result.data)

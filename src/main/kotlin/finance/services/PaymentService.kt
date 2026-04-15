@@ -31,7 +31,7 @@ class PaymentService
         private val accountService: AccountService,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Payment, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Payment"
 

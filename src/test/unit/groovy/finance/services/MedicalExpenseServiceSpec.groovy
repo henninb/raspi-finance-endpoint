@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
@@ -18,7 +19,7 @@ import java.math.BigDecimal
 class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
     def medicalExpenseRepositoryMock = Mock(MedicalExpenseRepository)
-    def standardizedMedicalExpenseService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validator, null)
+    def standardizedMedicalExpenseService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validator, ResilienceComponents.noOp())
 
     def "should have correct entity name"() {
         expect:
@@ -142,7 +143,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<MedicalExpense>> violations = [violation] as Set
         validatorMock.validate(expense) >> violations
-        def localService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validatorMock, null)
+        def localService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
         when:
         def result = localService.save(expense)
@@ -338,7 +339,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         violation.message >> "must be greater than or equal to 0"
         Set<jakarta.validation.ConstraintViolation<MedicalExpense>> violations = [violation] as Set
         validatorMock.validate(expense) >> violations
-        def localService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validatorMock, null)
+        def localService = new MedicalExpenseService(medicalExpenseRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
         when:
         localService.insertMedicalExpense(expense)

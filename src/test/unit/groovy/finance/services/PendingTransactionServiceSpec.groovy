@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
@@ -28,7 +29,7 @@ class PendingTransactionServiceSpec extends Specification {
     def setup() {
         def auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(TEST_OWNER, "password")
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth)
-        standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository, meterService, mockValidator, null)
+        standardizedPendingTransactionService = new PendingTransactionService(mockPendingTransactionRepository, meterService, mockValidator, ResilienceComponents.noOp())
     }
 
     def cleanup() {

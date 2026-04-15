@@ -53,7 +53,7 @@ import java.util.Calendar
 @Table(name = "t_transaction")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class Transaction(
+class Transaction(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @SequenceGenerator(name = "t_transaction_transaction_id_seq")
@@ -170,6 +170,14 @@ data class Transaction(
     )
     @JsonIgnore
     var categories = mutableListOf<Category>()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Transaction) return false
+        return guid.isNotEmpty() && guid == other.guid
+    }
+
+    override fun hashCode(): Int = guid.hashCode()
 
     override fun toString(): String =
         "Transaction(guid=$guid, accountNameOwner=$accountNameOwner, amount=$amount, " +

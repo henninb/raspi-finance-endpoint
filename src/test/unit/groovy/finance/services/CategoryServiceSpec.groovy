@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.Category
 import finance.domain.ServiceResult
@@ -18,7 +19,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
 
     def categoryRepositoryMock = Mock(CategoryRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
-    def standardizedCategoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validatorMock, null)
+    def standardizedCategoryService = new CategoryService(categoryRepositoryMock, transactionRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 
     // ===== TDD Tests for findAllActive() =====
 

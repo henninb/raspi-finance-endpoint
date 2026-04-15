@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.User
 import finance.repositories.UserRepository
@@ -22,7 +23,7 @@ class LoginControllerSpec extends Specification {
     private UserRepository userRepository = Mock()
     private Validator validator = Mock()
     private MeterService meterService = new MeterService()
-    private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder(), meterService, validator, null)
+    private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder(), meterService, validator, ResilienceComponents.noOp())
     private TokenBlacklistService tokenBlacklistService = Mock()
     private LoginController loginController = new LoginController(userService, tokenBlacklistService)
     private HttpServletResponse response = Mock()

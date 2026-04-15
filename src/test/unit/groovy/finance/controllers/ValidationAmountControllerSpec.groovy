@@ -1,4 +1,5 @@
 package finance.controllers
+import finance.configurations.ResilienceComponents
 
 import finance.domain.ValidationAmount
 import finance.domain.TransactionState
@@ -21,7 +22,7 @@ class StandardizedValidationAmountControllerSpec extends Specification {
     finance.repositories.AccountRepository accountRepository = Mock()
     jakarta.validation.Validator validator = Mock() { validate(_ as Object) >> ([] as Set) }
     finance.services.MeterService meterService = new finance.services.MeterService()
-    ValidationAmountService service = new ValidationAmountService(validationRepo, accountRepository, meterService, validator, null)
+    ValidationAmountService service = new ValidationAmountService(validationRepo, accountRepository, meterService, validator, ResilienceComponents.noOp())
 
     @Subject
     ValidationAmountController controller = new ValidationAmountController(service)
@@ -161,7 +162,7 @@ class StandardizedValidationAmountControllerSpec extends Specification {
         def violatingValidator = Mock(jakarta.validation.Validator) {
             validate(_ as Object) >> ([Mock(jakarta.validation.ConstraintViolation)] as Set)
         }
-        def localService = new ValidationAmountService(validationRepo, accountRepository, meterService, violatingValidator, null)
+        def localService = new ValidationAmountService(validationRepo, accountRepository, meterService, violatingValidator, ResilienceComponents.noOp())
         def localController = new ValidationAmountController(localService)
 
         when:

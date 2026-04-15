@@ -1,4 +1,5 @@
 package finance.services
+import finance.configurations.ResilienceComponents
 
 import finance.domain.ImageFormatType
 import spock.lang.Shared
@@ -26,7 +27,7 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
     byte[] invalidImageData
 
     void setup() {
-        localImageProcessingService = new ImageProcessingService(meterService, validatorMock, null)
+        localImageProcessingService = new ImageProcessingService(meterService, validatorMock, ResilienceComponents.noOp())
     }
 
     def setupSpec() {

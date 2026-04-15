@@ -6,7 +6,7 @@ import finance.domain.AccountType
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 import org.springframework.dao.DataAccessResourceFailureException
 import org.springframework.jdbc.CannotGetJdbcConnectionException
 import java.sql.SQLException
@@ -18,21 +18,19 @@ open class BaseService
     constructor(
         open val meterService: MeterService,
         open val validator: Validator,
-        protected val resilienceComponents: ResilienceComponents? = null,
+        protected val resilienceComponents: ResilienceComponents,
     ) {
-        protected val logger get() = LoggerFactory.getLogger(javaClass)
+        protected val logger get() = LogManager.getLogger(javaClass)
 
         open fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>) {
-            if (constraintViolations.isNotEmpty()) {
-                var details = ""
-                constraintViolations.forEach { constraintViolation ->
-                    details = constraintViolation.invalidValue.toString() + ": " + constraintViolation.message
-                    logger.error(details)
+            if (constraintViolations.isEmpty()) return
+            val details =
+                constraintViolations.joinToString("; ") {
+                    "${it.propertyPath}: ${it.message} (got: ${it.invalidValue})"
                 }
-                logger.error("Cannot insert record because of constraint violation(s): $details")
-                meterService.incrementExceptionThrownCounter("ValidationException")
-                throw ValidationException("Cannot insert record because of constraint violation(s): $details")
-            }
+            logger.error("Cannot insert record because of constraint violation(s): $details")
+            meterService.incrementExceptionThrownCounter("ValidationException")
+            throw ValidationException("Cannot insert record because of constraint violation(s): $details")
         }
 
         fun createDefaultAccount(
@@ -57,16 +55,10 @@ open class BaseService
             operation: () -> T,
             operationName: String = "database-operation",
         ): CompletableFuture<T> {
-            val rc = resilienceComponents
-            if (rc == null) {
-                logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
-                return CompletableFuture.completedFuture(executeDirectly(operation, operationName))
-            }
-
             val startTime = System.currentTimeMillis()
 
             return try {
-                rc.databaseResilienceConfig
+                resilienceComponents.databaseResilienceConfig
                     .executeWithResilience(
                         operation = {
                             var result: T
@@ -80,10 +72,10 @@ open class BaseService
                             }
                             result
                         },
-                        circuitBreaker = rc.circuitBreaker,
-                        retry = rc.retry,
-                        timeLimiter = rc.timeLimiter,
-                        executor = rc.scheduledExecutorService,
+                        circuitBreaker = resilienceComponents.circuitBreaker,
+                        retry = resilienceComponents.retry,
+                        timeLimiter = resilienceComponents.timeLimiter,
+                        executor = resilienceComponents.scheduledExecutorService,
                     ).whenComplete { _, throwable ->
                         val totalDuration = System.currentTimeMillis() - startTime
                         if (throwable != null) {
@@ -126,66 +118,32 @@ open class BaseService
             operation: () -> T,
             operationName: String = "database-operation",
             timeoutSeconds: Long = 30,
-        ): T {
-            if (resilienceComponents == null) {
-                logger.debug("Resilience components not available, executing operation directly for: {}", operationName)
-                return executeDirectly(operation, operationName)
-            }
-
-            return try {
+        ): T =
+            try {
                 executeWithResilience(operation, operationName)
                     .get(timeoutSeconds, TimeUnit.SECONDS)
             } catch (ex: Exception) {
-                logger.error("Synchronous database operation {} failed: {}", operationName, ex.message, ex)
-                when (ex.cause) {
+                // Unwrap ExecutionException and UndeclaredThrowableException wrappers
+                val cause =
+                    generateSequence(ex as Throwable) { t ->
+                        if (t is java.util.concurrent.ExecutionException || t is java.lang.reflect.UndeclaredThrowableException) t.cause else null
+                    }.last()
+                logger.error("Synchronous database operation {} failed: {}", operationName, cause.message, cause)
+                when (cause) {
                     is SQLException -> {
                         meterService.incrementExceptionThrownCounter("SQLException")
-                        throw DataAccessResourceFailureException("Database operation failed", ex)
+                        throw DataAccessResourceFailureException("Database operation failed", cause)
                     }
 
                     is DataAccessResourceFailureException -> {
                         meterService.incrementExceptionThrownCounter("DataAccessResourceFailureException")
-                        throw ex
+                        throw cause
                     }
 
                     else -> {
                         meterService.incrementExceptionThrownCounter("DatabaseOperationTimeoutException")
-                        throw DataAccessResourceFailureException("Database operation timeout", ex)
+                        throw DataAccessResourceFailureException("Database operation timeout", cause)
                     }
                 }
             }
-        }
-
-        /**
-         * Execute database operations directly without resilience patterns
-         * Used as fallback when resilience components are not available
-         */
-        private fun <T> executeDirectly(
-            operation: () -> T,
-            operationName: String,
-        ): T {
-            val startTime = System.currentTimeMillis()
-            return try {
-                val result: T
-                val duration =
-                    measureTimeMillis {
-                        result = operation()
-                    }
-                if (duration > 100) {
-                    logger.warn("Slow query detected for {}: {} ms", operationName, duration)
-                    meterService.incrementExceptionThrownCounter("SlowQuery")
-                }
-                logger.debug("Database operation {} completed in {} ms", operationName, System.currentTimeMillis() - startTime)
-                result
-            } catch (ex: Exception) {
-                logger.error("Database operation {} failed: {}", operationName, ex.message, ex)
-                when (ex) {
-                    is SQLException -> meterService.incrementExceptionThrownCounter("SQLException")
-                    is DataAccessResourceFailureException -> meterService.incrementExceptionThrownCounter("DataAccessResourceFailureException")
-                    is CannotGetJdbcConnectionException -> meterService.incrementExceptionThrownCounter("CannotGetJdbcConnectionException")
-                    else -> meterService.incrementExceptionThrownCounter("DatabaseOperationException")
-                }
-                throw ex
-            }
-        }
     }

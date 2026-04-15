@@ -19,7 +19,7 @@ class WebSecurityConfigSpec extends Specification {
     TokenBlacklistService tokenBlacklistService = Mock()
 
     def setup() {
-        webSecurityConfig = new WebSecurityConfig(environment)
+        webSecurityConfig = new WebSecurityConfig(environment, 'test_jwt_key_for_web_security_config_spec_test_jwt_key_x')
     }
 
     def "should create password encoder bean"() {
@@ -89,7 +89,7 @@ class WebSecurityConfigSpec extends Specification {
 
     def "should create filter registration beans with disabled status"() {
         given:
-        def jwtFilter = new JwtAuthenticationFilter(meterRegistry, tokenBlacklistService)
+        def jwtFilter = new JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, 'test_jwt_key_for_web_security_config_spec_test_jwt_key_x')
         def rateLimitFilter = new RateLimitingFilter()
         def securityAuditFilter = new SecurityAuditFilter(meterRegistry)
         def httpErrorLoggingFilter = new HttpErrorLoggingFilter(meterRegistry)

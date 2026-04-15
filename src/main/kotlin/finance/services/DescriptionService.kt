@@ -21,7 +21,7 @@ class DescriptionService
         private val transactionRepository: TransactionRepository,
         meterService: MeterService,
         validator: Validator,
-        resilienceComponents: ResilienceComponents? = null,
+        resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Description, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Description"
 
