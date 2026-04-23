@@ -60,7 +60,7 @@ data class User(
     var username: String,
     @field:Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
     @field:NotBlank(message = "Password cannot be blank")
-    @Column(name = "password", unique = true, nullable = false)
+    @Column(name = "password", nullable = false)
     @field:JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     var password: String,
 ) {

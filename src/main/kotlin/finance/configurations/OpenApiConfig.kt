@@ -23,8 +23,7 @@ open class OpenApiConfig {
                     .description("Personal Finance Management API built with Spring Boot, Kotlin, and GraphQL")
                     .contact(
                         Contact()
-                            .name("Brian Henning")
-                            .email("henninb@msn.com")
+                            .name("Finance API")
                             .url("https://github.com/henninb/raspi-finance-endpoint"),
                     ).license(
                         License()

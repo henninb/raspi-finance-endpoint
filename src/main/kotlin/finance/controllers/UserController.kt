@@ -43,6 +43,11 @@ class UserController(
             logger.warn("SECURITY: Rejected pre-encoded password in signup attempt for username: ${user.username}")
             return ResponseEntity.badRequest().body("""{"error":"Invalid password format"}""")
         }
+        val passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@\$!%*?&])[A-Za-z\\d@\$!%*?&]+\$"
+        if (user.password.length < 8 || !user.password.matches(passwordRegex.toRegex())) {
+            logger.warn("SECURITY: Weak password rejected for username: ${user.username}")
+            return ResponseEntity.badRequest().body("""{"error":"Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"}""")
+        }
         return try {
             userService.signUp(user)
             ResponseEntity.ok(writeJson(user))
@@ -54,7 +59,7 @@ class UserController(
             throw ResponseStatusException(HttpStatus.CONFLICT, "User already exists.")
         } catch (ex: Exception) {
             logger.error("Unexpected error during user sign up: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to sign up user: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to sign up user")
         }
     }
 }

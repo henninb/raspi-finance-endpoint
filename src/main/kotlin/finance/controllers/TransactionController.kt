@@ -378,7 +378,7 @@ class TransactionController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transactions for $accountNameOwner: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions")
             }
         }
 
@@ -494,7 +494,7 @@ class TransactionController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error updating transaction state for $guid: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update transaction state")
             }
         }
     }
@@ -531,7 +531,7 @@ class TransactionController(
 
             is ServiceResult.SystemError -> {
                 logger.error("Unexpected error creating future transaction: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error creating future transaction")
             }
         }
     }
@@ -599,12 +599,12 @@ class TransactionController(
 
             is ServiceResult.BusinessError -> {
                 logger.error("Business error updating receipt image for $guid: ${result.message}")
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${result.message}")
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image")
             }
 
             is ServiceResult.SystemError -> {
                 logger.error("System error updating receipt image for $guid: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to update receipt image")
             }
         }
     }
@@ -644,7 +644,7 @@ class TransactionController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transactions for category $categoryName: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by category: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by category")
             }
         }
 
@@ -683,7 +683,7 @@ class TransactionController(
 
             is ServiceResult.SystemError -> {
                 logger.error("System error retrieving transactions for description $descriptionName: ${result.exception.message}", result.exception)
-                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by description: ${result.exception.message}", result.exception)
+                throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve transactions by description")
             }
         }
 }

@@ -53,11 +53,16 @@ open class WebSecurityConfig(
             .addFilterBefore(loggingCorsFilter, UsernamePasswordAuthenticationFilter::class.java)
             .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
             .headers { headers ->
+                headers.cacheControl { }
                 headers.contentTypeOptions { }
                 headers.frameOptions { it.deny() }
                 headers.referrerPolicy { it.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN) }
-                // Apply HSTS only when running with a production-like profile
-                val isProd = environment.activeProfiles.any { it.equals("prod", true) || it.equals("production", true) }
+                // Apply HSTS for all internet-facing profiles
+                val isProd =
+                    environment.activeProfiles.any {
+                        it.equals("prod", true) || it.equals("production", true) ||
+                            it.equals("stage", true) || it.equals("prodora", true)
+                    }
                 if (isProd) {
                     headers.httpStrictTransportSecurity { hsts ->
                         hsts.includeSubDomains(true).preload(true).maxAgeInSeconds(15552000)
@@ -90,7 +95,7 @@ open class WebSecurityConfig(
             }.authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/login", "/api/register", "/api/logout", "/api/csrf").permitAll()
                 auth.requestMatchers("/graphiql").permitAll()
-                auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
                 auth.requestMatchers("/actuator/health", "/health").permitAll()
                 auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
@@ -121,7 +126,8 @@ open class WebSecurityConfig(
     open fun jwtAuthenticationFilter(
         meterRegistry: MeterRegistry,
         tokenBlacklistService: TokenBlacklistService,
-    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, jwtKey)
+        customProperties: CustomProperties,
+    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, jwtKey, customProperties)
 
     // Prevent Boot from auto-registering these filters with the servlet container; they are managed by SecurityFilterChain
     @Bean

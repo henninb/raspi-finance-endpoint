@@ -21,6 +21,7 @@ class TokenBlacklistService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TokenBlacklistService::class.java)
+        private const val MAX_BLACKLIST_SIZE = 10_000
     }
 
     init {
@@ -58,6 +59,19 @@ class TokenBlacklistService {
         token: String,
         expirationTime: Long,
     ) {
+        if (blacklistedTokens.size >= MAX_BLACKLIST_SIZE) {
+            logger.warn("Blacklist at capacity ({}), running early cleanup before adding token", MAX_BLACKLIST_SIZE)
+            cleanupExpiredTokens()
+            if (blacklistedTokens.size >= MAX_BLACKLIST_SIZE) {
+                logger.error("Blacklist still at capacity after cleanup; dropping oldest 10% of entries")
+                val cutoff =
+                    blacklistedTokens.entries
+                        .sortedBy { it.value }
+                        .take(MAX_BLACKLIST_SIZE / 10)
+                        .map { it.key }
+                cutoff.forEach { blacklistedTokens.remove(it) }
+            }
+        }
         blacklistedTokens[token] = expirationTime
         logger.info("Token blacklisted, expires at: ${Date(expirationTime)}, current blacklist size: ${blacklistedTokens.size}")
     }

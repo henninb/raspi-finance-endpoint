@@ -303,6 +303,6 @@ class DescriptionController(
             throw ex
         } catch (ex: Exception) {
             logger.error("Failed to merge descriptions into ${request.targetName}: ${ex.message}", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge descriptions: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge descriptions")
         }
 }

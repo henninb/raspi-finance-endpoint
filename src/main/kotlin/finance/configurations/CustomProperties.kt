@@ -7,4 +7,5 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 open class CustomProperties(
     var excludedAccounts: MutableList<String> = mutableListOf(),
+    var adminUsers: MutableList<String> = mutableListOf(),
 )

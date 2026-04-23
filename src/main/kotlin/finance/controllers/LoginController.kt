@@ -101,6 +101,8 @@ class LoginController(
         val token =
             Jwts
                 .builder()
+                .issuer("raspi-finance-endpoint")
+                .subject(loginRequest.username)
                 .claim("username", loginRequest.username)
                 .notBefore(now)
                 .expiration(expiration)
@@ -160,6 +162,7 @@ class LoginController(
                 val claims =
                     Jwts
                         .parser()
+                        .requireIssuer("raspi-finance-endpoint")
                         .verifyWith(key)
                         .build()
                         .parseSignedClaims(token)
@@ -242,6 +245,8 @@ class LoginController(
         val token =
             Jwts
                 .builder()
+                .issuer("raspi-finance-endpoint")
+                .subject(newUser.username)
                 .claim("username", newUser.username)
                 .notBefore(now)
                 .expiration(expiration)
@@ -286,6 +291,7 @@ class LoginController(
             val claims =
                 Jwts
                     .parser()
+                    .requireIssuer("raspi-finance-endpoint")
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)

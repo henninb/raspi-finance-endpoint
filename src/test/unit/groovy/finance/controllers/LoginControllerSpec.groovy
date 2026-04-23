@@ -79,6 +79,7 @@ class LoginControllerSpec extends Specification {
         def request = Mock(jakarta.servlet.http.HttpServletRequest)
         def key = Keys.hmacShaKeyFor(loginController.jwtKey.bytes)
         def token = Jwts.builder()
+            .issuer("raspi-finance-endpoint")
             .claim("username", "testuser")
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + 3600000))
@@ -164,7 +165,7 @@ class LoginControllerSpec extends Specification {
         given:
         def user = new User(username: "testuser", password: "hashed_password")
         def key = Keys.hmacShaKeyFor(loginController.jwtKey.bytes)
-        def token = Jwts.builder().claim("username", "testuser").setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 3600000)).signWith(key).compact()
+        def token = Jwts.builder().issuer("raspi-finance-endpoint").claim("username", "testuser").setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 3600000)).signWith(key).compact()
         userRepository.findByUsername("testuser") >> Optional.of(user)
 
         when:

@@ -358,8 +358,16 @@ class TransactionService
         ): ServiceResult<ReceiptImage> {
             return handleServiceOperation("updateTransactionReceiptImage", guid) {
                 val owner = TenantContext.getCurrentOwner()
+                // 5 MB decoded → ~6.67 MB base64; reject oversized payloads before allocating heap
+                val maxBase64Length = 5 * 1024 * 1024 * 4 / 3 + 1024
+                if (imageBase64Payload.length > maxBase64Length) {
+                    throw IllegalArgumentException("Image payload exceeds the maximum allowed size of 5 MB")
+                }
                 val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
                 val rawImage = Base64.getDecoder().decode(imageBase64String)
+                if (!imageProcessingService.validateImageSize(rawImage)) {
+                    throw IllegalArgumentException("Decoded image exceeds the maximum allowed size of 5 MB")
+                }
                 val imageFormatType = imageProcessingService.getImageFormatType(rawImage)
                 val thumbnail = imageProcessingService.createThumbnail(rawImage, imageFormatType)
 

@@ -25,6 +25,7 @@ class JwtAuthenticationFilter(
     private val meterRegistry: MeterRegistry,
     private val tokenBlacklistService: TokenBlacklistService,
     private val jwtKey: String,
+    private val customProperties: CustomProperties,
 ) : OncePerRequestFilter() {
     companion object {
         private val securityLogger = LogManager.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
@@ -90,6 +91,7 @@ class JwtAuthenticationFilter(
                     val claims: Claims =
                         Jwts
                             .parser()
+                            .requireIssuer("raspi-finance-endpoint")
                             .verifyWith(key)
                             .build()
                             .parseSignedClaims(token)
@@ -102,10 +104,13 @@ class JwtAuthenticationFilter(
                         SecurityContextHolder.clearContext()
                     } else {
                         val authorities =
-                            listOf(
-                                SimpleGrantedAuthority("ROLE_USER"),
-                                SimpleGrantedAuthority("USER"),
-                            )
+                            buildList {
+                                add(SimpleGrantedAuthority("ROLE_USER"))
+                                add(SimpleGrantedAuthority("USER"))
+                                if (customProperties.adminUsers.any { it.equals(username, ignoreCase = true) }) {
+                                    add(SimpleGrantedAuthority("ROLE_ADMIN"))
+                                }
+                            }
                         val auth = UsernamePasswordAuthenticationToken(username, null, authorities)
                         SecurityContextHolder.getContext().authentication = auth
 
