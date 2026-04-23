@@ -19,7 +19,7 @@ class CustomPropertiesSpec extends Specification {
         def excludedAccounts = ["account1", "account2"]
 
         when:
-        CustomProperties properties = new CustomProperties(excludedAccounts)
+        CustomProperties properties = new CustomProperties(excludedAccounts, [])
 
         then:
         properties.excludedAccounts == excludedAccounts

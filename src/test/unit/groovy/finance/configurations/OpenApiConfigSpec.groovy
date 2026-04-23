@@ -30,8 +30,8 @@ class OpenApiConfigSpec extends Specification {
 
         then:
         openAPI.info.contact != null
-        openAPI.info.contact.name == "Brian Henning"
-        openAPI.info.contact.email == "henninb@msn.com"
+        openAPI.info.contact.name == "Finance API"
+        openAPI.info.contact.email == null
         openAPI.info.contact.url == "https://github.com/henninb/raspi-finance-endpoint"
     }
 

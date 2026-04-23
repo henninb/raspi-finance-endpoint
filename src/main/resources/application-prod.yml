@@ -5,6 +5,7 @@ server:
     enabled: true
   tomcat:
     connection-timeout: 10s
+    max-http-form-post-size: 12MB
   ssl:
     enabled: ${SSL_ENABLED}
     key-store: classpath:bhenning-letsencrypt.p12
@@ -15,6 +16,10 @@ server:
     enabled-protocols: TLSv1.3,TLSv1.2
     protocol: TLS
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
   graphql:
     path: /graphql
     graphiql:
@@ -167,6 +172,8 @@ custom:
         - https://netlify.brianhenning.com
     excluded-accounts:
       - test_brian
+    admin-users:
+      - ${ADMIN_USERNAME:}
   security:
     rate-limit:
       enabled: true
