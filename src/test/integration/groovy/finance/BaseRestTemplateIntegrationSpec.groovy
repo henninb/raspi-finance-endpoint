@@ -144,6 +144,8 @@ class BaseRestTemplateIntegrationSpec extends Specification {
         return Jwts.builder()
             .claim('username', username)
             .claim('authorities', authorities)
+            .issuer('raspi-finance-endpoint')
+            .audience().add('raspi-finance-endpoint').and()
             .issuedAt(issuedAt)
             .expiration(expiration)
             .signWith(key)

@@ -1,6 +1,7 @@
 package finance.graphql
 
 import finance.BaseIntegrationSpec
+import finance.controllers.dto.ParameterInputDto
 import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.Parameter
 import finance.services.ParameterService
@@ -18,16 +19,15 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     def "createParameter mutation succeeds with valid input"() {
         given:
         withUserRole()
-        def parameter = new Parameter(
-                0L,
-                "",
+        def dto = new ParameterInputDto(
+                null,
                 "test_create_param",
                 "test_create_value",
                 true
         )
 
         when:
-        def result = mutationController.createParameter(parameter)
+        def result = mutationController.createParameter(dto)
 
         then:
         result != null
@@ -40,16 +40,15 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     def "createParameter mutation fails validation for empty parameter name"() {
         given:
         withUserRole()
-        def parameter = new Parameter(
-                0L,
-                "",
+        def dto = new ParameterInputDto(
+                null,
                 "",                     // invalid: empty
                 "test_value",
                 true
         )
 
         when:
-        mutationController.createParameter(parameter)
+        mutationController.createParameter(dto)
 
         then:
         thrown(ConstraintViolationException)
@@ -58,16 +57,15 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     def "createParameter mutation fails validation for parameter name too long"() {
         given:
         withUserRole()
-        def parameter = new Parameter(
-                0L,
-                "",
+        def dto = new ParameterInputDto(
+                null,
                 "a" * 51,               // invalid: exceeds 50 character limit
                 "test_value",
                 true
         )
 
         when:
-        mutationController.createParameter(parameter)
+        mutationController.createParameter(dto)
 
         then:
         thrown(ConstraintViolationException)
@@ -76,16 +74,15 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     def "createParameter mutation fails validation for empty parameter value"() {
         given:
         withUserRole()
-        def parameter = new Parameter(
-                0L,
-                "",
+        def dto = new ParameterInputDto(
+                null,
                 "test_param",
                 "",                     // invalid: empty
                 true
         )
 
         when:
-        mutationController.createParameter(parameter)
+        mutationController.createParameter(dto)
 
         then:
         thrown(ConstraintViolationException)
@@ -95,16 +92,15 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
         given:
         withUserRole()
         def created = createTestParameter("test_update_param", "original_value")
-        def updated = new Parameter(
+        def updateDto = new ParameterInputDto(
                 created.parameterId,
-                "",
                 "test_update_param",
                 "updated_value",
                 true
         )
 
         when:
-        def result = mutationController.updateParameter(updated)
+        def result = mutationController.updateParameter(updateDto)
 
         then:
         result != null
@@ -117,16 +113,15 @@ class ParameterMutationIntSpec extends BaseIntegrationSpec {
     def "updateParameter mutation fails for non-existent parameter"() {
         given:
         withUserRole()
-        def parameter = new Parameter(
+        def dto = new ParameterInputDto(
                 999999L,                // non-existent ID
-                "",
                 "test_param",
                 "test_value",
                 true
         )
 
         when:
-        mutationController.updateParameter(parameter)
+        mutationController.updateParameter(dto)
 
         then:
         thrown(RuntimeException)
