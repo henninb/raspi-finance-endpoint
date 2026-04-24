@@ -8,7 +8,6 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Tag
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -24,9 +23,11 @@ import javax.crypto.SecretKey
 class JwtAuthenticationFilter(
     private val meterRegistry: MeterRegistry,
     private val tokenBlacklistService: TokenBlacklistService,
-    private val jwtKey: String,
+    jwtKey: String,
     private val customProperties: CustomProperties,
 ) : OncePerRequestFilter() {
+
+    private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray(Charsets.UTF_8))
     companion object {
         private val securityLogger = LogManager.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
     }
@@ -87,12 +88,12 @@ class JwtAuthenticationFilter(
                 SecurityContextHolder.clearContext()
             } else {
                 try {
-                    val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
                     val claims: Claims =
                         Jwts
                             .parser()
                             .requireIssuer("raspi-finance-endpoint")
-                            .verifyWith(key)
+                            .requireAudience("raspi-finance-endpoint")
+                            .verifyWith(secretKey)
                             .build()
                             .parseSignedClaims(token)
                             .payload
