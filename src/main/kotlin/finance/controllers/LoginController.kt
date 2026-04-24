@@ -37,7 +37,6 @@ class LoginController(
     private val loginAttemptService: LoginAttemptService,
     @Value("\${custom.project.jwt.key}") jwtKey: String,
 ) : BaseController() {
-
     private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray(Charsets.UTF_8))
 
     @Value("\${spring.profiles.active:dev}")
