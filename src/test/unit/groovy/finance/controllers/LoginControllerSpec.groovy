@@ -3,6 +3,7 @@ import finance.configurations.ResilienceComponents
 
 import finance.domain.User
 import finance.repositories.UserRepository
+import finance.services.LoginAttemptService
 import finance.services.MeterService
 import finance.services.TokenBlacklistService
 import finance.services.UserService
@@ -20,17 +21,19 @@ import java.util.Date
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 class LoginControllerSpec extends Specification {
+    private static final String TEST_JWT_KEY = "test_jwt_key_for_login_controller_spec_test_jwt_key_for_login_controller_spec"
+
     private UserRepository userRepository = Mock()
     private Validator validator = Mock()
     private MeterService meterService = new MeterService()
     private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder(), meterService, validator, ResilienceComponents.noOp())
     private TokenBlacklistService tokenBlacklistService = Mock()
-    private LoginController loginController = new LoginController(userService, tokenBlacklistService)
+    private LoginAttemptService loginAttemptService = new LoginAttemptService()
+    private LoginController loginController = new LoginController(userService, tokenBlacklistService, loginAttemptService, TEST_JWT_KEY)
     private HttpServletResponse response = Mock()
     private BindingResult bindingResult = Mock()
 
     def setup() {
-        loginController.jwtKey = "test_jwt_key_for_login_controller_spec_test_jwt_key_for_login_controller_spec"
         loginController.activeProfile = "dev"
     }
 
@@ -77,12 +80,13 @@ class LoginControllerSpec extends Specification {
     def "logout should clear token and return NO_CONTENT"() {
         given:
         def request = Mock(jakarta.servlet.http.HttpServletRequest)
-        def key = Keys.hmacShaKeyFor(loginController.jwtKey.bytes)
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
         def token = Jwts.builder()
             .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
             .claim("username", "testuser")
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + 3600000))
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 3600000))
             .signWith(key)
             .compact()
         request.getCookies() >> null
@@ -164,8 +168,8 @@ class LoginControllerSpec extends Specification {
     def "getCurrentUser should return user details for valid token"() {
         given:
         def user = new User(username: "testuser", password: "hashed_password")
-        def key = Keys.hmacShaKeyFor(loginController.jwtKey.bytes)
-        def token = Jwts.builder().issuer("raspi-finance-endpoint").claim("username", "testuser").setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 3600000)).signWith(key).compact()
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
+        def token = Jwts.builder().issuer("raspi-finance-endpoint").audience().add("raspi-finance-endpoint").and().claim("username", "testuser").issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + 3600000)).signWith(key).compact()
         userRepository.findByUsername("testuser") >> Optional.of(user)
 
         when:
