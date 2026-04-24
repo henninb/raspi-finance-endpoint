@@ -11,7 +11,7 @@ class SmartUserBuilder {
 
     private String testOwner
     private String username
-    private String password = 'test_password'
+    private String password = 'Test1234!'
     private Boolean activeStatus = true
     private String firstName = 'test'
     private String lastName = 'user'
