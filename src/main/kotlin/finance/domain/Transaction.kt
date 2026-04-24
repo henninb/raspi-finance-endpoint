@@ -63,6 +63,7 @@ class Transaction(
     @Column(name = "owner", nullable = false)
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
+    @field:JsonProperty(access = JsonProperty.Access.READ_ONLY)
     var owner: String = "",
     @Column(name = "guid", unique = true, nullable = false)
     @field:Pattern(regexp = UUID_PATTERN, message = FIELD_MUST_BE_UUID_MESSAGE)

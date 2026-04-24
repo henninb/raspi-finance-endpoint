@@ -2,6 +2,7 @@ package finance.configurations
 
 import finance.services.TokenBlacklistService
 import io.micrometer.core.instrument.MeterRegistry
+import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.web.servlet.FilterRegistrationBean
@@ -30,8 +31,31 @@ open class WebSecurityConfig(
     @Value("\${custom.project.chrome-extension-id:}")
     private var chromeExtensionId: String = ""
 
+    @Value("\${spring.datasource.url:}")
+    private var datasourceUrl: String = ""
+
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${WebSecurityConfig::class.java.simpleName}")
+        private const val MIN_JWT_KEY_BYTES = 32
+        private val PROD_PROFILES = setOf("prod", "production", "stage", "prodora")
+    }
+
+    @PostConstruct
+    fun validateSecurityConfiguration() {
+        val keyBytes = jwtKey.toByteArray(Charsets.UTF_8).size
+        check(keyBytes >= MIN_JWT_KEY_BYTES) {
+            "FATAL: custom.project.jwt.key is $keyBytes bytes — minimum $MIN_JWT_KEY_BYTES bytes (256 bits) required for HS256"
+        }
+        securityLogger.info("SECURITY_CONFIG JWT key validated: {} bytes", keyBytes)
+
+        val isProd = environment.activeProfiles.any { it.lowercase() in PROD_PROFILES }
+        if (isProd && datasourceUrl.isNotBlank()) {
+            val urlLower = datasourceUrl.lowercase()
+            check(urlLower.contains("ssl") || urlLower.contains("sslmode")) {
+                "FATAL: DATASOURCE URL must include SSL parameters in production (e.g., ?sslmode=require). Current URL does not contain 'ssl'."
+            }
+            securityLogger.info("SECURITY_CONFIG datasource SSL parameter present in URL")
+        }
     }
 
     @Bean
@@ -77,21 +101,20 @@ open class WebSecurityConfig(
             // 1. Cookie-based CSRF tokens (double-submit pattern via CookieCsrfTokenRepository)
             // 2. SameSite=Strict cookies (browser-level protection in production)
             // 3. JWT authentication via HttpOnly cookies
-            // 4. Exemptions: login/register (pre-authentication), GraphQL (for dev convenience)
+            // 4. Exemptions: login/register (pre-authentication) only
+            // /graphql is NOT exempted — mutations require X-CSRF-TOKEN header
             // This provides defense-in-depth against CSRF attacks and resolves CodeQL alert #10
             .csrf { csrf ->
                 val csrfTokenRepository =
                     CookieCsrfTokenRepository
                         .withHttpOnlyFalse()
                         .apply {
-                            // Use X-CSRF-TOKEN header (instead of default X-XSRF-TOKEN)
-                            // This matches the standard CSRF header name used by most frameworks
                             setHeaderName("X-CSRF-TOKEN")
                         }
                 csrf
                     .csrfTokenRepository(csrfTokenRepository)
                     .csrfTokenRequestHandler(SpaCsrfTokenRequestHandler())
-                    .ignoringRequestMatchers("/api/login", "/api/register", "/graphiql", "/graphql")
+                    .ignoringRequestMatchers("/api/login", "/api/register", "/graphiql")
             }.authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/login", "/api/register", "/api/logout", "/api/csrf").permitAll()
                 auth.requestMatchers("/graphiql").permitAll()
@@ -171,7 +194,7 @@ open class WebSecurityConfig(
                     origins.add("chrome-extension://$chromeExtensionId")
                 }
                 allowedOrigins = origins
-                allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key", "X-CSRF-TOKEN")
                 allowCredentials = true
                 // Spring Framework version here expects seconds as Long
