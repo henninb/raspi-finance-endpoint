@@ -126,6 +126,7 @@ open class WebSecurityConfig(
                 auth.requestMatchers("/actuator/**").authenticated()
                 auth.anyRequest().denyAll()
             }.formLogin { it.disable() }
+            .httpBasic { it.disable() }
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter::class.java)
         val chain = http.build()

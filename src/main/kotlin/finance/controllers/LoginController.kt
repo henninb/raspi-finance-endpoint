@@ -69,7 +69,7 @@ class LoginController(
 
         if (loginAttemptService.isLocked(loginRequest.username)) {
             val remaining = loginAttemptService.remainingLockSeconds(loginRequest.username)
-            logger.warn("LOGIN_429_LOCKED username=${loginRequest.username} remainingSeconds=$remaining")
+            logger.warn("LOGIN_429_LOCKED username={} remainingSeconds={}", loginRequest.username.take(60), remaining)
             return ResponseEntity
                 .status(HttpStatus.TOO_MANY_REQUESTS)
                 .body(mapOf("error" to "Account temporarily locked. Try again in $remaining seconds."))
@@ -77,7 +77,7 @@ class LoginController(
 
         if (bindingResult.hasErrors()) {
             val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
-            logger.warn("LOGIN_400_VALIDATION username=${loginRequest.username} errors=$errors")
+            logger.warn("LOGIN_400_VALIDATION username={} errors={}", loginRequest.username.take(60), errors)
             return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
         }
 
@@ -92,14 +92,14 @@ class LoginController(
             try {
                 userService.signIn(authAttempt)
             } catch (e: Exception) {
-                logger.warn("LOGIN_401_EXCEPTION username=${loginRequest.username} ex=${e.javaClass.simpleName} msg=${e.message}")
+                logger.warn("LOGIN_401_EXCEPTION username={} ex={} msg={}", loginRequest.username.take(60), e.javaClass.simpleName, e.message)
                 loginAttemptService.recordFailure(loginRequest.username)
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
             }
 
-        logger.info("LOGIN_AUTH_ATTEMPT username=${loginRequest.username}")
+        logger.info("LOGIN_AUTH_ATTEMPT username={}", loginRequest.username.take(60))
         if (user.isEmpty) {
-            logger.warn("LOGIN_401_INVALID_CREDENTIALS username=${loginRequest.username}")
+            logger.warn("LOGIN_401_INVALID_CREDENTIALS username={}", loginRequest.username.take(60))
             loginAttemptService.recordFailure(loginRequest.username)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
         }
@@ -134,7 +134,7 @@ class LoginController(
                 .build()
 
         response.addHeader("Set-Cookie", cookie.toString())
-        logger.info("LOGIN_SUCCESS username=${loginRequest.username}")
+        logger.info("LOGIN_SUCCESS username={}", loginRequest.username.take(60))
         return ResponseEntity.ok(mapOf("message" to "Login successful"))
     }
 
