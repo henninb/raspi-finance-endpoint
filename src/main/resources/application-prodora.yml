@@ -22,6 +22,8 @@ spring:
     schema:
       printer:
         enabled: false
+      introspection:
+        enabled: false
   application:
     name: raspi-finance-endpoint
   #  profiles:

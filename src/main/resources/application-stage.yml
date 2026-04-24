@@ -22,6 +22,8 @@ spring:
     schema:
       printer:
         enabled: false
+      introspection:
+        enabled: false
   security:
     user:
       name: ${API_USERNAME}

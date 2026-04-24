@@ -505,7 +505,7 @@ class TransactionController(
     @ApiResponses(value = [ApiResponse(responseCode = "201", description = "Future transaction created"), ApiResponse(responseCode = "400", description = "Validation error"), ApiResponse(responseCode = "409", description = "Duplicate"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PostMapping("/future", consumes = ["application/json"], produces = ["application/json"])
     fun insertFutureTransaction(
-        @RequestBody transaction: Transaction,
+        @Valid @RequestBody transaction: Transaction,
     ): ResponseEntity<Transaction> {
         logger.info("Inserting future transaction for account: ${transaction.accountNameOwner}")
         return when (val result = transactionService.createAndSaveFutureTransaction(transaction)) {
