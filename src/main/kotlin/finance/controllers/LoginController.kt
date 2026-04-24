@@ -18,8 +18,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.BindingResult
-import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -65,7 +65,7 @@ class LoginController(
         bindingResult: BindingResult,
         response: HttpServletResponse,
     ): ResponseEntity<Map<String, String>> {
-        logger.info("LOGIN_REQUEST username=${loginRequest.username}")
+        logger.info("LOGIN_REQUEST username={}", loginRequest.username.take(60).replace(Regex("[\\r\\n\\t]"), "_"))
 
         if (loginAttemptService.isLocked(loginRequest.username)) {
             val remaining = loginAttemptService.remainingLockSeconds(loginRequest.username)
@@ -117,6 +117,7 @@ class LoginController(
                 .and()
                 .subject(loginRequest.username)
                 .claim("username", loginRequest.username)
+                .issuedAt(now)
                 .notBefore(now)
                 .expiration(expiration)
                 .signWith(secretKey)
@@ -263,6 +264,7 @@ class LoginController(
                 .and()
                 .subject(newUser.username)
                 .claim("username", newUser.username)
+                .issuedAt(now)
                 .notBefore(now)
                 .expiration(expiration)
                 .signWith(secretKey)
@@ -283,54 +285,30 @@ class LoginController(
     }
 
     // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
-    @Operation(summary = "Return JWT identity info from cookie")
+    @Operation(summary = "Return current user info from authenticated session")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Token valid; user info returned"),
-            ApiResponse(responseCode = "401", description = "Missing or invalid token"),
+            ApiResponse(responseCode = "200", description = "User info returned"),
+            ApiResponse(responseCode = "401", description = "Not authenticated"),
+            ApiResponse(responseCode = "404", description = "User not found"),
         ],
     )
     @GetMapping("/me")
     fun getCurrentUser(
-        @CookieValue(name = "token", required = false) token: String?,
+        @AuthenticationPrincipal principal: String?,
     ): ResponseEntity<Any> {
-        // Check if the token cookie is present.
-        if (token.isNullOrBlank()) {
-            logger.info("No token found in the request")
+        if (principal.isNullOrBlank()) {
+            logger.info("No authenticated principal found")
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
 
-        try {
-            // Parse and validate the JWT.
-            val claims =
-                Jwts
-                    .parser()
-                    .requireIssuer("raspi-finance-endpoint")
-                    .requireAudience("raspi-finance-endpoint")
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .payload
-
-            val username = claims["username"] as? String
-            if (username.isNullOrBlank()) {
-                logger.info("Token does not contain a valid username claim")
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
-            }
-
-            // Optionally, fetch the full user details from your database.
-            val user = userService.findUserByUsername(username)
-            if (user == null) {
-                logger.info("No user found for username: $username")
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
-            }
-
-            // Return user information (excluding sensitive data).
-            return ResponseEntity.ok(user)
-        } catch (e: Exception) {
-            logger.warn("JWT validation failed for token validation")
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid or expired token"))
+        val user = userService.findUserByUsername(principal)
+        if (user == null) {
+            logger.info("No user found for authenticated principal: {}", principal)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
         }
+
+        return ResponseEntity.ok(user)
     }
 
     /**

@@ -116,6 +116,7 @@ class BaseControllerFunctionalSpec extends Specification {
                 .audience().add("raspi-finance-endpoint").and()
                 .subject(username)
                 .claim("username", username)
+                .issuedAt(new Date(now))
                 .notBefore(new Date(now))
                 .expiration(new Date(now + 3600000)) // 1 hour expiration
                 .signWith(key)
