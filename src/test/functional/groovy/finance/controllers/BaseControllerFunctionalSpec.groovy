@@ -112,6 +112,9 @@ class BaseControllerFunctionalSpec extends Specification {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.bytes)
         long now = System.currentTimeMillis()
         return Jwts.builder()
+                .issuer("raspi-finance-endpoint")
+                .audience().add("raspi-finance-endpoint").and()
+                .subject(username)
                 .claim("username", username)
                 .notBefore(new Date(now))
                 .expiration(new Date(now + 3600000)) // 1 hour expiration
