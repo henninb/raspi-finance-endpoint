@@ -36,12 +36,18 @@ class LoginAttemptService {
             val newCount = record.count + 1
             val lockedUntil =
                 when {
-                    record.lockedUntil != null -> record.lockedUntil
+                    record.lockedUntil != null -> {
+                        record.lockedUntil
+                    }
+
                     newCount >= MAX_ATTEMPTS -> {
                         logger.warn("SECURITY: account locked after {} failed attempts: {}", newCount, key)
                         Instant.now().plusSeconds(LOCKOUT_DURATION_SECONDS)
                     }
-                    else -> null
+
+                    else -> {
+                        null
+                    }
                 }
             AttemptRecord(newCount, lockedUntil)
         }

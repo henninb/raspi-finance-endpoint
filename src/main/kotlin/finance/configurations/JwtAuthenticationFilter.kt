@@ -26,8 +26,8 @@ class JwtAuthenticationFilter(
     jwtKey: String,
     private val customProperties: CustomProperties,
 ) : OncePerRequestFilter() {
-
     private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray(Charsets.UTF_8))
+
     companion object {
         private val securityLogger = LogManager.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
     }
