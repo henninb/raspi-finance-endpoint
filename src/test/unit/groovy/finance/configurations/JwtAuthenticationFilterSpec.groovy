@@ -31,7 +31,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String secret = 'a' * 64 // 64-byte key
         def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
-        String token = Jwts.builder().issuer('raspi-finance-endpoint').claim('username', 'alice').signWith(key).compact()
+        String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'alice').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
         def req = Mock(HttpServletRequest)
         req.getCookies() >> null
@@ -58,7 +58,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String secret = 'b' * 64
         def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
-        String token = Jwts.builder().issuer('raspi-finance-endpoint').claim('username', 'bob').signWith(key).compact()
+        String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'bob').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
         def req = Mock(HttpServletRequest)
         req.getCookies() >> ([new Cookie('token', token)] as Cookie[])
@@ -114,7 +114,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         String secret = 'd' * 64
         def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
-        String token = Jwts.builder().issuer('raspi-finance-endpoint').claim('username', 'charlie').signWith(key).compact()
+        String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'charlie').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
         // Configure mock to return true for this specific token
         tokenBlacklistService.isBlacklisted(token) >> true

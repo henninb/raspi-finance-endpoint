@@ -2,6 +2,7 @@ package finance.controllers
 
 import finance.domain.LoginRequest
 import finance.domain.User
+import finance.services.LoginAttemptService
 import finance.services.TokenBlacklistService
 import finance.services.UserService
 import io.jsonwebtoken.Jwts
@@ -33,9 +34,11 @@ import javax.crypto.SecretKey
 class LoginController(
     private val userService: UserService,
     private val tokenBlacklistService: TokenBlacklistService,
+    private val loginAttemptService: LoginAttemptService,
+    @Value("\${custom.project.jwt.key}") jwtKey: String,
 ) : BaseController() {
-    @Value("\${custom.project.jwt.key}")
-    private lateinit var jwtKey: String
+
+    private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray(Charsets.UTF_8))
 
     @Value("\${spring.profiles.active:dev}")
     private lateinit var activeProfile: String
@@ -63,10 +66,16 @@ class LoginController(
         bindingResult: BindingResult,
         response: HttpServletResponse,
     ): ResponseEntity<Map<String, String>> {
-        // Entry log for tracing
         logger.info("LOGIN_REQUEST username=${loginRequest.username}")
 
-        // Check for validation errors on the minimal DTO
+        if (loginAttemptService.isLocked(loginRequest.username)) {
+            val remaining = loginAttemptService.remainingLockSeconds(loginRequest.username)
+            logger.warn("LOGIN_429_LOCKED username=${loginRequest.username} remainingSeconds=$remaining")
+            return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(mapOf("error" to "Account temporarily locked. Try again in $remaining seconds."))
+        }
+
         if (bindingResult.hasErrors()) {
             val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
             logger.warn("LOGIN_400_VALIDATION username=${loginRequest.username} errors=$errors")
@@ -85,28 +94,33 @@ class LoginController(
                 userService.signIn(authAttempt)
             } catch (e: Exception) {
                 logger.warn("LOGIN_401_EXCEPTION username=${loginRequest.username} ex=${e.javaClass.simpleName} msg=${e.message}")
+                loginAttemptService.recordFailure(loginRequest.username)
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
             }
 
         logger.info("LOGIN_AUTH_ATTEMPT username=${loginRequest.username}")
         if (user.isEmpty) {
             logger.warn("LOGIN_401_INVALID_CREDENTIALS username=${loginRequest.username}")
+            loginAttemptService.recordFailure(loginRequest.username)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Invalid credentials"))
         }
+        loginAttemptService.recordSuccess(loginRequest.username)
 
         // Generate JWT after validating credentials.
         val now = Date()
         val expiration = Date(now.time + JWT_EXPIRY_MS)
-        val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token =
             Jwts
                 .builder()
                 .issuer("raspi-finance-endpoint")
+                .audience()
+                .add("raspi-finance-endpoint")
+                .and()
                 .subject(loginRequest.username)
                 .claim("username", loginRequest.username)
                 .notBefore(now)
                 .expiration(expiration)
-                .signWith(key)
+                .signWith(secretKey)
                 .compact()
 
         val cookie =
@@ -158,12 +172,12 @@ class LoginController(
         // If token exists, blacklist it before clearing the cookie
         if (!token.isNullOrBlank()) {
             try {
-                val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
                 val claims =
                     Jwts
                         .parser()
                         .requireIssuer("raspi-finance-endpoint")
-                        .verifyWith(key)
+                        .requireAudience("raspi-finance-endpoint")
+                        .verifyWith(secretKey)
                         .build()
                         .parseSignedClaims(token)
                         .payload
@@ -241,16 +255,18 @@ class LoginController(
         val now = Date()
         val expiration = Date(now.time + JWT_EXPIRY_MS)
 
-        val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
         val token =
             Jwts
                 .builder()
                 .issuer("raspi-finance-endpoint")
+                .audience()
+                .add("raspi-finance-endpoint")
+                .and()
                 .subject(newUser.username)
                 .claim("username", newUser.username)
                 .notBefore(now)
                 .expiration(expiration)
-                .signWith(key)
+                .signWith(secretKey)
                 .compact()
 
         val cookie =
@@ -287,12 +303,12 @@ class LoginController(
 
         try {
             // Parse and validate the JWT.
-            val key: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray())
             val claims =
                 Jwts
                     .parser()
                     .requireIssuer("raspi-finance-endpoint")
-                    .verifyWith(key)
+                    .requireAudience("raspi-finance-endpoint")
+                    .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(token)
                     .payload

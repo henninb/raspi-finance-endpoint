@@ -89,7 +89,7 @@ open class WebSecurityConfig(
                     }
                 if (isProd) {
                     headers.httpStrictTransportSecurity { hsts ->
-                        hsts.includeSubDomains(true).preload(true).maxAgeInSeconds(15552000)
+                        hsts.includeSubDomains(true).preload(true).maxAgeInSeconds(31536000)
                     }
                 }
                 headers.contentSecurityPolicy { csp ->
