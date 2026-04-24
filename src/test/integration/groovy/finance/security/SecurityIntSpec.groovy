@@ -30,6 +30,7 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
     }
 
     // Helper method to create JWT tokens for testing (renamed to avoid overriding base helper)
+    // Tokens include issuer and audience so they pass the production JwtAuthenticationFilter.
     private String makeJwtToken(String username, List<String> authorities = ["ROLE_USER"], boolean expired = false) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
         java.util.Date issuedAt = new java.util.Date()
@@ -38,6 +39,9 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
             java.util.Date.from(Instant.now().plus(1, ChronoUnit.HOURS))
 
         return Jwts.builder()
+            .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
+            .subject(username)
             .claim("username", username)
             .claim("authorities", authorities)
             .issuedAt(issuedAt)
@@ -418,5 +422,97 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
         originalClaims.get("username") == newClaims.get("username")
         originalClaims.get("username") == "refreshuser"
         originalClaims.getIssuedAt().before(newClaims.getIssuedAt())  // New token should have later timestamp
+    }
+
+    void 'generated JWT tokens include issuedAt (iat) claim'() {
+        when:
+        String token = makeJwtToken("iatuser", ["ROLE_USER"])
+        SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
+        def claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+
+        then:
+        claims.getIssuedAt() != null
+        claims.getExpiration() != null
+        claims.getIssuedAt().before(claims.getExpiration())
+    }
+
+    void 'generated JWT tokens include issuer and audience claims'() {
+        when:
+        String token = makeJwtToken("claimuser", ["ROLE_USER"])
+        SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
+        def claims = Jwts.parser()
+            .requireIssuer("raspi-finance-endpoint")
+            .requireAudience("raspi-finance-endpoint")
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
+
+        then:
+        claims.issuer == "raspi-finance-endpoint"
+        claims.audience == ["raspi-finance-endpoint"] as Set
+        claims.get("username") == "claimuser"
+    }
+
+    void 'login endpoint rejects username shorter than 3 characters'() {
+        given:
+        def loginRequest = [username: "ab", password: "AnyPass1!"]
+
+        when:
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(loginRequest, headers)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.postForEntity(baseUrl + "/api/login", entity, String.class)
+        } catch (Exception e) {
+            response = new ResponseEntity<>("", e.message?.contains("400") ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+        then:
+        response.statusCode.value() == 400
+    }
+
+    void 'login endpoint rejects password longer than 128 characters'() {
+        given:
+        def longPassword = "A1!" + "a" * 126  // 129 chars total
+        def loginRequest = [username: "validuser", password: longPassword]
+
+        when:
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(loginRequest, headers)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.postForEntity(baseUrl + "/api/login", entity, String.class)
+        } catch (Exception e) {
+            response = new ResponseEntity<>("", e.message?.contains("400") ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+        then:
+        response.statusCode.value() == 400
+    }
+
+    void 'login endpoint accepts credentials within valid size bounds'() {
+        given:
+        def loginRequest = [username: "validuser", password: "ValidPass1!"]
+
+        when:
+        HttpHeaders headers = new HttpHeaders()
+        headers.setContentType(MediaType.APPLICATION_JSON)
+        HttpEntity<Object> entity = new HttpEntity<>(loginRequest, headers)
+        ResponseEntity<String> response
+        try {
+            response = restTemplate.postForEntity(baseUrl + "/api/login", entity, String.class)
+        } catch (Exception e) {
+            response = new ResponseEntity<>("", e.message?.contains("401") ? HttpStatus.UNAUTHORIZED : HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+
+        then: "reaches authentication logic (not rejected for size) — 401 means credentials not found, which is expected"
+        response.statusCode.value() in [200, 401]
     }
 }

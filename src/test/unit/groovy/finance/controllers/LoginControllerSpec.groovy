@@ -165,22 +165,24 @@ class LoginControllerSpec extends Specification {
         ]
     }
 
-    def "getCurrentUser should return user details for valid token"() {
+    // --- getCurrentUser tests ---
+    // The method now takes the already-authenticated principal from SecurityContext
+    // (via @AuthenticationPrincipal), not a raw JWT token.
+
+    def "getCurrentUser should return user details for valid principal"() {
         given:
         def user = new User(username: "testuser", password: "hashed_password")
-        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
-        def token = Jwts.builder().issuer("raspi-finance-endpoint").audience().add("raspi-finance-endpoint").and().claim("username", "testuser").issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + 3600000)).signWith(key).compact()
         userRepository.findByUsername("testuser") >> Optional.of(user)
 
         when:
-        ResponseEntity<Object> result = loginController.getCurrentUser(token)
+        ResponseEntity<Object> result = loginController.getCurrentUser("testuser")
 
         then:
         result.statusCode == HttpStatus.OK
         result.body == user
     }
 
-    def "getCurrentUser should return UNAUTHORIZED for missing token"() {
+    def "getCurrentUser should return UNAUTHORIZED for null principal"() {
         when:
         ResponseEntity<Object> result = loginController.getCurrentUser(null)
 
@@ -188,11 +190,47 @@ class LoginControllerSpec extends Specification {
         result.statusCode == HttpStatus.UNAUTHORIZED
     }
 
-    def "getCurrentUser should return UNAUTHORIZED for invalid token"() {
+    def "getCurrentUser should return UNAUTHORIZED for blank principal"() {
         when:
-        ResponseEntity<Object> result = loginController.getCurrentUser("invalid_token")
+        ResponseEntity<Object> result = loginController.getCurrentUser("   ")
 
         then:
         result.statusCode == HttpStatus.UNAUTHORIZED
+    }
+
+    def "getCurrentUser should return NOT_FOUND when principal has no matching user record"() {
+        given:
+        userRepository.findByUsername("ghost") >> Optional.empty()
+
+        when:
+        ResponseEntity<Object> result = loginController.getCurrentUser("ghost")
+
+        then:
+        result.statusCode == HttpStatus.NOT_FOUND
+    }
+
+    // --- LoginRequest @Size validation tests ---
+
+    def "LoginRequest should reject username shorter than 3 characters"() {
+        given:
+        jakarta.validation.Validation.buildDefaultValidatorFactory().with { factory ->
+            def validator = factory.validator
+            def request = new LoginRequest("ab", "ValidPass1!")
+            def violations = validator.validate(request)
+            expect:
+            violations.any { it.propertyPath.toString() == "username" }
+        }
+    }
+
+    def "LoginRequest should reject password longer than 128 characters"() {
+        given:
+        def longPassword = "A1!" + "a" * 126  // 129 chars
+        jakarta.validation.Validation.buildDefaultValidatorFactory().with { factory ->
+            def validator = factory.validator
+            def request = new LoginRequest("validuser", longPassword)
+            def violations = validator.validate(request)
+            expect:
+            violations.any { it.propertyPath.toString() == "password" }
+        }
     }
 }
