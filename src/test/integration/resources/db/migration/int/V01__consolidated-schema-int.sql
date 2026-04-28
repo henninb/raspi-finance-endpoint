@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS int.t_account
     billing_due_day_same_month  SMALLINT      NULL,
     billing_due_day_next_month  SMALLINT      NULL,
     billing_cycle_weekend_shift TEXT          NULL,
+    CONSTRAINT ck_billing_statement_close_day CHECK (billing_statement_close_day BETWEEN 1 AND 31),
+    CONSTRAINT ck_billing_grace_period_days CHECK (billing_grace_period_days BETWEEN 1 AND 60),
+    CONSTRAINT ck_billing_due_day_same_month CHECK (billing_due_day_same_month BETWEEN 1 AND 31),
+    CONSTRAINT ck_billing_due_day_next_month CHECK (billing_due_day_next_month BETWEEN 1 AND 31),
+    CONSTRAINT ck_billing_cycle_weekend_shift CHECK (billing_cycle_weekend_shift IN ('back', 'forward', 'back_sat_only')),
+    CONSTRAINT ck_billing_due_method_exclusive CHECK (
+        (CASE WHEN billing_grace_period_days  IS NOT NULL THEN 1 ELSE 0 END +
+         CASE WHEN billing_due_day_same_month IS NOT NULL THEN 1 ELSE 0 END +
+         CASE WHEN billing_due_day_next_month IS NOT NULL THEN 1 ELSE 0 END) <= 1
+    ),
     CONSTRAINT unique_owner_account_name_owner_account_type UNIQUE (owner, account_name_owner, account_type),
     CONSTRAINT unique_owner_account_name_owner UNIQUE (owner, account_name_owner),
     CONSTRAINT unique_owner_account_id_name_type UNIQUE (owner, account_id, account_name_owner, account_type),
@@ -233,6 +243,9 @@ ALTER TABLE int.t_receipt_image
 
 CREATE INDEX IF NOT EXISTS idx_transaction_owner ON int.t_transaction(owner);
 CREATE INDEX IF NOT EXISTS idx_transaction_account_lookup ON int.t_transaction(account_name_owner, active_status, transaction_date DESC);
+CREATE INDEX IF NOT EXISTS idx_transaction_account_name_owner ON int.t_transaction(account_name_owner);
+CREATE INDEX IF NOT EXISTS idx_transaction_date ON int.t_transaction(transaction_date);
+CREATE INDEX IF NOT EXISTS idx_transaction_transaction_state ON int.t_transaction(transaction_state);
 
 --------------------------
 -- Pending Transaction  --
@@ -467,4 +480,17 @@ CREATE INDEX IF NOT EXISTS idx_medical_expense_service_date ON int.t_medical_exp
 CREATE INDEX IF NOT EXISTS idx_medical_expense_claim_status ON int.t_medical_expense(claim_status);
 CREATE INDEX IF NOT EXISTS idx_medical_expense_active ON int.t_medical_expense(active_status, service_date);
 CREATE INDEX IF NOT EXISTS idx_medical_expense_owner ON int.t_medical_expense(owner);
+
+---------------------
+-- Token Blacklist --
+---------------------
+CREATE TABLE IF NOT EXISTS int.t_token_blacklist (
+    token_blacklist_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token_hash         VARCHAR(64)              NOT NULL,
+    expires_at         TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT uk_token_blacklist_token_hash UNIQUE (token_hash)
+);
+
+CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at
+    ON int.t_token_blacklist (expires_at);
 
