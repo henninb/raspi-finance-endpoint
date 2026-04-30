@@ -1,8 +1,20 @@
 package finance.services
 
 import finance.Application
-import finance.domain.*
-import finance.repositories.*
+import finance.domain.Account
+import finance.domain.AccountType
+import finance.domain.Category
+import finance.domain.Description
+import finance.domain.ImageFormatType
+import finance.domain.Payment
+import finance.domain.ReceiptImage
+import finance.domain.Transaction
+import finance.domain.TransactionState
+import finance.domain.TransactionType
+import finance.domain.Transfer
+import finance.domain.ValidationAmount
+import finance.repositories.AccountRepository
+import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -12,8 +24,8 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Specification
 
-import java.time.LocalDate
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.util.Optional
 
 @ActiveProfiles("int")
@@ -21,7 +33,12 @@ import java.util.Optional
 @ContextConfiguration(classes = Application)
 class ServiceLayerIntSpec extends Specification {
 
-    private static final String TEST_OWNER = "test-service-user"
+    private static final String OWNER_SUFFIX =
+        UUID.randomUUID().toString().replaceAll(/[^a-f]/, '').padRight(8, 'a').substring(0, 8)
+    private static final String TEST_OWNER = "test-service-${OWNER_SUFFIX}"
+    private static final String PRIMARY_ACCOUNT_NAME = "checking_${OWNER_SUFFIX}"
+    private static final String SECONDARY_ACCOUNT_NAME = "savings_${OWNER_SUFFIX}"
+    private static final String DEFAULT_CATEGORY = "service_category_${OWNER_SUFFIX}"
 
     @Autowired
     TransactionService transactionService
@@ -53,62 +70,6 @@ class ServiceLayerIntSpec extends Specification {
     @Autowired
     TransactionRepository transactionRepository
 
-    void setup() {
-        // Set SecurityContext so TenantContext.getCurrentOwner() works
-        def authorities = [new SimpleGrantedAuthority("USER")]
-        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
-        SecurityContextHolder.getContext().setAuthentication(auth)
-
-        // Create commonly used test accounts
-        Account checkingAccount = new Account(
-            accountId: 0L,
-            owner: TEST_OWNER,
-            accountNameOwner: "checking_brian",
-            accountType: AccountType.Credit,
-            activeStatus: true,
-            moniker: "1234",  // Must be 4 digits
-            outstanding: BigDecimal.ZERO,
-            future: BigDecimal.ZERO,
-            cleared: BigDecimal.ZERO,
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
-        checkingAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
-        checkingAccount.dateAdded = new Timestamp(System.currentTimeMillis())
-
-        Account savingsAccount = new Account(
-            accountId: 0L,
-            owner: TEST_OWNER,
-            accountNameOwner: "savings_brian",
-            accountType: AccountType.Credit,
-            activeStatus: true,
-            moniker: "5678",  // Must be 4 digits
-            outstanding: BigDecimal.ZERO,
-            future: BigDecimal.ZERO,
-            cleared: BigDecimal.ZERO,
-            dateClosed: new Timestamp(System.currentTimeMillis()),
-            validationDate: new Timestamp(System.currentTimeMillis())
-        )
-        savingsAccount.dateUpdated = new Timestamp(System.currentTimeMillis())
-        savingsAccount.dateAdded = new Timestamp(System.currentTimeMillis())
-
-        try {
-            accountService.insertAccount(checkingAccount)
-        } catch (Exception e) {
-            // Account might already exist, ignore
-        }
-
-        try {
-            accountService.insertAccount(savingsAccount)
-        } catch (Exception e) {
-            // Account might already exist, ignore
-        }
-    }
-
-    void cleanup() {
-        SecurityContextHolder.clearContext()
-    }
-
     private static <T> T unwrapSuccess(def result) {
         try {
             return result?.data
@@ -117,22 +78,82 @@ class ServiceLayerIntSpec extends Specification {
         }
     }
 
+    private static Timestamp now() {
+        new Timestamp(System.currentTimeMillis())
+    }
+
+    private String uniqueName(String prefix) {
+        "${prefix}_${UUID.randomUUID().toString().replace('-', '').substring(0, 8)}"
+    }
+
+    void setup() {
+        def authorities = [new SimpleGrantedAuthority("USER")]
+        def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
+        SecurityContextHolder.getContext().setAuthentication(auth)
+
+        Account primaryAccount = new Account(
+            accountId: 0L,
+            owner: TEST_OWNER,
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
+            accountType: AccountType.Credit,
+            activeStatus: true,
+            moniker: "1234",
+            outstanding: BigDecimal.ZERO,
+            future: BigDecimal.ZERO,
+            cleared: BigDecimal.ZERO,
+            dateClosed: now(),
+            validationDate: now()
+        )
+        primaryAccount.dateUpdated = now()
+        primaryAccount.dateAdded = now()
+
+        Account secondaryAccount = new Account(
+            accountId: 0L,
+            owner: TEST_OWNER,
+            accountNameOwner: SECONDARY_ACCOUNT_NAME,
+            accountType: AccountType.Credit,
+            activeStatus: true,
+            moniker: "5678",
+            outstanding: BigDecimal.ZERO,
+            future: BigDecimal.ZERO,
+            cleared: BigDecimal.ZERO,
+            dateClosed: now(),
+            validationDate: now()
+        )
+        secondaryAccount.dateUpdated = now()
+        secondaryAccount.dateAdded = now()
+
+        try {
+            accountService.insertAccount(primaryAccount)
+        } catch (Exception ignored) {
+        }
+
+        try {
+            accountService.insertAccount(secondaryAccount)
+        } catch (Exception ignored) {
+        }
+    }
+
+    void cleanup() {
+        SecurityContextHolder.clearContext()
+    }
+
     void 'test transaction service integration with database operations'() {
         given:
         Transaction testTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "checking_brian",
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
             accountType: AccountType.Credit,
-            description: "service_integration_test_transaction",
-            category: "service_test_category",
+            description: uniqueName("service_txn"),
+            category: DEFAULT_CATEGORY,
             amount: 150.75,
             transactionDate: LocalDate.parse("2023-05-25"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             notes: "Integration test for transaction service",
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
@@ -142,7 +163,7 @@ class ServiceLayerIntSpec extends Specification {
         savedTransaction != null
         savedTransaction.transactionId != null
         savedTransaction.guid == testTransaction.guid
-        savedTransaction.description == "service_integration_test_transaction"
+        savedTransaction.description == testTransaction.description
 
         when:
         def findResult = transactionService.findById(savedTransaction.guid)
@@ -151,33 +172,33 @@ class ServiceLayerIntSpec extends Specification {
         then:
         retrievedTransaction.isPresent()
         retrievedTransaction.get().amount == 150.75
-        retrievedTransaction.get().accountNameOwner == "checking_brian"
+        retrievedTransaction.get().accountNameOwner == PRIMARY_ACCOUNT_NAME
     }
-
 
     void 'test category service integration with transaction relationships'() {
         given:
-        Category testCategory = new Category(
-            categoryName: "service_integration_category",
+        String categoryName = uniqueName("service_category")
+        Category category = new Category(
+            categoryName: categoryName,
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
-        Category savedCategory = unwrapSuccess(categoryService.save(testCategory))
+        Category savedCategory = unwrapSuccess(categoryService.save(category))
 
         then:
         savedCategory != null
         savedCategory.categoryId != null
-        savedCategory.categoryName == "service_integration_category"
+        savedCategory.categoryName == categoryName
 
         when:
         Transaction categoryTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "checking_brian",
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
             accountType: AccountType.Credit,
-            description: "category_service_test",
+            description: uniqueName("category_service"),
             category: savedCategory.categoryName,
             amount: 200.00,
             transactionDate: LocalDate.parse("2023-05-28"),
@@ -185,72 +206,74 @@ class ServiceLayerIntSpec extends Specification {
             transactionType: TransactionType.Expense,
             notes: "integration_test_note",
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
         unwrapSuccess(transactionService.save(categoryTransaction))
 
-        List<Transaction> categoryTransactions = unwrapSuccess(transactionService.findTransactionsByCategoryStandardized(savedCategory.categoryName)) as List<Transaction>
+        List<Transaction> categoryTransactions =
+            unwrapSuccess(transactionService.findTransactionsByCategoryStandardized(savedCategory.categoryName)) as List<Transaction>
 
         then:
         categoryTransactions.size() >= 1
-        categoryTransactions.any { it.description == "category_service_test" }
+        categoryTransactions.any { it.guid == categoryTransaction.guid }
     }
 
     void 'test description service integration with transaction relationships'() {
         given:
-        Description testDescription = new Description(
-            descriptionName: "service_integration_description",
+        String descriptionName = uniqueName("service_description")
+        Description description = new Description(
+            descriptionName: descriptionName,
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
-        Description savedDescription = descriptionService.insertDescription(testDescription)
+        Description savedDescription = descriptionService.insertDescription(description)
 
         then:
         savedDescription != null
         savedDescription.descriptionId != null
-        savedDescription.descriptionName == "service_integration_description"
+        savedDescription.descriptionName == descriptionName
 
         when:
         Transaction descriptionTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "checking_brian",
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
             accountType: AccountType.Credit,
             description: savedDescription.descriptionName,
-            category: "description_test_category",
+            category: DEFAULT_CATEGORY,
             amount: 175.25,
             transactionDate: LocalDate.parse("2023-05-29"),
             transactionState: TransactionState.Outstanding,
             transactionType: TransactionType.Income,
             notes: "integration_test_note",
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
         unwrapSuccess(transactionService.save(descriptionTransaction))
 
-        List<Transaction> descriptionTransactions = unwrapSuccess(transactionService.findTransactionsByDescriptionStandardized(savedDescription.descriptionName)) as List<Transaction>
+        List<Transaction> descriptionTransactions =
+            unwrapSuccess(transactionService.findTransactionsByDescriptionStandardized(savedDescription.descriptionName)) as List<Transaction>
 
         then:
         descriptionTransactions.size() >= 1
-        descriptionTransactions.any { it.amount == 175.25 }
-        descriptionTransactions.any { it.transactionState == TransactionState.Outstanding }
+        descriptionTransactions.any { it.guid == descriptionTransaction.guid }
     }
 
     void 'test payment service integration'() {
         given:
         Payment testPayment = new Payment(
             paymentId: 0L,
-            sourceAccount: "checking_brian",
-            destinationAccount: "savings_brian",
+            sourceAccount: PRIMARY_ACCOUNT_NAME,
+            destinationAccount: SECONDARY_ACCOUNT_NAME,
             amount: 300.00,
             transactionDate: LocalDate.parse("2023-05-30"),
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
@@ -276,15 +299,15 @@ class ServiceLayerIntSpec extends Specification {
         given:
         Transfer testTransfer = new Transfer(
             transferId: 0L,
-            sourceAccount: "checking_brian",
-            destinationAccount: "savings_brian",
+            sourceAccount: PRIMARY_ACCOUNT_NAME,
+            destinationAccount: SECONDARY_ACCOUNT_NAME,
             guidSource: UUID.randomUUID().toString(),
             guidDestination: UUID.randomUUID().toString(),
             amount: 250.50,
             transactionDate: LocalDate.parse("2023-05-31"),
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
@@ -293,7 +316,6 @@ class ServiceLayerIntSpec extends Specification {
         then:
         savedTransfer != null
         savedTransfer.transferId != null
-        savedTransfer.amount == 250.50
         savedTransfer.amount == 250.50
 
         when:
@@ -311,14 +333,15 @@ class ServiceLayerIntSpec extends Specification {
         ValidationAmount testValidationAmount = new ValidationAmount(
             validationId: 0L,
             accountId: 0L,
-            validationDate: new Timestamp(System.currentTimeMillis()),
+            validationDate: now(),
             activeStatus: true,
             transactionState: TransactionState.Cleared,
             amount: 2875.50
         )
 
         when:
-        ValidationAmount savedValidationAmount = validationAmountService.insertValidationAmount("checking_brian", testValidationAmount)
+        ValidationAmount savedValidationAmount =
+            validationAmountService.insertValidationAmount(PRIMARY_ACCOUNT_NAME, testValidationAmount)
 
         then:
         savedValidationAmount != null
@@ -327,7 +350,8 @@ class ServiceLayerIntSpec extends Specification {
         savedValidationAmount.accountId > 0
 
         when:
-        ValidationAmount foundValidationAmount = validationAmountService.findValidationAmountByAccountNameOwner("checking_brian", TransactionState.Cleared)
+        ValidationAmount foundValidationAmount =
+            validationAmountService.findValidationAmountByAccountNameOwner(PRIMARY_ACCOUNT_NAME, TransactionState.Cleared)
 
         then:
         foundValidationAmount != null
@@ -336,20 +360,19 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test receipt image service integration'() {
         given:
-        // First create a transaction to get a valid transactionId
         Transaction testTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "checking_brian",
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
             accountType: AccountType.Credit,
-            description: "receipt_image_test_transaction",
-            category: "receipt_test_category",
+            description: uniqueName("receipt_txn"),
+            category: DEFAULT_CATEGORY,
             amount: 100.00,
             transactionDate: LocalDate.parse("2023-06-01"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
         Transaction savedTransaction = unwrapSuccess(transactionService.save(testTransaction))
 
@@ -372,8 +395,8 @@ class ServiceLayerIntSpec extends Specification {
         savedReceiptImage.imageFormatType == ImageFormatType.Jpeg
 
         when:
-        def findResultRI = receiptImageService.findById(savedReceiptImage.receiptImageId)
-        Optional<ReceiptImage> foundReceiptImage = Optional.ofNullable(unwrapSuccess(findResultRI))
+        def findResult = receiptImageService.findById(savedReceiptImage.receiptImageId)
+        Optional<ReceiptImage> foundReceiptImage = Optional.ofNullable(unwrapSuccess(findResult))
 
         then:
         foundReceiptImage.isPresent()
@@ -382,71 +405,69 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test cross-service integration with transaction and account updates'() {
         given:
-        Optional<Account> account = accountService.account("checking_brian")
+        Optional<Account> account = accountService.account(PRIMARY_ACCOUNT_NAME)
         BigDecimal initialTotal = account.get().cleared
 
         Transaction largeTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "checking_brian",
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
             accountType: AccountType.Credit,
-            description: "large_cross_service_test",
-            category: "cross_service_category",
+            description: uniqueName("large_cross_service"),
+            category: DEFAULT_CATEGORY,
             amount: 500.00,
             transactionDate: LocalDate.parse("2023-06-02"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Income,
             notes: "integration_test_note",
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
         unwrapSuccess(transactionService.save(largeTransaction))
-        List<Transaction> accountTransactions = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
+        List<Transaction> accountTransactions =
+            unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(PRIMARY_ACCOUNT_NAME)) as List<Transaction>
 
         then:
         accountTransactions.size() >= 1
-        accountTransactions.any { it.description == "large_cross_service_test" }
-        accountTransactions.any { it.amount == 500.00 }
+        accountTransactions.any { it.guid == largeTransaction.guid }
+        initialTotal != null
     }
-
 
     void 'test service layer transaction rollback on failure'() {
         given:
-        List<Transaction> transactionsBefore = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
+        List<Transaction> transactionsBefore =
+            unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(PRIMARY_ACCOUNT_NAME)) as List<Transaction>
         int initialCount = transactionsBefore.size()
 
         Transaction validTransaction = new Transaction(
             guid: UUID.randomUUID().toString(),
-            accountNameOwner: "checking_brian",
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
             accountType: AccountType.Credit,
-            description: "rollback_test_transaction",
-            category: "rollback_category",
+            description: uniqueName("rollback_txn"),
+            category: DEFAULT_CATEGORY,
             amount: 100.00,
             transactionDate: LocalDate.parse("2023-06-04"),
             transactionState: TransactionState.Cleared,
             transactionType: TransactionType.Expense,
             notes: "integration_test_note",
             activeStatus: true,
-            dateUpdated: new Timestamp(System.currentTimeMillis()),
-            dateAdded: new Timestamp(System.currentTimeMillis())
+            dateUpdated: now(),
+            dateAdded: now()
         )
 
         when:
         try {
             unwrapSuccess(transactionService.save(validTransaction))
-            // Simulate a failure after successful insert
             throw new RuntimeException("Simulated failure for rollback test")
-        } catch (RuntimeException e) {
-            // Exception caught - transaction should be rolled back
+        } catch (RuntimeException ignored) {
         }
 
-        List<Transaction> transactionsAfter = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
+        List<Transaction> transactionsAfter =
+            unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(PRIMARY_ACCOUNT_NAME)) as List<Transaction>
 
         then:
-        // Due to @Transactional annotation, the transaction should be rolled back
-        // However, the behavior depends on the specific transaction configuration
         transactionsAfter.size() >= initialCount
     }
 
@@ -456,18 +477,18 @@ class ServiceLayerIntSpec extends Specification {
         for (int i = 0; i < 50; i++) {
             bulkTransactions.add(new Transaction(
                 guid: UUID.randomUUID().toString(),
-                accountNameOwner: "checking_brian",
+                accountNameOwner: PRIMARY_ACCOUNT_NAME,
                 accountType: AccountType.Credit,
                 description: "bulk_performance_test_${i}",
-                category: "performance_category",
+                category: DEFAULT_CATEGORY,
                 amount: Math.round((Math.random() * 100) * 100) / 100.0,
                 transactionDate: LocalDate.parse("2023-06-05"),
                 transactionState: TransactionState.Cleared,
                 transactionType: TransactionType.Expense,
                 notes: "bulk_performance_test_note_${i}",
                 activeStatus: true,
-                dateUpdated: new Timestamp(System.currentTimeMillis()),
-                dateAdded: new Timestamp(System.currentTimeMillis())
+                dateUpdated: now(),
+                dateAdded: now()
             ))
         }
 
@@ -478,10 +499,11 @@ class ServiceLayerIntSpec extends Specification {
         }
         long endTime = System.currentTimeMillis()
 
-        List<Transaction> allAccountTransactions = unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized("checking_brian")) as List<Transaction>
+        List<Transaction> allAccountTransactions =
+            unwrapSuccess(transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(PRIMARY_ACCOUNT_NAME)) as List<Transaction>
 
         then:
-        (endTime - startTime) < 30000  // Should complete within 30 seconds
+        (endTime - startTime) < 30000
         allAccountTransactions.size() >= 50
         allAccountTransactions.count { it.description.startsWith("bulk_performance_test") } == 50
     }
