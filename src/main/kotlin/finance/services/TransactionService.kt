@@ -484,6 +484,7 @@ class TransactionService
                 transaction.accountId = account.accountId
                 transaction.dateAdded = transactionFromDatabase.dateAdded
                 transaction.dateUpdated = Timestamp(System.currentTimeMillis())
+                transaction.receiptImageId = transactionFromDatabase.receiptImageId
                 processDescription(transaction)
                 logger.info("Successfully updated transaction: ${transaction.guid}")
                 return transactionRepository.saveAndFlush(transaction)
