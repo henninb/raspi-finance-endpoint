@@ -426,8 +426,9 @@ class TransactionService
                     throw TransactionNotFoundException("Cannot delete receipt image for a transaction that does not exist with guid = '$guid'.")
                 }
                 val transaction = optionalTransaction.get()
-                val receiptImageId = transaction.receiptImageId
-                    ?: throw ReceiptImageException("Transaction '$guid' has no receipt image to delete.")
+                val receiptImageId =
+                    transaction.receiptImageId
+                        ?: throw ReceiptImageException("Transaction '$guid' has no receipt image to delete.")
                 transaction.receiptImageId = null
                 transaction.dateUpdated = Timestamp(System.currentTimeMillis())
                 transactionRepository.saveAndFlush(transaction)
