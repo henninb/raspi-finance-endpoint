@@ -418,6 +418,25 @@ class TransactionService
             }
         }
 
+        fun deleteReceiptImageForTransactionByGuidStandardized(guid: String): ServiceResult<Unit> =
+            handleServiceOperation("deleteReceiptImageForTransaction", guid) {
+                val owner = TenantContext.getCurrentOwner()
+                val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, guid)
+                if (optionalTransaction.isEmpty) {
+                    throw TransactionNotFoundException("Cannot delete receipt image for a transaction that does not exist with guid = '$guid'.")
+                }
+                val transaction = optionalTransaction.get()
+                val receiptImageId = transaction.receiptImageId
+                    ?: throw ReceiptImageException("Transaction '$guid' has no receipt image to delete.")
+                transaction.receiptImageId = null
+                transaction.dateUpdated = Timestamp(System.currentTimeMillis())
+                transactionRepository.saveAndFlush(transaction)
+                when (val deleteResult = receiptImageService.deleteById(receiptImageId)) {
+                    is ServiceResult.Success -> Unit
+                    else -> throw ReceiptImageException("Failed to delete receipt image $receiptImageId for transaction '$guid': $deleteResult")
+                }
+            }
+
         @org.springframework.transaction.annotation.Transactional
         fun createAndSaveFutureTransaction(transaction: Transaction): ServiceResult<Transaction> {
             val futureResult = createFutureTransactionStandardized(transaction)

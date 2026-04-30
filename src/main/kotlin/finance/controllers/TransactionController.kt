@@ -609,6 +609,42 @@ class TransactionController(
         }
     }
 
+    // curl -k --request DELETE https://localhost:8443/transaction/receipt/image/da8a0a55-c4ef-44dc-9e5a-4cb7367a164f
+    @Operation(summary = "Delete receipt image for a transaction")
+    @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Receipt image deleted"), ApiResponse(responseCode = "404", description = "Transaction or receipt image not found"), ApiResponse(responseCode = "500", description = "Internal server error")])
+    @DeleteMapping("/receipt/image/{guid}", produces = ["application/json"])
+    fun deleteTransactionReceiptImageByGuid(
+        @PathVariable("guid") guid: String,
+    ): ResponseEntity<Void> {
+        logger.info("Deleting receipt image for transaction: $guid")
+        return when (val result = transactionService.deleteReceiptImageForTransactionByGuidStandardized(guid)) {
+            is ServiceResult.Success -> {
+                logger.info("Receipt image deleted successfully for transaction: $guid")
+                ResponseEntity.ok().build()
+            }
+
+            is ServiceResult.NotFound -> {
+                logger.warn("Transaction or receipt image not found: $guid")
+                ResponseEntity.notFound().build()
+            }
+
+            is ServiceResult.ValidationError -> {
+                logger.error("Validation error deleting receipt image for $guid: ${result.errors}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.BusinessError -> {
+                logger.error("Business error deleting receipt image for $guid: ${result.message}")
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+
+            is ServiceResult.SystemError -> {
+                logger.error("System error deleting receipt image for $guid: ${result.exception.message}", result.exception)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            }
+        }
+    }
+
     // curl -k https://localhost:8443/transaction/category/ach
     @Operation(summary = "List transactions by category name")
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Transactions returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
