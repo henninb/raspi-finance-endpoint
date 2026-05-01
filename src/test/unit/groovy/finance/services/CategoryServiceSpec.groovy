@@ -225,7 +225,7 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         then: "should merge successfully"
         1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "category1") >> Optional.of(category1)
         1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "category2") >> Optional.of(category2)
-        1 * transactionRepositoryMock.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, "category2", true) >> transactions
+        1 * transactionRepositoryMock.bulkUpdateCategoryByOwner(TEST_OWNER, "category2", "category1") >> 0
         1 * categoryRepositoryMock.saveAndFlush(category1) >> category1
         result.categoryName == "category1"
         result.categoryCount == 8L // 5 + 3

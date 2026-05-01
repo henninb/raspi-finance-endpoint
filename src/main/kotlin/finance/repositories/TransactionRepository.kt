@@ -254,4 +254,28 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         @Param("oldAccountNameOwner") oldAccountNameOwner: String,
         @Param("newAccountNameOwner") newAccountNameOwner: String,
     ): Int
+
+    @Modifying
+    @Transactional
+    @Query(
+        value = "UPDATE {h-schema}t_transaction SET category = :newCategory, date_updated = now() WHERE category = :oldCategory AND owner = :owner AND active_status = true",
+        nativeQuery = true,
+    )
+    fun bulkUpdateCategoryByOwner(
+        @Param("owner") owner: String,
+        @Param("oldCategory") oldCategory: String,
+        @Param("newCategory") newCategory: String,
+    ): Int
+
+    @Modifying
+    @Transactional
+    @Query(
+        value = "UPDATE {h-schema}t_transaction SET description = :newDescription, date_updated = now() WHERE description = :oldDescription AND owner = :owner AND active_status = true",
+        nativeQuery = true,
+    )
+    fun bulkUpdateDescriptionByOwner(
+        @Param("owner") owner: String,
+        @Param("oldDescription") oldDescription: String,
+        @Param("newDescription") newDescription: String,
+    ): Int
 }

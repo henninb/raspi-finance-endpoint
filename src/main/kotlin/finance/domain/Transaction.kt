@@ -157,13 +157,13 @@ class Transaction(
     var receiptImage: ReceiptImage? = null
 
     // Foreign key constraint (many transactions can have one account)
-    @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(cascade = [CascadeType.MERGE], fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false, insertable = false, updatable = false)
     @JsonIgnore
     var account: Account? = null
 
     // Foreign key constraint (many transactions can have many categories)
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "t_transaction_categories",
         joinColumns = [JoinColumn(name = "transaction_id")],

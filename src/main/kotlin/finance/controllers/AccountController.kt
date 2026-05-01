@@ -49,9 +49,8 @@ class AccountController(
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Account>> {
-        accountService.updateTotalsForAllAccounts()
-        return when (val result = accountService.findAllActive()) {
+    override fun findAllActive(): ResponseEntity<List<Account>> =
+        when (val result = accountService.findAllActive()) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved ${result.data.size} active accounts (standardized)")
                 ResponseEntity.ok(result.data)
@@ -72,7 +71,6 @@ class AccountController(
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
         }
-    }
 
     /**
      * Paginated collection retrieval - GET /api/account/active/paged?page=0&size=50
@@ -90,7 +88,6 @@ class AccountController(
         pageable: Pageable,
     ): ResponseEntity<Page<Account>> {
         logger.debug("Retrieving all active accounts (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
-        accountService.updateTotalsForAllAccounts()
         return when (val result = accountService.findAllActive(pageable)) {
             is ServiceResult.Success -> {
                 logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} accounts")

@@ -94,7 +94,9 @@ class TransactionService
                 entity.dateUpdated = timestamp
                 entity.dateAdded = timestamp
 
-                transactionRepository.saveAndFlush(entity)
+                val saved = transactionRepository.saveAndFlush(entity)
+                accountService.updateTotalsForAllAccounts()
+                saved
             }
 
         override fun update(entity: Transaction): ServiceResult<Transaction> =
@@ -112,7 +114,9 @@ class TransactionService
                 }
 
                 // Use existing masterTransactionUpdater logic
-                masterTransactionUpdater(existingTransaction.get(), entity)
+                val updated = masterTransactionUpdater(existingTransaction.get(), entity)
+                accountService.updateTotalsForAllAccounts()
+                updated
             }
 
         override fun deleteById(id: String): ServiceResult<Transaction> =
@@ -138,6 +142,7 @@ class TransactionService
                 }
 
                 transactionRepository.delete(transaction)
+                accountService.updateTotalsForAllAccounts()
                 transaction
             }
 
