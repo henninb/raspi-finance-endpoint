@@ -3,6 +3,10 @@ package finance.repositories
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import org.springframework.transaction.annotation.Transactional
 import java.util.Optional
 
 interface ValidationAmountRepository : JpaRepository<ValidationAmount, Long> {
@@ -40,4 +44,12 @@ interface ValidationAmountRepository : JpaRepository<ValidationAmount, Long> {
         owner: String,
         validationId: Long,
     ): Optional<ValidationAmount>
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ValidationAmount v WHERE v.owner = :owner AND v.accountId = :accountId")
+    fun deleteByOwnerAndAccountId(
+        @Param("owner") owner: String,
+        @Param("accountId") accountId: Long,
+    ): Int
 }

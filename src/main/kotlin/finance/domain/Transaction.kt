@@ -151,7 +151,7 @@ class Transaction(
     // TODO: 11/19/2020 - Probably need to change to a OneToMany relationship
     // Foreign key constraint (one transaction can have many receiptImages)
     // @OneToOne(mappedBy = "receiptImageId", cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
-    @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.EAGER, optional = true)
+    @OneToOne(cascade = [CascadeType.MERGE], fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "receipt_image_id", nullable = true, insertable = false, updatable = false)
     @JsonProperty
     var receiptImage: ReceiptImage? = null

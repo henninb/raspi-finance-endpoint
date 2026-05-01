@@ -20,6 +20,7 @@ import jakarta.persistence.Table
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 import org.apache.logging.log4j.LogManager
+import org.hibernate.annotations.BatchSize
 import java.sql.Timestamp
 import java.util.Base64
 import java.util.Calendar
@@ -27,6 +28,7 @@ import java.util.Calendar
 @Entity
 @Table(name = "t_receipt_image")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@BatchSize(size = 50)
 data class ReceiptImage(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

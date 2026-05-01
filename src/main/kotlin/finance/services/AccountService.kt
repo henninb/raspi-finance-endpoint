@@ -110,10 +110,9 @@ class AccountService
 
                 // Delete all associated ValidationAmount records first to avoid foreign key constraint violation
                 // This is needed for production DB which lacks ON DELETE CASCADE
-                val validationAmounts = validationAmountRepository.findByAccountId(account.accountId)
-                if (validationAmounts.isNotEmpty()) {
-                    logger.info("Deleting ${validationAmounts.size} ValidationAmount records for account: ${account.accountNameOwner}")
-                    validationAmountRepository.deleteAll(validationAmounts)
+                val deleted = validationAmountRepository.deleteByOwnerAndAccountId(owner, account.accountId)
+                if (deleted > 0) {
+                    logger.info("Deleted $deleted ValidationAmount records for account: ${account.accountNameOwner}")
                 }
 
                 accountRepository.delete(account)
