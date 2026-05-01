@@ -244,14 +244,9 @@ class DescriptionService
                         RuntimeException("Source description $sourceName not found")
                     }
 
-                // Reassign transactions from source to target
-                val transactionsToUpdate = transactionRepository.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(owner, sourceName, true)
-                logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $sourceName to $normalizedTargetName")
-
-                transactionsToUpdate.forEach { transaction ->
-                    transaction.description = normalizedTargetName
-                    transactionRepository.saveAndFlush(transaction)
-                }
+                // Reassign transactions from source to target via single bulk UPDATE
+                val updatedCount = transactionRepository.bulkUpdateDescriptionByOwner(owner, sourceName, normalizedTargetName)
+                logger.info("Bulk updated $updatedCount transactions from $sourceName to $normalizedTargetName")
 
                 // Merge description counts
                 totalMergedCount += sourceDescription.descriptionCount

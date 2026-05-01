@@ -290,8 +290,8 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> Optional.of(targetDescription)
         1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "source1") >> Optional.of(sourceDescription1)
         1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "source2") >> Optional.of(sourceDescription2)
-        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, "source1", true) >> transactions1
-        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, "source2", true) >> transactions2
+        1 * transactionRepositoryMock.bulkUpdateDescriptionByOwner(TEST_OWNER, "source1", "target") >> 0
+        1 * transactionRepositoryMock.bulkUpdateDescriptionByOwner(TEST_OWNER, "source2", "target") >> 0
         1 * descriptionRepositoryMock.saveAndFlush(sourceDescription1) >> sourceDescription1
         1 * descriptionRepositoryMock.saveAndFlush(sourceDescription2) >> sourceDescription2
         1 * descriptionRepositoryMock.saveAndFlush(targetDescription) >> targetDescription

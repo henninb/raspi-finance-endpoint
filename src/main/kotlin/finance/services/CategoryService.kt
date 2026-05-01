@@ -182,14 +182,9 @@ class CategoryService
 
             logger.info("Merging categories: $categoryName2 into $categoryName1")
 
-            // Reassign transactions from category2 to category1
-            val transactionsToUpdate = transactionRepository.findByOwnerAndCategoryAndActiveStatusOrderByTransactionDateDesc(owner, categoryName2, true)
-            logger.info("Found ${transactionsToUpdate.size} transactions to reassign from $categoryName2 to $categoryName1")
-
-            transactionsToUpdate.forEach { transaction ->
-                transaction.category = categoryName1
-                transactionRepository.saveAndFlush(transaction)
-            }
+            // Reassign transactions from category2 to category1 via single bulk UPDATE
+            val updatedCount = transactionRepository.bulkUpdateCategoryByOwner(owner, categoryName2, categoryName1)
+            logger.info("Bulk updated $updatedCount transactions from $categoryName2 to $categoryName1")
 
             // Merge category counts
             category1.categoryCount += category2.categoryCount
