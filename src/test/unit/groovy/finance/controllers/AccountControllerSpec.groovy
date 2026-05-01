@@ -302,7 +302,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountId: 100L, accountNameOwner: id)
         and:
         1 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
-        validationAmountRepository.findByAccountId(100L) >> []
+        validationAmountRepository.deleteByOwnerAndAccountId(TEST_OWNER, 100L) >> 0
 
         when:
         ResponseEntity<Account> response = controller.deleteById(id)
@@ -330,7 +330,8 @@ class StandardizedAccountControllerSpec extends Specification {
         String id = "acct_err_del"
         Account existing = acct(accountNameOwner: id)
         and:
-        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >>> [Optional.of(existing), { throw new RuntimeException("db") }]
+        1 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
+        validationAmountRepository.deleteByOwnerAndAccountId(TEST_OWNER, _ as Long) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<Account> response = controller.deleteById(id)
@@ -345,7 +346,7 @@ class StandardizedAccountControllerSpec extends Specification {
         Account existing = acct(accountNameOwner: id)
         and:
         1 * accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, id) >> Optional.of(existing)
-        validationAmountRepository.findByAccountId(_) >> []
+        validationAmountRepository.deleteByOwnerAndAccountId(TEST_OWNER, _ as Long) >> 0
         accountRepository.delete(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("conflict") }
 
         when:

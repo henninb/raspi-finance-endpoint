@@ -70,19 +70,9 @@ class PaymentService
                 if (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank()) {
                     logger.info("Creating transactions for payment: ${entity.sourceAccount} -> ${entity.destinationAccount}")
 
-                    // Process accounts (create if missing)
-                    processPaymentAccount(entity.destinationAccount)
-                    processPaymentAccount(entity.sourceAccount)
-
-                    // Retrieve account types for behavior inference
-                    val sourceAccount =
-                        accountService
-                            .account(entity.sourceAccount)
-                            .orElseThrow { jakarta.persistence.EntityNotFoundException("Source account not found after creation: ${entity.sourceAccount}") }
-                    val destinationAccount =
-                        accountService
-                            .account(entity.destinationAccount)
-                            .orElseThrow { jakarta.persistence.EntityNotFoundException("Destination account not found after creation: ${entity.destinationAccount}") }
+                    // Process accounts (create if missing) and retrieve for behavior inference
+                    val destinationAccount = processPaymentAccount(entity.destinationAccount)
+                    val sourceAccount = processPaymentAccount(entity.sourceAccount)
 
                     // Infer payment behavior from account types
                     val behavior =
@@ -326,22 +316,23 @@ class PaymentService
         /**
          * Process payment account - create if missing (similar to TransactionService.processAccount)
          */
-        private fun processPaymentAccount(accountNameOwner: String) {
+        private fun processPaymentAccount(accountNameOwner: String): Account {
             logger.debug("Processing payment account: $accountNameOwner")
             val accountOptional = accountService.account(accountNameOwner)
             if (accountOptional.isPresent) {
                 logger.info("Using existing account for payment: $accountNameOwner (accountId: ${accountOptional.get().accountId})")
-            } else {
-                logger.info("Account not found for payment, creating new account: $accountNameOwner")
-                try {
-                    val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
-                    val savedAccount = accountService.insertAccount(account)
-                    logger.info("Created new account for payment: $accountNameOwner with ID: ${savedAccount.accountId}")
-                } catch (ex: Exception) {
-                    logger.error("Failed to create account for payment: $accountNameOwner", ex)
-                    meterService.incrementExceptionCaughtCounter("PaymentAccountCreationFailed")
-                    throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
-                }
+                return accountOptional.get()
+            }
+            logger.info("Account not found for payment, creating new account: $accountNameOwner")
+            try {
+                val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
+                val savedAccount = accountService.insertAccount(account)
+                logger.info("Created new account for payment: $accountNameOwner with ID: ${savedAccount.accountId}")
+                return savedAccount
+            } catch (ex: Exception) {
+                logger.error("Failed to create account for payment: $accountNameOwner", ex)
+                meterService.incrementExceptionCaughtCounter("PaymentAccountCreationFailed")
+                throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
             }
         }
 

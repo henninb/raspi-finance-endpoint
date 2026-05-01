@@ -189,7 +189,7 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
 
         then: "should return Success"
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
-        1 * validationAmountRepositoryMock.findByAccountId(100L) >> []
+        1 * validationAmountRepositoryMock.deleteByOwnerAndAccountId(TEST_OWNER, 100L) >> 0
         1 * accountRepositoryMock.delete(account)
         result instanceof ServiceResult.Success
         result.data != null
