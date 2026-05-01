@@ -26,7 +26,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableMethodSecurity(prePostEnabled = true)
 open class WebSecurityConfig(
     private val environment: Environment,
-    @Value("\${custom.project.jwt.key}") private val jwtKey: String,
+    @param:Value("\${custom.project.jwt.key}") private val jwtKey: String,
 ) {
     @Value("\${custom.project.chrome-extension-id:}")
     private var chromeExtensionId: String = ""
