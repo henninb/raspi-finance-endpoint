@@ -284,6 +284,56 @@ class LoginController(
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Registration successful"))
     }
 
+    // curl -k --header "Cookie: token=your_jwt_token" --request POST https://localhost:8443/api/refresh
+    @Operation(summary = "Refresh JWT cookie to extend an active session")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Token refreshed"),
+            ApiResponse(responseCode = "401", description = "Not authenticated"),
+        ],
+    )
+    @PostMapping("/refresh")
+    fun refresh(
+        @AuthenticationPrincipal principal: String?,
+        response: HttpServletResponse,
+    ): ResponseEntity<Map<String, String>> {
+        if (principal.isNullOrBlank()) {
+            logger.warn("REFRESH_401 no authenticated principal")
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Not authenticated"))
+        }
+
+        val now = Date()
+        val expiration = Date(now.time + JWT_EXPIRY_MS)
+        val token =
+            Jwts
+                .builder()
+                .issuer("raspi-finance-endpoint")
+                .audience()
+                .add("raspi-finance-endpoint")
+                .and()
+                .subject(principal)
+                .claim("username", principal)
+                .issuedAt(now)
+                .notBefore(now)
+                .expiration(expiration)
+                .signWith(secretKey)
+                .compact()
+
+        val cookie =
+            ResponseCookie
+                .from("token", token)
+                .path("/")
+                .maxAge(JWT_EXPIRY_SECONDS)
+                .httpOnly(true)
+                .secure(isSecureCookie)
+                .sameSite(if (isSecureCookie) "Strict" else "Lax")
+                .build()
+
+        response.addHeader("Set-Cookie", cookie.toString())
+        logger.info("REFRESH_SUCCESS username={}", principal.take(60))
+        return ResponseEntity.ok(mapOf("message" to "Token refreshed"))
+    }
+
     // curl -k --header "Cookie: token=your_jwt_token" https://localhost:8443/api/me
     @Operation(summary = "Return current user info from authenticated session")
     @ApiResponses(
