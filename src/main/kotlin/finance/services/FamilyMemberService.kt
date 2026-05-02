@@ -10,7 +10,6 @@ import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
 
 /**
  * Standardized FamilyMember Service with ServiceResult patterns
@@ -80,7 +79,7 @@ class FamilyMemberService
                     )
                 }
 
-                val timestamp = Timestamp(System.currentTimeMillis())
+                val timestamp = nowTimestamp()
                 entity.dateAdded = timestamp
                 entity.dateUpdated = timestamp
 
@@ -108,7 +107,7 @@ class FamilyMemberService
 
                 // Keep immutable fields from existing if needed; for now, update timestamps only
                 entity.dateAdded = existingMember.dateAdded
-                entity.dateUpdated = Timestamp(System.currentTimeMillis())
+                entity.dateUpdated = nowTimestamp()
                 ServiceResult.Success(familyMemberRepository.save(entity))
             } catch (e: Exception) {
                 logger.error("Error updating family member", e)

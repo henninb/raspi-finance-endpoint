@@ -6,12 +6,13 @@ import finance.domain.ServiceResult
 import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import finance.utils.TenantContext
+import finance.utils.orThrowNotFound
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
+import org.springframework.transaction.annotation.Transactional
 import java.util.Optional
 
 @Service
@@ -54,57 +55,37 @@ class DescriptionService
         override fun findById(id: Long): ServiceResult<Description> =
             handleServiceOperation("findById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
-                if (optionalDescription.isPresent) {
-                    optionalDescription.get()
-                } else {
-                    throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
-                }
+                descriptionRepository.findByOwnerAndDescriptionId(owner, id).orThrowNotFound("Description", id)
             }
 
         override fun save(entity: Description): ServiceResult<Description> =
             handleServiceOperation("save", entity.descriptionId) {
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
-
-                val violations = validator.validate(entity)
-                if (violations.isNotEmpty()) {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-                }
-
-                // Set timestamps
-                val timestamp = Timestamp(System.currentTimeMillis())
+                validateOrThrow(entity)
+                val timestamp = nowTimestamp()
                 entity.dateAdded = timestamp
                 entity.dateUpdated = timestamp
-
                 descriptionRepository.saveAndFlush(entity)
             }
 
         override fun update(entity: Description): ServiceResult<Description> =
             handleServiceOperation("update", entity.descriptionId) {
                 val owner = TenantContext.getCurrentOwner()
-                val existingDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, entity.descriptionId)
-                if (existingDescription.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("Description not found: ${entity.descriptionId}")
-                }
-
-                // Update fields from the provided entity
-                val descriptionToUpdate = existingDescription.get()
+                val descriptionToUpdate =
+                    descriptionRepository
+                        .findByOwnerAndDescriptionId(owner, entity.descriptionId)
+                        .orThrowNotFound("Description", entity.descriptionId)
                 descriptionToUpdate.descriptionName = entity.descriptionName
                 descriptionToUpdate.activeStatus = entity.activeStatus
-                descriptionToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
-
+                descriptionToUpdate.dateUpdated = nowTimestamp()
                 descriptionRepository.saveAndFlush(descriptionToUpdate)
             }
 
         override fun deleteById(id: Long): ServiceResult<Description> =
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionId(owner, id)
-                if (optionalDescription.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("Description not found: $id")
-                }
-                val description = optionalDescription.get()
+                val description = descriptionRepository.findByOwnerAndDescriptionId(owner, id).orThrowNotFound("Description", id)
                 descriptionRepository.delete(description)
                 description
             }
@@ -144,25 +125,21 @@ class DescriptionService
         fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
             handleServiceOperation("findByDescriptionName", null) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
-                if (optionalDescription.isPresent) {
-                    val description = optionalDescription.get()
-                    val count = transactionRepository.countByOwnerAndDescriptionName(owner, description.descriptionName)
-                    description.descriptionCount = count
-                    description
-                } else {
-                    throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
-                }
+                val description =
+                    descriptionRepository
+                        .findByOwnerAndDescriptionName(owner, descriptionName)
+                        .orThrowNotFound("Description", descriptionName)
+                description.descriptionCount = transactionRepository.countByOwnerAndDescriptionName(owner, description.descriptionName)
+                description
             }
 
         fun deleteByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
             handleServiceOperation("deleteByDescriptionName", null) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalDescription = descriptionRepository.findByOwnerAndDescriptionName(owner, descriptionName)
-                if (optionalDescription.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("Description not found: $descriptionName")
-                }
-                val description = optionalDescription.get()
+                val description =
+                    descriptionRepository
+                        .findByOwnerAndDescriptionName(owner, descriptionName)
+                        .orThrowNotFound("Description", descriptionName)
                 descriptionRepository.delete(description)
                 description
             }
@@ -211,6 +188,7 @@ class DescriptionService
 
         fun description(descriptionName: String): Optional<Description> = findByDescriptionName(descriptionName)
 
+        @Transactional
         fun mergeDescriptions(
             targetName: String,
             sourceNames: List<String>,

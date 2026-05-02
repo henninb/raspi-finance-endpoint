@@ -8,6 +8,7 @@ import finance.domain.TransactionState
 import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
 import finance.utils.TenantContext
+import finance.utils.orThrowNotFound
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
@@ -43,12 +44,7 @@ class AccountService
         override fun findById(id: String): ServiceResult<Account> =
             handleServiceOperation("findById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, id)
-                if (optionalAccount.isPresent) {
-                    optionalAccount.get()
-                } else {
-                    throw EntityNotFoundException("Account not found: $id")
-                }
+                accountRepository.findByOwnerAndAccountNameOwner(owner, id).orThrowNotFound("Account", id)
             }
 
         override fun save(entity: Account): ServiceResult<Account> =
@@ -74,13 +70,10 @@ class AccountService
         override fun update(entity: Account): ServiceResult<Account> =
             handleServiceOperation("update", entity.accountNameOwner) {
                 val owner = TenantContext.getCurrentOwner()
-                val existingAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, entity.accountNameOwner)
-                if (existingAccount.isEmpty) {
-                    throw EntityNotFoundException("Account not found: ${entity.accountNameOwner}")
-                }
-
-                // Update fields from the provided entity
-                val accountToUpdate = existingAccount.get()
+                val accountToUpdate =
+                    accountRepository
+                        .findByOwnerAndAccountNameOwner(owner, entity.accountNameOwner)
+                        .orThrowNotFound("Account", entity.accountNameOwner)
                 accountToUpdate.accountNameOwner = entity.accountNameOwner
                 accountToUpdate.accountType = entity.accountType
                 accountToUpdate.activeStatus = entity.activeStatus
@@ -97,14 +90,7 @@ class AccountService
         override fun deleteById(id: String): ServiceResult<Account> =
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, id)
-                if (optionalAccount.isEmpty) {
-                    throw EntityNotFoundException("Account not found: $id")
-                }
-                val account = optionalAccount.get()
-
-                // Delete all associated ValidationAmount records first to avoid foreign key constraint violation
-                // This is needed for production DB which lacks ON DELETE CASCADE
+                val account = accountRepository.findByOwnerAndAccountNameOwner(owner, id).orThrowNotFound("Account", id)
                 val deleted = validationAmountRepository.deleteByOwnerAndAccountId(owner, account.accountId)
                 if (deleted > 0) {
                     logger.info("Deleted $deleted ValidationAmount records for account: ${account.accountNameOwner}")
