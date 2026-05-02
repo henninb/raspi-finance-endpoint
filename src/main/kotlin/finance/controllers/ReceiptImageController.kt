@@ -1,14 +1,15 @@
 package finance.controllers
 
 import finance.domain.ReceiptImage
-import finance.domain.ServiceResult
+import finance.domain.toCreatedResponse
+import finance.domain.toListOkResponse
+import finance.domain.toOkResponse
 import finance.services.ReceiptImageService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -28,12 +29,6 @@ class ReceiptImageController(
     private val receiptImageService: ReceiptImageService,
 ) : StandardizedBaseController(),
     StandardRestController<ReceiptImage, Long> {
-    // ===== STANDARDIZED ENDPOINTS (NEW) =====
-
-    /**
-     * Standardized collection retrieval - GET /api/receipt/image/active
-     * Returns empty list instead of throwing 404 (standardized behavior)
-     */
     @Operation(summary = "Get all active receipt images")
     @ApiResponses(
         value = [
@@ -42,38 +37,8 @@ class ReceiptImageController(
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<ReceiptImage>> =
-        when (val result = receiptImageService.findAllActive()) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved ${result.data.size} active receipt images (standardized)")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActive(): ResponseEntity<List<ReceiptImage>> = receiptImageService.findAllActive().toListOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.info("No active receipt images found (standardized)")
-                ResponseEntity.ok(emptyList())
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving active receipt images: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving active receipt images: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving active receipt images: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized single entity retrieval - GET /api/receipt/image/{receiptImageId}
-     * Uses camelCase parameter with @PathVariable annotation
-     */
     @Operation(summary = "Get receipt image by ID")
     @ApiResponses(
         value = [
@@ -85,38 +50,8 @@ class ReceiptImageController(
     @GetMapping("/{receiptImageId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("receiptImageId") id: Long,
-    ): ResponseEntity<ReceiptImage> =
-        when (val result = receiptImageService.findById(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved receipt image: $id (standardized)")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<ReceiptImage> = receiptImageService.findById(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Receipt image not found: $id (standardized)")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving receipt image $id: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving receipt image $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving receipt image $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity creation - POST /api/receipt/image
-     * Returns 201 CREATED
-     */
     @Operation(summary = "Create receipt image")
     @ApiResponses(
         value = [
@@ -129,38 +64,8 @@ class ReceiptImageController(
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: ReceiptImage,
-    ): ResponseEntity<ReceiptImage> =
-        when (val result = receiptImageService.save(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Receipt image created successfully: ${result.data.receiptImageId} (standardized)")
-                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
-            }
+    ): ResponseEntity<ReceiptImage> = receiptImageService.save(entity).toCreatedResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Not found during receipt image save: ${entity.receiptImageId}")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error creating receipt image: ${result.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error creating receipt image: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error creating receipt image: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity update - PUT /api/receipt/image/{receiptImageId}
-     * Uses camelCase parameter with @PathVariable annotation
-     */
     @Operation(summary = "Update receipt image by ID")
     @ApiResponses(
         value = [
@@ -175,38 +80,8 @@ class ReceiptImageController(
     override fun update(
         @PathVariable("receiptImageId") id: Long,
         @Valid @RequestBody entity: ReceiptImage,
-    ): ResponseEntity<ReceiptImage> =
-        when (val result = receiptImageService.update(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Receipt image updated successfully: $id (standardized)")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<ReceiptImage> = receiptImageService.update(entity).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Receipt image not found for update: $id (standardized)")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating receipt image: ${result.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating receipt image: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error updating receipt image: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity deletion - DELETE /api/receipt/image/{receiptImageId}
-     * Returns 200 OK with deleted entity
-     */
     @Operation(summary = "Delete receipt image by ID")
     @ApiResponses(
         value = [
@@ -218,31 +93,5 @@ class ReceiptImageController(
     @DeleteMapping("/{receiptImageId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("receiptImageId") id: Long,
-    ): ResponseEntity<ReceiptImage> =
-        when (val result = receiptImageService.deleteById(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Receipt image deleted successfully: $id")
-                ResponseEntity.ok(result.data)
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("Receipt image not found for deletion: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error deleting receipt image: ${result.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error deleting receipt image $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error deleting receipt image: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
+    ): ResponseEntity<ReceiptImage> = receiptImageService.deleteById(id).toOkResponse()
 }

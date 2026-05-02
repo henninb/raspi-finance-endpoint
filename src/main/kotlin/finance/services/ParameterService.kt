@@ -46,10 +46,7 @@ class ParameterService
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
 
-                val violations = validator.validate(entity)
-                if (violations.isNotEmpty()) {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-                }
+                validateOrThrow(entity)
                 parameterRepository.saveAndFlush(entity)
             }
 

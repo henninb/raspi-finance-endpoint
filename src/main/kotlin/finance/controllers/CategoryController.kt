@@ -1,7 +1,10 @@
 package finance.controllers
 
 import finance.domain.Category
-import finance.domain.ServiceResult
+import finance.domain.toCreatedResponse
+import finance.domain.toListOkResponse
+import finance.domain.toOkResponse
+import finance.domain.toPagedOkResponse
 import finance.services.CategoryService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -32,53 +35,16 @@ class CategoryController(
     private val categoryService: CategoryService,
 ) : StandardizedBaseController(),
     StandardRestController<Category, String> {
-    // ===== STANDARDIZED ENDPOINTS (NEW) =====
-
-    /**
-     * Standardized collection retrieval - GET /api/category/active
-     * Returns empty list instead of throwing 404 (standardized behavior)
-     */
     @Operation(summary = "Get all active categories")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Active categories retrieved"),
-            ApiResponse(responseCode = "404", description = "No categories found"),
             ApiResponse(responseCode = "500", description = "Internal server error"),
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Category>> =
-        when (val result = categoryService.findAllActive()) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved ${result.data.size} active categories")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActive(): ResponseEntity<List<Category>> = categoryService.findAllActive().toListOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("No categories found")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving categories: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving categories: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving categories: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Paginated collection retrieval - GET /api/category/active/paged?page=0&size=50
-     * Returns Page<Category> with metadata
-     */
     @Operation(summary = "Get all active categories (paginated)")
     @ApiResponses(
         value = [
@@ -87,42 +53,8 @@ class CategoryController(
         ],
     )
     @GetMapping("/active/paged", produces = ["application/json"])
-    override fun findAllActivePaged(
-        pageable: Pageable,
-    ): ResponseEntity<Page<Category>> {
-        logger.debug("Retrieving all active categories (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
-        return when (val result = categoryService.findAllActive(pageable)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} categories")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActivePaged(pageable: Pageable): ResponseEntity<Page<Category>> = categoryService.findAllActive(pageable).toPagedOkResponse(pageable)
 
-            is ServiceResult.NotFound -> {
-                logger.warn("No categories found")
-                ResponseEntity.ok(Page.empty(pageable))
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving categories: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving categories: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving categories: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-    }
-
-    /**
-     * Standardized single entity retrieval - GET /api/category/{categoryName}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Get category by name")
     @ApiResponses(
         value = [
@@ -134,38 +66,8 @@ class CategoryController(
     @GetMapping("/{categoryName}", produces = ["application/json"])
     override fun findById(
         @PathVariable("categoryName") id: String,
-    ): ResponseEntity<Category> =
-        when (val result = categoryService.findByCategoryNameStandardized(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved category: $id")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<Category> = categoryService.findByCategoryNameStandardized(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Category not found: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving category $id: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving category $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving category $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity creation - POST /api/category
-     * Returns 201 CREATED
-     */
     @Operation(summary = "Create category")
     @ApiResponses(
         value = [
@@ -178,38 +80,8 @@ class CategoryController(
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Category,
-    ): ResponseEntity<Category> =
-        when (val result = categoryService.save(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Category created successfully: ${entity.categoryName}")
-                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
-            }
+    ): ResponseEntity<Category> = categoryService.save(entity).toCreatedResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Not found during category save: ${entity.categoryName}")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error creating category: ${result.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error creating category: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error creating category: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity update - PUT /api/category/{categoryName}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Update category by name")
     @ApiResponses(
         value = [
@@ -224,38 +96,8 @@ class CategoryController(
     override fun update(
         @PathVariable("categoryName") id: String,
         @Valid @RequestBody entity: Category,
-    ): ResponseEntity<Category> =
-        when (val result = categoryService.update(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Category updated successfully: $id")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<Category> = categoryService.update(entity).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Category not found for update: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating category: ${result.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating category: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error updating category: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity deletion - DELETE /api/category/{categoryName}
-     * Returns 200 OK with deleted entity
-     */
     @Operation(summary = "Delete category by name")
     @ApiResponses(
         value = [
@@ -267,40 +109,10 @@ class CategoryController(
     @DeleteMapping("/{categoryName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("categoryName") id: String,
-    ): ResponseEntity<Category> =
-        when (val deleteResult = categoryService.deleteByCategoryNameStandardized(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Category deleted successfully: $id")
-                ResponseEntity.ok(deleteResult.data)
-            }
+    ): ResponseEntity<Category> = categoryService.deleteByCategoryNameStandardized(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Category not found for deletion: $id")
-                ResponseEntity.notFound().build()
-            }
+    // ===== BUSINESS LOGIC ENDPOINTS =====
 
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error deleting category: ${deleteResult.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error deleting category: ${deleteResult.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error deleting category: ${deleteResult.exception.message}", deleteResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
-
-    /**
-     * Business logic endpoint - PUT /api/category/merge
-     * Preserved as-is, not part of standardization
-     */
     @PutMapping("/merge", produces = ["application/json"])
     @Operation(summary = "Merge one category into another")
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Categories merged"), ApiResponse(responseCode = "500", description = "Internal server error")])
@@ -309,10 +121,7 @@ class CategoryController(
         @RequestParam("old") categoryName2: String,
     ): ResponseEntity<Category> =
         try {
-            logger.info("Merging categories: $categoryName2 into $categoryName1")
-            val mergedCategory = categoryService.mergeCategories(categoryName1, categoryName2)
-            logger.info("Categories merged successfully: $categoryName2 into $categoryName1")
-            ResponseEntity.ok(mergedCategory)
+            ResponseEntity.ok(categoryService.mergeCategories(categoryName1, categoryName2))
         } catch (ex: Exception) {
             logger.error("Failed to merge categories $categoryName2 into $categoryName1: ${ex.message}", ex)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to merge categories: ${ex.message}", ex)

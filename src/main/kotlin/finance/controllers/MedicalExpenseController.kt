@@ -2,7 +2,9 @@ package finance.controllers
 
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
-import finance.domain.ServiceResult
+import finance.domain.toCreatedResponse
+import finance.domain.toListOkResponse
+import finance.domain.toOkResponse
 import finance.exceptions.DuplicateMedicalExpenseException
 import finance.services.MedicalExpenseService
 import io.swagger.v3.oas.annotations.Operation
@@ -40,57 +42,16 @@ class MedicalExpenseController(
     private val medicalExpenseService: MedicalExpenseService,
 ) : StandardizedBaseController(),
     StandardRestController<MedicalExpense, Long> {
-    init {
-        logger.info("★★★ MedicalExpenseController constructor called! Service: $medicalExpenseService")
-    }
-
-    // ===== STANDARDIZED ENDPOINTS (NEW) =====
-
-    /**
-     * Standardized collection retrieval - GET /api/medical-expenses/active
-     * Returns active medical expenses using standardized patterns
-     */
     @Operation(summary = "Get all active medical expenses")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Active medical expenses retrieved"),
-            ApiResponse(responseCode = "404", description = "No medical expenses found"),
             ApiResponse(responseCode = "500", description = "Internal server error"),
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<MedicalExpense>> =
-        when (val result = medicalExpenseService.findAllActive()) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved ${result.data.size} active medical expenses")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActive(): ResponseEntity<List<MedicalExpense>> = medicalExpenseService.findAllActive().toListOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("No medical expenses found")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving medical expenses: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving medical expenses: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving medical expenses: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized single entity retrieval - GET /api/medical-expenses/{medicalExpenseId}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Get medical expense by ID")
     @ApiResponses(
         value = [
@@ -102,38 +63,8 @@ class MedicalExpenseController(
     @GetMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("medicalExpenseId") id: Long,
-    ): ResponseEntity<MedicalExpense> =
-        when (val result = medicalExpenseService.findById(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved medical expense: $id")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<MedicalExpense> = medicalExpenseService.findById(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Medical expense not found: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving medical expense $id: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving medical expense $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving medical expense $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity creation - POST /api/medical-expenses
-     * Returns 201 CREATED
-     */
     @Operation(summary = "Create medical expense")
     @ApiResponses(
         value = [
@@ -146,38 +77,8 @@ class MedicalExpenseController(
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: MedicalExpense,
-    ): ResponseEntity<MedicalExpense> =
-        when (val result = medicalExpenseService.save(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Medical expense created successfully: ${result.data.medicalExpenseId}")
-                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
-            }
+    ): ResponseEntity<MedicalExpense> = medicalExpenseService.save(entity).toCreatedResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Not found during medical expense save: ${entity.medicalExpenseId}")
-                ResponseEntity.notFound().build<MedicalExpense>()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error creating medical expense: ${result.errors}")
-                ResponseEntity.badRequest().build<MedicalExpense>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error creating medical expense: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<MedicalExpense>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error creating medical expense: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
-            }
-        }
-
-    /**
-     * Standardized entity update - PUT /api/medical-expenses/{medicalExpenseId}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Update medical expense by ID")
     @ApiResponses(
         value = [
@@ -193,41 +94,10 @@ class MedicalExpenseController(
         @PathVariable("medicalExpenseId") id: Long,
         @Valid @RequestBody entity: MedicalExpense,
     ): ResponseEntity<MedicalExpense> {
-        // Ensure the ID matches the path parameter
         entity.medicalExpenseId = id
-
-        return when (val result = medicalExpenseService.update(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Medical expense updated successfully: $id")
-                ResponseEntity.ok(result.data)
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("Medical expense not found for update: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating medical expense: ${result.errors}")
-                ResponseEntity.badRequest().build<MedicalExpense>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating medical expense: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<MedicalExpense>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error updating medical expense $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<MedicalExpense>()
-            }
-        }
+        return medicalExpenseService.update(entity).toOkResponse()
     }
 
-    /**
-     * Standardized entity deletion - DELETE /api/medical-expenses/{medicalExpenseId}
-     * Returns 200 OK with deleted entity (standardized behavior)
-     */
     @Operation(summary = "Delete medical expense by ID")
     @ApiResponses(
         value = [
@@ -239,33 +109,7 @@ class MedicalExpenseController(
     @DeleteMapping("/{medicalExpenseId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("medicalExpenseId") id: Long,
-    ): ResponseEntity<MedicalExpense> =
-        when (val deleteResult = medicalExpenseService.deleteById(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Medical expense deleted successfully: $id")
-                ResponseEntity.ok(deleteResult.data)
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("Medical expense not found for deletion: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error deleting medical expense: ${deleteResult.errors}")
-                ResponseEntity.badRequest().build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error deleting medical expense: ${deleteResult.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error deleting medical expense $id: ${deleteResult.exception.message}", deleteResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
+    ): ResponseEntity<MedicalExpense> = medicalExpenseService.deleteById(id).toOkResponse()
 
     // ===== LEGACY ENDPOINTS (BACKWARD COMPATIBILITY) =====
 

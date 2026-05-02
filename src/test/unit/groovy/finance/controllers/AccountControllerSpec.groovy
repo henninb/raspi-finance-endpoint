@@ -150,7 +150,7 @@ class StandardizedAccountControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
-    def "findById returns 500 on business error"() {
+    def "findById returns 409 on business error"() {
         given:
         String id = "acct_err2"
         and:
@@ -160,7 +160,7 @@ class StandardizedAccountControllerSpec extends Specification {
         ResponseEntity<Account> response = controller.findById(id)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.CONFLICT
     }
 
     def "save creates account and returns 201"() {
@@ -389,7 +389,7 @@ class StandardizedAccountControllerSpec extends Specification {
         response.body.accountNameOwner == "new"
     }
 
-    def "renameAccountNameOwner returns 409 on conflict"() {
+    def "renameAccountNameOwner throws DataIntegrityViolationException on conflict"() {
         given:
         Account existing = acct(accountId: 61L, accountNameOwner: "old")
         and:
@@ -397,10 +397,10 @@ class StandardizedAccountControllerSpec extends Specification {
         accountRepository.saveAndFlush(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
 
         when:
-        def resp = controller.renameAccountNameOwner("old", "new")
+        controller.renameAccountNameOwner("old", "new")
 
         then:
-        thrown(org.springframework.web.server.ResponseStatusException)
+        thrown(org.springframework.dao.DataIntegrityViolationException)
     }
 
     def "deactivateAccount returns 200"() {
@@ -418,7 +418,7 @@ class StandardizedAccountControllerSpec extends Specification {
         !response.body.activeStatus
     }
 
-    def "deactivateAccount returns 404 when missing"() {
+    def "deactivateAccount throws EntityNotFoundException when missing"() {
         given:
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "missing") >> Optional.empty()
 
@@ -426,8 +426,7 @@ class StandardizedAccountControllerSpec extends Specification {
         controller.deactivateAccount("missing")
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.NOT_FOUND
+        thrown(jakarta.persistence.EntityNotFoundException)
     }
 
     def "activateAccount returns 200"() {
@@ -454,14 +453,14 @@ class StandardizedAccountControllerSpec extends Specification {
         response.statusCode == HttpStatus.NO_CONTENT
     }
 
-    def "refreshValidationDates returns 500 on failure"() {
+    def "refreshValidationDates throws on failure"() {
         given:
         accountRepository.updateValidationDateForAllAccountsByOwner(TEST_OWNER) >> { throw new RuntimeException("boom") }
 
         when:
-        ResponseEntity<Void> response = controller.refreshValidationDates()
+        controller.refreshValidationDates()
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        thrown(RuntimeException)
     }
 }

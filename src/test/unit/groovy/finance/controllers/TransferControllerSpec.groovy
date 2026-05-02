@@ -148,7 +148,7 @@ class TransferControllerSpec extends Specification {
         response.body == null
     }
 
-    def "findById returns 500 on unexpected result type"() {
+    def "findById returns 400 on validation error result type"() {
         given:
         transferService.findById(1L) >> ServiceResult.ValidationError.of([field: "error"])
 
@@ -156,7 +156,7 @@ class TransferControllerSpec extends Specification {
         ResponseEntity<Transfer> response = controller.findById(1L)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         response.body == null
     }
 
