@@ -14,6 +14,8 @@ import finance.domain.TransactionType
 import finance.domain.Transfer
 import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
+import finance.repositories.CategoryRepository
+import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -70,6 +72,12 @@ class ServiceLayerIntSpec extends Specification {
     @Autowired
     TransactionRepository transactionRepository
 
+    @Autowired
+    CategoryRepository categoryRepository
+
+    @Autowired
+    DescriptionRepository descriptionRepository
+
     private static <T> T unwrapSuccess(def result) {
         try {
             return result?.data
@@ -86,6 +94,55 @@ class ServiceLayerIntSpec extends Specification {
         "${prefix}_${UUID.randomUUID().toString().replace('-', '').substring(0, 8)}"
     }
 
+    private void ensureCategory(String name) {
+        if (!categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, name).present) {
+            categoryRepository.saveAndFlush(new Category(
+                categoryId: 0L,
+                owner: TEST_OWNER,
+                activeStatus: true,
+                categoryName: name
+            ))
+        }
+    }
+
+    private void ensureDescription(String name) {
+        if (!descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, name).present) {
+            descriptionRepository.saveAndFlush(new Description(
+                descriptionId: 0L,
+                owner: TEST_OWNER,
+                activeStatus: true,
+                descriptionName: name
+            ))
+        }
+    }
+
+    private Transaction createLinkedTransaction(
+        String accountName,
+        AccountType accountType,
+        String description,
+        String category,
+        BigDecimal amount,
+        LocalDate transactionDate,
+        TransactionType transactionType,
+        String notes
+    ) {
+        unwrapSuccess(transactionService.save(new Transaction(
+            guid: UUID.randomUUID().toString(),
+            accountNameOwner: accountName,
+            accountType: accountType,
+            description: description,
+            category: category,
+            amount: amount,
+            transactionDate: transactionDate,
+            transactionState: TransactionState.Outstanding,
+            transactionType: transactionType,
+            notes: notes,
+            activeStatus: true,
+            dateUpdated: now(),
+            dateAdded: now()
+        )))
+    }
+
     void setup() {
         def authorities = [new SimpleGrantedAuthority("USER")]
         def auth = new UsernamePasswordAuthenticationToken(TEST_OWNER, "N/A", authorities)
@@ -95,7 +152,7 @@ class ServiceLayerIntSpec extends Specification {
             accountId: 0L,
             owner: TEST_OWNER,
             accountNameOwner: PRIMARY_ACCOUNT_NAME,
-            accountType: AccountType.Credit,
+            accountType: AccountType.Debit,
             activeStatus: true,
             moniker: "1234",
             outstanding: BigDecimal.ZERO,
@@ -132,6 +189,14 @@ class ServiceLayerIntSpec extends Specification {
             accountService.insertAccount(secondaryAccount)
         } catch (Exception ignored) {
         }
+
+        ensureCategory(DEFAULT_CATEGORY)
+        ensureCategory("bill_pay")
+        ensureCategory("transfer")
+
+        ensureDescription("payment")
+        ensureDescription("transfer withdrawal")
+        ensureDescription("transfer deposit")
     }
 
     void cleanup() {
@@ -265,10 +330,32 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test payment service integration'() {
         given:
+        Transaction sourceTransaction = createLinkedTransaction(
+            PRIMARY_ACCOUNT_NAME,
+            AccountType.Debit,
+            uniqueName("payment_source"),
+            DEFAULT_CATEGORY,
+            new BigDecimal("-300.00"),
+            LocalDate.parse("2023-05-30"),
+            TransactionType.Expense,
+            "prelinked payment source"
+        )
+        Transaction destinationTransaction = createLinkedTransaction(
+            SECONDARY_ACCOUNT_NAME,
+            AccountType.Credit,
+            uniqueName("payment_dest"),
+            DEFAULT_CATEGORY,
+            new BigDecimal("-300.00"),
+            LocalDate.parse("2023-05-30"),
+            TransactionType.Expense,
+            "prelinked payment destination"
+        )
         Payment testPayment = new Payment(
             paymentId: 0L,
             sourceAccount: PRIMARY_ACCOUNT_NAME,
             destinationAccount: SECONDARY_ACCOUNT_NAME,
+            guidSource: sourceTransaction.guid,
+            guidDestination: destinationTransaction.guid,
             amount: 300.00,
             transactionDate: LocalDate.parse("2023-05-30"),
             activeStatus: true,
@@ -297,12 +384,32 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test transfer service integration'() {
         given:
+        Transaction sourceTransaction = createLinkedTransaction(
+            PRIMARY_ACCOUNT_NAME,
+            AccountType.Debit,
+            "transfer withdrawal",
+            "transfer",
+            new BigDecimal("-250.50"),
+            LocalDate.parse("2023-05-31"),
+            TransactionType.Transfer,
+            "Transfer to ${SECONDARY_ACCOUNT_NAME}"
+        )
+        Transaction destinationTransaction = createLinkedTransaction(
+            SECONDARY_ACCOUNT_NAME,
+            AccountType.Credit,
+            "transfer deposit",
+            "transfer",
+            new BigDecimal("250.50"),
+            LocalDate.parse("2023-05-31"),
+            TransactionType.Transfer,
+            "Transfer from ${PRIMARY_ACCOUNT_NAME}"
+        )
         Transfer testTransfer = new Transfer(
             transferId: 0L,
             sourceAccount: PRIMARY_ACCOUNT_NAME,
             destinationAccount: SECONDARY_ACCOUNT_NAME,
-            guidSource: UUID.randomUUID().toString(),
-            guidDestination: UUID.randomUUID().toString(),
+            guidSource: sourceTransaction.guid,
+            guidDestination: destinationTransaction.guid,
             amount: 250.50,
             transactionDate: LocalDate.parse("2023-05-31"),
             activeStatus: true,
@@ -311,7 +418,7 @@ class ServiceLayerIntSpec extends Specification {
         )
 
         when:
-        Transfer savedTransfer = transferService.insertTransfer(testTransfer)
+        Transfer savedTransfer = unwrapSuccess(transferService.save(testTransfer))
 
         then:
         savedTransfer != null

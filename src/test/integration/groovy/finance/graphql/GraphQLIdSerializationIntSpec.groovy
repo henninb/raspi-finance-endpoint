@@ -2,11 +2,20 @@ package finance.graphql
 
 import finance.BaseRestTemplateIntegrationSpec
 import finance.controllers.graphql.GraphQLMutationController
+import finance.domain.Category
+import finance.domain.Description
+import finance.domain.Transaction
+import finance.domain.TransactionState
+import finance.domain.TransactionType
 import finance.controllers.dto.PaymentInputDto
 import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
+import finance.repositories.CategoryRepository
+import finance.repositories.DescriptionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.graphql.execution.GraphQlSource
+import finance.services.PaymentService
+import finance.services.TransactionService
 import org.springframework.test.context.TestPropertySource
 import groovy.json.JsonSlurper
 import spock.lang.Requires
@@ -30,37 +39,32 @@ class GraphQLIdSerializationIntSpec extends BaseRestTemplateIntegrationSpec {
     @Autowired
     AccountRepository accountRepository
 
+    @Autowired
+    CategoryRepository categoryRepository
+
+    @Autowired
+    DescriptionRepository descriptionRepository
+
+    @Autowired
+    PaymentService paymentService
+
+    @Autowired
+    TransactionService transactionService
+
     private static String safeSuffix(int len = 5) {
         def rnd = new Random()
         def alphabet = ['a','b','c','d','e','f']
         (1..len).collect { alphabet[rnd.nextInt(alphabet.size())] }.join()
     }
 
-    private static PaymentInputDto paymentDto(String src, String dest) {
-        new PaymentInputDto(
-                null,                           // paymentId
-                src,                            // sourceAccount
-                dest,                           // destinationAccount
-                LocalDate.parse("2024-01-15"),     // transactionDate
-                new BigDecimal("12.34"),        // amount
-                null,                           // guidSource
-                null,                           // guidDestination
-                null                            // activeStatus
-        )
-    }
-
     @Requires({ env['CI'] || true })
     def "GraphQL returns ID-typed fields as strings"() {
         given:
-        // Ensure @PreAuthorize(USER) passes for mutation
         def testUser = "graphqlid"
         withUserRole(testUser)
-        // Account names must match ^[a-z-]*_[a-z]*$ and 3-40 chars
-        // Use a deterministic a-f suffix to avoid rare short UUID letter runs
         def suffix = safeSuffix(5)
         def src = "srcuser_${suffix}"
         def dest = "destuser_${suffix}"
-        // Ensure accounts exist and satisfy constraints (debit src, credit dest)
         def srcAccount = SmartAccountBuilder.builderForOwner(testUser)
                 .withAccountNameOwner(src)
                 .asDebit()
@@ -74,7 +78,47 @@ class GraphQLIdSerializationIntSpec extends BaseRestTemplateIntegrationSpec {
                 .withCleared(new BigDecimal("-200.00"))
                 .buildAndValidate()
         accountRepository.save(destAccount)
-        def created = mutationController.createPayment(paymentDto(src, dest))
+        if (!categoryRepository.findByOwnerAndCategoryName(testUser, "bill_pay").present) {
+            categoryRepository.saveAndFlush(new Category(categoryId: 0L, owner: testUser, activeStatus: true, categoryName: "bill_pay"))
+        }
+        if (!descriptionRepository.findByOwnerAndDescriptionName(testUser, "payment").present) {
+            descriptionRepository.saveAndFlush(new Description(descriptionId: 0L, owner: testUser, activeStatus: true, descriptionName: "payment"))
+        }
+        def sourceTransaction = transactionService.save(new Transaction(
+                guid: UUID.randomUUID().toString(),
+                accountNameOwner: src,
+                accountType: srcAccount.accountType,
+                description: "payment",
+                category: "bill_pay",
+                amount: new BigDecimal("-12.34"),
+                transactionDate: LocalDate.parse("2024-01-15"),
+                transactionState: TransactionState.Outstanding,
+                transactionType: TransactionType.Expense,
+                notes: "prelinked payment source"
+        )).data
+        def destinationTransaction = transactionService.save(new Transaction(
+                guid: UUID.randomUUID().toString(),
+                accountNameOwner: dest,
+                accountType: destAccount.accountType,
+                description: "payment",
+                category: "bill_pay",
+                amount: new BigDecimal("-12.34"),
+                transactionDate: LocalDate.parse("2024-01-15"),
+                transactionState: TransactionState.Outstanding,
+                transactionType: TransactionType.Expense,
+                notes: "prelinked payment destination"
+        )).data
+        def created = paymentService.save(new finance.domain.Payment(
+                0L,
+                "",
+                src,
+                dest,
+                LocalDate.parse("2024-01-15"),
+                new BigDecimal("12.34"),
+                sourceTransaction.guid,
+                destinationTransaction.guid,
+                true
+        )).data
 
         and:
         if (graphQlSource == null) {
