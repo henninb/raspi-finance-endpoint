@@ -47,13 +47,7 @@ class MedicalExpenseService
             handleServiceOperation("save", entity.medicalExpenseId) {
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
-
-                val violations = validator.validate(entity)
-                if (violations.isNotEmpty()) {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-                }
-
-                // Check for duplicates if transactionId is provided
+                validateOrThrow(entity)
                 entity.transactionId?.let { transactionId ->
                     if (transactionId > 0) {
                         val existingExpense = medicalExpenseRepository.findByOwnerAndTransactionId(owner, transactionId)

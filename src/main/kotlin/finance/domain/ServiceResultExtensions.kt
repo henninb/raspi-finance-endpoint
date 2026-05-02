@@ -1,5 +1,8 @@
 package finance.domain
 
+import jakarta.persistence.EntityNotFoundException
+import jakarta.validation.ValidationException
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -39,4 +42,14 @@ fun <T : Any> ServiceResult<Page<T>>.toPagedOkResponse(pageable: Pageable): Resp
         is ServiceResult.ValidationError -> ResponseEntity.badRequest().build()
         is ServiceResult.BusinessError -> ResponseEntity.badRequest().build()
         is ServiceResult.SystemError -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+    }
+
+/** Unwraps a ServiceResult to its data or throws the appropriate exception. */
+fun <T> ServiceResult<T>.unwrapOrThrow(): T =
+    when (this) {
+        is ServiceResult.Success -> data
+        is ServiceResult.NotFound -> throw EntityNotFoundException(message)
+        is ServiceResult.ValidationError -> throw ValidationException("Validation failed: $errors")
+        is ServiceResult.BusinessError -> throw DataIntegrityViolationException(message)
+        is ServiceResult.SystemError -> throw RuntimeException("System error: ${exception.message}", exception)
     }

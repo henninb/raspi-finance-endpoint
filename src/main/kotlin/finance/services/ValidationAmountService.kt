@@ -7,10 +7,10 @@ import finance.domain.ValidationAmount
 import finance.repositories.AccountRepository
 import finance.repositories.ValidationAmountRepository
 import finance.utils.TenantContext
+import finance.utils.orThrowNotFound
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
 
 /**
  * Standardized ValidationAmount Service implementing ServiceResult pattern
@@ -72,31 +72,20 @@ class ValidationAmountService
         override fun findById(id: Long): ServiceResult<ValidationAmount> =
             handleServiceOperation("findById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
-                if (optionalValidationAmount.isPresent) {
-                    optionalValidationAmount.get()
-                } else {
-                    throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: $id")
-                }
+                validationAmountRepository
+                    .findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
+                    .orThrowNotFound("ValidationAmount", id)
             }
 
         override fun save(entity: ValidationAmount): ServiceResult<ValidationAmount> =
             handleServiceOperation("save", entity.validationId) {
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
-
-                val violations = validator.validate(entity)
-                if (violations.isNotEmpty()) {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-                }
-
-                // Set timestamps
-                val timestamp = Timestamp(System.currentTimeMillis())
+                validateOrThrow(entity)
+                val timestamp = nowTimestamp()
                 entity.dateAdded = timestamp
                 entity.dateUpdated = timestamp
-
                 val saved = validationAmountRepository.saveAndFlush(entity)
-                // Keep Account.validationDate in sync with newest ValidationAmount row
                 try {
                     accountRepository.updateValidationDateForAccountByOwner(saved.accountId, owner)
                 } catch (ex: Exception) {
@@ -108,22 +97,17 @@ class ValidationAmountService
         override fun update(entity: ValidationAmount): ServiceResult<ValidationAmount> =
             handleServiceOperation("update", entity.validationId) {
                 val owner = TenantContext.getCurrentOwner()
-                val existingValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, entity.validationId)
-                if (existingValidationAmount.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: ${entity.validationId}")
-                }
-
-                // Update fields from the provided entity
-                val validationAmountToUpdate = existingValidationAmount.get()
+                val validationAmountToUpdate =
+                    validationAmountRepository
+                        .findByOwnerAndValidationIdAndActiveStatusTrue(owner, entity.validationId)
+                        .orThrowNotFound("ValidationAmount", entity.validationId)
                 validationAmountToUpdate.accountId = entity.accountId
                 validationAmountToUpdate.amount = entity.amount
                 validationAmountToUpdate.transactionState = entity.transactionState
                 validationAmountToUpdate.validationDate = entity.validationDate
                 validationAmountToUpdate.activeStatus = entity.activeStatus
-                validationAmountToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
-
+                validationAmountToUpdate.dateUpdated = nowTimestamp()
                 val updated = validationAmountRepository.saveAndFlush(validationAmountToUpdate)
-                // Refresh Account.validationDate projection
                 try {
                     accountRepository.updateValidationDateForAccountByOwner(updated.accountId, owner)
                 } catch (ex: Exception) {
@@ -135,11 +119,10 @@ class ValidationAmountService
         override fun deleteById(id: Long): ServiceResult<ValidationAmount> =
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalValidationAmount = validationAmountRepository.findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
-                if (optionalValidationAmount.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("ValidationAmount not found: $id")
-                }
-                val validationAmount = optionalValidationAmount.get()
+                val validationAmount =
+                    validationAmountRepository
+                        .findByOwnerAndValidationIdAndActiveStatusTrue(owner, id)
+                        .orThrowNotFound("ValidationAmount", id)
                 validationAmountRepository.delete(validationAmount)
                 validationAmount
             }

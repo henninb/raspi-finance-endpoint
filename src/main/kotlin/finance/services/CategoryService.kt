@@ -6,11 +6,12 @@ import finance.domain.ServiceResult
 import finance.repositories.CategoryRepository
 import finance.repositories.TransactionRepository
 import finance.utils.TenantContext
+import finance.utils.orThrowNotFound
 import jakarta.validation.Validator
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class CategoryService
@@ -52,57 +53,37 @@ class CategoryService
         override fun findById(id: Long): ServiceResult<Category> =
             handleServiceOperation("findById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalCategory = categoryRepository.findByOwnerAndCategoryId(owner, id)
-                if (optionalCategory.isPresent) {
-                    optionalCategory.get()
-                } else {
-                    throw jakarta.persistence.EntityNotFoundException("Category not found: $id")
-                }
+                categoryRepository.findByOwnerAndCategoryId(owner, id).orThrowNotFound("Category", id)
             }
 
         override fun save(entity: Category): ServiceResult<Category> =
             handleServiceOperation("save", entity.categoryId) {
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
-
-                val violations = validator.validate(entity)
-                if (violations.isNotEmpty()) {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-                }
-
-                // Set timestamps
-                val timestamp = Timestamp(System.currentTimeMillis())
+                validateOrThrow(entity)
+                val timestamp = nowTimestamp()
                 entity.dateAdded = timestamp
                 entity.dateUpdated = timestamp
-
                 categoryRepository.saveAndFlush(entity)
             }
 
         override fun update(entity: Category): ServiceResult<Category> =
             handleServiceOperation("update", entity.categoryId) {
                 val owner = TenantContext.getCurrentOwner()
-                val existingCategory = categoryRepository.findByOwnerAndCategoryId(owner, entity.categoryId)
-                if (existingCategory.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("Category not found: ${entity.categoryId}")
-                }
-
-                // Update fields from the provided entity
-                val categoryToUpdate = existingCategory.get()
+                val categoryToUpdate =
+                    categoryRepository
+                        .findByOwnerAndCategoryId(owner, entity.categoryId)
+                        .orThrowNotFound("Category", entity.categoryId)
                 categoryToUpdate.categoryName = entity.categoryName
                 categoryToUpdate.activeStatus = entity.activeStatus
-                categoryToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
-
+                categoryToUpdate.dateUpdated = nowTimestamp()
                 categoryRepository.saveAndFlush(categoryToUpdate)
             }
 
         override fun deleteById(id: Long): ServiceResult<Category> =
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalCategory = categoryRepository.findByOwnerAndCategoryId(owner, id)
-                if (optionalCategory.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("Category not found: $id")
-                }
-                val category = optionalCategory.get()
+                val category = categoryRepository.findByOwnerAndCategoryId(owner, id).orThrowNotFound("Category", id)
                 categoryRepository.delete(category)
                 category
             }
@@ -140,31 +121,28 @@ class CategoryService
         fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =
             handleServiceOperation("findByCategoryName", null) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalCategory = categoryRepository.findByOwnerAndCategoryName(owner, categoryName)
-                if (optionalCategory.isPresent) {
-                    val category = optionalCategory.get()
-                    val count = transactionRepository.countByOwnerAndCategoryName(owner, category.categoryName)
-                    category.categoryCount = count
-                    category
-                } else {
-                    throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
-                }
+                val category =
+                    categoryRepository
+                        .findByOwnerAndCategoryName(owner, categoryName)
+                        .orThrowNotFound("Category", categoryName)
+                category.categoryCount = transactionRepository.countByOwnerAndCategoryName(owner, category.categoryName)
+                category
             }
 
         fun deleteByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =
             handleServiceOperation("deleteByCategoryName", null) {
                 val owner = TenantContext.getCurrentOwner()
-                val optionalCategory = categoryRepository.findByOwnerAndCategoryName(owner, categoryName)
-                if (optionalCategory.isEmpty) {
-                    throw jakarta.persistence.EntityNotFoundException("Category not found: $categoryName")
-                }
-                val category = optionalCategory.get()
+                val category =
+                    categoryRepository
+                        .findByOwnerAndCategoryName(owner, categoryName)
+                        .orThrowNotFound("Category", categoryName)
                 categoryRepository.delete(category)
                 category
             }
 
         // ===== Business Logic Methods =====
 
+        @Transactional
         fun mergeCategories(
             categoryName1: String,
             categoryName2: String,
