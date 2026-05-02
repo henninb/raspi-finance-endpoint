@@ -2,7 +2,10 @@ package finance.controllers
 
 import finance.domain.Description
 import finance.domain.MergeDescriptionsRequest
-import finance.domain.ServiceResult
+import finance.domain.toCreatedResponse
+import finance.domain.toListOkResponse
+import finance.domain.toOkResponse
+import finance.domain.toPagedOkResponse
 import finance.services.DescriptionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -32,48 +35,16 @@ class DescriptionController(
     private val descriptionService: DescriptionService,
 ) : StandardizedBaseController(),
     StandardRestController<Description, String> {
-    // ===== STANDARDIZED ENDPOINTS (NEW) =====
-
-    /**
-     * Standardized collection retrieval - GET /api/description/active
-     * Returns empty list instead of throwing 404 (standardized behavior)
-     */
     @Operation(summary = "Get all active descriptions")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Active descriptions retrieved"),
-            ApiResponse(responseCode = "404", description = "No descriptions found"),
             ApiResponse(responseCode = "500", description = "Internal server error"),
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Description>> =
-        when (val result = descriptionService.findAllActive()) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved ${result.data.size} active descriptions")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActive(): ResponseEntity<List<Description>> = descriptionService.findAllActive().toListOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("No descriptions found")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving descriptions: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Paginated collection retrieval - GET /api/description/active/paged?page=0&size=50
-     * Returns Page<Description> with metadata
-     */
     @Operation(summary = "Get all active descriptions (paginated)")
     @ApiResponses(
         value = [
@@ -82,37 +53,8 @@ class DescriptionController(
         ],
     )
     @GetMapping("/active/paged", produces = ["application/json"])
-    override fun findAllActivePaged(
-        pageable: Pageable,
-    ): ResponseEntity<Page<Description>> {
-        logger.debug("Retrieving all active descriptions (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
-        return when (val result = descriptionService.findAllActive(pageable)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} descriptions")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActivePaged(pageable: Pageable): ResponseEntity<Page<Description>> = descriptionService.findAllActive(pageable).toPagedOkResponse(pageable)
 
-            is ServiceResult.NotFound -> {
-                logger.warn("No descriptions found")
-                ResponseEntity.ok(Page.empty(pageable))
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving descriptions: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-    }
-
-    /**
-     * Standardized single entity retrieval - GET /api/description/{descriptionName}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Get description by name")
     @ApiResponses(
         value = [
@@ -124,33 +66,8 @@ class DescriptionController(
     @GetMapping("/{descriptionName}", produces = ["application/json"])
     override fun findById(
         @PathVariable("descriptionName") id: String,
-    ): ResponseEntity<Description> =
-        when (val result = descriptionService.findByDescriptionNameStandardized(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved description: $id")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<Description> = descriptionService.findByDescriptionNameStandardized(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Description not found: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving description $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity creation - POST /api/description
-     * Returns 201 CREATED
-     */
     @Operation(summary = "Create description")
     @ApiResponses(
         value = [
@@ -163,38 +80,8 @@ class DescriptionController(
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Description,
-    ): ResponseEntity<Description> =
-        when (val result = descriptionService.save(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Description created successfully: ${entity.descriptionName}")
-                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
-            }
+    ): ResponseEntity<Description> = descriptionService.save(entity).toCreatedResponse()
 
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error creating description: ${result.errors}")
-                ResponseEntity.badRequest().build<Description>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error creating description: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error creating description: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
-            }
-
-            else -> {
-                logger.error("Unexpected result type: $result")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity update - PUT /api/description/{descriptionName}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Update description by name")
     @ApiResponses(
         value = [
@@ -209,38 +96,8 @@ class DescriptionController(
     override fun update(
         @PathVariable("descriptionName") id: String,
         @Valid @RequestBody entity: Description,
-    ): ResponseEntity<Description> =
-        when (val result = descriptionService.update(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Description updated successfully: $id")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<Description> = descriptionService.update(entity).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Description not found for update: $id")
-                ResponseEntity.notFound().build<Description>()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating description: ${result.errors}")
-                ResponseEntity.badRequest().build<Description>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating description: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error updating description $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
-            }
-        }
-
-    /**
-     * Standardized entity deletion - DELETE /api/description/{descriptionName}
-     * Returns 200 OK with deleted entity
-     */
     @Operation(summary = "Delete description by name")
     @ApiResponses(
         value = [
@@ -252,40 +109,10 @@ class DescriptionController(
     @DeleteMapping("/{descriptionName}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("descriptionName") id: String,
-    ): ResponseEntity<Description> =
-        when (val deleteResult = descriptionService.deleteByDescriptionNameStandardized(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Description deleted successfully: $id")
-                ResponseEntity.ok(deleteResult.data)
-            }
+    ): ResponseEntity<Description> = descriptionService.deleteByDescriptionNameStandardized(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Description not found for deletion: $id")
-                ResponseEntity.notFound().build<Description>()
-            }
+    // ===== BUSINESS LOGIC ENDPOINTS =====
 
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error deleting description: ${deleteResult.errors}")
-                ResponseEntity.badRequest().build<Description>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error deleting description: ${deleteResult.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<Description>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error deleting description $id: ${deleteResult.exception.message}", deleteResult.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Description>()
-            }
-        }
-
-    // ===== BUSINESS LOGIC ENDPOINTS (PRESERVED) =====
-
-    /**
-     * Business logic endpoint - POST /api/description/merge
-     * Preserved as-is, not part of standardization
-     */
     @Operation(summary = "Merge multiple descriptions into a target")
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Descriptions merged"), ApiResponse(responseCode = "400", description = "Bad request"), ApiResponse(responseCode = "500", description = "Internal server error")])
     @PostMapping("/merge", consumes = ["application/json"], produces = ["application/json"])
@@ -296,9 +123,7 @@ class DescriptionController(
             if (request.targetName.isBlank() || request.sourceNames.isEmpty()) {
                 throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetName and sourceNames are required")
             }
-            logger.info("Merging descriptions ${request.sourceNames} into ${request.targetName}")
-            val merged = descriptionService.mergeDescriptions(request.targetName, request.sourceNames)
-            ResponseEntity.ok(merged)
+            ResponseEntity.ok(descriptionService.mergeDescriptions(request.targetName, request.sourceNames))
         } catch (ex: ResponseStatusException) {
             throw ex
         } catch (ex: Exception) {

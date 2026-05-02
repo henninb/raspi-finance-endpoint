@@ -4,12 +4,14 @@ import finance.configurations.ResilienceComponents
 import finance.domain.Account
 import finance.domain.AccountType
 import jakarta.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.apache.logging.log4j.LogManager
 import org.springframework.dao.DataAccessResourceFailureException
 import org.springframework.jdbc.CannotGetJdbcConnectionException
 import java.sql.SQLException
+import java.sql.Timestamp
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
@@ -21,6 +23,15 @@ open class BaseService
         protected val resilienceComponents: ResilienceComponents,
     ) {
         protected val logger get() = LogManager.getLogger(javaClass)
+
+        protected fun nowTimestamp(): Timestamp = Timestamp(System.currentTimeMillis())
+
+        protected fun <T> validateOrThrow(entity: T) {
+            val violations = validator.validate(entity)
+            if (violations.isNotEmpty()) {
+                throw ConstraintViolationException("Validation failed", violations)
+            }
+        }
 
         open fun handleConstraintViolations(constraintViolations: Set<ConstraintViolation<*>>) {
             if (constraintViolations.isEmpty()) return

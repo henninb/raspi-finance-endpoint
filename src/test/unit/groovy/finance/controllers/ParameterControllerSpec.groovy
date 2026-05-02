@@ -65,7 +65,7 @@ class StandardizedParameterControllerSpec extends Specification {
         (response.body as List).isEmpty()
     }
 
-    def "findAllActive returns empty list when service NotFound"() {
+    def "findAllActive returns 404 when service NotFound"() {
         given:
         parameterRepository.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> { throw new jakarta.persistence.EntityNotFoundException("none") }
 
@@ -73,8 +73,8 @@ class StandardizedParameterControllerSpec extends Specification {
         ResponseEntity<?> response = controller.findAllActive()
 
         then:
-        response.statusCode == HttpStatus.OK
-        (response.body as List).isEmpty()
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body == null
     }
 
     def "findAllActive returns 500 on system error"() {

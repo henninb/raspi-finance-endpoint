@@ -99,7 +99,7 @@ class TransactionControllerSpec extends Specification {
         response.body == null
     }
 
-    def "findById handles unexpected result type with 500"() {
+    def "findById returns 400 on validation error result type"() {
         given:
         standardizedTransactionService.findById("guid") >> ServiceResult.ValidationError.of([:])
 
@@ -107,7 +107,7 @@ class TransactionControllerSpec extends Specification {
         ResponseEntity<Transaction> response = controller.findById("guid")
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.BAD_REQUEST
         response.body == null
     }
 
@@ -170,7 +170,7 @@ class TransactionControllerSpec extends Specification {
         response.body == null
     }
 
-    def "save handles unexpected result type with 500"() {
+    def "save returns 404 when service returns NotFound"() {
         given:
         Transaction input = createValidTransaction("unexpected-guid", "test_account")
         and:
@@ -180,7 +180,7 @@ class TransactionControllerSpec extends Specification {
         ResponseEntity<Transaction> response = controller.save(input)
 
         then:
-        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.statusCode == HttpStatus.NOT_FOUND
         response.body == null
     }
 
@@ -375,19 +375,18 @@ class TransactionControllerSpec extends Specification {
         response.body.isEmpty()
     }
 
-    def "selectByAccountNameOwner throws 500 on service error"() {
+    def "selectByAccountNameOwner returns 500 on service error"() {
         given:
         String accountNameOwner = "error_account"
         and:
         standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner) >> ServiceResult.SystemError.of(new RuntimeException("Service error"))
 
         when:
-        controller.selectByAccountNameOwner(accountNameOwner)
+        ResponseEntity<List<Transaction>> response = controller.selectByAccountNameOwner(accountNameOwner)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        ex.reason.contains("Failed to retrieve transactions")
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
     }
 
     def "selectTotalsCleared returns totals for account"() {
@@ -407,7 +406,7 @@ class TransactionControllerSpec extends Specification {
         response.body.totalsFuture == BigDecimal.valueOf(300.00)
     }
 
-    def "selectTotalsCleared throws 500 on service error"() {
+    def "selectTotalsCleared throws on service error"() {
         given:
         String accountNameOwner = "totals_error_account"
         and:
@@ -419,9 +418,7 @@ class TransactionControllerSpec extends Specification {
         controller.selectTotalsCleared(accountNameOwner)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        ex.reason.contains("Failed to calculate account totals")
+        thrown(RuntimeException)
     }
 
     def "updateTransactionState updates state successfully"() {
@@ -665,19 +662,18 @@ class TransactionControllerSpec extends Specification {
         response.body.isEmpty()
     }
 
-    def "selectTransactionsByCategory throws 500 on service error"() {
+    def "selectTransactionsByCategory returns 500 on service error"() {
         given:
         String categoryName = "error_category"
         and:
         standardizedTransactionService.findTransactionsByCategoryStandardized(categoryName) >> ServiceResult.SystemError.of(new RuntimeException("Category search failed"))
 
         when:
-        controller.selectTransactionsByCategory(categoryName)
+        ResponseEntity<List<Transaction>> response = controller.selectTransactionsByCategory(categoryName)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        ex.reason.contains("Failed to retrieve transactions by category")
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
     }
 
     def "selectTransactionsByDescription returns transactions for description"() {
@@ -714,19 +710,18 @@ class TransactionControllerSpec extends Specification {
         response.body.isEmpty()
     }
 
-    def "selectTransactionsByDescription throws 500 on service error"() {
+    def "selectTransactionsByDescription returns 500 on service error"() {
         given:
         String descriptionName = "error_description"
         and:
         standardizedTransactionService.findTransactionsByDescriptionStandardized(descriptionName) >> ServiceResult.SystemError.of(new RuntimeException("Description search failed"))
 
         when:
-        controller.selectTransactionsByDescription(descriptionName)
+        ResponseEntity<List<Transaction>> response = controller.selectTransactionsByDescription(descriptionName)
 
         then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-        ex.reason.contains("Failed to retrieve transactions by description")
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body == null
     }
 
     // ===== Helper Methods =====

@@ -18,7 +18,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.sql.Timestamp
 import java.util.Optional
 
 @Service
@@ -63,13 +62,9 @@ class AccountService
                     throw org.springframework.dao.DataIntegrityViolationException("Account already exists: ${entity.accountNameOwner}")
                 }
 
-                val violations = validator.validate(entity)
-                if (violations.isNotEmpty()) {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
-                }
+                validateOrThrow(entity)
 
-                // Set timestamps
-                val timestamp = Timestamp(System.currentTimeMillis())
+                val timestamp = nowTimestamp()
                 entity.dateAdded = timestamp
                 entity.dateUpdated = timestamp
 
@@ -94,7 +89,7 @@ class AccountService
                 accountToUpdate.outstanding = entity.outstanding
                 accountToUpdate.cleared = entity.cleared
                 accountToUpdate.dateClosed = entity.dateClosed
-                accountToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
+                accountToUpdate.dateUpdated = nowTimestamp()
 
                 accountRepository.saveAndFlush(accountToUpdate)
             }
@@ -241,7 +236,7 @@ class AccountService
 
                 // Then, rename the account itself
                 oldAccount.accountNameOwner = newAccountNameOwner
-                oldAccount.dateUpdated = Timestamp(System.currentTimeMillis())
+                oldAccount.dateUpdated = nowTimestamp()
                 val renamedAccount = accountRepository.saveAndFlush(oldAccount)
                 logger.info("Successfully renamed account to: $newAccountNameOwner (accountId: ${renamedAccount.accountId})")
                 return renamedAccount
@@ -270,8 +265,8 @@ class AccountService
 
             // Deactivate the account
             account.activeStatus = false
-            account.dateClosed = Timestamp(System.currentTimeMillis())
-            account.dateUpdated = Timestamp(System.currentTimeMillis())
+            account.dateClosed = nowTimestamp()
+            account.dateUpdated = nowTimestamp()
             val updatedAccount = accountRepository.saveAndFlush(account)
             logger.info("Successfully deactivated account: $accountNameOwner")
             return updatedAccount
@@ -286,7 +281,7 @@ class AccountService
 
             logger.info("Activating account: $accountNameOwner")
             account.activeStatus = true
-            account.dateUpdated = Timestamp(System.currentTimeMillis())
+            account.dateUpdated = nowTimestamp()
             val updatedAccount = accountRepository.saveAndFlush(account)
             logger.info("Successfully activated account: $accountNameOwner")
             return updatedAccount

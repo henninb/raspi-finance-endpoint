@@ -73,7 +73,7 @@ class PaymentControllerSpec extends Specification {
         response.body.isEmpty()
     }
 
-    def "findAllActive returns empty list when service returns NotFound"() {
+    def "findAllActive returns 404 when service returns NotFound"() {
         given:
         paymentService.findAllActive() >> ServiceResult.NotFound.of("No payments found")
 
@@ -81,8 +81,8 @@ class PaymentControllerSpec extends Specification {
         ResponseEntity<List<Payment>> response = controller.findAllActive()
 
         then:
-        response.statusCode == HttpStatus.OK
-        response.body.isEmpty()
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body == null
     }
 
     def "findAllActive returns 500 on system error"() {

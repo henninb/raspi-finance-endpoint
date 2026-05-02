@@ -1,7 +1,10 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.domain.ServiceResult
+import finance.domain.toCreatedResponse
+import finance.domain.toListOkResponse
+import finance.domain.toOkResponse
+import finance.domain.toPagedOkResponse
 import finance.services.PaymentService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -10,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 
 @Tag(name = "Payment Management", description = "Operations for managing payments")
 @RestController
@@ -31,12 +32,6 @@ class PaymentController(
     private val paymentService: PaymentService,
 ) : StandardizedBaseController(),
     StandardRestController<Payment, Long> {
-    // ===== STANDARDIZED ENDPOINTS (NEW) =====
-
-    /**
-     * Standardized collection retrieval - GET /api/payment/active
-     * Returns empty list instead of throwing 404 (standardized behavior)
-     */
     @Operation(summary = "Get all active payments")
     @ApiResponses(
         value = [
@@ -45,38 +40,8 @@ class PaymentController(
         ],
     )
     @GetMapping("/active", produces = ["application/json"])
-    override fun findAllActive(): ResponseEntity<List<Payment>> =
-        when (val result = paymentService.findAllActive()) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved ${result.data.size} active payments (standardized)")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActive(): ResponseEntity<List<Payment>> = paymentService.findAllActive().toListOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.info("No active payments found (standardized)")
-                ResponseEntity.ok(emptyList())
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving active payments: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving active payments: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving active payments: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Paginated collection retrieval - GET /api/payment/active/paged?page=0&size=50
-     * Returns Page<Payment> with metadata
-     */
     @Operation(summary = "Get all active payments (paginated)")
     @ApiResponses(
         value = [
@@ -85,42 +50,8 @@ class PaymentController(
         ],
     )
     @GetMapping("/active/paged", produces = ["application/json"])
-    override fun findAllActivePaged(
-        pageable: Pageable,
-    ): ResponseEntity<Page<Payment>> {
-        logger.debug("Retrieving all active payments (paginated) - page: ${pageable.pageNumber}, size: ${pageable.pageSize}")
-        return when (val result = paymentService.findAllActive(pageable)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved page ${pageable.pageNumber} with ${result.data.numberOfElements} payments")
-                ResponseEntity.ok(result.data)
-            }
+    override fun findAllActivePaged(pageable: Pageable): ResponseEntity<Page<Payment>> = paymentService.findAllActive(pageable).toPagedOkResponse(pageable)
 
-            is ServiceResult.NotFound -> {
-                logger.warn("No payments found")
-                ResponseEntity.ok(Page.empty(pageable))
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving payments: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving payments: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving payments: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-    }
-
-    /**
-     * Standardized single entity retrieval - GET /api/payment/{paymentId}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Get payment by ID")
     @ApiResponses(
         value = [
@@ -132,38 +63,8 @@ class PaymentController(
     @GetMapping("/{paymentId}", produces = ["application/json"])
     override fun findById(
         @PathVariable("paymentId") id: Long,
-    ): ResponseEntity<Payment> =
-        when (val result = paymentService.findById(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Retrieved payment: $id (standardized)")
-                ResponseEntity.ok(result.data)
-            }
+    ): ResponseEntity<Payment> = paymentService.findById(id).toOkResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Payment not found: $id (standardized)")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Unexpected validation error retrieving payment $id: ${result.errors}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.error("Unexpected business error retrieving payment $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error retrieving payment $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-            }
-        }
-
-    /**
-     * Standardized entity creation - POST /api/payment
-     * Returns 201 CREATED
-     */
     @Operation(summary = "Create payment")
     @ApiResponses(
         value = [
@@ -176,38 +77,8 @@ class PaymentController(
     @PostMapping(consumes = ["application/json"], produces = ["application/json"])
     override fun save(
         @Valid @RequestBody entity: Payment,
-    ): ResponseEntity<Payment> =
-        when (val result = paymentService.save(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Payment created successfully: ${entity.sourceAccount} -> ${entity.destinationAccount} (standardized)")
-                ResponseEntity.status(HttpStatus.CREATED).body(result.data)
-            }
+    ): ResponseEntity<Payment> = paymentService.save(entity).toCreatedResponse()
 
-            is ServiceResult.NotFound -> {
-                logger.warn("Not found during payment save: ${entity.sourceAccount} -> ${entity.destinationAccount}")
-                ResponseEntity.notFound().build<Payment>()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error creating payment: ${result.errors}")
-                ResponseEntity.badRequest().build<Payment>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error creating payment: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<Payment>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error creating payment: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
-            }
-        }
-
-    /**
-     * Standardized entity update - PUT /api/payment/{paymentId}
-     * Uses camelCase parameter without @PathVariable annotation
-     */
     @Operation(summary = "Update payment by ID")
     @ApiResponses(
         value = [
@@ -223,43 +94,10 @@ class PaymentController(
         @PathVariable("paymentId") id: Long,
         @Valid @RequestBody entity: Payment,
     ): ResponseEntity<Payment> {
-        logger.debug("Updating payment with ID: $id")
-
-        // Ensure the entity has the correct ID from the path
         entity.paymentId = id
-
-        return when (val result = paymentService.update(entity)) {
-            is ServiceResult.Success -> {
-                logger.info("Payment updated successfully: $id (standardized)")
-                ResponseEntity.ok(result.data)
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("Payment not found for update: $id (standardized)")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("Validation error updating payment $id: ${result.errors}")
-                ResponseEntity.badRequest().build<Payment>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error updating payment $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build<Payment>()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error updating payment $id: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
-            }
-        }
+        return paymentService.update(entity).toOkResponse()
     }
 
-    /**
-     * Standardized entity deletion - DELETE /api/payment/{paymentId}
-     * Returns 200 OK with deleted entity
-     */
     @Operation(summary = "Delete payment by ID")
     @ApiResponses(
         value = [
@@ -271,31 +109,5 @@ class PaymentController(
     @DeleteMapping("/{paymentId}", produces = ["application/json"])
     override fun deleteById(
         @PathVariable("paymentId") id: Long,
-    ): ResponseEntity<Payment> =
-        when (val result = paymentService.deleteById(id)) {
-            is ServiceResult.Success -> {
-                logger.info("Payment deleted successfully: $id")
-                ResponseEntity.ok(result.data)
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("Payment not found for deletion: $id")
-                ResponseEntity.notFound().build()
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.error("Validation error deleting payment: ${result.errors}")
-                ResponseEntity.badRequest().build<Payment>()
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("Business error deleting payment $id: ${result.message}")
-                ResponseEntity.status(HttpStatus.CONFLICT).build()
-            }
-
-            is ServiceResult.SystemError -> {
-                logger.error("System error deleting payment: ${result.exception.message}", result.exception)
-                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build<Payment>()
-            }
-        }
+    ): ResponseEntity<Payment> = paymentService.deleteById(id).toOkResponse()
 }

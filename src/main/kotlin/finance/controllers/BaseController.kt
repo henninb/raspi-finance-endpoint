@@ -2,6 +2,7 @@ package finance.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.IpAddressValidator
+import jakarta.persistence.EntityNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
@@ -20,6 +21,7 @@ import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
+import java.util.concurrent.ExecutionException
 
 open class BaseController {
     @ExceptionHandler(
@@ -58,6 +60,30 @@ open class BaseController {
         logSecureError("UNAUTHORIZED", throwable, status)
         val body = buildErrorBody(status, "UNAUTHORIZED", "Authentication required")
         return ResponseEntity(body, status)
+    }
+
+    @ExceptionHandler(value = [EntityNotFoundException::class])
+    fun handleEntityNotFoundException(throwable: EntityNotFoundException): ResponseEntity<Map<String, Any>> {
+        val status = HttpStatus.NOT_FOUND
+        logSecureError("ENTITY_NOT_FOUND", throwable, status)
+        val body = buildErrorBody(status, "NOT_FOUND", throwable.message ?: "Entity not found")
+        return ResponseEntity(body, status)
+    }
+
+    @ExceptionHandler(value = [ExecutionException::class])
+    fun handleExecutionException(throwable: ExecutionException): ResponseEntity<Map<String, Any>> {
+        val cause = throwable.cause
+        return if (cause is EntityNotFoundException) {
+            val status = HttpStatus.NOT_FOUND
+            logSecureError("ENTITY_NOT_FOUND", throwable, status)
+            val body = buildErrorBody(status, "NOT_FOUND", cause.message ?: "Entity not found")
+            ResponseEntity(body, status)
+        } else {
+            val status = HttpStatus.INTERNAL_SERVER_ERROR
+            logSecureError("EXECUTION_EXCEPTION", throwable, status)
+            val body = buildErrorBody(status, "INTERNAL_SERVER_ERROR", "An internal error occurred")
+            ResponseEntity(body, status)
+        }
     }
 
     @ExceptionHandler(value = [ClientAbortException::class])
