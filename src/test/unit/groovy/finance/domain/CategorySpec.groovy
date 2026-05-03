@@ -89,4 +89,29 @@ class CategorySpec extends BaseDomainSpec {
         'categoryName' | ''                                                         | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
         'categoryName' | 'ynotynotynotynotynotynotynotynotynotynotynotynotynotynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
     }
+
+    def "test equals and hashCode"() {
+        given:
+        Category category1 = CategoryBuilder.builder().withCategory("foo").build()
+        Category category2 = CategoryBuilder.builder().withCategory("foo").build()
+        Category category3 = CategoryBuilder.builder().withCategory("bar").build()
+
+        expect:
+        category1 == category2
+        category1.hashCode() == category2.hashCode()
+        category1 != category3
+        category1 != null
+    }
+
+    def "test toString"() {
+        given:
+        Category category = CategoryBuilder.builder().withCategory("foo").withActiveStatus(true).build()
+
+        when:
+        String result = category.toString()
+
+        then:
+        result.contains('"categoryName":"foo"')
+        result.contains('"activeStatus":true')
+    }
 }

@@ -78,6 +78,6 @@ data class PendingTransaction(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().findAndRegisterModules()
     }
 }

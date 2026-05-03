@@ -2,11 +2,53 @@ package finance.domain
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
+import jakarta.validation.Validation
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
+import jakarta.validation.ConstraintViolation
 
 import java.sql.Timestamp
 import java.util.*
 
 class UserSpec extends Specification {
+
+    protected ValidatorFactory validatorFactory
+    protected Validator validator
+
+    void setup() {
+        validatorFactory = Validation.buildDefaultValidatorFactory()
+        validator = validatorFactory.getValidator()
+    }
+
+    void cleanup() {
+        validatorFactory.close()
+    }
+
+    def "User - validation valid user"() {
+        given:
+        def user = new User(1L, true, "John", "Doe", "johndoe", "password123")
+
+        when:
+        Set<ConstraintViolation<User>> violations = validator.validate(user)
+
+        then:
+        violations.empty
+    }
+
+    def "User - validation fails for invalid data"() {
+        given: "a user with multiple validation issues"
+        def user = new User(1L, true, "", "D0e", "jd", "short")
+
+        when:
+        Set<ConstraintViolation<User>> violations = validator.validate(user)
+
+        then:
+        !violations.empty
+        violations.any { it.message.contains("First name cannot be blank") }
+        violations.any { it.message.contains("Last name can only contain letters") }
+        violations.any { it.message.contains("Username must be between 3 and 60 characters") }
+        violations.any { it.message.contains("Password must be between 8 and 255 characters") }
+    }
 
     def "User - default constructor"() {
         when:

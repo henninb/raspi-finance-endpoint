@@ -90,7 +90,7 @@ data class ReceiptImage(
 
     companion object {
         @JsonIgnore
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().findAndRegisterModules()
 
         @JsonIgnore
         private val logger = LogManager.getLogger()

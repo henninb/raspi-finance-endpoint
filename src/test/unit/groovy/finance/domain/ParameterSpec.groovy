@@ -76,4 +76,29 @@ class ParameterSpec extends BaseDomainSpec {
         'parameterName'  | ''                                                       | 'someValue'                                              | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
         'parameterValue' | 'someName'                                               | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
     }
+
+    def "test equals and hashCode"() {
+        given:
+        Parameter p1 = new ParameterBuilder().withParameterName("foo").build()
+        Parameter p2 = new ParameterBuilder().withParameterName("foo").build()
+        Parameter p3 = new ParameterBuilder().withParameterName("bar").build()
+
+        expect:
+        p1 == p2
+        p1.hashCode() == p2.hashCode()
+        p1 != p3
+        p1 != null
+    }
+
+    def "test toString"() {
+        given:
+        Parameter p = new ParameterBuilder().withParameterName("foo").withParameterValue("bar").build()
+
+        when:
+        String result = p.toString()
+
+        then:
+        result.contains('"parameterName":"foo"')
+        result.contains('"parameterValue":"bar"')
+    }
 }

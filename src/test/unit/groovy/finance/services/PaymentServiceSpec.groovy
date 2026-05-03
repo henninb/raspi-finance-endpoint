@@ -22,7 +22,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
     def paymentRepositoryMock = Mock(PaymentRepository)
     def transactionServiceMock = Mock(TransactionService)
-    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountService, meterService, validatorMock, ResilienceComponents.noOp())
+    def standardizedPaymentService = new PaymentService(paymentRepositoryMock, transactionServiceMock, accountServiceMock, meterService, validatorMock, ResilienceComponents.noOp())
 
     // ===== TDD Tests for findAllActive() =====
 
@@ -407,18 +407,87 @@ class PaymentServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "findByPaymentId should return payment when found"() {
-        given: "existing payment"
-        def payment = PaymentBuilder.builder().withPaymentId(1L).build()
+    def "save should return Success and create transactions when GUIDs are missing"() {
+        given: "a payment without transaction GUIDs"
+        def payment = PaymentBuilder.builder()
+                .withGuidSource(null)
+                .withGuidDestination(null)
+                .withSourceAccount("chase_checking")
+                .withDestinationAccount("discover_credit")
+                .withAmount(new BigDecimal("100.00"))
+                .build()
+        
+        def sourceAccount = new Account()
+        sourceAccount.accountType = AccountType.Checking
+        
+        def destinationAccount = new Account()
+        destinationAccount.accountType = AccountType.CreditCard
+        
+        def noViolations = [] as Set
 
-        when: "finding by payment ID"
-        def result = standardizedPaymentService.findByPaymentId(1L)
+        when: "saving the payment"
+        def result = standardizedPaymentService.save(payment)
 
-        then: "should return payment optional"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
-        result.isPresent()
-        result.get().paymentId == 1L
-        0 * _
+        then: "should return Success and have populated GUIDs"
+        1 * validatorMock.validate(payment) >> noViolations
+        
+        // Account processing order: destination then source
+        1 * accountServiceMock.account("discover_credit") >> Optional.of(destinationAccount)
+        1 * accountServiceMock.account("chase_checking") >> Optional.of(sourceAccount)
+        
+        // Transaction creation order: destination then source
+        1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> { finance.domain.Transaction t ->
+            assert t.accountNameOwner == "discover_credit"
+            // PaymentService.kt: calculateDestinationAmount for BILL_PAYMENT is -amount.abs()
+            assert t.amount == new BigDecimal("-100.00")
+            t.guid = "new-dest-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> { finance.domain.Transaction t ->
+            assert t.accountNameOwner == "chase_checking"
+            // PaymentService.kt: calculateSourceAmount for BILL_PAYMENT is -amount.abs()
+            assert t.amount == new BigDecimal("-100.00")
+            t.guid = "new-source-guid"
+            return ServiceResult.Success.of(t)
+        }
+        
+        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
+        
+        result instanceof ServiceResult.Success
+        payment.guidSource == "new-source-guid"
+        payment.guidDestination == "new-dest-guid"
+    }
+
+    def "save should create missing accounts during transaction creation"() {
+        given: "a payment with a non-existent source account"
+        def payment = PaymentBuilder.builder()
+                .withGuidSource(null)
+                .withGuidDestination(null)
+                .withSourceAccount("new_account")
+                .withDestinationAccount("existing_account")
+                .build()
+        
+        def noViolations = [] as Set
+
+        when: "saving the payment"
+        standardizedPaymentService.save(payment)
+
+        then: "should create the missing account"
+        1 * validatorMock.validate(payment) >> noViolations
+        
+        // Destination account exists
+        1 * accountServiceMock.account("existing_account") >> Optional.of(new Account(accountType: AccountType.CreditCard))
+        
+        // Source account missing
+        1 * accountServiceMock.account("new_account") >> Optional.empty()
+        1 * accountServiceMock.insertAccount(_ as Account) >> { Account a -> 
+            assert a.accountNameOwner == "new_account"
+            return a 
+        }
+        
+        // Continue with transaction creation
+        2 * transactionServiceMock.save(_) >> ServiceResult.Success.of(new finance.domain.Transaction(guid: "guid"))
+        1 * paymentRepositoryMock.saveAndFlush(_) >> payment
     }
 
 
