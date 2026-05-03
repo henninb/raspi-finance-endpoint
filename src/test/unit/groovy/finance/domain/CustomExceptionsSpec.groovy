@@ -24,7 +24,8 @@ class CustomExceptionsSpec extends Specification {
             InvalidTransactionStateException,
             TransactionValidationException,
             AccountValidationException,
-            InvalidReoccurringTypeException
+            InvalidReoccurringTypeException,
+            DomainException
         ]
     }
 
@@ -141,7 +142,8 @@ class CustomExceptionsSpec extends Specification {
             InvalidTransactionStateException,
             TransactionValidationException,
             AccountValidationException,
-            InvalidReoccurringTypeException
+            InvalidReoccurringTypeException,
+            DomainException
         ]
     }
 
