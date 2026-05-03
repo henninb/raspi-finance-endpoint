@@ -97,4 +97,32 @@ class AccountSpec extends BaseDomainSpec {
         'moniker'          | AccountType.Credit | 'chase_brian'      | '00001' | true         | 0.00G  | 0.00G       | 0.00G   | FIELD_MUST_BE_FOUR_DIGITS_MESSAGE                   | 1
         //'accountType'      | AccountType.valueOf("invalid") | 'chase_brian'      | '0001' | true         | 0.00G  | 0.00G       | 0.00G   | 'Must be 4 digits.'                        | 1
     }
+
+    def "test equals and hashCode"() {
+        given:
+        Account account1 = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+        Account account2 = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+        Account account3 = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("discover_brian").withAccountType(AccountType.Credit).build()
+
+        expect:
+        account1 == account2
+        account1.hashCode() == account2.hashCode()
+        account1 != account3
+        account1.hashCode() != account3.hashCode()
+        account1 != null
+        account1 != "string"
+    }
+
+    def "test toString"() {
+        given:
+        Account account = AccountBuilder.builder().withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).withActiveStatus(true).build()
+
+        when:
+        String result = account.toString()
+
+        then:
+        result.contains("accountNameOwner=chase_brian")
+        result.contains("accountType=credit")
+        result.contains("activeStatus=true")
+    }
 }

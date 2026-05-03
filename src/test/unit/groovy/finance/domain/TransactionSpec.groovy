@@ -154,4 +154,34 @@ class TransactionSpec extends BaseDomainSpec {
         'amount'           | UUID.randomUUID()                      | 1003      | AccountType.Credit | TransactionType.Expense | 'one-chase_brian'  | LocalDate.now()                | 'Cafe Roale'     | 'online' | 3.1412G | TransactionState.Cleared | ReoccurringType.Undefined | 'no notes' | FIELD_MUST_BE_A_CURRENCY_MESSAGE                    | 1
         'transactionDate'  | UUID.randomUUID()                      | 1003      | AccountType.Credit | TransactionType.Expense | 'one-chase_brian'  | LocalDate.of(1999, 12, 31)     | 'Cafe Roale'     | 'online' | 3.14G   | TransactionState.Cleared | ReoccurringType.Undefined | 'no notes' | FILED_MUST_BE_DATE_GREATER_THAN_MESSAGE             | 1
     }
+
+    def "test equals and hashCode"() {
+        given:
+        String guid = UUID.randomUUID().toString()
+        Transaction transaction1 = TransactionBuilder.builder().withGuid(guid).build()
+        Transaction transaction2 = TransactionBuilder.builder().withGuid(guid).build()
+        Transaction transaction3 = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
+
+        expect:
+        transaction1 == transaction2
+        transaction1.hashCode() == transaction2.hashCode()
+        transaction1 != transaction3
+        transaction1.hashCode() != transaction3.hashCode()
+        transaction1 != null
+        transaction1 != "string"
+    }
+
+    def "test toString"() {
+        given:
+        String guid = UUID.randomUUID().toString()
+        Transaction transaction = TransactionBuilder.builder().withGuid(guid).withAccountNameOwner("chase_brian").withAmount(10.00G).build()
+
+        when:
+        String result = transaction.toString()
+
+        then:
+        result.contains("guid=$guid")
+        result.contains("accountNameOwner=chase_brian")
+        result.contains("amount=10.00")
+    }
 }
