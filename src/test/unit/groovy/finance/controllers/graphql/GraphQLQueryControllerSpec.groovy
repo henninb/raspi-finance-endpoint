@@ -515,20 +515,64 @@ class GraphQLQueryControllerSpec extends Specification {
         result == null
     }
 
-    def "receiptImages should return empty list (stub)"() {
-        when: "receiptImages is called"
+    def "receiptImages should return list of images"() {
+        given:
+        def images = [new ReceiptImage(receiptImageId: 1L), new ReceiptImage(receiptImageId: 2L)]
+
+        when:
         def result = controller.receiptImages()
 
-        then: "empty list is returned"
-        result == []
+        then:
+        1 * mockReceiptImageService.findAllActive() >> ServiceResult.Success.of(images)
+        result == images
     }
 
-    def "receiptImage should return null (stub)"() {
-        when: "receiptImage is called"
+    def "receiptImage should return image when found"() {
+        given:
+        def image = new ReceiptImage(receiptImageId: 123L)
+
+        when:
         def result = controller.receiptImage(123L)
 
-        then: "null is returned"
-        result == null
+        then:
+        1 * mockReceiptImageService.findById(123L) >> ServiceResult.Success.of(image)
+        result == image
+    }
+
+    def "medicalExpenses should return all expenses"() {
+        given:
+        def expenses = [new finance.domain.MedicalExpense(medicalExpenseId: 1L)]
+
+        when:
+        def result = controller.medicalExpenses()
+
+        then:
+        1 * mockMedicalExpenseService.findAllActive() >> ServiceResult.Success.of(expenses)
+        result == expenses
+    }
+
+    def "medicalExpense should return expense when found"() {
+        given:
+        def expense = new finance.domain.MedicalExpense(medicalExpenseId: 1L)
+
+        when:
+        def result = controller.medicalExpense(1L)
+
+        then:
+        1 * mockMedicalExpenseService.findById(1L) >> ServiceResult.Success.of(expense)
+        result == expense
+    }
+
+    def "medicalExpensesByClaimStatus should return filtered expenses"() {
+        given:
+        def expenses = [new finance.domain.MedicalExpense(medicalExpenseId: 1L)]
+
+        when:
+        def result = controller.medicalExpensesByClaimStatus(finance.domain.ClaimStatus.Paid)
+
+        then:
+        1 * mockMedicalExpenseService.findMedicalExpensesByClaimStatus(finance.domain.ClaimStatus.Paid) >> expenses
+        result == expenses
     }
 
     def "transactionReceiptImage should return receipt image when found"() {

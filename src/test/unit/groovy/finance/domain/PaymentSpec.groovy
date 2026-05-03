@@ -90,4 +90,31 @@ class PaymentSpec extends BaseDomainSpec {
         'guidDestination' | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
         'guidSource'      | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
     }
+
+    def "test equals and hashCode"() {
+        given:
+        String guidSrc = UUID.randomUUID().toString()
+        String guidDest = UUID.randomUUID().toString()
+        Payment payment1 = PaymentBuilder.builder().withGuidSource(guidSrc).withGuidDestination(guidDest).build()
+        Payment payment2 = PaymentBuilder.builder().withGuidSource(guidSrc).withGuidDestination(guidDest).build()
+        Payment payment3 = PaymentBuilder.builder().withGuidSource(UUID.randomUUID().toString()).build()
+
+        expect:
+        payment1 == payment2
+        payment1.hashCode() == payment2.hashCode()
+        payment1 != payment3
+        payment1 != null
+    }
+
+    def "test toString"() {
+        given:
+        Payment payment = PaymentBuilder.builder().withSourceAccount("chase_checking").withAmount(100.00G).build()
+
+        when:
+        String result = payment.toString()
+
+        then:
+        result.contains('"sourceAccount":"chase_checking"')
+        result.contains('"amount":100.0')
+    }
 }

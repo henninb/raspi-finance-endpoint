@@ -607,4 +607,55 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         then:
         result == expense
     }
+
+    def "updatePaidAmount should set paidAmount to zero if no transaction linked"() {
+        given:
+        def medicalExpenseId = 1L
+        def medicalExpense = MedicalExpenseBuilder.builder()
+                .withMedicalExpenseId(medicalExpenseId)
+                .withTransactionId(null)
+                .withPaidAmount(new BigDecimal("50.00"))
+                .build()
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, medicalExpenseId) >> medicalExpense
+        medicalExpenseRepositoryMock.save(medicalExpense) >> medicalExpense
+        def result = standardizedMedicalExpenseService.updatePaidAmount(medicalExpenseId)
+
+        then:
+        result.paidAmount == BigDecimal.ZERO
+    }
+
+    def "getClaimStatusCounts should return counts for all statuses"() {
+        when:
+        def result = standardizedMedicalExpenseService.getClaimStatusCounts()
+
+        then:
+        ClaimStatus.values().each { status ->
+            1 * medicalExpenseRepositoryMock.countByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, status) >> 1L
+        }
+        result.size() == ClaimStatus.values().size()
+        result.values().every { it == 1L }
+    }
+
+    def "findAllMedicalExpenses should return empty list on error"() {
+        when:
+        def result = standardizedMedicalExpenseService.findAllMedicalExpenses()
+
+        then:
+        1 * medicalExpenseRepositoryMock.findByOwnerAndActiveStatusTrueOrderByServiceDateDesc(TEST_OWNER) >> { throw new RuntimeException("error") }
+        result == []
+    }
+
+    def "insertMedicalExpense should throw BusinessError if duplicate transactionId"() {
+        given:
+        def expense = MedicalExpenseBuilder.builder().withTransactionId(100L).build()
+
+        when:
+        standardizedMedicalExpenseService.insertMedicalExpense(expense)
+
+        then:
+        1 * medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, 100L) >> new MedicalExpense()
+        thrown(finance.exceptions.DuplicateMedicalExpenseException)
+    }
 }

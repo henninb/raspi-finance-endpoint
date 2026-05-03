@@ -91,4 +91,30 @@ class TransferSpec extends Specification {
         transfer.dateUpdated.time >= beforeCreation
         transfer.dateUpdated.time <= afterCreation
     }
+
+    def "Transfer - equals and hashCode"() {
+        given:
+        def t1 = new Transfer(1L, "o", "src", "dest", LocalDate.now(), 10.0G, "s", "d", true)
+        def t2 = new Transfer(1L, "o", "src", "dest", LocalDate.now(), 10.0G, "s", "d", true)
+        def t3 = new Transfer(2L, "o", "src", "dest", LocalDate.now(), 10.0G, "s", "d", true)
+
+        expect:
+        t1 == t2
+        t1.hashCode() == t2.hashCode()
+        t1 != t3
+        t1 != null
+    }
+
+    def "Transfer - toString returns valid JSON"() {
+        given:
+        def t = new Transfer(1L, "brian", "chase_checking", "chase_savings", LocalDate.parse("2023-01-01"), 100.0G, "s", "d", true)
+
+        when:
+        String result = t.toString()
+
+        then:
+        result.contains('"sourceAccount":"chase_checking"')
+        result.contains('"destinationAccount":"chase_savings"')
+        result.contains('"amount":100.0')
+    }
 }

@@ -1,6 +1,7 @@
 package finance.services
 import finance.configurations.ResilienceComponents
 
+import finance.domain.Account
 import finance.domain.ValidationAmount
 import finance.domain.ServiceResult
 import finance.domain.TransactionState
@@ -287,5 +288,50 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
         result.amount == new BigDecimal("300.00")
         result.validationDate == newestDate
         0 * _
+    }
+
+    def "findAllActiveFiltered should filter by account and state"() {
+        given:
+        def account = new Account(accountId: 1L)
+        def va1 = new ValidationAmount(accountId: 1L, transactionState: TransactionState.Cleared, activeStatus: true)
+        def va2 = new ValidationAmount(accountId: 1L, transactionState: TransactionState.Outstanding, activeStatus: true)
+        def va3 = new ValidationAmount(accountId: 2L, transactionState: TransactionState.Cleared, activeStatus: true)
+
+        when:
+        def result = standardizedValidationAmountService.findAllActiveFiltered("acc1", TransactionState.Cleared)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> [va1, va2, va3]
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "acc1") >> Optional.of(account)
+        result instanceof ServiceResult.Success
+        result.data.size() == 1
+        result.data[0].accountId == 1L
+        result.data[0].transactionState == TransactionState.Cleared
+    }
+
+    def "findAllActiveFiltered should return empty list if account not found"() {
+        when:
+        def result = standardizedValidationAmountService.findAllActiveFiltered("missing", null)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> []
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "missing") >> Optional.empty()
+        result instanceof ServiceResult.Success
+        result.data.isEmpty()
+    }
+
+    def "insertValidationAmount should resolve accountId and save"() {
+        given:
+        def account = new Account(accountId: 5L)
+        def va = new ValidationAmount(amount: 100.0G)
+
+        when:
+        def result = standardizedValidationAmountService.insertValidationAmount("acc1", va)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "acc1") >> Optional.of(account)
+        1 * validatorMock.validate(va) >> ([] as Set)
+        1 * validationAmountRepositoryMock.saveAndFlush(va) >> va
+        result.accountId == 5L
     }
 }

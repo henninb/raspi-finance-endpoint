@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.ValidationAmountBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
+import java.sql.Timestamp
 
 import static finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE
@@ -76,5 +77,35 @@ class ValidationAmountSpec extends BaseDomainSpec {
         invalidField       | accountId | amount | transactionState         | activeStatus | expectedError                           | errorCount
         //'validationAmount' | 1         | 3.45155  | TransactionState.Cleared | true         | FIELD_MUST_BE_A_CURRENCY_MESSAGE        | 1
         'accountId'        | -1        | 3.45   | TransactionState.Cleared | true         | FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE | 1
+    }
+
+    def "test equals and hashCode"() {
+        given:
+        Timestamp fixedDate = new Timestamp(1700000000000L)
+        ValidationAmount va1 = new ValidationAmountBuilder().withAccountId(1L).withAmount(10.0G).withValidationDate(fixedDate).withDateAdded(fixedDate).withDateUpdated(fixedDate).build()
+        ValidationAmount va2 = new ValidationAmountBuilder().withAccountId(1L).withAmount(10.0G).withValidationDate(fixedDate).withDateAdded(fixedDate).withDateUpdated(fixedDate).build()
+        
+        va1.validationId = 1L
+        va2.validationId = 1L
+        ValidationAmount va3 = new ValidationAmountBuilder().withAccountId(2L).build()
+        va3.validationId = 2L
+
+        expect:
+        va1 == va2
+        va1.hashCode() == va2.hashCode()
+        va1 != va3
+        va1 != null
+    }
+
+    def "test toString"() {
+        given:
+        ValidationAmount va = new ValidationAmountBuilder().withAccountId(123L).withAmount(50.50G).build()
+
+        when:
+        String result = va.toString()
+
+        then:
+        result.contains('"accountId":123')
+        result.contains('"amount":50.5')
     }
 }

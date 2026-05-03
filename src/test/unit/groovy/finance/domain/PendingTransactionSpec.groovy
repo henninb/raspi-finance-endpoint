@@ -100,4 +100,29 @@ class PendingTransactionSpec extends Specification {
         pendingTransaction.account != null
         pendingTransaction.account.accountNameOwner == "test_account"
     }
+
+    def "PendingTransaction - equals and hashCode"() {
+        given:
+        def pt1 = new PendingTransaction(1L, "acc", LocalDate.now(), "desc", 10.0G, "p", "o", null)
+        def pt2 = new PendingTransaction(1L, "acc", LocalDate.now(), "desc", 10.0G, "p", "o", null)
+        def pt3 = new PendingTransaction(2L, "acc", LocalDate.now(), "desc", 10.0G, "p", "o", null)
+
+        expect:
+        pt1 == pt2
+        pt1.hashCode() == pt2.hashCode()
+        pt1 != pt3
+        pt1 != null
+    }
+
+    def "PendingTransaction - toString returns valid JSON"() {
+        given:
+        def pt = new PendingTransaction(1L, "chase_brian", LocalDate.parse("2023-01-01"), "desc", 10.0G, "pending", "brian", null)
+
+        when:
+        String result = pt.toString()
+
+        then:
+        result.contains('"accountNameOwner":"chase_brian"')
+        result.contains('"amount":10.0')
+    }
 }

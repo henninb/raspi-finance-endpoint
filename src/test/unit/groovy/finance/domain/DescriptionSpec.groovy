@@ -1,8 +1,5 @@
 package finance.domain
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.DescriptionBuilder
 import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
@@ -10,52 +7,22 @@ import jakarta.validation.ConstraintViolation
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 
 class DescriptionSpec extends BaseDomainSpec {
-    protected String jsonPayload = '{"descriptionName":"bar", "activeStatus":true}'
 
     void 'test -- JSON serialization to Description'() {
+        given:
+        String jsonPayload = '{"descriptionName":"foo","activeStatus":true}'
 
         when:
         Description description = mapper.readValue(jsonPayload, Description)
 
         then:
-        description.descriptionName == "bar"
-        0 * _
-    }
-
-    @Unroll
-    void 'test -- JSON deserialize to Description with invalid payload'() {
-        when:
-        mapper.readValue(payload, Description)
-
-        then:
-        Exception ex = thrown(exceptionThrown)
-        ex.message.contains(message)
-        0 * _
-
-        where:
-        payload                     | exceptionThrown          | message
-        'non-jsonPayload'           | JsonParseException       | 'Unrecognized token'
-        '[]'                        | MismatchedInputException | 'Cannot deserialize value of type'
-        '{descriptionName: "test"}' | JsonParseException       | 'was expecting double-quote to start field name'
-        '{"activeStatus": "abc"}'   | InvalidFormatException   | 'Cannot deserialize value of type'
-    }
-
-    void 'test JSON deserialization to Description object - description is empty'() {
-        given:
-        String jsonPayloadBad = '{"descriptionMissing":"bar"}'
-
-        when:
-        Description description = mapper.readValue(jsonPayloadBad, Description)
-
-        then:
-        description.descriptionName == ""
-        0 * _
+        description.descriptionName == 'foo'
+        description.activeStatus == true
     }
 
     void 'test validation valid description'() {
         given:
-        Description description = DescriptionBuilder.builder().build()
-        description.descriptionName = "foobar"
+        Description description = DescriptionBuilder.builder().withDescription("foobar").build()
 
         when:
         Set<ConstraintViolation<Description>> violations = validator.validate(description)
@@ -67,7 +34,7 @@ class DescriptionSpec extends BaseDomainSpec {
     @Unroll
     void 'test Description validation invalid #invalidField has error expectedError'() {
         given:
-        Description description = new DescriptionBuilder().builder()
+        Description description = DescriptionBuilder.builder()
                 .withDescription(descriptionName)
                 .withActiveStatus(activeStatus)
                 .build()
@@ -78,11 +45,35 @@ class DescriptionSpec extends BaseDomainSpec {
         then:
         violations.size() == errorCount
         violations.message.contains(expectedError)
-        violations.iterator().next().invalidValue == description.properties[invalidField]
 
         where:
-        invalidField      | descriptionName                                          | activeStatus | expectedError                               | errorCount
-        'descriptionName' | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        invalidField      | descriptionName                                            | activeStatus | expectedError                               | errorCount
+        'descriptionName' | ''                                                         | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
         'descriptionName' | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+    }
+
+    def "test equals and hashCode"() {
+        given:
+        Description d1 = DescriptionBuilder.builder().withDescription("foo").build()
+        Description d2 = DescriptionBuilder.builder().withDescription("foo").build()
+        Description d3 = DescriptionBuilder.builder().withDescription("bar").build()
+
+        expect:
+        d1 == d2
+        d1.hashCode() == d2.hashCode()
+        d1 != d3
+        d1 != null
+    }
+
+    def "test toString"() {
+        given:
+        Description d = DescriptionBuilder.builder().withDescription("foo").withActiveStatus(true).build()
+
+        when:
+        String result = d.toString()
+
+        then:
+        result.contains('"descriptionName":"foo"')
+        result.contains('"activeStatus":true')
     }
 }

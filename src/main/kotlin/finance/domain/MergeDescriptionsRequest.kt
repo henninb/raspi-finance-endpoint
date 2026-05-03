@@ -10,6 +10,6 @@ data class MergeDescriptionsRequest(
     override fun toString(): String = mapper.writeValueAsString(this)
 
     companion object {
-        private val mapper = ObjectMapper()
+        private val mapper = ObjectMapper().findAndRegisterModules()
     }
 }
