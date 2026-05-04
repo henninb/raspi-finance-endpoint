@@ -127,4 +127,114 @@ class GraphQLInterceptorSpec extends Specification {
         expect:
         interceptor instanceof WebGraphQlInterceptor
     }
+
+    def "intercept handles Map value in response data"() {
+        given:
+        def chain = Mock(WebGraphQlInterceptor.Chain)
+        def request = Mock(WebGraphQlRequest)
+        def response = Mock(WebGraphQlResponse)
+        def executionResult = Mock(ExecutionResult)
+
+        response.executionResult >> executionResult
+        executionResult.errors >> []
+        executionResult.getData() >> ["transaction": ["id": "1", "amount": "100.00"]]
+        chain.next(request) >> Mono.just(response)
+
+        when:
+        def result = interceptor.intercept(request, chain)
+
+        then:
+        result.block() == response
+    }
+
+    def "intercept handles scalar/primitive value in response data"() {
+        given:
+        def chain = Mock(WebGraphQlInterceptor.Chain)
+        def request = Mock(WebGraphQlRequest)
+        def response = Mock(WebGraphQlResponse)
+        def executionResult = Mock(ExecutionResult)
+
+        response.executionResult >> executionResult
+        executionResult.errors >> []
+        executionResult.getData() >> ["totalCount": 42, "success": true]
+        chain.next(request) >> Mono.just(response)
+
+        when:
+        def result = interceptor.intercept(request, chain)
+
+        then:
+        result.block() == response
+    }
+
+    def "intercept logs warning when all response fields are null or empty"() {
+        given:
+        def chain = Mock(WebGraphQlInterceptor.Chain)
+        def request = Mock(WebGraphQlRequest)
+        def response = Mock(WebGraphQlResponse)
+        def executionResult = Mock(ExecutionResult)
+
+        request.document >> "{ accounts { id } }"
+        response.executionResult >> executionResult
+        executionResult.errors >> []
+        executionResult.getData() >> ["accounts": [], "transactions": null]
+        chain.next(request) >> Mono.just(response)
+
+        when:
+        def result = interceptor.intercept(request, chain)
+
+        then:
+        result.block() == response
+    }
+
+    def "intercept handles GraphQL error with null extensions"() {
+        given:
+        def chain = Mock(WebGraphQlInterceptor.Chain)
+        def request = Mock(WebGraphQlRequest)
+        def response = Mock(WebGraphQlResponse)
+        def executionResult = Mock(ExecutionResult)
+        def mockError = Mock(GraphQLError)
+
+        mockError.message >> "Some error"
+        mockError.locations >> []
+        mockError.path >> []
+        mockError.errorType >> ErrorType.DataFetchingException
+        mockError.extensions >> null
+
+        response.executionResult >> executionResult
+        executionResult.errors >> [mockError]
+        executionResult.getData() >> [:]
+        chain.next(request) >> Mono.just(response)
+
+        when:
+        def result = interceptor.intercept(request, chain)
+
+        then:
+        result.block() == response
+    }
+
+    def "intercept handles GraphQL error with empty extensions"() {
+        given:
+        def chain = Mock(WebGraphQlInterceptor.Chain)
+        def request = Mock(WebGraphQlRequest)
+        def response = Mock(WebGraphQlResponse)
+        def executionResult = Mock(ExecutionResult)
+        def mockError = Mock(GraphQLError)
+
+        mockError.message >> "Another error"
+        mockError.locations >> []
+        mockError.path >> []
+        mockError.errorType >> ErrorType.DataFetchingException
+        mockError.extensions >> [:]
+
+        response.executionResult >> executionResult
+        executionResult.errors >> [mockError]
+        executionResult.getData() >> [:]
+        chain.next(request) >> Mono.just(response)
+
+        when:
+        def result = interceptor.intercept(request, chain)
+
+        then:
+        result.block() == response
+    }
 }
