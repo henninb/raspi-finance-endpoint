@@ -80,44 +80,68 @@ abstract class StandardizedBaseController : BaseController() {
         operationName: String,
         entityId: Any?,
         operation: () -> T,
-    ): ResponseEntity<T> =
+    ): ResponseEntity<T> {
         try {
             val result = operation()
             logSuccessfulOperation(operationName, entityId)
-            ResponseEntity.ok(result)
-        } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
-            logOperationError(operationName, entityId, "Data integrity violation", ex)
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Operation failed due to data conflict: ${ex.message}")
-        } catch (ex: jakarta.validation.ValidationException) {
-            logOperationError(operationName, entityId, "Validation error", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${ex.message}")
-        } catch (ex: IllegalArgumentException) {
-            logOperationError(operationName, entityId, "Invalid input", ex)
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${ex.message}")
-        } catch (ex: jakarta.persistence.EntityNotFoundException) {
-            logOperationError(operationName, entityId, "Entity not found", ex)
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found: ${ex.message}")
-        } catch (ex: java.util.concurrent.ExecutionException) {
-            // Handle wrapped exceptions from resilience4j
-            val cause = ex.cause
-            when (cause) {
+            return ResponseEntity.ok(result)
+        } catch (ex: Exception) {
+            val actualEx =
+                if (ex is java.lang.reflect.UndeclaredThrowableException || ex is java.lang.reflect.InvocationTargetException) {
+                    ex.cause as? Exception ?: ex
+                } else {
+                    ex
+                }
+
+            when (actualEx) {
+                is org.springframework.dao.DataIntegrityViolationException -> {
+                    logOperationError(operationName, entityId, "Data integrity violation", actualEx)
+                    throw ResponseStatusException(HttpStatus.CONFLICT, "Operation failed due to data conflict: ${actualEx.message}")
+                }
+
+                is jakarta.validation.ValidationException -> {
+                    logOperationError(operationName, entityId, "Validation error", actualEx)
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${actualEx.message}")
+                }
+
+                is IllegalArgumentException -> {
+                    logOperationError(operationName, entityId, "Invalid input", actualEx)
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input: ${actualEx.message}")
+                }
+
                 is jakarta.persistence.EntityNotFoundException -> {
-                    logOperationError(operationName, entityId, "Entity not found (wrapped)", cause)
-                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found: ${cause.message}")
+                    logOperationError(operationName, entityId, "Entity not found", actualEx)
+                    throw ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found: ${actualEx.message}")
+                }
+
+                is java.util.concurrent.ExecutionException -> {
+                    // Handle wrapped exceptions from resilience4j
+                    val cause = actualEx.cause
+                    when (cause) {
+                        is jakarta.persistence.EntityNotFoundException -> {
+                            logOperationError(operationName, entityId, "Entity not found (wrapped)", cause)
+                            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found: ${cause.message}")
+                        }
+
+                        else -> {
+                            logOperationError(operationName, entityId, "Execution error", actualEx)
+                            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Operation failed: ${actualEx.message}")
+                        }
+                    }
+                }
+
+                is ResponseStatusException -> {
+                    // Re-throw ResponseStatusException as-is
+                    throw actualEx
                 }
 
                 else -> {
-                    logOperationError(operationName, entityId, "Execution error", ex)
-                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Operation failed: ${ex.message}")
+                    logOperationError(operationName, entityId, "Unexpected error", actualEx)
+                    throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${actualEx.message}")
                 }
             }
-        } catch (ex: ResponseStatusException) {
-            // Re-throw ResponseStatusException as-is
-            throw ex
-        } catch (ex: Exception) {
-            logOperationError(operationName, entityId, "Unexpected error", ex)
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: ${ex.message}")
         }
+    }
 
     /**
      * Standard creation operation handler - returns 201 CREATED

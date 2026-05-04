@@ -39,13 +39,13 @@ class StandardizedValidationAmountControllerSpec extends Specification {
 
     private static ValidationAmount va(Map args = [:]) {
         new ValidationAmount(
-            validationId: (args.validationId ?: 0L) as Long,
-            owner: (args.owner ?: TEST_OWNER) as String,
-            accountId: (args.accountId ?: 1L) as Long,
-            validationDate: (args.validationDate ?: new Timestamp(System.currentTimeMillis())) as Timestamp,
-            activeStatus: (args.activeStatus ?: true) as Boolean,
-            transactionState: (args.transactionState ?: TransactionState.Cleared) as TransactionState,
-            amount: (args.amount ?: new BigDecimal("1.00")) as BigDecimal
+            validationId: (args.containsKey('validationId') ? args.validationId : 0L) as Long,
+            owner: (args.containsKey('owner') ? args.owner : TEST_OWNER) as String,
+            accountId: (args.containsKey('accountId') ? args.accountId : 1L) as Long,
+            validationDate: (args.containsKey('validationDate') ? args.validationDate : new Timestamp(System.currentTimeMillis())) as Timestamp,
+            activeStatus: (args.containsKey('activeStatus') ? args.activeStatus : true) as Boolean,
+            transactionState: (args.containsKey('transactionState') ? args.transactionState : TransactionState.Cleared) as TransactionState,
+            amount: (args.containsKey('amount') ? args.amount : new BigDecimal("1.00")) as BigDecimal
         )
     }
 
@@ -414,7 +414,7 @@ class StandardizedValidationAmountControllerSpec extends Specification {
         ResponseEntity resp = controller.insertValidationAmount(input, "checking_primary")
 
         then:
-        resp.statusCode == HttpStatus.BAD_REQUEST
+        resp.statusCode.value() == HttpStatus.BAD_REQUEST.value()
     }
 
     def "insertValidationAmount returns 500 on unexpected error"() {

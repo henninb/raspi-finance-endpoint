@@ -312,4 +312,48 @@ class ValidationAmountInputDtoSpec extends BaseDomainSpec {
         dto.transactionState == transactionState
         dto.amount == amount
     }
+
+    def "ValidationAmountInputDto equals and hashCode for identical values"() {
+        given:
+        def ts = new Timestamp(1000000L)
+        def dto1 = new ValidationAmountInputDto(null, 1L, ts, true, TransactionState.Cleared, new BigDecimal("100.00"))
+        def dto2 = new ValidationAmountInputDto(null, 1L, ts, true, TransactionState.Cleared, new BigDecimal("100.00"))
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "ValidationAmountInputDto inequality when amount differs"() {
+        given:
+        def ts = new Timestamp(1000000L)
+        def dto1 = new ValidationAmountInputDto(null, 1L, ts, null, TransactionState.Cleared, new BigDecimal("100.00"))
+        def dto2 = new ValidationAmountInputDto(null, 1L, ts, null, TransactionState.Cleared, new BigDecimal("200.00"))
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "ValidationAmountInputDto toString contains transactionState"() {
+        given:
+        def dto = new ValidationAmountInputDto(null, 1L, new Timestamp(System.currentTimeMillis()), true, TransactionState.Cleared, new BigDecimal("100.00"))
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("cleared")
+    }
+
+    def "ValidationAmountInputDto copy produces modified instance"() {
+        given:
+        def ts = new Timestamp(1000000L)
+        def original = new ValidationAmountInputDto(null, 1L, ts, true, TransactionState.Cleared, new BigDecimal("100.00"))
+
+        when:
+        def copy = original.copy(null, 2L, ts, true, TransactionState.Outstanding, new BigDecimal("100.00"))
+
+        then:
+        copy.accountId == 2L
+        copy.transactionState == TransactionState.Outstanding
+        original.accountId == 1L
+    }
 }

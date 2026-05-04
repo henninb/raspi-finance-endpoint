@@ -695,10 +695,10 @@ class StandardizedMedicalExpenseControllerSpec extends Specification {
 
     def "getMedicalExpensesByClaimStatus returns 500 on error"() {
         given:
-        repo.findByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Pending) >> { throw new RuntimeException("db") }
+        repo.findByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Submitted) >> { throw new RuntimeException("db") }
 
         when:
-        ResponseEntity<List<MedicalExpense>> resp = controller.getMedicalExpensesByClaimStatus(ClaimStatus.Pending)
+        ResponseEntity<List<MedicalExpense>> resp = controller.getMedicalExpensesByClaimStatus(ClaimStatus.Submitted)
 
         then:
         resp.statusCode == HttpStatus.INTERNAL_SERVER_ERROR

@@ -47,4 +47,56 @@ class LoggingCorsFilterSpec extends Specification {
         then:
         noExceptionThrown()
     }
+
+    def "no Origin header proceeds with chain without CORS check"() {
+        given:
+        def filter = makeFilter(["https://allowed.example"])
+        def req = new org.springframework.mock.web.MockHttpServletRequest("GET", "/api/resource")
+        // no Origin header added
+        def res = new org.springframework.mock.web.MockHttpServletResponse()
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "null cors configuration proceeds with chain"() {
+        given:
+        CorsConfigurationSource source = Stub(CorsConfigurationSource) {
+            getCorsConfiguration(_ as HttpServletRequest) >> null
+        }
+        def filter = new LoggingCorsFilter(source)
+        def req = new org.springframework.mock.web.MockHttpServletRequest("GET", "/api/resource")
+        req.addHeader("Origin", "https://other.example")
+        def res = new org.springframework.mock.web.MockHttpServletResponse()
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "null allowedOrigins in config proceeds with chain"() {
+        given:
+        CorsConfigurationSource source = Stub(CorsConfigurationSource) {
+            getCorsConfiguration(_ as HttpServletRequest) >> new CorsConfiguration()
+            // allowedOrigins is null by default
+        }
+        def filter = new LoggingCorsFilter(source)
+        def req = new org.springframework.mock.web.MockHttpServletRequest("GET", "/api/resource")
+        req.addHeader("Origin", "https://other.example")
+        def res = new org.springframework.mock.web.MockHttpServletResponse()
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        noExceptionThrown()
+    }
 }

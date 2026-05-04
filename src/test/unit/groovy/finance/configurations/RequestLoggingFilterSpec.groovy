@@ -87,4 +87,35 @@ class RequestLoggingFilterSpec extends Specification {
         where:
         sensitiveUri << ["/api/login", "/api/register"]
     }
+
+    def "logs body when chain reads the request body"() {
+        given:
+        def body = '{"amount":100}'.getBytes("UTF-8")
+        requestMock.getInputStream() >> inputStreamWith(body)
+        requestMock.getRequestURI() >> "/api/transaction"
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, new jakarta.servlet.FilterChain() {
+            void doFilter(jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res) {
+                req.getInputStream().readAllBytes()
+            }
+        })
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "logs URI only when chain does not read body"() {
+        given:
+        def body = '{"amount":200}'.getBytes("UTF-8")
+        requestMock.getInputStream() >> inputStreamWith(body)
+        requestMock.getRequestURI() >> "/api/accounts"
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, responseMock)
+        noExceptionThrown()
+    }
 }

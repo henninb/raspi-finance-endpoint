@@ -164,4 +164,54 @@ class PerformanceMonitoringAspectSpec extends Specification {
         result == null
         noExceptionThrown()
     }
+
+    def "monitorServiceMethodPerformance logs WARN for execution exceeding 500ms threshold"() {
+        given:
+        signature.declaringTypeName >> "finance.services.AccountService"
+        signature.name >> "slowMethod"
+        joinPoint.proceed() >> {
+            Thread.sleep(510)
+            return "slow-result"
+        }
+
+        when:
+        Object result = aspect.monitorServiceMethodPerformance(joinPoint)
+
+        then:
+        result == "slow-result"
+        noExceptionThrown()
+        meterRegistry.find("method.execution.time").tag("status", "success").timer() != null
+    }
+
+    def "monitorServiceMethodPerformance logs ERROR for execution exceeding 2000ms threshold"() {
+        given:
+        signature.declaringTypeName >> "finance.services.AccountService"
+        signature.name >> "verySlowMethod"
+        joinPoint.proceed() >> {
+            Thread.sleep(2010)
+            return "very-slow-result"
+        }
+
+        when:
+        Object result = aspect.monitorServiceMethodPerformance(joinPoint)
+
+        then:
+        result == "very-slow-result"
+        noExceptionThrown()
+        meterRegistry.find("method.execution.time").tag("status", "success").timer() != null
+    }
+
+    def "monitorServiceMethodPerformance uses N/A for correlationId when MDC is empty"() {
+        given:
+        MDC.clear()
+        signature.declaringTypeName >> "finance.services.AccountService"
+        signature.name >> "findAll"
+        joinPoint.proceed() >> "result"
+
+        when:
+        aspect.monitorServiceMethodPerformance(joinPoint)
+
+        then:
+        noExceptionThrown()
+    }
 }

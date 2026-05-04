@@ -84,4 +84,44 @@ class CategoryInputDtoSpec extends BaseDomainSpec {
         dto.categoryName == "utilities"
         dto.activeStatus == false
     }
+
+    def "CategoryInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new CategoryInputDto(1L, "groceries", true)
+        def dto2 = new CategoryInputDto(1L, "groceries", true)
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "CategoryInputDto inequality when categoryName differs"() {
+        given:
+        def dto1 = new CategoryInputDto(null, "groceries", true)
+        def dto2 = new CategoryInputDto(null, "utilities", true)
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "CategoryInputDto toString contains categoryName"() {
+        given:
+        def dto = new CategoryInputDto(5L, "groceries", true)
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("groceries")
+    }
+
+    def "CategoryInputDto copy produces modified instance"() {
+        given:
+        def original = new CategoryInputDto(1L, "groceries", true)
+
+        when:
+        def copy = original.copy(1L, "utilities", true)
+
+        then:
+        copy.categoryName == "utilities"
+        original.categoryName == "groceries"
+    }
 }

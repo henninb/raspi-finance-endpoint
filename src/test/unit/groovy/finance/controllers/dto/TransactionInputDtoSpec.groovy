@@ -383,4 +383,198 @@ class TransactionInputDtoSpec extends BaseDomainSpec {
         where:
         notes << ["a".repeat(101)]
     }
+
+    def "TransactionInputDto validation should fail for non-ASCII notes"() {
+        given:
+        def dto = new TransactionInputDto(
+            null, null, null,
+            AccountType.Debit,
+            TransactionType.Expense,
+            "checking_primary",
+            LocalDate.of(2024, 1, 15),
+            "test description",
+            "groceries",
+            new BigDecimal("100.00"),
+            TransactionState.Outstanding,
+            null, null,
+            "café receipt",
+            null, null
+        )
+
+        when:
+        Set<ConstraintViolation<TransactionInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'notes' }
+    }
+
+    def "TransactionInputDto validation should fail for non-ASCII description"() {
+        given:
+        def dto = new TransactionInputDto(
+            null, null, null,
+            AccountType.Debit,
+            TransactionType.Expense,
+            "checking_primary",
+            LocalDate.of(2024, 1, 15),
+            "café purchase",
+            "groceries",
+            new BigDecimal("100.00"),
+            TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        when:
+        Set<ConstraintViolation<TransactionInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'description' }
+    }
+
+    def "TransactionInputDto validation should fail for dueDate before year 2000"() {
+        given:
+        def dto = new TransactionInputDto(
+            null, null, null,
+            AccountType.Debit,
+            TransactionType.Expense,
+            "checking_primary",
+            LocalDate.of(2024, 1, 15),
+            "test description",
+            "groceries",
+            new BigDecimal("100.00"),
+            TransactionState.Outstanding,
+            null, null, null,
+            LocalDate.of(1999, 12, 31),
+            null
+        )
+
+        when:
+        Set<ConstraintViolation<TransactionInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'dueDate' }
+    }
+
+    def "TransactionInputDto validation should fail for negative accountId"() {
+        given:
+        def dto = new TransactionInputDto(
+            null, null, -1L,
+            AccountType.Debit,
+            TransactionType.Expense,
+            "checking_primary",
+            LocalDate.of(2024, 1, 15),
+            "test description",
+            "groceries",
+            new BigDecimal("100.00"),
+            TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        when:
+        Set<ConstraintViolation<TransactionInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'accountId' }
+    }
+
+    def "TransactionInputDto validation should fail for negative receiptImageId"() {
+        given:
+        def dto = new TransactionInputDto(
+            null, null, null,
+            AccountType.Debit,
+            TransactionType.Expense,
+            "checking_primary",
+            LocalDate.of(2024, 1, 15),
+            "test description",
+            "groceries",
+            new BigDecimal("100.00"),
+            TransactionState.Outstanding,
+            null, null, null, null, -1L
+        )
+
+        when:
+        Set<ConstraintViolation<TransactionInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'receiptImageId' }
+    }
+
+    def "TransactionInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new TransactionInputDto(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "checking_primary", LocalDate.of(2024, 1, 15), "test description",
+            "groceries", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+        def dto2 = new TransactionInputDto(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "checking_primary", LocalDate.of(2024, 1, 15), "test description",
+            "groceries", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "TransactionInputDto inequality when category differs"() {
+        given:
+        def dto1 = new TransactionInputDto(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "checking_primary", LocalDate.of(2024, 1, 15), "test description",
+            "groceries", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+        def dto2 = new TransactionInputDto(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "checking_primary", LocalDate.of(2024, 1, 15), "test description",
+            "utilities", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "TransactionInputDto toString contains accountNameOwner"() {
+        given:
+        def dto = new TransactionInputDto(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "checking_primary", LocalDate.of(2024, 1, 15), "test description",
+            "groceries", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("checking_primary")
+    }
+
+    def "TransactionInputDto copy produces modified instance"() {
+        given:
+        def original = new TransactionInputDto(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "checking_primary", LocalDate.of(2024, 1, 15), "test description",
+            "groceries", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        when:
+        def copy = original.copy(
+            null, null, null, AccountType.Debit, TransactionType.Expense,
+            "savings_primary", LocalDate.of(2024, 1, 15), "test description",
+            "groceries", new BigDecimal("100.00"), TransactionState.Outstanding,
+            null, null, null, null, null
+        )
+
+        then:
+        copy.accountNameOwner == "savings_primary"
+        original.accountNameOwner == "checking_primary"
+    }
 }

@@ -155,4 +155,44 @@ class AccountInputDtoSpec extends BaseDomainSpec {
         dto.dateClosed == null    // Optional field
         dto.validationDate == null // Optional field
     }
+
+    def "AccountInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new AccountInputDto(1L, "checking_primary", AccountType.Checking, true, "1234", null, null, null, null, null)
+        def dto2 = new AccountInputDto(1L, "checking_primary", AccountType.Checking, true, "1234", null, null, null, null, null)
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "AccountInputDto inequality when accountNameOwner differs"() {
+        given:
+        def dto1 = new AccountInputDto(null, "checking_primary", AccountType.Checking, null, null, null, null, null, null, null)
+        def dto2 = new AccountInputDto(null, "savings_primary", AccountType.Checking, null, null, null, null, null, null, null)
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "AccountInputDto toString contains accountNameOwner"() {
+        given:
+        def dto = new AccountInputDto(null, "checking_primary", AccountType.Checking, null, null, null, null, null, null, null)
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("checking_primary")
+    }
+
+    def "AccountInputDto copy produces modified instance"() {
+        given:
+        def original = new AccountInputDto(null, "checking_primary", AccountType.Checking, null, null, null, null, null, null, null)
+
+        when:
+        def copy = original.copy(null, "savings_primary", AccountType.Checking, null, null, null, null, null, null, null)
+
+        then:
+        copy.accountNameOwner == "savings_primary"
+        original.accountNameOwner == "checking_primary"
+    }
 }

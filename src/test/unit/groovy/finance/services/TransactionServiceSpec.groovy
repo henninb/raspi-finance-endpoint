@@ -133,7 +133,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             transactionId: 1L,
             image: "test-image".bytes,
             thumbnail: "test-thumbnail".bytes,
-            imageFormatType: ImageFormatType.JPEG
+            imageFormatType: ImageFormatType.Jpeg
         )
     }
 
@@ -993,7 +993,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     def "createFutureTransactionStandardized should return BusinessError for Debit with unsupported reoccurring type"() {
         given:
         def transaction = createTestTransaction()
-        transaction.reoccurringType = ReoccurringType.Yearly
+        transaction.reoccurringType = ReoccurringType.Annually
         transaction.accountType = AccountType.Debit
 
         when:

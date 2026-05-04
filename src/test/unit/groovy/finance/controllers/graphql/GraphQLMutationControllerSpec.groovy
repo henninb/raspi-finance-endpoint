@@ -470,4 +470,957 @@ class GraphQLMutationControllerSpec extends Specification {
         1 * mockCounter.increment()
         result == true
     }
+
+    // createPayment error paths
+    def "createPayment should throw when validation error"() {
+        given:
+        def dto = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, true)
+
+        when:
+        controller.createPayment(dto)
+
+        then:
+        1 * mockPaymentService.save(_) >> ServiceResult.ValidationError.of(["amount": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createPayment should throw when business error"() {
+        given:
+        def dto = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, true)
+
+        when:
+        controller.createPayment(dto)
+
+        then:
+        1 * mockPaymentService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalArgumentException)
+    }
+
+    def "createPayment should throw when system error"() {
+        given:
+        def dto = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, true)
+
+        when:
+        controller.createPayment(dto)
+
+        then:
+        1 * mockPaymentService.save(_) >> ServiceResult.SystemError.of(new RuntimeException("db error"))
+        thrown(RuntimeException)
+    }
+
+    def "updatePayment should throw when payment not found"() {
+        given:
+        def dto = new PaymentInputDto(1L, "acc", "dest", LocalDate.now(), new BigDecimal("150.00"), null, null, true)
+
+        when:
+        controller.updatePayment(1L, dto)
+
+        then:
+        1 * mockPaymentService.findByPaymentId(1L) >> Optional.empty()
+        thrown(IllegalArgumentException)
+    }
+
+    def "deletePayment should throw when system error"() {
+        when:
+        controller.deletePayment(123L)
+
+        then:
+        1 * mockPaymentService.deleteById(123L) >> ServiceResult.SystemError.of(new RuntimeException("db error"))
+        thrown(RuntimeException)
+    }
+
+    def "updateTransfer should throw when transfer not found"() {
+        given:
+        def dto = new TransferInputDto(1L, "src", "dest", LocalDate.now(), new BigDecimal("600.00"), null, null, true)
+
+        when:
+        controller.updateTransfer(1L, dto)
+
+        then:
+        1 * mockTransferService.findByTransferId(1L) >> Optional.empty()
+        thrown(IllegalArgumentException)
+    }
+
+    // createParameter error paths
+    def "createParameter should throw when validation error"() {
+        given:
+        def dto = new ParameterInputDto(null, "test_param", "test_value", true)
+
+        when:
+        controller.createParameter(dto)
+
+        then:
+        1 * mockParameterService.save(_) >> ServiceResult.ValidationError.of(["parameterName": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createParameter should throw when business error"() {
+        given:
+        def dto = new ParameterInputDto(null, "test_param", "test_value", true)
+
+        when:
+        controller.createParameter(dto)
+
+        then:
+        1 * mockParameterService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateParameter error paths
+    def "updateParameter should throw when not found"() {
+        given:
+        def dto = new ParameterInputDto(123L, "test_param", "updated_value", true)
+
+        when:
+        controller.updateParameter(dto)
+
+        then:
+        1 * mockParameterService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateParameter should throw when validation error"() {
+        given:
+        def dto = new ParameterInputDto(123L, "test_param", "updated_value", true)
+
+        when:
+        controller.updateParameter(dto)
+
+        then:
+        1 * mockParameterService.update(_) >> ServiceResult.ValidationError.of(["parameterName": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateParameter should throw when business error"() {
+        given:
+        def dto = new ParameterInputDto(123L, "test_param", "updated_value", true)
+
+        when:
+        controller.updateParameter(dto)
+
+        then:
+        1 * mockParameterService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteParameter error paths
+    def "deleteParameter should return false when not found"() {
+        when:
+        def result = controller.deleteParameter(999L)
+
+        then:
+        1 * mockParameterService.deleteById(999L) >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
+
+    // createCategory error paths
+    def "createCategory should throw when validation error"() {
+        given:
+        def dto = new CategoryInputDto(null, "groceries", true)
+
+        when:
+        controller.createCategory(dto)
+
+        then:
+        1 * mockCategoryService.save(_) >> ServiceResult.ValidationError.of(["categoryName": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createCategory should throw when business error"() {
+        given:
+        def dto = new CategoryInputDto(null, "groceries", true)
+
+        when:
+        controller.createCategory(dto)
+
+        then:
+        1 * mockCategoryService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateCategory - with categoryId provided directly
+    def "updateCategory should update when categoryId is provided"() {
+        given:
+        def dto = new CategoryInputDto(5L, "groceries", true)
+        def updated = new Category(categoryName: "groceries")
+
+        when:
+        def result = controller.updateCategory(dto, null)
+
+        then:
+        1 * mockCategoryService.update(_) >> ServiceResult.Success.of(updated)
+        1 * mockCounter.increment()
+        result == updated
+    }
+
+    // updateCategory - neither categoryId nor oldCategoryName provided
+    def "updateCategory should look up by categoryName when neither id nor old name provided"() {
+        given:
+        def dto = new CategoryInputDto(null, "groceries", true)
+        def updated = new Category(categoryName: "groceries")
+
+        when:
+        def result = controller.updateCategory(dto, null)
+
+        then:
+        1 * mockCategoryService.findByCategoryNameStandardized("groceries") >> ServiceResult.Success.of(new Category(categoryId: 3L))
+        1 * mockCategoryService.update(_) >> ServiceResult.Success.of(updated)
+        1 * mockCounter.increment()
+        result == updated
+    }
+
+    def "updateCategory should throw when category not found by name"() {
+        given:
+        def dto = new CategoryInputDto(null, "nonexistent", true)
+
+        when:
+        controller.updateCategory(dto, null)
+
+        then:
+        1 * mockCategoryService.findByCategoryNameStandardized("nonexistent") >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateCategory should throw when oldCategoryName not found"() {
+        given:
+        def dto = new CategoryInputDto(null, "groceries", true)
+
+        when:
+        controller.updateCategory(dto, "old_groceries")
+
+        then:
+        1 * mockCategoryService.findByCategoryNameStandardized("old_groceries") >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateCategory should throw when update returns not found"() {
+        given:
+        def dto = new CategoryInputDto(5L, "groceries", true)
+
+        when:
+        controller.updateCategory(dto, null)
+
+        then:
+        1 * mockCategoryService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateCategory should throw when update returns validation error"() {
+        given:
+        def dto = new CategoryInputDto(5L, "groceries", true)
+
+        when:
+        controller.updateCategory(dto, null)
+
+        then:
+        1 * mockCategoryService.update(_) >> ServiceResult.ValidationError.of(["categoryName": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateCategory should throw when update returns business error"() {
+        given:
+        def dto = new CategoryInputDto(5L, "groceries", true)
+
+        when:
+        controller.updateCategory(dto, null)
+
+        then:
+        1 * mockCategoryService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteCategory error paths
+    def "deleteCategory should return false when not found"() {
+        when:
+        def result = controller.deleteCategory("nonexistent")
+
+        then:
+        1 * mockCategoryService.deleteByCategoryNameStandardized("nonexistent") >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
+
+    // createDescription error paths
+    def "createDescription should throw when validation error"() {
+        given:
+        def dto = new DescriptionInputDto(null, "amazon", true)
+
+        when:
+        controller.createDescription(dto)
+
+        then:
+        1 * mockDescriptionService.save(_) >> ServiceResult.ValidationError.of(["descriptionName": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createDescription should throw when business error"() {
+        given:
+        def dto = new DescriptionInputDto(null, "amazon", true)
+
+        when:
+        controller.createDescription(dto)
+
+        then:
+        1 * mockDescriptionService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateDescription - with descriptionId provided
+    def "updateDescription should update when descriptionId is provided"() {
+        given:
+        def dto = new DescriptionInputDto(5L, "amazon", true)
+        def updated = new Description(descriptionName: "amazon")
+
+        when:
+        def result = controller.updateDescription(dto, null)
+
+        then:
+        1 * mockDescriptionService.update(_) >> ServiceResult.Success.of(updated)
+        1 * mockCounter.increment()
+        result == updated
+    }
+
+    // updateDescription - neither descriptionId nor oldDescriptionName provided
+    def "updateDescription should look up by descriptionName when neither id nor old name provided"() {
+        given:
+        def dto = new DescriptionInputDto(null, "amazon", true)
+        def updated = new Description(descriptionName: "amazon")
+
+        when:
+        def result = controller.updateDescription(dto, null)
+
+        then:
+        1 * mockDescriptionService.findByDescriptionNameStandardized("amazon") >> ServiceResult.Success.of(new Description(descriptionId: 3L))
+        1 * mockDescriptionService.update(_) >> ServiceResult.Success.of(updated)
+        1 * mockCounter.increment()
+        result == updated
+    }
+
+    def "updateDescription should throw when description not found by name"() {
+        given:
+        def dto = new DescriptionInputDto(null, "nonexistent", true)
+
+        when:
+        controller.updateDescription(dto, null)
+
+        then:
+        1 * mockDescriptionService.findByDescriptionNameStandardized("nonexistent") >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateDescription should throw when oldDescriptionName not found"() {
+        given:
+        def dto = new DescriptionInputDto(null, "amazon", true)
+
+        when:
+        controller.updateDescription(dto, "old_amazon")
+
+        then:
+        1 * mockDescriptionService.findByDescriptionNameStandardized("old_amazon") >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateDescription should throw when update returns not found"() {
+        given:
+        def dto = new DescriptionInputDto(5L, "amazon", true)
+
+        when:
+        controller.updateDescription(dto, null)
+
+        then:
+        1 * mockDescriptionService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateDescription should throw when update returns validation error"() {
+        given:
+        def dto = new DescriptionInputDto(5L, "amazon", true)
+
+        when:
+        controller.updateDescription(dto, null)
+
+        then:
+        1 * mockDescriptionService.update(_) >> ServiceResult.ValidationError.of(["descriptionName": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateDescription should throw when update returns business error"() {
+        given:
+        def dto = new DescriptionInputDto(5L, "amazon", true)
+
+        when:
+        controller.updateDescription(dto, null)
+
+        then:
+        1 * mockDescriptionService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteDescription error paths
+    def "deleteDescription should return false when not found"() {
+        when:
+        def result = controller.deleteDescription("nonexistent")
+
+        then:
+        1 * mockDescriptionService.deleteByDescriptionNameStandardized("nonexistent") >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
+
+    // createMedicalExpense null field validation paths
+    def "createMedicalExpense should throw when serviceDate is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, null, "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when billedAmount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", null, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when insuranceDiscount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, null, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when insurancePaid is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, null, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when patientResponsibility is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, null, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when isOutOfNetwork is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, null, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when claimNumber is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, null, ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when claimStatus is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", null, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when paidAmount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, null)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when validation error from service"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        1 * mockMedicalExpenseService.save(_) >> ServiceResult.ValidationError.of(["field": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createMedicalExpense should throw when business error from service"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 0.0G)
+
+        when:
+        controller.createMedicalExpense(dto)
+
+        then:
+        1 * mockMedicalExpenseService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateMedicalExpense null field validation paths
+    def "updateMedicalExpense should throw when medicalExpenseId is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(null, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Submitted, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when serviceDate is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, null, "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when billedAmount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", null, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when insuranceDiscount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, null, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when insurancePaid is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, null, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when patientResponsibility is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, null, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when isOutOfNetwork is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, null, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when claimNumber is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, null, ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when claimStatus is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", null, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when paidAmount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, null)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when not found"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        1 * mockMedicalExpenseService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when validation error"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        1 * mockMedicalExpenseService.update(_) >> ServiceResult.ValidationError.of(["field": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateMedicalExpense should throw when business error"() {
+        given:
+        def dto = new MedicalExpenseInputDto(1L, null, null, null, LocalDate.now(), "cleaning", "proc", "diag", 100.0G, 20.0G, 50.0G, 30.0G, null, false, "claim123", ClaimStatus.Paid, true, 30.0G)
+
+        when:
+        controller.updateMedicalExpense(dto)
+
+        then:
+        1 * mockMedicalExpenseService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteMedicalExpense error paths
+    def "deleteMedicalExpense should return false when not found"() {
+        when:
+        def result = controller.deleteMedicalExpense(999L)
+
+        then:
+        1 * mockMedicalExpenseService.deleteById(999L) >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
+
+    // createValidationAmount error paths
+    def "createValidationAmount should throw when validation error"() {
+        given:
+        def dto = new ValidationAmountInputDto(null, 1L, new Timestamp(System.currentTimeMillis()), true, TransactionState.Cleared, 1000.0G)
+
+        when:
+        controller.createValidationAmount(dto)
+
+        then:
+        1 * mockValidationAmountService.save(_) >> ServiceResult.ValidationError.of(["amount": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createValidationAmount should throw when business error"() {
+        given:
+        def dto = new ValidationAmountInputDto(null, 1L, new Timestamp(System.currentTimeMillis()), true, TransactionState.Cleared, 1000.0G)
+
+        when:
+        controller.createValidationAmount(dto)
+
+        then:
+        1 * mockValidationAmountService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateValidationAmount error paths
+    def "updateValidationAmount should throw when not found"() {
+        given:
+        def dto = new ValidationAmountInputDto(1L, 1L, new Timestamp(System.currentTimeMillis()), true, TransactionState.Cleared, 1100.0G)
+
+        when:
+        controller.updateValidationAmount(dto)
+
+        then:
+        1 * mockValidationAmountService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateValidationAmount should throw when validation error"() {
+        given:
+        def dto = new ValidationAmountInputDto(1L, 1L, new Timestamp(System.currentTimeMillis()), true, TransactionState.Cleared, 1100.0G)
+
+        when:
+        controller.updateValidationAmount(dto)
+
+        then:
+        1 * mockValidationAmountService.update(_) >> ServiceResult.ValidationError.of(["amount": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateValidationAmount should throw when business error"() {
+        given:
+        def dto = new ValidationAmountInputDto(1L, 1L, new Timestamp(System.currentTimeMillis()), true, TransactionState.Cleared, 1100.0G)
+
+        when:
+        controller.updateValidationAmount(dto)
+
+        then:
+        1 * mockValidationAmountService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteValidationAmount error paths
+    def "deleteValidationAmount should return false when not found"() {
+        when:
+        def result = controller.deleteValidationAmount(999L)
+
+        then:
+        1 * mockValidationAmountService.deleteById(999L) >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
+
+    // createAccount error paths
+    def "createAccount should throw when validation error"() {
+        given:
+        def dto = new AccountInputDto(null, "chase_brian", AccountType.Credit, true, "0001", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.createAccount(dto)
+
+        then:
+        1 * mockAccountService.save(_) >> ServiceResult.ValidationError.of(["accountNameOwner": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createAccount should throw when business error"() {
+        given:
+        def dto = new AccountInputDto(null, "chase_brian", AccountType.Credit, true, "0001", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.createAccount(dto)
+
+        then:
+        1 * mockAccountService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateAccount - with accountId provided
+    def "updateAccount should update when accountId is provided"() {
+        given:
+        def dto = new AccountInputDto(5L, "chase_brian", AccountType.Credit, true, "0002", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+        def updated = new Account(accountNameOwner: "chase_brian")
+
+        when:
+        def result = controller.updateAccount(dto, null)
+
+        then:
+        1 * mockAccountService.update(_) >> ServiceResult.Success.of(updated)
+        1 * mockCounter.increment()
+        result == updated
+    }
+
+    // updateAccount - neither accountId nor oldAccountNameOwner provided
+    def "updateAccount should look up by accountNameOwner when neither id nor old name provided"() {
+        given:
+        def dto = new AccountInputDto(null, "chase_brian", AccountType.Credit, true, "0002", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+        def updated = new Account(accountNameOwner: "chase_brian")
+
+        when:
+        def result = controller.updateAccount(dto, null)
+
+        then:
+        1 * mockAccountService.findById("chase_brian") >> ServiceResult.Success.of(new Account(accountId: 3L))
+        1 * mockAccountService.update(_) >> ServiceResult.Success.of(updated)
+        1 * mockCounter.increment()
+        result == updated
+    }
+
+    def "updateAccount should throw when account not found by name"() {
+        given:
+        def dto = new AccountInputDto(null, "nonexistent_brian", AccountType.Credit, true, "0001", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.updateAccount(dto, null)
+
+        then:
+        1 * mockAccountService.findById("nonexistent_brian") >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateAccount should throw when oldAccountNameOwner not found"() {
+        given:
+        def dto = new AccountInputDto(null, "chase_brian", AccountType.Credit, true, "0001", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.updateAccount(dto, "old_chase_brian")
+
+        then:
+        1 * mockAccountService.findById("old_chase_brian") >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateAccount should throw when update returns not found"() {
+        given:
+        def dto = new AccountInputDto(5L, "chase_brian", AccountType.Credit, true, "0002", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.updateAccount(dto, null)
+
+        then:
+        1 * mockAccountService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateAccount should throw when update returns validation error"() {
+        given:
+        def dto = new AccountInputDto(5L, "chase_brian", AccountType.Credit, true, "0002", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.updateAccount(dto, null)
+
+        then:
+        1 * mockAccountService.update(_) >> ServiceResult.ValidationError.of(["accountNameOwner": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateAccount should throw when update returns business error"() {
+        given:
+        def dto = new AccountInputDto(5L, "chase_brian", AccountType.Credit, true, "0002", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, null)
+
+        when:
+        controller.updateAccount(dto, null)
+
+        then:
+        1 * mockAccountService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteAccount error paths
+    def "deleteAccount should return false when not found"() {
+        when:
+        def result = controller.deleteAccount("nonexistent_brian")
+
+        then:
+        1 * mockAccountService.deleteById("nonexistent_brian") >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
+
+    // createTransaction error paths
+    def "createTransaction should throw when validation error"() {
+        given:
+        def guid = UUID.randomUUID().toString()
+        def dto = new TransactionInputDto(null, guid, 100L, AccountType.Credit, TransactionType.Expense, "chase_brian", LocalDate.now(), "amazon", "online", new BigDecimal("50.00"), TransactionState.Cleared, true, ReoccurringType.Undefined, "notes", null, 0L)
+
+        when:
+        controller.createTransaction(dto)
+
+        then:
+        1 * mockTransactionService.save(_) >> ServiceResult.ValidationError.of(["description": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "createTransaction should throw when business error"() {
+        given:
+        def guid = UUID.randomUUID().toString()
+        def dto = new TransactionInputDto(null, guid, 100L, AccountType.Credit, TransactionType.Expense, "chase_brian", LocalDate.now(), "amazon", "online", new BigDecimal("50.00"), TransactionState.Cleared, true, ReoccurringType.Undefined, "notes", null, 0L)
+
+        when:
+        controller.createTransaction(dto)
+
+        then:
+        1 * mockTransactionService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // updateTransaction error paths
+    def "updateTransaction should throw when not found"() {
+        given:
+        def guid = UUID.randomUUID().toString()
+        def dto = new TransactionInputDto(1L, guid, 100L, AccountType.Credit, TransactionType.Expense, "chase_brian", LocalDate.now(), "updated", "online", new BigDecimal("50.00"), TransactionState.Cleared, true, ReoccurringType.Undefined, "notes", null, 0L)
+
+        when:
+        controller.updateTransaction(dto)
+
+        then:
+        1 * mockTransactionService.update(_) >> ServiceResult.NotFound.of("not found")
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateTransaction should throw when validation error"() {
+        given:
+        def guid = UUID.randomUUID().toString()
+        def dto = new TransactionInputDto(1L, guid, 100L, AccountType.Credit, TransactionType.Expense, "chase_brian", LocalDate.now(), "updated", "online", new BigDecimal("50.00"), TransactionState.Cleared, true, ReoccurringType.Undefined, "notes", null, 0L)
+
+        when:
+        controller.updateTransaction(dto)
+
+        then:
+        1 * mockTransactionService.update(_) >> ServiceResult.ValidationError.of(["description": "invalid"])
+        thrown(IllegalArgumentException)
+    }
+
+    def "updateTransaction should throw when business error"() {
+        given:
+        def guid = UUID.randomUUID().toString()
+        def dto = new TransactionInputDto(1L, guid, 100L, AccountType.Credit, TransactionType.Expense, "chase_brian", LocalDate.now(), "updated", "online", new BigDecimal("50.00"), TransactionState.Cleared, true, ReoccurringType.Undefined, "notes", null, 0L)
+
+        when:
+        controller.updateTransaction(dto)
+
+        then:
+        1 * mockTransactionService.update(_) >> ServiceResult.BusinessError.of("error", "ERR")
+        thrown(IllegalStateException)
+    }
+
+    // deleteTransaction error paths
+    def "deleteTransaction should return false when not found"() {
+        given:
+        def guid = UUID.randomUUID().toString()
+
+        when:
+        def result = controller.deleteTransaction(guid)
+
+        then:
+        1 * mockTransactionService.deleteById(guid) >> ServiceResult.NotFound.of("not found")
+        result == false
+    }
 }

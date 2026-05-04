@@ -122,4 +122,44 @@ class DescriptionInputDtoSpec extends BaseDomainSpec {
         then:
         violations.isEmpty()
     }
+
+    def "DescriptionInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new DescriptionInputDto(1L, "grocery_store", true)
+        def dto2 = new DescriptionInputDto(1L, "grocery_store", true)
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "DescriptionInputDto inequality when descriptionName differs"() {
+        given:
+        def dto1 = new DescriptionInputDto(null, "grocery_store", true)
+        def dto2 = new DescriptionInputDto(null, "restaurant", true)
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "DescriptionInputDto toString contains descriptionName"() {
+        given:
+        def dto = new DescriptionInputDto(5L, "grocery_store", true)
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("grocery_store")
+    }
+
+    def "DescriptionInputDto copy produces modified instance"() {
+        given:
+        def original = new DescriptionInputDto(1L, "grocery_store", true)
+
+        when:
+        def copy = original.copy(1L, "restaurant", true)
+
+        then:
+        copy.descriptionName == "restaurant"
+        original.descriptionName == "grocery_store"
+    }
 }
