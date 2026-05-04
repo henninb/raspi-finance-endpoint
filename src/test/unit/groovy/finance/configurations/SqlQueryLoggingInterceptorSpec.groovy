@@ -1,19 +1,38 @@
 package finance.configurations
 
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import spock.lang.Specification
 
 class SqlQueryLoggingInterceptorSpec extends Specification {
 
     SqlQueryLoggingInterceptor interceptor
+    ListAppender<ILoggingEvent> listAppender
+    Logger logger
+    ch.qos.logback.classic.Level originalLevel
 
     def setup() {
         interceptor = new SqlQueryLoggingInterceptor()
         MDC.clear()
+        logger = (Logger) LoggerFactory.getLogger(SqlQueryLoggingInterceptor.class)
+        originalLevel = logger.getLevel()
+        logger.setLevel(ch.qos.logback.classic.Level.DEBUG)
+        listAppender = new ListAppender<>()
+        listAppender.start()
+        logger.addAppender(listAppender)
     }
 
     def cleanup() {
         MDC.clear()
+        if (logger) {
+            if (listAppender) {
+                logger.detachAppender(listAppender)
+            }
+            logger.setLevel(originalLevel)
+        }
     }
 
     def "inspect returns SQL wrapped with QueryID comment"() {
@@ -58,11 +77,12 @@ class SqlQueryLoggingInterceptorSpec extends Specification {
         String sql = "UPDATE users SET password='supersecret' WHERE id=1"
 
         when:
-        String result = interceptor.inspect(sql)
+        interceptor.inspect(sql)
+        def logEntry = listAppender.list.find { it.formattedMessage.contains("[SQL]") }
 
         then:
-        result.contains("password='***'")
-        !result.contains("supersecret")
+        logEntry.formattedMessage.contains("password='***'")
+        !logEntry.formattedMessage.contains("supersecret")
     }
 
     def "inspect masks token values in SQL"() {
@@ -70,11 +90,12 @@ class SqlQueryLoggingInterceptorSpec extends Specification {
         String sql = "INSERT INTO sessions (token='abc123xyz') WHERE user_id=5"
 
         when:
-        String result = interceptor.inspect(sql)
+        interceptor.inspect(sql)
+        def logEntry = listAppender.list.find { it.formattedMessage.contains("[SQL]") }
 
         then:
-        result.contains("token='***'")
-        !result.contains("abc123xyz")
+        logEntry.formattedMessage.contains("token='***'")
+        !logEntry.formattedMessage.contains("abc123xyz")
     }
 
     def "inspect masks secret values in SQL"() {
@@ -82,11 +103,12 @@ class SqlQueryLoggingInterceptorSpec extends Specification {
         String sql = "UPDATE config SET secret='mysecretvalue' WHERE id=1"
 
         when:
-        String result = interceptor.inspect(sql)
+        interceptor.inspect(sql)
+        def logEntry = listAppender.list.find { it.formattedMessage.contains("[SQL]") }
 
         then:
-        result.contains("secret='***'")
-        !result.contains("mysecretvalue")
+        logEntry.formattedMessage.contains("secret='***'")
+        !logEntry.formattedMessage.contains("mysecretvalue")
     }
 
     def "inspect produces unique QueryIDs for each call"() {
@@ -118,9 +140,10 @@ class SqlQueryLoggingInterceptorSpec extends Specification {
         String sql = "UPDATE users SET PASSWORD='MyPass123' WHERE id=1"
 
         when:
-        String result = interceptor.inspect(sql)
+        interceptor.inspect(sql)
+        def logEntry = listAppender.list.find { it.formattedMessage.contains("[SQL]") }
 
         then:
-        !result.contains("MyPass123")
+        !logEntry.formattedMessage.contains("MyPass123")
     }
 }
