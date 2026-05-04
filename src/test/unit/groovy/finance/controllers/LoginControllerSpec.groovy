@@ -233,4 +233,114 @@ class LoginControllerSpec extends Specification {
             violations.any { it.propertyPath.toString() == "password" }
         }
     }
+
+    def "refresh should return UNAUTHORIZED when principal is null"() {
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh(null, response)
+
+        then:
+        result.statusCode == HttpStatus.UNAUTHORIZED
+        result.body["error"] == "Not authenticated"
+    }
+
+    def "refresh should return UNAUTHORIZED when principal is blank"() {
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("   ", response)
+
+        then:
+        result.statusCode == HttpStatus.UNAUTHORIZED
+        result.body["error"] == "Not authenticated"
+    }
+
+    def "refresh should return OK and set cookie when principal is valid"() {
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        result.body["message"] == "Token refreshed"
+        1 * response.addHeader("Set-Cookie", _)
+    }
+
+    def "login should return TOO_MANY_REQUESTS when account is locked"() {
+        given:
+        def loginRequest = new LoginRequest("lockeduser", "password123")
+        10.times { loginAttemptService.recordFailure("lockeduser") }
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.login(loginRequest, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.TOO_MANY_REQUESTS
+        result.body["error"].contains("locked")
+    }
+
+    def "logout should return NO_CONTENT when no token present"() {
+        given:
+        def request = Mock(jakarta.servlet.http.HttpServletRequest)
+        request.getCookies() >> null
+        request.getHeader("Cookie") >> null
+        request.getHeader("Authorization") >> null
+
+        when:
+        ResponseEntity<Void> result = loginController.logout(request, response)
+
+        then:
+        result.statusCode == HttpStatus.NO_CONTENT
+        0 * tokenBlacklistService.blacklistToken(_, _)
+    }
+
+    def "logout should extract token from Authorization header when no cookie"() {
+        given:
+        def request = Mock(jakarta.servlet.http.HttpServletRequest)
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
+        def token = Jwts.builder()
+            .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
+            .claim("username", "testuser")
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key)
+            .compact()
+        request.getCookies() >> null
+        request.getHeader("Cookie") >> null
+        request.getHeader("Authorization") >> "Bearer ${token}"
+
+        when:
+        ResponseEntity<Void> result = loginController.logout(request, response)
+
+        then:
+        1 * tokenBlacklistService.blacklistToken(token, _)
+        result.statusCode == HttpStatus.NO_CONTENT
+    }
+
+    def "register should return INTERNAL_SERVER_ERROR on unexpected registration error"() {
+        given:
+        def newUser = new User(username: "erroruser", password: "Password123!", firstName: "first", lastName: "last")
+        userRepository.findByUsername("erroruser") >> Optional.empty()
+        userRepository.saveAndFlush(_) >> { throw new RuntimeException("unexpected") }
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.register(newUser, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        result.body["error"] == "Registration failed"
+    }
+
+    def "register should return BAD_REQUEST when binding has errors"() {
+        given:
+        def newUser = new User(username: "testuser", password: "Password123!", firstName: "first", lastName: "last")
+        bindingResult.hasErrors() >> true
+        bindingResult.getFieldErrors() >> [Mock(org.springframework.validation.FieldError) {
+            getField() >> "username"
+            getDefaultMessage() >> "size must be between 3 and 60"
+        }]
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.register(newUser, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.BAD_REQUEST
+    }
 }
