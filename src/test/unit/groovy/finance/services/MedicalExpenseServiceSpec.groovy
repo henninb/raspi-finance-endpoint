@@ -658,4 +658,398 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
         1 * medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, 100L) >> new MedicalExpense()
         thrown(finance.exceptions.DuplicateMedicalExpenseException)
     }
+
+    def "insertMedicalExpense should succeed when transactionId is null (no dup check)"() {
+        given:
+        def expense = MedicalExpenseBuilder.builder().withTransactionId(null).build()
+        def saved = MedicalExpenseBuilder.builder().withMedicalExpenseId(5L).withTransactionId(null).build()
+
+        when:
+        medicalExpenseRepositoryMock.save(expense) >> saved
+        def result = standardizedMedicalExpenseService.insertMedicalExpense(expense)
+
+        then:
+        result.medicalExpenseId == 5L
+        0 * medicalExpenseRepositoryMock.findByOwnerAndTransactionId(_, _)
+    }
+
+    def "insertMedicalExpense should succeed when transactionId is zero (no dup check)"() {
+        given:
+        def expense = MedicalExpenseBuilder.builder().withTransactionId(0L).build()
+        def saved = MedicalExpenseBuilder.builder().withMedicalExpenseId(6L).build()
+
+        when:
+        medicalExpenseRepositoryMock.save(expense) >> saved
+        def result = standardizedMedicalExpenseService.insertMedicalExpense(expense)
+
+        then:
+        result.medicalExpenseId == 6L
+        0 * medicalExpenseRepositoryMock.findByOwnerAndTransactionId(_, _)
+    }
+
+    def "updateMedicalExpense should throw DataIntegrityViolationException on BusinessError"() {
+        given:
+        def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(1L).build()
+        def existingExpense = MedicalExpenseBuilder.builder().withMedicalExpenseId(1L).build()
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingExpense
+        medicalExpenseRepositoryMock.save(expense) >> { throw new org.springframework.dao.DataIntegrityViolationException("constraint violation") }
+        standardizedMedicalExpenseService.updateMedicalExpense(expense)
+
+        then:
+        thrown(RuntimeException)
+    }
+
+    def "findMedicalExpensesByAccountId should delegate to repository"() {
+        given:
+        def accountId = 42L
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndAccountId(TEST_OWNER, accountId) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByAccountId(accountId)
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByServiceDateRange should delegate to repository"() {
+        given:
+        def start = java.time.LocalDate.of(2024, 1, 1)
+        def end = java.time.LocalDate.of(2024, 12, 31)
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndServiceDateBetweenAndActiveStatusTrue(TEST_OWNER, start, end) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByServiceDateRange(start, end)
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByAccountIdAndDateRange should delegate to repository"() {
+        given:
+        def accountId = 10L
+        def start = java.time.LocalDate.of(2024, 1, 1)
+        def end = java.time.LocalDate.of(2024, 6, 30)
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndAccountIdAndServiceDateBetween(TEST_OWNER, accountId, start, end) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByAccountIdAndDateRange(accountId, start, end)
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByProviderId should delegate to repository"() {
+        given:
+        def providerId = 7L
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndProviderIdAndActiveStatusTrue(TEST_OWNER, providerId) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByProviderId(providerId)
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByFamilyMemberId should delegate to repository"() {
+        given:
+        def familyMemberId = 3L
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, familyMemberId) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByFamilyMemberId(familyMemberId)
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByFamilyMemberAndDateRange should delegate to repository"() {
+        given:
+        def familyMemberId = 2L
+        def start = java.time.LocalDate.of(2024, 1, 1)
+        def end = java.time.LocalDate.of(2024, 12, 31)
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndFamilyMemberIdAndServiceDateBetween(TEST_OWNER, familyMemberId, start, end) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByFamilyMemberAndDateRange(familyMemberId, start, end)
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByClaimStatus should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndClaimStatusAndActiveStatusTrue(TEST_OWNER, ClaimStatus.Approved) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByClaimStatus(ClaimStatus.Approved)
+
+        then:
+        result == expenses
+    }
+
+    def "findOutOfNetworkExpenses should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().withIsOutOfNetwork(true).build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndIsOutOfNetworkAndActiveStatusTrue(TEST_OWNER, true) >> expenses
+        def result = standardizedMedicalExpenseService.findOutOfNetworkExpenses()
+
+        then:
+        result == expenses
+    }
+
+    def "findOutstandingPatientBalances should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findOutstandingPatientBalancesByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findOutstandingPatientBalances()
+
+        then:
+        result == expenses
+    }
+
+    def "findActiveOpenClaims should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findActiveOpenClaimsByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findActiveOpenClaims()
+
+        then:
+        result == expenses
+    }
+
+    def "getTotalPatientResponsibilityByYear should return sum or zero"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalPatientResponsibilityByOwnerAndYear(TEST_OWNER, 2024) >> new BigDecimal("500.00")
+        def result = standardizedMedicalExpenseService.getTotalPatientResponsibilityByYear(2024)
+
+        then:
+        result == new BigDecimal("500.00")
+    }
+
+    def "getTotalPatientResponsibilityByYear should return zero when null"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalPatientResponsibilityByOwnerAndYear(TEST_OWNER, 2024) >> null
+        def result = standardizedMedicalExpenseService.getTotalPatientResponsibilityByYear(2024)
+
+        then:
+        result == BigDecimal.ZERO
+    }
+
+    def "getTotalInsurancePaidByYear should return sum or zero"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalInsurancePaidByOwnerAndYear(TEST_OWNER, 2024) >> new BigDecimal("800.00")
+        def result = standardizedMedicalExpenseService.getTotalInsurancePaidByYear(2024)
+
+        then:
+        result == new BigDecimal("800.00")
+    }
+
+    def "getTotalInsurancePaidByYear should return zero when null"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalInsurancePaidByOwnerAndYear(TEST_OWNER, 2024) >> null
+        def result = standardizedMedicalExpenseService.getTotalInsurancePaidByYear(2024)
+
+        then:
+        result == BigDecimal.ZERO
+    }
+
+    def "getTotalPaidAmountByYear should return sum or zero"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalPaidAmountByOwnerAndYear(TEST_OWNER, 2024) >> new BigDecimal("200.00")
+        def result = standardizedMedicalExpenseService.getTotalPaidAmountByYear(2024)
+
+        then:
+        result == new BigDecimal("200.00")
+    }
+
+    def "getTotalPaidAmountByYear should return zero when null"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalPaidAmountByOwnerAndYear(TEST_OWNER, 2024) >> null
+        def result = standardizedMedicalExpenseService.getTotalPaidAmountByYear(2024)
+
+        then:
+        result == BigDecimal.ZERO
+    }
+
+    def "getTotalUnpaidBalance should return balance or zero"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalUnpaidBalanceByOwner(TEST_OWNER) >> new BigDecimal("350.00")
+        def result = standardizedMedicalExpenseService.getTotalUnpaidBalance()
+
+        then:
+        result == new BigDecimal("350.00")
+    }
+
+    def "getTotalUnpaidBalance should return zero when null"() {
+        when:
+        medicalExpenseRepositoryMock.getTotalUnpaidBalanceByOwner(TEST_OWNER) >> null
+        def result = standardizedMedicalExpenseService.getTotalUnpaidBalance()
+
+        then:
+        result == BigDecimal.ZERO
+    }
+
+    def "findMedicalExpensesByProcedureCode should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().withProcedureCode("CPT-99213").build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndProcedureCodeAndActiveStatusTrue(TEST_OWNER, "CPT-99213") >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByProcedureCode("CPT-99213")
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesByDiagnosisCode should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().withDiagnosisCode("ICD-Z00.00").build()]
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndDiagnosisCodeAndActiveStatusTrue(TEST_OWNER, "ICD-Z00.00") >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesByDiagnosisCode("ICD-Z00.00")
+
+        then:
+        result == expenses
+    }
+
+    def "findUnpaidMedicalExpenses should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findUnpaidMedicalExpensesByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findUnpaidMedicalExpenses()
+
+        then:
+        result == expenses
+    }
+
+    def "findPartiallyPaidMedicalExpenses should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findPartiallyPaidMedicalExpensesByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findPartiallyPaidMedicalExpenses()
+
+        then:
+        result == expenses
+    }
+
+    def "findFullyPaidMedicalExpenses should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findFullyPaidMedicalExpensesByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findFullyPaidMedicalExpenses()
+
+        then:
+        result == expenses
+    }
+
+    def "findMedicalExpensesWithoutTransaction should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().withTransactionId(null).build()]
+
+        when:
+        medicalExpenseRepositoryMock.findMedicalExpensesWithoutTransactionByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findMedicalExpensesWithoutTransaction()
+
+        then:
+        result == expenses
+    }
+
+    def "findOverpaidMedicalExpenses should delegate to repository"() {
+        given:
+        def expenses = [MedicalExpenseBuilder.builder().build()]
+
+        when:
+        medicalExpenseRepositoryMock.findOverpaidMedicalExpensesByOwner(TEST_OWNER) >> expenses
+        def result = standardizedMedicalExpenseService.findOverpaidMedicalExpenses()
+
+        then:
+        result == expenses
+    }
+
+    def "linkPaymentTransaction should throw IllegalArgumentException when expense not found"() {
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
+        standardizedMedicalExpenseService.linkPaymentTransaction(999L, 123L)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "linkPaymentTransaction should allow linking when transaction is already linked to same expense"() {
+        given:
+        def expenseId = 1L
+        def transactionId = 123L
+        def expense = MedicalExpenseBuilder.builder().withMedicalExpenseId(expenseId).build()
+        def sameExpenseLinked = MedicalExpenseBuilder.builder()
+            .withMedicalExpenseId(expenseId)
+            .withTransactionId(transactionId)
+            .build()
+
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, expenseId) >> expense
+        medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, transactionId) >> sameExpenseLinked
+        medicalExpenseRepositoryMock.save(_ as MedicalExpense) >> sameExpenseLinked
+        def result = standardizedMedicalExpenseService.linkPaymentTransaction(expenseId, transactionId)
+
+        then:
+        result.transactionId == transactionId
+    }
+
+    def "unlinkPaymentTransaction should throw IllegalArgumentException when expense not found"() {
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
+        standardizedMedicalExpenseService.unlinkPaymentTransaction(999L)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "updatePaidAmount should throw IllegalArgumentException when expense not found"() {
+        when:
+        medicalExpenseRepositoryMock.findByOwnerAndMedicalExpenseIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
+        standardizedMedicalExpenseService.updatePaidAmount(999L)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "softDeleteMedicalExpense should propagate exception from repository"() {
+        when:
+        medicalExpenseRepositoryMock.softDeleteByOwnerAndMedicalExpenseId(TEST_OWNER, 1L) >> { throw new RuntimeException("db failure") }
+        standardizedMedicalExpenseService.softDeleteMedicalExpense(1L)
+
+        then:
+        thrown(RuntimeException)
+    }
+
+    def "updateClaimStatus should propagate exception from repository"() {
+        when:
+        medicalExpenseRepositoryMock.updateClaimStatusByOwner(TEST_OWNER, 1L, ClaimStatus.Denied) >> { throw new RuntimeException("lock timeout") }
+        standardizedMedicalExpenseService.updateClaimStatus(1L, ClaimStatus.Denied)
+
+        then:
+        thrown(RuntimeException)
+    }
 }

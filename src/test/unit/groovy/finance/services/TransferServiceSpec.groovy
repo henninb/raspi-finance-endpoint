@@ -262,4 +262,149 @@ class TransferServiceSpec extends BaseServiceSpec {
         !deletedMissing
         0 * _
     }
+
+    def "findById should return Success when transfer exists"() {
+        given:
+        def transfer = TransferBuilder.builder().withTransferId(10L).build()
+
+        when:
+        def result = transferService.findById(10L)
+
+        then:
+        1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 10L) >> Optional.of(transfer)
+        result instanceof finance.domain.ServiceResult.Success
+        result.data.transferId == 10L
+        0 * _
+    }
+
+    def "update should return Success when transfer exists and passes validation"() {
+        given:
+        def transfer = TransferBuilder.builder().withTransferId(20L).build()
+        def existing = Optional.of(transfer)
+        Set noViolations = [] as Set
+
+        when:
+        def result = transferService.update(transfer)
+
+        then:
+        1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 20L) >> existing
+        1 * validatorMock.validate(_ as finance.domain.Transfer) >> noViolations
+        1 * transferRepositoryMock.save(_ as finance.domain.Transfer) >> transfer
+        result instanceof finance.domain.ServiceResult.Success
+        result.data.transferId == 20L
+        0 * _
+    }
+
+    def "updateTransfer should return transfer on success"() {
+        given:
+        def transfer = TransferBuilder.builder().withTransferId(30L).build()
+        Set noViolations = [] as Set
+
+        when:
+        def result = transferService.updateTransfer(transfer)
+
+        then:
+        1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 30L) >> Optional.of(transfer)
+        1 * validatorMock.validate(_ as finance.domain.Transfer) >> noViolations
+        1 * transferRepositoryMock.save(_ as finance.domain.Transfer) >> transfer
+        result.transferId == 30L
+        0 * _
+    }
+
+    def "updateTransfer should throw RuntimeException when transfer not found"() {
+        given:
+        def transfer = TransferBuilder.builder().withTransferId(404L).build()
+
+        when:
+        transferService.updateTransfer(transfer)
+
+        then:
+        1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 404L) >> Optional.empty()
+        def ex = thrown(RuntimeException)
+        ex.message.contains("404")
+        0 * _
+    }
+
+    def "insertTransfer should fail when destination account is missing"() {
+        given:
+        def transfer = TransferBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_primary")
+            .withDestinationAccount("savings_primary")
+            .build()
+        def sourceAccount = new finance.domain.Account(accountNameOwner: "checking_primary", accountType: finance.domain.AccountType.Checking)
+
+        when:
+        transferService.insertTransfer(transfer)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(sourceAccount)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "savings_primary") >> Optional.empty()
+        def ex = thrown(RuntimeException)
+        ex.message.contains("Destination account not found")
+        0 * _
+    }
+
+    def "insertTransfer should map source transaction generic errors to RuntimeException"() {
+        given:
+        def transfer = TransferBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_primary")
+            .withDestinationAccount("savings_primary")
+            .build()
+        def sourceAccount = new finance.domain.Account(accountNameOwner: "checking_primary", accountType: finance.domain.AccountType.Checking)
+        def destinationAccount = new finance.domain.Account(accountNameOwner: "savings_primary", accountType: finance.domain.AccountType.Savings)
+
+        when:
+        transferService.insertTransfer(transfer)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(sourceAccount)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "savings_primary") >> Optional.of(destinationAccount)
+        1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.NotFound.of("tx gone")
+        def ex = thrown(RuntimeException)
+        ex.message.contains("Failed to create source transaction")
+        0 * _
+    }
+
+    def "insertTransfer should map destination transaction validation errors to ConstraintViolationException"() {
+        given:
+        def transfer = TransferBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_primary")
+            .withDestinationAccount("savings_primary")
+            .build()
+        def sourceAccount = new finance.domain.Account(accountNameOwner: "checking_primary", accountType: finance.domain.AccountType.Checking)
+        def destinationAccount = new finance.domain.Account(accountNameOwner: "savings_primary", accountType: finance.domain.AccountType.Savings)
+        def sourceSaved = TransactionBuilder.builder().withGuid("aaaa-0000").build()
+
+        when:
+        transferService.insertTransfer(transfer)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(sourceAccount)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "savings_primary") >> Optional.of(destinationAccount)
+        1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.Success.of(sourceSaved)
+        1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.ValidationError.of([amount: "invalid"])
+        def ex = thrown(jakarta.validation.ConstraintViolationException)
+        ex.message.contains("Destination transaction validation failed")
+        0 * _
+    }
+
+    def "findByTransferId should return transfer wrapped in Optional"() {
+        given:
+        def transfer = TransferBuilder.builder().withTransferId(55L).build()
+
+        when:
+        def result = transferService.findByTransferId(55L)
+
+        then:
+        1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 55L) >> Optional.of(transfer)
+        result.isPresent()
+        result.get().transferId == 55L
+        0 * _
+    }
 }
