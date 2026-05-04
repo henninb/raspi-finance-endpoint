@@ -195,6 +195,72 @@ class ImageProcessingServiceSpec extends BaseServiceSpec {
         thumbnail.length < imageData.length
     }
 
+    def "createThumbnail should return empty byte array for empty input"() {
+        when:
+        byte[] result = localImageProcessingService.createThumbnail(new byte[0], ImageFormatType.Jpeg)
+
+        then:
+        result != null
+        result.length == 0
+    }
+
+    def "createThumbnail should return empty byte array for Undefined format"() {
+        when:
+        byte[] result = localImageProcessingService.createThumbnail(validJpegImage, ImageFormatType.Undefined)
+
+        then:
+        result != null
+        result.length == 0
+    }
+
+    def "processImage should return invalid result when format is Undefined"() {
+        given:
+        byte[] notAnImage = "not-an-image".bytes
+
+        when:
+        ImageProcessingResult result = localImageProcessingService.processImage(notAnImage)
+
+        then:
+        result.format == ImageFormatType.Undefined
+        result.isValid == false
+        result.thumbnail.length == 0
+    }
+
+    def "processImage should return invalid result for oversized image placeholder"() {
+        given:
+        byte[] oversizedData = new byte[6 * 1024 * 1024]
+
+        when:
+        ImageProcessingResult result = localImageProcessingService.processImage(oversizedData)
+
+        then:
+        result.isValid == false
+        result.thumbnail.length == 0
+        result.originalSize == oversizedData.length
+    }
+
+    def "validateImageSize should return false for exactly max plus one byte"() {
+        given:
+        byte[] oversized = new byte[5 * 1024 * 1024 + 1]
+
+        when:
+        boolean valid = localImageProcessingService.validateImageSize(oversized)
+
+        then:
+        !valid
+    }
+
+    def "validateImageSize should return true for exactly max allowed size"() {
+        given:
+        byte[] maxSized = new byte[5 * 1024 * 1024]
+
+        when:
+        boolean valid = localImageProcessingService.validateImageSize(maxSized)
+
+        then:
+        valid
+    }
+
     // ===== Test Data Helper Methods =====
 
     private byte[] makeTestJpegImage() {

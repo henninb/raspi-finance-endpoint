@@ -806,4 +806,326 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result.message.toLowerCase().contains("startdate must be before or equal to enddate")
     }
 
+    def "findAllActive paginated should return paged transactions"() {
+        given:
+        def pageable = PageRequest.of(0, 10)
+        def transactions = [createTestTransaction()]
+        def page = new PageImpl(transactions, pageable, 1)
+
+        when:
+        def result = standardizedTransactionService.findAllActive(pageable)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndActiveStatus(TEST_OWNER, true, _) >> page
+        result instanceof ServiceResult.Success
+        result.data.content == transactions
+    }
+
+    def "findByAccountNameOwnerOrderByTransactionDateStandardized paginated should return paged transactions"() {
+        given:
+        def accountNameOwner = "test_account"
+        def pageable = PageRequest.of(0, 10)
+        def transactions = [createTestTransaction()]
+        def page = new PageImpl(transactions, pageable, 1)
+
+        when:
+        def result = standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner, pageable)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatus(TEST_OWNER, accountNameOwner, true, _) >> page
+        result instanceof ServiceResult.Success
+        result.data.content == transactions
+    }
+
+    def "findByAccountNameOwnerOrderByTransactionDateStandardized paginated should log warning for empty page"() {
+        given:
+        def accountNameOwner = "unknown_account"
+        def pageable = PageRequest.of(0, 10)
+        def emptyPage = new PageImpl([], pageable, 0)
+
+        when:
+        def result = standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner, pageable)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatus(TEST_OWNER, accountNameOwner, true, _) >> emptyPage
+        result instanceof ServiceResult.Success
+        result.data.isEmpty()
+    }
+
+    def "findTransactionsByCategoryStandardized paginated should return paged transactions"() {
+        given:
+        def category = "food"
+        def pageable = PageRequest.of(0, 5)
+        def transactions = [createTestTransaction()]
+        def page = new PageImpl(transactions, pageable, 1)
+
+        when:
+        def result = standardizedTransactionService.findTransactionsByCategoryStandardized(category, pageable)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndCategoryAndActiveStatus(TEST_OWNER, category, true, _) >> page
+        result instanceof ServiceResult.Success
+        result.data.content == transactions
+    }
+
+    def "findTransactionsByDescriptionStandardized paginated should return paged transactions"() {
+        given:
+        def description = "grocery run"
+        def pageable = PageRequest.of(0, 5)
+        def transactions = [createTestTransaction()]
+        def page = new PageImpl(transactions, pageable, 1)
+
+        when:
+        def result = standardizedTransactionService.findTransactionsByDescriptionStandardized(description, pageable)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndDescriptionAndActiveStatus(TEST_OWNER, description, true, _) >> page
+        result instanceof ServiceResult.Success
+        result.data.content == transactions
+    }
+
+    def "updateTransactionStateStandardized should return NotFound when transaction does not exist"() {
+        given:
+        def guid = "non-existent-guid"
+
+        when:
+        def result = standardizedTransactionService.updateTransactionStateStandardized(guid, TransactionState.Cleared)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
+        result instanceof ServiceResult.NotFound
+        result.message.contains("Transaction not found: non-existent-guid")
+    }
+
+    def "updateTransactionStateStandardized should return BusinessError when clearing a future-dated transaction"() {
+        given:
+        def guid = "future-guid"
+        def transaction = createTestTransaction()
+        transaction.guid = guid
+        transaction.transactionState = TransactionState.Outstanding
+        transaction.transactionDate = LocalDate.now().plusDays(5)
+
+        when:
+        def result = standardizedTransactionService.updateTransactionStateStandardized(guid, TransactionState.Cleared)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        result instanceof ServiceResult.BusinessError
+        result.message.toLowerCase().contains("future")
+    }
+
+    def "changeAccountNameOwnerStandardized should return BusinessError when account does not exist"() {
+        given:
+        def guid = "test-guid-123"
+        def accountNameOwner = "nonexistent_account"
+        def transaction = createTestTransaction()
+
+        when:
+        def result = standardizedTransactionService.changeAccountNameOwnerStandardized(accountNameOwner, guid)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.empty()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("guid='$guid'")
+    }
+
+    def "changeAccountNameOwnerStandardized should return BusinessError when transaction does not exist"() {
+        given:
+        def guid = "missing-guid"
+        def accountNameOwner = "test_account"
+        def account = createTestAccount()
+
+        when:
+        def result = standardizedTransactionService.changeAccountNameOwnerStandardized(accountNameOwner, guid)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.of(account)
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "createFutureTransactionStandardized should calculate date for FortNightly reoccurring type"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.FortNightly
+        def expectedDate = transaction.transactionDate.plusDays(14)
+
+        when:
+        def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
+
+        then:
+        result instanceof ServiceResult.Success
+        result.data.transactionDate == expectedDate
+        result.data.transactionState == TransactionState.Future
+    }
+
+    def "createFutureTransactionStandardized should calculate monthly date for Debit account"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.accountType = AccountType.Debit
+        def expectedDate = transaction.transactionDate.plusMonths(1)
+
+        when:
+        def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
+
+        then:
+        result instanceof ServiceResult.Success
+        result.data.transactionDate == expectedDate
+    }
+
+    def "createFutureTransactionStandardized should calculate yearly date for Credit account"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.accountType = AccountType.Credit
+        def expectedDate = transaction.transactionDate.plusYears(1)
+
+        when:
+        def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
+
+        then:
+        result instanceof ServiceResult.Success
+        result.data.transactionDate == expectedDate
+    }
+
+    def "createFutureTransactionStandardized should return BusinessError for Debit with unsupported reoccurring type"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.Yearly
+        transaction.accountType = AccountType.Debit
+
+        when:
+        def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
+
+        then:
+        result instanceof ServiceResult.BusinessError
+        result.message.toLowerCase().contains("reoccurring")
+    }
+
+    def "createFutureTransactionStandardized should propagate future due date calculation"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        transaction.accountType = AccountType.Credit
+        transaction.dueDate = LocalDate.of(2023, 1, 15)
+
+        when:
+        def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
+
+        then:
+        result instanceof ServiceResult.Success
+        result.data.dueDate == transaction.dueDate.plusYears(1)
+    }
+
+    def "createAndSaveFutureTransaction should return Success when future transaction created and saved"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.Monthly
+        def account = createTestAccount()
+        def category = createTestCategory()
+        def description = createTestDescription()
+        def savedTransaction = createTestTransaction()
+        savedTransaction.transactionState = TransactionState.Future
+
+        when:
+        def result = standardizedTransactionService.createAndSaveFutureTransaction(transaction)
+
+        then:
+        1 * validatorMock.validate(_) >> Collections.emptySet()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, _) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.of(account)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, _) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, _) >> 0L
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, _) >> Optional.of(description)
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, _) >> 0L
+        1 * transactionRepositoryMock.saveAndFlush(_) >> savedTransaction
+        result instanceof ServiceResult.Success
+    }
+
+    def "createAndSaveFutureTransaction should return error when createFutureTransaction fails"() {
+        given:
+        def transaction = createTestTransaction()
+        transaction.reoccurringType = ReoccurringType.Undefined
+
+        when:
+        def result = standardizedTransactionService.createAndSaveFutureTransaction(transaction)
+
+        then:
+        result instanceof ServiceResult.BusinessError
+        result.message.toLowerCase().contains("reoccurring")
+        0 * transactionRepositoryMock.saveAndFlush(_)
+    }
+
+    def "deleteReceiptImageForTransactionByGuidStandardized should return NotFound when transaction missing"() {
+        given:
+        def guid = "missing-guid"
+
+        when:
+        def result = standardizedTransactionService.deleteReceiptImageForTransactionByGuidStandardized(guid)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "deleteReceiptImageForTransactionByGuidStandardized should return BusinessError when transaction has no image"() {
+        given:
+        def guid = "no-image-guid"
+        def transaction = createTestTransaction()
+        transaction.receiptImageId = null
+
+        when:
+        def result = standardizedTransactionService.deleteReceiptImageForTransactionByGuidStandardized(guid)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "deleteReceiptImageForTransactionByGuidStandardized should delete image when transaction has one"() {
+        given:
+        def guid = "has-image-guid"
+        def transaction = createTestTransaction()
+        transaction.receiptImageId = 99L
+        def receiptImage = createTestReceiptImage()
+        receiptImage.receiptImageId = 99L
+
+        when:
+        def result = standardizedTransactionService.deleteReceiptImageForTransactionByGuidStandardized(guid)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        1 * standardizedReceiptImageServiceMock.deleteById(99L) >> ServiceResult.Success.of(receiptImage)
+        result instanceof ServiceResult.Success
+    }
+
+    def "save should create a new account when account does not exist"() {
+        given:
+        def transaction = createTestTransactionWithoutId()
+        def newAccount = createTestAccount()
+        newAccount.accountId = 99L
+        def category = createTestCategory()
+        def description = createTestDescription()
+        def savedTransaction = createTestTransaction()
+
+        when:
+        def result = standardizedTransactionService.save(transaction)
+
+        then:
+        1 * validatorMock.validate(transaction) >> Collections.emptySet()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, transaction.guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.empty()
+        1 * accountRepositoryMock.saveAndFlush(_) >> newAccount
+        _ * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, transaction.category) >> Optional.of(category)
+        _ * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, _) >> 0L
+        _ * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, transaction.description) >> Optional.of(description)
+        _ * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, _) >> 0L
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
+        result instanceof ServiceResult.Success
+    }
+
 }

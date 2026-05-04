@@ -344,4 +344,125 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         thrown(RuntimeException)
         0 * _
     }
+
+    def "mergeDescriptions should skip self-merge when source normalizes to same name as target"() {
+        given: "target and a source that normalizes to the same name"
+        def targetDescription = DescriptionBuilder.builder().withDescriptionName("target").withDescriptionCount(10L).build()
+
+        when: "merging with source that is the same when normalized"
+        def result = standardizedDescriptionService.mergeDescriptions("target", ["TARGET", "  Target  "])
+
+        then: "target description is looked up once"
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> Optional.of(targetDescription)
+        1 * descriptionRepositoryMock.saveAndFlush(targetDescription) >> targetDescription
+        result.descriptionName == "target"
+        result.descriptionCount == 10L
+        0 * _
+    }
+
+    def "findAllActive paginated should return paged descriptions with transaction counts"() {
+        given:
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 5)
+        def desc = DescriptionBuilder.builder().withDescriptionName("rent").withDescriptionId(1L).build()
+        def page = new org.springframework.data.domain.PageImpl([desc], pageable, 1)
+
+        when:
+        def result = standardizedDescriptionService.findAllActive(pageable)
+
+        then:
+        1 * descriptionRepositoryMock.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, pageable) >> page
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionNameIn(TEST_OWNER, ["rent"]) >> [["rent", 7L] as Object[]]
+        result instanceof finance.domain.ServiceResult.Success
+        result.data.content[0].descriptionCount == 7L
+        0 * _
+    }
+
+    def "findAllActive paginated should return empty page when no descriptions"() {
+        given:
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 5)
+        def emptyPage = org.springframework.data.domain.Page.empty(pageable)
+
+        when:
+        def result = standardizedDescriptionService.findAllActive(pageable)
+
+        then:
+        1 * descriptionRepositoryMock.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, pageable) >> emptyPage
+        result instanceof finance.domain.ServiceResult.Success
+        result.data.isEmpty()
+        0 * _
+    }
+
+    def "findByDescriptionNameStandardized should return Success with description and count"() {
+        given:
+        def description = DescriptionBuilder.builder().withDescriptionName("coffee").build()
+
+        when:
+        def result = standardizedDescriptionService.findByDescriptionNameStandardized("coffee")
+
+        then:
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "coffee") >> Optional.of(description)
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, "coffee") >> 4L
+        result instanceof finance.domain.ServiceResult.Success
+        result.data.descriptionName == "coffee"
+        result.data.descriptionCount == 4L
+        0 * _
+    }
+
+    def "findByDescriptionNameStandardized should return NotFound when description does not exist"() {
+        when:
+        def result = standardizedDescriptionService.findByDescriptionNameStandardized("missing")
+
+        then:
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "missing") >> Optional.empty()
+        result instanceof finance.domain.ServiceResult.NotFound
+        0 * _
+    }
+
+    def "deleteByDescriptionNameStandardized should return Success and delete description"() {
+        given:
+        def description = DescriptionBuilder.builder().withDescriptionName("gas").build()
+
+        when:
+        def result = standardizedDescriptionService.deleteByDescriptionNameStandardized("gas")
+
+        then:
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "gas") >> Optional.of(description)
+        1 * descriptionRepositoryMock.delete(description)
+        result instanceof finance.domain.ServiceResult.Success
+        result.data.descriptionName == "gas"
+        0 * _
+    }
+
+    def "deleteByDescriptionNameStandardized should return NotFound when description does not exist"() {
+        when:
+        def result = standardizedDescriptionService.deleteByDescriptionNameStandardized("unknown")
+
+        then:
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, "unknown") >> Optional.empty()
+        result instanceof finance.domain.ServiceResult.NotFound
+        0 * _
+    }
+
+    def "insertDescription should throw EntityNotFoundException for NotFound ServiceResult"() {
+        given:
+        def description = DescriptionBuilder.builder().build()
+
+        when:
+        standardizedDescriptionService.insertDescription(description)
+
+        then:
+        1 * validatorMock.validate(description) >> ([] as Set)
+        1 * descriptionRepositoryMock.saveAndFlush(description) >> { throw new jakarta.persistence.EntityNotFoundException("Description not found") }
+        thrown(RuntimeException)
+    }
+
+    def "fetchAllDescriptions should return empty list when findAllActive fails"() {
+        when:
+        def result = standardizedDescriptionService.fetchAllDescriptions()
+
+        then:
+        1 * descriptionRepositoryMock.findByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true) >> { throw new RuntimeException("db error") }
+        result == []
+        0 * _
+    }
 }
