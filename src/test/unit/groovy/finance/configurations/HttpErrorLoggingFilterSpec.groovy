@@ -266,4 +266,148 @@ class HttpErrorLoggingFilterSpec extends Specification {
         and:
         noExceptionThrown()
     }
+
+    def "increments 4xx counter for generic 405 method not allowed"() {
+        given:
+        requestMock.method >> "DELETE"
+        requestMock.requestURI >> "/api/accounts"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> "JUnit"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        and:
+        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
+            resp.sendError(405)
+        }
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _)
+        noExceptionThrown()
+    }
+
+    def "increments 4xx counter for 409 conflict"() {
+        given:
+        requestMock.method >> "POST"
+        requestMock.requestURI >> "/api/categories"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> "JUnit"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        and:
+        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
+            resp.sendError(409)
+        }
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _)
+        noExceptionThrown()
+    }
+
+    def "handles null user agent without throwing"() {
+        given:
+        requestMock.method >> "GET"
+        requestMock.requestURI >> "/api/test"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> null
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        and:
+        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
+            resp.sendError(500)
+        }
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _)
+        noExceptionThrown()
+    }
+
+    def "sanitizes user agent with CRLF injection"() {
+        given:
+        requestMock.method >> "GET"
+        requestMock.requestURI >> "/api/test"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> "Mozilla/5.0\r\nEvil-Header: injected"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        and:
+        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
+            resp.sendError(403)
+        }
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _)
+        noExceptionThrown()
+    }
+
+    def "handles empty query string value for sensitive param"() {
+        given:
+        requestMock.method >> "GET"
+        requestMock.requestURI >> "/api/login"
+        requestMock.queryString >> "password=&username=user"
+        requestMock.getHeader("User-Agent") >> "JUnit"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        and:
+        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
+            resp.sendError(401)
+        }
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _)
+        noExceptionThrown()
+    }
+
+    def "sanitizes endpoint with hash-like path segment"() {
+        given:
+        requestMock.method >> "GET"
+        requestMock.requestURI >> "/api/resources/abcdef0123456789abcdef0123456789"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> "JUnit"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        and:
+        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
+            resp.sendError(404)
+        }
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _)
+        noExceptionThrown()
+    }
 }

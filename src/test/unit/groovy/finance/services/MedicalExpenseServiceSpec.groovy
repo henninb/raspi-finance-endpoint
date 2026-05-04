@@ -675,7 +675,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
     def "insertMedicalExpense should succeed when transactionId is zero (no dup check)"() {
         given:
-        def expense = MedicalExpenseBuilder.builder().withTransactionId(0L).build()
+        def expense = MedicalExpenseBuilder.builder().withTransactionId(null).build()
         def saved = MedicalExpenseBuilder.builder().withMedicalExpenseId(6L).build()
 
         when:

@@ -110,4 +110,44 @@ class TransactionAccountChangeInputDtoSpec extends BaseDomainSpec {
         where:
         accountName << ["checking_primary", "savings_joint", "visa_reward", "amex_platinum"]
     }
+
+    def "TransactionAccountChangeInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new TransactionAccountChangeInputDto("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "checking_primary")
+        def dto2 = new TransactionAccountChangeInputDto("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "checking_primary")
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "TransactionAccountChangeInputDto inequality when accountNameOwner differs"() {
+        given:
+        def dto1 = new TransactionAccountChangeInputDto("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "checking_primary")
+        def dto2 = new TransactionAccountChangeInputDto("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "savings_primary")
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "TransactionAccountChangeInputDto toString contains accountNameOwner"() {
+        given:
+        def dto = new TransactionAccountChangeInputDto("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "checking_primary")
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("checking_primary")
+    }
+
+    def "TransactionAccountChangeInputDto copy produces modified instance"() {
+        given:
+        def original = new TransactionAccountChangeInputDto("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "checking_primary")
+
+        when:
+        def copy = original.copy("a1b2c3d4-e5f6-7890-abcd-ef1234567890", "savings_primary")
+
+        then:
+        copy.accountNameOwner == "savings_primary"
+        original.accountNameOwner == "checking_primary"
+    }
 }

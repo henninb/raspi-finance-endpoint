@@ -604,4 +604,58 @@ class GraphQLQueryControllerSpec extends Specification {
         and: "null is returned"
         result == null
     }
+
+    def "payments should return empty list when service fails"() {
+        when:
+        def result = controller.payments()
+
+        then:
+        1 * mockPaymentService.findAllActive() >> ServiceResult.NotFound.of("error")
+        result == []
+    }
+
+    def "transfers should return empty list when service fails"() {
+        when:
+        def result = controller.transfers()
+
+        then:
+        1 * mockTransferService.findAllActive() >> ServiceResult.NotFound.of("error")
+        result == []
+    }
+
+    def "receiptImages should return empty list when service fails"() {
+        when:
+        def result = controller.receiptImages()
+
+        then:
+        1 * mockReceiptImageService.findAllActive() >> ServiceResult.NotFound.of("error")
+        result == []
+    }
+
+    def "receiptImage should return null when not found"() {
+        when:
+        def result = controller.receiptImage(999L)
+
+        then:
+        1 * mockReceiptImageService.findById(999L) >> ServiceResult.NotFound.of("not found")
+        result == null
+    }
+
+    def "medicalExpenses should return empty list when service fails"() {
+        when:
+        def result = controller.medicalExpenses()
+
+        then:
+        1 * mockMedicalExpenseService.findAllActive() >> ServiceResult.NotFound.of("error")
+        result == []
+    }
+
+    def "medicalExpense should return null when not found"() {
+        when:
+        def result = controller.medicalExpense(999L)
+
+        then:
+        1 * mockMedicalExpenseService.findById(999L) >> ServiceResult.NotFound.of("not found")
+        result == null
+    }
 }

@@ -101,4 +101,44 @@ class ParameterInputDtoSpec extends BaseDomainSpec {
         dto.parameterValue == "enabled"
         dto.activeStatus == false
     }
+
+    def "ParameterInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new ParameterInputDto(1L, "my_param", "myvalue", true)
+        def dto2 = new ParameterInputDto(1L, "my_param", "myvalue", true)
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "ParameterInputDto inequality when parameterValue differs"() {
+        given:
+        def dto1 = new ParameterInputDto(null, "my_param", "value1", null)
+        def dto2 = new ParameterInputDto(null, "my_param", "value2", null)
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "ParameterInputDto toString contains parameterName"() {
+        given:
+        def dto = new ParameterInputDto(5L, "feature_flag", "enabled", true)
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("feature_flag")
+    }
+
+    def "ParameterInputDto copy produces modified instance"() {
+        given:
+        def original = new ParameterInputDto(1L, "feature_flag", "enabled", true)
+
+        when:
+        def copy = original.copy(1L, "feature_flag", "disabled", true)
+
+        then:
+        copy.parameterValue == "disabled"
+        original.parameterValue == "enabled"
+    }
 }

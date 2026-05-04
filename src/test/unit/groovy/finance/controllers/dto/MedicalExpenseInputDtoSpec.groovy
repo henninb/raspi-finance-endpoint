@@ -298,4 +298,322 @@ class MedicalExpenseInputDtoSpec extends BaseDomainSpec {
         dto.diagnosisCode == null
         dto.serviceDescription == "Annual checkup"
     }
+
+    def "MedicalExpenseInputDto fails validation when insuranceDiscount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            null,
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'insuranceDiscount' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when insurancePaid is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            null,
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'insurancePaid' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when patientResponsibility is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            null,
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'patientResponsibility' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when isOutOfNetwork is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, null,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'isOutOfNetwork' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when paidAmount is null"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            null
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'paidAmount' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when transactionId is negative"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, -1L, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'transactionId' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when providerId is negative"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, -1L, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'providerId' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when familyMemberId is negative"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, -1L,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'familyMemberId' }
+    }
+
+    @Unroll
+    def "MedicalExpenseInputDto fails validation for invalid diagnosisCode: '#code'"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null,
+            code,
+            new BigDecimal("100.00"),
+            new BigDecimal("0.00"),
+            new BigDecimal("0.00"),
+            new BigDecimal("100.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("100.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'diagnosisCode' }
+
+        where:
+        code << ["lowercase", "has space", "special!"]
+    }
+
+    def "MedicalExpenseInputDto fails validation when insuranceDiscount is negative"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("-1.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("50.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'insuranceDiscount' }
+    }
+
+    def "MedicalExpenseInputDto fails validation when patientResponsibility is negative"() {
+        given:
+        def dto = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15),
+            null, null, null,
+            new BigDecimal("200.00"),
+            new BigDecimal("50.00"),
+            new BigDecimal("100.00"),
+            new BigDecimal("-1.00"),
+            null, false,
+            "CLM-001",
+            ClaimStatus.Submitted,
+            true,
+            new BigDecimal("50.00")
+        )
+
+        when:
+        Set<ConstraintViolation<MedicalExpenseInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'patientResponsibility' }
+    }
+
+    def "MedicalExpenseInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = validDto()
+        def dto2 = validDto()
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "MedicalExpenseInputDto inequality when claimNumber differs"() {
+        given:
+        def dto1 = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15), "checkup", null, null,
+            new BigDecimal("200.00"), new BigDecimal("50.00"), new BigDecimal("100.00"), new BigDecimal("50.00"),
+            null, false, "CLM-001", ClaimStatus.Submitted, true, new BigDecimal("50.00")
+        )
+        def dto2 = new MedicalExpenseInputDto(
+            null, null, null, null,
+            LocalDate.of(2024, 1, 15), "checkup", null, null,
+            new BigDecimal("200.00"), new BigDecimal("50.00"), new BigDecimal("100.00"), new BigDecimal("50.00"),
+            null, false, "CLM-002", ClaimStatus.Submitted, true, new BigDecimal("50.00")
+        )
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "MedicalExpenseInputDto toString contains claimNumber"() {
+        given:
+        def dto = validDto()
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("CLM-001")
+    }
 }

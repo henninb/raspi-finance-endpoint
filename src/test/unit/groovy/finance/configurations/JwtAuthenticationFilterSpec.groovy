@@ -137,4 +137,139 @@ class JwtAuthenticationFilterSpec extends Specification {
         SecurityContextHolder.context.authentication == null
         1 * chain.doFilter(req, res)
     }
+
+    def "no token continues chain without setting authentication"() {
+        given:
+        def meter = new SimpleMeterRegistry()
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        String secret = 'e' * 64
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+
+        def req = Mock(HttpServletRequest)
+        req.getCookies() >> null
+        req.getHeader('Cookie') >> null
+        req.getHeader('Authorization') >> null
+        def res = Mock(HttpServletResponse)
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        SecurityContextHolder.context.authentication == null
+        1 * chain.doFilter(req, res)
+        0 * tokenBlacklistService.isBlacklisted(_)
+    }
+
+    def "token extracted from Cookie header string when cookies array is null"() {
+        given:
+        def meter = new SimpleMeterRegistry()
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        tokenBlacklistService.isBlacklisted(_) >> false
+        String secret = 'f' * 64
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
+        String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'dave').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
+
+        def req = Mock(HttpServletRequest)
+        req.getCookies() >> null
+        req.getHeader('Cookie') >> "other=value; token=${token}; another=x"
+        req.getHeader('Authorization') >> null
+        req.getHeader('X-Forwarded-For') >> null
+        req.getHeader('X-Real-IP') >> null
+        req.getRemoteAddr() >> '127.0.0.1'
+        def res = Mock(HttpServletResponse)
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        SecurityContextHolder.context.authentication?.principal == 'dave'
+        1 * chain.doFilter(req, res)
+    }
+
+    def "admin user receives ROLE_ADMIN authority"() {
+        given:
+        def meter = new SimpleMeterRegistry()
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        tokenBlacklistService.isBlacklisted(_) >> false
+        String secret = 'g' * 64
+        def props = new CustomProperties(adminUsers: ['adminuser'])
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, props)
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
+        String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'AdminUser').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
+
+        def req = Mock(HttpServletRequest)
+        req.getCookies() >> null
+        req.getHeader('Cookie') >> null
+        req.getHeader('Authorization') >> "Bearer ${token}"
+        req.getHeader('X-Forwarded-For') >> null
+        req.getHeader('X-Real-IP') >> null
+        req.getRemoteAddr() >> '127.0.0.1'
+        def res = Mock(HttpServletResponse)
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        def auth = SecurityContextHolder.context.authentication
+        auth != null
+        auth.authorities*.authority.contains('ROLE_ADMIN')
+        auth.authorities*.authority.contains('ROLE_USER')
+        1 * chain.doFilter(req, res)
+    }
+
+    def "JWT with missing username claim clears context"() {
+        given:
+        def meter = new SimpleMeterRegistry()
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        tokenBlacklistService.isBlacklisted(_) >> false
+        String secret = 'h' * 64
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
+        // Token without 'username' claim
+        String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().subject('somesubject').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
+
+        def req = Mock(HttpServletRequest)
+        req.getCookies() >> null
+        req.getHeader('Cookie') >> null
+        req.getHeader('Authorization') >> "Bearer ${token}"
+        req.getHeader('X-Forwarded-For') >> null
+        req.getHeader('X-Real-IP') >> null
+        req.getRemoteAddr() >> '127.0.0.1'
+        def res = Mock(HttpServletResponse)
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        SecurityContextHolder.context.authentication == null
+        1 * chain.doFilter(req, res)
+    }
+
+    def "blank Authorization header continues chain without authentication"() {
+        given:
+        def meter = new SimpleMeterRegistry()
+        def tokenBlacklistService = Mock(TokenBlacklistService)
+        String secret = 'i' * 64
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+
+        def req = Mock(HttpServletRequest)
+        req.getCookies() >> null
+        req.getHeader('Cookie') >> null
+        req.getHeader('Authorization') >> "NotBearer something"
+        def res = Mock(HttpServletResponse)
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        SecurityContextHolder.context.authentication == null
+        1 * chain.doFilter(req, res)
+        0 * tokenBlacklistService.isBlacklisted(_)
+    }
 }

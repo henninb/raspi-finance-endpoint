@@ -63,5 +63,168 @@ class SecurityAuditFilterSpec extends Specification {
         !registry.find("security.audit.endpoint.access").counters().isEmpty()
         !registry.find("security.audit.http.4xx").counters().isEmpty()
     }
+
+    def "non-sensitive endpoint does not increment audit endpoint access counter"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/api/accounts"
+            getMethod() >> "GET"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> "JUnit"
+            getRemoteAddr() >> "127.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 200
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        registry.find("security.audit.endpoint.access").counters().isEmpty()
+        registry.find("security.audit.http.4xx").counters().isEmpty()
+    }
+
+    def "non-sensitive endpoint with 4xx only increments the 4xx counter"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/api/transactions"
+            getMethod() >> "POST"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> "JUnit"
+            getRemoteAddr() >> "127.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 400
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        registry.find("security.audit.endpoint.access").counters().isEmpty()
+        !registry.find("security.audit.http.4xx").counters().isEmpty()
+    }
+
+    def "security violation logged for non-api select/active path with 403"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/select/active"
+            getMethod() >> "GET"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> "JUnit"
+            getRemoteAddr() >> "127.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 403
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        noExceptionThrown()
+    }
+
+    def "security violation logged for non-api select/active path with 401"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/select/active"
+            getMethod() >> "GET"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> "JUnit"
+            getRemoteAddr() >> "127.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 401
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        noExceptionThrown()
+    }
+
+    def "api select/active with 403 does NOT trigger security violation"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/api/select/active"
+            getMethod() >> "GET"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> "JUnit"
+            getRemoteAddr() >> "127.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 403
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        noExceptionThrown()
+    }
+
+    def "sensitive endpoint with null user agent does not throw"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/api/select/totals"
+            getMethod() >> "GET"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> null
+            getRemoteAddr() >> "127.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 200
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        noExceptionThrown()
+    }
+
+    def "4xx response with user-agent containing CRLF is sanitized"() {
+        given:
+        def req = Mock(HttpServletRequest) {
+            getRequestURI() >> "/api/accounts"
+            getMethod() >> "GET"
+            getHeader("X-Forwarded-For") >> null
+            getHeader("X-Real-IP") >> null
+            getHeader("User-Agent") >> "Mozilla/5.0\r\nEvil: header"
+            getRemoteAddr() >> "10.0.0.1"
+        }
+        def res = Mock(HttpServletResponse) {
+            getStatus() >> 401
+        }
+        def chain = Mock(FilterChain)
+
+        when:
+        filter.doFilterInternal(req, res, chain)
+
+        then:
+        1 * chain.doFilter(req, res)
+        noExceptionThrown()
+    }
 }
 

@@ -329,4 +329,44 @@ class PaymentInputDtoSpec extends BaseDomainSpec {
         dto.guidDestination == null
         dto.activeStatus == null
     }
+
+    def "PaymentInputDto equals and hashCode for identical values"() {
+        given:
+        def dto1 = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, true)
+        def dto2 = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, true)
+
+        expect:
+        dto1 == dto2
+        dto1.hashCode() == dto2.hashCode()
+    }
+
+    def "PaymentInputDto inequality when amount differs"() {
+        given:
+        def dto1 = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, null)
+        def dto2 = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("200.00"), null, null, null)
+
+        expect:
+        dto1 != dto2
+    }
+
+    def "PaymentInputDto toString contains sourceAccount"() {
+        given:
+        def dto = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, null)
+
+        expect:
+        dto.toString() != null
+        dto.toString().contains("checking_primary")
+    }
+
+    def "PaymentInputDto copy produces modified instance"() {
+        given:
+        def original = new PaymentInputDto(null, "checking_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, null)
+
+        when:
+        def copy = original.copy(null, "savings_primary", "bills_payable", LocalDate.of(2024, 1, 15), new BigDecimal("100.00"), null, null, null)
+
+        then:
+        copy.sourceAccount == "savings_primary"
+        original.sourceAccount == "checking_primary"
+    }
 }
