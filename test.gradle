@@ -1,6 +1,7 @@
 sourceSets {
     test {
         groovy.srcDir "src/test/unit/groovy"
+        kotlin.srcDir "src/test/unit/kotlin"
         resources.srcDir "src/test/unit/resources"
 
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
@@ -92,6 +93,10 @@ test {
 //    afterSuite { suite, result ->
 //        result.exception?.printStackTrace()
 //    }
+}
+
+compileTestJava {
+    options.release = 24
 }
 
 //TODO: fix this issue

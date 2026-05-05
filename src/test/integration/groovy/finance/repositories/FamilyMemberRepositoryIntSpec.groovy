@@ -123,4 +123,89 @@ class FamilyMemberRepositoryIntSpec extends BaseIntegrationSpec {
         actives.any { it.familyMemberId == active2.familyMemberId }
         !actives.any { it.familyMemberId == inactive.familyMemberId }
     }
+
+    void 'findByOwnerAndFamilyMemberIdAndActiveStatusTrue returns correct member'() {
+        given:
+        def member = familyMemberRepository.save(
+                SmartFamilyMemberBuilder.builderForOwner(owner)
+                        .withMemberName("ownerid_${owner.replaceAll(/[^a-z]/,'')}")
+                        .asActive()
+                        .build()
+        )
+
+        when:
+        def found = familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(owner, member.familyMemberId)
+        def wrongOwner = familyMemberRepository.findByOwnerAndFamilyMemberIdAndActiveStatusTrue("wrong-owner", member.familyMemberId)
+
+        then:
+        found != null
+        found.familyMemberId == member.familyMemberId
+        wrongOwner == null
+    }
+
+    void 'findByOwnerAndFamilyMemberId returns member regardless of active status'() {
+        given:
+        def member = familyMemberRepository.save(
+                SmartFamilyMemberBuilder.builderForOwner(owner)
+                        .withMemberName("anyactive_${owner.replaceAll(/[^a-z]/,'')}")
+                        .asInactive()
+                        .build()
+        )
+
+        when:
+        def found = familyMemberRepository.findByOwnerAndFamilyMemberId(owner, member.familyMemberId)
+
+        then:
+        found != null
+        found.familyMemberId == member.familyMemberId
+        found.activeStatus == false
+    }
+
+    void 'softDeleteByOwnerAndFamilyMemberId only soft-deletes for correct owner'() {
+        given:
+        def member = familyMemberRepository.save(
+                SmartFamilyMemberBuilder.builderForOwner(owner)
+                        .withMemberName("softdel_${owner.replaceAll(/[^a-z]/,'')}")
+                        .asActive()
+                        .build()
+        )
+
+        when:
+        int wrongOwnerResult = familyMemberRepository.softDeleteByOwnerAndFamilyMemberId("wrong-owner", member.familyMemberId)
+
+        then:
+        wrongOwnerResult == 0
+        familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(member.familyMemberId) != null
+
+        when:
+        int result = familyMemberRepository.softDeleteByOwnerAndFamilyMemberId(owner, member.familyMemberId)
+
+        then:
+        result == 1
+        familyMemberRepository.findByFamilyMemberIdAndActiveStatusTrue(member.familyMemberId) == null
+    }
+
+    void 'updateActiveStatusByOwner updates active status for correct owner only'() {
+        given:
+        def member = familyMemberRepository.save(
+                SmartFamilyMemberBuilder.builderForOwner(owner)
+                        .withMemberName("updatestatus_${owner.replaceAll(/[^a-z]/,'')}")
+                        .asActive()
+                        .build()
+        )
+
+        when:
+        int wrongOwnerResult = familyMemberRepository.updateActiveStatusByOwner("wrong-owner", member.familyMemberId, false)
+
+        then:
+        wrongOwnerResult == 0
+        familyMemberRepository.findById(member.familyMemberId).get().activeStatus == true
+
+        when:
+        int result = familyMemberRepository.updateActiveStatusByOwner(owner, member.familyMemberId, false)
+
+        then:
+        result == 1
+        familyMemberRepository.findById(member.familyMemberId).get().activeStatus == false
+    }
 }

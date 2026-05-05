@@ -167,7 +167,7 @@ class AccountRepositorySpec extends Specification {
         }
 
         then:
-        queryMethods.size() >= 5  // At least 5 methods with @Query annotations
+        queryMethods.size() >= 8  // Legacy + owner-scoped @Query methods
 
         // Verify all modifying queries have @Modifying and @Transactional
         queryMethods.findAll { it.isAnnotationPresent(Modifying.class) }.each { method ->
@@ -189,5 +189,78 @@ class AccountRepositorySpec extends Specification {
         methods.find { it.name == "sumOfAllTransactionsByTransactionState" }?.returnType == java.math.BigDecimal.class
         methods.find { it.name == "sumOfAllTransactionsByTransactionStateJpql" }?.returnType == java.math.BigDecimal.class
         methods.find { it.name == "updateValidationDateForAccount" }?.returnType == int.class
+    }
+
+    def "should declare all owner-scoped methods from Phase 4"() {
+        when:
+        def names = AccountRepository.getDeclaredMethods()*.name as Set
+
+        then:
+        names.containsAll([
+            "findByOwnerAndAccountNameOwner",
+            "findByOwnerAndAccountId",
+            "findByOwnerAndActiveStatusOrderByAccountNameOwner",
+            "findByOwnerAndActiveStatus",
+            "findByOwnerAndAccountType",
+            "findByOwnerAndActiveStatusAndAccountType",
+            "findAllByOwnerAndActiveStatusOrderByAccountNameOwner",
+            "updateTotalsForAllAccountsByOwner",
+            "sumOfAllTransactionsByTransactionStateAndOwner",
+            "sumOfAllTransactionsByTransactionStateAndOwnerJpql",
+            "findAccountsThatRequirePaymentByOwner",
+            "updateValidationDateForAccountByOwner",
+            "updateValidationDateForAllAccountsByOwner",
+        ])
+    }
+
+    def "owner-scoped find methods have correct return types"() {
+        when:
+        def methods = AccountRepository.getDeclaredMethods()
+
+        then:
+        methods.find { it.name == "findByOwnerAndAccountNameOwner" }?.returnType == Optional.class
+        methods.find { it.name == "findByOwnerAndAccountId" }?.returnType == Optional.class
+        methods.find { it.name == "findByOwnerAndActiveStatusOrderByAccountNameOwner" }?.returnType == List.class
+        methods.find { it.name == "findByOwnerAndActiveStatus" }?.returnType == List.class
+        methods.find { it.name == "findByOwnerAndAccountType" }?.returnType == List.class
+        methods.find { it.name == "findByOwnerAndActiveStatusAndAccountType" }?.returnType == List.class
+        methods.find { it.name == "findAccountsThatRequirePaymentByOwner" }?.returnType == List.class
+        methods.find { it.name == "sumOfAllTransactionsByTransactionStateAndOwner" }?.returnType == java.math.BigDecimal.class
+        methods.find { it.name == "sumOfAllTransactionsByTransactionStateAndOwnerJpql" }?.returnType == java.math.BigDecimal.class
+        methods.find { it.name == "updateValidationDateForAccountByOwner" }?.returnType == int.class
+    }
+
+    def "owner-scoped modifying queries have proper annotations"() {
+        when:
+        def methods = AccountRepository.getDeclaredMethods()
+        def modifyingMethods = [
+            "updateTotalsForAllAccountsByOwner",
+            "updateValidationDateForAccountByOwner",
+            "updateValidationDateForAllAccountsByOwner",
+        ]
+
+        then:
+        modifyingMethods.each { name ->
+            def m = methods.find { it.name == name }
+            assert m != null
+            assert m.isAnnotationPresent(Modifying.class)
+            assert m.isAnnotationPresent(Transactional.class)
+            assert m.isAnnotationPresent(Query.class)
+            assert m.getAnnotation(Query.class).nativeQuery() == true
+        }
+    }
+
+    def "owner-scoped query methods reference owner in SQL"() {
+        when:
+        def methods = AccountRepository.getDeclaredMethods()
+        def ownerQueryMethods = methods.findAll { m ->
+            m.isAnnotationPresent(Query.class) && m.name.contains("Owner")
+        }
+
+        then:
+        ownerQueryMethods.size() >= 5
+        ownerQueryMethods.every { m ->
+            m.getAnnotation(Query.class).value().contains("owner")
+        }
     }
 }
