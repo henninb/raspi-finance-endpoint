@@ -125,4 +125,39 @@ class AccountSpec extends BaseDomainSpec {
         result.contains("accountType=credit")
         result.contains("activeStatus=true")
     }
+
+    def "equals returns true for same object reference"() {
+        given:
+        Account account = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+
+        expect:
+        account == account
+    }
+
+    def "equals returns false when owner is empty"() {
+        given:
+        Account account = AccountBuilder.builder().withOwner("").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+        Account other = AccountBuilder.builder().withOwner("").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+
+        expect:
+        account != other
+    }
+
+    def "equals returns false when accountType differs"() {
+        given:
+        Account account1 = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+        Account account2 = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("chase_brian").withAccountType(AccountType.Debit).build()
+
+        expect:
+        account1 != account2
+    }
+
+    def "equals returns false when owner differs"() {
+        given:
+        Account account1 = AccountBuilder.builder().withOwner("alice").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+        Account account2 = AccountBuilder.builder().withOwner("brian").withAccountNameOwner("chase_brian").withAccountType(AccountType.Credit).build()
+
+        expect:
+        account1 != account2
+    }
 }

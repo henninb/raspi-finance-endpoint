@@ -85,7 +85,12 @@ class GraphQLExceptionHandlerSpec extends Specification {
 
     def "handleConstraintViolation returns BAD_REQUEST GraphQLError"() {
         given:
+        def field = graphql.language.Field.newField("test").build()
+        def stepInfo = GroovyMock(graphql.execution.ExecutionStepInfo)
+        stepInfo.getPath() >> graphql.execution.ResultPath.rootPath()
         def env = Mock(graphql.schema.DataFetchingEnvironment)
+        env.getField() >> field
+        env.getExecutionStepInfo() >> stepInfo
         def violation = Mock(jakarta.validation.ConstraintViolation)
         violation.propertyPath >> Mock(jakarta.validation.Path)
         violation.message >> "must not be blank"
@@ -102,7 +107,12 @@ class GraphQLExceptionHandlerSpec extends Specification {
 
     def "handleIllegalArgument returns BAD_REQUEST GraphQLError with message"() {
         given:
+        def field = graphql.language.Field.newField("test").build()
+        def stepInfo = GroovyMock(graphql.execution.ExecutionStepInfo)
+        stepInfo.getPath() >> graphql.execution.ResultPath.rootPath()
         def env = Mock(graphql.schema.DataFetchingEnvironment)
+        env.getField() >> field
+        env.getExecutionStepInfo() >> stepInfo
         def ex = new IllegalArgumentException("bad value provided")
 
         when:
@@ -116,7 +126,12 @@ class GraphQLExceptionHandlerSpec extends Specification {
 
     def "handleIllegalArgument returns BAD_REQUEST GraphQLError when message is null"() {
         given:
+        def field = graphql.language.Field.newField("test").build()
+        def stepInfo = GroovyMock(graphql.execution.ExecutionStepInfo)
+        stepInfo.getPath() >> graphql.execution.ResultPath.rootPath()
         def env = Mock(graphql.schema.DataFetchingEnvironment)
+        env.getField() >> field
+        env.getExecutionStepInfo() >> stepInfo
         def ex = new IllegalArgumentException((String) null)
 
         when:
@@ -130,7 +145,12 @@ class GraphQLExceptionHandlerSpec extends Specification {
 
     def "handleGeneric returns INTERNAL_ERROR GraphQLError"() {
         given:
+        def field = graphql.language.Field.newField("test").build()
+        def stepInfo = GroovyMock(graphql.execution.ExecutionStepInfo)
+        stepInfo.getPath() >> graphql.execution.ResultPath.rootPath()
         def env = Mock(graphql.schema.DataFetchingEnvironment)
+        env.getField() >> field
+        env.getExecutionStepInfo() >> stepInfo
         def ex = new Exception("something went wrong")
 
         when:

@@ -287,7 +287,8 @@ class StandardizedCategoryControllerSpec extends Specification {
         def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
         def page = new org.springframework.data.domain.PageImpl<>([c1, c2], pageable, 2)
         and:
-        categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, pageable) >> page
+        categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, _) >> page
+        transactionRepository.countByOwnerAndCategoryNameIn(TEST_OWNER, _) >> []
 
         when:
         ResponseEntity<?> response = controller.findAllActivePaged(pageable)
@@ -301,7 +302,7 @@ class StandardizedCategoryControllerSpec extends Specification {
         given:
         def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
         and:
-        categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, pageable) >> { throw new RuntimeException("db") }
+        categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, _) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<?> response = controller.findAllActivePaged(pageable)

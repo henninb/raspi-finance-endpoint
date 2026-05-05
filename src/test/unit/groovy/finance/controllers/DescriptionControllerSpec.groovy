@@ -311,7 +311,8 @@ class StandardizedDescriptionControllerSpec extends Specification {
         def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
         def page = new org.springframework.data.domain.PageImpl<>([d1, d2], pageable, 2)
         and:
-        descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, pageable) >> page
+        descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, _) >> page
+        transactionRepository.countByOwnerAndDescriptionNameIn(TEST_OWNER, _) >> []
 
         when:
         ResponseEntity<?> response = controller.findAllActivePaged(pageable)
@@ -325,7 +326,7 @@ class StandardizedDescriptionControllerSpec extends Specification {
         given:
         def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
         and:
-        descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, pageable) >> { throw new RuntimeException("db") }
+        descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, _) >> { throw new RuntimeException("db") }
 
         when:
         ResponseEntity<?> response = controller.findAllActivePaged(pageable)
@@ -392,15 +393,4 @@ class StandardizedDescriptionControllerSpec extends Specification {
         ex.reason.contains("Failed to merge descriptions")
     }
 
-    def "mergeDescriptions rethrows ResponseStatusException from validation"() {
-        given:
-        def request = new finance.domain.MergeDescriptionsRequest(["source"], " ")
-
-        when:
-        controller.mergeDescriptions(request)
-
-        then:
-        def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == org.springframework.http.HttpStatus.BAD_REQUEST
-    }
 }

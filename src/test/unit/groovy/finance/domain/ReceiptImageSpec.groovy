@@ -54,4 +54,44 @@ class ReceiptImageSpec extends BaseDomainSpec {
         invalidField    | transactionId | imageFormatType     | image                                                                                              | thumbnail                                                                                          | activeStatus | expectedError                           | errorCount
         'transactionId' | -1            | ImageFormatType.Png | 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==' | 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mMMYfj/HwAEVwJUeAAUQgAAAABJRU5ErkJggg==' | true         | FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE | 1
     }
+
+    void 'test jsonGetterJpgImage returns base64 encoded image bytes'() {
+        given:
+        ReceiptImage ri = new ReceiptImage()
+        ri.image = "hello world".bytes
+        ri.thumbnail = "thumb".bytes
+
+        when:
+        String encoded = ri.jsonGetterJpgImage()
+
+        then:
+        encoded == java.util.Base64.getEncoder().encodeToString("hello world".bytes)
+        noExceptionThrown()
+    }
+
+    void 'test toString returns JSON representation'() {
+        given:
+        ReceiptImage ri = new ReceiptImage()
+        ri.image = "img".bytes
+        ri.thumbnail = "thumb".bytes
+
+        when:
+        String result = ri.toString()
+
+        then:
+        result != null
+        !result.isEmpty()
+        noExceptionThrown()
+    }
+
+    void 'test ReceiptImage with explicit owner and activeStatus false'() {
+        given:
+        ReceiptImage ri = new ReceiptImage(1L, "test_owner", 5L, false)
+
+        expect:
+        ri.receiptImageId == 1L
+        ri.owner == "test_owner"
+        ri.transactionId == 5L
+        ri.activeStatus == false
+    }
 }

@@ -184,4 +184,30 @@ class TransactionSpec extends BaseDomainSpec {
         result.contains("accountNameOwner=chase_brian")
         result.contains("amount=10.00")
     }
+
+    def "equals returns true for same object reference"() {
+        given:
+        Transaction t = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
+
+        expect:
+        t == t
+    }
+
+    def "equals returns false for non-Transaction object"() {
+        given:
+        Transaction t = TransactionBuilder.builder().withGuid(UUID.randomUUID().toString()).build()
+
+        expect:
+        t != "not a transaction"
+        t != 42
+    }
+
+    def "equals returns false when guid is empty"() {
+        given:
+        Transaction t1 = TransactionBuilder.builder().withGuid("").build()
+        Transaction t2 = TransactionBuilder.builder().withGuid("").build()
+
+        expect:
+        t1 != t2
+    }
 }
