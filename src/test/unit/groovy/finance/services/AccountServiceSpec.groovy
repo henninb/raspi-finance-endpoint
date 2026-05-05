@@ -10,7 +10,10 @@ import finance.repositories.AccountRepository
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.dao.InvalidDataAccessResourceUsageException
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import java.math.BigDecimal
 import java.sql.Timestamp
 
@@ -416,6 +419,123 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, account.accountNameOwner) >> Optional.empty()
         1 * validatorMock.validate(account) >> { throw new ConstraintViolationException("Validation failed", violations) }
         thrown(jakarta.validation.ValidationException)
+    }
+
+    def "findAllActive with pageable should return Success with paginated accounts"() {
+        given:
+        def pageable = PageRequest.of(0, 10)
+        def accounts = [AccountBuilder.builder().withAccountId(1L).withAccountNameOwner("account1").build()]
+        def page = new PageImpl(accounts, pageable, 1L)
+
+        when:
+        def result = standardizedAccountService.findAllActive(pageable)
+
+        then:
+        1 * accountRepositoryMock.findAllByOwnerAndActiveStatusOrderByAccountNameOwner(TEST_OWNER, true, pageable) >> page
+        result instanceof ServiceResult.Success
+        result.data.content.size() == 1
+        result.data.totalElements == 1L
+        0 * _
+    }
+
+    def "accountsByType should return accounts filtered by account type"() {
+        given:
+        def accounts = [AccountBuilder.builder().withAccountNameOwner("credit_account").build()]
+
+        when:
+        def result = standardizedAccountService.accountsByType(AccountType.Credit)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndActiveStatusAndAccountType(TEST_OWNER, true, AccountType.Credit) >> accounts
+        result.size() == 1
+        0 * _
+    }
+
+    def "updateTotalsForAllAccounts should catch InvalidDataAccessResourceUsageException and return true"() {
+        when:
+        def result = standardizedAccountService.updateTotalsForAllAccounts()
+
+        then:
+        1 * accountRepositoryMock.updateTotalsForAllAccountsByOwner(TEST_OWNER) >> {
+            throw new InvalidDataAccessResourceUsageException("view error")
+        }
+        result == true
+        0 * _
+    }
+
+    def "updateValidationDatesForAllAccounts should catch InvalidDataAccessResourceUsageException and return true"() {
+        when:
+        def result = standardizedAccountService.updateValidationDatesForAllAccounts()
+
+        then:
+        1 * accountRepositoryMock.updateValidationDateForAllAccountsByOwner(TEST_OWNER) >> {
+            throw new InvalidDataAccessResourceUsageException("view error")
+        }
+        result == true
+        0 * _
+    }
+
+    def "deleteById should log info when validation amounts were deleted"() {
+        given:
+        def account = AccountBuilder.builder().withAccountId(100L).withAccountNameOwner("test_account").build()
+
+        when:
+        def result = standardizedAccountService.deleteById("test_account")
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
+        1 * validationAmountRepositoryMock.deleteByOwnerAndAccountId(TEST_OWNER, 100L) >> 3
+        1 * accountRepositoryMock.delete(account)
+        result instanceof ServiceResult.Success
+        0 * _
+    }
+
+    def "insertAccount should throw EntityNotFoundException for NotFound result"() {
+        given:
+        def account = AccountBuilder.builder().withAccountNameOwner("ghost_account").build()
+
+        when:
+        standardizedAccountService.insertAccount(account)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "ghost_account") >> Optional.empty()
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * accountRepositoryMock.saveAndFlush(account) >> {
+            throw new EntityNotFoundException("not found")
+        }
+        thrown(EntityNotFoundException)
+    }
+
+    def "insertAccount should throw RuntimeException for SystemError result"() {
+        given:
+        def account = AccountBuilder.builder().withAccountNameOwner("error_account").build()
+
+        when:
+        standardizedAccountService.insertAccount(account)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "error_account") >> Optional.empty()
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * accountRepositoryMock.saveAndFlush(account) >> {
+            throw new RuntimeException("connection lost")
+        }
+        thrown(RuntimeException)
+    }
+
+    def "insertAccount should throw RuntimeException for BusinessError without already exists message"() {
+        given:
+        def account = AccountBuilder.builder().withAccountNameOwner("constrained_account").build()
+
+        when:
+        standardizedAccountService.insertAccount(account)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "constrained_account") >> Optional.empty()
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * accountRepositoryMock.saveAndFlush(account) >> {
+            throw new DataIntegrityViolationException("foreign key violation")
+        }
+        thrown(RuntimeException)
     }
 
 }

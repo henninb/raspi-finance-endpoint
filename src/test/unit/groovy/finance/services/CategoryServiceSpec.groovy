@@ -9,6 +9,8 @@ import finance.repositories.TransactionRepository
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import jakarta.persistence.EntityNotFoundException
 
 /**
@@ -257,6 +259,101 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
         1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "category1") >> Optional.of(category1)
         1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "missing2") >> Optional.empty()
         thrown(RuntimeException)
+        0 * _
+    }
+
+    def "findAllActive with pageable returns Success with page when categories exist"() {
+        given:
+        def pageable = PageRequest.of(0, 10)
+        def categories = [
+            CategoryBuilder.builder().withCategoryName("food").build(),
+            CategoryBuilder.builder().withCategoryName("travel").build()
+        ]
+        def page = new PageImpl(categories, pageable, 2L)
+
+        when:
+        def result = standardizedCategoryService.findAllActive(pageable)
+
+        then:
+        1 * categoryRepositoryMock.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, pageable) >> page
+        1 * transactionRepositoryMock.countByOwnerAndCategoryNameIn(TEST_OWNER, ["food", "travel"]) >> [
+            ["food", 4L] as Object[],
+            ["travel", 2L] as Object[]
+        ]
+        result instanceof ServiceResult.Success
+        result.data.content.size() == 2
+        result.data.content[0].categoryName == "food"
+        result.data.content[0].categoryCount == 4L
+        result.data.content[1].categoryName == "travel"
+        result.data.content[1].categoryCount == 2L
+        result.data.totalElements == 2L
+        0 * _
+    }
+
+    def "findAllActive with pageable returns Success with empty page when no categories"() {
+        given:
+        def pageable = PageRequest.of(0, 10)
+        def page = new PageImpl([], pageable, 0L)
+
+        when:
+        def result = standardizedCategoryService.findAllActive(pageable)
+
+        then:
+        1 * categoryRepositoryMock.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, pageable) >> page
+        result instanceof ServiceResult.Success
+        result.data.content.isEmpty()
+        result.data.totalElements == 0L
+        0 * _
+    }
+
+    def "findByCategoryNameStandardized should return Success when category found"() {
+        given:
+        def category = CategoryBuilder.builder().withCategoryName("groceries").build()
+
+        when:
+        def result = standardizedCategoryService.findByCategoryNameStandardized("groceries")
+
+        then:
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "groceries") >> Optional.of(category)
+        1 * transactionRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, "groceries") >> 7L
+        result instanceof ServiceResult.Success
+        result.data.categoryName == "groceries"
+        result.data.categoryCount == 7L
+        0 * _
+    }
+
+    def "findByCategoryNameStandardized should return NotFound when category not found"() {
+        when:
+        def result = standardizedCategoryService.findByCategoryNameStandardized("unknown")
+
+        then:
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "unknown") >> Optional.empty()
+        result instanceof ServiceResult.NotFound
+        0 * _
+    }
+
+    def "deleteByCategoryNameStandardized should return Success when category found"() {
+        given:
+        def category = CategoryBuilder.builder().withCategoryName("obsolete").build()
+
+        when:
+        def result = standardizedCategoryService.deleteByCategoryNameStandardized("obsolete")
+
+        then:
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "obsolete") >> Optional.of(category)
+        1 * categoryRepositoryMock.delete(category)
+        result instanceof ServiceResult.Success
+        result.data.categoryName == "obsolete"
+        0 * _
+    }
+
+    def "deleteByCategoryNameStandardized should return NotFound when category not found"() {
+        when:
+        def result = standardizedCategoryService.deleteByCategoryNameStandardized("ghost")
+
+        then:
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, "ghost") >> Optional.empty()
+        result instanceof ServiceResult.NotFound
         0 * _
     }
 }

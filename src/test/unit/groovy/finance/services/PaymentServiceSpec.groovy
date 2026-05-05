@@ -12,6 +12,8 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import java.math.BigDecimal
 
 /**
@@ -502,5 +504,381 @@ class PaymentServiceSpec extends BaseServiceSpec {
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
         thrown(RuntimeException)
         0 * _
+    }
+
+    def "findAllActive with pageable should return Success with paginated payments"() {
+        given:
+        def pageable = PageRequest.of(0, 10)
+        def payments = [
+            PaymentBuilder.builder().withPaymentId(1L).withAmount(new BigDecimal("100.00")).build()
+        ]
+        def page = new PageImpl(payments, pageable, 1L)
+
+        when:
+        def result = standardizedPaymentService.findAllActive(pageable)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndActiveStatusOrderByTransactionDateDesc(TEST_OWNER, true, pageable) >> page
+        result instanceof ServiceResult.Success
+        result.data.content.size() == 1
+        result.data.totalElements == 1L
+        0 * _
+    }
+
+    def "findByPaymentId should return Optional with payment when found"() {
+        given:
+        def payment = PaymentBuilder.builder().withPaymentId(42L).build()
+
+        when:
+        def result = standardizedPaymentService.findByPaymentId(42L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 42L) >> Optional.of(payment)
+        result.isPresent()
+        result.get().paymentId == 42L
+        0 * _
+    }
+
+    def "findByPaymentId should return empty Optional when payment not found"() {
+        when:
+        def result = standardizedPaymentService.findByPaymentId(999L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 999L) >> Optional.empty()
+        !result.isPresent()
+        0 * _
+    }
+
+    def "deleteById should return BusinessError when source transaction delete has ValidationError"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withPaymentId(10L)
+            .withGuidSource("validation-error-source")
+            .withGuidDestination(null)
+            .build()
+
+        when:
+        def result = standardizedPaymentService.deleteById(10L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 10L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal("validation-error-source") >>
+            new ServiceResult.ValidationError(["field": "invalid"])
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "deleteById should return SystemError when source transaction delete has SystemError"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withPaymentId(11L)
+            .withGuidSource("system-error-source")
+            .withGuidDestination(null)
+            .build()
+
+        when:
+        def result = standardizedPaymentService.deleteById(11L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 11L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal("system-error-source") >>
+            new ServiceResult.SystemError(new RuntimeException("db down"))
+        result instanceof ServiceResult.SystemError
+    }
+
+    def "deleteById should return BusinessError when destination transaction delete has ValidationError"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withPaymentId(12L)
+            .withGuidSource("valid-source")
+            .withGuidDestination("validation-error-dest")
+            .build()
+
+        when:
+        def result = standardizedPaymentService.deleteById(12L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 12L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal("valid-source") >> new ServiceResult.Success(true)
+        1 * transactionServiceMock.deleteByIdInternal("validation-error-dest") >>
+            new ServiceResult.ValidationError(["field": "invalid"])
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "deleteById should return SystemError when destination transaction delete has SystemError"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withPaymentId(13L)
+            .withGuidSource("valid-source")
+            .withGuidDestination("system-error-dest")
+            .build()
+
+        when:
+        def result = standardizedPaymentService.deleteById(13L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 13L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal("valid-source") >> new ServiceResult.Success(true)
+        1 * transactionServiceMock.deleteByIdInternal("system-error-dest") >>
+            new ServiceResult.SystemError(new RuntimeException("db down"))
+        result instanceof ServiceResult.SystemError
+    }
+
+    def "save should return BusinessError when processPaymentAccount fails to create account"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("new_source")
+            .withDestinationAccount("existing_dest")
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.CreditCard)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("existing_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("new_source") >> Optional.empty()
+        1 * accountServiceMock.insertAccount(_) >> { throw new RuntimeException("cannot create account") }
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "save should return Success when both GUIDs are already set"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withGuidSource("existing-source-guid")
+            .withGuidDestination("existing-dest-guid")
+            .build()
+        def noViolations = [] as Set
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        0 * transactionServiceMock.save(_)
+        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
+        result instanceof ServiceResult.Success
+        0 * _
+    }
+
+    def "save should return ValidationError when destination transaction validation fails"() {
+        given: "TRANSFER behavior: source=Checking(asset) -> dest=Checking(asset)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_src")
+            .withDestinationAccount("checking_dest")
+            .withAmount(new BigDecimal("75.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Checking)
+        def srcAccount = new Account(accountType: AccountType.Checking)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("checking_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("checking_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.ValidationError(["amount": "invalid"])
+        result instanceof ServiceResult.ValidationError
+        0 * _
+    }
+
+    def "save should return BusinessError when destination transaction has business error"() {
+        given: "TRANSFER behavior: source=Checking(asset) -> dest=Savings(asset)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_src")
+            .withDestinationAccount("savings_dest")
+            .withAmount(new BigDecimal("150.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Savings)
+        def srcAccount = new Account(accountType: AccountType.Checking)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("savings_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("checking_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.BusinessError("duplicate", "DATA_INTEGRITY_VIOLATION")
+        result instanceof ServiceResult.BusinessError
+        0 * _
+    }
+
+    def "save should return SystemError when destination transaction has system error"() {
+        given: "CASH_ADVANCE behavior: source=CreditCard(liability) -> dest=Checking(asset)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("cc_src")
+            .withDestinationAccount("checking_dest")
+            .withAmount(new BigDecimal("100.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Checking)
+        def srcAccount = new Account(accountType: AccountType.CreditCard)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("checking_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("cc_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.SystemError(new RuntimeException("db down"))
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    def "save should return ValidationError when source transaction validation fails"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_src")
+            .withDestinationAccount("creditcard_dest")
+            .withAmount(new BigDecimal("50.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.CreditCard)
+        def srcAccount = new Account(accountType: AccountType.Checking)
+        def destTx = new finance.domain.Transaction(guid: "dest-guid")
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("creditcard_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("checking_src") >> Optional.of(srcAccount)
+        // First save (destination) succeeds, second (source) fails with ValidationError
+        1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.ValidationError(["field": "bad"])
+        result instanceof ServiceResult.ValidationError
+        0 * _
+    }
+
+    def "save should return BusinessError when source transaction has business error"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("creditcard_src")
+            .withDestinationAccount("checking_dest")
+            .withAmount(new BigDecimal("200.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Checking)
+        def srcAccount = new Account(accountType: AccountType.CreditCard)
+        def destTx = new finance.domain.Transaction(guid: "dest-guid")
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("checking_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("creditcard_src") >> Optional.of(srcAccount)
+        // Destination succeeds, source fails with BusinessError
+        1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.BusinessError("conflict", "DATA_INTEGRITY_VIOLATION")
+        result instanceof ServiceResult.BusinessError
+        0 * _
+    }
+
+    def "save should return SystemError when source transaction has system error"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("creditcard_src")
+            .withDestinationAccount("creditcard_dest")
+            .withAmount(new BigDecimal("300.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.CreditCard)
+        def srcAccount = new Account(accountType: AccountType.CreditCard)
+        def destTx = new finance.domain.Transaction(guid: "dest-guid")
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("creditcard_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("creditcard_src") >> Optional.of(srcAccount)
+        // Destination succeeds, source fails with SystemError
+        1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.SystemError(new RuntimeException("db down"))
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    def "updatePayment should throw RuntimeException when update returns ValidationError"() {
+        given:
+        def existingPayment = PaymentBuilder.builder().withPaymentId(20L).build()
+        def patch = PaymentBuilder.builder().withPaymentId(20L).build()
+
+        when:
+        standardizedPaymentService.updatePayment(20L, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 20L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.saveAndFlush(_) >> {
+            throw new jakarta.validation.ConstraintViolationException("invalid", Collections.emptySet())
+        }
+        def ex = thrown(RuntimeException)
+        ex.message.contains("Validation error")
+    }
+
+    def "updatePayment should throw RuntimeException when update returns BusinessError"() {
+        given:
+        def existingPayment = PaymentBuilder.builder().withPaymentId(21L).build()
+        def patch = PaymentBuilder.builder().withPaymentId(21L).build()
+
+        when:
+        standardizedPaymentService.updatePayment(21L, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 21L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.saveAndFlush(_) >> {
+            throw new DataIntegrityViolationException("constraint violation")
+        }
+        def ex = thrown(RuntimeException)
+        ex.message.contains("Business error")
+    }
+
+    def "updatePayment should rethrow exception when update returns SystemError"() {
+        given:
+        def existingPayment = PaymentBuilder.builder().withPaymentId(22L).build()
+        def patch = PaymentBuilder.builder().withPaymentId(22L).build()
+
+        when:
+        standardizedPaymentService.updatePayment(22L, patch)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 22L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.saveAndFlush(_) >> {
+            throw new RuntimeException("connection lost")
+        }
+        def ex = thrown(RuntimeException)
+        ex.message == "connection lost"
     }
 }
