@@ -343,4 +343,32 @@ class LoginControllerSpec extends Specification {
         then:
         result.statusCode == HttpStatus.BAD_REQUEST
     }
+
+    def "login should return UNAUTHORIZED when userRepository throws exception"() {
+        given:
+        def loginRequest = new LoginRequest("dbfailuser", "password123")
+        userRepository.findByUsername("dbfailuser") >> { throw new RuntimeException("db connection failed") }
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.login(loginRequest, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.UNAUTHORIZED
+        result.body["error"] == "Invalid credentials"
+    }
+
+    def "logout should return NO_CONTENT when token is malformed"() {
+        given:
+        def request = Mock(jakarta.servlet.http.HttpServletRequest)
+        request.getCookies() >> null
+        request.getHeader("Cookie") >> "token=malformed.invalid.jwt.not.parseable"
+        request.getHeader("Authorization") >> null
+
+        when:
+        ResponseEntity<Void> result = loginController.logout(request, response)
+
+        then:
+        result.statusCode == HttpStatus.NO_CONTENT
+        0 * tokenBlacklistService.blacklistToken(_, _)
+    }
 }

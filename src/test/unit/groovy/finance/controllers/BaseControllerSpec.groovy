@@ -1,5 +1,6 @@
 package finance.controllers
 
+import jakarta.persistence.EntityNotFoundException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
@@ -7,6 +8,7 @@ import org.apache.catalina.connector.ClientAbortException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.security.core.AuthenticationException
 import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -15,6 +17,8 @@ import org.springframework.web.context.request.ServletRequestAttributes
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
+
+import java.util.concurrent.ExecutionException
 
 class BaseControllerSpec extends Specification {
 
@@ -212,6 +216,59 @@ class BaseControllerSpec extends Specification {
         then:
         logger != null
         logger instanceof org.slf4j.Logger
+    }
+
+    def "should handle EntityNotFoundException with NOT_FOUND status"() {
+        given:
+        def exception = new EntityNotFoundException("entity not found")
+
+        when:
+        def response = controller.handleEntityNotFoundException(exception)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body["code"] == "NOT_FOUND"
+    }
+
+    def "should handle ExecutionException with EntityNotFoundException cause as NOT_FOUND"() {
+        given:
+        def cause = new EntityNotFoundException("wrapped not found")
+        def exception = new ExecutionException(cause)
+
+        when:
+        def response = controller.handleExecutionException(exception)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body["code"] == "NOT_FOUND"
+    }
+
+    def "should handle ExecutionException with non-EntityNotFoundException cause as INTERNAL_SERVER_ERROR"() {
+        given:
+        def cause = new RuntimeException("some other error")
+        def exception = new ExecutionException(cause)
+
+        when:
+        def response = controller.handleExecutionException(exception)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        response.body["code"] == "INTERNAL_SERVER_ERROR"
+    }
+
+    def "should handle exception with active HTTP request context"() {
+        given:
+        def mockRequest = new MockHttpServletRequest()
+        mockRequest.remoteAddr = "192.168.1.100"
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest))
+        def exception = new EntityNotFoundException("entity not found with request context")
+
+        when:
+        def response = controller.handleEntityNotFoundException(exception)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body["code"] == "NOT_FOUND"
     }
 
     def cleanup() {

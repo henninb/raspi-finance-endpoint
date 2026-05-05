@@ -429,6 +429,30 @@ class StandardizedValidationAmountControllerSpec extends Specification {
         resp.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
+    def "insertValidationAmount returns 400 on ValidationException"() {
+        given:
+        ValidationAmount input = va(validationId: 0L, accountId: 7L)
+        validationRepo.saveAndFlush(_ as ValidationAmount) >> { throw new jakarta.validation.ValidationException("invalid value") }
+
+        when:
+        ResponseEntity resp = controller.insertValidationAmount(input, "checking_primary")
+
+        then:
+        resp.statusCode == HttpStatus.BAD_REQUEST
+    }
+
+    def "insertValidationAmount returns 400 on IllegalArgumentException"() {
+        given:
+        ValidationAmount input = va(validationId: 0L, accountId: 7L)
+        validationRepo.saveAndFlush(_ as ValidationAmount) >> { throw new IllegalArgumentException("bad arg") }
+
+        when:
+        ResponseEntity resp = controller.insertValidationAmount(input, "checking_primary")
+
+        then:
+        resp.statusCode == HttpStatus.BAD_REQUEST
+    }
+
     // ===== selectValidationAmountByAccountId (legacy GET /select/{accountNameOwner}/{state}) =====
     def "selectValidationAmountByAccountId returns 200 when found"() {
         given:
