@@ -166,6 +166,96 @@ class CalculationServiceSpec extends Specification {
         cc.count() >= 1d
     }
 
+    def "calculateActiveTotalsByAccountNameOwner skips non-Array rows and increments UnexpectedRowType counter"() {
+        given:
+        def account = 'owner_bad_row'
+        def rows = [
+            "not_an_array",
+            [new BigDecimal('5.00'), 0L, 'cleared'] as Object[]
+        ]
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> rows
+
+        when:
+        def totals = service.calculateActiveTotalsByAccountNameOwner(account)
+
+        then:
+        totals.totalsCleared == new BigDecimal('5.00').setScale(2)
+        def counter = registry.get(finance.utils.Constants.EXCEPTION_CAUGHT_COUNTER)
+                .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, 'UnexpectedRowType')
+                .counter()
+        counter.count() >= 1d
+    }
+
+    def "calculateActiveTotalsByAccountNameOwner skips rows with fewer than 3 columns"() {
+        given:
+        def account = 'owner_short_row'
+        def rows = [
+            [new BigDecimal('7.00'), 0L] as Object[],
+            [new BigDecimal('3.00'), 0L, 'cleared'] as Object[]
+        ]
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> rows
+
+        when:
+        def totals = service.calculateActiveTotalsByAccountNameOwner(account)
+
+        then:
+        totals.totalsCleared == new BigDecimal('3.00').setScale(2)
+        def counter = registry.get(finance.utils.Constants.EXCEPTION_CAUGHT_COUNTER)
+                .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, 'InsufficientColumns')
+                .counter()
+        counter.count() >= 1d
+    }
+
+    def "calculateActiveTotalsByAccountNameOwner returns zeros for empty result set"() {
+        given:
+        def account = 'owner_empty'
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> []
+
+        when:
+        def totals = service.calculateActiveTotalsByAccountNameOwner(account)
+
+        then:
+        totals.totalsFuture == new BigDecimal('0.00').setScale(2)
+        totals.totalsCleared == new BigDecimal('0.00').setScale(2)
+        totals.totalsOutstanding == new BigDecimal('0.00').setScale(2)
+        totals.totals == new BigDecimal('0.00').setScale(2)
+    }
+
+    def "calculateTotalsFromTransactions accumulates multiple transactions per state"() {
+        given:
+        def transactions = [
+            tx(TransactionState.Cleared, new BigDecimal('10.00')),
+            tx(TransactionState.Cleared, new BigDecimal('5.00')),
+            tx(TransactionState.Outstanding, new BigDecimal('2.50'))
+        ]
+
+        when:
+        def totalsMap = service.calculateTotalsFromTransactions(transactions)
+
+        then:
+        totalsMap[TransactionState.Cleared] == new BigDecimal('15.00').setScale(2)
+        totalsMap[TransactionState.Outstanding] == new BigDecimal('2.50').setScale(2)
+    }
+
+    def "calculateTotalsFromTransactions returns empty map for empty list"() {
+        expect:
+        service.calculateTotalsFromTransactions([]).isEmpty()
+    }
+
+    def "calculateGrandTotal returns zero for empty map"() {
+        expect:
+        service.calculateGrandTotal([:]) == new BigDecimal('0.00').setScale(2)
+    }
+
+    def "validateTotals fails for negative unreasonable amounts"() {
+        given:
+        def huge = new BigDecimal('-1000000000.00').setScale(2)
+        def totals = new finance.domain.Totals(huge, huge, huge, huge)
+
+        expect:
+        !service.validateTotals(totals)
+    }
+
     def "calculateActiveTotalsByAccountNameOwner wraps SQLException as DataAccessResourceFailureException via resilience"() {
         given: 'a service with resilience components enabled'
         def cfg = new finance.configurations.DatabaseResilienceConfiguration()

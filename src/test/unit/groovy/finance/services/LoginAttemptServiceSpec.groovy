@@ -122,4 +122,101 @@ class LoginAttemptServiceSpec extends Specification {
         then:
         remaining == 0L
     }
+
+    def "recordFailure on already-locked account keeps existing lock time"() {
+        given: "account is locked after 10 failures"
+        10.times { service.recordFailure("kate") }
+        def firstRemaining = service.remainingLockSeconds("kate")
+
+        when: "one more failure is recorded"
+        service.recordFailure("kate")
+
+        then: "account stays locked and lock expiry has not been extended"
+        service.isLocked("kate")
+        service.remainingLockSeconds("kate") <= firstRemaining + 1
+    }
+
+    def "isLocked removes expired lock entry and returns false"() {
+        given: "inject an expired lock record via reflection"
+        def field = LoginAttemptService.getDeclaredField("attempts")
+        field.accessible = true
+        def map = field.get(service)
+        def recordClass = LoginAttemptService.getDeclaredClasses().find { it.simpleName == 'AttemptRecord' }
+        def constructor = recordClass.getDeclaredConstructors()[0]
+        constructor.accessible = true
+        def expiredLockUntil = java.time.Instant.now().minusSeconds(1)
+        def record = constructor.newInstance(10, expiredLockUntil, java.time.Instant.now().minusSeconds(10))
+        map.put("expired_user", record)
+
+        when:
+        def locked = service.isLocked("expired_user")
+
+        then:
+        !locked
+        !map.containsKey("expired_user")
+    }
+
+    def "cleanupExpiredEntries removes expired lock entries"() {
+        given: "inject an expired lock record via reflection"
+        def field = LoginAttemptService.getDeclaredField("attempts")
+        field.accessible = true
+        def map = field.get(service)
+        def recordClass = LoginAttemptService.getDeclaredClasses().find { it.simpleName == 'AttemptRecord' }
+        def constructor = recordClass.getDeclaredConstructors()[0]
+        constructor.accessible = true
+        def expiredLockUntil = java.time.Instant.now().minusSeconds(1)
+        def record = constructor.newInstance(10, expiredLockUntil, java.time.Instant.now().minusSeconds(10))
+        map.put("expired_locked_user", record)
+
+        when:
+        service.cleanupExpiredEntries()
+
+        then:
+        !map.containsKey("expired_locked_user")
+    }
+
+    def "cleanupExpiredEntries removes stale non-locked entries older than TTL"() {
+        given: "inject a stale (old) non-locked record via reflection"
+        def field = LoginAttemptService.getDeclaredField("attempts")
+        field.accessible = true
+        def map = field.get(service)
+        def recordClass = LoginAttemptService.getDeclaredClasses().find { it.simpleName == 'AttemptRecord' }
+        def constructor = recordClass.getDeclaredConstructors()[0]
+        constructor.accessible = true
+        def staleInstant = java.time.Instant.now().minusSeconds(3601)
+        def record = constructor.newInstance(3, null, staleInstant)
+        map.put("stale_user", record)
+
+        when:
+        service.cleanupExpiredEntries()
+
+        then:
+        !map.containsKey("stale_user")
+    }
+
+    def "evictOldestEntries preserves locked entries"() {
+        given: "account is locked"
+        10.times { service.recordFailure("locked_user") }
+        assert service.isLocked("locked_user")
+        def field = LoginAttemptService.getDeclaredField("attempts")
+        field.accessible = true
+        def map = field.get(service)
+        int sizeBeforeEvict = map.size()
+
+        when: "forced eviction"
+        def method = LoginAttemptService.getDeclaredMethod("evictOldestEntries")
+        method.accessible = true
+        method.invoke(service)
+
+        then: "locked entry is preserved"
+        service.isLocked("locked_user")
+    }
+
+    def "remainingLockSeconds is zero for entry with null lockedUntil"() {
+        given: "account has failure count but no lock"
+        3.times { service.recordFailure("partial") }
+
+        expect:
+        service.remainingLockSeconds("partial") == 0L
+    }
 }

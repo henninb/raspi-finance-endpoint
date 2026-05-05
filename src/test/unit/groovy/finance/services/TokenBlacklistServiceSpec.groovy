@@ -111,4 +111,75 @@ class TokenBlacklistServiceSpec extends spock.lang.Specification {
         then:
         0 * _
     }
+
+    def "isBlacklisted returns false for non-blacklisted token"() {
+        given:
+        service = new TokenBlacklistService(tokenBlacklistRepository)
+
+        when:
+        def blacklisted = service.isBlacklisted("not-blacklisted-token")
+
+        then:
+        1 * tokenBlacklistRepository.existsByTokenHash({ it.size() == 64 }) >> false
+        !blacklisted
+    }
+
+    def "cleanupExpiredTokens does not log when zero tokens removed"() {
+        given:
+        service = new TokenBlacklistService(tokenBlacklistRepository)
+
+        when:
+        def method = TokenBlacklistService.getDeclaredMethod("cleanupExpiredTokens")
+        method.accessible = true
+        method.invoke(service)
+
+        then:
+        1 * tokenBlacklistRepository.deleteAllExpiredBefore(_ as java.time.Instant) >> 0
+        0 * _
+    }
+
+    def "hashToken produces consistent SHA-256 hex for same input"() {
+        given:
+        service = new TokenBlacklistService(tokenBlacklistRepository)
+        def method = TokenBlacklistService.getDeclaredMethod("hashToken", String)
+        method.accessible = true
+
+        when:
+        def hash1 = method.invoke(service, "same-token")
+        def hash2 = method.invoke(service, "same-token")
+
+        then:
+        hash1 == hash2
+        hash1.length() == 64
+        hash1 ==~ /[0-9a-f]{64}/
+    }
+
+    def "hashToken produces different values for different inputs"() {
+        given:
+        service = new TokenBlacklistService(tokenBlacklistRepository)
+        def method = TokenBlacklistService.getDeclaredMethod("hashToken", String)
+        method.accessible = true
+
+        when:
+        def hash1 = method.invoke(service, "token-a")
+        def hash2 = method.invoke(service, "token-b")
+
+        then:
+        hash1 != hash2
+    }
+
+    def "blacklistToken stores hash not raw token"() {
+        given:
+        service = new TokenBlacklistService(tokenBlacklistRepository)
+        def rawToken = "my-secret-jwt"
+        def expiration = System.currentTimeMillis() + 3600_000L
+
+        when:
+        service.blacklistToken(rawToken, expiration)
+
+        then:
+        1 * tokenBlacklistRepository.save({
+            it.tokenHash != rawToken && it.tokenHash.length() == 64
+        })
+    }
 }
