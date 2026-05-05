@@ -1128,4 +1128,158 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result instanceof ServiceResult.Success
     }
 
+    def "update should return ValidationError when constraint violations are present"() {
+        given:
+        def existingTransaction = createTestTransaction()
+        def updatedTransaction = createTestTransaction()
+        def violation = Mock(jakarta.validation.ConstraintViolation)
+        def violations = [violation] as Set
+
+        when:
+        def result = standardizedTransactionService.update(updatedTransaction)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, updatedTransaction.guid) >> Optional.of(existingTransaction)
+        1 * validatorMock.validate(updatedTransaction) >> violations
+        result instanceof ServiceResult.ValidationError
+    }
+
+    def "update should return BusinessError when account not found in masterTransactionUpdater"() {
+        given:
+        def existingTransaction = createTestTransaction()
+        def updatedTransaction = createTestTransaction()
+        def category = createTestCategory()
+
+        when:
+        def result = standardizedTransactionService.update(updatedTransaction)
+
+        then:
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, updatedTransaction.guid) >> Optional.of(existingTransaction)
+        1 * validatorMock.validate(updatedTransaction) >> Collections.emptySet()
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, updatedTransaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, category.categoryName) >> 0L
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, updatedTransaction.accountNameOwner) >> Optional.empty()
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "updateTransactionReceiptImageByGuidStandardized should return SystemError when payload exceeds max size"() {
+        given:
+        def guid = "test-guid-123"
+        def oversizedPayload = "a" * 7_000_000
+
+        when:
+        def result = standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, oversizedPayload)
+
+        then:
+        result instanceof ServiceResult.SystemError
+    }
+
+    def "updateTransactionReceiptImageByGuidStandardized should return BusinessError when transaction not found"() {
+        given:
+        def guid = "missing-guid"
+        def validBase64 = "aGVsbG8="
+
+        when:
+        def result = standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, validBase64)
+
+        then:
+        1 * imageProcessingServiceMock.validateImageSize(_) >> true
+        1 * imageProcessingServiceMock.getImageFormatType(_) >> ImageFormatType.Jpeg
+        1 * imageProcessingServiceMock.createThumbnail(_, ImageFormatType.Jpeg) >> "thumb".bytes
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
+        result instanceof ServiceResult.BusinessError
+    }
+
+    def "updateTransactionReceiptImageByGuidStandardized should insert new receipt image when none exists"() {
+        given:
+        def guid = "test-guid-123"
+        def validBase64 = "aGVsbG8="
+        def transaction = createTestTransaction()
+        transaction.receiptImageId = null
+        def savedReceiptImage = createTestReceiptImage()
+        savedReceiptImage.receiptImageId = 77L
+
+        when:
+        def result = standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, validBase64)
+
+        then:
+        1 * imageProcessingServiceMock.validateImageSize(_) >> true
+        1 * imageProcessingServiceMock.getImageFormatType(_) >> ImageFormatType.Jpeg
+        1 * imageProcessingServiceMock.createThumbnail(_, ImageFormatType.Jpeg) >> "thumb".bytes
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        1 * standardizedReceiptImageServiceMock.save(_) >> ServiceResult.Success.of(savedReceiptImage)
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> transaction
+        result instanceof ServiceResult.Success
+    }
+
+    def "updateTransactionReceiptImageByGuidStandardized should update existing receipt image"() {
+        given:
+        def guid = "test-guid-123"
+        def validBase64 = "aGVsbG8="
+        def transaction = createTestTransaction()
+        transaction.receiptImageId = 99L
+        def existingReceiptImage = createTestReceiptImage()
+        existingReceiptImage.receiptImageId = 99L
+        def updatedReceiptImage = createTestReceiptImage()
+        updatedReceiptImage.receiptImageId = 99L
+
+        when:
+        def result = standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, validBase64)
+
+        then:
+        1 * imageProcessingServiceMock.validateImageSize(_) >> true
+        1 * imageProcessingServiceMock.getImageFormatType(_) >> ImageFormatType.Jpeg
+        1 * imageProcessingServiceMock.createThumbnail(_, ImageFormatType.Jpeg) >> "thumb".bytes
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.of(transaction)
+        1 * standardizedReceiptImageServiceMock.findById(99L) >> ServiceResult.Success.of(existingReceiptImage)
+        1 * standardizedReceiptImageServiceMock.save(_) >> ServiceResult.Success.of(updatedReceiptImage)
+        result instanceof ServiceResult.Success
+    }
+
+    def "save should create new category when category not found"() {
+        given:
+        def transaction = createTestTransactionWithoutId()
+        def account = createTestAccount()
+        def newCategory = createTestCategory()
+        def description = createTestDescription()
+        def savedTransaction = createTestTransaction()
+
+        when:
+        def result = standardizedTransactionService.save(transaction)
+
+        then:
+        _ * validatorMock.validate(_) >> Collections.emptySet()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, transaction.guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.of(account)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, transaction.category) >> Optional.empty()
+        1 * categoryRepositoryMock.saveAndFlush(_) >> newCategory
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, transaction.description) >> Optional.of(description)
+        1 * transactionRepositoryMock.countByOwnerAndDescriptionName(TEST_OWNER, description.descriptionName) >> 0L
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
+        result instanceof ServiceResult.Success
+    }
+
+    def "save should create new description when description not found"() {
+        given:
+        def transaction = createTestTransactionWithoutId()
+        def account = createTestAccount()
+        def category = createTestCategory()
+        def newDescription = createTestDescription()
+        def savedTransaction = createTestTransaction()
+
+        when:
+        def result = standardizedTransactionService.save(transaction)
+
+        then:
+        _ * validatorMock.validate(_) >> Collections.emptySet()
+        1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, transaction.guid) >> Optional.empty()
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, transaction.accountNameOwner) >> Optional.of(account)
+        1 * categoryRepositoryMock.findByOwnerAndCategoryName(TEST_OWNER, transaction.category) >> Optional.of(category)
+        1 * categoryTxRepositoryMock.countByOwnerAndCategoryName(TEST_OWNER, category.categoryName) >> 0L
+        1 * descriptionRepositoryMock.findByOwnerAndDescriptionName(TEST_OWNER, transaction.description) >> Optional.empty()
+        1 * descriptionRepositoryMock.saveAndFlush(_) >> newDescription
+        1 * transactionRepositoryMock.saveAndFlush(transaction) >> savedTransaction
+        result instanceof ServiceResult.Success
+    }
+
 }
