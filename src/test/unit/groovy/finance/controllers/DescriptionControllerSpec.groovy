@@ -302,4 +302,105 @@ class StandardizedDescriptionControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.CONFLICT
     }
+
+    // ===== findAllActivePaged =====
+    def "findAllActivePaged returns page of descriptions"() {
+        given:
+        Description d1 = desc(1L, "alpha")
+        Description d2 = desc(2L, "beta")
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
+        def page = new org.springframework.data.domain.PageImpl<>([d1, d2], pageable, 2)
+        and:
+        descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, pageable) >> page
+
+        when:
+        ResponseEntity<?> response = controller.findAllActivePaged(pageable)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        (response.body as org.springframework.data.domain.Page<Description>).content.size() == 2
+    }
+
+    def "findAllActivePaged returns 500 on system error"() {
+        given:
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
+        and:
+        descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(TEST_OWNER, true, pageable) >> { throw new RuntimeException("db") }
+
+        when:
+        ResponseEntity<?> response = controller.findAllActivePaged(pageable)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+    }
+
+    // ===== mergeDescriptions =====
+    def "mergeDescriptions returns 200 when valid request"() {
+        given:
+        Description target = desc(1L, "target")
+        Description source = desc(2L, "source")
+        def request = new finance.domain.MergeDescriptionsRequest(["source"], "target")
+        and:
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> Optional.of(target)
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "source") >> Optional.of(source)
+        transactionRepository.bulkUpdateDescriptionByOwner(TEST_OWNER, "source", "target") >> 2
+        descriptionRepository.saveAndFlush(_ as Description) >> source
+
+        when:
+        ResponseEntity<Description> response = controller.mergeDescriptions(request)
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    def "mergeDescriptions throws 400 when targetName is blank"() {
+        given:
+        def request = new finance.domain.MergeDescriptionsRequest(["source"], "")
+
+        when:
+        controller.mergeDescriptions(request)
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == org.springframework.http.HttpStatus.BAD_REQUEST
+    }
+
+    def "mergeDescriptions throws 400 when sourceNames is empty"() {
+        given:
+        def request = new finance.domain.MergeDescriptionsRequest([], "target")
+
+        when:
+        controller.mergeDescriptions(request)
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == org.springframework.http.HttpStatus.BAD_REQUEST
+    }
+
+    def "mergeDescriptions throws 500 when service throws generic exception"() {
+        given:
+        def request = new finance.domain.MergeDescriptionsRequest(["source"], "target")
+        and:
+        descriptionRepository.findByOwnerAndDescriptionName(TEST_OWNER, "target") >> { throw new RuntimeException("db error") }
+
+        when:
+        controller.mergeDescriptions(request)
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+        ex.reason.contains("Failed to merge descriptions")
+    }
+
+    def "mergeDescriptions rethrows ResponseStatusException from validation"() {
+        given:
+        def request = new finance.domain.MergeDescriptionsRequest(["source"], " ")
+
+        when:
+        controller.mergeDescriptions(request)
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == org.springframework.http.HttpStatus.BAD_REQUEST
+    }
 }

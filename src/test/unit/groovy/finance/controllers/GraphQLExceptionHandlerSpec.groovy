@@ -82,4 +82,63 @@ class GraphQLExceptionHandlerSpec extends Specification {
         illegalArgMethod.returnType == graphql.GraphQLError.class
         genericMethod.returnType == graphql.GraphQLError.class
     }
+
+    def "handleConstraintViolation returns BAD_REQUEST GraphQLError"() {
+        given:
+        def env = Mock(graphql.schema.DataFetchingEnvironment)
+        def violation = Mock(jakarta.validation.ConstraintViolation)
+        violation.propertyPath >> Mock(jakarta.validation.Path)
+        violation.message >> "must not be blank"
+        def ex = new jakarta.validation.ConstraintViolationException("Validation failed", [violation] as Set)
+
+        when:
+        def error = handler.handleConstraintViolation(ex, env)
+
+        then:
+        error != null
+        error.errorType == org.springframework.graphql.execution.ErrorType.BAD_REQUEST
+        error.message.contains("Validation failed")
+    }
+
+    def "handleIllegalArgument returns BAD_REQUEST GraphQLError with message"() {
+        given:
+        def env = Mock(graphql.schema.DataFetchingEnvironment)
+        def ex = new IllegalArgumentException("bad value provided")
+
+        when:
+        def error = handler.handleIllegalArgument(ex, env)
+
+        then:
+        error != null
+        error.errorType == org.springframework.graphql.execution.ErrorType.BAD_REQUEST
+        error.message == "bad value provided"
+    }
+
+    def "handleIllegalArgument returns BAD_REQUEST GraphQLError when message is null"() {
+        given:
+        def env = Mock(graphql.schema.DataFetchingEnvironment)
+        def ex = new IllegalArgumentException((String) null)
+
+        when:
+        def error = handler.handleIllegalArgument(ex, env)
+
+        then:
+        error != null
+        error.errorType == org.springframework.graphql.execution.ErrorType.BAD_REQUEST
+        error.message == "Bad request"
+    }
+
+    def "handleGeneric returns INTERNAL_ERROR GraphQLError"() {
+        given:
+        def env = Mock(graphql.schema.DataFetchingEnvironment)
+        def ex = new Exception("something went wrong")
+
+        when:
+        def error = handler.handleGeneric(ex, env)
+
+        then:
+        error != null
+        error.errorType == org.springframework.graphql.execution.ErrorType.INTERNAL_ERROR
+        error.message == "Internal server error"
+    }
 }

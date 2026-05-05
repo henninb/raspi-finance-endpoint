@@ -724,6 +724,127 @@ class TransactionControllerSpec extends Specification {
         response.body == null
     }
 
+    // ===== findAllActivePaged =====
+    def "findAllActivePaged returns page of transactions"() {
+        given:
+        def transactions = [createValidTransaction("p1", "acct1")]
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 20)
+        def page = new org.springframework.data.domain.PageImpl<>(transactions, pageable, 1)
+        and:
+        standardizedTransactionService.findAllActive(pageable) >> ServiceResult.Success.of(page)
+
+        when:
+        ResponseEntity<?> response = controller.findAllActivePaged(pageable)
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    // ===== findByDateRange =====
+    def "findByDateRange returns page of transactions for given range"() {
+        given:
+        def start = LocalDate.of(2024, 1, 1)
+        def end = LocalDate.of(2024, 1, 31)
+        def transactions = [createValidTransaction("dr1", "acct1")]
+        def page = new org.springframework.data.domain.PageImpl<>(transactions)
+        and:
+        standardizedTransactionService.findTransactionsByDateRangeStandardized(start, end, _) >> ServiceResult.Success.of(page)
+
+        when:
+        ResponseEntity<?> response = controller.findByDateRange(start, end, 0, 20)
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    // ===== selectByAccountNameOwnerPaged =====
+    def "selectByAccountNameOwnerPaged returns page of transactions for account"() {
+        given:
+        def accountNameOwner = "test_account"
+        def transactions = [createValidTransaction("pp1", accountNameOwner)]
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
+        def page = new org.springframework.data.domain.PageImpl<>(transactions, pageable, 1)
+        and:
+        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner, pageable) >> ServiceResult.Success.of(page)
+
+        when:
+        ResponseEntity<?> response = controller.selectByAccountNameOwnerPaged(accountNameOwner, pageable)
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    // ===== updateTransactionState error branches =====
+    def "updateTransactionState returns 404 when transaction not found"() {
+        given:
+        standardizedTransactionService.updateTransactionStateStandardized("missing-guid", TransactionState.Cleared) >> ServiceResult.NotFound.of("Transaction not found")
+
+        when:
+        ResponseEntity<?> response = controller.updateTransactionState("missing-guid", "cleared")
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+    }
+
+    def "updateTransactionState throws 400 on ValidationError"() {
+        given:
+        standardizedTransactionService.updateTransactionStateStandardized("guid-1", TransactionState.Cleared) >> ServiceResult.ValidationError.of(["state": "invalid"])
+
+        when:
+        controller.updateTransactionState("guid-1", "cleared")
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == HttpStatus.BAD_REQUEST
+    }
+
+    def "updateTransactionState throws 400 on BusinessError"() {
+        given:
+        standardizedTransactionService.updateTransactionStateStandardized("guid-2", TransactionState.Cleared) >> ServiceResult.BusinessError.of("Cannot update", "DOMAIN_RULE_VIOLATION")
+
+        when:
+        controller.updateTransactionState("guid-2", "cleared")
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == HttpStatus.BAD_REQUEST
+        ex.reason.contains("Cannot update")
+    }
+
+    // ===== deleteTransactionReceiptImageByGuid =====
+    def "deleteTransactionReceiptImageByGuid returns 200 on success"() {
+        given:
+        standardizedTransactionService.deleteReceiptImageForTransactionByGuidStandardized("guid-del") >> ServiceResult.Success.of(null)
+
+        when:
+        ResponseEntity<Void> response = controller.deleteTransactionReceiptImageByGuid("guid-del")
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    def "deleteTransactionReceiptImageByGuid returns 404 when not found"() {
+        given:
+        standardizedTransactionService.deleteReceiptImageForTransactionByGuidStandardized("guid-missing") >> ServiceResult.NotFound.of("not found")
+
+        when:
+        ResponseEntity<Void> response = controller.deleteTransactionReceiptImageByGuid("guid-missing")
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+    }
+
+    def "deleteTransactionReceiptImageByGuid returns 500 on error"() {
+        given:
+        standardizedTransactionService.deleteReceiptImageForTransactionByGuidStandardized("guid-err") >> ServiceResult.SystemError.of(new RuntimeException("error"))
+
+        when:
+        ResponseEntity<Void> response = controller.deleteTransactionReceiptImageByGuid("guid-err")
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+    }
+
     // ===== Helper Methods =====
 
     private Transaction createValidTransaction(String guid, String accountNameOwner) {

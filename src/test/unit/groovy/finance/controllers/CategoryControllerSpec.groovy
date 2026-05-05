@@ -279,4 +279,66 @@ class StandardizedCategoryControllerSpec extends Specification {
         response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
     }
 
+    // ===== findAllActivePaged =====
+    def "findAllActivePaged returns page of categories"() {
+        given:
+        Category c1 = cat(1L, "groceries")
+        Category c2 = cat(2L, "utilities")
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
+        def page = new org.springframework.data.domain.PageImpl<>([c1, c2], pageable, 2)
+        and:
+        categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, pageable) >> page
+
+        when:
+        ResponseEntity<?> response = controller.findAllActivePaged(pageable)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        (response.body as org.springframework.data.domain.Page<Category>).content.size() == 2
+    }
+
+    def "findAllActivePaged returns 500 on system error"() {
+        given:
+        def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
+        and:
+        categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(TEST_OWNER, true, pageable) >> { throw new RuntimeException("db") }
+
+        when:
+        ResponseEntity<?> response = controller.findAllActivePaged(pageable)
+
+        then:
+        response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+    }
+
+    // ===== mergeCategories =====
+    def "mergeCategories returns 200 with merged category"() {
+        given:
+        Category c1 = cat(1L, "target")
+        Category c2 = cat(2L, "source")
+        and:
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "target") >> Optional.of(c1)
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "source") >> Optional.of(c2)
+        transactionRepository.bulkUpdateCategoryByOwner(TEST_OWNER, "source", "target") >> 3
+        categoryRepository.saveAndFlush(_ as Category) >> c1
+
+        when:
+        ResponseEntity<?> response = controller.mergeCategories("target", "source")
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    def "mergeCategories throws 500 when service throws exception"() {
+        given:
+        categoryRepository.findByOwnerAndCategoryName(TEST_OWNER, "target") >> { throw new RuntimeException("db error") }
+
+        when:
+        controller.mergeCategories("target", "source")
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+        ex.reason.contains("Failed to merge categories")
+    }
+
 }
