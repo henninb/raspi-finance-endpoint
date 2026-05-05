@@ -881,4 +881,176 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def ex = thrown(RuntimeException)
         ex.message == "connection lost"
     }
+
+    def "deleteById should log warning when destination transaction is not found"() {
+        given:
+        def payment = PaymentBuilder.builder()
+            .withPaymentId(30L)
+            .withGuidSource("valid-source")
+            .withGuidDestination("missing-dest")
+            .build()
+
+        when:
+        def result = standardizedPaymentService.deleteById(30L)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 30L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.delete(payment)
+        1 * paymentRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal("valid-source") >> new ServiceResult.Success(true)
+        1 * transactionServiceMock.deleteByIdInternal("missing-dest") >> new ServiceResult.NotFound("not found")
+        result instanceof ServiceResult.Success
+        0 * _
+    }
+
+    def "save should return Success with TRANSFER behavior (Checking to Savings)"() {
+        given: "TRANSFER: source=Checking(asset) -> dest=Savings(asset)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_src")
+            .withDestinationAccount("savings_dest")
+            .withAmount(new BigDecimal("400.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Savings)
+        def srcAccount = new Account(accountType: AccountType.Checking)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("savings_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("checking_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> { finance.domain.Transaction t ->
+            t.guid = "dest-transfer-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * transactionServiceMock.save(_) >> { finance.domain.Transaction t ->
+            t.guid = "src-transfer-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
+        result instanceof ServiceResult.Success
+        0 * _
+    }
+
+    def "save should return Success with CASH_ADVANCE behavior (CreditCard to Checking)"() {
+        given: "CASH_ADVANCE: source=CreditCard(liability) -> dest=Checking(asset)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("cc_src")
+            .withDestinationAccount("checking_dest")
+            .withAmount(new BigDecimal("500.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Checking)
+        def srcAccount = new Account(accountType: AccountType.CreditCard)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("checking_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("cc_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> { finance.domain.Transaction t ->
+            t.guid = "dest-cash-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * transactionServiceMock.save(_) >> { finance.domain.Transaction t ->
+            t.guid = "src-cash-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
+        result instanceof ServiceResult.Success
+        0 * _
+    }
+
+    def "save should return Success with BALANCE_TRANSFER behavior (CreditCard to Credit)"() {
+        given: "BALANCE_TRANSFER: source=CreditCard(liability) -> dest=Credit(liability)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("cc_src")
+            .withDestinationAccount("credit_dest")
+            .withAmount(new BigDecimal("600.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.Credit)
+        def srcAccount = new Account(accountType: AccountType.CreditCard)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("credit_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("cc_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> { finance.domain.Transaction t ->
+            t.guid = "dest-bal-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * transactionServiceMock.save(_) >> { finance.domain.Transaction t ->
+            t.guid = "src-bal-guid"
+            return ServiceResult.Success.of(t)
+        }
+        1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
+        result instanceof ServiceResult.Success
+        0 * _
+    }
+
+    def "save should return SystemError when destination transaction returns NotFound"() {
+        given: "BILL_PAYMENT: source=Checking(asset) -> dest=CreditCard(liability)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_src")
+            .withDestinationAccount("creditcard_dest")
+            .withAmount(new BigDecimal("100.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.CreditCard)
+        def srcAccount = new Account(accountType: AccountType.Checking)
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("creditcard_dest") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("checking_src") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.NotFound("transaction not found")
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    def "save should return SystemError when source transaction returns NotFound"() {
+        given: "BILL_PAYMENT: source=Checking(asset) -> dest=CreditCard(liability)"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination(null)
+            .withSourceAccount("checking_src2")
+            .withDestinationAccount("creditcard_dest2")
+            .withAmount(new BigDecimal("100.00"))
+            .build()
+        def noViolations = [] as Set
+        def destAccount = new Account(accountType: AccountType.CreditCard)
+        def srcAccount = new Account(accountType: AccountType.Checking)
+        def destTx = new finance.domain.Transaction(guid: "dest-guid")
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        1 * accountServiceMock.account("creditcard_dest2") >> Optional.of(destAccount)
+        1 * accountServiceMock.account("checking_src2") >> Optional.of(srcAccount)
+        1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
+        1 * transactionServiceMock.save(_) >> new ServiceResult.NotFound("not found")
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
 }
