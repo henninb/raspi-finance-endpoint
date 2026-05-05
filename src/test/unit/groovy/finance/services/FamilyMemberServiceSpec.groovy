@@ -436,4 +436,182 @@ class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
         thrown(IllegalArgumentException)
         0 * _
     }
+
+    def "findByIdAnyStatus should return Success when family member found regardless of active status"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(5L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.findByIdAnyStatus(5L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 5L) >> member
+        result instanceof ServiceResult.Success
+        result.data.familyMemberId == 5L
+        0 * _
+    }
+
+    def "findByIdAnyStatus should return NotFound when family member does not exist"() {
+        when:
+        def result = standardizedFamilyMemberService.findByIdAnyStatus(999L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 999L) >> null
+        result instanceof ServiceResult.NotFound
+        result.message.contains("FamilyMember not found: 999")
+        0 * _
+    }
+
+    def "deleteByIdAnyStatus should return Success when family member exists"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(7L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.deleteByIdAnyStatus(7L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 7L) >> member
+        1 * familyMemberRepositoryMock.softDeleteByOwnerAndFamilyMemberId(TEST_OWNER, 7L) >> 1
+        result instanceof ServiceResult.Success
+        result.data == true
+        0 * _
+    }
+
+    def "deleteByIdAnyStatus should return NotFound when family member does not exist"() {
+        when:
+        def result = standardizedFamilyMemberService.deleteByIdAnyStatus(999L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 999L) >> null
+        result instanceof ServiceResult.NotFound
+        result.message.contains("FamilyMember not found: 999")
+        0 * _
+    }
+
+    def "findFamilyMemberById should return family member when found"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(3L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.findFamilyMemberById(3L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 3L) >> member
+        result.familyMemberId == 3L
+        0 * _
+    }
+
+    def "findFamilyMemberById should return null when family member not found"() {
+        when:
+        def result = standardizedFamilyMemberService.findFamilyMemberById(999L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 999L) >> null
+        result == null
+        0 * _
+    }
+
+    def "updateFamilyMember should throw RuntimeException on SystemError from repository"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(1L).build()
+        def existingMember = FamilyMemberBuilder.builder().withFamilyMemberId(1L).build()
+
+        when:
+        standardizedFamilyMemberService.updateFamilyMember(member)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 1L) >> existingMember
+        1 * familyMemberRepositoryMock.save(_) >> { throw new RuntimeException("db failure") }
+        thrown(RuntimeException)
+    }
+
+    def "insertFamilyMember should throw RuntimeException on SystemError from repository"() {
+        given:
+        def member = FamilyMemberBuilder.builder().build()
+
+        when:
+        standardizedFamilyMemberService.insertFamilyMember(member)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndMemberName(TEST_OWNER, member.memberName) >> null
+        1 * validatorMock.validate(member) >> ([] as Set)
+        1 * familyMemberRepositoryMock.save(member) >> { throw new RuntimeException("db failure") }
+        thrown(RuntimeException)
+    }
+
+    def "findByIdAnyStatus should return SystemError when repository throws exception"() {
+        when:
+        def result = standardizedFamilyMemberService.findByIdAnyStatus(5L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 5L) >> {
+            throw new RuntimeException("db error")
+        }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    def "deleteById should return SystemError when softDelete throws exception"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(8L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.deleteById(8L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 8L) >> member
+        1 * familyMemberRepositoryMock.softDeleteByOwnerAndFamilyMemberId(TEST_OWNER, 8L) >> {
+            throw new RuntimeException("db error")
+        }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    def "deleteByIdAnyStatus should return SystemError when softDelete throws exception"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(9L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.deleteByIdAnyStatus(9L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 9L) >> member
+        1 * familyMemberRepositoryMock.softDeleteByOwnerAndFamilyMemberId(TEST_OWNER, 9L) >> {
+            throw new RuntimeException("db error")
+        }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    def "updateActiveStatus should return false when repository throws exception"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(10L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.updateActiveStatus(10L, true)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberIdAndActiveStatusTrue(TEST_OWNER, 10L) >> member
+        1 * familyMemberRepositoryMock.updateActiveStatusByOwner(TEST_OWNER, 10L, true) >> {
+            throw new RuntimeException("db error")
+        }
+        result == false
+        0 * _
+    }
+
+    def "softDelete should return false when repository throws exception"() {
+        given:
+        def member = FamilyMemberBuilder.builder().withFamilyMemberId(11L).build()
+
+        when:
+        def result = standardizedFamilyMemberService.softDelete(11L)
+
+        then:
+        1 * familyMemberRepositoryMock.findByOwnerAndFamilyMemberId(TEST_OWNER, 11L) >> member
+        1 * familyMemberRepositoryMock.softDeleteByOwnerAndFamilyMemberId(TEST_OWNER, 11L) >> {
+            throw new RuntimeException("db error")
+        }
+        result == false
+        0 * _
+    }
 }

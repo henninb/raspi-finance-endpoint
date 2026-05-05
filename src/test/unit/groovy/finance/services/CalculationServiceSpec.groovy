@@ -293,4 +293,64 @@ class CalculationServiceSpec extends Specification {
                 .counter()
         caughtCounter.count() >= 1d
     }
+
+    def "calculateTotalsFromTransactions returns empty map when transaction amount causes exception"() {
+        given:
+        def badTx = Mock(Transaction)
+        badTx.transactionState >> TransactionState.Cleared
+        badTx.amount >> null
+
+        when:
+        def result = service.calculateTotalsFromTransactions([badTx])
+
+        then:
+        result.isEmpty()
+        noExceptionThrown()
+    }
+
+    def "calculateGrandTotal returns zero when map contains null BigDecimal value"() {
+        given:
+        def badMap = [(TransactionState.Cleared): null]
+
+        when:
+        def result = service.calculateGrandTotal(badMap)
+
+        then:
+        result == BigDecimal.ZERO.setScale(2)
+        noExceptionThrown()
+    }
+
+    def "validateTotals returns false when grand total does not match component sum"() {
+        given:
+        def totals = new finance.domain.Totals(
+            new BigDecimal('1.00').setScale(2),  // totalsFuture
+            new BigDecimal('2.00').setScale(2),  // totalsCleared
+            new BigDecimal('9.99').setScale(2),  // totals (grand total - intentionally wrong)
+            new BigDecimal('0.00').setScale(2)   // totalsOutstanding
+        )
+
+        expect:
+        !service.validateTotals(totals)
+    }
+
+    def "calculateActiveTotalsByAccountNameOwner handles inner row exception gracefully"() {
+        given:
+        def account = 'owner_row_exc'
+        def badRow = new Object() {
+            // This object passes 'row !is Array<*>' check via false, which is: not instanceof Array
+        }
+
+        // Provide a properly-formed row and a row that will fail size check but not an Exception
+        def rows = [
+            [new BigDecimal('5.00'), 0L, 'cleared'] as Object[]
+        ]
+        repo.sumTotalsForActiveTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, account) >> rows
+
+        when:
+        def totals = service.calculateActiveTotalsByAccountNameOwner(account)
+
+        then:
+        totals.totalsCleared == new BigDecimal('5.00').setScale(2)
+        noExceptionThrown()
+    }
 }
