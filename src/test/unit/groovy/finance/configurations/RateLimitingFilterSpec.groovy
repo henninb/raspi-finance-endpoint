@@ -287,6 +287,54 @@ class RateLimitingFilterSpec extends Specification {
         IpAddressValidator.INSTANCE.getClientIpAddress(requestMock) == "203.0.113.1"
     }
 
+    def "cleanupOldEntries runs without error when counters have recent entries"() {
+        given:
+        rateLimitingFilter.rateLimitingEnabled = true
+        rateLimitingFilter.rateLimitPerMinute = 500
+        rateLimitingFilter.windowSizeMinutes = 1L
+        requestMock.remoteAddr >> "10.0.0.1"
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        rateLimitingFilter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        when:
+        def method = RateLimitingFilter.class.getDeclaredMethod("cleanupOldEntries")
+        method.accessible = true
+        method.invoke(rateLimitingFilter)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "cleanupOldEntries removes counters with only expired entries"() {
+        given:
+        rateLimitingFilter.rateLimitingEnabled = true
+        rateLimitingFilter.rateLimitPerMinute = 500
+        rateLimitingFilter.windowSizeMinutes = 1L
+        requestMock.remoteAddr >> "10.0.0.3"
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        rateLimitingFilter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        def requestCountsField = RateLimitingFilter.class.getDeclaredField("requestCounts")
+        requestCountsField.accessible = true
+        def requestCounts = requestCountsField.get(rateLimitingFilter)
+        def counter = requestCounts.get("10.0.0.3")
+        def requestsField = counter.class.getDeclaredField("requests")
+        requestsField.accessible = true
+        def requests = requestsField.get(counter)
+        requests.each { it.set(0L) }
+
+        when:
+        def method = RateLimitingFilter.class.getDeclaredMethod("cleanupOldEntries")
+        method.accessible = true
+        method.invoke(rateLimitingFilter)
+
+        then:
+        noExceptionThrown()
+        !requestCounts.containsKey("10.0.0.3")
+    }
+
     def "test invalid forwarded IP falls back to remoteAddr"() {
         given:
         requestMock.getHeader("X-Forwarded-For") >> "invalid-ip"
