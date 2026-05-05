@@ -523,4 +523,59 @@ class MedicalExpenseSpec extends Specification {
         !medicalExpense.isOverpaid()
         medicalExpense.getUnpaidAmount() == BigDecimal.ZERO
     }
+
+    def "prePersist sets dateAdded when it is epoch zero"() {
+        given: "a medical expense with dateAdded set to epoch"
+        MedicalExpense medicalExpense = new MedicalExpense(
+            serviceDate: LocalDate.of(2024, 1, 15),
+            billedAmount: new BigDecimal("100.00"),
+            insuranceDiscount: new BigDecimal("20.00"),
+            insurancePaid: new BigDecimal("60.00"),
+            patientResponsibility: new BigDecimal("20.00")
+        )
+        medicalExpense.dateAdded = new Timestamp(0L)
+
+        when: "pre-persisting the entity"
+        medicalExpense.prePersist()
+
+        then: "dateAdded should be updated to current time"
+        medicalExpense.dateAdded.time > 0L
+        medicalExpense.dateUpdated.time > 0L
+        noExceptionThrown()
+    }
+
+    def "equals returns true for same object reference"() {
+        given:
+        MedicalExpense expense = new MedicalExpense(medicalExpenseId: 1L)
+
+        expect:
+        expense == expense
+    }
+
+    def "equals returns false for non-MedicalExpense object"() {
+        given:
+        MedicalExpense expense = new MedicalExpense(medicalExpenseId: 1L)
+
+        expect:
+        expense != "not a medical expense"
+        expense != null
+    }
+
+    def "transaction familyMember and medicalProvider fields can be set and read"() {
+        given:
+        MedicalExpense expense = new MedicalExpense()
+        Transaction txn = new Transaction()
+        FamilyMember fm = new FamilyMember()
+        MedicalProvider mp = new MedicalProvider()
+
+        when:
+        expense.transaction = txn
+        expense.familyMember = fm
+        expense.medicalProvider = mp
+
+        then:
+        expense.transaction.is(txn)
+        expense.familyMember.is(fm)
+        expense.medicalProvider.is(mp)
+    }
 }
