@@ -3,10 +3,9 @@ package finance.configurations
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import jakarta.servlet.FilterChain
-import jakarta.servlet.ServletOutputStream
-import jakarta.servlet.WriteListener
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Specification
 
 class HttpErrorLoggingFilterSpec extends Specification {
@@ -15,25 +14,15 @@ class HttpErrorLoggingFilterSpec extends Specification {
     HttpErrorLoggingFilter filter
 
     HttpServletRequest requestMock
-    HttpServletResponse responseMock
+    MockHttpServletResponse responseMock
     FilterChain filterChainMock
 
     def setup() {
         meterRegistry = new SimpleMeterRegistry()
         filter = new HttpErrorLoggingFilter(meterRegistry)
         requestMock = Mock(HttpServletRequest)
-        responseMock = Mock(HttpServletResponse)
+        responseMock = new MockHttpServletResponse()
         filterChainMock = Mock(FilterChain)
-
-        // Provide a safe output stream for the wrapper to copy to
-        responseMock.getOutputStream() >> new ServletOutputStream() {
-            @Override
-            boolean isReady() { return true }
-            @Override
-            void setWriteListener(WriteListener writeListener) {}
-            @Override
-            void write(int b) {}
-        }
     }
 
     def "increments 4xx counter and sanitizes endpoint for 404"() {
@@ -47,18 +36,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and: "the downstream sets 404"
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(404)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and: "no exception occurs during logging"
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(404) }
         noExceptionThrown()
     }
 
@@ -73,18 +55,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(500)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(500) }
         noExceptionThrown()
     }
 
@@ -103,11 +78,7 @@ class HttpErrorLoggingFilterSpec extends Specification {
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(requestMock, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.setStatus(200)
-        }
-
-        and:
+        1 * filterChainMock.doFilter(requestMock, _) >> { req, resp -> resp.setStatus(200) }
         meterRegistry.find("http.error.responses").counter() == null
     }
 
@@ -122,18 +93,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(401)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(401) }
         noExceptionThrown()
     }
 
@@ -148,18 +112,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(403)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(403) }
         noExceptionThrown()
     }
 
@@ -174,18 +131,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(400)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(400) }
         noExceptionThrown()
     }
 
@@ -200,18 +150,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(400)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(400) }
         noExceptionThrown()
     }
 
@@ -226,18 +169,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(503)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(503) }
         noExceptionThrown()
     }
 
@@ -252,18 +188,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "10.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(404)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-
-        and:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(404) }
         noExceptionThrown()
     }
 
@@ -278,16 +207,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(405)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(405) }
         noExceptionThrown()
     }
 
@@ -302,16 +226,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(409)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(409) }
         noExceptionThrown()
     }
 
@@ -326,16 +245,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(500)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(500) }
         noExceptionThrown()
     }
 
@@ -350,16 +264,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(403)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(403) }
         noExceptionThrown()
     }
 
@@ -374,16 +283,11 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(401)
-        }
-
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(401) }
         noExceptionThrown()
     }
 
@@ -398,16 +302,49 @@ class HttpErrorLoggingFilterSpec extends Specification {
         requestMock.getHeader("X-Real-IP") >> null
         requestMock.remoteAddr >> "127.0.0.1"
 
-        and:
-        filterChainMock.doFilter(_, _) >> { HttpServletRequest req, HttpServletResponse resp ->
-            resp.sendError(404)
-        }
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(404) }
+        noExceptionThrown()
+    }
+
+    def "counter is incremented for 4xx error"() {
+        given:
+        requestMock.method >> "GET"
+        requestMock.requestURI >> "/api/test"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> "JUnit"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
 
         when:
         filter.doFilterInternal(requestMock, responseMock, filterChainMock)
 
         then:
-        1 * filterChainMock.doFilter(_, _)
-        noExceptionThrown()
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(404) }
+        meterRegistry.find("http.error.responses").tag("category", "4xx").counter() != null
+    }
+
+    def "counter is incremented for 5xx error"() {
+        given:
+        requestMock.method >> "POST"
+        requestMock.requestURI >> "/api/test"
+        requestMock.queryString >> null
+        requestMock.getHeader("User-Agent") >> "JUnit"
+        requestMock.getHeader("Referer") >> null
+        requestMock.getHeader("X-Forwarded-For") >> null
+        requestMock.getHeader("X-Real-IP") >> null
+        requestMock.remoteAddr >> "127.0.0.1"
+
+        when:
+        filter.doFilterInternal(requestMock, responseMock, filterChainMock)
+
+        then:
+        1 * filterChainMock.doFilter(_, _) >> { req, resp -> resp.setStatus(500) }
+        meterRegistry.find("http.error.responses").tag("category", "5xx").counter() != null
     }
 }

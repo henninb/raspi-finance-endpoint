@@ -6,13 +6,15 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.timelimiter.TimeLimiter
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import spock.lang.Specification
 
 import javax.sql.DataSource
 import java.sql.SQLException
 import java.time.Duration
-import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 class DatabaseResilienceConfigurationSpec extends Specification {
 
@@ -192,5 +194,92 @@ class DatabaseResilienceConfigurationSpec extends Specification {
 
         cleanup:
         executor?.shutdown()
+    }
+
+    def "should create resilienceComponents bean with all components"() {
+        when:
+        def components = config.resilienceComponents()
+
+        then:
+        components != null
+        components.circuitBreaker != null
+        components.circuitBreaker.name == "database"
+        components.retry != null
+        components.retry.name == "database"
+        components.timeLimiter != null
+        components.scheduledExecutorService != null
+        components.databaseResilienceConfig != null
+
+        cleanup:
+        components.scheduledExecutorService?.shutdown()
+    }
+
+    def "circuit breaker onStateTransition listener fires without error on state change"() {
+        given:
+        CircuitBreaker circuitBreaker = config.databaseCircuitBreaker()
+
+        when:
+        circuitBreaker.transitionToOpenState()
+
+        then:
+        noExceptionThrown()
+        circuitBreaker.state == CircuitBreaker.State.OPEN
+    }
+
+    def "circuit breaker onFailureRateExceeded listener fires when threshold crossed"() {
+        given:
+        CircuitBreaker circuitBreaker = config.databaseCircuitBreaker()
+
+        when:
+        3.times {
+            circuitBreaker.acquirePermission()
+            circuitBreaker.onError(1L, TimeUnit.MILLISECONDS, new SQLException("test failure"))
+        }
+        2.times {
+            circuitBreaker.acquirePermission()
+            circuitBreaker.onSuccess(1L, TimeUnit.MILLISECONDS)
+        }
+
+        then:
+        noExceptionThrown()
+        circuitBreaker.state == CircuitBreaker.State.OPEN
+    }
+
+    def "circuit breaker onCallNotPermitted listener fires when circuit is open"() {
+        given:
+        CircuitBreaker circuitBreaker = config.databaseCircuitBreaker()
+        circuitBreaker.transitionToOpenState()
+
+        when:
+        try {
+            circuitBreaker.acquirePermission()
+        } catch (io.github.resilience4j.circuitbreaker.CallNotPermittedException ignored) {
+            // expected when circuit is open
+        }
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "connection pool gauge lambdas return correct values when sampled"() {
+        given:
+        def realMeterRegistry = new SimpleMeterRegistry()
+        HikariDataSource hikariDataSource = Mock() {
+            getHikariPoolMXBean() >> Mock(HikariPoolMXBean) {
+                getActiveConnections() >> 5
+                getIdleConnections() >> 3
+                getThreadsAwaitingConnection() >> 1
+                getTotalConnections() >> 10
+            }
+        }
+
+        when:
+        config.connectionPoolMetrics(realMeterRegistry, hikariDataSource)
+
+        then:
+        realMeterRegistry.get("hikari.connections.active").gauge().value() == 5.0
+        realMeterRegistry.get("hikari.connections.idle").gauge().value() == 3.0
+        realMeterRegistry.get("hikari.connections.pending").gauge().value() == 1.0
+        realMeterRegistry.get("hikari.connections.total").gauge().value() == 10.0
     }
 }
