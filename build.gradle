@@ -35,6 +35,7 @@ jacocoTestReport {
         html.required = true
     }
     sourceSets sourceSets.main
+    executionData fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec")
 }
 
 repositories {
