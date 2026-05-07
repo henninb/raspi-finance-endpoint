@@ -344,6 +344,101 @@ class LoginControllerSpec extends Specification {
         result.statusCode == HttpStatus.BAD_REQUEST
     }
 
+    def "login sets Strict sameSite cookie when profile is not dev"() {
+        given:
+        loginController.activeProfile = "prod"
+        def loginRequest = new LoginRequest("testuser", "password123")
+        def user = new User(username: "testuser", password: new BCryptPasswordEncoder().encode("password123"))
+        userRepository.findByUsername("testuser") >> Optional.of(user)
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.login(loginRequest, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
+
+        cleanup:
+        loginController.activeProfile = "dev"
+    }
+
+    def "refresh sets Strict sameSite cookie when profile is not dev"() {
+        given:
+        loginController.activeProfile = "prod"
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
+
+        cleanup:
+        loginController.activeProfile = "dev"
+    }
+
+    def "logout sets Strict sameSite cookie when profile is not dev"() {
+        given:
+        loginController.activeProfile = "prod"
+        def request = Mock(jakarta.servlet.http.HttpServletRequest)
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
+        def token = Jwts.builder()
+            .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
+            .claim("username", "testuser")
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key)
+            .compact()
+        request.getCookies() >> null
+        request.getHeader("Cookie") >> "token=${token}"
+        request.getHeader("Authorization") >> null
+
+        when:
+        ResponseEntity<Void> result = loginController.logout(request, response)
+
+        then:
+        result.statusCode == HttpStatus.NO_CONTENT
+        1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
+
+        cleanup:
+        loginController.activeProfile = "dev"
+    }
+
+    def "register sets Strict sameSite cookie when profile is not dev"() {
+        given:
+        loginController.activeProfile = "prod"
+        def newUser = new User(username: "secureuser", password: "Password123!", firstName: "first", lastName: "last")
+        userRepository.findByUsername("secureuser") >> Optional.empty()
+        userRepository.saveAndFlush(_) >> newUser
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.register(newUser, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.CREATED
+        1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
+
+        cleanup:
+        loginController.activeProfile = "dev"
+    }
+
+    def "login returns BAD_REQUEST with null defaultMessage field error"() {
+        given:
+        def loginRequest = new LoginRequest("testuser", "password123")
+        bindingResult.hasErrors() >> true
+        bindingResult.getFieldErrors() >> [Mock(org.springframework.validation.FieldError) {
+            getField() >> "username"
+            getDefaultMessage() >> null
+        }]
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.login(loginRequest, bindingResult, response)
+
+        then:
+        result.statusCode == HttpStatus.BAD_REQUEST
+    }
+
     def "login should return UNAUTHORIZED when userRepository throws exception"() {
         given:
         def loginRequest = new LoginRequest("dbfailuser", "password123")

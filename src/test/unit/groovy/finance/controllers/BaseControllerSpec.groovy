@@ -230,6 +230,46 @@ class BaseControllerSpec extends Specification {
         response.body["code"] == "NOT_FOUND"
     }
 
+    def "should handle EntityNotFoundException with null message"() {
+        given:
+        def exception = new EntityNotFoundException()
+
+        when:
+        def response = controller.handleEntityNotFoundException(exception)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body["code"] == "NOT_FOUND"
+        response.body["message"] == "Entity not found"
+    }
+
+    def "should handle ExecutionException with EntityNotFoundException cause having null message"() {
+        given:
+        def cause = new EntityNotFoundException()
+        def exception = new ExecutionException(cause)
+
+        when:
+        def response = controller.handleExecutionException(exception)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+        response.body["code"] == "NOT_FOUND"
+    }
+
+    def "should log with null throwable message using request context"() {
+        given:
+        def mockRequest = new MockHttpServletRequest()
+        mockRequest.remoteAddr = "10.0.0.1"
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest))
+        def exception = new EntityNotFoundException()
+
+        when:
+        def response = controller.handleEntityNotFoundException(exception)
+
+        then:
+        response.statusCode == HttpStatus.NOT_FOUND
+    }
+
     def "should handle ExecutionException with EntityNotFoundException cause as NOT_FOUND"() {
         given:
         def cause = new EntityNotFoundException("wrapped not found")
