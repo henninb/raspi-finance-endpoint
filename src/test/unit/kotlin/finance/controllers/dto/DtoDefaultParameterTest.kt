@@ -12,13 +12,13 @@ import java.sql.Timestamp
 import java.time.LocalDate
 
 class DtoDefaultParameterTest {
-
     @Test
     fun `AccountInputDto with default optional parameters`() {
-        val dto = AccountInputDto(
-            accountNameOwner = "checking_primary",
-            accountType = AccountType.Checking,
-        )
+        val dto =
+            AccountInputDto(
+                accountNameOwner = "checking_primary",
+                accountType = AccountType.Checking,
+            )
         assertNull(dto.accountId)
         assertEquals("checking_primary", dto.accountNameOwner)
         assertNull(dto.activeStatus)
@@ -57,12 +57,13 @@ class DtoDefaultParameterTest {
 
     @Test
     fun `PaymentInputDto with default optional parameters`() {
-        val dto = PaymentInputDto(
-            sourceAccount = "checking_primary",
-            destinationAccount = "bills_payable",
-            transactionDate = LocalDate.of(2024, 1, 15),
-            amount = BigDecimal("100.00"),
-        )
+        val dto =
+            PaymentInputDto(
+                sourceAccount = "checking_primary",
+                destinationAccount = "bills_payable",
+                transactionDate = LocalDate.of(2024, 1, 15),
+                amount = BigDecimal("100.00"),
+            )
         assertNull(dto.paymentId)
         assertEquals("checking_primary", dto.sourceAccount)
         assertEquals("bills_payable", dto.destinationAccount)
@@ -73,12 +74,13 @@ class DtoDefaultParameterTest {
 
     @Test
     fun `TransferInputDto with default optional parameters`() {
-        val dto = TransferInputDto(
-            sourceAccount = "checking_primary",
-            destinationAccount = "savings_primary",
-            transactionDate = LocalDate.of(2024, 1, 15),
-            amount = BigDecimal("200.00"),
-        )
+        val dto =
+            TransferInputDto(
+                sourceAccount = "checking_primary",
+                destinationAccount = "savings_primary",
+                transactionDate = LocalDate.of(2024, 1, 15),
+                amount = BigDecimal("200.00"),
+            )
         assertNull(dto.transferId)
         assertEquals("checking_primary", dto.sourceAccount)
         assertEquals("savings_primary", dto.destinationAccount)
@@ -89,16 +91,17 @@ class DtoDefaultParameterTest {
 
     @Test
     fun `TransactionInputDto with default optional parameters`() {
-        val dto = TransactionInputDto(
-            accountType = AccountType.Debit,
-            transactionType = TransactionType.Expense,
-            accountNameOwner = "checking_primary",
-            transactionDate = LocalDate.of(2024, 1, 15),
-            description = "grocery store",
-            category = "groceries",
-            amount = BigDecimal("100.00"),
-            transactionState = TransactionState.Outstanding,
-        )
+        val dto =
+            TransactionInputDto(
+                accountType = AccountType.Debit,
+                transactionType = TransactionType.Expense,
+                accountNameOwner = "checking_primary",
+                transactionDate = LocalDate.of(2024, 1, 15),
+                description = "grocery store",
+                category = "groceries",
+                amount = BigDecimal("100.00"),
+                transactionState = TransactionState.Outstanding,
+            )
         assertNull(dto.transactionId)
         assertNull(dto.guid)
         assertNull(dto.accountId)
@@ -112,12 +115,13 @@ class DtoDefaultParameterTest {
     @Test
     fun `ValidationAmountInputDto with default optional parameters`() {
         val now = Timestamp(System.currentTimeMillis())
-        val dto = ValidationAmountInputDto(
-            accountId = 1L,
-            validationDate = now,
-            transactionState = TransactionState.Cleared,
-            amount = BigDecimal("100.00"),
-        )
+        val dto =
+            ValidationAmountInputDto(
+                accountId = 1L,
+                validationDate = now,
+                transactionState = TransactionState.Cleared,
+                amount = BigDecimal("100.00"),
+            )
         assertNull(dto.validationId)
         assertEquals(1L, dto.accountId)
         assertEquals(now, dto.validationDate)
@@ -127,17 +131,18 @@ class DtoDefaultParameterTest {
     @Test
     fun `MedicalExpenseInputDto with default optional parameters and all fields accessible`() {
         val serviceDate = LocalDate.of(2024, 1, 15)
-        val dto = MedicalExpenseInputDto(
-            serviceDate = serviceDate,
-            billedAmount = BigDecimal("200.00"),
-            insuranceDiscount = BigDecimal("50.00"),
-            insurancePaid = BigDecimal("100.00"),
-            patientResponsibility = BigDecimal("50.00"),
-            isOutOfNetwork = false,
-            claimNumber = "CLM-001",
-            claimStatus = ClaimStatus.Submitted,
-            paidAmount = BigDecimal("50.00"),
-        )
+        val dto =
+            MedicalExpenseInputDto(
+                serviceDate = serviceDate,
+                billedAmount = BigDecimal("200.00"),
+                insuranceDiscount = BigDecimal("50.00"),
+                insurancePaid = BigDecimal("100.00"),
+                patientResponsibility = BigDecimal("50.00"),
+                isOutOfNetwork = false,
+                claimNumber = "CLM-001",
+                claimStatus = ClaimStatus.Submitted,
+                paidAmount = BigDecimal("50.00"),
+            )
         assertNull(dto.medicalExpenseId)
         assertNull(dto.transactionId)
         assertNull(dto.providerId)
