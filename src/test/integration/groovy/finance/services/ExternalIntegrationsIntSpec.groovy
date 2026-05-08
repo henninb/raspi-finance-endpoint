@@ -2,12 +2,12 @@ package finance.services
 
 import finance.BaseRestTemplateIntegrationSpec
 import finance.domain.Transaction
-import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.TransactionState
 import finance.domain.TransactionType
 import finance.repositories.TransactionRepository
 import finance.repositories.AccountRepository
+import finance.helpers.TestDataManager
 import finance.services.MeterService
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
@@ -46,12 +46,19 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
     @Autowired
     JdbcTemplate jdbcTemplate
 
+    @Autowired
+    TestDataManager testDataManager
+
     private RestTemplate mgmtRestTemplate
+    private String testOwner
+    private String metricsAccountName
 
     void setup() {
+        testOwner = "metrics_${UUID.randomUUID().toString().replace('-', '').take(8)}"
+        withUserRole(testOwner)
         setupTestData()
         mgmtRestTemplate = new RestTemplate()
-        String token = createJwtToken()
+        String token = createJwtToken(testOwner)
         mgmtRestTemplate.interceptors = [
             { request, body, execution ->
                 request.headers.add("Authorization", "Bearer " + token)
@@ -61,32 +68,23 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
     }
 
     void setupTestData() {
-        Account testAccount = new Account()
-        testAccount.accountNameOwner = "metricstestchecking_brian"
-        testAccount.accountType = AccountType.Credit
-        testAccount.activeStatus = true
-        testAccount.moniker = "2500"
-        testAccount.outstanding = new BigDecimal("2000.00")
-        testAccount.future = new BigDecimal("0.00")
-        testAccount.cleared = new BigDecimal("2000.00")
-        testAccount.dateClosed = new Timestamp(System.currentTimeMillis())
-        testAccount.validationDate = new Timestamp(System.currentTimeMillis())
-        accountRepository.save(testAccount)
+        testDataManager.initializeIntegrationTestEnvironment(testOwner)
+        metricsAccountName = testDataManager.createAccountFor(testOwner, "metrics", "credit", true)
 
-        // Insert categories/descriptions for transaction metrics tests.
-        // Transactions are built with no explicit owner, so owner defaults to empty string ''.
-        // The fk_category_name and fk_description_name FKs require matching rows.
+        // Insert exact category/description names used by the assertions below.
         ['metricstest', 'dbtest'].each { name ->
             try {
                 jdbcTemplate.update(
-                    "INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added) VALUES (?, true, '', '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
-                    name
+                    "INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added) VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
+                    name,
+                    testOwner
                 )
             } catch (Exception ignored) {}
             try {
                 jdbcTemplate.update(
-                    "INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added) VALUES (?, true, '', '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
-                    name
+                    "INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added) VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
+                    name,
+                    testOwner
                 )
             } catch (Exception ignored) {}
         }
@@ -177,11 +175,12 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test transaction metrics integration'() {
         given:
-        def savedAccount = accountRepository.findByAccountNameOwner("metricstestchecking_brian").get()
+        def savedAccount = accountRepository.findByAccountNameOwner(metricsAccountName).get()
 
         Transaction testTransaction = new Transaction()
+        testTransaction.owner = testOwner
         testTransaction.guid = UUID.randomUUID().toString()
-        testTransaction.accountNameOwner = "metricstestchecking_brian"
+        testTransaction.accountNameOwner = metricsAccountName
         testTransaction.accountId = savedAccount.accountId
         testTransaction.accountType = AccountType.Credit
         testTransaction.description = "metricstest"
@@ -293,11 +292,12 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         Timer.Sample sample = Timer.start(meterRegistry)
 
-        def savedAccount = accountRepository.findByAccountNameOwner("metricstestchecking_brian").get()
+        def savedAccount = accountRepository.findByAccountNameOwner(metricsAccountName).get()
 
         Transaction transaction = new Transaction()
+        transaction.owner = testOwner
         transaction.guid = UUID.randomUUID().toString()
-        transaction.accountNameOwner = "metricstestchecking_brian"
+        transaction.accountNameOwner = metricsAccountName
         transaction.accountId = savedAccount.accountId
         transaction.accountType = AccountType.Credit
         transaction.description = "dbtest"
