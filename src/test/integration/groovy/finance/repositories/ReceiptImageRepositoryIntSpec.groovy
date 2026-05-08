@@ -67,7 +67,11 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
     void 'findAllByOwner returns only images belonging to the owner'() {
         given:
         Long txnId1 = testDataManager.createTransactionAndGetId(testOwner)
-        Long txnId2 = testDataManager.createTransactionAndGetId(testOwner)
+        Long txnId2 = testDataManager.createTransactionAndGetId(
+                testOwner,
+                "primary",
+                "integration_test_transaction_two"
+        )
 
         ReceiptImage ri1 = SmartReceiptImageBuilder.builderForOwner(testOwner)
                 .withTransactionId(txnId1)
