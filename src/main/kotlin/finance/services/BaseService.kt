@@ -44,7 +44,7 @@ open class BaseService
             throw ValidationException("Cannot insert record because of constraint violation(s): $details")
         }
 
-        fun createDefaultAccount(
+        open fun createDefaultAccount(
             accountNameOwner: String,
             accountType: AccountType,
         ): Account {

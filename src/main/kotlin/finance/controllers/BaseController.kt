@@ -31,7 +31,7 @@ open class BaseController {
             IllegalArgumentException::class, MethodArgumentNotValidException::class,
         ],
     )
-    fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+    open fun handleBadHttpRequests(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.BAD_REQUEST
         logSecureError("BAD_REQUEST", throwable, status)
         val body = buildErrorBody(status, "BAD_REQUEST", "Invalid request")
@@ -39,7 +39,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [ValidationException::class])
-    fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, Any>> {
+    open fun handleValidationException(throwable: ValidationException): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.BAD_REQUEST
         logSecureError("VALIDATION_EXCEPTION", throwable, status)
         val body = buildErrorBody(status, "BAD_REQUEST", "Validation failed")
@@ -47,7 +47,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [ResponseStatusException::class])
-    fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, Any>> {
+    open fun handleResponseStatusException(throwable: ResponseStatusException): ResponseEntity<Map<String, Any>> {
         val httpStatus = HttpStatus.valueOf(throwable.statusCode.value())
         logSecureError("RESPONSE_STATUS_EXCEPTION", throwable, httpStatus)
         val body = buildErrorBody(httpStatus, httpStatus.name, httpStatus.reasonPhrase)
@@ -55,7 +55,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [AuthenticationException::class])
-    fun handleUnauthorized(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+    open fun handleUnauthorized(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.UNAUTHORIZED
         logSecureError("UNAUTHORIZED", throwable, status)
         val body = buildErrorBody(status, "UNAUTHORIZED", "Authentication required")
@@ -63,7 +63,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [EntityNotFoundException::class])
-    fun handleEntityNotFoundException(throwable: EntityNotFoundException): ResponseEntity<Map<String, Any>> {
+    open fun handleEntityNotFoundException(throwable: EntityNotFoundException): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.NOT_FOUND
         logSecureError("ENTITY_NOT_FOUND", throwable, status)
         val body = buildErrorBody(status, "NOT_FOUND", throwable.message ?: "Entity not found")
@@ -71,7 +71,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [ExecutionException::class])
-    fun handleExecutionException(throwable: ExecutionException): ResponseEntity<Map<String, Any>> {
+    open fun handleExecutionException(throwable: ExecutionException): ResponseEntity<Map<String, Any>> {
         val cause = throwable.cause
         return if (cause is EntityNotFoundException) {
             val status = HttpStatus.NOT_FOUND
@@ -87,7 +87,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [ClientAbortException::class])
-    fun handleServiceUnavailable(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+    open fun handleServiceUnavailable(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.SERVICE_UNAVAILABLE
         logSecureError("SERVICE_UNAVAILABLE", throwable, status)
         val body = buildErrorBody(status, "SERVICE_UNAVAILABLE", "Service temporarily unavailable")
@@ -95,7 +95,7 @@ open class BaseController {
     }
 
     @ExceptionHandler(value = [Exception::class])
-    fun handleHttpInternalError(throwable: Throwable): ResponseEntity<Map<String, Any>> {
+    open fun handleHttpInternalError(throwable: Throwable): ResponseEntity<Map<String, Any>> {
         val status = HttpStatus.INTERNAL_SERVER_ERROR
         logSecureError("INTERNAL_SERVER_ERROR", throwable, status)
         val body = buildErrorBody(status, "INTERNAL_SERVER_ERROR", "An internal error occurred")
