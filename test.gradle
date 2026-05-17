@@ -96,6 +96,7 @@ tasks.withType(Test) {
     environment "LOGS", "logs"
     environment "SPRING_PROFILES_ACTIVE", "unit"
     environment "APPNAME", "raspi-finance-endpoint"
+    jvmArgs '-XX:+EnableDynamicAgentLoading', '-Xshare:off'
 }
 
 task integrationTest(type: Test) {
@@ -119,7 +120,9 @@ task integrationTest(type: Test) {
         '-Xmx1024m',
         '-XX:+UseParallelGC',
         '-XX:MaxMetaspaceSize=512m',
-        '-Djava.awt.headless=true'
+        '-Djava.awt.headless=true',
+        '-XX:+EnableDynamicAgentLoading',
+        '-Xshare:off'
     ]
 
     testLogging {
