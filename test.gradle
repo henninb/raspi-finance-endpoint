@@ -29,13 +29,6 @@ sourceSets {
         compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
         runtimeClasspath += output + compileClasspath
     }
-
-    oracleTest {
-        groovy.srcDir "src/test/oracle/groovy"
-        resources.srcDir "src/test/oracle/resources"
-        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
-        runtimeClasspath += output + compileClasspath
-    }
 }
 
 //provide dependency scopes
@@ -49,9 +42,6 @@ configurations {
 
     performanceTestImplementation.extendsFrom testImplementation
     performanceTestRuntimeOnly.extendsFrom testRuntimeOnly
-
-    oracleTestImplementation.extendsFrom testImplementation
-    oracleTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 // Kotlin toolchain is configured in build.gradle for all Kotlin compile tasks.
@@ -165,23 +155,9 @@ task performanceTest(type: Test) {
     useJUnitPlatform()
 }
 
-task oracleTest(type: Test) {
-    description = "Runs the oracle tests."
-    testClassesDirs = project.sourceSets.oracleTest.output.classesDirs
-    classpath = project.sourceSets.oracleTest.runtimeClasspath
-
-    environment "LOGS", "logs"
-    environment "SPRING_PROFILES_ACTIVE", "ora"
-    environment "APPNAME", "raspi-finance-endpoint"
-
-    // Gradle 9 compatibility
-    useJUnitPlatform()
-}
-
 // Use outputLocation and layout.buildDirectory instead of deprecated $buildDir for Gradle 9 readiness
 integrationTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/integration"))
 functionalTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/functional"))
 performanceTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/performance"))
-oracleTest.reports.html.outputLocation.set(layout.buildDirectory.dir("reports/test/oracle"))
 //test.dependsOn functionalTest
 //test.dependsOn integrationTest

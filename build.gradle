@@ -212,10 +212,6 @@ dependencies {
     implementation("org.jooq:jooq:${jooqVersion}")
     jooqGenerator "org.postgresql:postgresql:${postgresqlDriverVersion}"
 
-    // Oracle database
-    runtimeOnly fileTree(dir: 'libs', include: 'ojdbc8.jar')
-    implementation("org.apache.tomcat:tomcat-jdbc:${apacheTomcatJdbcVersion}")
-
     //Flyway
     implementation("org.springframework.boot:spring-boot-starter-flyway:${springBootVersion}")
     implementation("org.flywaydb:flyway-database-postgresql:${flywayVersion}")
