@@ -5,15 +5,15 @@ import finance.domain.ReoccurringType
 import finance.domain.Transaction
 import finance.domain.TransactionState
 
-import java.sql.Date
+import java.time.LocalDate
 
 class TransactionBuilder {
     String guid = '4ea3be58-3993-abcd-88a2-4ffc7f1d73bd'
     Long accountId = 0
     AccountType accountType = AccountType.Credit
     String accountNameOwner = 'chase_brian'
-    Date transactionDate = new Date(1553645394)
-    String description = 'aliexpress.com'
+    LocalDate transactionDate = LocalDate.of(2024, 1, 15)
+    String description = 'aliexpress'
     String category = 'online'
     BigDecimal amount = 3.14G
     TransactionState transactionState = TransactionState.Cleared
@@ -60,7 +60,7 @@ class TransactionBuilder {
         return this
     }
 
-    TransactionBuilder transactionDate(Date transactionDate) {
+    TransactionBuilder transactionDate(LocalDate transactionDate) {
         this.transactionDate = transactionDate
         return this
     }
