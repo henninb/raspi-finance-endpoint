@@ -5,6 +5,7 @@ import finance.domain.User
 import finance.services.LoginAttemptService
 import finance.services.TokenBlacklistService
 import finance.services.UserService
+import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import io.swagger.v3.oas.annotations.Operation
@@ -45,6 +46,9 @@ class LoginController(
     companion object {
         private const val JWT_EXPIRY_MS = 60 * 60 * 1000L // 1 hour
         private const val JWT_EXPIRY_SECONDS = 3600L
+        private const val JWT_LONG_EXPIRY_MS = 30L * 24 * 60 * 60 * 1000L // 30 days
+        private const val JWT_LONG_EXPIRY_SECONDS = 30L * 24 * 60 * 60L // 30 days
+        private const val CLAIM_KEEP_LOGGED_IN = "keepLoggedIn"
     }
 
     private val isSecureCookie: Boolean
@@ -106,8 +110,10 @@ class LoginController(
         loginAttemptService.recordSuccess(loginRequest.username)
 
         // Generate JWT after validating credentials.
+        val expiryMs = if (loginRequest.keepLoggedIn) JWT_LONG_EXPIRY_MS else JWT_EXPIRY_MS
+        val expirySecs = if (loginRequest.keepLoggedIn) JWT_LONG_EXPIRY_SECONDS else JWT_EXPIRY_SECONDS
         val now = Date()
-        val expiration = Date(now.time + JWT_EXPIRY_MS)
+        val expiration = Date(now.time + expiryMs)
         val token =
             Jwts
                 .builder()
@@ -117,6 +123,7 @@ class LoginController(
                 .and()
                 .subject(loginRequest.username)
                 .claim("username", loginRequest.username)
+                .claim(CLAIM_KEEP_LOGGED_IN, loginRequest.keepLoggedIn)
                 .issuedAt(now)
                 .notBefore(now)
                 .expiration(expiration)
@@ -127,7 +134,7 @@ class LoginController(
             ResponseCookie
                 .from("token", token)
                 .path("/")
-                .maxAge(JWT_EXPIRY_SECONDS)
+                .maxAge(expirySecs)
                 .httpOnly(true)
                 .secure(isSecureCookie)
                 .sameSite(if (isSecureCookie) "Strict" else "Lax")
@@ -295,6 +302,7 @@ class LoginController(
     @PostMapping("/refresh")
     fun refresh(
         @AuthenticationPrincipal principal: String?,
+        request: HttpServletRequest,
         response: HttpServletResponse,
     ): ResponseEntity<Map<String, String>> {
         if (principal.isNullOrBlank()) {
@@ -302,8 +310,42 @@ class LoginController(
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Not authenticated"))
         }
 
+        // Read keepLoggedIn from the current JWT so refresh preserves the session type
+        val keepLoggedIn =
+            run {
+                val currentToken =
+                    request.cookies?.firstOrNull { it.name == "token" }?.value
+                        ?: request
+                            .getHeader("Cookie")
+                            ?.split(';')
+                            ?.map { it.trim() }
+                            ?.firstOrNull { it.startsWith("token=") }
+                            ?.substringAfter("token=")
+                if (!currentToken.isNullOrBlank()) {
+                    try {
+                        val claims: Claims =
+                            Jwts
+                                .parser()
+                                .requireIssuer("raspi-finance-endpoint")
+                                .requireAudience("raspi-finance-endpoint")
+                                .verifyWith(secretKey)
+                                .build()
+                                .parseSignedClaims(currentToken)
+                                .payload
+                        claims.get(CLAIM_KEEP_LOGGED_IN, Boolean::class.java) ?: false
+                    } catch (e: Exception) {
+                        logger.warn("REFRESH could not read keepLoggedIn claim: {}", e.message)
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+
+        val expiryMs = if (keepLoggedIn) JWT_LONG_EXPIRY_MS else JWT_EXPIRY_MS
+        val expirySecs = if (keepLoggedIn) JWT_LONG_EXPIRY_SECONDS else JWT_EXPIRY_SECONDS
         val now = Date()
-        val expiration = Date(now.time + JWT_EXPIRY_MS)
+        val expiration = Date(now.time + expiryMs)
         val token =
             Jwts
                 .builder()
@@ -313,6 +355,7 @@ class LoginController(
                 .and()
                 .subject(principal)
                 .claim("username", principal)
+                .claim(CLAIM_KEEP_LOGGED_IN, keepLoggedIn)
                 .issuedAt(now)
                 .notBefore(now)
                 .expiration(expiration)
@@ -323,14 +366,14 @@ class LoginController(
             ResponseCookie
                 .from("token", token)
                 .path("/")
-                .maxAge(JWT_EXPIRY_SECONDS)
+                .maxAge(expirySecs)
                 .httpOnly(true)
                 .secure(isSecureCookie)
                 .sameSite(if (isSecureCookie) "Strict" else "Lax")
                 .build()
 
         response.addHeader("Set-Cookie", cookie.toString())
-        logger.info("REFRESH_SUCCESS username={}", principal.take(60))
+        logger.info("REFRESH_SUCCESS username={} keepLoggedIn={}", principal.take(60), keepLoggedIn)
         return ResponseEntity.ok(mapOf("message" to "Token refreshed"))
     }
 

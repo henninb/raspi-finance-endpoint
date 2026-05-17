@@ -95,7 +95,9 @@ class GraphQLMutationController(
                 throw result.exception
             }
 
-            else -> throw RuntimeException("Unexpected error creating payment: $result")
+            else -> {
+                throw RuntimeException("Unexpected error creating payment: $result")
+            }
         }
     }
 
@@ -231,7 +233,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create parameter")
+            else -> {
+                throw RuntimeException("Failed to create parameter")
+            }
         }
     }
 
@@ -269,7 +273,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update parameter")
+            else -> {
+                throw RuntimeException("Failed to update parameter")
+            }
         }
     }
 
@@ -285,7 +291,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -319,7 +327,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create category")
+            else -> {
+                throw RuntimeException("Failed to create category")
+            }
         }
     }
 
@@ -358,7 +368,9 @@ class GraphQLMutationController(
                             throw IllegalArgumentException("Category not found: $oldCategoryName")
                         }
 
-                        else -> throw RuntimeException("Failed to find category: $oldCategoryName")
+                        else -> {
+                            throw RuntimeException("Failed to find category: $oldCategoryName")
+                        }
                     }
                 }
 
@@ -379,7 +391,9 @@ class GraphQLMutationController(
                             )
                         }
 
-                        else -> throw RuntimeException("Failed to find category: ${categoryInput.categoryName}")
+                        else -> {
+                            throw RuntimeException("Failed to find category: ${categoryInput.categoryName}")
+                        }
                     }
                 }
             }
@@ -413,7 +427,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update category")
+            else -> {
+                throw RuntimeException("Failed to update category")
+            }
         }
     }
 
@@ -429,7 +445,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -463,7 +481,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create description")
+            else -> {
+                throw RuntimeException("Failed to create description")
+            }
         }
     }
 
@@ -526,7 +546,9 @@ class GraphQLMutationController(
                             )
                         }
 
-                        else -> throw RuntimeException("Failed to find description: ${descriptionInput.descriptionName}")
+                        else -> {
+                            throw RuntimeException("Failed to find description: ${descriptionInput.descriptionName}")
+                        }
                     }
                 }
             }
@@ -560,7 +582,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update description")
+            else -> {
+                throw RuntimeException("Failed to update description")
+            }
         }
     }
 
@@ -576,7 +600,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -663,7 +689,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create medical expense")
+            else -> {
+                throw RuntimeException("Failed to create medical expense")
+            }
         }
     }
 
@@ -759,7 +787,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update medical expense")
+            else -> {
+                throw RuntimeException("Failed to update medical expense")
+            }
         }
     }
 
@@ -775,7 +805,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -812,7 +844,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create validation amount")
+            else -> {
+                throw RuntimeException("Failed to create validation amount")
+            }
         }
     }
 
@@ -854,7 +888,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update validation amount")
+            else -> {
+                throw RuntimeException("Failed to update validation amount")
+            }
         }
     }
 
@@ -870,7 +906,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -911,7 +949,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create account")
+            else -> {
+                throw RuntimeException("Failed to create account")
+            }
         }
     }
 
@@ -950,7 +990,9 @@ class GraphQLMutationController(
                             throw IllegalArgumentException("Account not found: $oldAccountNameOwner")
                         }
 
-                        else -> throw RuntimeException("Failed to find account: $oldAccountNameOwner")
+                        else -> {
+                            throw RuntimeException("Failed to find account: $oldAccountNameOwner")
+                        }
                     }
                 }
 
@@ -971,7 +1013,9 @@ class GraphQLMutationController(
                             )
                         }
 
-                        else -> throw RuntimeException("Failed to find account: ${accountInput.accountNameOwner}")
+                        else -> {
+                            throw RuntimeException("Failed to find account: ${accountInput.accountNameOwner}")
+                        }
                     }
                 }
             }
@@ -1012,7 +1056,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update account")
+            else -> {
+                throw RuntimeException("Failed to update account")
+            }
         }
     }
 
@@ -1028,7 +1074,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 
@@ -1077,7 +1125,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to create transaction")
+            else -> {
+                throw RuntimeException("Failed to create transaction")
+            }
         }
     }
 
@@ -1129,7 +1179,9 @@ class GraphQLMutationController(
                 throw IllegalStateException(result.message)
             }
 
-            else -> throw RuntimeException("Failed to update transaction")
+            else -> {
+                throw RuntimeException("Failed to update transaction")
+            }
         }
     }
 
@@ -1145,7 +1197,9 @@ class GraphQLMutationController(
                 true
             }
 
-            else -> false
+            else -> {
+                false
+            }
         }
     }
 }

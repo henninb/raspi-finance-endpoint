@@ -153,7 +153,7 @@ validate_and_create_keystore() {
 }
 
 
-export JAVA_HOME=/usr/lib/jvm/java-26-openjdk
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 export PATH="$JAVA_HOME/bin:$PATH"
 
 log_info "Starting raspi-finance-endpoint boot run script..."

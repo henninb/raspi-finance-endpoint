@@ -202,6 +202,8 @@ setup_ssh
 
 # --- Step 2: Gradle build ---
 log "Step 2: Building application with Gradle..."
+export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
+export PATH="${JAVA_HOME}/bin:${PATH}"
 if ! ./gradlew clean build -x test; then
   log_error "Gradle build failed"
   exit 1
