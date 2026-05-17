@@ -5,8 +5,8 @@ import finance.Application
 import finance.domain.Transaction
 import finance.helpers.TransactionBuilder
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.web.client.RestTemplate
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
@@ -19,7 +19,7 @@ class TransactionControllerPerf extends Specification {
     @LocalServerPort
     protected int port
 
-    protected TestRestTemplate restTemplate = new TestRestTemplate()
+    protected RestTemplate restTemplate = new RestTemplate()
 
     @Shared
     protected HttpHeaders headers
