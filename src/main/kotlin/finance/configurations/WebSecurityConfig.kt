@@ -37,7 +37,7 @@ open class WebSecurityConfig(
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${WebSecurityConfig::class.java.simpleName}")
         private const val MIN_JWT_KEY_BYTES = 32
-        private val PROD_PROFILES = setOf("prod", "production", "stage", "prodora")
+        private val PROD_PROFILES = setOf("prod", "production", "stage")
     }
 
     @PostConstruct
@@ -85,7 +85,7 @@ open class WebSecurityConfig(
                 val isProd =
                     environment.activeProfiles.any {
                         it.equals("prod", true) || it.equals("production", true) ||
-                            it.equals("stage", true) || it.equals("prodora", true)
+                            it.equals("stage", true)
                     }
                 if (isProd) {
                     headers.httpStrictTransportSecurity { hsts ->

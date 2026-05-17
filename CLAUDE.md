@@ -63,7 +63,7 @@ A Spring Boot financial management application built with Kotlin/Groovy providin
 - **Resilience**: Circuit breakers, retry logic, timeouts
 
 ### Database
-- **Profiles**: `prod`, `stage`, `prodora`, `func`, `int`, `unit`, `perf`, `ora`
+- **Profiles**: `prod`, `stage`, `func`, `int`, `unit`, `perf`
 - **Hibernate/Flyway**: Production uses `ddl-auto: validate` + Flyway first, Tests use `ddl-auto: create` + optional Flyway
 
 ### Test Strategy
