@@ -15,12 +15,12 @@ import org.springframework.security.web.access.intercept.AuthorizationFilter
 @Order(0)
 class TestSecurityConfig {
 
-    @Bean("securityFilterChain")
+    @Bean("perfTestSecurityFilterChain")
     @Order(0)
-    SecurityFilterChain securityFilterChain(
+    SecurityFilterChain perfTestSecurityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter
-    ) throws Exception { // overrides main WebSecurityConfig bean for perf tests
+    ) throws Exception {
         http
             .csrf { it.disable() }
             .anonymous { it.disable() }
