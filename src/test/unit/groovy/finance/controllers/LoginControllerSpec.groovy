@@ -39,7 +39,7 @@ class LoginControllerSpec extends Specification {
 
     def "login should return OK on successful authentication"() {
         given:
-        def loginRequest = new LoginRequest("testuser", "password123")
+        def loginRequest = new LoginRequest("testuser", "password123", false)
         def user = new User(username: "testuser", password: new BCryptPasswordEncoder().encode("password123"))
         userRepository.findByUsername("testuser") >> Optional.of(user)
 
@@ -53,7 +53,7 @@ class LoginControllerSpec extends Specification {
 
     def "login should return UNAUTHORIZED for invalid credentials"() {
         given:
-        def loginRequest = new LoginRequest("wronguser", "wrongpassword")
+        def loginRequest = new LoginRequest("wronguser", "wrongpassword", false)
         userRepository.findByUsername("wronguser") >> Optional.empty()
 
         when:
@@ -66,7 +66,7 @@ class LoginControllerSpec extends Specification {
 
     def "login should return BAD_REQUEST for validation errors"() {
         given:
-        def loginRequest = new LoginRequest("", "")
+        def loginRequest = new LoginRequest("", "", false)
         bindingResult.hasErrors() >> true
         bindingResult.getFieldErrors() >> []
 
@@ -215,7 +215,7 @@ class LoginControllerSpec extends Specification {
         given:
         jakarta.validation.Validation.buildDefaultValidatorFactory().with { factory ->
             def validator = factory.validator
-            def request = new LoginRequest("ab", "ValidPass1!")
+            def request = new LoginRequest("ab", "ValidPass1!", false)
             def violations = validator.validate(request)
             expect:
             violations.any { it.propertyPath.toString() == "username" }
@@ -227,7 +227,7 @@ class LoginControllerSpec extends Specification {
         def longPassword = "A1!" + "a" * 126  // 129 chars
         jakarta.validation.Validation.buildDefaultValidatorFactory().with { factory ->
             def validator = factory.validator
-            def request = new LoginRequest("validuser", longPassword)
+            def request = new LoginRequest("validuser", longPassword, false)
             def violations = validator.validate(request)
             expect:
             violations.any { it.propertyPath.toString() == "password" }
@@ -235,8 +235,13 @@ class LoginControllerSpec extends Specification {
     }
 
     def "refresh should return UNAUTHORIZED when principal is null"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> null
+
         when:
-        ResponseEntity<Map<String, String>> result = loginController.refresh(null, response)
+        ResponseEntity<Map<String, String>> result = loginController.refresh(null, refreshRequest, response)
 
         then:
         result.statusCode == HttpStatus.UNAUTHORIZED
@@ -244,8 +249,13 @@ class LoginControllerSpec extends Specification {
     }
 
     def "refresh should return UNAUTHORIZED when principal is blank"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> null
+
         when:
-        ResponseEntity<Map<String, String>> result = loginController.refresh("   ", response)
+        ResponseEntity<Map<String, String>> result = loginController.refresh("   ", refreshRequest, response)
 
         then:
         result.statusCode == HttpStatus.UNAUTHORIZED
@@ -253,8 +263,13 @@ class LoginControllerSpec extends Specification {
     }
 
     def "refresh should return OK and set cookie when principal is valid"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> null
+
         when:
-        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", response)
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
 
         then:
         result.statusCode == HttpStatus.OK
@@ -264,7 +279,7 @@ class LoginControllerSpec extends Specification {
 
     def "login should return TOO_MANY_REQUESTS when account is locked"() {
         given:
-        def loginRequest = new LoginRequest("lockeduser", "password123")
+        def loginRequest = new LoginRequest("lockeduser", "password123", false)
         10.times { loginAttemptService.recordFailure("lockeduser") }
 
         when:
@@ -347,7 +362,7 @@ class LoginControllerSpec extends Specification {
     def "login sets Strict sameSite cookie when profile is not dev"() {
         given:
         loginController.activeProfile = "prod"
-        def loginRequest = new LoginRequest("testuser", "password123")
+        def loginRequest = new LoginRequest("testuser", "password123", false)
         def user = new User(username: "testuser", password: new BCryptPasswordEncoder().encode("password123"))
         userRepository.findByUsername("testuser") >> Optional.of(user)
 
@@ -365,9 +380,12 @@ class LoginControllerSpec extends Specification {
     def "refresh sets Strict sameSite cookie when profile is not dev"() {
         given:
         loginController.activeProfile = "prod"
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> null
 
         when:
-        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", response)
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
 
         then:
         result.statusCode == HttpStatus.OK
@@ -425,7 +443,7 @@ class LoginControllerSpec extends Specification {
 
     def "login returns BAD_REQUEST with null defaultMessage field error"() {
         given:
-        def loginRequest = new LoginRequest("testuser", "password123")
+        def loginRequest = new LoginRequest("testuser", "password123", false)
         bindingResult.hasErrors() >> true
         bindingResult.getFieldErrors() >> [Mock(org.springframework.validation.FieldError) {
             getField() >> "username"
@@ -441,7 +459,7 @@ class LoginControllerSpec extends Specification {
 
     def "login should return UNAUTHORIZED when userRepository throws exception"() {
         given:
-        def loginRequest = new LoginRequest("dbfailuser", "password123")
+        def loginRequest = new LoginRequest("dbfailuser", "password123", false)
         userRepository.findByUsername("dbfailuser") >> { throw new RuntimeException("db connection failed") }
 
         when:

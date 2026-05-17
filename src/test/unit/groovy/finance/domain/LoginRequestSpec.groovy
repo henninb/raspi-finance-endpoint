@@ -15,7 +15,7 @@ class LoginRequestSpec extends Specification {
 
     def "should create LoginRequest with valid username and password"() {
         when: "creating a LoginRequest with valid data"
-        def loginRequest = new LoginRequest("testuser", "testpassword")
+        def loginRequest = new LoginRequest("testuser", "testpassword", false)
 
         then: "loginRequest is created successfully"
         loginRequest.username == "testuser"
@@ -28,7 +28,7 @@ class LoginRequestSpec extends Specification {
 
     def "should fail validation when username is blank"() {
         given: "a LoginRequest with blank username"
-        def loginRequest = new LoginRequest("", "testpassword")
+        def loginRequest = new LoginRequest("", "testpassword", false)
 
         when: "validating the request"
         def violations = validator.validate(loginRequest)
@@ -41,7 +41,7 @@ class LoginRequestSpec extends Specification {
 
     def "should fail validation when password is blank"() {
         given: "a LoginRequest with blank password"
-        def loginRequest = new LoginRequest("testuser", "")
+        def loginRequest = new LoginRequest("testuser", "", false)
 
         when: "validating the request"
         def violations = validator.validate(loginRequest)
@@ -54,7 +54,7 @@ class LoginRequestSpec extends Specification {
 
     def "should fail validation when both username and password are blank"() {
         given: "a LoginRequest with blank credentials"
-        def loginRequest = new LoginRequest("", "")
+        def loginRequest = new LoginRequest("", "", false)
 
         when: "validating the request"
         def violations = validator.validate(loginRequest)
@@ -76,8 +76,8 @@ class LoginRequestSpec extends Specification {
 
     def "should support data class equality"() {
         given: "two LoginRequest objects with same data"
-        def request1 = new LoginRequest("user1", "pass1")
-        def request2 = new LoginRequest("user1", "pass1")
+        def request1 = new LoginRequest("user1", "pass1", false)
+        def request2 = new LoginRequest("user1", "pass1", false)
 
         expect: "they are equal"
         request1 == request2
@@ -86,8 +86,8 @@ class LoginRequestSpec extends Specification {
 
     def "should support data class inequality"() {
         given: "two LoginRequest objects with different data"
-        def request1 = new LoginRequest("user1", "pass1")
-        def request2 = new LoginRequest("user2", "pass2")
+        def request1 = new LoginRequest("user1", "pass1", false)
+        def request2 = new LoginRequest("user2", "pass2", false)
 
         expect: "they are not equal"
         request1 != request2
@@ -95,7 +95,7 @@ class LoginRequestSpec extends Specification {
 
     def "should handle whitespace-only username as invalid"() {
         given: "a LoginRequest with whitespace-only username"
-        def loginRequest = new LoginRequest("   ", "testpassword")
+        def loginRequest = new LoginRequest("   ", "testpassword", false)
 
         when: "validating the request"
         def violations = validator.validate(loginRequest)
@@ -107,7 +107,7 @@ class LoginRequestSpec extends Specification {
 
     def "should handle whitespace-only password as invalid"() {
         given: "a LoginRequest with whitespace-only password"
-        def loginRequest = new LoginRequest("testuser", "   ")
+        def loginRequest = new LoginRequest("testuser", "   ", false)
 
         when: "validating the request"
         def violations = validator.validate(loginRequest)
