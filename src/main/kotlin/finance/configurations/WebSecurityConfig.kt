@@ -59,7 +59,7 @@ open class WebSecurityConfig(
     }
 
     @Bean
-    @org.springframework.context.annotation.Profile("!func")
+    @org.springframework.context.annotation.Profile("!func & !perf")
     open fun securityFilterChain(
         http: HttpSecurity,
         loggingCorsFilter: LoggingCorsFilter,

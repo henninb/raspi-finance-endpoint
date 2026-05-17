@@ -9,7 +9,6 @@ spring:
     exclude: org.springframework.boot.actuate.autoconfigure.metrics.export.influx.InfluxMetricsExportAutoConfiguration
   main:
     web-application-type: servlet
-    allow-bean-definition-overriding: true
 
   # ===============================
   # = Jackson Settings
