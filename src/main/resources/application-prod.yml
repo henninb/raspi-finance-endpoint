@@ -175,7 +175,7 @@ custom:
       - ${ADMIN_USERNAME:}
   security:
     rate-limit:
-      enabled: true
+      enabled: false
       # Allow override via env var RATE_LIMIT_RPM; default to 5000
       requests-per-minute: ${RATE_LIMIT_RPM:5000}
       window-size-minutes: 1
