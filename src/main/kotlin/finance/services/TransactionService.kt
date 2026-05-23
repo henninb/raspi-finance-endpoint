@@ -452,36 +452,30 @@ class TransactionService
 
         fun createFutureTransactionStandardized(transaction: Transaction): ServiceResult<Transaction> =
             handleServiceOperation("createFutureTransaction", transaction.guid) {
-                val owner = TenantContext.getCurrentOwner()
-                // Calculate future transaction date using LocalDate
+                val txOwner = TenantContext.getCurrentOwner()
                 val futureTransactionDate = calculateFutureLocalDate(transaction, transaction.transactionDate)
-
-                val transactionFuture = Transaction()
-                transactionFuture.owner = owner
-
-                // Calculate future due date if present
-                if (transaction.dueDate != null) {
-                    transactionFuture.dueDate = calculateFutureLocalDate(transaction, transaction.dueDate!!)
-                }
-
-                transactionFuture.guid = UUID.randomUUID().toString()
-                transactionFuture.account = transaction.account
-                transactionFuture.accountId = transaction.accountId
-                transactionFuture.accountNameOwner = transaction.accountNameOwner
-                transactionFuture.accountType = transaction.accountType
-                transactionFuture.activeStatus = transaction.activeStatus
-                transactionFuture.amount = transaction.amount
-                transactionFuture.category = transaction.category
-                transactionFuture.description = transaction.description
-                transactionFuture.receiptImageId = null
-                transactionFuture.notes = ""
-                transactionFuture.reoccurringType = transaction.reoccurringType
-                transactionFuture.transactionState = TransactionState.Future
-                transactionFuture.transactionDate = futureTransactionDate
-                val futureTimestamp = Timestamp(System.currentTimeMillis())
-                transactionFuture.dateUpdated = futureTimestamp
-                transactionFuture.dateAdded = futureTimestamp
-
+                val timestamp = nowTimestamp()
+                val transactionFuture =
+                    Transaction().apply {
+                        owner = txOwner
+                        transaction.dueDate?.let { dueDate = calculateFutureLocalDate(transaction, it) }
+                        guid = UUID.randomUUID().toString()
+                        account = transaction.account
+                        accountId = transaction.accountId
+                        accountNameOwner = transaction.accountNameOwner
+                        accountType = transaction.accountType
+                        activeStatus = transaction.activeStatus
+                        amount = transaction.amount
+                        category = transaction.category
+                        description = transaction.description
+                        receiptImageId = null
+                        notes = ""
+                        reoccurringType = transaction.reoccurringType
+                        transactionState = TransactionState.Future
+                        transactionDate = futureTransactionDate
+                        dateUpdated = timestamp
+                        dateAdded = timestamp
+                    }
                 if (transactionFuture.reoccurringType == ReoccurringType.Undefined) {
                     throw InvalidReoccurringTypeException("TransactionState cannot be undefined for reoccurring transactions.")
                 }
@@ -601,17 +595,9 @@ class TransactionService
             }
         }
 
-        private fun createDefaultCategory(categoryName: String): Category {
-            val category = Category()
-            category.categoryName = categoryName
-            return category
-        }
+        private fun createDefaultCategory(categoryName: String) = Category(categoryName = categoryName)
 
-        private fun createDefaultDescription(descriptionName: String): Description {
-            val description = Description()
-            description.descriptionName = descriptionName
-            return description
-        }
+        private fun createDefaultDescription(descriptionName: String) = Description(descriptionName = descriptionName)
 
         // ===== Private Helper Methods =====
 
@@ -619,18 +605,22 @@ class TransactionService
             transaction: Transaction,
             date: LocalDate,
         ): LocalDate =
-            if (transaction.reoccurringType == ReoccurringType.FortNightly) {
-                date.plusDays(14)
-            } else {
-                if (transaction.accountType == AccountType.Debit) {
-                    if (transaction.reoccurringType == ReoccurringType.Monthly) {
-                        date.plusMonths(1)
-                    } else {
-                        logger.warn("debit transaction ReoccurringType needs to be configured.")
-                        throw InvalidReoccurringTypeException("debit transaction ReoccurringType needs to be configured.")
-                    }
-                } else {
+            when {
+                transaction.reoccurringType == ReoccurringType.FortNightly -> {
+                    date.plusDays(14)
+                }
+
+                transaction.accountType != AccountType.Debit -> {
                     date.plusYears(1)
+                }
+
+                transaction.reoccurringType == ReoccurringType.Monthly -> {
+                    date.plusMonths(1)
+                }
+
+                else -> {
+                    logger.warn("debit transaction ReoccurringType needs to be configured.")
+                    throw InvalidReoccurringTypeException("debit transaction ReoccurringType needs to be configured.")
                 }
             }
     }

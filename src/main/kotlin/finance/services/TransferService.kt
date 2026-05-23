@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.Optional
 import java.util.UUID
@@ -143,8 +144,6 @@ class TransferService
             val owner = TenantContext.getCurrentOwner()
             transfer.owner = owner
             logger.info("Inserting new transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
-            val transactionSource = Transaction()
-            val transactionDestination = Transaction()
 
             // Validate source account
             val optionalSourceAccount = accountService.account(transfer.sourceAccount)
@@ -160,11 +159,25 @@ class TransferService
                 throw RuntimeException("Destination account not found: ${transfer.destinationAccount}")
             }
 
-            // Populate source and destination transactions
-            populateSourceTransaction(transactionSource, transfer, transfer.sourceAccount)
-            populateDestinationTransaction(transactionDestination, transfer, transfer.destinationAccount)
-
             logger.info("Creating source and destination transactions for transfer")
+            val transactionSource =
+                buildTransferTransaction(
+                    transfer = transfer,
+                    accountName = transfer.sourceAccount,
+                    description = "transfer withdrawal",
+                    notes = "Transfer to ${transfer.destinationAccount}",
+                    amount = transfer.amount.negate(),
+                    accountType = AccountType.Debit,
+                )
+            val transactionDestination =
+                buildTransferTransaction(
+                    transfer = transfer,
+                    accountName = transfer.destinationAccount,
+                    description = "transfer deposit",
+                    notes = "Transfer from ${transfer.sourceAccount}",
+                    amount = transfer.amount,
+                    accountType = AccountType.Credit,
+                )
 
             // Create source transaction using ServiceResult pattern
             val sourceResult = transactionService.save(transactionSource)
@@ -256,43 +269,28 @@ class TransferService
 
         // ===== Helper Methods for Transfer Processing =====
 
-        private fun populateSourceTransaction(
-            transaction: Transaction,
+        private fun buildTransferTransaction(
             transfer: Transfer,
             accountName: String,
-        ) {
-            transaction.guid = UUID.randomUUID().toString()
-            transaction.transactionDate = transfer.transactionDate
-            transaction.description = "transfer withdrawal"
-            transaction.category = "transfer"
-            transaction.notes = "Transfer to ${transfer.destinationAccount}"
-            transaction.amount = transfer.amount.negate()
-            transaction.transactionState = TransactionState.Outstanding
-            transaction.reoccurringType = ReoccurringType.Onetime
-            transaction.accountType = AccountType.Debit
-            transaction.accountNameOwner = accountName
-            val timestamp = Timestamp(System.currentTimeMillis())
-            transaction.dateUpdated = timestamp
-            transaction.dateAdded = timestamp
-        }
-
-        private fun populateDestinationTransaction(
-            transaction: Transaction,
-            transfer: Transfer,
-            accountName: String,
-        ) {
-            transaction.guid = UUID.randomUUID().toString()
-            transaction.transactionDate = transfer.transactionDate
-            transaction.description = "transfer deposit"
-            transaction.category = "transfer"
-            transaction.notes = "Transfer from ${transfer.sourceAccount}"
-            transaction.amount = transfer.amount
-            transaction.transactionState = TransactionState.Outstanding
-            transaction.reoccurringType = ReoccurringType.Onetime
-            transaction.accountType = AccountType.Credit
-            transaction.accountNameOwner = accountName
-            val timestamp = Timestamp(System.currentTimeMillis())
-            transaction.dateUpdated = timestamp
-            transaction.dateAdded = timestamp
+            description: String,
+            notes: String,
+            amount: BigDecimal,
+            accountType: AccountType,
+        ): Transaction {
+            val timestamp = nowTimestamp()
+            return Transaction().apply {
+                guid = UUID.randomUUID().toString()
+                transactionDate = transfer.transactionDate
+                this.description = description
+                category = "transfer"
+                this.notes = notes
+                this.amount = amount
+                transactionState = TransactionState.Outstanding
+                reoccurringType = ReoccurringType.Onetime
+                this.accountType = accountType
+                accountNameOwner = accountName
+                dateUpdated = timestamp
+                dateAdded = timestamp
+            }
         }
     }

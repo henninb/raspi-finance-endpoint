@@ -47,14 +47,13 @@ open class BaseService
         open fun createDefaultAccount(
             accountNameOwner: String,
             accountType: AccountType,
-        ): Account {
-            val account = Account()
-            account.accountNameOwner = accountNameOwner
-            account.moniker = "0000"
-            account.accountType = accountType
-            account.activeStatus = true
-            return account
-        }
+        ): Account =
+            Account().apply {
+                this.accountNameOwner = accountNameOwner
+                moniker = "0000"
+                this.accountType = accountType
+                activeStatus = true
+            }
 
         /**
          * Execute database operations with resilience patterns (circuit breaker, retry, timeout)

@@ -172,24 +172,23 @@ class AccountService
                 }
             }
 
-        fun updateTotalsForAllAccounts(): Boolean {
-            val owner = TenantContext.getCurrentOwner()
-            try {
+        fun updateTotalsForAllAccounts() =
+            runAccountUpdate { owner ->
                 accountRepository.updateTotalsForAllAccountsByOwner(owner)
-            } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
-                meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
-                logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
             }
-            return true
-        }
 
-        fun updateValidationDatesForAllAccounts(): Boolean {
+        fun updateValidationDatesForAllAccounts() =
+            runAccountUpdate { owner ->
+                accountRepository.updateValidationDateForAllAccountsByOwner(owner)
+            }
+
+        private fun runAccountUpdate(repositoryOp: (String) -> Unit): Boolean {
             val owner = TenantContext.getCurrentOwner()
             try {
-                accountRepository.updateValidationDateForAllAccountsByOwner(owner)
-            } catch (invalidDataAccessResourceUsageException: InvalidDataAccessResourceUsageException) {
+                repositoryOp(owner)
+            } catch (ex: InvalidDataAccessResourceUsageException) {
                 meterService.incrementExceptionCaughtCounter("InvalidDataAccessResourceUsageException")
-                logger.warn("InvalidDataAccessResourceUsageException: ${invalidDataAccessResourceUsageException.message}")
+                logger.warn("InvalidDataAccessResourceUsageException: ${ex.message}")
             }
             return true
         }

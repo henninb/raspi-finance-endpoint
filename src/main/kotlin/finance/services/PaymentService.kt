@@ -83,14 +83,7 @@ class PaymentService
                     logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
 
                     // Create destination transaction
-                    val transactionDestination = Transaction()
-                    populateDestinationTransaction(
-                        transactionDestination,
-                        entity,
-                        entity.sourceAccount,
-                        destinationAccount.accountType,
-                        behavior,
-                    )
+                    val transactionDestination = buildDestinationTransaction(entity, entity.sourceAccount, destinationAccount.accountType, behavior)
                     val destinationResult = transactionService.save(transactionDestination)
                     when (destinationResult) {
                         is ServiceResult.Success -> {
@@ -116,14 +109,7 @@ class PaymentService
                     }
 
                     // Create source transaction
-                    val transactionSource = Transaction()
-                    populateSourceTransaction(
-                        transactionSource,
-                        entity,
-                        entity.sourceAccount,
-                        sourceAccount.accountType,
-                        behavior,
-                    )
+                    val transactionSource = buildSourceTransaction(entity, entity.sourceAccount, sourceAccount.accountType, behavior)
                     val sourceResult = transactionService.save(transactionSource)
                     when (sourceResult) {
                         is ServiceResult.Success -> {
@@ -230,65 +216,45 @@ class PaymentService
             guidDestination: String?,
         ): Int {
             var deletedCount = 0
-
-            // Delete source transaction
-            if (!guidSource.isNullOrBlank()) {
-                when (val result = transactionService.deleteByIdInternal(guidSource)) {
-                    is ServiceResult.Success -> {
-                        deletedCount++
-                        logger.info("Deleted source transaction: $guidSource")
-                    }
-
-                    is ServiceResult.NotFound -> {
-                        logger.warn("Source transaction not found: $guidSource")
-                    }
-
-                    is ServiceResult.BusinessError -> {
-                        throw DataIntegrityViolationException(
-                            "Cannot delete payment because source transaction $guidSource could not be deleted: ${result.message}",
-                        )
-                    }
-
-                    is ServiceResult.ValidationError -> {
-                        throw DataIntegrityViolationException("Validation error deleting source transaction $guidSource")
-                    }
-
-                    is ServiceResult.SystemError -> {
-                        throw RuntimeException("System error deleting source transaction: $guidSource", result.exception)
-                    }
-                }
-            }
-
-            // Delete destination transaction
-            if (!guidDestination.isNullOrBlank()) {
-                when (val result = transactionService.deleteByIdInternal(guidDestination)) {
-                    is ServiceResult.Success -> {
-                        deletedCount++
-                        logger.info("Deleted destination transaction: $guidDestination")
-                    }
-
-                    is ServiceResult.NotFound -> {
-                        logger.warn("Destination transaction not found: $guidDestination")
-                    }
-
-                    is ServiceResult.BusinessError -> {
-                        throw DataIntegrityViolationException(
-                            "Cannot delete payment because destination transaction $guidDestination could not be deleted: ${result.message}",
-                        )
-                    }
-
-                    is ServiceResult.ValidationError -> {
-                        throw DataIntegrityViolationException("Validation error deleting destination transaction $guidDestination")
-                    }
-
-                    is ServiceResult.SystemError -> {
-                        throw RuntimeException("System error deleting destination transaction: $guidDestination", result.exception)
-                    }
-                }
-            }
-
+            if (!guidSource.isNullOrBlank()) deletedCount += deleteTransactionByGuid(guidSource, "source")
+            if (!guidDestination.isNullOrBlank()) deletedCount += deleteTransactionByGuid(guidDestination, "destination")
             return deletedCount
         }
+
+        private fun deleteTransactionByGuid(
+            guid: String,
+            label: String,
+        ): Int =
+            when (val result = transactionService.deleteByIdInternal(guid)) {
+                is ServiceResult.Success -> {
+                    logger.info("Deleted $label transaction: $guid")
+                    1
+                }
+
+                is ServiceResult.NotFound -> {
+                    logger.warn("$label transaction not found: $guid")
+                    0
+                }
+
+                is ServiceResult.BusinessError -> {
+                    throw DataIntegrityViolationException(
+                        "Cannot delete payment because $label transaction $guid could not be deleted: ${result.message}",
+                    )
+                }
+
+                is ServiceResult.ValidationError -> {
+                    throw DataIntegrityViolationException(
+                        "Validation error deleting $label transaction $guid",
+                    )
+                }
+
+                is ServiceResult.SystemError -> {
+                    throw RuntimeException(
+                        "System error deleting $label transaction: $guid",
+                        result.exception,
+                    )
+                }
+            }
 
         fun updatePayment(
             paymentId: Long,
@@ -368,49 +334,51 @@ class PaymentService
                 else -> -amount.abs()
             }
 
-        // ===== Transaction Population Methods =====
+        // ===== Transaction Factory Methods =====
 
-        private fun populateSourceTransaction(
-            transactionSource: finance.domain.Transaction,
+        private fun buildSourceTransaction(
             payment: Payment,
             sourceAccountNameOwner: String,
             sourceAccountType: AccountType,
             behavior: PaymentBehavior,
-        ) {
-            transactionSource.guid = UUID.randomUUID().toString()
-            transactionSource.transactionDate = payment.transactionDate
-            transactionSource.description = "payment"
-            transactionSource.category = "bill_pay"
-            transactionSource.notes = "to ${payment.destinationAccount}"
-            transactionSource.amount = calculateSourceAmount(payment.amount, behavior)
-            transactionSource.transactionState = TransactionState.Outstanding
-            transactionSource.reoccurringType = ReoccurringType.Onetime
-            transactionSource.accountType = sourceAccountType
-            transactionSource.accountNameOwner = sourceAccountNameOwner
-            val timestamp = Timestamp(System.currentTimeMillis())
-            transactionSource.dateUpdated = timestamp
-            transactionSource.dateAdded = timestamp
+        ): Transaction {
+            val timestamp = nowTimestamp()
+            return Transaction().apply {
+                guid = UUID.randomUUID().toString()
+                transactionDate = payment.transactionDate
+                description = "payment"
+                category = "bill_pay"
+                notes = "to ${payment.destinationAccount}"
+                amount = calculateSourceAmount(payment.amount, behavior)
+                transactionState = TransactionState.Outstanding
+                reoccurringType = ReoccurringType.Onetime
+                accountType = sourceAccountType
+                accountNameOwner = sourceAccountNameOwner
+                dateUpdated = timestamp
+                dateAdded = timestamp
+            }
         }
 
-        private fun populateDestinationTransaction(
-            transactionDestination: finance.domain.Transaction,
+        private fun buildDestinationTransaction(
             payment: Payment,
             sourceAccountNameOwner: String,
             destinationAccountType: AccountType,
             behavior: PaymentBehavior,
-        ) {
-            transactionDestination.guid = UUID.randomUUID().toString()
-            transactionDestination.transactionDate = payment.transactionDate
-            transactionDestination.description = "payment"
-            transactionDestination.category = "bill_pay"
-            transactionDestination.notes = "from $sourceAccountNameOwner"
-            transactionDestination.amount = calculateDestinationAmount(payment.amount, behavior)
-            transactionDestination.transactionState = TransactionState.Outstanding
-            transactionDestination.reoccurringType = ReoccurringType.Onetime
-            transactionDestination.accountType = destinationAccountType
-            transactionDestination.accountNameOwner = payment.destinationAccount
-            val timestamp = Timestamp(System.currentTimeMillis())
-            transactionDestination.dateUpdated = timestamp
-            transactionDestination.dateAdded = timestamp
+        ): Transaction {
+            val timestamp = nowTimestamp()
+            return Transaction().apply {
+                guid = UUID.randomUUID().toString()
+                transactionDate = payment.transactionDate
+                description = "payment"
+                category = "bill_pay"
+                notes = "from $sourceAccountNameOwner"
+                amount = calculateDestinationAmount(payment.amount, behavior)
+                transactionState = TransactionState.Outstanding
+                reoccurringType = ReoccurringType.Onetime
+                accountType = destinationAccountType
+                accountNameOwner = payment.destinationAccount
+                dateUpdated = timestamp
+                dateAdded = timestamp
+            }
         }
     }
