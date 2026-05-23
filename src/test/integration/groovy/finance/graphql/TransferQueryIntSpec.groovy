@@ -11,9 +11,7 @@ import finance.services.TransferService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
-import java.math.BigDecimal
 import java.sql.Date
-import java.util.UUID
 
 class TransferQueryIntSpec extends BaseIntegrationSpec {
 

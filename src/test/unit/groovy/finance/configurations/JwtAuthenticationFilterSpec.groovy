@@ -46,7 +46,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         then:
         SecurityContextHolder.context.authentication != null
         SecurityContextHolder.context.authentication.principal == 'alice'
-        SecurityContextHolder.context.authentication.authorities*.authority.containsAll(['ROLE_USER','USER'])
+        SecurityContextHolder.context.authentication.authorities*.authority.containsAll(['ROLE_USER', 'USER'])
         1 * chain.doFilter(req, res)
     }
 

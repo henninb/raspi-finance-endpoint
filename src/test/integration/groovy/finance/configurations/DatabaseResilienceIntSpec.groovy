@@ -15,13 +15,11 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Specification
 
-import java.sql.Date
 import java.sql.Timestamp
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
-import java.math.BigDecimal
 
 @ActiveProfiles("int")
 @SpringBootTest

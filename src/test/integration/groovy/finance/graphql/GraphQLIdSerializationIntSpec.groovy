@@ -6,8 +6,6 @@ import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Transaction
 import finance.domain.TransactionState
-import finance.domain.TransactionType
-import finance.controllers.dto.PaymentInputDto
 import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
@@ -20,7 +18,6 @@ import org.springframework.test.context.TestPropertySource
 import groovy.json.JsonSlurper
 import spock.lang.Requires
 
-import java.math.BigDecimal
 import java.time.LocalDate
 
 @TestPropertySource(properties = [
@@ -53,7 +50,7 @@ class GraphQLIdSerializationIntSpec extends BaseRestTemplateIntegrationSpec {
 
     private static String safeSuffix(int len = 5) {
         def rnd = new Random()
-        def alphabet = ['a','b','c','d','e','f']
+        def alphabet = ['a', 'b', 'c', 'd', 'e', 'f']
         (1..len).collect { alphabet[rnd.nextInt(alphabet.size())] }.join()
     }
 

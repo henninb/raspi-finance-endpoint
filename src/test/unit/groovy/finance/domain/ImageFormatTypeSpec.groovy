@@ -69,7 +69,7 @@ class ImageFormatTypeSpec extends Specification {
     def "should support switch statements"() {
         when: "using image format type in switch"
         def result
-        switch(ImageFormatType.Jpeg) {
+        switch (ImageFormatType.Jpeg) {
             case ImageFormatType.Jpeg:
                 result = "jpeg image"
                 break

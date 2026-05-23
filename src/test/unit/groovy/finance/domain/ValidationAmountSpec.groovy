@@ -84,7 +84,7 @@ class ValidationAmountSpec extends BaseDomainSpec {
         Timestamp fixedDate = new Timestamp(1700000000000L)
         ValidationAmount va1 = new ValidationAmountBuilder().withAccountId(1L).withAmount(10.0G).withValidationDate(fixedDate).withDateAdded(fixedDate).withDateUpdated(fixedDate).build()
         ValidationAmount va2 = new ValidationAmountBuilder().withAccountId(1L).withAmount(10.0G).withValidationDate(fixedDate).withDateAdded(fixedDate).withDateUpdated(fixedDate).build()
-        
+
         va1.validationId = 1L
         va2.validationId = 1L
         ValidationAmount va3 = new ValidationAmountBuilder().withAccountId(2L).build()

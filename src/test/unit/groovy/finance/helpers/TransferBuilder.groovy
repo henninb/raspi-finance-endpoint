@@ -1,7 +1,6 @@
 package finance.helpers
 
 import finance.domain.Transfer
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 

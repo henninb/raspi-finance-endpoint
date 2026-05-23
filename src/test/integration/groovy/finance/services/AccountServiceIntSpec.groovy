@@ -10,7 +10,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import spock.lang.Ignore
 import spock.lang.Specification
 
 @Log

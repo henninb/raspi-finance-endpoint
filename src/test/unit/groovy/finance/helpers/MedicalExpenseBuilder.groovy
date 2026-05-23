@@ -3,10 +3,8 @@ package finance.helpers
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
 
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
-import java.util.*
 
 class MedicalExpenseBuilder {
 

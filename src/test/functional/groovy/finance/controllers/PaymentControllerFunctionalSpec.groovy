@@ -1,7 +1,6 @@
 package finance.controllers
 
 import finance.domain.Payment
-import finance.controllers.BaseControllerFunctionalSpec
 import finance.helpers.SmartPaymentBuilder
 import finance.helpers.TestFixtures
 import groovy.json.JsonSlurper
@@ -16,7 +15,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.PendingFeature
 import spock.lang.Shared
-import spock.lang.Unroll
 
 /**
  * TDD specification for standardized PaymentController implementation.
@@ -25,7 +23,7 @@ import spock.lang.Unroll
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedPaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
+class PaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     TestFixtures testFixtures

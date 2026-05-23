@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.FamilyMember
@@ -9,7 +10,7 @@ import org.springframework.http.ResponseEntity
 import spock.lang.Specification
 import spock.lang.Subject
 
-class StandardizedFamilyMemberControllerSpec extends Specification {
+class FamilyMemberControllerSpec extends Specification {
 
     private static final String TEST_OWNER = "test_owner"
 

@@ -17,10 +17,6 @@ class SecurityUserRepoServiceIntSpec extends BaseRestTemplateIntegrationSpec {
     @Autowired
     UserService userService
 
-    void setup() {
-        // Setup if needed
-    }
-
     void 'test user repository integration'() {
         given:
         User testUser = new User()

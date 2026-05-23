@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Description
@@ -15,7 +16,7 @@ import jakarta.persistence.EntityNotFoundException
  * TDD Specification for DescriptionService
  * Tests the Description service using new ServiceResult pattern with comprehensive error handling
  */
-class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
+class DescriptionServiceSpec extends BaseServiceSpec {
 
     def descriptionRepositoryMock = Mock(DescriptionRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
@@ -242,7 +243,6 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-
     def "findByDescriptionName should return description when found"() {
         given: "existing description"
         def description = DescriptionBuilder.builder().withDescriptionName("test").build()
@@ -270,7 +270,6 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         result.get().descriptionName == "test"
         0 * _
     }
-
 
     // ===== TDD Tests for mergeDescriptions() =====
 
@@ -319,7 +318,6 @@ class StandardizedDescriptionServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(description) >> { throw new ConstraintViolationException("Validation failed", violations) }
         thrown(jakarta.validation.ValidationException)
     }
-
 
     def "mergeDescriptions should throw RuntimeException when target description not found"() {
         when: "merging with non-existent target description"

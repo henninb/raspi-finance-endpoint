@@ -6,15 +6,11 @@ import finance.domain.Account
 import finance.helpers.SmartPendingTransactionBuilder
 import finance.helpers.SmartAccountBuilder
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Shared
 import java.time.LocalDate
-import java.math.BigDecimal
-import jakarta.validation.ConstraintViolationException
 
 /**
  * INTEGRATION TEST - PendingTransactionRepository using non-brittle, resilient architecture
- *
  * This integration test demonstrates the refined non-brittle approach:
  * ✅ No hardcoded names - all use testOwner for uniqueness
  * ✅ SmartBuilder with flexible constraint validation
@@ -92,7 +88,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         savedTx.dateAdded != null
 
         when: "Retrieving the transaction by ID"
-        Optional<PendingTransaction> foundTx = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner,savedTx.pendingTransactionId)
+        Optional<PendingTransaction> foundTx = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner, savedTx.pendingTransactionId)
 
         then: "Transaction is retrievable with consistent data"
         foundTx.isPresent()
@@ -268,7 +264,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         pendingTransactionRepository.delete(saved)
-        def found = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner,saved.pendingTransactionId)
+        def found = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner, saved.pendingTransactionId)
 
         then:
         !found.isPresent()
@@ -327,7 +323,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         pendingTransactionRepository.delete(saved)
 
         then: "Transaction is removed from persistence"
-        Optional<PendingTransaction> deleted = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner,tempId)
+        Optional<PendingTransaction> deleted = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner, tempId)
         !deleted.isPresent()
 
         and: "Standard JPA findById also shows removal"
@@ -498,7 +494,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
         saved.accountNameOwner == existingAccount
 
         when: "Retrieving and verifying business data consistency"
-        Optional<PendingTransaction> retrieved = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner,saved.pendingTransactionId)
+        Optional<PendingTransaction> retrieved = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner, saved.pendingTransactionId)
 
         then: "Retrieved data maintains full business integrity"
         retrieved.isPresent()
@@ -511,7 +507,7 @@ class PendingTransactionRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find non-existent pending transaction'() {
         when: "Searching for non-existent transactions"
-        Optional<PendingTransaction> nonExistentById = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner,-999L)
+        Optional<PendingTransaction> nonExistentById = pendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(testOwner, -999L)
         Optional<PendingTransaction> nonExistentByJpaId = pendingTransactionRepository.findById(-999L)
 
         then: "Repository properly handles non-existent lookups"

@@ -12,7 +12,7 @@ import spock.lang.Unroll
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("func")
-class StandardizedControllerPatternFunctionalSpec extends Specification {
+class ControllerPatternFunctionalSpec extends Specification {
 
     // STANDARDIZATION REQUIREMENT TESTS
 
@@ -108,7 +108,7 @@ class StandardizedControllerPatternFunctionalSpec extends Specification {
         operation   | expectedStatus
         'save'      | '201 CREATED'
         'update'    | '200 OK'
-        'deleteById'| '200 OK with entity body'
+        'deleteById' | '200 OK with entity body'
         'findById'  | '200 OK or 404 NOT_FOUND'
         'findAllActive' | '200 OK with list (possibly empty)'
     }

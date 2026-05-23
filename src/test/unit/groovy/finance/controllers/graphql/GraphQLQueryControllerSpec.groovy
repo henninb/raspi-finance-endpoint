@@ -9,7 +9,6 @@ import finance.domain.Payment
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.domain.Transaction
-import finance.domain.TransactionState
 import finance.domain.Transfer
 import finance.domain.ValidationAmount
 import finance.services.AccountService

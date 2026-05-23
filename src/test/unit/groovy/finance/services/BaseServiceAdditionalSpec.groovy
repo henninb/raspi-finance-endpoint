@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.DatabaseResilienceConfiguration
 import finance.configurations.ResilienceComponents
 

@@ -4,7 +4,6 @@ import finance.domain.Payment
 
 import java.sql.Timestamp
 import java.time.LocalDate
-import java.util.*
 
 class PaymentBuilder {
 
@@ -41,7 +40,6 @@ class PaymentBuilder {
         }
         payment
     }
-
 
     PaymentBuilder withOwner(String owner) {
         this.owner = owner

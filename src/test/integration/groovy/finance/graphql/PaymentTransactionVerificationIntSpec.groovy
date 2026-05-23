@@ -7,7 +7,6 @@ import finance.domain.AccountType
 import finance.repositories.TransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 
-import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
@@ -50,11 +49,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result.guidDestination != null
 
         and: "source transaction has negative amount (money leaving)"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("-150.00")
 
         and: "destination transaction has negative amount (debt decreasing)"
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("-150.00")
     }
 
@@ -82,11 +81,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "source transaction has negative amount (money leaving)"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("-500.00")
 
         and: "destination transaction has positive amount (money arriving)"
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("500.00")
     }
 
@@ -114,11 +113,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "source transaction has positive amount (debt increasing)"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("300.00")
 
         and: "destination transaction has positive amount (money arriving)"
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("300.00")
     }
 
@@ -146,11 +145,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "source transaction has positive amount (debt increasing - charging to pay another card)"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("1000.00")
 
         and: "destination transaction has negative amount (debt decreasing - being paid off)"
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("-1000.00")
     }
 
@@ -178,12 +177,12 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "source transaction uses actual Checking account type"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.accountType == AccountType.Checking
         sourceTransaction.accountType != AccountType.Debit
 
         and: "destination transaction uses actual Savings account type"
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.accountType == AccountType.Savings
         destTransaction.accountType != AccountType.Credit
     }
@@ -212,11 +211,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "source transaction notes reference destination"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.notes.contains(destAcct)
 
         and: "destination transaction notes reference source"
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.notes.contains(sourceAcct)
     }
 
@@ -244,10 +243,10 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "both transactions have 'payment' description"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.description == "payment"
 
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.description == "payment"
 
         and: "both transactions have 'bill_pay' category"
@@ -280,10 +279,10 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result.amount == new BigDecimal("0.01")
 
         and: "transactions have correct small amounts"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("-0.01")
 
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("0.01")
     }
 
@@ -312,10 +311,10 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result.amount == new BigDecimal("999999.99")
 
         and: "transactions have correct large amounts with proper signs"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("-999999.99")
 
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("999999.99")
     }
 
@@ -343,11 +342,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "transactions have TRANSFER behavior amounts (negative source, positive dest)"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("-250.00")
         sourceTransaction.accountType == AccountType.HSA
 
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("250.00")
         destTransaction.accountType == AccountType.Checking
     }
@@ -376,11 +375,11 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
         result != null
 
         and: "transactions have BILL_PAYMENT behavior amounts (both negative)"
-        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidSource).get()
+        def sourceTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidSource).get()
         sourceTransaction.amount == new BigDecimal("-2000.00")
         sourceTransaction.accountType == AccountType.Brokerage
 
-        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner,result.guidDestination).get()
+        def destTransaction = transactionRepository.findByOwnerAndGuid(testOwner, result.guidDestination).get()
         destTransaction.amount == new BigDecimal("-2000.00")
         destTransaction.accountType == AccountType.Mortgage
     }

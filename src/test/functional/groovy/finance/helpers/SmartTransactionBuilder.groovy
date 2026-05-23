@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.*
 import groovy.util.logging.Slf4j
-import java.math.BigDecimal
 import java.sql.Date
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicInteger

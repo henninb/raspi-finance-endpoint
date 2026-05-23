@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Account
@@ -14,14 +15,12 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import java.math.BigDecimal
-import java.sql.Timestamp
 
 /**
  * TDD Specification for AccountService
  * Tests the Account service using new ServiceResult pattern with comprehensive error handling
  */
-class StandardizedAccountServiceSpec extends BaseServiceSpec {
+class AccountServiceSpec extends BaseServiceSpec {
 
     def accountRepositoryMock = Mock(AccountRepository)
     def validationAmountRepositoryMock = Mock(finance.repositories.ValidationAmountRepository)
@@ -255,8 +254,6 @@ class StandardizedAccountServiceSpec extends BaseServiceSpec {
         result.accountId == 1L
         0 * _
     }
-
-
 
     // ===== TDD Tests for Complex Business Operations =====
 

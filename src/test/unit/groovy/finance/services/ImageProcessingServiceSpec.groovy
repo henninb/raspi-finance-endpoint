@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.ImageFormatType
@@ -7,7 +8,6 @@ import spock.lang.Unroll
 
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
 
 /**
  * TDD Specification for ImageProcessingService

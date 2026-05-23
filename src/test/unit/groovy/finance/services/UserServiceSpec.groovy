@@ -1,12 +1,10 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.User
 import finance.repositories.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
-import spock.lang.Specification
-
-import java.util.*
 
 class UserServiceSpec extends BaseServiceSpec {
 

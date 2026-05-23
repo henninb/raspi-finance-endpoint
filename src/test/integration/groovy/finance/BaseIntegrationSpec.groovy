@@ -1,6 +1,5 @@
 package finance
 
-import finance.Application
 import finance.helpers.TestDataManager
 import finance.helpers.TestFixtures
 import groovy.util.logging.Slf4j

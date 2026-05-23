@@ -1,17 +1,13 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.*
 import finance.repositories.TransactionRepository
 import finance.repositories.CategoryRepository
 import jakarta.validation.ConstraintViolation
-import jakarta.validation.ConstraintViolationException
-import jakarta.validation.Validator
-import org.springframework.dao.DataIntegrityViolationException
-import spock.lang.Specification
 import spock.lang.Subject
 
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 import org.springframework.data.domain.Page
@@ -448,8 +444,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transaction.guid = guid
 
         and: "payments that reference this transaction"
-        def payment1 = GroovyMock(finance.domain.Payment)
-        def payment2 = GroovyMock(finance.domain.Payment)
         payment1.paymentId >> 1L
         payment2.paymentId >> 2L
 
@@ -543,7 +537,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def guid = "transaction-with-payment"
         def transaction = createTestTransaction()
         transaction.guid = guid
-        def payment = GroovyMock(finance.domain.Payment)
 
         when: "public deleteById is called"
         def result = standardizedTransactionService.deleteById(guid)
@@ -719,10 +712,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
     }
 
     // ===== Legacy Method Compatibility Tests (REMOVED) =====
-
-
-
-
 
     def "calculateActiveTotalsByAccountNameOwner should delegate to calculationService"() {
         given: "an account name owner"
@@ -1132,7 +1121,6 @@ class TransactionServiceSpec extends BaseServiceSpec {
         given:
         def existingTransaction = createTestTransaction()
         def updatedTransaction = createTestTransaction()
-        def violation = Mock(jakarta.validation.ConstraintViolation)
         def violations = [violation] as Set
 
         when:

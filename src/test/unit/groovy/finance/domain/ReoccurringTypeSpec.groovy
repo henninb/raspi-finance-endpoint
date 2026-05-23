@@ -86,7 +86,7 @@ class ReoccurringTypeSpec extends Specification {
     def "should support switch statements"() {
         when: "using reoccurring type in switch"
         def result
-        switch(ReoccurringType.Monthly) {
+        switch (ReoccurringType.Monthly) {
             case ReoccurringType.Monthly:
                 result = "monthly payment"
                 break

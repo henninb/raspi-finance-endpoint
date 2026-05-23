@@ -4,7 +4,6 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Specification
 

@@ -5,7 +5,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.beans.factory.annotation.Autowired
-import spock.lang.Specification
 
 class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
 
@@ -103,7 +102,6 @@ class GraphQLFunctionalSpec extends BaseControllerFunctionalSpec {
         created.guidDestination != null
         0 * _
     }
-
 
 //    void 'description test'() {
 //        when:

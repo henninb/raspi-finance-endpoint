@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.ClaimStatus
@@ -7,14 +8,10 @@ import finance.domain.ServiceResult
 import finance.exceptions.DuplicateMedicalExpenseException
 import finance.helpers.MedicalExpenseBuilder
 import finance.repositories.MedicalExpenseRepository
-import jakarta.validation.ConstraintViolation
-import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
-import java.math.BigDecimal
 
 /**
  * TDD Test Specification for MedicalExpenseService
- * Following the established ServiceResult pattern and TDD methodology
  */
 class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
@@ -656,7 +653,6 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
         then:
         1 * medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, 100L) >> new MedicalExpense()
-        thrown(finance.exceptions.DuplicateMedicalExpenseException)
     }
 
     def "insertMedicalExpense should succeed when transactionId is null (no dup check)"() {

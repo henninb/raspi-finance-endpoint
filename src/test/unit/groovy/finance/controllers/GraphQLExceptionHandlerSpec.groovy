@@ -1,6 +1,5 @@
 package finance.controllers
 
-import finance.controllers.GraphQLExceptionHandler
 import spock.lang.Specification
 
 class GraphQLExceptionHandlerSpec extends Specification {

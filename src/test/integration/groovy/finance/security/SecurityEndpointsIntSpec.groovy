@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
 import org.springframework.transaction.annotation.Transactional
 
-import java.sql.Date
-
 @Transactional
 class SecurityEndpointsIntSpec extends BaseRestTemplateIntegrationSpec {
 
@@ -18,10 +16,6 @@ class SecurityEndpointsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired
     UserService userService
-
-    void setup() {
-        // Setup if needed
-    }
 
     void 'test user repository integration'() {
         given:

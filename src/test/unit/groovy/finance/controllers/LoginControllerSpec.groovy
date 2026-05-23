@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.User
@@ -17,7 +18,6 @@ import org.springframework.validation.BindingResult
 import finance.domain.LoginRequest
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import java.util.Date
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 class LoginControllerSpec extends Specification {

@@ -3,7 +3,6 @@ package finance.services
 import finance.repositories.TokenBlacklistRepository
 import java.time.Instant
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 class TokenBlacklistServiceSpec extends spock.lang.Specification {
 

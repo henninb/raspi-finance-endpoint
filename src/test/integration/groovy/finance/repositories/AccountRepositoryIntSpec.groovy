@@ -9,12 +9,10 @@ import org.springframework.dao.DataIntegrityViolationException
 import jakarta.validation.ConstraintViolationException
 
 import java.sql.Timestamp
-import java.math.BigDecimal
 
 class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
     @Autowired
-    AccountRepository accountRepository
 
     void 'test account repository basic CRUD operations'() {
         given:

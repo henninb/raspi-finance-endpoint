@@ -2,8 +2,6 @@ package finance.domain
 
 import spock.lang.Specification
 
-import java.math.BigDecimal
-
 class SummarySpec extends Specification {
 
     def "test Summary data class creation with all parameters"() {

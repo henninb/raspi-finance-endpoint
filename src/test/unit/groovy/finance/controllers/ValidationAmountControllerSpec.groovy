@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.ValidationAmount
@@ -11,10 +12,9 @@ import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
-import java.math.BigDecimal
 import java.sql.Timestamp
 
-class StandardizedValidationAmountControllerSpec extends Specification {
+class ValidationAmountControllerSpec extends Specification {
 
     static final String TEST_OWNER = "test_owner"
 

@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Account
@@ -11,14 +12,12 @@ import finance.repositories.AccountRepository
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
-import jakarta.persistence.EntityNotFoundException
-import java.math.BigDecimal
 
 /**
  * TDD Specification for ValidationAmountService
  * Tests the ValidationAmount service using new ServiceResult pattern with comprehensive error handling
  */
-class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
+class ValidationAmountServiceSpec extends BaseServiceSpec {
 
     def validationAmountRepositoryMock = Mock(ValidationAmountRepository)
     def accountRepositoryMock = Mock(AccountRepository)
@@ -214,7 +213,6 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
 
     def "findValidationAmountByAccountNameOwner should return validation amount when found"() {
         given: "existing account and validation amount"
-        def account = new finance.domain.Account()
         account.accountId = 1L
         account.accountNameOwner = "testAccount"
         def validationAmount = ValidationAmountBuilder.builder().withAccountId(1L).withTransactionState(TransactionState.Cleared).build()
@@ -244,7 +242,6 @@ class StandardizedValidationAmountServiceSpec extends BaseServiceSpec {
 
     def "findValidationAmountByAccountNameOwner should return LATEST validation amount by date when multiple exist"() {
         given: "account with multiple validation amounts at different dates"
-        def account = new finance.domain.Account()
         account.accountId = 1L
         account.accountNameOwner = "testAccount"
 

@@ -6,7 +6,6 @@ import finance.helpers.SmartTransactionBuilder
 import finance.helpers.TransactionTestContext
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
@@ -21,7 +20,7 @@ import spock.lang.Shared
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedTransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
+class TransactionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     private final String endpointName = "transaction"

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import finance.helpers.AccountBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
-
 import jakarta.validation.ConstraintViolation
 
 import static finance.utils.Constants.*

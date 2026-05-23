@@ -1,21 +1,17 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
-import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.helpers.ReceiptImageBuilder
 import finance.repositories.ReceiptImageRepository
-import jakarta.validation.ConstraintViolation
-import jakarta.validation.ConstraintViolationException
-import org.springframework.dao.DataIntegrityViolationException
-import java.util.Optional
 
 /**
  * TDD Test Specification for ReceiptImageService
  * Following the established ServiceResult pattern and TDD methodology
  */
-class StandardizedReceiptImageServiceSpec extends BaseServiceSpec {
+class ReceiptImageServiceSpec extends BaseServiceSpec {
 
     def receiptImageRepositoryMock = Mock(ReceiptImageRepository)
     def standardizedReceiptImageService = new ReceiptImageService(receiptImageRepositoryMock, meterService, validator, ResilienceComponents.noOp())

@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Description
@@ -10,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
-class StandardizedDescriptionControllerSpec extends Specification {
+class DescriptionControllerSpec extends Specification {
 
     static final String TEST_OWNER = "test_owner"
 

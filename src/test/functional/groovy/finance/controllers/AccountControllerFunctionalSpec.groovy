@@ -1,18 +1,15 @@
 package finance.controllers
 
 import finance.helpers.SmartAccountBuilder
-import finance.helpers.TestDataManager
-import finance.helpers.TestFixtures
 import groovy.util.logging.Slf4j
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
-import spock.lang.Shared
 
 @Slf4j
 @ActiveProfiles("func")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class StandardizedAccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
+class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     // ===== STANDARDIZED METHOD NAMING TESTS =====
 

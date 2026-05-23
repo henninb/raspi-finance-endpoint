@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.ClaimStatus
@@ -12,9 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
-import java.math.BigDecimal
-
-class StandardizedMedicalExpenseControllerSpec extends Specification {
+class MedicalExpenseControllerSpec extends Specification {
 
     static final String TEST_OWNER = "test_owner"
 

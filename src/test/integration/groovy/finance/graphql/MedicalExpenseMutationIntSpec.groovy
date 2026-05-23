@@ -7,8 +7,6 @@ import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
 import finance.services.MedicalExpenseService
 import org.springframework.beans.factory.annotation.Autowired
-import jakarta.validation.ConstraintViolationException
-import java.math.BigDecimal
 import java.time.LocalDate
 
 class MedicalExpenseMutationIntSpec extends BaseIntegrationSpec {

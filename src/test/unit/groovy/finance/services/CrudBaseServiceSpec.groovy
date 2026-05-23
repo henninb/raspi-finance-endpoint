@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.DomainException
@@ -13,7 +14,7 @@ import spock.lang.Specification
  * TDD Specification for CrudBaseService
  * Tests the abstract base class with standardized error handling patterns
  */
-class StandardizedBaseServiceSpec extends Specification {
+class CrudBaseServiceSpec extends Specification {
 
     // Mock entity for testing
     static class TestEntity {

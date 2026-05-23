@@ -15,8 +15,6 @@ import finance.repositories.TransactionRepository
 import finance.services.AccountService
 import finance.domain.ServiceResult
 import finance.services.CategoryService
-import finance.services.DescriptionService
-import finance.services.ParameterService
 import finance.services.TransactionService
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired

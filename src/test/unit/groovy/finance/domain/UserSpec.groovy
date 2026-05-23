@@ -8,7 +8,6 @@ import jakarta.validation.ValidatorFactory
 import jakarta.validation.ConstraintViolation
 
 import java.sql.Timestamp
-import java.util.*
 
 class UserSpec extends Specification {
 

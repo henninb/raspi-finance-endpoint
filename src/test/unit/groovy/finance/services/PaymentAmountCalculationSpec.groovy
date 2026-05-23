@@ -4,8 +4,6 @@ import finance.domain.PaymentBehavior
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.math.BigDecimal
-
 /**
  * Unit tests for payment amount calculation logic.
  * Tests the mathematical correctness of transaction amount sign determination.

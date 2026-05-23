@@ -5,12 +5,9 @@ import finance.domain.ServiceResult
 import finance.services.TransferService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 import spock.lang.Subject
-import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.Optional
 
 class TransferControllerSpec extends Specification {
 

@@ -8,13 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.access.intercept.AuthorizationFilter
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 import finance.configurations.JwtAuthenticationFilter
-import finance.configurations.LoggingCorsFilter
-import finance.configurations.HttpErrorLoggingFilter
-import finance.configurations.RateLimitingFilter
-import finance.configurations.SecurityAuditFilter
 
 @TestConfiguration(proxyBeanMethods = false)
 @Profile("func")

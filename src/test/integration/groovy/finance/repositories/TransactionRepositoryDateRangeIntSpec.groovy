@@ -13,7 +13,6 @@ import org.springframework.data.domain.Sort
 import spock.lang.Shared
 
 import java.time.LocalDate
-import java.util.Optional
 
 /**
  * Integration spec for date range queries across all accounts using pagination.
@@ -56,13 +55,13 @@ class TransactionRepositoryDateRangeIntSpec extends BaseIntegrationSpec {
                 .asDebit()
                 .buildAndValidate()
 
-        Optional<Account> p = accountRepository.findByOwnerAndAccountNameOwner(testOwner,primaryName)
+        Optional<Account> p = accountRepository.findByOwnerAndAccountNameOwner(testOwner, primaryName)
         if (!p.isPresent()) {
             p = Optional.of(accountRepository.save(primary))
         }
         primaryAccountId = p.get().accountId
 
-        Optional<Account> s = accountRepository.findByOwnerAndAccountNameOwner(testOwner,secondaryName)
+        Optional<Account> s = accountRepository.findByOwnerAndAccountNameOwner(testOwner, secondaryName)
         if (!s.isPresent()) {
             s = Optional.of(accountRepository.save(secondary))
         }

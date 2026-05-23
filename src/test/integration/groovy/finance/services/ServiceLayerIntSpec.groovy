@@ -28,7 +28,6 @@ import spock.lang.Specification
 
 import java.sql.Timestamp
 import java.time.LocalDate
-import java.util.Optional
 
 @ActiveProfiles("int")
 @SpringBootTest

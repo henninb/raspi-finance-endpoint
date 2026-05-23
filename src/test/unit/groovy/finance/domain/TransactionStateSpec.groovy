@@ -129,7 +129,7 @@ class TransactionStateSpec extends Specification {
     def "should support switch statements"() {
         when: "using transaction state in switch"
         def result
-        switch(TransactionState.Cleared) {
+        switch (TransactionState.Cleared) {
             case TransactionState.Cleared:
                 result = "cleared transaction"
                 break

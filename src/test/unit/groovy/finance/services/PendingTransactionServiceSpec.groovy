@@ -1,17 +1,16 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.PendingTransaction
 import finance.domain.ServiceResult
 import finance.repositories.PendingTransactionRepository
 import jakarta.validation.ConstraintViolation
-import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Specification
 import spock.lang.Subject
 
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 

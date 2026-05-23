@@ -72,7 +72,7 @@ class TransactionTypeSpec extends Specification {
     def "should support switch statements"() {
         when: "using transaction type in switch"
         def result
-        switch(TransactionType.Expense) {
+        switch (TransactionType.Expense) {
             case TransactionType.Expense:
                 result = "expense transaction"
                 break

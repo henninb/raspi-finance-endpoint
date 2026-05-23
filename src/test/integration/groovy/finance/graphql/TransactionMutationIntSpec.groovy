@@ -13,7 +13,6 @@ import finance.services.AccountService
 import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.sql.Timestamp
 

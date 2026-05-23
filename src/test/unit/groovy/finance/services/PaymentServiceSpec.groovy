@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Account
@@ -7,14 +8,11 @@ import finance.domain.Payment
 import finance.domain.ServiceResult
 import finance.helpers.PaymentBuilder
 import finance.repositories.PaymentRepository
-import finance.services.TransactionService
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
-import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import java.math.BigDecimal
 
 /**
  * TDD Specification for PaymentService
@@ -70,7 +68,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findById(1L)
 
         then: "should return Success with payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 1L) >> Optional.of(payment)
         result instanceof ServiceResult.Success
         result.data.paymentId == 1L
         0 * _
@@ -81,7 +79,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.findById(999L)
 
         then: "should return NotFound result"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
@@ -156,7 +154,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.update(updatedPayment)
 
         then: "should return Success with updated payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 1L) >> Optional.of(existingPayment)
         1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment payment ->
             assert payment.amount == new BigDecimal("200.00")
             return payment
@@ -174,7 +172,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.update(payment)
 
         then: "should return NotFound result"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
@@ -194,7 +192,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(1L)
 
         then: "should return Success"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 1L) >> Optional.of(payment)
         0 * transactionServiceMock.deleteByIdInternal(_)  // No transactions to delete
         1 * paymentRepositoryMock.delete(payment)
         1 * paymentRepositoryMock.flush()
@@ -207,7 +205,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(999L)
 
         then: "should return NotFound result"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Payment not found: 999")
         0 * _
@@ -228,7 +226,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, paymentId) >> Optional.of(payment)
 
         and: "transaction service deletes source transaction"
         1 * transactionServiceMock.deleteByIdInternal("source-guid-123") >>
@@ -260,7 +258,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, paymentId) >> Optional.of(payment)
 
         and: "source transaction delete returns NotFound (logged as warning)"
         1 * transactionServiceMock.deleteByIdInternal("missing-source") >>
@@ -291,7 +289,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, paymentId) >> Optional.of(payment)
 
         and: "no transaction deletes are attempted"
         0 * transactionServiceMock.deleteByIdInternal(_)
@@ -317,7 +315,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, paymentId) >> Optional.of(payment)
 
         and: "no transaction deletes are attempted"
         0 * transactionServiceMock.deleteByIdInternal(_)
@@ -342,7 +340,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, paymentId) >> Optional.of(payment)
 
         and: "payment delete is attempted first (will be rolled back by transaction)"
         1 * paymentRepositoryMock.delete(payment)
@@ -374,7 +372,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.deleteById(paymentId)
 
         then: "repository finds the payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,paymentId) >> Optional.of(payment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, paymentId) >> Optional.of(payment)
 
         and: "payment delete is attempted first (will be rolled back by transaction)"
         1 * paymentRepositoryMock.delete(payment)
@@ -403,7 +401,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def result = standardizedPaymentService.updatePayment(1L, updatedPayment)
 
         then: "should return updated payment"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,1L) >> Optional.of(existingPayment)
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 1L) >> Optional.of(existingPayment)
         1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment payment -> return payment }
         result.amount == new BigDecimal("200.00")
         0 * _
@@ -418,13 +416,13 @@ class PaymentServiceSpec extends BaseServiceSpec {
                 .withDestinationAccount("discover_credit")
                 .withAmount(new BigDecimal("100.00"))
                 .build()
-        
+
         def sourceAccount = new Account()
         sourceAccount.accountType = AccountType.Checking
-        
+
         def destinationAccount = new Account()
         destinationAccount.accountType = AccountType.CreditCard
-        
+
         def noViolations = [] as Set
 
         when: "saving the payment"
@@ -432,11 +430,11 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then: "should return Success and have populated GUIDs"
         1 * validatorMock.validate(payment) >> noViolations
-        
+
         // Account processing order: destination then source
         1 * accountServiceMock.account("discover_credit") >> Optional.of(destinationAccount)
         1 * accountServiceMock.account("chase_checking") >> Optional.of(sourceAccount)
-        
+
         // Transaction creation order: destination then source
         1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> { finance.domain.Transaction t ->
             assert t.accountNameOwner == "discover_credit"
@@ -452,9 +450,9 @@ class PaymentServiceSpec extends BaseServiceSpec {
             t.guid = "new-source-guid"
             return ServiceResult.Success.of(t)
         }
-        
+
         1 * paymentRepositoryMock.saveAndFlush(payment) >> payment
-        
+
         result instanceof ServiceResult.Success
         payment.guidSource == "new-source-guid"
         payment.guidDestination == "new-dest-guid"
@@ -468,7 +466,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
                 .withSourceAccount("new_account")
                 .withDestinationAccount("existing_account")
                 .build()
-        
+
         def noViolations = [] as Set
 
         when: "saving the payment"
@@ -476,22 +474,21 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then: "should create the missing account"
         1 * validatorMock.validate(payment) >> noViolations
-        
+
         // Destination account exists
         1 * accountServiceMock.account("existing_account") >> Optional.of(new Account(accountType: AccountType.CreditCard))
-        
+
         // Source account missing
         1 * accountServiceMock.account("new_account") >> Optional.empty()
-        1 * accountServiceMock.insertAccount(_ as Account) >> { Account a -> 
+        1 * accountServiceMock.insertAccount(_ as Account) >> { Account a ->
             assert a.accountNameOwner == "new_account"
-            return a 
+            return a
         }
-        
+
         // Continue with transaction creation
         2 * transactionServiceMock.save(_) >> ServiceResult.Success.of(new finance.domain.Transaction(guid: "guid"))
         1 * paymentRepositoryMock.saveAndFlush(_) >> payment
     }
-
 
     def "updatePayment should throw RuntimeException when payment not found"() {
         given: "payment with non-existent ID"
@@ -501,7 +498,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         standardizedPaymentService.updatePayment(999L, payment)
 
         then: "should throw RuntimeException"
-        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER,999L) >> Optional.empty()
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 999L) >> Optional.empty()
         thrown(RuntimeException)
         0 * _
     }
@@ -842,7 +839,6 @@ class PaymentServiceSpec extends BaseServiceSpec {
         then:
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 20L) >> Optional.of(existingPayment)
         1 * paymentRepositoryMock.saveAndFlush(_) >> {
-            throw new jakarta.validation.ConstraintViolationException("invalid", Collections.emptySet())
         }
         def ex = thrown(RuntimeException)
         ex.message.contains("Validation error")

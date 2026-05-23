@@ -8,7 +8,6 @@ import io.micrometer.core.instrument.MeterRegistry
 import spock.lang.Specification
 
 import java.time.LocalDate
-import java.math.BigDecimal
 import java.sql.Timestamp
 
 class GraphQLMutationControllerSpec extends Specification {

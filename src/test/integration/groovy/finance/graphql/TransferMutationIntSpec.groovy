@@ -4,10 +4,8 @@ import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLMutationController
 import finance.helpers.GraphQLIntegrationContext
 import finance.helpers.TransferTestScenario
-import finance.domain.Transfer
 import org.springframework.beans.factory.annotation.Autowired
 
-import java.math.BigDecimal
 import java.time.LocalDate
 import jakarta.validation.ConstraintViolationException
 
@@ -34,7 +32,6 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
         testDataManager.createAccountFor(testOwner, "source", "debit", true)
         testDataManager.createAccountFor(testOwner, "dest", "debit", true)
     }
-
 
     def "createTransfer mutation succeeds with valid input"() {
         given: "valid security context from setup()"
@@ -91,7 +88,6 @@ class TransferMutationIntSpec extends BaseIntegrationSpec {
         mutationController.createTransfer(
                 new finance.controllers.dto.TransferInputDto(
                         null,
-                        "nonexistent_${java.util.UUID.randomUUID().toString().take(8)}",
                         destName,
                         LocalDate.parse("2024-02-01"),
                         new BigDecimal("300.00"),

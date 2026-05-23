@@ -1,7 +1,6 @@
 package finance.domain
 
 import spock.lang.Specification
-import java.math.BigDecimal
 
 class TotalsSpec extends Specification {
 

@@ -1,8 +1,6 @@
 package finance.services
 
 import finance.domain.Totals
-import finance.domain.Transaction
-import finance.domain.TransactionState
 import spock.lang.Specification
 
 import java.lang.reflect.Method

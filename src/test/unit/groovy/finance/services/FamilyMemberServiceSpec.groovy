@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.FamilyMember
@@ -14,7 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException
  * TDD Specification for FamilyMemberService
  * Tests the FamilyMember service using new ServiceResult pattern with comprehensive error handling
  */
-class StandardizedFamilyMemberServiceSpec extends BaseServiceSpec {
+class FamilyMemberServiceSpec extends BaseServiceSpec {
 
     def familyMemberRepositoryMock = Mock(FamilyMemberRepository)
     def standardizedFamilyMemberService = new FamilyMemberService(familyMemberRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())

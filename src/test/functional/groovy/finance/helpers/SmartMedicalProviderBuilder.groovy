@@ -4,7 +4,6 @@ import finance.domain.MedicalProvider
 import finance.domain.MedicalProviderType
 import finance.domain.NetworkStatus
 import groovy.util.logging.Slf4j
-import java.sql.Timestamp
 import java.util.concurrent.atomic.AtomicInteger
 
 @Slf4j

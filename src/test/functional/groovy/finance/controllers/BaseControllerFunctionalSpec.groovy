@@ -21,9 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.env.Environment
 import org.springframework.web.client.RestTemplate
 import org.springframework.http.client.SimpleClientHttpRequestFactory
-import java.io.IOException
 import java.lang.reflect.Field
-import java.net.HttpURLConnection
 import org.flywaydb.core.Flyway
 
 //import org.springframework.boot.context.embedded.LocalServerPort
@@ -37,7 +35,6 @@ import finance.config.TestSecurityConfig
 import org.spockframework.spring.EnableSharedInjection
 import spock.lang.Shared
 import spock.lang.Specification
-import java.util.Date
 
 @Slf4j
 @ActiveProfiles("func")
@@ -131,7 +128,6 @@ class BaseControllerFunctionalSpec extends Specification {
         payload instanceof String ? payload : asJson(payload)
     }
 
-
     protected ResponseEntity<String> insertEndpoint(String endpointName, Object payload) {
         String token = generateJwtToken(username)
         String body = payload instanceof String ? payload : asJson(payload)
@@ -202,7 +198,7 @@ class BaseControllerFunctionalSpec extends Specification {
         // Configure RestTemplate to not throw exceptions on non-2xx
         restTemplate.setErrorHandler(new org.springframework.web.client.ResponseErrorHandler() {
                         boolean hasError(org.springframework.http.client.ClientHttpResponse response) { return false }
-                        void handleError(org.springframework.http.client.ClientHttpResponse response) { /* no-op */ }
+                        void handleError(org.springframework.http.client.ClientHttpResponse response) { log.debug("Error response suppressed for test") }
         })
         try {
             flyway?.migrate()

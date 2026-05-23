@@ -40,7 +40,7 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
         FamilyRelationship.Self     | '"self"'
         FamilyRelationship.Spouse   | '"spouse"'
         FamilyRelationship.Child    | '"child"'
-        FamilyRelationship.Dependent| '"dependent"'
+        FamilyRelationship.Dependent | '"dependent"'
         FamilyRelationship.Other    | '"other"'
     }
 
@@ -58,7 +58,7 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
         FamilyRelationship.Self     | 'self'
         FamilyRelationship.Spouse   | 'spouse'
         FamilyRelationship.Child    | 'child'
-        FamilyRelationship.Dependent| 'dependent'
+        FamilyRelationship.Dependent | 'dependent'
         FamilyRelationship.Other    | 'other'
     }
 
@@ -72,7 +72,7 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
         FamilyRelationship.Self     | 'self'
         FamilyRelationship.Spouse   | 'spouse'
         FamilyRelationship.Child    | 'child'
-        FamilyRelationship.Dependent| 'dependent'
+        FamilyRelationship.Dependent | 'dependent'
         FamilyRelationship.Other    | 'other'
     }
 

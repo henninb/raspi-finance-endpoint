@@ -2,7 +2,6 @@ package finance.domain
 
 import spock.lang.Specification
 
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 

@@ -11,8 +11,6 @@ import org.springframework.transaction.annotation.Transactional
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import javax.crypto.SecretKey
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
@@ -25,18 +23,10 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
     @Value('${custom.project.jwt.key}')
     String jwtKey
 
-    void setup() {
-        // Setup if needed
-    }
-
     // Helper method to create JWT tokens for testing (renamed to avoid overriding base helper)
     // Tokens include issuer and audience so they pass the production JwtAuthenticationFilter.
     private String makeJwtToken(String username, List<String> authorities = ["ROLE_USER"], boolean expired = false) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
-        java.util.Date issuedAt = new java.util.Date()
-        java.util.Date expiration = expired ?
-            java.util.Date.from(Instant.now().minus(1, ChronoUnit.HOURS)) :
-            java.util.Date.from(Instant.now().plus(1, ChronoUnit.HOURS))
 
         return Jwts.builder()
             .issuer("raspi-finance-endpoint")
@@ -49,7 +39,6 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
             .signWith(key)
             .compact()
     }
-
 
     void 'test JWT authentication filter integration'() {
         expect:

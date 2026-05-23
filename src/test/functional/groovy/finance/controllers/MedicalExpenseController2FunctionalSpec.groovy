@@ -1,6 +1,5 @@
 package finance.controllers
 
-import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
 import finance.helpers.SmartMedicalExpenseBuilder
 import groovy.json.JsonSlurper
@@ -12,7 +11,7 @@ import org.springframework.http.*
 import spock.lang.Shared
 
 @Slf4j
-class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerFunctionalSpec {
+class MedicalExpenseController2FunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Shared
     String endpointName = 'medical-expenses'
@@ -583,12 +582,12 @@ class StandardizedMedicalExpenseControllerFunctionalSpec extends BaseControllerF
                             String.class
                         )
                     } catch (Exception e) {
-                        // Ignore cleanup errors
+                        log.debug("Cleanup error for medical expense: ${e.message}")
                     }
                 }
             }
         } catch (Exception e) {
-            // Ignore cleanup errors - some tests may not have created any data
+            log.debug("Cleanup error - some tests may not have created data: ${e.message}")
         }
     }
 

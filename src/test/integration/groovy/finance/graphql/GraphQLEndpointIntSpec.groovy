@@ -11,12 +11,9 @@ import org.springframework.web.client.HttpClientErrorException
 import org.springframework.graphql.execution.GraphQlSource
 import graphql.ExecutionResult
 import org.springframework.transaction.annotation.Transactional
-import spock.lang.Ignore
 
 import java.sql.Date
-import java.math.BigDecimal
 import java.sql.Timestamp
-import java.util.*
 
 @Transactional
 @org.springframework.test.context.TestPropertySource(properties = [
@@ -62,7 +59,7 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void setup() {
         // NOTE: setupTestData() disabled temporarily due to entity constructor issues
-        // setupTestData()
+        log.debug("GraphQL endpoint setup - test data initialization skipped")
     }
 
     void setupTestData() {
@@ -105,8 +102,6 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
         testPayment.activeStatus = true
         paymentRepository.save(testPayment)
     }
-
-
 
     private static <T> List<T> unwrapList(def result) {
         try {
@@ -161,7 +156,7 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
                 // Some setups serve GraphiQL at /graphiql/index.html
                 response = getWithRetry("/graphiql/index.html")
             } catch (Exception ignored2) {
-                // Leave response as null to fall through to property assertion
+                log.debug("GraphiQL index.html not available at /graphiql/index.html: ${ignored2.message}")
             }
         }
 
@@ -173,26 +168,6 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
             assert environment.getProperty("spring.graphql.graphiql.enabled", Boolean, false)
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     void 'introspection returns query and mutation types'() {
         given:

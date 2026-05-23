@@ -7,9 +7,6 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import spock.lang.Specification
 
-import java.io.PrintWriter
-import java.util.concurrent.TimeUnit
-
 class RateLimitingFilterSpec extends Specification {
 
     RateLimitingFilter rateLimitingFilter

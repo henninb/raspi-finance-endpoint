@@ -3,11 +3,9 @@ package finance.services
 import com.fasterxml.jackson.databind.ObjectMapper
 import finance.configurations.ResilienceComponents
 import finance.repositories.*
-import finance.utils.Constants
 import io.micrometer.core.instrument.*
 import org.springframework.core.io.FileSystemResource
 import spock.lang.Specification
-
 import jakarta.validation.Validation
 import jakarta.validation.Validator
 
@@ -41,7 +39,6 @@ class BaseServiceSpec extends Specification {
     protected Validator validator = Validation.buildDefaultValidatorFactory().getValidator()
     protected String baseName = new FileSystemResource("").getFile().absolutePath
     protected Counter counter = Mock(Counter)
-
 
     protected ReceiptImageService standardizedReceiptImageServiceMock = GroovyMock(ReceiptImageService)
     protected CategoryService categoryServiceMock = GroovyMock(CategoryService)

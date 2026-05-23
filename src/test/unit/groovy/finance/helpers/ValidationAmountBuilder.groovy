@@ -2,9 +2,7 @@ package finance.helpers
 
 import finance.domain.TransactionState
 import finance.domain.ValidationAmount
-import java.math.BigDecimal
 import java.sql.Timestamp
-import java.util.*
 
 class ValidationAmountBuilder {
     Long validationId = 0L

@@ -10,9 +10,7 @@ import finance.services.PaymentService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
-import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.UUID
 
 class PaymentQueryIntSpec extends BaseIntegrationSpec {
 

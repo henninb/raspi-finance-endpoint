@@ -8,7 +8,6 @@ import finance.domain.AccountType
 import finance.services.AccountService
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.validation.ConstraintViolationException
-import java.math.BigDecimal
 import java.sql.Timestamp
 
 class AccountMutationIntSpec extends BaseIntegrationSpec {

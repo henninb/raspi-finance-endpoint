@@ -7,7 +7,6 @@ import finance.helpers.GraphQLIntegrationContext
 import finance.helpers.PaymentTestScenario
 import org.springframework.beans.factory.annotation.Autowired
 
-import java.math.BigDecimal
 import java.time.LocalDate
 import jakarta.validation.ConstraintViolationException
 
@@ -15,7 +14,6 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
 
     @Autowired
     GraphQLMutationController mutationController
-
 
     @spock.lang.Shared
     GraphQLIntegrationContext gqlCtx

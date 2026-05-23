@@ -7,7 +7,6 @@ import finance.domain.MedicalExpense
 import finance.services.MedicalExpenseService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
-import java.math.BigDecimal
 import java.time.LocalDate
 
 class MedicalExpenseQueryIntSpec extends BaseIntegrationSpec {

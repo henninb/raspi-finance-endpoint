@@ -1,6 +1,5 @@
 package finance
 
-import finance.Application
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -139,8 +138,6 @@ class BaseRestTemplateIntegrationSpec extends Specification {
      */
     protected String createJwtToken(String username = 'test-user', List<String> authorities = ['USER']) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
-        java.util.Date issuedAt = new java.util.Date()
-        java.util.Date expiration = new java.util.Date(System.currentTimeMillis() + 60_000) // 1 min
         return Jwts.builder()
             .claim('username', username)
             .claim('authorities', authorities)

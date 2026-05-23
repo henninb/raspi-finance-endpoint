@@ -5,7 +5,6 @@ import finance.domain.FamilyMember
 import finance.domain.FamilyRelationship
 import finance.domain.ServiceResult
 import finance.repositories.FamilyMemberRepository
-import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException

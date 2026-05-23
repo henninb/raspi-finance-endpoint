@@ -1,12 +1,11 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Transaction
 import finance.domain.TransactionState
 import finance.repositories.TransactionRepository
 import spock.lang.Specification
-
-import java.math.BigDecimal
 
 class CalculationServiceSpec extends Specification {
 
@@ -279,7 +278,7 @@ class CalculationServiceSpec extends Specification {
         thrown(org.springframework.dao.DataAccessResourceFailureException)
 
         and: 'BaseService increments a thrown counter tag (implementation-dependent)'
-        def possibleTags = ['SQLException','DatabaseOperationException','DataAccessResourceFailureException','CannotGetJdbcConnectionException','DatabaseOperationTimeoutException']
+        def possibleTags = ['SQLException', 'DatabaseOperationException', 'DataAccessResourceFailureException', 'CannotGetJdbcConnectionException', 'DatabaseOperationTimeoutException']
         assert possibleTags.any { tag ->
             def c = registry.find(finance.utils.Constants.EXCEPTION_THROWN_COUNTER)
                     .tags(finance.utils.Constants.EXCEPTION_NAME_TAG, tag)

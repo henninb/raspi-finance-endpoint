@@ -146,7 +146,6 @@ class UserRepositoryIntSpec extends BaseIntegrationSpec {
         thrown(DataIntegrityViolationException)
     }
 
-
     void 'test user constraint validation at build time'() {
         when: "trying to create a user with invalid username length (too short)"
         User user1 = SmartUserBuilder.builderForOwner(testOwner)

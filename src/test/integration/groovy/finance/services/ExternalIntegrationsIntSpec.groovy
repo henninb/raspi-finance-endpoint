@@ -8,7 +8,6 @@ import finance.domain.TransactionType
 import finance.repositories.TransactionRepository
 import finance.repositories.AccountRepository
 import finance.helpers.TestDataManager
-import finance.services.MeterService
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import io.micrometer.core.instrument.Counter
@@ -22,8 +21,6 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.jdbc.core.JdbcTemplate
 
 import java.sql.Date
-import java.sql.Timestamp
-import java.math.BigDecimal
 
 @Transactional
 @TestPropertySource(properties = [
@@ -352,7 +349,7 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         try {
             gcResponse = mgmtRestTemplate.getForEntity(managementBaseUrl + "/actuator/metrics/jvm.gc.pause", Map)
         } catch (Exception e) {
-            // Expected with some GC configurations
+            log.debug("GC pause metrics unavailable with current GC configuration: ${e.message}")
         }
 
         then:

@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.Description
 import java.sql.Timestamp
-import java.util.*
 
 class DescriptionBuilder {
 

@@ -40,7 +40,7 @@ class SmartFamilyMemberBuilder {
         if (relationship == null) return this
         try {
             this.relationship = FamilyRelationship.valueOf(relationship.capitalize())
-        } catch(Exception ignored) {
+        } catch (Exception ignored) {
             // default remains
         }
         return this
@@ -84,7 +84,7 @@ class SmartFamilyMemberBuilder {
     SmartFamilyMemberBuilder withDateOfBirth(String dob) {
         try {
             this.dateOfBirth = Date.valueOf(dob)
-        } catch(Exception ignored) {
+        } catch (Exception ignored) {
             // leave as null to let validation fail in persistence if needed
         }
         return this

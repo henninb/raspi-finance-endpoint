@@ -10,9 +10,7 @@ import finance.helpers.SmartTransactionBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
-import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.Optional
 
 /**
  * MIGRATED INTEGRATION TEST - Robust, isolated TransactionRepository tests

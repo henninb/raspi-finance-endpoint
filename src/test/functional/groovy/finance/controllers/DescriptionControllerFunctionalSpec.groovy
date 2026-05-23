@@ -1,7 +1,6 @@
 package finance.controllers
 
 import finance.domain.Description
-import finance.controllers.BaseControllerFunctionalSpec
 import finance.helpers.SmartDescriptionBuilder
 import finance.helpers.TestFixtures
 import finance.helpers.DescriptionTestContext
@@ -25,7 +24,7 @@ import spock.lang.Unroll
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedDescriptionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
+class DescriptionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     TestFixtures testFixtures

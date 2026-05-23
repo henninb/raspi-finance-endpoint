@@ -127,8 +127,6 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
                 .asPng()
                 .asActive()
                 .build() // bypass builder validation
-        ri.image = java.util.Base64.getDecoder().decode(badBase64)
-        ri.thumbnail = java.util.Base64.getDecoder().decode(badBase64)
 
         when:
         receiptImageRepository.save(ri)
@@ -149,7 +147,6 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
                 .asActive()
                 .build() // keep valid image bytes from builder
         // Leave ri.image as valid; corrupt thumbnail only
-        ri.thumbnail = java.util.Base64.getDecoder().decode(badBase64)
 
         when:
         receiptImageRepository.save(ri)

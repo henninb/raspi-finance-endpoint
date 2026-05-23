@@ -3,14 +3,11 @@ package finance.helpers
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.Category
+import finance.domain.User
 import finance.domain.Description
-import finance.domain.ImageFormatType
-import finance.domain.Parameter
 import finance.domain.Payment
-import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.domain.Transfer
-import finance.domain.User
 import finance.domain.ValidationAmount
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,7 +84,6 @@ class TestFixtures {
             testDataManager: testDataManager
         )
     }
-
 
 }
 

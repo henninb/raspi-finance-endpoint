@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Parameter
@@ -7,13 +8,12 @@ import finance.helpers.ParameterBuilder
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
-import jakarta.persistence.EntityNotFoundException
 
 /**
  * TDD Specification for ParameterService
  * Tests the Parameter service using new ServiceResult pattern with comprehensive error handling
  */
-class StandardizedParameterServiceSpec extends BaseServiceSpec {
+class ParameterServiceSpec extends BaseServiceSpec {
 
     def standardizedParameterService = new ParameterService(parameterRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
 

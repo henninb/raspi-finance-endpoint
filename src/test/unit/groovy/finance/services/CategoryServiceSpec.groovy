@@ -1,4 +1,5 @@
 package finance.services
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Category
@@ -11,13 +12,12 @@ import jakarta.validation.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import jakarta.persistence.EntityNotFoundException
 
 /**
  * TDD Specification for CategoryService
  * Tests the Category service using new ServiceResult pattern with comprehensive error handling
  */
-class StandardizedCategoryServiceSpec extends BaseServiceSpec {
+class CategoryServiceSpec extends BaseServiceSpec {
 
     def categoryRepositoryMock = Mock(CategoryRepository)
     def transactionRepositoryMock = Mock(TransactionRepository)
@@ -211,8 +211,6 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
 
     // ===== TDD Tests for Legacy Method Support =====
 
-
-
     // ===== TDD Tests for mergeCategories() =====
 
     def "mergeCategories should successfully merge two existing categories"() {
@@ -236,7 +234,6 @@ class StandardizedCategoryServiceSpec extends BaseServiceSpec {
     }
 
     // ===== TDD Tests for Error Handling in Business Methods =====
-
 
     def "mergeCategories should throw RuntimeException when first category not found"() {
         when: "merging with non-existent first category"

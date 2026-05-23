@@ -8,7 +8,6 @@ import finance.helpers.SmartValidationAmountBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
-import java.math.BigDecimal
 import java.sql.Timestamp
 
 /**
@@ -55,7 +54,7 @@ class ValidationAmountRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         def foundById = validationAmountRepository.findById(saved.validationId)
-        def foundForAccount = validationAmountRepository.findByOwnerAndAccountId(testOwner,accountId)
+        def foundForAccount = validationAmountRepository.findByOwnerAndAccountId(testOwner, accountId)
 
         then:
         foundById.isPresent()
@@ -87,7 +86,7 @@ class ValidationAmountRepositoryIntSpec extends BaseIntegrationSpec {
         def s3 = validationAmountRepository.save(va3)
 
         when:
-        List<ValidationAmount> allForAccount = validationAmountRepository.findByOwnerAndAccountId(testOwner,accountId)
+        List<ValidationAmount> allForAccount = validationAmountRepository.findByOwnerAndAccountId(testOwner, accountId)
 
         then:
         allForAccount.size() >= 3
@@ -121,9 +120,9 @@ class ValidationAmountRepositoryIntSpec extends BaseIntegrationSpec {
         )
 
         when:
-        def clearedList = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(testOwner,TransactionState.Cleared, accountId)
-        def outstandingList = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(testOwner,TransactionState.Outstanding, accountId)
-        def futureList = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(testOwner,TransactionState.Future, accountId)
+        def clearedList = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(testOwner, TransactionState.Cleared, accountId)
+        def outstandingList = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(testOwner, TransactionState.Outstanding, accountId)
+        def futureList = validationAmountRepository.findByOwnerAndTransactionStateAndAccountId(testOwner, TransactionState.Future, accountId)
 
         then:
         clearedList.size() >= 1 && clearedList*.validationId.contains(cleared.validationId)
@@ -202,7 +201,7 @@ class ValidationAmountRepositoryIntSpec extends BaseIntegrationSpec {
         when: 'delete and verify removal'
         validationAmountRepository.delete(updated)
         def byId = validationAmountRepository.findById(updated.validationId)
-        def byAccount = validationAmountRepository.findByOwnerAndAccountId(testOwner,accountId)
+        def byAccount = validationAmountRepository.findByOwnerAndAccountId(testOwner, accountId)
 
         then:
         !byId.isPresent()

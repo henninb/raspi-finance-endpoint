@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.PendingTransaction
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity
 import spock.lang.Specification
 import spock.lang.Subject
 
-import java.math.BigDecimal
 import java.time.LocalDate
 
 class PendingTransactionControllerSpec extends Specification {
@@ -66,7 +66,7 @@ class PendingTransactionControllerSpec extends Specification {
         long id = 10L
         PendingTransaction pt = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_a", transactionDate: LocalDate.of(2024, 3, 1), description: "alpha", amount: new BigDecimal("33.33"), reviewStatus: "pending", owner: "test_owner")
         and:
-        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(pt)
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.of(pt)
 
         when:
         ResponseEntity<PendingTransaction> response = controller.findById(id)
@@ -80,7 +80,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 404L
         and:
-        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.empty()
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.empty()
 
         when:
         ResponseEntity<PendingTransaction> response = controller.findById(id)
@@ -93,7 +93,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 500L
         and:
-        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> { throw new RuntimeException("boom") }
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> { throw new RuntimeException("boom") }
 
         when:
         ResponseEntity<PendingTransaction> response = controller.findById(id)
@@ -152,7 +152,7 @@ class PendingTransactionControllerSpec extends Specification {
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 1, 1), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: "test_owner")
         PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.of(existing)
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { PendingTransaction p -> p }
 
         when:
@@ -167,7 +167,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 23L
         and:
-        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.empty()
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.empty()
 
         when:
         ResponseEntity<PendingTransaction> response = controller.update(id, new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: "test_owner"))
@@ -182,7 +182,7 @@ class PendingTransactionControllerSpec extends Specification {
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 1, 1), description: "old", amount: new BigDecimal("1.00"), reviewStatus: "pending", owner: "test_owner")
         PendingTransaction patch = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_x", transactionDate: LocalDate.of(2024, 5, 5), description: "new", amount: new BigDecimal("2.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.of(existing)
         pendingRepo.saveAndFlush(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:
@@ -197,7 +197,7 @@ class PendingTransactionControllerSpec extends Specification {
         long id = 33L
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.of(existing)
 
         when:
         ResponseEntity<PendingTransaction> response = controller.deleteById(id)
@@ -211,7 +211,7 @@ class PendingTransactionControllerSpec extends Specification {
         given:
         long id = 34L
         and:
-        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.empty()
+        pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.empty()
 
         when:
         ResponseEntity<PendingTransaction> response = controller.deleteById(id)
@@ -225,7 +225,7 @@ class PendingTransactionControllerSpec extends Specification {
         long id = 35L
         PendingTransaction existing = new PendingTransaction(pendingTransactionId: id, accountNameOwner: "acct_d", transactionDate: LocalDate.of(2024, 2, 2), description: "to_delete", amount: new BigDecimal("5.00"), reviewStatus: "pending", owner: "test_owner")
         and:
-        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner",id) >> Optional.of(existing)
+        1 * pendingRepo.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc("test_owner", id) >> Optional.of(existing)
         pendingRepo.delete(_ as PendingTransaction) >> { throw new RuntimeException("db") }
 
         when:

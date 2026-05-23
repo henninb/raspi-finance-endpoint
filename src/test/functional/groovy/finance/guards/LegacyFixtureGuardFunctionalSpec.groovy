@@ -1,6 +1,5 @@
 package finance.guards
 
-import spock.lang.Ignore
 import spock.lang.Specification
 
 class LegacyFixtureGuardFunctionalSpec extends Specification {

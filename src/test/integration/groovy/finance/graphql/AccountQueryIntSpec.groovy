@@ -7,7 +7,6 @@ import finance.domain.AccountType
 import finance.services.AccountService
 import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
-import java.math.BigDecimal
 import java.sql.Timestamp
 
 class AccountQueryIntSpec extends BaseIntegrationSpec {

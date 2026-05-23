@@ -8,7 +8,6 @@ import jakarta.validation.ValidatorFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import groovy.json.JsonSlurper
-import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 
@@ -302,7 +301,6 @@ class MedicalExpenseSpec extends Specification {
         String result = (String)(medicalExpense)
 
         then: "should contain key information in JSON form"
-        def json = new groovy.json.JsonSlurper().parseText(result)
         (json.medicalExpenseId as Long) == 123L
         (json.transactionId as Long) == 1001L
         (json.billedAmount as BigDecimal) == new BigDecimal("350.00")

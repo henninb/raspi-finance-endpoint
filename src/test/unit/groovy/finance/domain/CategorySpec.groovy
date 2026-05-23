@@ -11,7 +11,6 @@ import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAG
 
 class CategorySpec extends BaseDomainSpec {
 
-
     protected String jsonPayload = '{"categoryName":"bar", "activeStatus":true}'
 
     void 'test -- JSON serialization to Category'() {

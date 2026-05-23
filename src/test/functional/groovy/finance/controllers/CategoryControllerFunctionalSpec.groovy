@@ -1,7 +1,6 @@
 package finance.controllers
 
 import finance.domain.Category
-import finance.controllers.BaseControllerFunctionalSpec
 import finance.helpers.SmartCategoryBuilder
 import finance.helpers.TestFixtures
 import finance.helpers.CategoryTestContext
@@ -25,7 +24,7 @@ import spock.lang.Unroll
  */
 @Slf4j
 @ActiveProfiles("func")
-class StandardizedCategoryControllerFunctionalSpec extends BaseControllerFunctionalSpec {
+class CategoryControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
     @Autowired
     TestFixtures testFixtures

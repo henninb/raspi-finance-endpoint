@@ -14,7 +14,6 @@ import finance.services.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import spock.lang.Shared
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.sql.Timestamp
 

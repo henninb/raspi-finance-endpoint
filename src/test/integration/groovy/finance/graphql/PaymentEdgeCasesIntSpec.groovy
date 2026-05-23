@@ -3,10 +3,8 @@ package finance.graphql
 import finance.BaseIntegrationSpec
 import finance.controllers.graphql.GraphQLMutationController
 import finance.controllers.dto.PaymentInputDto
-import finance.domain.AccountType
 import org.springframework.beans.factory.annotation.Autowired
 
-import java.math.BigDecimal
 import java.time.LocalDate
 
 /**

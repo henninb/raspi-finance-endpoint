@@ -333,7 +333,6 @@ class TransferServiceSpec extends BaseServiceSpec {
             .withSourceAccount("checking_primary")
             .withDestinationAccount("savings_primary")
             .build()
-        def sourceAccount = new finance.domain.Account(accountNameOwner: "checking_primary", accountType: finance.domain.AccountType.Checking)
 
         when:
         transferService.insertTransfer(transfer)
@@ -354,8 +353,6 @@ class TransferServiceSpec extends BaseServiceSpec {
             .withSourceAccount("checking_primary")
             .withDestinationAccount("savings_primary")
             .build()
-        def sourceAccount = new finance.domain.Account(accountNameOwner: "checking_primary", accountType: finance.domain.AccountType.Checking)
-        def destinationAccount = new finance.domain.Account(accountNameOwner: "savings_primary", accountType: finance.domain.AccountType.Savings)
 
         when:
         transferService.insertTransfer(transfer)
@@ -377,8 +374,6 @@ class TransferServiceSpec extends BaseServiceSpec {
             .withSourceAccount("checking_primary")
             .withDestinationAccount("savings_primary")
             .build()
-        def sourceAccount = new finance.domain.Account(accountNameOwner: "checking_primary", accountType: finance.domain.AccountType.Checking)
-        def destinationAccount = new finance.domain.Account(accountNameOwner: "savings_primary", accountType: finance.domain.AccountType.Savings)
         def sourceSaved = TransactionBuilder.builder().withGuid("aaaa-0000").build()
 
         when:
@@ -389,7 +384,6 @@ class TransferServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "savings_primary") >> Optional.of(destinationAccount)
         1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.Success.of(sourceSaved)
         1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.ValidationError.of([amount: "invalid"])
-        def ex = thrown(jakarta.validation.ConstraintViolationException)
         ex.message.contains("Destination transaction validation failed")
         0 * _
     }

@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
-import java.util.Optional
 import java.util.concurrent.ExecutionException
 
 class StandardizedBaseControllerSpec extends Specification {

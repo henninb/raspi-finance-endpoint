@@ -1,4 +1,5 @@
 package finance.controllers
+
 import finance.configurations.ResilienceComponents
 
 import finance.domain.Account
@@ -12,11 +13,9 @@ import org.springframework.security.core.context.SecurityContextHolder
 import spock.lang.Specification
 import spock.lang.Subject
 
-import java.math.BigDecimal
 import java.sql.Timestamp
-import java.util.Optional
 
-class StandardizedAccountControllerSpec extends Specification {
+class AccountControllerSpec extends Specification {
 
     private static final String TEST_OWNER = "test_owner"
 

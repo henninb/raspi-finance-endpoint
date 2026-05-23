@@ -1,16 +1,12 @@
 package finance.repositories
 
 import finance.domain.Account
-import finance.domain.AccountType
 import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import spock.lang.Specification
-
-import java.lang.reflect.Method
-import java.lang.reflect.ParameterizedType
 
 class AccountRepositorySpec extends Specification {
 

@@ -2,7 +2,6 @@ package finance.helpers
 
 import finance.domain.Category
 import java.sql.Timestamp
-import java.util.*
 
 class CategoryBuilder {
     Long categoryId = 0L

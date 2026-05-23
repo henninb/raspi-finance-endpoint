@@ -15,8 +15,6 @@ import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Shared
 import java.sql.Timestamp
-import java.time.Instant
-import java.util.Date
 
 /**
  * TDD specification for account validation date synchronization.

@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Shared
 import java.time.LocalDate
-import java.math.BigDecimal
 
 /**
  * INTEGRATION TEST - TransferRepository using robust, isolated architecture
@@ -64,7 +63,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         savedTransfer.dateUpdated != null
 
         when:
-        Optional<Transfer> foundTransfer = transferRepository.findByOwnerAndTransferId(testOwner,savedTransfer.transferId)
+        Optional<Transfer> foundTransfer = transferRepository.findByOwnerAndTransferId(testOwner, savedTransfer.transferId)
 
         then:
         foundTransfer.isPresent()
@@ -363,7 +362,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         updatedTransfer.activeStatus == false
 
         when:
-        Optional<Transfer> refetchedTransfer = transferRepository.findByOwnerAndTransferId(testOwner,savedTransfer.transferId)
+        Optional<Transfer> refetchedTransfer = transferRepository.findByOwnerAndTransferId(testOwner, savedTransfer.transferId)
 
         then:
         refetchedTransfer.isPresent()
@@ -383,7 +382,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
 
         when:
         transferRepository.delete(savedTransfer)
-        Optional<Transfer> deletedTransfer = transferRepository.findByOwnerAndTransferId(testOwner,savedTransfer.transferId)
+        Optional<Transfer> deletedTransfer = transferRepository.findByOwnerAndTransferId(testOwner, savedTransfer.transferId)
 
         then:
         !deletedTransfer.isPresent()
@@ -397,7 +396,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find non-existent transfer'() {
         when:
-        Optional<Transfer> nonExistentById = transferRepository.findByOwnerAndTransferId(testOwner,-999L)
+        Optional<Transfer> nonExistentById = transferRepository.findByOwnerAndTransferId(testOwner, -999L)
         Optional<Transfer> nonExistentByJpaId = transferRepository.findById(-999L)
 
         then:

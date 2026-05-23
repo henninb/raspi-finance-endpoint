@@ -1,10 +1,8 @@
 package finance.controllers
 
-import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 import finance.domain.Transaction
 import finance.helpers.ReceiptImageTestContext
-import finance.helpers.SmartReceiptImageBuilder
 import finance.helpers.SmartTransactionBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

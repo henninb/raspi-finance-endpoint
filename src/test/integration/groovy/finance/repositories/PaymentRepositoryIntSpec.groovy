@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import spock.lang.Shared
 
-import java.math.BigDecimal
 import java.time.LocalDate
 
 /**
@@ -57,7 +56,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
         savedPayment.guidSource != savedPayment.guidDestination
 
         when:
-        Optional<Payment> foundPayment = paymentRepository.findByOwnerAndPaymentId(testOwner,savedPayment.paymentId)
+        Optional<Payment> foundPayment = paymentRepository.findByOwnerAndPaymentId(testOwner, savedPayment.paymentId)
 
         then:
         foundPayment.isPresent()
@@ -68,7 +67,7 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
 
     void 'test find by payment ID with non-existent ID'() {
         when:
-        Optional<Payment> foundPayment = paymentRepository.findByOwnerAndPaymentId(testOwner,99999L)
+        Optional<Payment> foundPayment = paymentRepository.findByOwnerAndPaymentId(testOwner, 99999L)
 
         then:
         !foundPayment.isPresent()

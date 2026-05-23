@@ -1,7 +1,6 @@
 package finance.controllers
 
 import jakarta.persistence.EntityNotFoundException
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.ValidationException
 import org.apache.catalina.connector.ClientAbortException
@@ -11,7 +10,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.security.core.AuthenticationException
 import org.springframework.web.HttpMediaTypeNotSupportedException
-import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
