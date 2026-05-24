@@ -839,6 +839,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         then:
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 20L) >> Optional.of(existingPayment)
         1 * paymentRepositoryMock.saveAndFlush(_) >> {
+            throw new ConstraintViolationException("validation failed", [] as Set)
         }
         def ex = thrown(RuntimeException)
         ex.message.contains("Validation error")

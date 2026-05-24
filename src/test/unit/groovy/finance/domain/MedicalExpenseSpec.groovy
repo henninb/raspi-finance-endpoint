@@ -301,6 +301,7 @@ class MedicalExpenseSpec extends Specification {
         String result = (String)(medicalExpense)
 
         then: "should contain key information in JSON form"
+        def json = new JsonSlurper().parseText(result)
         (json.medicalExpenseId as Long) == 123L
         (json.transactionId as Long) == 1001L
         (json.billedAmount as BigDecimal) == new BigDecimal("350.00")

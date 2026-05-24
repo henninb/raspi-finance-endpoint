@@ -653,6 +653,7 @@ class MedicalExpenseServiceSpec extends BaseServiceSpec {
 
         then:
         1 * medicalExpenseRepositoryMock.findByOwnerAndTransactionId(TEST_OWNER, 100L) >> new MedicalExpense()
+        thrown(DuplicateMedicalExpenseException)
     }
 
     def "insertMedicalExpense should succeed when transactionId is null (no dup check)"() {

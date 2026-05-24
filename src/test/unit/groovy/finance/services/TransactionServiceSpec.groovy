@@ -444,6 +444,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
         transaction.guid = guid
 
         and: "payments that reference this transaction"
+        def payment1 = Mock(finance.domain.Payment)
+        def payment2 = Mock(finance.domain.Payment)
         payment1.paymentId >> 1L
         payment2.paymentId >> 2L
 
@@ -537,6 +539,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def guid = "transaction-with-payment"
         def transaction = createTestTransaction()
         transaction.guid = guid
+        def payment = Mock(finance.domain.Payment)
 
         when: "public deleteById is called"
         def result = standardizedTransactionService.deleteById(guid)
@@ -1121,6 +1124,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         given:
         def existingTransaction = createTestTransaction()
         def updatedTransaction = createTestTransaction()
+        def violation = Mock(ConstraintViolation)
         def violations = [violation] as Set
 
         when:

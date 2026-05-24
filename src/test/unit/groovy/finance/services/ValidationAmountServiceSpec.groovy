@@ -213,6 +213,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
 
     def "findValidationAmountByAccountNameOwner should return validation amount when found"() {
         given: "existing account and validation amount"
+        def account = new Account()
         account.accountId = 1L
         account.accountNameOwner = "testAccount"
         def validationAmount = ValidationAmountBuilder.builder().withAccountId(1L).withTransactionState(TransactionState.Cleared).build()
@@ -242,6 +243,7 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
 
     def "findValidationAmountByAccountNameOwner should return LATEST validation amount by date when multiple exist"() {
         given: "account with multiple validation amounts at different dates"
+        def account = new Account()
         account.accountId = 1L
         account.accountNameOwner = "testAccount"
 

@@ -327,6 +327,7 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "insertTransfer should fail when destination account is missing"() {
         given:
+        def sourceAccount = new Account(accountNameOwner: "checking_primary", accountType: AccountType.Checking)
         def transfer = TransferBuilder.builder()
             .withGuidSource(null)
             .withGuidDestination(null)
@@ -347,6 +348,8 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "insertTransfer should map source transaction generic errors to RuntimeException"() {
         given:
+        def sourceAccount = new Account(accountNameOwner: "checking_primary", accountType: AccountType.Checking)
+        def destinationAccount = new Account(accountNameOwner: "savings_primary", accountType: AccountType.Savings)
         def transfer = TransferBuilder.builder()
             .withGuidSource(null)
             .withGuidDestination(null)
@@ -368,6 +371,8 @@ class TransferServiceSpec extends BaseServiceSpec {
 
     def "insertTransfer should map destination transaction validation errors to ConstraintViolationException"() {
         given:
+        def sourceAccount = new Account(accountNameOwner: "checking_primary", accountType: AccountType.Checking)
+        def destinationAccount = new Account(accountNameOwner: "savings_primary", accountType: AccountType.Savings)
         def transfer = TransferBuilder.builder()
             .withGuidSource(null)
             .withGuidDestination(null)
@@ -384,6 +389,7 @@ class TransferServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "savings_primary") >> Optional.of(destinationAccount)
         1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.Success.of(sourceSaved)
         1 * transactionServiceMock.save(_ as finance.domain.Transaction) >> finance.domain.ServiceResult.ValidationError.of([amount: "invalid"])
+        def ex = thrown(ConstraintViolationException)
         ex.message.contains("Destination transaction validation failed")
         0 * _
     }
