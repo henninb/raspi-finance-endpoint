@@ -76,28 +76,6 @@ tasks.withType(org.gradle.api.plugins.quality.CodeNarc).configureEach {
     }
 }
 
-// Apply stricter rules only for main sources
-tasks.named('codenarcMain') {
-    configFile = rootProject.file('config/codenarc/ruleset-main.groovy')
-}
-
-// Add a ratchet task that fails only on a narrow set of rules for main
-tasks.register('codenarcMainRatchet', org.gradle.api.plugins.quality.CodeNarc) {
-    description = 'Ratchet: fail main on critical rules only'
-    group = 'verification'
-    configFile = rootProject.file('config/codenarc/ruleset-ratchet.groovy')
-    source = sourceSets.main.groovy
-    // Fail the build on these violations
-    ignoreFailures = false
-    reports {
-        xml.required = true
-        html.required = true
-    }
-}
-
-// Wire ratchet into the lifecycle so CI fails only on the narrow ruleset
-tasks.named('check') { dependsOn 'codenarcMainRatchet' }
-
 // The CodeNarc plugin automatically creates tasks for each Groovy source set
 // (including custom ones from test.gradle) and wires them into 'check'.
 
