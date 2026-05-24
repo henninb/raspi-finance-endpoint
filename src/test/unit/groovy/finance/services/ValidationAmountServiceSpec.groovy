@@ -333,4 +333,45 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         1 * validationAmountRepositoryMock.saveAndFlush(va) >> va
         result.accountId == 5L
     }
+
+    def "insertValidationAmount should throw when account not found by name and no accountId provided"() {
+        given:
+        def va = new ValidationAmount(amount: 50.0G)
+
+        when:
+        standardizedValidationAmountService.insertValidationAmount("unknown_account", va)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "unknown_account") >> Optional.empty()
+        thrown(org.springframework.web.server.ResponseStatusException)
+    }
+
+    def "findAllActiveFiltered should return all active when called with null filters"() {
+        given:
+        def va1 = new ValidationAmount(accountId: 1L, transactionState: TransactionState.Cleared, activeStatus: true)
+        def va2 = new ValidationAmount(accountId: 2L, transactionState: TransactionState.Outstanding, activeStatus: true)
+
+        when:
+        def result = standardizedValidationAmountService.findAllActiveFiltered(null, null)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> [va1, va2]
+        result instanceof ServiceResult.Success
+        result.data.size() == 2
+    }
+
+    def "findAllActiveFiltered should filter by transactionState only when accountNameOwner is null"() {
+        given:
+        def va1 = new ValidationAmount(accountId: 1L, transactionState: TransactionState.Cleared, activeStatus: true)
+        def va2 = new ValidationAmount(accountId: 2L, transactionState: TransactionState.Outstanding, activeStatus: true)
+
+        when:
+        def result = standardizedValidationAmountService.findAllActiveFiltered(null, TransactionState.Cleared)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> [va1, va2]
+        result instanceof ServiceResult.Success
+        result.data.size() == 1
+        result.data[0].transactionState == TransactionState.Cleared
+    }
 }
