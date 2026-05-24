@@ -72,20 +72,16 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
         // Insert exact category/description names used by the assertions below.
         ['metricstest', 'dbtest'].each { name ->
-            try {
-                jdbcTemplate.update(
-                    "INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added) VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
-                    name,
-                    testOwner
-                )
-            } catch (Exception ignored) {}
-            try {
-                jdbcTemplate.update(
-                    "INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added) VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
-                    name,
-                    testOwner
-                )
-            } catch (Exception ignored) {}
+            jdbcTemplate.update(
+                "INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added) VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
+                name,
+                testOwner
+            )
+            jdbcTemplate.update(
+                "INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added) VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')",
+                name,
+                testOwner
+            )
         }
     }
 
@@ -174,7 +170,8 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
 
     void 'test transaction metrics integration'() {
         given:
-        def savedAccount = accountRepository.findByAccountNameOwner(metricsAccountName).get()
+        def savedAccount = accountRepository.findByAccountNameOwner(metricsAccountName)
+            .orElseThrow { new AssertionError("Account '${metricsAccountName}' not found for owner '${testOwner}'") }
 
         Transaction testTransaction = new Transaction()
         testTransaction.owner = testOwner
@@ -291,7 +288,8 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         when:
         Timer.Sample sample = Timer.start(meterRegistry)
 
-        def savedAccount = accountRepository.findByAccountNameOwner(metricsAccountName).get()
+        def savedAccount = accountRepository.findByAccountNameOwner(metricsAccountName)
+            .orElseThrow { new AssertionError("Account '${metricsAccountName}' not found for owner '${testOwner}'") }
 
         Transaction transaction = new Transaction()
         transaction.owner = testOwner
