@@ -461,4 +461,76 @@ class PendingTransactionServiceSpec extends Specification {
         and: "RuntimeException is thrown"
         thrown(RuntimeException)
     }
+
+    def "insertPendingTransaction should throw RuntimeException on BusinessError"() {
+        given:
+        def pendingTransaction = createTestPendingTransactionWithoutId()
+
+        when:
+        standardizedPendingTransactionService.insertPendingTransaction(pendingTransaction)
+
+        then:
+        1 * mockValidator.validate(pendingTransaction) >> Collections.emptySet()
+        1 * mockPendingTransactionRepository.saveAndFlush(pendingTransaction) >> { throw new DataIntegrityViolationException("Duplicate") }
+        thrown(RuntimeException)
+    }
+
+    def "insertPendingTransaction should throw RuntimeException on SystemError"() {
+        given:
+        def pendingTransaction = createTestPendingTransactionWithoutId()
+
+        when:
+        standardizedPendingTransactionService.insertPendingTransaction(pendingTransaction)
+
+        then:
+        1 * mockValidator.validate(pendingTransaction) >> Collections.emptySet()
+        1 * mockPendingTransactionRepository.saveAndFlush(pendingTransaction) >> { throw new RuntimeException("system failure") }
+        thrown(RuntimeException)
+    }
+
+    def "deletePendingTransaction should throw RuntimeException on SystemError"() {
+        given:
+        def pendingTransactionId = 1L
+        def pendingTransaction = createTestPendingTransaction()
+
+        when:
+        standardizedPendingTransactionService.deletePendingTransaction(pendingTransactionId)
+
+        then:
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, pendingTransactionId) >> Optional.of(pendingTransaction)
+        1 * mockPendingTransactionRepository.delete(pendingTransaction) >> { throw new RuntimeException("system failure") }
+        thrown(RuntimeException)
+    }
+
+    def "getAllPendingTransactions should return empty list on SystemError"() {
+        when:
+        def result = standardizedPendingTransactionService.getAllPendingTransactions()
+
+        then:
+        1 * mockPendingTransactionRepository.findAllByOwner(TEST_OWNER) >> { throw new RuntimeException("repo failure") }
+        result == []
+    }
+
+    def "deleteAllPendingTransactions should throw RuntimeException on SystemError"() {
+        when:
+        standardizedPendingTransactionService.deleteAllPendingTransactions()
+
+        then:
+        1 * mockPendingTransactionRepository.deleteAllByOwner(TEST_OWNER) >> { throw new RuntimeException("repo failure") }
+        thrown(RuntimeException)
+    }
+
+    def "updatePendingTransaction should throw RuntimeException on SystemError"() {
+        given:
+        def existingTransaction = createTestPendingTransaction()
+        def updatedTransaction = createTestPendingTransaction()
+
+        when:
+        standardizedPendingTransactionService.updatePendingTransaction(updatedTransaction)
+
+        then:
+        1 * mockPendingTransactionRepository.findByOwnerAndPendingTransactionIdOrderByTransactionDateDesc(TEST_OWNER, updatedTransaction.pendingTransactionId) >> Optional.of(existingTransaction)
+        1 * mockPendingTransactionRepository.saveAndFlush(existingTransaction) >> { throw new RuntimeException("save failed") }
+        thrown(RuntimeException)
+    }
 }

@@ -176,4 +176,72 @@ class FamilyMemberSpec extends BaseDomainSpec {
             FamilyRelationship.Other
         ]
     }
+
+    void 'test FamilyMember dateAdded and dateUpdated getters'() {
+        given:
+        def ts = new java.sql.Timestamp(System.currentTimeMillis())
+        FamilyMember member = new FamilyMemberBuilder()
+                .withDateAdded(ts)
+                .withDateUpdated(ts)
+                .build()
+
+        expect:
+        member.dateAdded == ts
+        member.dateUpdated == ts
+    }
+
+    void 'test FamilyMember optional fields getters'() {
+        given:
+        def dob = java.sql.Date.valueOf('1985-06-15')
+        FamilyMember member = new FamilyMemberBuilder()
+                .withDateOfBirth(dob)
+                .withInsuranceMemberId('INS999')
+                .withSsnLastFour('5678')
+                .withMedicalRecordNumber('MRN001')
+                .build()
+
+        expect:
+        member.dateOfBirth == dob
+        member.insuranceMemberId == 'INS999'
+        member.ssnLastFour == '5678'
+        member.medicalRecordNumber == 'MRN001'
+    }
+
+    void 'test FamilyMember toString returns JSON with member data'() {
+        given:
+        FamilyMember member = FamilyMemberBuilder.builder()
+                .withOwner('test_owner')
+                .withMemberName('test_member')
+                .withRelationship(FamilyRelationship.Spouse)
+                .build()
+
+        when:
+        String json = member.toString()
+
+        then:
+        json != null
+        json.contains('test_member')
+        json.contains('spouse')
+        0 * _
+    }
+
+    void 'test FamilyMember equality based on data class fields'() {
+        given:
+        FamilyMember m1 = new FamilyMemberBuilder()
+                .withFamilyMemberId(1L)
+                .withOwner('owner')
+                .withMemberName('member')
+                .withRelationship(FamilyRelationship.Self)
+                .build()
+        FamilyMember m2 = new FamilyMemberBuilder()
+                .withFamilyMemberId(1L)
+                .withOwner('owner')
+                .withMemberName('member')
+                .withRelationship(FamilyRelationship.Self)
+                .build()
+
+        expect:
+        m1 == m2
+        m1.hashCode() == m2.hashCode()
+    }
 }

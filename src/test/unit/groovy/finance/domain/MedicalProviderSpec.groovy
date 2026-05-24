@@ -163,4 +163,102 @@ class MedicalProviderSpec extends BaseDomainSpec {
         provider.activeStatus == true
         0 * _
     }
+
+    void 'test MedicalProvider optional field setters and getters'() {
+        given:
+        MedicalProvider provider = MedicalProviderBuilder.builder().build()
+
+        when:
+        provider.taxId = 'TAX123456789'
+        provider.addressLine1 = '123 main st'
+        provider.addressLine2 = 'suite 100'
+        provider.city = 'anytown'
+        provider.state = 'ca'
+        provider.zipCode = '12345'
+        provider.phone = '5551234567'
+        provider.fax = '5551234568'
+        provider.email = 'provider@example.com'
+        provider.website = 'https://example.com'
+        provider.billingName = 'test billing'
+        provider.notes = 'some notes'
+
+        then:
+        provider.taxId == 'TAX123456789'
+        provider.addressLine1 == '123 main st'
+        provider.addressLine2 == 'suite 100'
+        provider.city == 'anytown'
+        provider.state == 'ca'
+        provider.zipCode == '12345'
+        provider.phone == '5551234567'
+        provider.fax == '5551234568'
+        provider.email == 'provider@example.com'
+        provider.website == 'https://example.com'
+        provider.billingName == 'test billing'
+        provider.notes == 'some notes'
+        0 * _
+    }
+
+    void 'test MedicalProvider dateAdded and dateUpdated getters'() {
+        given:
+        def ts = new java.sql.Timestamp(System.currentTimeMillis())
+
+        when:
+        MedicalProvider provider = MedicalProviderBuilder.builder().build()
+        provider.dateAdded = ts
+        provider.dateUpdated = ts
+
+        then:
+        provider.dateAdded == ts
+        provider.dateUpdated == ts
+        0 * _
+    }
+
+    void 'test MedicalProvider primaryConstructor sets all fields'() {
+        when:
+        MedicalProvider provider = new MedicalProvider(
+            2L,
+            'specific_provider',
+            MedicalProviderType.Specialist,
+            'cardiology',
+            '1234567890',
+            'TAX987',
+            '456 oak ave',
+            'floor 2',
+            'springfield',
+            'il',
+            '62701',
+            'US',
+            '2175551234',
+            '2175554321',
+            'info@hospital.com',
+            'https://hospital.com',
+            NetworkStatus.InNetwork,
+            'hospital billing dept',
+            'accepts medicare',
+            true
+        )
+
+        then:
+        provider.providerId == 2L
+        provider.providerName == 'specific_provider'
+        provider.providerType == MedicalProviderType.Specialist
+        provider.specialty == 'cardiology'
+        provider.npi == '1234567890'
+        provider.taxId == 'TAX987'
+        provider.addressLine1 == '456 oak ave'
+        provider.addressLine2 == 'floor 2'
+        provider.city == 'springfield'
+        provider.state == 'il'
+        provider.zipCode == '62701'
+        provider.country == 'US'
+        provider.phone == '2175551234'
+        provider.fax == '2175554321'
+        provider.email == 'info@hospital.com'
+        provider.website == 'https://hospital.com'
+        provider.networkStatus == NetworkStatus.InNetwork
+        provider.billingName == 'hospital billing dept'
+        provider.notes == 'accepts medicare'
+        provider.activeStatus == true
+        0 * _
+    }
 }

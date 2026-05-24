@@ -484,4 +484,97 @@ class LoginControllerSpec extends Specification {
         result.statusCode == HttpStatus.NO_CONTENT
         0 * tokenBlacklistService.blacklistToken(_, _)
     }
+
+    def "refresh should parse keepLoggedIn false from cookie token"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
+        def token = Jwts.builder()
+            .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
+            .subject("testuser")
+            .claim("username", "testuser")
+            .claim("keepLoggedIn", false)
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key)
+            .compact()
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> "token=${token}"
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        result.body["message"] == "Token refreshed"
+        1 * response.addHeader("Set-Cookie", { it.contains("Max-Age=3600") })
+    }
+
+    def "refresh should use long expiry when keepLoggedIn is true in cookie token"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
+        def token = Jwts.builder()
+            .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
+            .subject("testuser")
+            .claim("username", "testuser")
+            .claim("keepLoggedIn", true)
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key)
+            .compact()
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> "token=${token}"
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        result.body["message"] == "Token refreshed"
+        1 * response.addHeader("Set-Cookie", _)
+    }
+
+    def "refresh should fall back to keepLoggedIn false when cookie token is malformed"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        refreshRequest.getCookies() >> null
+        refreshRequest.getHeader("Cookie") >> "token=malformed.invalid.jwt.token.here"
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        result.body["message"] == "Token refreshed"
+        1 * response.addHeader("Set-Cookie", { it.contains("Max-Age=3600") })
+    }
+
+    def "refresh should read token from HttpServletRequest.getCookies()"() {
+        given:
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
+        def token = Jwts.builder()
+            .issuer("raspi-finance-endpoint")
+            .audience().add("raspi-finance-endpoint").and()
+            .subject("testuser")
+            .claim("username", "testuser")
+            .claim("keepLoggedIn", false)
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 3600000))
+            .signWith(key)
+            .compact()
+        def cookie = new jakarta.servlet.http.Cookie("token", token)
+        refreshRequest.getCookies() >> ([cookie] as jakarta.servlet.http.Cookie[])
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
+
+        then:
+        result.statusCode == HttpStatus.OK
+        result.body["message"] == "Token refreshed"
+        1 * response.addHeader("Set-Cookie", _)
+    }
 }

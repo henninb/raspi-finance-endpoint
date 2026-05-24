@@ -108,4 +108,29 @@ class ValidationAmountSpec extends BaseDomainSpec {
         result.contains('"accountId":123')
         result.contains('"amount":50.5')
     }
+
+    def "test ValidationAmount dateAdded and dateUpdated getters"() {
+        given:
+        def ts = new Timestamp(System.currentTimeMillis())
+        ValidationAmount va = new ValidationAmountBuilder().withDateAdded(ts).withDateUpdated(ts).build()
+
+        expect:
+        va.dateAdded == ts
+        va.dateUpdated == ts
+    }
+
+    def "test ValidationAmount default constructor field defaults"() {
+        when:
+        ValidationAmount va = new ValidationAmount()
+
+        then:
+        va.validationId == 0L
+        va.owner == ''
+        va.accountId == 0L
+        va.activeStatus == true
+        va.transactionState == TransactionState.Undefined
+        va.dateAdded != null
+        va.dateUpdated != null
+        0 * _
+    }
 }

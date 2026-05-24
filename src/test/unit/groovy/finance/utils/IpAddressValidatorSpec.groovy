@@ -298,4 +298,45 @@ class IpAddressValidatorSpec extends Specification {
         then: "should return the IPv6 loopback"
         result == "::1"
     }
+
+    def "should trust headers from full-form IPv6 loopback address"() {
+        given: "a request from full-form IPv6 loopback with forwarded header"
+        def request = Mock(HttpServletRequest)
+        request.remoteAddr >> "0:0:0:0:0:0:0:1"
+        request.getHeader("X-Forwarded-For") >> "203.0.113.10"
+
+        when: "validating the client IP"
+        def result = IpAddressValidator.INSTANCE.getClientIpAddress(request)
+
+        then: "should trust the forwarded IP from IPv6 loopback"
+        result == "203.0.113.10"
+    }
+
+    def "should fall back to remoteAddr when X-Real-IP is invalid"() {
+        given: "a request from a private network with invalid X-Real-IP"
+        def request = Mock(HttpServletRequest)
+        request.remoteAddr >> "10.0.0.1"
+        request.getHeader("X-Forwarded-For") >> null
+        request.getHeader("X-Real-IP") >> "not.valid.ip.address.at.all"
+
+        when: "validating the client IP"
+        def result = IpAddressValidator.INSTANCE.getClientIpAddress(request)
+
+        then: "should fall back to remoteAddr"
+        result == "10.0.0.1"
+    }
+
+    def "should return remoteAddr when no headers match from trusted proxy"() {
+        given: "a request from a private network with both headers empty"
+        def request = Mock(HttpServletRequest)
+        request.remoteAddr >> "172.16.0.1"
+        request.getHeader("X-Forwarded-For") >> ""
+        request.getHeader("X-Real-IP") >> ""
+
+        when: "validating the client IP"
+        def result = IpAddressValidator.INSTANCE.getClientIpAddress(request)
+
+        then: "should return remoteAddr"
+        result == "172.16.0.1"
+    }
 }

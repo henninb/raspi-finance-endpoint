@@ -124,4 +124,31 @@ class PendingTransactionSpec extends Specification {
         result.contains('"accountNameOwner":"chase_brian"')
         result.contains('"amount":10.0')
     }
+
+    def "PendingTransaction - dateAdded setter"() {
+        given:
+        def pendingTransaction = new PendingTransaction()
+        def ts = new Timestamp(1700000000000L)
+
+        when:
+        pendingTransaction.dateAdded = ts
+
+        then:
+        pendingTransaction.dateAdded == ts
+    }
+
+    def "PendingTransaction - copy creates new instance with changed fields"() {
+        given:
+        def pt = new PendingTransaction(1L, "chase_brian", LocalDate.parse("2023-01-01"), "desc", 10.0G, "pending", "brian", null)
+
+        when:
+        def copied = pt.copy(2L, "wells_brian", LocalDate.parse("2024-01-01"), "new desc", 20.0G, "approved", "brian", null)
+
+        then:
+        copied.pendingTransactionId == 2L
+        copied.accountNameOwner == "wells_brian"
+        copied.description == "new desc"
+        copied.amount == 20.0G
+        copied != pt
+    }
 }

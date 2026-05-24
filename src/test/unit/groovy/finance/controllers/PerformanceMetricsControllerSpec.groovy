@@ -184,4 +184,92 @@ class PerformanceMetricsControllerSpec extends Specification {
         response.body.timestamp >= before
         response.body.timestamp <= after
     }
+
+    def "getJvmMetrics returns calculated values when JVM gauges are registered"() {
+        given:
+        io.micrometer.core.instrument.Gauge.builder("jvm.memory.used", [], { 512.0 * 1024 * 1024 })
+            .tags("area", "heap")
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("jvm.memory.max", [], { 1024.0 * 1024 * 1024 })
+            .tags("area", "heap")
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("jvm.memory.used", [], { 100.0 * 1024 * 1024 })
+            .tags("area", "nonheap")
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("jvm.memory.max", [], { 256.0 * 1024 * 1024 })
+            .tags("area", "nonheap")
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("jvm.threads.live", [], { 30.0 })
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("jvm.threads.daemon", [], { 10.0 })
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("system.cpu.usage", [], { 0.6 })
+            .register(meterRegistry)
+        io.micrometer.core.instrument.Gauge.builder("process.cpu.usage", [], { 0.4 })
+            .register(meterRegistry)
+        def gcTimer = Timer.builder("jvm.gc.pause").register(meterRegistry)
+        gcTimer.record(50, TimeUnit.MILLISECONDS)
+
+        when:
+        PerformanceMetricsController.JvmMetrics result = controller.getJvmMetrics()
+
+        then:
+        result.heapMemory.usedMB > 0.0
+        result.heapMemory.maxMB > 0.0
+        result.heapMemory.usagePercent > 0.0
+        result.nonHeapMemory.usedMB > 0.0
+        result.nonHeapMemory.maxMB > 0.0
+        result.nonHeapMemory.usagePercent > 0.0
+        result.threads.live == 30
+        result.threads.daemon == 10
+        result.cpu.systemUsagePercent > 0.0
+        result.cpu.processUsagePercent > 0.0
+        result.garbageCollection.totalCollections == 1L
+        result.garbageCollection.avgPauseTimeMs > 0.0
+    }
+
+    def "getDatabaseMetrics returns non-zero utilization when connections present"() {
+        given:
+        meterRegistry.gauge("hikari.connections.active", [], { 4.0 })
+        meterRegistry.gauge("hikari.connections.total", [], { 10.0 })
+        meterRegistry.gauge("hikari.connections.idle", [], { 6.0 })
+        meterRegistry.gauge("hikari.connections.pending", [], { 1.0 })
+
+        when:
+        PerformanceMetricsController.DatabaseMetrics result = controller.getDatabaseMetrics()
+
+        then:
+        result.connectionPool.active == 4
+        result.connectionPool.total == 10
+        result.connectionPool.idle == 6
+        result.connectionPool.pending == 1
+        result.connectionPool.utilizationPercent == 40.0
+    }
+
+    def "getMethodMetrics populates slowest and most called lists"() {
+        given:
+        Timer.builder("method.execution.time")
+            .tag("class", "TransactionService")
+            .tag("method", "insert")
+            .tag("layer", "service")
+            .tag("status", "success")
+            .register(meterRegistry)
+            .record(200, TimeUnit.MILLISECONDS)
+        Timer.builder("method.execution.time")
+            .tag("class", "AccountRepository")
+            .tag("method", "findAll")
+            .tag("layer", "repository")
+            .tag("status", "success")
+            .register(meterRegistry)
+            .record(50, TimeUnit.MILLISECONDS)
+
+        when:
+        PerformanceMetricsController.MethodExecutionMetrics result = controller.getMethodMetrics()
+
+        then:
+        result.slowest10Overall.size() == 2
+        result.mostCalled10.size() == 2
+        result.slowest10Overall[0].className == "TransactionService"
+        result.mostCalled10[0].count == 1L
+    }
 }

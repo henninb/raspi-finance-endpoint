@@ -210,4 +210,100 @@ class TransactionSpec extends BaseDomainSpec {
         expect:
         t1 != t2
     }
+
+    def "test Transaction mutable fields dateAdded and dateUpdated"() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        def ts = new java.sql.Timestamp(System.currentTimeMillis())
+
+        when:
+        transaction.dateAdded = ts
+        transaction.dateUpdated = ts
+
+        then:
+        transaction.dateAdded == ts
+        transaction.dateUpdated == ts
+        0 * _
+    }
+
+    def "test Transaction account field access"() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        transaction.account = null
+
+        then:
+        transaction.account == null
+        0 * _
+    }
+
+    def "test Transaction receiptImageId field access"() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        when:
+        transaction.receiptImageId = 42L
+
+        then:
+        transaction.receiptImageId == 42L
+        0 * _
+    }
+
+    def "test Transaction categories list operations"() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        Category category = new Category()
+        category.categoryName = 'food'
+        category.activeStatus = true
+
+        when:
+        transaction.categories.add(category)
+
+        then:
+        transaction.categories.size() == 1
+        transaction.categories[0].categoryName == 'food'
+        0 * _
+    }
+
+    def "test Transaction default constructor"() {
+        when:
+        Transaction transaction = new Transaction()
+
+        then:
+        transaction.transactionId == 0L
+        transaction.owner == ''
+        transaction.guid == ''
+        transaction.dateAdded != null
+        transaction.dateUpdated != null
+        transaction.categories != null
+        0 * _
+    }
+
+    def "test Transaction setCategories replaces the list"() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+        Category c1 = new Category()
+        c1.categoryName = 'groceries'
+        Category c2 = new Category()
+        c2.categoryName = 'utilities'
+        def newList = [c1, c2]
+
+        when:
+        transaction.categories = newList
+
+        then:
+        transaction.categories.size() == 2
+        transaction.categories[0].categoryName == 'groceries'
+        0 * _
+    }
+
+    def "test Transaction equals returns false for different types"() {
+        given:
+        Transaction transaction = TransactionBuilder.builder().build()
+
+        expect:
+        transaction != "not a transaction"
+        transaction != null
+    }
 }

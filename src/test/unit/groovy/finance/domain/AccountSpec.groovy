@@ -159,4 +159,50 @@ class AccountSpec extends BaseDomainSpec {
         expect:
         account1 != account2
     }
+
+    def "test Account mutable fields not in primary constructor"() {
+        given:
+        Account account = AccountBuilder.builder().build()
+        def ts = new java.sql.Timestamp(System.currentTimeMillis())
+
+        when:
+        account.dateClosed = ts
+        account.validationDate = ts
+        account.dateAdded = ts
+        account.dateUpdated = ts
+        account.billingStatementCloseDay = (short) 15
+        account.billingGracePeriodDays = (short) 5
+        account.billingDueDaySameMonth = (short) 20
+        account.billingDueDayNextMonth = (short) 5
+        account.billingCycleWeekendShift = 'next_monday'
+
+        then:
+        account.dateClosed == ts
+        account.validationDate == ts
+        account.dateAdded == ts
+        account.dateUpdated == ts
+        account.billingStatementCloseDay == (short) 15
+        account.billingGracePeriodDays == (short) 5
+        account.billingDueDaySameMonth == (short) 20
+        account.billingDueDayNextMonth == (short) 5
+        account.billingCycleWeekendShift == 'next_monday'
+        0 * _
+    }
+
+    def "test Account default constructor sets billing fields to null"() {
+        when:
+        Account account = new Account()
+
+        then:
+        account.billingStatementCloseDay == null
+        account.billingGracePeriodDays == null
+        account.billingDueDaySameMonth == null
+        account.billingDueDayNextMonth == null
+        account.billingCycleWeekendShift == null
+        account.dateAdded != null
+        account.dateUpdated != null
+        account.dateClosed != null
+        account.validationDate != null
+        0 * _
+    }
 }
