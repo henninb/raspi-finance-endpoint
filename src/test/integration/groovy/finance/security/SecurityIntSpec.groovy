@@ -27,6 +27,8 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
     // Tokens include issuer and audience so they pass the production JwtAuthenticationFilter.
     private String makeJwtToken(String username, List<String> authorities = ["ROLE_USER"], boolean expired = false) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
+        Date now = new Date()
+        Date exp = expired ? new Date(now.time - 1000L) : new Date(now.time + 3_600_000L)
 
         return Jwts.builder()
             .issuer("raspi-finance-endpoint")
@@ -34,8 +36,8 @@ class SecurityIntSpec extends BaseRestTemplateIntegrationSpec {
             .subject(username)
             .claim("username", username)
             .claim("authorities", authorities)
-            .issuedAt(issuedAt)
-            .expiration(expiration)
+            .issuedAt(now)
+            .expiration(exp)
             .signWith(key)
             .compact()
     }

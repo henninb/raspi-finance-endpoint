@@ -1,6 +1,7 @@
 package finance.graphql
 
 import finance.BaseRestTemplateIntegrationSpec
+import groovy.util.logging.Slf4j
 import finance.domain.*
 import finance.domain.AccountType
 import finance.repositories.*
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.sql.Date
 import java.sql.Timestamp
 
+@Slf4j
 @Transactional
 @org.springframework.test.context.TestPropertySource(properties = [
     'spring.graphql.graphiql.enabled=true',
@@ -56,11 +58,6 @@ class GraphQLEndpointIntSpec extends BaseRestTemplateIntegrationSpec {
 
     @Autowired(required = false)
     GraphQlSource graphQlSource
-
-    void setup() {
-        // NOTE: setupTestData() disabled temporarily due to entity constructor issues
-        log.debug("GraphQL endpoint setup - test data initialization skipped")
-    }
 
     void setupTestData() {
         // Create test account using no-arg constructor and property setting

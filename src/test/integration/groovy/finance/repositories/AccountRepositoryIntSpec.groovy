@@ -13,6 +13,7 @@ import java.sql.Timestamp
 class AccountRepositoryIntSpec extends BaseIntegrationSpec {
 
     @Autowired
+    AccountRepository accountRepository
 
     void 'test account repository basic CRUD operations'() {
         given:

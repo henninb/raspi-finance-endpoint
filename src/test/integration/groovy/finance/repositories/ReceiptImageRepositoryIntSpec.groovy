@@ -120,13 +120,12 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
     void 'invalid image bytes trigger constraint violation'() {
         given:
         Long txnId = testDataManager.createTransactionAndGetId(testOwner)
-        // Use non-image base64 data to produce invalid bytes for validator
-        String badBase64 = 'aGVsbG8=' // "hello"
         ReceiptImage ri = SmartReceiptImageBuilder.builderForOwner(testOwner)
                 .withTransactionId(txnId)
                 .asPng()
                 .asActive()
-                .build() // bypass builder validation
+                .build()
+        ri.image = 'aGVsbG8='.decodeBase64() // "hello" - not a valid PNG
 
         when:
         receiptImageRepository.save(ri)
@@ -139,14 +138,12 @@ class ReceiptImageRepositoryIntSpec extends BaseIntegrationSpec {
     void 'invalid thumbnail bytes trigger constraint violation while image is valid'() {
         given:
         Long txnId = testDataManager.createTransactionAndGetId(testOwner)
-        // Start with valid image bytes from builder, then corrupt only the thumbnail
-        String badBase64 = 'aGVsbG8=' // "hello"
         ReceiptImage ri = SmartReceiptImageBuilder.builderForOwner(testOwner)
                 .withTransactionId(txnId)
                 .asJpeg()
                 .asActive()
-                .build() // keep valid image bytes from builder
-        // Leave ri.image as valid; corrupt thumbnail only
+                .build()
+        ri.thumbnail = 'aGVsbG8='.decodeBase64() // "hello" - not a valid image
 
         when:
         receiptImageRepository.save(ri)

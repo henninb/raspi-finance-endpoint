@@ -6,6 +6,7 @@ import finance.domain.Category
 import finance.domain.Description
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.domain.TransactionType
 import finance.helpers.SmartAccountBuilder
 import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository

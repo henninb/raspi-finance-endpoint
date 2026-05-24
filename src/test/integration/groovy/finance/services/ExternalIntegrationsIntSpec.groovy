@@ -2,6 +2,7 @@ package finance.services
 
 import finance.BaseRestTemplateIntegrationSpec
 import finance.domain.Transaction
+import groovy.util.logging.Slf4j
 import finance.domain.AccountType
 import finance.domain.TransactionState
 import finance.domain.TransactionType
@@ -22,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 
 import java.sql.Date
 
+@Slf4j
 @Transactional
 @TestPropertySource(properties = [
     "management.server.port="

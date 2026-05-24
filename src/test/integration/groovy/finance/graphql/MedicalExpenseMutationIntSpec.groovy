@@ -6,6 +6,7 @@ import finance.controllers.graphql.GraphQLMutationController
 import finance.domain.ClaimStatus
 import finance.domain.MedicalExpense
 import finance.services.MedicalExpenseService
+import jakarta.validation.ConstraintViolationException
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 

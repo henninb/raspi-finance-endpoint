@@ -1,6 +1,7 @@
 package finance.helpers
 
 import finance.domain.Account
+import finance.domain.ImageFormatType
 import finance.domain.ReceiptImage
 import finance.domain.Category
 import finance.domain.Description

@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.core.env.Environment
 import org.springframework.http.*
 import org.springframework.test.context.ActiveProfiles
+import groovy.util.logging.Slf4j
 import org.spockframework.spring.EnableSharedInjection
 import spock.lang.Shared
 import spock.lang.Specification
@@ -24,6 +25,7 @@ import javax.crypto.SecretKey
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
+@Slf4j
 @ActiveProfiles("perf")
 @SpringBootTest(classes = Application, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import([TestSecurityConfig])
@@ -64,10 +66,7 @@ class ReferenceDataPerfSpec extends Specification {
 
     def setupSpec() {
         restTemplate = new org.springframework.web.client.RestTemplate()
-        restTemplate.errorHandler = new org.springframework.web.client.ResponseErrorHandler() {
-            boolean hasError(org.springframework.http.client.ClientHttpResponse r) { false }
-            void handleError(org.springframework.http.client.ClientHttpResponse r) {}
-        }
+        restTemplate.errorHandler = new org.springframework.web.client.NoOpResponseErrorHandler()
 
         (0..19).each { i ->
             Category cat = new Category()
@@ -160,9 +159,9 @@ class ReferenceDataPerfSpec extends Specification {
     private static void printReport(String label, List<Long> sorted, long wallMs) {
         def p = percentiles(sorted)
         double rps = TOTAL_REQUESTS / (wallMs / 1000.0)
-        println "\n=== $label ==="
-        println "  threads=${THREAD_COUNT}  requests=${TOTAL_REQUESTS}  wall=${wallMs}ms  throughput=${String.format('%.1f', rps)} req/sec"
-        println "  min=${p.min}ms  p50=${p.p50}ms  p95=${p.p95}ms  p99=${p.p99}ms  max=${p.max}ms"
+        log.info("\n=== ${label} ===")
+        log.info("  threads=${THREAD_COUNT}  requests=${TOTAL_REQUESTS}  wall=${wallMs}ms  throughput=${String.format('%.1f', rps)} req/sec")
+        log.info("  min=${p.min}ms  p50=${p.p50}ms  p95=${p.p95}ms  p99=${p.p99}ms  max=${p.max}ms")
     }
 
     void "GET /api/category/active - concurrent list latency"() {

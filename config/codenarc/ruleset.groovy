@@ -100,6 +100,8 @@ ruleset {
         AbcMetric(enabled: false)
         // Test helpers and data builders legitimately take many parameters
         ParameterCount(maxParameters: 8)
+        // CrapMetric requires a Cobertura XML coverage file which is not generated
+        CrapMetric(enabled: false)
     }
 
     // Test data naturally repeats literals; dry rules are too noisy in tests

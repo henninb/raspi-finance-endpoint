@@ -138,13 +138,15 @@ class BaseRestTemplateIntegrationSpec extends Specification {
      */
     protected String createJwtToken(String username = 'test-user', List<String> authorities = ['USER']) {
         SecretKey key = Keys.hmacShaKeyFor(jwtKey.getBytes())
+        Date now = new Date()
+        Date exp = new Date(now.time + 3_600_000L)
         return Jwts.builder()
             .claim('username', username)
             .claim('authorities', authorities)
             .issuer('raspi-finance-endpoint')
             .audience().add('raspi-finance-endpoint').and()
-            .issuedAt(issuedAt)
-            .expiration(expiration)
+            .issuedAt(now)
+            .expiration(exp)
             .signWith(key)
             .compact()
     }
