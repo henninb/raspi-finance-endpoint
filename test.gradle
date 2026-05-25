@@ -1,0 +1,138 @@
+sourceSets {
+    test {
+        groovy.srcDir "src/test/unit/groovy"
+        resources.srcDir "src/test/unit/resources"
+
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+
+    integrationTest {
+        groovy.srcDir "src/test/integration/groovy"
+        resources.srcDir "src/test/integration/resources"
+
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+
+    functionalTest {
+        groovy.srcDir "src/test/functional/groovy"
+        resources.srcDir "src/test/functional/resources" as String
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+
+    performanceTest {
+        groovy.srcDir "src/test/performance/groovy"
+        resources.srcDir "src/test/performance/resources"
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+
+    oracleTest {
+        groovy.srcDir "src/test/oracle/groovy"
+        resources.srcDir "src/test/oracle/resources"
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+//provide dependency scopes
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntime.extendsFrom testRuntime
+    functionalTestImplementation.extendsFrom testImplementation
+    functionalTestRuntime.extendsFrom testRuntime
+    performanceTestImplementation.extendsFrom testImplementation
+    performanceRuntime.extendsFrom testRuntime
+    oracleTestImplementation.extendsFrom testImplementation
+    oracleRuntime.extendsFrom testRuntime
+}
+
+compileTestKotlin {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+    testImplementation("org.apache.groovy:groovy:${groovyVersion}")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    testImplementation("org.spockframework:spock-core:${spockVersion}")
+    testImplementation("org.spockframework:spock-spring:${spockVersion}")
+    testImplementation("org.testcontainers:spock:${testContainersVersion}")
+    testImplementation("io.github.http-builder-ng:http-builder-ng-core:${httpBuilderVersion}")
+    testImplementation("com.squareup.retrofit2:retrofit:${retrofitVersion}")
+    testImplementation("com.squareup.retrofit2:retrofit-mock:${retrofitVersion}")
+    //h2 database
+    runtimeOnly("com.h2database:h2:${h2Version}")
+}
+
+////provide dependency scopes
+//configurations {
+//    integrationTestImplementation.extendsFrom testImplementation
+//    integrationTestRuntime.extendsFrom testRuntime
+//    functionalTestCompile.extendsFrom testImplementation
+//    testFunctionalCompile.extendsFrom testRuntime
+//}
+
+test {
+    //useJUnitPlatform()
+//    afterSuite { suite, result ->
+//        result.exception?.printStackTrace()
+//    }
+}
+
+//TODO: fix this issue
+tasks.withType(Test) {
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "unit"
+    environment "APPNAME", "raspi-finance-endpoint"
+}
+
+task integrationTest(type: Test) {
+    description = "Runs the integration tests."
+    testClassesDirs = project.sourceSets.integrationTest.output.classesDirs
+    classpath = project.sourceSets.integrationTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "int"
+    environment "APPNAME", "raspi-finance-endpoint"
+}
+
+task functionalTest(type: Test) {
+    description = "Runs the functional tests."
+    testClassesDirs = project.sourceSets.functionalTest.output.classesDirs
+    classpath = project.sourceSets.functionalTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "func"
+    environment "APPNAME", "raspi-finance-endpoint"
+}
+
+task performanceTest(type: Test) {
+    description = "Runs the performance tests."
+    testClassesDirs = project.sourceSets.performanceTest.output.classesDirs
+    classpath = project.sourceSets.performanceTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "perf"
+    environment "APPNAME", "raspi-finance-endpoint"
+}
+
+task oracleTest(type: Test) {
+    description = "Runs the oracle tests."
+    testClassesDirs = project.sourceSets.oracleTest.output.classesDirs
+    classpath = project.sourceSets.oracleTest.runtimeClasspath
+
+    environment "LOGS", "logs"
+    environment "SPRING_PROFILES_ACTIVE", "ora"
+    environment "APPNAME", "raspi-finance-endpoint"
+}
+
+integrationTest.reports.html.destination = file("$buildDir/reports/test/integration")
+functionalTest.reports.html.destination = file("$buildDir/reports/test/functional")
+performanceTest.reports.html.destination = file("$buildDir/reports/test/performance")
+//test.dependsOn functionalTest
+//test.dependsOn integrationTest

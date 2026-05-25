@@ -1,0 +1,24 @@
+version: "3.7"
+services:
+  postgresql-server:
+    image: postgres:14.1
+    # user: "${CURRENT_UID}:${CURRENT_GID}"
+    container_name: postgresql-server
+    ports:
+      - "5433:5432"
+    expose:
+      - "5433"
+    extra_hosts:
+      - "raspi:192.168.10.25"
+    env_file:
+      - env.postgresql
+    hostname: postgresql-server
+    volumes:
+      - ./postgresql-data:/var/lib/postgresql/data
+      # postgresql-volume:/var/lib/postgresql/data
+  raspi-finance-endpoint:
+    depends_on:
+      - postgresql-server
+volumes:
+  postgresql-volume:
+    driver: local

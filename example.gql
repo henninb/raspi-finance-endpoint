@@ -1,0 +1,7 @@
+{
+    descriptions {
+        descriptionId
+        description
+        activeStatus
+    }
+}

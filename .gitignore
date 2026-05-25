@@ -1,0 +1,61 @@
+## gradle ##
+.gradle/
+out/
+target/
+build/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### Directories ###
+LOGS_IS_UNDEFINED/
+LOG_PATH_IS_UNDEFINED/
+logs/
+json_in/
+func_json_in/
+int_json_in/
+ssl/
+node_modules/
+
+### File types ###
+*.bak
+*.gz
+*.jks
+*.pem
+*.p12
+*.ks
+*.der
+*.ts
+*.crt
+*.key
+*.csr
+*.tar
+test.json
+
+### Files ###
+ip
+
+### others ###
+.classpath
+.project
+.settings/
+bin/
+libs/
+
+build.gradle-verbose
+docker-compose-run.yml
+docker-compose.yml
+database-data/
+postgresql-data/
+influxdb-data/
+grafana-data/
+varnish-data/
+excel_in/
+finance_db_master.xlsm
+metrics-*.json
+tags
+env.bootrun
+v3.ext

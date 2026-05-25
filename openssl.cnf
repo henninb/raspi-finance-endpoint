@@ -1,0 +1,27 @@
+# openssl genrsa -out rootCA.key 2048
+# openssl req -new -x509 -key rootCA.key -out rootCA.crt -config openssl.cnf -days 365
+# openssl req -new -keyout hornsup.key -out hornsup.csr -config openssl.cnf
+[ req ]
+ default_bits       = 2048
+ default_md         = sha256
+ prompt             = no
+ encrypt_key        = no
+ distinguished_name = hornsup
+# rootCA
+ [ rootCA ]
+ countryName            = "US"
+ stateOrProvinceName    = "TX"
+ localityName           = "Denton"
+ organizationName       = "Brian LLC"
+ organizationalUnitName = "prod"
+ commonName             = "Brian LLC rootCA"
+ emailAddress           = "henninb@gmail.com"
+# hornsup
+ [ hornsup ]
+ countryName            = "US"
+ stateOrProvinceName    = "TX"
+ localityName           = "Denton"
+ organizationName       = "Brian LLC"
+ organizationalUnitName = "Brian LLC"
+ commonName             = "hornsup"
+ emailAddress           = "henninb@gmail.com"
