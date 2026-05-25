@@ -45,8 +45,8 @@ jobs:
         include:
         - language: actions
           build-mode: none
-        - language: java-kotlin
-          build-mode: none
+        # java-kotlin disabled: Kotlin 2.4.0-RC exceeds CodeQL support ceiling (< 2.3.30)
+        # Re-enable once CodeQL supports Kotlin 2.4+
         - language: python
           build-mode: none
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
