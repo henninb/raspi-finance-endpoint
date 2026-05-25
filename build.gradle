@@ -128,7 +128,7 @@ sourceSets {
 
 compileJava {
     options.annotationProcessorPath = configurations.annotationProcessor
-    options.release = 24
+    options.release = 21
 }
 
 wrapper {
