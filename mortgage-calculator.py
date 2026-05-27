@@ -1,40 +1,105 @@
 #!/usr/bin/env python3
 """
-ServiceMac Mortgage Principal Calculator
+Mortgage Principal Calculator
 
-Based on analysis of servicemac_brian account payments.
-ServiceMac credits extra payments at the START of the month for interest calculation.
+Supports lenders that credit extra payments at the START of the month
+for interest calculation (e.g., ServiceMac).
 
 Usage:
-    python mortgage-calculator.py                     # Interactive mode
-    python mortgage-calculator.py 88493.63 6042      # Single month
-    python mortgage-calculator.py 88493.63 6000 --months 12  # Project 12 months
+    python mortgage-calculator.py 17538              # Extra payment only (balance from saved state)
+    python mortgage-calculator.py 46534.45 17538     # Balance + extra payment
+    python mortgage-calculator.py 46534.45 6000 -m 12  # Project 12 months
 """
 
 import argparse
+import json
+import os
 import sys
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
 
-# Mortgage constants
-ANNUAL_RATE = 0.0649  # 6.49%
-MONTHLY_RATE = ANNUAL_RATE / 12
-MONTHLY_PAYMENT = 1294.39
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich import box
+
+MAX_REASONABLE_BALANCE = 10_000_000.0
+MAX_MONTHS = 360
+
+DEFAULT_ANNUAL_RATE = 0.0649
+DEFAULT_MONTHLY_PAYMENT = 1294.39
+
+STATE_FILE = Path(
+    os.environ.get(
+        "MORTGAGE_STATE_FILE",
+        str(Path.home() / ".mortgage-calculator.json"),
+    )
+)
+
+console = Console()
 
 
-def calculate_month(balance: float, extra_payment: float) -> dict:
-    """
-    Calculate a single month's mortgage payment breakdown.
+@dataclass(frozen=True)
+class MortgageConfig:
+    annual_rate: float
+    monthly_payment: float
 
-    Args:
-        balance: Current principal balance at start of month
-        extra_payment: Total extra principal payment for the month
+    @property
+    def monthly_rate(self) -> float:
+        return self.annual_rate / 12
 
-    Returns:
-        dict with interest, principal, and new balance
-    """
-    # ServiceMac credits extra payment at start of month for interest calc
+    def validate(self):
+        if not (0.0 < self.annual_rate < 1.0):
+            raise ValueError(f"Annual rate must be between 0 and 1, got {self.annual_rate}")
+        if self.monthly_payment <= 0:
+            raise ValueError(f"Monthly payment must be positive, got {self.monthly_payment}")
+
+
+def _validate_amount(value: float, name: str) -> float:
+    if value < 0:
+        raise ValueError(f"{name} cannot be negative, got {value}")
+    if value > MAX_REASONABLE_BALANCE:
+        raise ValueError(
+            f"{name} exceeds maximum allowed ({MAX_REASONABLE_BALANCE:,.0f}), got {value:,.2f}"
+        )
+    return value
+
+
+def load_state() -> dict:
+    if not STATE_FILE.exists():
+        return {}
+    try:
+        data = json.loads(STATE_FILE.read_text())
+        if not isinstance(data, dict):
+            return {}
+        balance = data.get("balance")
+        if balance is not None and not isinstance(balance, (int, float)):
+            return {}
+        return data
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_state(balance: float):
+    state = load_state()
+    state["balance"] = balance
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", dir=STATE_FILE.parent, delete=False, suffix=".tmp"
+        ) as tmp:
+            tmp_path = Path(tmp.name)
+            json.dump(state, tmp, indent=2)
+        tmp_path.chmod(0o600)
+        tmp_path.replace(STATE_FILE)
+    except OSError as e:
+        console.print(f"[yellow]Warning: could not save state: {e}[/yellow]")
+
+
+def calculate_month(balance: float, extra_payment: float, config: MortgageConfig) -> dict:
     balance_for_interest = balance - extra_payment
-    interest = balance_for_interest * MONTHLY_RATE
-    principal = MONTHLY_PAYMENT - interest
+    interest = balance_for_interest * config.monthly_rate
+    principal = config.monthly_payment - interest
     new_balance = balance - extra_payment - principal
 
     return {
@@ -43,33 +108,26 @@ def calculate_month(balance: float, extra_payment: float) -> dict:
         "balance_for_interest": balance_for_interest,
         "interest": round(interest, 2),
         "principal": round(principal, 2),
-        "total_paid": round(extra_payment + MONTHLY_PAYMENT, 2),
-        "new_balance": round(new_balance, 2)
+        "total_paid": round(extra_payment + config.monthly_payment, 2),
+        "new_balance": round(new_balance, 2),
     }
 
 
-def project_months(starting_balance: float, monthly_extra: float, num_months: int) -> list:
-    """
-    Project multiple months of payments.
-
-    Args:
-        starting_balance: Current principal balance
-        monthly_extra: Extra payment to make each month
-        num_months: Number of months to project
-
-    Returns:
-        List of monthly calculation results
-    """
+def project_months(
+    starting_balance: float,
+    monthly_extra: float,
+    num_months: int,
+    config: MortgageConfig,
+) -> list:
     results = []
     balance = starting_balance
 
     for month in range(1, num_months + 1):
-        # Adjust extra payment if it would exceed remaining balance
-        extra = min(monthly_extra, balance - MONTHLY_PAYMENT * 0.1)
+        extra = min(monthly_extra, balance - config.monthly_payment * 0.1)
         if extra < 0:
             extra = 0
 
-        result = calculate_month(balance, extra)
+        result = calculate_month(balance, extra, config)
         result["month"] = month
         results.append(result)
 
@@ -80,122 +138,207 @@ def project_months(starting_balance: float, monthly_extra: float, num_months: in
     return results
 
 
-def print_single_month(result: dict):
-    """Print a single month's calculation."""
-    total_principal = result['extra_payment'] + result['principal']
+def print_single_month(result: dict, config: MortgageConfig):
+    total_principal = result["extra_payment"] + result["principal"]
 
-    print("\nMortgage Payment Calculation")
-    print("=" * 50)
-    print(f"Starting balance:        ${result['starting_balance']:>12,.2f}")
-    print(f"Monthly rate:            {MONTHLY_RATE * 100:>12.6f}%")
-    print("-" * 50)
-    print(f"Interest portion:        ${result['interest']:>12,.2f}")
-    print(f"Principal portion:       ${result['principal']:>12,.2f}")
-    print(f"Regular payment:         ${MONTHLY_PAYMENT:>12,.2f}")
-    print("-" * 50)
-    print(f"Extra payment:           ${result['extra_payment']:>12,.2f}")
-    print(f"Total principal paid:    ${total_principal:>12,.2f}")
-    print(f"Total paid this month:   ${result['total_paid']:>12,.2f}")
-    print("=" * 50)
-    print(f"REMAINING BALANCE:       ${result['new_balance']:>12,.2f}")
-    print("=" * 50)
+    table = Table(box=box.SIMPLE, show_header=False, padding=(0, 1))
+    table.add_column(justify="left", style="dim")
+    table.add_column(justify="right", style="bold")
+
+    table.add_row("Starting balance", f"[cyan]${result['starting_balance']:>12,.2f}[/cyan]")
+    table.add_row("Monthly rate", f"{config.monthly_rate * 100:.6f}%")
+    table.add_section()
+    table.add_row("Interest portion", f"[red]${result['interest']:>12,.2f}[/red]")
+    table.add_row("Principal portion", f"${result['principal']:>12,.2f}")
+    table.add_row("Regular payment", f"${config.monthly_payment:>12,.2f}")
+    table.add_section()
+    table.add_row("Extra payment", f"[yellow]${result['extra_payment']:>12,.2f}[/yellow]")
+    table.add_row("Total principal paid", f"[green]${total_principal:>12,.2f}[/green]")
+    table.add_row("Total paid this month", f"[green]${result['total_paid']:>12,.2f}[/green]")
+    table.add_section()
+    table.add_row("Remaining balance", f"[bold magenta]${result['new_balance']:>12,.2f}[/bold magenta]")
+
+    console.print(Panel(table, title="[bold]Mortgage Payment Breakdown[/bold]", border_style="blue"))
 
 
-def print_projection(results: list):
-    """Print a multi-month projection table."""
-    print("\nMortgage Payment Projection")
-    print("=" * 95)
-    print(f"{'Month':>5} | {'Balance':>12} | {'Extra':>10} | {'Interest':>10} | {'Principal':>10} | {'New Balance':>12}")
-    print("-" * 95)
+def print_projection(results: list, config: MortgageConfig):
+    table = Table(box=box.ROUNDED, show_footer=True)
 
-    total_interest = 0
-    total_principal = 0
-    total_extra = 0
+    total_interest = sum(r["interest"] for r in results)
+    total_principal = sum(r["principal"] for r in results)
+    total_extra = sum(r["extra_payment"] for r in results)
+
+    table.add_column("Month", justify="right", footer=f"[bold]{len(results)}[/bold]")
+    table.add_column("Balance", justify="right", style="cyan", footer="")
+    table.add_column("Extra", justify="right", style="yellow",
+                     footer=f"[yellow]${total_extra:,.2f}[/yellow]")
+    table.add_column("Interest", justify="right", style="red",
+                     footer=f"[red]${total_interest:,.2f}[/red]")
+    table.add_column("Principal", justify="right", footer=f"${total_principal:,.2f}")
+    table.add_column("New Balance", justify="right", style="magenta",
+                     footer=f"[bold magenta]${results[-1]['new_balance']:,.2f}[/bold magenta]")
 
     for r in results:
-        print(f"{r['month']:>5} | ${r['starting_balance']:>10,.2f} | ${r['extra_payment']:>8,.2f} | "
-              f"${r['interest']:>8,.2f} | ${r['principal']:>8,.2f} | ${r['new_balance']:>10,.2f}")
-        total_interest += r['interest']
-        total_principal += r['principal']
-        total_extra += r['extra_payment']
+        table.add_row(
+            str(r["month"]),
+            f"${r['starting_balance']:,.2f}",
+            f"${r['extra_payment']:,.2f}",
+            f"${r['interest']:,.2f}",
+            f"${r['principal']:,.2f}",
+            f"${r['new_balance']:,.2f}",
+        )
 
-    print("-" * 95)
-    print(f"{'TOTAL':>5} | {'':>12} | ${total_extra:>8,.2f} | ${total_interest:>8,.2f} | ${total_principal:>8,.2f} |")
-    print()
-    print(f"Total payments: ${total_extra + len(results) * MONTHLY_PAYMENT:,.2f}")
-    print(f"Principal paid: ${total_principal + total_extra:,.2f}")
-    print(f"Interest paid:  ${total_interest:,.2f}")
+    console.print(Panel(table, title="[bold]Mortgage Projection[/bold]", border_style="blue"))
 
-    if results[-1]['new_balance'] <= 0:
-        print(f"\nMortgage paid off in {len(results)} months!")
+    total_payments = total_extra + len(results) * config.monthly_payment
+    console.print(f"  Total payments:  [green]${total_payments:,.2f}[/green]")
+    console.print(f"  Principal paid:  [green]${total_principal + total_extra:,.2f}[/green]")
+    console.print(f"  Interest paid:   [red]${total_interest:,.2f}[/red]")
+
+    if results[-1]["new_balance"] <= 0:
+        console.print(f"\n  [bold green]Mortgage paid off in {len(results)} months![/bold green]")
 
 
-def interactive_mode():
-    """Run in interactive mode."""
-    print("\nServiceMac Mortgage Calculator")
-    print("=" * 50)
-    print(f"Annual Rate: {ANNUAL_RATE * 100:.2f}%")
-    print(f"Monthly Payment: ${MONTHLY_PAYMENT:,.2f}")
-    print()
+def interactive_mode(config: MortgageConfig):
+    state = load_state()
+    saved_balance = state.get("balance")
+
+    console.print(Panel(
+        f"[bold]Mortgage Calculator[/bold]\n"
+        f"Rate: [cyan]{config.annual_rate * 100:.2f}%[/cyan]  |  "
+        f"Monthly payment: [cyan]${config.monthly_payment:,.2f}[/cyan]",
+        border_style="blue"
+    ))
 
     try:
-        balance = float(input("Enter current balance: $"))
-        extra = float(input("Enter extra payment for this month: $"))
+        if saved_balance:
+            console.print(f"  Saved balance: [cyan]${saved_balance:,.2f}[/cyan]")
+            raw = input(f"  Current balance [${saved_balance:,.2f}]: ").strip()
+            balance = float(raw) if raw else saved_balance
+        else:
+            balance = float(input("  Current balance: $"))
+        _validate_amount(balance, "Balance")
 
-        result = calculate_month(balance, extra)
-        print_single_month(result)
+        extra = float(input("  Extra payment this month: $"))
+        _validate_amount(extra, "Extra payment")
 
-        project = input("\nProject future months? (y/n): ").strip().lower()
-        if project == 'y':
-            months = int(input("How many months to project? "))
-            monthly_extra = float(input("Monthly extra payment amount: $"))
-            results = project_months(balance, monthly_extra, months)
-            print_projection(results)
+        result = calculate_month(balance, extra, config)
+        print_single_month(result, config)
+
+        save_state(result["new_balance"])
+        console.print(f"  [dim]Balance saved → ${result['new_balance']:,.2f}[/dim]\n")
+
+        project = input("  Project future months? (y/n/payoff): ").strip().lower()
+        if project == "y":
+            months = int(input("  How many months? "))
+            if not (1 <= months <= MAX_MONTHS):
+                raise ValueError(f"Months must be between 1 and {MAX_MONTHS}")
+            monthly_extra_raw = input(f"  Monthly extra payment [${extra:,.2f}]: ").strip()
+            monthly_extra = float(monthly_extra_raw) if monthly_extra_raw else extra
+            _validate_amount(monthly_extra, "Monthly extra payment")
+            results = project_months(result["new_balance"], monthly_extra, months, config)
+            print_projection(results, config)
+        elif project in ("p", "payoff"):
+            monthly_extra_raw = input(f"  Monthly extra payment [${extra:,.2f}]: ").strip()
+            monthly_extra = float(monthly_extra_raw) if monthly_extra_raw else extra
+            _validate_amount(monthly_extra, "Monthly extra payment")
+            results = project_months(result["new_balance"], monthly_extra, MAX_MONTHS, config)
+            print_projection(results, config)
 
     except ValueError as e:
-        print(f"Invalid input: {e}")
+        console.print(f"[red]Invalid input: {e}[/red]")
         sys.exit(1)
     except KeyboardInterrupt:
-        print("\nCancelled.")
+        console.print("\n[dim]Cancelled.[/dim]")
         sys.exit(0)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Calculate mortgage principal portions using ServiceMac's method",
+        description="Calculate mortgage payments",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                          Interactive mode
-  %(prog)s 88493.63 6042            Calculate single month
-  %(prog)s 88493.63 6000 -m 12      Project 12 months with $6000/month extra
-  %(prog)s 88493.63 6000 -m 24 -v   Verbose projection
-  %(prog)s 95347.03 0 -m 240 -v     Project full term with no extra payments
+  %(prog)s                              Interactive mode (prompts for input)
+  %(prog)s 17538                        Extra payment only — balance loaded from saved state
+  %(prog)s 46534.45 17538               Balance + extra payment
+  %(prog)s 46534.45 6000 -m 12          Project 12 months with $6000/month extra
+  %(prog)s -p                           Project to full payoff from saved balance
+  %(prog)s 5000 -p                      Project to payoff with $5000/month extra
+  %(prog)s 27858.88 5000 -p             Project to payoff from given balance
+  %(prog)s --rate 0.07 --payment 1500   Use a different mortgage configuration
         """
     )
-    parser.add_argument("balance", type=float, nargs="?", help="Current principal balance")
-    parser.add_argument("extra", type=float, nargs="?", help="Extra payment this month")
-    parser.add_argument("-m", "--months", type=int, default=1, help="Number of months to project")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output")
+    parser.add_argument("first", type=float, nargs="?",
+                        help="Extra payment (if balance is saved) or current balance")
+    parser.add_argument("second", type=float, nargs="?",
+                        help="Extra payment (when balance given as first arg)")
+    parser.add_argument("-m", "--months", type=int, default=1,
+                        help="Number of months to project")
+    parser.add_argument("-p", "--payoff", action="store_true",
+                        help="Project all remaining months to full payoff")
+    parser.add_argument("--rate", type=float, default=None,
+                        help="Annual interest rate as decimal (e.g., 0.0649 for 6.49%%)")
+    parser.add_argument("--payment", type=float, default=None,
+                        help="Monthly payment amount in dollars")
 
     args = parser.parse_args()
 
-    if args.balance is None:
-        interactive_mode()
-    else:
-        if args.extra is None:
-            print("Error: extra payment amount required")
-            sys.exit(1)
+    config = MortgageConfig(
+        annual_rate=args.rate if args.rate is not None else DEFAULT_ANNUAL_RATE,
+        monthly_payment=args.payment if args.payment is not None else DEFAULT_MONTHLY_PAYMENT,
+    )
 
-        if args.months == 1:
-            result = calculate_month(args.balance, args.extra)
-            if args.verbose:
-                print_single_month(result)
-            else:
-                print(f"Principal: ${result['principal']:.2f}  |  Remaining Balance: ${result['new_balance']:,.2f}")
-        else:
-            results = project_months(args.balance, args.extra, args.months)
-            print_projection(results)
+    try:
+        config.validate()
+        if args.first is not None:
+            _validate_amount(args.first, "First argument")
+        if args.second is not None:
+            _validate_amount(args.second, "Second argument")
+        if not (1 <= args.months <= MAX_MONTHS):
+            raise ValueError(f"Months must be between 1 and {MAX_MONTHS}")
+    except ValueError as e:
+        console.print(f"[red]Invalid argument: {e}[/red]")
+        sys.exit(1)
+
+    if args.first is None and args.payoff:
+        state = load_state()
+        if not state.get("balance"):
+            console.print("[red]No saved balance found. Provide a balance:[/red]")
+            console.print("  mortgage-calculator.py 27858.88 --payoff")
+            sys.exit(1)
+        results = project_months(state["balance"], 0, MAX_MONTHS, config)
+        print_projection(results, config)
+        return
+
+    if args.first is None:
+        interactive_mode(config)
+        return
+
+    state = load_state()
+
+    if args.second is not None:
+        balance = args.first
+        extra = args.second
+    elif state.get("balance"):
+        balance = state["balance"]
+        extra = args.first
+    else:
+        console.print("[red]No saved balance found. Run with both balance and extra payment:[/red]")
+        console.print("  mortgage-calculator.py 46534.45 17538")
+        sys.exit(1)
+
+    if args.payoff:
+        results = project_months(balance, extra, MAX_MONTHS, config)
+        print_projection(results, config)
+    elif args.months > 1:
+        results = project_months(balance, extra, args.months, config)
+        print_projection(results, config)
+    else:
+        result = calculate_month(balance, extra, config)
+        print_single_month(result, config)
+        save_state(result["new_balance"])
+        console.print(f"  [dim]Balance saved → ${result['new_balance']:,.2f}[/dim]\n")
 
 
 if __name__ == "__main__":
