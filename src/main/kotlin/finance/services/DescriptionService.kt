@@ -26,29 +26,11 @@ class DescriptionService
     ) : CrudBaseService<Description, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Description"
 
-        // ===== New Standardized ServiceResult Methods =====
-
         override fun findAllActive(): ServiceResult<List<Description>> =
             handleServiceOperation("findAllActive", null) {
                 val owner = TenantContext.getCurrentOwner()
                 val descriptions = descriptionRepository.findByOwnerAndActiveStatusOrderByDescriptionName(owner, true)
-
-                // Batch query to get all counts at once (prevents N+1 query problem)
-                val descriptionNames = descriptions.map { it.descriptionName }
-                val countMap =
-                    if (descriptionNames.isNotEmpty()) {
-                        transactionRepository
-                            .countByOwnerAndDescriptionNameIn(owner, descriptionNames)
-                            .associate { row -> row[0] as String to row[1] as Long }
-                    } else {
-                        emptyMap()
-                    }
-
-                // Apply counts to descriptions
-                descriptions.forEach { description ->
-                    description.descriptionCount = countMap[description.descriptionName] ?: 0L
-                }
-
+                applyDescriptionCounts(owner, descriptions)
                 descriptions
             }
 
@@ -90,37 +72,25 @@ class DescriptionService
                 description
             }
 
-        // ===== Paginated ServiceResult Methods =====
-
-        /**
-         * Find all active descriptions with pagination.
-         * Sorted by descriptionName ascending. Preserves transaction count batch loading.
-         */
         fun findAllActive(pageable: Pageable): ServiceResult<Page<Description>> =
             handleServiceOperation("findAllActive-paginated", null) {
                 val owner = TenantContext.getCurrentOwner()
                 val page = descriptionRepository.findAllByOwnerAndActiveStatusOrderByDescriptionName(owner, true, pageable)
-
-                // Batch query to get all counts at once (prevents N+1 query problem)
-                val descriptionNames = page.content.map { it.descriptionName }
-                val countMap =
-                    if (descriptionNames.isNotEmpty()) {
-                        transactionRepository
-                            .countByOwnerAndDescriptionNameIn(owner, descriptionNames)
-                            .associate { row -> row[0] as String to row[1] as Long }
-                    } else {
-                        emptyMap()
-                    }
-
-                // Apply counts to descriptions
-                page.content.forEach { description ->
-                    description.descriptionCount = countMap[description.descriptionName] ?: 0L
-                }
-
+                applyDescriptionCounts(owner, page.content)
                 page
             }
 
-        // ===== ServiceResult Business Methods for Controller =====
+        private fun applyDescriptionCounts(
+            owner: String,
+            descriptions: List<Description>,
+        ) {
+            if (descriptions.isEmpty()) return
+            val countMap =
+                transactionRepository
+                    .countByOwnerAndDescriptionNameIn(owner, descriptions.map { it.descriptionName })
+                    .associate { row -> row[0] as String to row[1] as Long }
+            descriptions.forEach { it.descriptionCount = countMap[it.descriptionName] ?: 0L }
+        }
 
         fun findByDescriptionNameStandardized(descriptionName: String): ServiceResult<Description> =
             handleServiceOperation("findByDescriptionName", null) {
@@ -143,8 +113,6 @@ class DescriptionService
                 descriptionRepository.delete(description)
                 description
             }
-
-        // ===== Legacy Method Compatibility =====
 
         fun fetchAllDescriptions(): List<Description> {
             val result = findAllActive()
@@ -194,10 +162,8 @@ class DescriptionService
             sourceNames: List<String>,
         ): Description {
             val owner = TenantContext.getCurrentOwner()
-            // Normalize target name (trim whitespace and convert to lowercase)
             val normalizedTargetName = targetName.trim().lowercase()
 
-            // Find target description by normalized name
             val targetDescription =
                 descriptionRepository.findByOwnerAndDescriptionName(owner, normalizedTargetName).orElseThrow {
                     RuntimeException("Target description $normalizedTargetName not found")
@@ -207,11 +173,9 @@ class DescriptionService
 
             var totalMergedCount = targetDescription.descriptionCount
 
-            // Process each source description, with normalization for self-merge detection
             sourceNames.forEach { sourceName ->
                 val normalizedSourceName = sourceName.trim().lowercase()
 
-                // Skip self-merge when normalized source equals normalized target
                 if (normalizedSourceName == normalizedTargetName) {
                     logger.info("Skipping self-merge: $sourceName normalizes to same as target $normalizedTargetName")
                     return@forEach
@@ -222,22 +186,16 @@ class DescriptionService
                         RuntimeException("Source description $sourceName not found")
                     }
 
-                // Reassign transactions from source to target via single bulk UPDATE
                 val updatedCount = transactionRepository.bulkUpdateDescriptionByOwner(owner, sourceName, normalizedTargetName)
                 logger.info("Bulk updated $updatedCount transactions from $sourceName to $normalizedTargetName")
 
-                // Merge description counts
                 totalMergedCount += sourceDescription.descriptionCount
-
-                // Mark source description as inactive
                 sourceDescription.activeStatus = false
                 descriptionRepository.saveAndFlush(sourceDescription)
             }
 
-            // Update target description with merged count
             targetDescription.descriptionCount = totalMergedCount
 
-            // Save the updated target description
             val mergedDescription = descriptionRepository.saveAndFlush(targetDescription)
             logger.info("Successfully merged descriptions ${sourceNames.joinToString(", ")} into $normalizedTargetName")
 

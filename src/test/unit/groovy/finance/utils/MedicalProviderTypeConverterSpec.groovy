@@ -41,7 +41,7 @@ class MedicalProviderTypeConverterSpec extends Specification {
 
         then:
             def ex = thrown(RuntimeException)
-            ex.message == 'Unknown medical provider type attribute: unknown_provider'
+            ex.message == 'Unknown MedicalProviderType attribute: unknown_provider'
     }
 
     def "round trip conversion works for common MedicalProviderType values"() {

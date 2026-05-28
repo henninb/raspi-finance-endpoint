@@ -80,7 +80,7 @@ class ReoccurringTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute: ${invalidInput}"
+        ex.message == "Unknown ReoccurringType attribute: ${invalidInput}"
 
         where:
         invalidInput << [
@@ -95,7 +95,7 @@ class ReoccurringTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute:   Weekly  "
+        ex.message == "Unknown ReoccurringType attribute:   Weekly  "
     }
 
     def "all ReoccurringType enum values are handled in convertToDatabaseColumn"() {

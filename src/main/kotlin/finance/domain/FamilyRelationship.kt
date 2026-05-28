@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class FamilyRelationship(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     @JsonProperty("self")
     Self("self"),
 

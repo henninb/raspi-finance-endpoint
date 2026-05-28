@@ -32,7 +32,7 @@ class NetworkStatusConverterSpec extends Specification {
 
         then:
             def ex = thrown(RuntimeException)
-            ex.message == 'Unknown network status attribute: not-a-status'
+            ex.message == 'Unknown NetworkStatus attribute: not-a-status'
     }
 
     def "round trip conversion works for all NetworkStatus values"() {

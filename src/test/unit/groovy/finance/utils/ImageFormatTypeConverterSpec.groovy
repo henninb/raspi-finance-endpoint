@@ -61,7 +61,7 @@ class ImageFormatTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute: ${invalidInput}"
+        ex.message == "Unknown ImageFormatType attribute: ${invalidInput}"
 
         where:
         invalidInput << [
@@ -76,7 +76,7 @@ class ImageFormatTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute:   GIF  "
+        ex.message == "Unknown ImageFormatType attribute:   GIF  "
     }
 
     def "all ImageFormatType enum values are handled in convertToDatabaseColumn"() {
@@ -102,7 +102,7 @@ class ImageFormatTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute: ${invalidVariation}"
+        ex.message == "Unknown ImageFormatType attribute: ${invalidVariation}"
 
         where:
         invalidVariation << ["jpg", "JPG"]

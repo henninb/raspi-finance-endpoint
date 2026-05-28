@@ -65,7 +65,7 @@ class TransactionTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute: ${invalidInput}"
+        ex.message == "Unknown TransactionType attribute: ${invalidInput}"
 
         where:
         invalidInput << ["invalid", "debit", "credit", "", " ", "null", "payment", "withdrawal"]
@@ -77,7 +77,7 @@ class TransactionTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute:   Payment  "
+        ex.message == "Unknown TransactionType attribute:   Payment  "
     }
 
     def "all TransactionType enum values are handled in convertToDatabaseColumn"() {

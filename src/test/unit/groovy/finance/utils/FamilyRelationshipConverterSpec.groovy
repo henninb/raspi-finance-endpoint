@@ -33,7 +33,7 @@ class FamilyRelationshipConverterSpec extends Specification {
 
         then:
             def ex = thrown(RuntimeException)
-            ex.message == 'Unknown family relationship attribute: cousin'
+            ex.message == 'Unknown FamilyRelationship attribute: cousin'
     }
 
     def "round trip conversion works for all FamilyRelationship values"() {

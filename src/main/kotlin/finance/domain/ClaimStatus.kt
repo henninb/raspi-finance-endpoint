@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
 enum class ClaimStatus(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     Submitted("submitted"),
     Processing("processing"),
     Approved("approved"),

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class MedicalProviderType(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     @JsonProperty("general")
     General("general"),
 

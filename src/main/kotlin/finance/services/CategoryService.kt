@@ -24,29 +24,11 @@ class CategoryService
     ) : CrudBaseService<Category, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Category"
 
-        // ===== New Standardized ServiceResult Methods =====
-
         override fun findAllActive(): ServiceResult<List<Category>> =
             handleServiceOperation("findAllActive", null) {
                 val owner = TenantContext.getCurrentOwner()
                 val categories = categoryRepository.findByOwnerAndActiveStatusOrderByCategoryName(owner, true)
-
-                // Batch query to get all counts at once (prevents N+1 query problem)
-                val categoryNames = categories.map { it.categoryName }
-                val countMap =
-                    if (categoryNames.isNotEmpty()) {
-                        transactionRepository
-                            .countByOwnerAndCategoryNameIn(owner, categoryNames)
-                            .associate { row -> row[0] as String to row[1] as Long }
-                    } else {
-                        emptyMap()
-                    }
-
-                // Apply counts to categories
-                categories.forEach { category ->
-                    category.categoryCount = countMap[category.categoryName] ?: 0L
-                }
-
+                applyCategoryCounts(owner, categories)
                 categories
             }
 
@@ -88,35 +70,25 @@ class CategoryService
                 category
             }
 
-        // ===== Paginated ServiceResult Methods =====
-
-        /**
-         * Find all active categories with pagination.
-         * Sorted by categoryName ascending. Preserves transaction count batch loading.
-         */
         fun findAllActive(pageable: Pageable): ServiceResult<Page<Category>> =
             handleServiceOperation("findAllActive-paginated", null) {
                 val owner = TenantContext.getCurrentOwner()
                 val page = categoryRepository.findAllByOwnerAndActiveStatusOrderByCategoryName(owner, true, pageable)
-
-                // Batch query to get all counts at once (prevents N+1 query problem)
-                val categoryNames = page.content.map { it.categoryName }
-                val countMap =
-                    if (categoryNames.isNotEmpty()) {
-                        transactionRepository
-                            .countByOwnerAndCategoryNameIn(owner, categoryNames)
-                            .associate { row -> row[0] as String to row[1] as Long }
-                    } else {
-                        emptyMap()
-                    }
-
-                // Apply counts to categories
-                page.content.forEach { category ->
-                    category.categoryCount = countMap[category.categoryName] ?: 0L
-                }
-
+                applyCategoryCounts(owner, page.content)
                 page
             }
+
+        private fun applyCategoryCounts(
+            owner: String,
+            categories: List<Category>,
+        ) {
+            if (categories.isEmpty()) return
+            val countMap =
+                transactionRepository
+                    .countByOwnerAndCategoryNameIn(owner, categories.map { it.categoryName })
+                    .associate { row -> row[0] as String to row[1] as Long }
+            categories.forEach { it.categoryCount = countMap[it.categoryName] ?: 0L }
+        }
 
         fun findByCategoryNameStandardized(categoryName: String): ServiceResult<Category> =
             handleServiceOperation("findByCategoryName", null) {
@@ -140,15 +112,12 @@ class CategoryService
                 category
             }
 
-        // ===== Business Logic Methods =====
-
         @Transactional
         fun mergeCategories(
             categoryName1: String,
             categoryName2: String,
         ): Category {
             val owner = TenantContext.getCurrentOwner()
-            // Find both categories by name
             val category1 =
                 categoryRepository.findByOwnerAndCategoryName(owner, categoryName1).orElseThrow {
                     RuntimeException("Category $categoryName1 not found")
@@ -160,17 +129,12 @@ class CategoryService
 
             logger.info("Merging categories: $categoryName2 into $categoryName1")
 
-            // Reassign transactions from category2 to category1 via single bulk UPDATE
             val updatedCount = transactionRepository.bulkUpdateCategoryByOwner(owner, categoryName2, categoryName1)
             logger.info("Bulk updated $updatedCount transactions from $categoryName2 to $categoryName1")
 
-            // Merge category counts
             category1.categoryCount += category2.categoryCount
-
-            // Mark category2 as inactive
             category2.activeStatus = false
 
-            // Save the updated category1
             val mergedCategory = categoryRepository.saveAndFlush(category1)
             logger.info("Successfully merged category $categoryName2 into $categoryName1")
 

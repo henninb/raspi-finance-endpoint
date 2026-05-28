@@ -92,7 +92,7 @@ class AccountTypeConverterSpec extends Specification {
 
         then:
         def ex = thrown(RuntimeException)
-        ex.message == "Unknown account type attribute: ${invalidInput}"
+        ex.message == "Unknown AccountType attribute: ${invalidInput}"
 
         where:
         invalidInput << ['invalid_type', 'not_valid', 'xyz', '', ' ', 'null', 'unknown_account']
@@ -104,7 +104,7 @@ class AccountTypeConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown account type attribute:   Invalid_Type  "
+        ex.message == "Unknown AccountType attribute:   Invalid_Type  "
     }
 
     def "all AccountType enum values are handled in convertToDatabaseColumn"() {

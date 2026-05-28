@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class ImageFormatType(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     @JsonProperty("jpeg")
     Jpeg("jpeg"),
 

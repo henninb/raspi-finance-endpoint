@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class TransactionType(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     @JsonProperty("expense")
     Expense("expense"),
 

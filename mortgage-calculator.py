@@ -199,6 +199,77 @@ def print_projection(results: list, config: MortgageConfig):
         console.print(f"\n  [bold green]Mortgage paid off in {len(results)} months![/bold green]")
 
 
+def compute_payoff_scenario(balance: float, monthly_extra: float, config: MortgageConfig) -> dict:
+    total_interest = 0.0
+    months = 0
+    cur = balance
+
+    for month in range(1, MAX_MONTHS + 1):
+        extra = min(monthly_extra, max(0.0, cur - config.monthly_payment * 0.1))
+        result = calculate_month(cur, extra, config)
+        total_interest += result["interest"]
+        months = month
+        cur = result["new_balance"]
+        if cur <= 0:
+            break
+
+    return {"months": months, "total_interest": round(total_interest, 2)}
+
+
+def _extra_payment_steps(balance: float, config: MortgageConfig) -> list[float]:
+    max_extra = max(0.0, balance - config.monthly_payment)
+    if max_extra <= 0:
+        return [0.0]
+
+    num_steps = 12
+    step = max_extra / num_steps
+    rounding = 1000 if step >= 1000 else (100 if step >= 100 else 10)
+
+    seen: set[float] = {0.0}
+    steps = [0.0]
+    for i in range(1, num_steps):
+        val = round((step * i) / rounding) * rounding
+        if val not in seen and 0 < val < max_extra:
+            seen.add(val)
+            steps.append(val)
+    steps.append(round(max_extra / rounding) * rounding or max_extra)
+    return steps
+
+
+def print_optimization_table(balance: float, config: MortgageConfig):
+    baseline = compute_payoff_scenario(balance, 0.0, config)
+    steps = _extra_payment_steps(balance, config)
+
+    table = Table(box=box.ROUNDED)
+    table.add_column("Extra/Month", justify="right", style="yellow")
+    table.add_column("Months", justify="right")
+    table.add_column("Years", justify="right")
+    table.add_column("Total Interest", justify="right", style="red")
+    table.add_column("Interest Saved", justify="right", style="green")
+    table.add_column("Months Saved", justify="right", style="cyan")
+
+    for extra in steps:
+        s = compute_payoff_scenario(balance, extra, config)
+        interest_saved = baseline["total_interest"] - s["total_interest"]
+        months_saved = baseline["months"] - s["months"]
+        table.add_row(
+            f"${extra:,.0f}",
+            str(s["months"]),
+            f"{s['months'] / 12:.1f}",
+            f"${s['total_interest']:,.2f}",
+            f"${interest_saved:,.2f}" if interest_saved > 0 else "-",
+            str(months_saved) if months_saved > 0 else "-",
+        )
+
+    console.print(Panel(
+        table,
+        title=f"[bold]Payoff Optimization — Balance ${balance:,.2f}[/bold]",
+        border_style="blue",
+    ))
+    console.print(f"  Baseline (no extra):  [red]{baseline['months']} months[/red]  |  "
+                  f"[red]${baseline['total_interest']:,.2f}[/red] total interest\n")
+
+
 def interactive_mode(config: MortgageConfig):
     state = load_state()
     saved_balance = state.get("balance")
@@ -267,6 +338,8 @@ Examples:
   %(prog)s 5000 -p                      Project to payoff with $5000/month extra
   %(prog)s 27858.88 5000 -p             Project to payoff from given balance
   %(prog)s --rate 0.07 --payment 1500   Use a different mortgage configuration
+  %(prog)s --calc                        Optimization table from saved balance
+  %(prog)s 27858.88 --calc              Optimization table from given balance
         """
     )
     parser.add_argument("first", type=float, nargs="?",
@@ -277,6 +350,8 @@ Examples:
                         help="Number of months to project")
     parser.add_argument("-p", "--payoff", action="store_true",
                         help="Project all remaining months to full payoff")
+    parser.add_argument("-c", "--calc", action="store_true",
+                        help="Show optimization table: payoff timeline and interest across extra-payment scenarios")
     parser.add_argument("--rate", type=float, default=None,
                         help="Annual interest rate as decimal (e.g., 0.0649 for 6.49%%)")
     parser.add_argument("--payment", type=float, default=None,
@@ -300,6 +375,18 @@ Examples:
     except ValueError as e:
         console.print(f"[red]Invalid argument: {e}[/red]")
         sys.exit(1)
+
+    if args.calc:
+        if args.first is not None:
+            calc_balance = args.first
+        else:
+            state = load_state()
+            if not state.get("balance"):
+                console.print("[red]No saved balance. Provide one: mortgage-calculator.py 27858.88 --calc[/red]")
+                sys.exit(1)
+            calc_balance = state["balance"]
+        print_optimization_table(calc_balance, config)
+        return
 
     if args.first is None and args.payoff:
         state = load_state()

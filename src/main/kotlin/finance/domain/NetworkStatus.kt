@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class NetworkStatus(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     @JsonProperty("in_network")
     InNetwork("in_network"),
 

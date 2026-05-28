@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class ReoccurringType(
-    val label: String,
-) {
+    override val label: String,
+) : LabeledEnum {
     @JsonProperty("monthly")
     Monthly("monthly"),
 

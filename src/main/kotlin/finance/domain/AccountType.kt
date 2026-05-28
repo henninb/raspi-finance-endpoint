@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonFormat
 enum class AccountType(
-    val label: String,
+    override val label: String,
     val category: String,
-) {
+) : LabeledEnum {
     // Existing types (preserve compatibility)
     @JsonProperty("credit")
     Credit("credit", "liability"),

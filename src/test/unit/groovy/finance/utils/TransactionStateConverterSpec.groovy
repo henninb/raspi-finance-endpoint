@@ -65,7 +65,7 @@ class TransactionStateConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute: ${invalidInput}"
+        ex.message == "Unknown TransactionState attribute: ${invalidInput}"
 
         where:
         invalidInput << ["invalid", "pending", "completed", "processing", "", " ", "null", "paid", "unpaid"]
@@ -77,7 +77,7 @@ class TransactionStateConverterSpec extends Specification {
 
         then:
         RuntimeException ex = thrown()
-        ex.message == "Unknown attribute:   Pending  "
+        ex.message == "Unknown TransactionState attribute:   Pending  "
     }
 
     def "all TransactionState enum values are handled in convertToDatabaseColumn"() {

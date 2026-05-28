@@ -9,10 +9,6 @@ import finance.utils.orThrowNotFound
 import jakarta.validation.Validator
 import org.springframework.stereotype.Service
 
-/**
- * Standardized Parameter Service implementing ServiceResult pattern
- * Provides both new standardized methods and legacy compatibility
- */
 @Service
 class ParameterService
     constructor(
@@ -22,8 +18,6 @@ class ParameterService
         resilienceComponents: ResilienceComponents,
     ) : CrudBaseService<Parameter, Long>(meterService, validator, resilienceComponents) {
         override fun getEntityName(): String = "Parameter"
-
-        // ===== New Standardized ServiceResult Methods =====
 
         override fun findAllActive(): ServiceResult<List<Parameter>> =
             handleServiceOperation("findAllActive", null) {
@@ -56,7 +50,7 @@ class ParameterService
                 parameterToUpdate.parameterName = entity.parameterName
                 parameterToUpdate.parameterValue = entity.parameterValue
                 parameterToUpdate.activeStatus = entity.activeStatus
-                parameterToUpdate.dateUpdated = entity.dateUpdated
+                parameterToUpdate.dateUpdated = nowTimestamp()
                 parameterRepository.saveAndFlush(parameterToUpdate)
             }
 
@@ -68,9 +62,6 @@ class ParameterService
                 parameter
             }
 
-        /**
-         * ServiceResult version of findByParameterName for modern controller usage
-         */
         fun findByParameterNameStandardized(parameterName: String): ServiceResult<Parameter> =
             handleServiceOperation("findByParameterName", null) {
                 val owner = TenantContext.getCurrentOwner()
