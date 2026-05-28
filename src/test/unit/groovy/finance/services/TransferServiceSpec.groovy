@@ -6,6 +6,7 @@ import finance.domain.AccountType
 import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.domain.TransactionType
 import finance.helpers.TransactionBuilder
 import finance.helpers.TransferBuilder
 import finance.repositories.TransferRepository
@@ -126,6 +127,7 @@ class TransferServiceSpec extends BaseServiceSpec {
             assert tx.amount == transfer.amount.negate()
             assert tx.description == "transfer withdrawal"
             assert tx.category == "transfer"
+            assert tx.transactionType == TransactionType.Transfer
             assert tx.notes == "Transfer to savings_primary"
             assert tx.transactionState == TransactionState.Outstanding
             ServiceResult.Success.of(sourceSaved)
@@ -135,6 +137,7 @@ class TransferServiceSpec extends BaseServiceSpec {
             assert tx.amount == transfer.amount
             assert tx.description == "transfer deposit"
             assert tx.category == "transfer"
+            assert tx.transactionType == TransactionType.Transfer
             assert tx.notes == "Transfer from checking_primary"
             assert tx.transactionState == TransactionState.Outstanding
             ServiceResult.Success.of(destinationSaved)

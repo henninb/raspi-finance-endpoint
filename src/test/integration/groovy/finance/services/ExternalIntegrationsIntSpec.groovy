@@ -26,9 +26,12 @@ import java.sql.Date
 @Slf4j
 @Transactional
 @TestPropertySource(properties = [
-    "management.server.port="
+    "management.server.port=",
+    "custom.project.admin-users=int-test-admin"
 ])
 class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
+
+    private static final String ADMIN_USERNAME = "int-test-admin"
 
     @Autowired
     MeterRegistry meterRegistry
@@ -57,10 +60,10 @@ class ExternalIntegrationsIntSpec extends BaseRestTemplateIntegrationSpec {
         withUserRole(testOwner)
         setupTestData()
         mgmtRestTemplate = new RestTemplate()
-        String token = createJwtToken(testOwner)
+        String adminToken = createJwtToken(ADMIN_USERNAME)
         mgmtRestTemplate.interceptors = [
             { request, body, execution ->
-                request.headers.add("Authorization", "Bearer " + token)
+                request.headers.add("Authorization", "Bearer " + adminToken)
                 execution.execute(request, body)
             } as ClientHttpRequestInterceptor
         ]

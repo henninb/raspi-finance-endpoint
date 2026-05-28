@@ -4,6 +4,7 @@ import finance.configurations.ResilienceComponents
 
 import finance.domain.User
 import finance.repositories.UserRepository
+import finance.services.JwtTokenService
 import finance.services.LoginAttemptService
 import finance.services.MeterService
 import finance.services.TokenBlacklistService
@@ -29,13 +30,12 @@ class LoginControllerSpec extends Specification {
     private UserService userService = new UserService(userRepository, new BCryptPasswordEncoder(), meterService, validator, ResilienceComponents.noOp())
     private TokenBlacklistService tokenBlacklistService = Mock()
     private LoginAttemptService loginAttemptService = new LoginAttemptService()
-    private LoginController loginController = new LoginController(userService, tokenBlacklistService, loginAttemptService, TEST_JWT_KEY)
+    private JwtTokenService jwtTokenService = new JwtTokenService(TEST_JWT_KEY, "dev")
+    private JwtTokenService prodJwtTokenService = new JwtTokenService(TEST_JWT_KEY, "prod")
+    private LoginController loginController = new LoginController(userService, tokenBlacklistService, loginAttemptService, jwtTokenService)
+    private LoginController prodLoginController = new LoginController(userService, tokenBlacklistService, loginAttemptService, prodJwtTokenService)
     private HttpServletResponse response = Mock()
     private BindingResult bindingResult = Mock()
-
-    def setup() {
-        loginController.activeProfile = "dev"
-    }
 
     def "login should return OK on successful authentication"() {
         given:
@@ -361,43 +361,34 @@ class LoginControllerSpec extends Specification {
 
     def "login sets Strict sameSite cookie when profile is not dev"() {
         given:
-        loginController.activeProfile = "prod"
         def loginRequest = new LoginRequest("testuser", "password123", false)
         def user = new User(username: "testuser", password: new BCryptPasswordEncoder().encode("password123"))
         userRepository.findByUsername("testuser") >> Optional.of(user)
 
         when:
-        ResponseEntity<Map<String, String>> result = loginController.login(loginRequest, bindingResult, response)
+        ResponseEntity<Map<String, String>> result = prodLoginController.login(loginRequest, bindingResult, response)
 
         then:
         result.statusCode == HttpStatus.OK
         1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
-
-        cleanup:
-        loginController.activeProfile = "dev"
     }
 
     def "refresh sets Strict sameSite cookie when profile is not dev"() {
         given:
-        loginController.activeProfile = "prod"
         def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
         refreshRequest.getCookies() >> null
         refreshRequest.getHeader("Cookie") >> null
 
         when:
-        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
+        ResponseEntity<Map<String, String>> result = prodLoginController.refresh("testuser", refreshRequest, response)
 
         then:
         result.statusCode == HttpStatus.OK
         1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
-
-        cleanup:
-        loginController.activeProfile = "dev"
     }
 
     def "logout sets Strict sameSite cookie when profile is not dev"() {
         given:
-        loginController.activeProfile = "prod"
         def request = Mock(jakarta.servlet.http.HttpServletRequest)
         def key = Keys.hmacShaKeyFor(TEST_JWT_KEY.bytes)
         def token = Jwts.builder()
@@ -413,32 +404,25 @@ class LoginControllerSpec extends Specification {
         request.getHeader("Authorization") >> null
 
         when:
-        ResponseEntity<Void> result = loginController.logout(request, response)
+        ResponseEntity<Void> result = prodLoginController.logout(request, response)
 
         then:
         result.statusCode == HttpStatus.NO_CONTENT
         1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
-
-        cleanup:
-        loginController.activeProfile = "dev"
     }
 
     def "register sets Strict sameSite cookie when profile is not dev"() {
         given:
-        loginController.activeProfile = "prod"
         def newUser = new User(username: "secureuser", password: "Password123!", firstName: "first", lastName: "last")
         userRepository.findByUsername("secureuser") >> Optional.empty()
         userRepository.saveAndFlush(_) >> newUser
 
         when:
-        ResponseEntity<Map<String, String>> result = loginController.register(newUser, bindingResult, response)
+        ResponseEntity<Map<String, String>> result = prodLoginController.register(newUser, bindingResult, response)
 
         then:
         result.statusCode == HttpStatus.CREATED
         1 * response.addHeader("Set-Cookie", { it.contains("SameSite=Strict") })
-
-        cleanup:
-        loginController.activeProfile = "dev"
     }
 
     def "login returns BAD_REQUEST with null defaultMessage field error"() {

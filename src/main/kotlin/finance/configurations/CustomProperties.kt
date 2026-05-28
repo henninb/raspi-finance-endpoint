@@ -8,4 +8,9 @@ import org.springframework.context.annotation.Configuration
 open class CustomProperties(
     var excludedAccounts: MutableList<String> = mutableListOf(),
     var adminUsers: MutableList<String> = mutableListOf(),
-)
+    var allowed: AllowedConfig = AllowedConfig(),
+) {
+    data class AllowedConfig(
+        var origins: MutableList<String> = mutableListOf(),
+    )
+}

@@ -1,11 +1,9 @@
 package finance.configurations
 
+import finance.services.JwtTokenService
 import finance.services.TokenBlacklistService
 import finance.utils.IpAddressValidator
-import io.jsonwebtoken.Claims
 import io.jsonwebtoken.JwtException
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.servlet.FilterChain
@@ -18,21 +16,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
-import javax.crypto.SecretKey
 
 class JwtAuthenticationFilter(
     private val meterRegistry: MeterRegistry,
     private val tokenBlacklistService: TokenBlacklistService,
-    jwtKey: String,
+    private val jwtTokenService: JwtTokenService,
     private val customProperties: CustomProperties,
 ) : OncePerRequestFilter() {
-    private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray(Charsets.UTF_8))
-
     companion object {
         private val securityLogger = LogManager.getLogger("SECURITY.${JwtAuthenticationFilter::class.java.simpleName}")
     }
 
-    // Cache counters to avoid recreation on every request
     private val authSuccessCounter: Counter by lazy {
         Counter
             .builder("authentication.success")
@@ -53,26 +47,9 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
-        var token: String? =
-            run {
-                request.cookies?.firstOrNull { it.name == "token" }?.value
-                    ?: request
-                        .getHeader("Cookie")
-                        ?.split(';')
-                        ?.map { it.trim() }
-                        ?.firstOrNull { it.startsWith("token=") }
-                        ?.substringAfter("token=")
-            }
-
-        if (token.isNullOrBlank()) {
-            val authHeader = request.getHeader("Authorization")
-            if (!authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ")) {
-                token = authHeader.removePrefix("Bearer ").trim()
-            }
-        }
+        val token = jwtTokenService.extractToken(request)
 
         if (!token.isNullOrBlank()) {
-            // Check if token is blacklisted before processing
             if (tokenBlacklistService.isBlacklisted(token)) {
                 val clientIp = IpAddressValidator.getClientIpAddress(request)
                 securityLogger.warn("Blacklisted token used from IP: {}", clientIp)
@@ -88,17 +65,8 @@ class JwtAuthenticationFilter(
                 SecurityContextHolder.clearContext()
             } else {
                 try {
-                    val claims: Claims =
-                        Jwts
-                            .parser()
-                            .requireIssuer("raspi-finance-endpoint")
-                            .requireAudience("raspi-finance-endpoint")
-                            .verifyWith(secretKey)
-                            .build()
-                            .parseSignedClaims(token)
-                            .payload
-
-                    val username = claims.get("username", String::class.java)
+                    val claims = jwtTokenService.parseClaims(token)
+                    val username = claims.get(JwtTokenService.CLAIM_USERNAME, String::class.java)
                     if (username.isNullOrBlank()) {
                         securityLogger.warn("JWT token missing username claim from IP: {}", IpAddressValidator.getClientIpAddress(request))
                         authFailureCounter.increment()

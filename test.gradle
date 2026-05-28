@@ -86,7 +86,7 @@ test {
 }
 
 compileTestJava {
-    options.release = 24
+    options.release = 21
 }
 
 //TODO: fix this issue

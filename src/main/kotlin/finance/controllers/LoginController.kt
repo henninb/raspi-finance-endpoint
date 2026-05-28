@@ -2,12 +2,10 @@ package finance.controllers
 
 import finance.domain.LoginRequest
 import finance.domain.User
+import finance.services.JwtTokenService
 import finance.services.LoginAttemptService
 import finance.services.TokenBlacklistService
 import finance.services.UserService
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -15,9 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.BindingResult
@@ -27,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.Date
-import javax.crypto.SecretKey
 
 @Tag(name = "Authentication", description = "Login, logout, registration, and user info")
 @RestController
@@ -36,24 +31,8 @@ class LoginController(
     private val userService: UserService,
     private val tokenBlacklistService: TokenBlacklistService,
     private val loginAttemptService: LoginAttemptService,
-    @Value("\${custom.project.jwt.key}") jwtKey: String,
+    private val jwtTokenService: JwtTokenService,
 ) : BaseController() {
-    private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtKey.toByteArray(Charsets.UTF_8))
-
-    @Value("\${spring.profiles.active:dev}")
-    private lateinit var activeProfile: String
-
-    companion object {
-        private const val JWT_EXPIRY_MS = 60 * 60 * 1000L // 1 hour
-        private const val JWT_EXPIRY_SECONDS = 3600L
-        private const val JWT_LONG_EXPIRY_MS = 30L * 24 * 60 * 60 * 1000L // 30 days
-        private const val JWT_LONG_EXPIRY_SECONDS = 30L * 24 * 60 * 60L // 30 days
-        private const val CLAIM_KEEP_LOGGED_IN = "keepLoggedIn"
-    }
-
-    private val isSecureCookie: Boolean
-        get() = activeProfile != "dev" && activeProfile != "development"
-
     // curl -k --header "Content-Type: application/json" --request POST --data '{"username": "testuser", "password": "password123"}' https://localhost:8443/api/login
     @Operation(summary = "Authenticate and issue JWT cookie")
     @ApiResponses(
@@ -85,7 +64,6 @@ class LoginController(
             return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
         }
 
-        // Validate user credentials against stored hash (no strength checks here)
         val authAttempt =
             User().apply {
                 username = loginRequest.username
@@ -109,37 +87,8 @@ class LoginController(
         }
         loginAttemptService.recordSuccess(loginRequest.username)
 
-        // Generate JWT after validating credentials.
-        val expiryMs = if (loginRequest.keepLoggedIn) JWT_LONG_EXPIRY_MS else JWT_EXPIRY_MS
-        val expirySecs = if (loginRequest.keepLoggedIn) JWT_LONG_EXPIRY_SECONDS else JWT_EXPIRY_SECONDS
-        val now = Date()
-        val expiration = Date(now.time + expiryMs)
-        val token =
-            Jwts
-                .builder()
-                .issuer("raspi-finance-endpoint")
-                .audience()
-                .add("raspi-finance-endpoint")
-                .and()
-                .subject(loginRequest.username)
-                .claim("username", loginRequest.username)
-                .claim(CLAIM_KEEP_LOGGED_IN, loginRequest.keepLoggedIn)
-                .issuedAt(now)
-                .notBefore(now)
-                .expiration(expiration)
-                .signWith(secretKey)
-                .compact()
-
-        val cookie =
-            ResponseCookie
-                .from("token", token)
-                .path("/")
-                .maxAge(expirySecs)
-                .httpOnly(true)
-                .secure(isSecureCookie)
-                .sameSite(if (isSecureCookie) "Strict" else "Lax")
-                .build()
-
+        val token = jwtTokenService.buildToken(loginRequest.username, loginRequest.keepLoggedIn)
+        val cookie = jwtTokenService.buildTokenCookie(token, loginRequest.keepLoggedIn)
         response.addHeader("Set-Cookie", cookie.toString())
         logger.info("LOGIN_SUCCESS username={}", loginRequest.username.take(60))
         return ResponseEntity.ok(mapOf("message" to "Login successful"))
@@ -157,60 +106,21 @@ class LoginController(
         request: HttpServletRequest,
         response: HttpServletResponse,
     ): ResponseEntity<Void> {
-        // Extract token from cookie or Authorization header
-        var token: String? =
-            run {
-                request.cookies?.firstOrNull { it.name == "token" }?.value
-                    ?: request
-                        .getHeader("Cookie")
-                        ?.split(';')
-                        ?.map { it.trim() }
-                        ?.firstOrNull { it.startsWith("token=") }
-                        ?.substringAfter("token=")
-            }
+        val token = jwtTokenService.extractToken(request)
 
-        if (token.isNullOrBlank()) {
-            val authHeader = request.getHeader("Authorization")
-            if (!authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ")) {
-                token = authHeader.removePrefix("Bearer ").trim()
-            }
-        }
-
-        // If token exists, blacklist it before clearing the cookie
         if (!token.isNullOrBlank()) {
             try {
-                val claims =
-                    Jwts
-                        .parser()
-                        .requireIssuer("raspi-finance-endpoint")
-                        .requireAudience("raspi-finance-endpoint")
-                        .verifyWith(secretKey)
-                        .build()
-                        .parseSignedClaims(token)
-                        .payload
-
+                val claims = jwtTokenService.parseClaims(token)
                 val expirationTime = claims.expiration?.time ?: 0L
-                val username = claims["username"] as? String
-
-                // Blacklist the token with its expiration time
+                val username = claims[JwtTokenService.CLAIM_USERNAME] as? String
                 tokenBlacklistService.blacklistToken(token, expirationTime)
-                logger.info("Token blacklisted for user: $username, expiration: ${Date(expirationTime)}")
+                logger.info("Token blacklisted for user: {}, expiration: {}", username, Date(expirationTime))
             } catch (e: Exception) {
-                // Token might be invalid or expired, but we still clear the cookie
-                logger.warn("Failed to parse token during logout: ${e.message}")
+                logger.warn("Failed to parse token during logout: {}", e.message)
             }
         }
 
-        val cookie =
-            ResponseCookie
-                .from("token", "")
-                .path("/")
-                .maxAge(0)
-                .httpOnly(true)
-                .secure(isSecureCookie)
-                .sameSite(if (isSecureCookie) "Strict" else "Lax")
-                .build()
-
+        val cookie = jwtTokenService.buildClearCookie()
         response.addHeader("Set-Cookie", cookie.toString())
         logger.info("Logout successful, cookie cleared")
         return ResponseEntity.noContent().build()
@@ -232,61 +142,31 @@ class LoginController(
         bindingResult: BindingResult,
         response: HttpServletResponse,
     ): ResponseEntity<Map<String, String>> {
-        // Check for validation errors
         if (bindingResult.hasErrors()) {
             val errors = bindingResult.fieldErrors.associate { it.field to (it.defaultMessage ?: "Invalid value") }
-            logger.warn("Registration validation failed for username: ${newUser.username}")
+            logger.warn("Registration validation failed for username: {}", newUser.username.take(60))
             return ResponseEntity.badRequest().body(mapOf("errors" to errors.toString()))
         }
 
-        // Additional password validation for raw passwords (before encoding)
         if (!isValidRawPassword(newUser.password)) {
             logger.warn("Registration failed - invalid password format for username: ${newUser.username}")
             return ResponseEntity.badRequest().body(mapOf("error" to "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"))
         }
 
-        logger.info("Register request received: ${newUser.username}")
+        logger.info("Register request received: {}", newUser.username.take(60))
         try {
-            // Register the new user
             userService.signUp(newUser)
         } catch (e: IllegalArgumentException) {
             logger.warn("Registration failed - username already exists: ${newUser.username}")
             return ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to "Username already exists"))
         } catch (e: Exception) {
-            logger.error("Registration error for username: ${newUser.username}")
+            logger.error("Registration error for username: {}", newUser.username.take(60))
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to "Registration failed"))
         }
 
-        // Auto-login: generate a JWT token for the new user.
         logger.info("User registered, generating JWT")
-        val now = Date()
-        val expiration = Date(now.time + JWT_EXPIRY_MS)
-
-        val token =
-            Jwts
-                .builder()
-                .issuer("raspi-finance-endpoint")
-                .audience()
-                .add("raspi-finance-endpoint")
-                .and()
-                .subject(newUser.username)
-                .claim("username", newUser.username)
-                .issuedAt(now)
-                .notBefore(now)
-                .expiration(expiration)
-                .signWith(secretKey)
-                .compact()
-
-        val cookie =
-            ResponseCookie
-                .from("token", token)
-                .httpOnly(true)
-                .secure(isSecureCookie)
-                .maxAge(JWT_EXPIRY_SECONDS)
-                .sameSite(if (isSecureCookie) "Strict" else "Lax")
-                .path("/")
-                .build()
-
+        val token = jwtTokenService.buildToken(newUser.username)
+        val cookie = jwtTokenService.buildTokenCookie(token, false)
         response.addHeader("Set-Cookie", cookie.toString())
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Registration successful"))
     }
@@ -310,68 +190,18 @@ class LoginController(
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("error" to "Not authenticated"))
         }
 
-        // Read keepLoggedIn from the current JWT so refresh preserves the session type
         val keepLoggedIn =
-            run {
-                val currentToken =
-                    request.cookies?.firstOrNull { it.name == "token" }?.value
-                        ?: request
-                            .getHeader("Cookie")
-                            ?.split(';')
-                            ?.map { it.trim() }
-                            ?.firstOrNull { it.startsWith("token=") }
-                            ?.substringAfter("token=")
-                if (!currentToken.isNullOrBlank()) {
-                    try {
-                        val claims: Claims =
-                            Jwts
-                                .parser()
-                                .requireIssuer("raspi-finance-endpoint")
-                                .requireAudience("raspi-finance-endpoint")
-                                .verifyWith(secretKey)
-                                .build()
-                                .parseSignedClaims(currentToken)
-                                .payload
-                        claims.get(CLAIM_KEEP_LOGGED_IN, Boolean::class.java) ?: false
-                    } catch (e: Exception) {
-                        logger.warn("REFRESH could not read keepLoggedIn claim: {}", e.message)
-                        false
-                    }
-                } else {
+            jwtTokenService.extractToken(request)?.let { currentToken ->
+                try {
+                    jwtTokenService.parseClaims(currentToken).get(JwtTokenService.CLAIM_KEEP_LOGGED_IN, Boolean::class.java) ?: false
+                } catch (e: Exception) {
+                    logger.warn("REFRESH could not read keepLoggedIn claim: {}", e.message)
                     false
                 }
-            }
+            } ?: false
 
-        val expiryMs = if (keepLoggedIn) JWT_LONG_EXPIRY_MS else JWT_EXPIRY_MS
-        val expirySecs = if (keepLoggedIn) JWT_LONG_EXPIRY_SECONDS else JWT_EXPIRY_SECONDS
-        val now = Date()
-        val expiration = Date(now.time + expiryMs)
-        val token =
-            Jwts
-                .builder()
-                .issuer("raspi-finance-endpoint")
-                .audience()
-                .add("raspi-finance-endpoint")
-                .and()
-                .subject(principal)
-                .claim("username", principal)
-                .claim(CLAIM_KEEP_LOGGED_IN, keepLoggedIn)
-                .issuedAt(now)
-                .notBefore(now)
-                .expiration(expiration)
-                .signWith(secretKey)
-                .compact()
-
-        val cookie =
-            ResponseCookie
-                .from("token", token)
-                .path("/")
-                .maxAge(expirySecs)
-                .httpOnly(true)
-                .secure(isSecureCookie)
-                .sameSite(if (isSecureCookie) "Strict" else "Lax")
-                .build()
-
+        val token = jwtTokenService.buildToken(principal, keepLoggedIn)
+        val cookie = jwtTokenService.buildTokenCookie(token, keepLoggedIn)
         response.addHeader("Set-Cookie", cookie.toString())
         logger.info("REFRESH_SUCCESS username={} keepLoggedIn={}", principal.take(60), keepLoggedIn)
         return ResponseEntity.ok(mapOf("message" to "Token refreshed"))
@@ -404,13 +234,9 @@ class LoginController(
         return ResponseEntity.ok(user)
     }
 
-    /**
-     * Validates raw password format before encoding
-     */
     private fun isValidRawPassword(password: String): Boolean {
         // SECURITY: Never accept pre-encoded passwords from user input
-        // Pre-encoded passwords would bypass complexity requirements
-        if (password.startsWith("$2a$") || password.startsWith("$2b$") || password.startsWith("$2y$")) {
+        if (password.startsWith("\$2a\$") || password.startsWith("\$2b\$") || password.startsWith("\$2y\$")) {
             logger.warn("SECURITY: Rejected pre-encoded password in registration attempt")
             return false
         }

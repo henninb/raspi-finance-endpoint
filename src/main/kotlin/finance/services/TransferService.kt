@@ -6,6 +6,7 @@ import finance.domain.ReoccurringType
 import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.domain.TransactionType
 import finance.domain.Transfer
 import finance.repositories.TransferRepository
 import finance.utils.TenantContext
@@ -287,6 +288,7 @@ class TransferService
                 this.amount = amount
                 transactionState = TransactionState.Outstanding
                 reoccurringType = ReoccurringType.Onetime
+                transactionType = TransactionType.Transfer
                 this.accountType = accountType
                 accountNameOwner = accountName
                 dateUpdated = timestamp

@@ -15,7 +15,7 @@ class SecurityAuditFilter(
     private val meterRegistry: MeterRegistry,
 ) : OncePerRequestFilter() {
     companion object {
-        private val securityLogger = LoggerFactory.getLogger("SECURITY.finance.controllers.AccountController")
+        private val securityLogger = LoggerFactory.getLogger("SECURITY.${SecurityAuditFilter::class.java.simpleName}")
         private val SENSITIVE_ENDPOINTS =
             setOf(
                 "/select/active",
@@ -23,6 +23,13 @@ class SecurityAuditFilter(
                 "/payment/required",
             )
     }
+
+    private data class AuditContext(
+        val username: String,
+        val clientIp: String,
+        val userAgent: String?,
+        val isAuthenticated: Boolean,
+    )
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -32,13 +39,10 @@ class SecurityAuditFilter(
         val startTime = System.currentTimeMillis()
         val requestUri = request.requestURI
         val method = request.method
-        val clientIp = IpAddressValidator.getClientIpAddress(request)
-
-        // Check if this is a sensitive endpoint access
         val isSensitiveEndpoint = SENSITIVE_ENDPOINTS.any { requestUri.contains(it) }
 
         if (isSensitiveEndpoint) {
-            logSecurityAuditEvent(request, "BEFORE_REQUEST")
+            logSensitiveAccess(request, "BEFORE_REQUEST")
         }
 
         try {
@@ -47,9 +51,7 @@ class SecurityAuditFilter(
             val responseTime = System.currentTimeMillis() - startTime
 
             if (isSensitiveEndpoint) {
-                logSecurityAuditEvent(request, response, "AFTER_REQUEST", responseTime)
-
-                // Increment security audit counter
+                logSensitiveAccess(request, response, "AFTER_REQUEST", responseTime)
                 Counter
                     .builder("security.audit.endpoint.access")
                     .description("Security audit events for sensitive endpoint access")
@@ -71,22 +73,17 @@ class SecurityAuditFilter(
                     .increment()
             }
 
-            // Log and count all 4xx responses to help trace 400 sources
             if (response.status in 400..499) {
-                val authentication = SecurityContextHolder.getContext().authentication
-                val isAuthenticated = authentication?.isAuthenticated ?: false
-                val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
-
+                val ctx = buildAuditContext(request)
                 securityLogger.info(
                     "SECURITY_HTTP_4XX status={} method={} endpoint={} user={} ip={} responseTime={}ms",
                     response.status,
                     method,
                     requestUri,
-                    username,
-                    clientIp,
+                    ctx.username,
+                    ctx.clientIp,
                     responseTime,
                 )
-
                 Counter
                     .builder("security.audit.http.4xx")
                     .description("Count of 4xx responses observed by security audit filter")
@@ -95,7 +92,7 @@ class SecurityAuditFilter(
                             Tag.of("status", response.status.toString()),
                             Tag.of("method", method),
                             Tag.of("endpoint", sanitizeEndpoint(requestUri)),
-                            Tag.of("authenticated", isAuthenticated.toString()),
+                            Tag.of("authenticated", ctx.isAuthenticated.toString()),
                         ),
                     ).register(meterRegistry)
                     .increment()
@@ -103,60 +100,51 @@ class SecurityAuditFilter(
         }
     }
 
-    private fun logSecurityAuditEvent(
+    private fun buildAuditContext(request: HttpServletRequest): AuditContext {
+        val authentication = SecurityContextHolder.getContext().authentication
+        val isAuthenticated = authentication?.isAuthenticated ?: false
+        return AuditContext(
+            username = if (isAuthenticated) authentication?.name ?: "unknown" else "anonymous",
+            clientIp = IpAddressValidator.getClientIpAddress(request),
+            userAgent = sanitizeUserAgent(request.getHeader("User-Agent")),
+            isAuthenticated = isAuthenticated,
+        )
+    }
+
+    private fun logSensitiveAccess(
         request: HttpServletRequest,
         phase: String,
     ) {
-        val authentication = SecurityContextHolder.getContext().authentication
-        val isAuthenticated = authentication?.isAuthenticated ?: false
-        val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
-        val clientIp = IpAddressValidator.getClientIpAddress(request)
-        val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
-
-        val auditType = if (isAuthenticated) "AUTHORIZED_ACCESS" else "UNAUTHORIZED_ACCESS"
-
+        val ctx = buildAuditContext(request)
+        val auditType = if (ctx.isAuthenticated) "AUTHORIZED_ACCESS" else "UNAUTHORIZED_ACCESS"
         securityLogger.info(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} userAgent='{}'",
             auditType,
             phase,
-            username,
+            ctx.username,
             request.requestURI,
             request.method,
-            clientIp,
-            userAgent ?: "unknown",
+            ctx.clientIp,
+            ctx.userAgent ?: "unknown",
         )
     }
 
-    private fun logSecurityAuditEvent(
+    private fun logSensitiveAccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
         phase: String,
         responseTime: Long,
     ) {
-        val authentication = SecurityContextHolder.getContext().authentication
-        val isAuthenticated = authentication?.isAuthenticated ?: false
-        val username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous"
-        val clientIp = IpAddressValidator.getClientIpAddress(request)
-        val userAgent = sanitizeUserAgent(request.getHeader("User-Agent"))
+        val ctx = buildAuditContext(request)
+        val auditType = if (response.status == 200 && ctx.isAuthenticated) "AUTHORIZED_ACCESS" else "UNAUTHORIZED_ACCESS"
 
-        val auditType =
-            if (response.status == 200 && isAuthenticated) {
-                "AUTHORIZED_ACCESS"
-            } else {
-                "UNAUTHORIZED_ACCESS"
-            }
-
-        // Log security violations for non-API routes
-        if (request.requestURI.contains("/select/active") &&
-            !request.requestURI.startsWith("/api/") &&
-            (response.status == 403 || response.status == 401)
-        ) {
+        if (response.status == 403 || response.status == 401) {
             securityLogger.warn(
-                "SECURITY_VIOLATION type=NON_API_ROUTE_ACCESS user={} endpoint={} method={} ip={} status={} responseTime={}ms",
-                username,
+                "SECURITY_VIOLATION type=UNAUTHORIZED_SENSITIVE_ACCESS user={} endpoint={} method={} ip={} status={} responseTime={}ms",
+                ctx.username,
                 request.requestURI,
                 request.method,
-                clientIp,
+                ctx.clientIp,
                 response.status,
                 responseTime,
             )
@@ -166,13 +154,13 @@ class SecurityAuditFilter(
             "SECURITY_AUDIT type={} phase={} user={} endpoint={} method={} ip={} status={} responseTime={}ms userAgent='{}'",
             auditType,
             phase,
-            username,
+            ctx.username,
             request.requestURI,
             request.method,
-            clientIp,
+            ctx.clientIp,
             response.status,
             responseTime,
-            userAgent ?: "unknown",
+            ctx.userAgent ?: "unknown",
         )
     }
 

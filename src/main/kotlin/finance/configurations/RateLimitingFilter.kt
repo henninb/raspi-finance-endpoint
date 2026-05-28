@@ -1,6 +1,7 @@
 package finance.configurations
 
 import finance.utils.IpAddressValidator
+import jakarta.annotation.PreDestroy
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -12,8 +13,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
 
 class RateLimitingFilter : OncePerRequestFilter() {
     companion object {
@@ -21,6 +22,7 @@ class RateLimitingFilter : OncePerRequestFilter() {
         private const val DEFAULT_RATE_LIMIT = 500
         private const val DEFAULT_WINDOW_SIZE_MINUTES = 1L
         private const val CLEANUP_INTERVAL_MINUTES = 5L
+        private const val MAX_TRACKED_IPS = 100_000
     }
 
     @Value("\${custom.security.rate-limit.requests-per-minute:500}")
@@ -32,21 +34,27 @@ class RateLimitingFilter : OncePerRequestFilter() {
     @Value("\${custom.security.rate-limit.enabled:true}")
     private var rateLimitingEnabled: Boolean = true
 
-    // Store request counts per IP address
     private val requestCounts = ConcurrentHashMap<String, RequestCounter>()
+    private val cleanupExecutor: ScheduledExecutorService =
+        Executors.newScheduledThreadPool(1) { r ->
+            Thread(r, "rate-limit-cleanup").apply { isDaemon = true }
+        }
 
     init {
-        // Scheduled cleanup of old entries every 5 minutes
-        val executor =
-            Executors.newScheduledThreadPool(1) { r ->
-                Thread(r, "rate-limit-cleanup").apply { isDaemon = true }
-            }
-        executor.scheduleWithFixedDelay(
+        cleanupExecutor.scheduleWithFixedDelay(
             ::cleanupOldEntries,
             CLEANUP_INTERVAL_MINUTES,
             CLEANUP_INTERVAL_MINUTES,
             TimeUnit.MINUTES,
         )
+    }
+
+    @PreDestroy
+    fun shutdown() {
+        cleanupExecutor.shutdown()
+        if (!cleanupExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+            cleanupExecutor.shutdownNow()
+        }
     }
 
     @Throws(ServletException::class, IOException::class)
@@ -64,9 +72,16 @@ class RateLimitingFilter : OncePerRequestFilter() {
         val currentTime = System.currentTimeMillis()
         val windowStart = currentTime - TimeUnit.MINUTES.toMillis(windowSizeMinutes)
 
+        if (requestCounts.size >= MAX_TRACKED_IPS && !requestCounts.containsKey(clientIp)) {
+            securityLogger.warn("Rate limit map at capacity ({}) — dropping tracking for IP: {}", MAX_TRACKED_IPS, clientIp)
+            response.status = HttpStatus.TOO_MANY_REQUESTS.value()
+            response.contentType = "application/json"
+            response.writer.write("""{"error":"Rate limit exceeded","message":"Too many requests"}""")
+            return
+        }
+
         val counter = requestCounts.computeIfAbsent(clientIp) { RequestCounter() }
 
-        // Check if rate limit exceeded
         if (counter.isRateLimitExceeded(windowStart, rateLimitPerMinute)) {
             securityLogger.warn(
                 "Rate limit exceeded for IP: {} - {} requests in {} minutes (limit: {})",
@@ -76,22 +91,19 @@ class RateLimitingFilter : OncePerRequestFilter() {
                 rateLimitPerMinute,
             )
 
+            val resetEpochSecs = (currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000
             response.status = HttpStatus.TOO_MANY_REQUESTS.value()
             response.setHeader("X-RateLimit-Limit", rateLimitPerMinute.toString())
             response.setHeader("X-RateLimit-Remaining", "0")
-            response.setHeader(
-                "X-RateLimit-Reset",
-                ((currentTime + TimeUnit.MINUTES.toMillis(windowSizeMinutes)) / 1000).toString(),
-            )
+            response.setHeader("X-RateLimit-Reset", resetEpochSecs.toString())
+            response.setHeader("Retry-After", TimeUnit.MINUTES.toSeconds(windowSizeMinutes).toString())
             response.contentType = "application/json"
             response.writer.write("""{"error":"Rate limit exceeded","message":"Too many requests"}""")
             return
         }
 
-        // Record the request
         counter.recordRequest(currentTime)
 
-        // Add rate limit headers
         val remainingRequests = maxOf(0, rateLimitPerMinute - counter.getRequestCount(windowStart))
         response.setHeader("X-RateLimit-Limit", rateLimitPerMinute.toString())
         response.setHeader("X-RateLimit-Remaining", remainingRequests.toString())
@@ -112,10 +124,8 @@ class RateLimitingFilter : OncePerRequestFilter() {
             val entry = iterator.next()
             val counter = entry.value
 
-            // Clean old requests from counter
             counter.cleanup(cutoffTime)
 
-            // Remove empty counters
             if (counter.isEmpty(cutoffTime)) {
                 iterator.remove()
                 cleanedCount++
@@ -128,12 +138,12 @@ class RateLimitingFilter : OncePerRequestFilter() {
     }
 
     private class RequestCounter {
-        private val requests = mutableListOf<AtomicLong>()
+        private val requests = mutableListOf<Long>()
         private val lock = Any()
 
         fun recordRequest(timestamp: Long) {
             synchronized(lock) {
-                requests.add(AtomicLong(timestamp))
+                requests.add(timestamp)
             }
         }
 
@@ -144,19 +154,19 @@ class RateLimitingFilter : OncePerRequestFilter() {
 
         fun getRequestCount(windowStart: Long): Int {
             synchronized(lock) {
-                return requests.count { it.get() >= windowStart }
+                return requests.count { it >= windowStart }
             }
         }
 
         fun cleanup(cutoffTime: Long) {
             synchronized(lock) {
-                requests.removeIf { it.get() < cutoffTime }
+                requests.removeIf { it < cutoffTime }
             }
         }
 
         fun isEmpty(cutoffTime: Long): Boolean {
             synchronized(lock) {
-                return requests.none { it.get() >= cutoffTime }
+                return requests.none { it >= cutoffTime }
             }
         }
     }

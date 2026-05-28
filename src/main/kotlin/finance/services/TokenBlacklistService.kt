@@ -16,7 +16,10 @@ import java.util.concurrent.TimeUnit
 class TokenBlacklistService(
     private val tokenBlacklistRepository: TokenBlacklistRepository,
 ) {
-    private val cleanup: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+    private val cleanup: ScheduledExecutorService =
+        Executors.newScheduledThreadPool(1) { r ->
+            Thread(r, "token-blacklist-cleanup").apply { isDaemon = true }
+        }
 
     companion object {
         private val logger = LoggerFactory.getLogger(TokenBlacklistService::class.java)

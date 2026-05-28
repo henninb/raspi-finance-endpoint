@@ -78,6 +78,7 @@ class RateLimitingFilterSpec extends Specification {
         // Third request should be blocked
         1 * responseMock.setStatus(HttpStatus.TOO_MANY_REQUESTS.value())
         (1.._) * responseMock.setHeader("X-RateLimit-Remaining", _)
+        1 * responseMock.setHeader("Retry-After", _)
         1 * responseMock.setContentType("application/json")
         1 * writerMock.write('{"error":"Rate limit exceeded","message":"Too many requests"}')
         (0.._) * responseMock.setHeader("X-RateLimit-Limit", _)
@@ -210,6 +211,7 @@ class RateLimitingFilterSpec extends Specification {
         (1.._) * responseMock.setHeader("X-RateLimit-Limit", _)
         (1.._) * responseMock.setHeader("X-RateLimit-Remaining", _)
         (1.._) * responseMock.setHeader("X-RateLimit-Reset", _)
+        (1.._) * responseMock.setHeader("Retry-After", _)
         1 * responseMock.setContentType("application/json")
         1 * writerMock.write('{"error":"Rate limit exceeded","message":"Too many requests"}')
     }
@@ -320,7 +322,7 @@ class RateLimitingFilterSpec extends Specification {
         def requestsField = counter.class.getDeclaredField("requests")
         requestsField.accessible = true
         def requests = requestsField.get(counter)
-        requests.each { it.set(0L) }
+        requests.replaceAll { 0L }
 
         when:
         def method = RateLimitingFilter.class.getDeclaredMethod("cleanupOldEntries")
@@ -366,6 +368,7 @@ class RateLimitingFilterSpec extends Specification {
         // Should rate limit based on actual IP (203.0.113.5), not spoofed headers
         2 * filterChainMock.doFilter(requestMock, responseMock) // First 2 allowed
         1 * responseMock.setStatus(HttpStatus.TOO_MANY_REQUESTS.value()) // Third blocked
+        1 * responseMock.setHeader("Retry-After", _)
         1 * responseMock.setContentType("application/json")
         1 * writerMock.write('{"error":"Rate limit exceeded","message":"Too many requests"}')
     }

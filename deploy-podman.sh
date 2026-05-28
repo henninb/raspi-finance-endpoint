@@ -170,12 +170,12 @@ if ! command -v gopass >/dev/null 2>&1; then
   exit 1
 fi
 log "Loading secrets from gopass..."
-DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)
-SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)
-SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore)
-BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)
-JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)
-INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)
+DATASOURCE_PASSWORD=$(gopass show -o raspi-finance-endpoint/postgresql)    || { log_error "Failed to retrieve secret 'raspi-finance-endpoint/postgresql'"; exit 1; }
+SSL_KEY_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-key)           || { log_error "Failed to retrieve secret 'raspi-finance-endpoint/ssl-key'"; exit 1; }
+SSL_KEY_STORE_PASSWORD=$(gopass show -o raspi-finance-endpoint/ssl-keystore) || { log_error "Failed to retrieve secret 'raspi-finance-endpoint/ssl-keystore'"; exit 1; }
+BASIC_AUTH_PASSWORD=$(gopass show -o raspi-finance-endpoint/basic-auth)     || { log_error "Failed to retrieve secret 'raspi-finance-endpoint/basic-auth'"; exit 1; }
+JWT_KEY=$(gopass show -o raspi-finance-endpoint/jwt-key)                    || { log_error "Failed to retrieve secret 'raspi-finance-endpoint/jwt-key'"; exit 1; }
+INFLUXDB_TOKEN=$(gopass show -o raspi-finance-endpoint/influxdb-token)      || { log_error "Failed to retrieve secret 'raspi-finance-endpoint/influxdb-token'"; exit 1; }
 export DATASOURCE_PASSWORD SSL_KEY_PASSWORD SSL_KEY_STORE_PASSWORD \
        BASIC_AUTH_PASSWORD JWT_KEY INFLUXDB_TOKEN
 log "✓ Secrets loaded from gopass"
@@ -482,8 +482,8 @@ log "  GraphiQL: https://${HOST_IP}:8443/graphiql"
 log "  Metrics: https://${HOST_IP}:8443/actuator/metrics"
 log ""
 log "Monitoring commands:"
-log "  App logs:     ssh ${REMOTE_HOST} 'podman logs raspi-finance-endpoint -f'"
-log "  InfluxDB logs: ssh ${REMOTE_HOST} 'podman logs influxdb-server -f'"
+log "  App logs:     ssh ${REMOTE_HOST} 'podman logs -f raspi-finance-endpoint'"
+log "  InfluxDB logs: ssh ${REMOTE_HOST} 'podman logs -f influxdb-server'"
 log "  Container status: ssh ${REMOTE_HOST} 'podman ps'"
 log "  Network info: ssh ${REMOTE_HOST} 'podman network inspect finance-lan'"
 log ""

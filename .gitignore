@@ -79,3 +79,4 @@ env.secrets.old
 .claude/settings.local.json
 .codex
 test_output.txt
+memory/

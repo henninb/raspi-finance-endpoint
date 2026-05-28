@@ -29,7 +29,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
         String secret = 'a' * 64 // 64-byte key
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'alice').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
@@ -56,7 +56,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
         String secret = 'b' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'bob').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
@@ -84,7 +84,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
         String secret = 'c' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
         // Malformed token
         String token = 'not.a.valid.token'
 
@@ -112,7 +112,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
         String secret = 'd' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'charlie').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
@@ -143,7 +143,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
         String secret = 'e' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
 
         def req = Mock(HttpServletRequest)
         req.getCookies() >> null
@@ -167,7 +167,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
         String secret = 'f' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'dave').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
@@ -196,7 +196,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         tokenBlacklistService.isBlacklisted(_) >> false
         String secret = 'g' * 64
         def props = new CustomProperties(adminUsers: ['adminuser'])
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, props)
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), props)
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().claim('username', 'AdminUser').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
 
@@ -227,7 +227,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def tokenBlacklistService = Mock(TokenBlacklistService)
         tokenBlacklistService.isBlacklisted(_) >> false
         String secret = 'h' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes())
         // Token without 'username' claim
         String token = Jwts.builder().issuer('raspi-finance-endpoint').audience().add('raspi-finance-endpoint').and().subject('somesubject').expiration(new Date(System.currentTimeMillis() + 3600_000L)).signWith(key).compact()
@@ -255,7 +255,7 @@ class JwtAuthenticationFilterSpec extends Specification {
         def meter = new SimpleMeterRegistry()
         def tokenBlacklistService = Mock(TokenBlacklistService)
         String secret = 'i' * 64
-        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, secret, new CustomProperties())
+        def filter = new JwtAuthenticationFilter(meter, tokenBlacklistService, new finance.services.JwtTokenService(secret, "dev"), new CustomProperties())
 
         def req = Mock(HttpServletRequest)
         req.getCookies() >> null

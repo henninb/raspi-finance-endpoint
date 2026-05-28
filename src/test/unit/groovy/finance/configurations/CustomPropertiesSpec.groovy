@@ -19,7 +19,7 @@ class CustomPropertiesSpec extends Specification {
         def excludedAccounts = ["account1", "account2"]
 
         when:
-        CustomProperties properties = new CustomProperties(excludedAccounts, [])
+        CustomProperties properties = new CustomProperties(excludedAccounts, [], new CustomProperties.AllowedConfig())
 
         then:
         properties.excludedAccounts == excludedAccounts
@@ -70,7 +70,7 @@ class CustomPropertiesSpec extends Specification {
         def adminUsers = ["admin1", "admin2"]
 
         when:
-        CustomProperties properties = new CustomProperties([], adminUsers)
+        CustomProperties properties = new CustomProperties([], adminUsers, new CustomProperties.AllowedConfig())
 
         then:
         properties.adminUsers == adminUsers
@@ -104,7 +104,7 @@ class CustomPropertiesSpec extends Specification {
 
     def "both lists are independent"() {
         given:
-        CustomProperties properties = new CustomProperties(["excluded"], ["admin"])
+        CustomProperties properties = new CustomProperties(["excluded"], ["admin"], new CustomProperties.AllowedConfig())
 
         expect:
         properties.excludedAccounts == ["excluded"]

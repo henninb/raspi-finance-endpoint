@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.services.JwtTokenService
 import finance.services.TokenBlacklistService
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.core.env.Environment
@@ -15,8 +16,10 @@ class WebSecurityConfigSpec extends Specification {
     MeterRegistry meterRegistry = Mock()
     TokenBlacklistService tokenBlacklistService = Mock()
 
+    private static final String TEST_JWT_KEY = 'test_jwt_key_for_web_security_config_spec_test_jwt_key_x'
+
     def setup() {
-        webSecurityConfig = new WebSecurityConfig(environment, 'test_jwt_key_for_web_security_config_spec_test_jwt_key_x')
+        webSecurityConfig = new WebSecurityConfig(environment, new CustomProperties())
     }
 
     def "should create password encoder bean"() {
@@ -55,8 +58,11 @@ class WebSecurityConfigSpec extends Specification {
     }
 
     def "should create jwt authentication filter bean with meter registry and token blacklist service"() {
+        given:
+        def jwtTokenService = new JwtTokenService(TEST_JWT_KEY, "dev")
+
         when:
-        JwtAuthenticationFilter filter = webSecurityConfig.jwtAuthenticationFilter(meterRegistry, tokenBlacklistService, new CustomProperties())
+        JwtAuthenticationFilter filter = webSecurityConfig.jwtAuthenticationFilter(meterRegistry, tokenBlacklistService, new CustomProperties(), jwtTokenService)
 
         then:
         filter != null
@@ -84,38 +90,25 @@ class WebSecurityConfigSpec extends Specification {
         filter instanceof LoggingCorsFilter
     }
 
-    def "validateSecurityConfiguration passes for valid JWT key length"() {
+    def "validateSecurityConfiguration passes when datasource URL is blank in prod"() {
         given:
-        def config = new WebSecurityConfig(environment, 'a' * 64)
-        environment.getActiveProfiles() >> []
+        environment.getActiveProfiles() >> ['prod']
+        setPrivateField(webSecurityConfig, 'datasourceUrl', '')
 
         when:
-        config.validateSecurityConfiguration()
+        webSecurityConfig.validateSecurityConfiguration()
 
         then:
         noExceptionThrown()
     }
 
-    def "validateSecurityConfiguration throws for JWT key shorter than 32 bytes"() {
-        given:
-        def config = new WebSecurityConfig(environment, 'short')
-        environment.getActiveProfiles() >> []
-
-        when:
-        config.validateSecurityConfiguration()
-
-        then:
-        thrown(IllegalStateException)
-    }
-
     def "validateSecurityConfiguration passes for prod profile with SSL in datasource URL"() {
         given:
-        def config = new WebSecurityConfig(environment, 'a' * 64)
         environment.getActiveProfiles() >> ['prod']
-        setPrivateField(config, 'datasourceUrl', 'jdbc:postgresql://host:5432/db?sslmode=require')
+        setPrivateField(webSecurityConfig, 'datasourceUrl', 'jdbc:postgresql://host:5432/db?sslmode=require')
 
         when:
-        config.validateSecurityConfiguration()
+        webSecurityConfig.validateSecurityConfiguration()
 
         then:
         noExceptionThrown()
@@ -123,12 +116,11 @@ class WebSecurityConfigSpec extends Specification {
 
     def "validateSecurityConfiguration throws for prod profile without SSL in datasource URL"() {
         given:
-        def config = new WebSecurityConfig(environment, 'a' * 64)
         environment.getActiveProfiles() >> ['prod']
-        setPrivateField(config, 'datasourceUrl', 'jdbc:postgresql://host:5432/db')
+        setPrivateField(webSecurityConfig, 'datasourceUrl', 'jdbc:postgresql://host:5432/db')
 
         when:
-        config.validateSecurityConfiguration()
+        webSecurityConfig.validateSecurityConfiguration()
 
         then:
         thrown(IllegalStateException)
@@ -136,12 +128,11 @@ class WebSecurityConfigSpec extends Specification {
 
     def "validateSecurityConfiguration skips SSL check for prod profile with blank datasource URL"() {
         given:
-        def config = new WebSecurityConfig(environment, 'a' * 64)
         environment.getActiveProfiles() >> ['prod']
-        setPrivateField(config, 'datasourceUrl', '')
+        setPrivateField(webSecurityConfig, 'datasourceUrl', '')
 
         when:
-        config.validateSecurityConfiguration()
+        webSecurityConfig.validateSecurityConfiguration()
 
         then:
         noExceptionThrown()
@@ -149,12 +140,11 @@ class WebSecurityConfigSpec extends Specification {
 
     def "validateSecurityConfiguration passes for stage profile with SSL in datasource URL"() {
         given:
-        def config = new WebSecurityConfig(environment, 'a' * 64)
         environment.getActiveProfiles() >> ['stage']
-        setPrivateField(config, 'datasourceUrl', 'jdbc:postgresql://host:5432/db?ssl=true')
+        setPrivateField(webSecurityConfig, 'datasourceUrl', 'jdbc:postgresql://host:5432/db?ssl=true')
 
         when:
-        config.validateSecurityConfiguration()
+        webSecurityConfig.validateSecurityConfiguration()
 
         then:
         noExceptionThrown()
@@ -162,12 +152,11 @@ class WebSecurityConfigSpec extends Specification {
 
     def "validateSecurityConfiguration skips SSL check for non-prod profile"() {
         given:
-        def config = new WebSecurityConfig(environment, 'a' * 64)
         environment.getActiveProfiles() >> ['unit']
-        setPrivateField(config, 'datasourceUrl', 'jdbc:postgresql://host:5432/db')
+        setPrivateField(webSecurityConfig, 'datasourceUrl', 'jdbc:postgresql://host:5432/db')
 
         when:
-        config.validateSecurityConfiguration()
+        webSecurityConfig.validateSecurityConfiguration()
 
         then:
         noExceptionThrown()
@@ -181,7 +170,8 @@ class WebSecurityConfigSpec extends Specification {
 
     def "should create filter registration beans with disabled status"() {
         given:
-        def jwtFilter = new JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, 'test_jwt_key_for_web_security_config_spec_test_jwt_key_x', new CustomProperties())
+        def jwtTokenService = new JwtTokenService(TEST_JWT_KEY, "dev")
+        def jwtFilter = new JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, jwtTokenService, new CustomProperties())
         def rateLimitFilter = new RateLimitingFilter()
         def securityAuditFilter = new SecurityAuditFilter(meterRegistry)
         def httpErrorLoggingFilter = new HttpErrorLoggingFilter(meterRegistry)

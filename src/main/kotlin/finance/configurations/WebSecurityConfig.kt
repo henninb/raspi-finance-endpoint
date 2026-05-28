@@ -1,5 +1,6 @@
 package finance.configurations
 
+import finance.services.JwtTokenService
 import finance.services.TokenBlacklistService
 import io.micrometer.core.instrument.MeterRegistry
 import jakarta.annotation.PostConstruct
@@ -18,6 +19,7 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy
+import org.springframework.security.web.header.writers.StaticHeadersWriter
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -26,7 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableMethodSecurity(prePostEnabled = true)
 open class WebSecurityConfig(
     private val environment: Environment,
-    @param:Value("\${custom.project.jwt.key}") private val jwtKey: String,
+    private val customProperties: CustomProperties,
 ) {
     @Value("\${custom.project.chrome-extension-id:}")
     private var chromeExtensionId: String = ""
@@ -36,18 +38,11 @@ open class WebSecurityConfig(
 
     companion object {
         private val securityLogger = LoggerFactory.getLogger("SECURITY.${WebSecurityConfig::class.java.simpleName}")
-        private const val MIN_JWT_KEY_BYTES = 32
         private val PROD_PROFILES = setOf("prod", "production", "stage")
     }
 
     @PostConstruct
     fun validateSecurityConfiguration() {
-        val keyBytes = jwtKey.toByteArray(Charsets.UTF_8).size
-        check(keyBytes >= MIN_JWT_KEY_BYTES) {
-            "FATAL: custom.project.jwt.key is $keyBytes bytes — minimum $MIN_JWT_KEY_BYTES bytes (256 bits) required for HS256"
-        }
-        securityLogger.info("SECURITY_CONFIG JWT key validated: {} bytes", keyBytes)
-
         val isProd = environment.activeProfiles.any { it.lowercase() in PROD_PROFILES }
         if (isProd && datasourceUrl.isNotBlank()) {
             val urlLower = datasourceUrl.lowercase()
@@ -96,6 +91,12 @@ open class WebSecurityConfig(
                     // Minimal CSP for API-only service; adjust if serving web content
                     csp.policyDirectives("default-src 'none'")
                 }
+                headers.addHeaderWriter(
+                    StaticHeadersWriter(
+                        "Permissions-Policy",
+                        "geolocation=(), camera=(), microphone=(), payment=()",
+                    ),
+                )
             }
             // CSRF Protection Strategy:
             // 1. Cookie-based CSRF tokens (double-submit pattern via CookieCsrfTokenRepository)
@@ -120,17 +121,18 @@ open class WebSecurityConfig(
                 auth.requestMatchers("/graphiql").permitAll()
                 auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").authenticated()
                 auth.requestMatchers("/actuator/health", "/health").permitAll()
+                auth.requestMatchers("/actuator/info", "/actuator/metrics", "/actuator/metrics/**").authenticated()
+                auth.requestMatchers("/actuator/**").hasRole("ADMIN")
                 auth.requestMatchers("/graphql").authenticated()
                 auth.requestMatchers("/api/**").authenticated()
                 auth.requestMatchers("/performance/**").authenticated()
-                auth.requestMatchers("/actuator/**").authenticated()
                 auth.anyRequest().denyAll()
             }.formLogin { it.disable() }
             .httpBasic { it.disable() }
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter::class.java)
         val chain = http.build()
-        securityLogger.info("SECURITY_CONFIG built main chain: protected=['/api/**','/performance/**','/actuator/**'] permit=['/api/login','/api/register','/api/logout','/api/csrf','/graphiql','/swagger-ui/**','/actuator/health'] default=denyAll")
+        securityLogger.info("SECURITY_CONFIG built main chain: admin=['/actuator/**'] authenticated=['/api/**','/performance/**','/actuator/info','/actuator/metrics'] permit=['/api/login','/api/register','/api/logout','/api/csrf','/graphiql','/swagger-ui/**','/actuator/health'] default=denyAll")
         return chain
     }
 
@@ -151,7 +153,8 @@ open class WebSecurityConfig(
         meterRegistry: MeterRegistry,
         tokenBlacklistService: TokenBlacklistService,
         customProperties: CustomProperties,
-    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, jwtKey, customProperties)
+        jwtTokenService: JwtTokenService,
+    ): JwtAuthenticationFilter = JwtAuthenticationFilter(meterRegistry, tokenBlacklistService, jwtTokenService, customProperties)
 
     // Prevent Boot from auto-registering these filters with the servlet container; they are managed by SecurityFilterChain
     @Bean
@@ -173,24 +176,29 @@ open class WebSecurityConfig(
     open fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration =
             CorsConfiguration().apply {
+                val configuredOrigins = customProperties.allowed.origins
                 val origins =
-                    mutableListOf(
-                        "http://localhost:3000",
-                        "https://www.bhenning.com",
-                        "https://www.brianhenning.com",
-                        "https://vercel.bhenning.com",
-                        "https://vercel.brianhenning.com",
-                        "https://pages.brianhenning.com",
-                        "https://pages.bhenning.com",
-                        "https://amplify.bhenning.com",
-                        "https://amplify.brianhenning.com",
-                        "https://netlify.bhenning.com",
-                        "https://netlify.brianhenning.com",
-                        "https://finance.bhenning.com",
-                        "https://finance.brianhenning.com",
-                        "https://dev.finance.bhenning.com:3000",
-                        "https://dev.finance.bhenning.com:3001",
-                    )
+                    if (configuredOrigins.isNotEmpty()) {
+                        configuredOrigins.toMutableList()
+                    } else {
+                        mutableListOf(
+                            "http://localhost:3000",
+                            "https://www.bhenning.com",
+                            "https://www.brianhenning.com",
+                            "https://vercel.bhenning.com",
+                            "https://vercel.brianhenning.com",
+                            "https://pages.brianhenning.com",
+                            "https://pages.bhenning.com",
+                            "https://amplify.bhenning.com",
+                            "https://amplify.brianhenning.com",
+                            "https://netlify.bhenning.com",
+                            "https://netlify.brianhenning.com",
+                            "https://finance.bhenning.com",
+                            "https://finance.brianhenning.com",
+                            "https://dev.finance.bhenning.com:3000",
+                            "https://dev.finance.bhenning.com:3001",
+                        )
+                    }
                 if (chromeExtensionId.isNotBlank()) {
                     origins.add("chrome-extension://$chromeExtensionId")
                 }
@@ -198,7 +206,6 @@ open class WebSecurityConfig(
                 allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 allowedHeaders = listOf("Content-Type", "Accept", "Cookie", "X-Requested-With", "Authorization", "X-Api-Key", "X-CSRF-TOKEN")
                 allowCredentials = true
-                // Spring Framework version here expects seconds as Long
                 maxAge = 3600L
             }
         val source = UrlBasedCorsConfigurationSource()
