@@ -1,33 +1,21 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonCreator
 
-@JsonFormat
 enum class TransactionState(
     override val label: String,
 ) : LabeledEnum {
-    @JsonProperty("cleared")
     Cleared("cleared"),
-
-    @JsonProperty("outstanding")
     Outstanding("outstanding"),
-
-    @JsonProperty("future")
     Future("future"),
-
-    @JsonProperty("undefined")
     Undefined("undefined"),
     ;
 
-    fun value(): String = label
-
-    override fun toString(): String = name.lowercase()
+    override fun toString(): String = label
 
     companion object {
-        private val VALUES = values()
-
         @JvmStatic
-        fun getByValue(label: String) = VALUES.firstOrNull { it.label == label }
+        @JsonCreator
+        fun fromString(value: String?): TransactionState = fromLabelOrThrow(value)
     }
 }

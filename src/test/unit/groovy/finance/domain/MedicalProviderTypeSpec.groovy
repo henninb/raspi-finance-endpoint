@@ -1,7 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.JsonMappingException
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -53,7 +53,7 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
     }
 
     @Unroll
-    void 'test toString returns lowercase name for #providerType'() {
+    void 'test toString returns label for #providerType'() {
         when:
         String result = (String)(providerType)
 
@@ -69,12 +69,12 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
         MedicalProviderType.Pharmacy     | 'pharmacy'
         MedicalProviderType.Laboratory   | 'laboratory'
         MedicalProviderType.Imaging      | 'imaging'
-        MedicalProviderType.UrgentCare   | 'urgentcare'
+        MedicalProviderType.UrgentCare   | 'urgent_care'
         MedicalProviderType.Emergency    | 'emergency'
-        MedicalProviderType.MentalHealth | 'mentalhealth'
+        MedicalProviderType.MentalHealth | 'mental_health'
         MedicalProviderType.Dental       | 'dental'
         MedicalProviderType.Vision       | 'vision'
-        MedicalProviderType.PhysicalTherapy | 'physicaltherapy'
+        MedicalProviderType.PhysicalTherapy | 'physical_therapy'
         MedicalProviderType.Other        | 'other'
     }
 
@@ -105,8 +105,8 @@ class MedicalProviderTypeSpec extends BaseDomainSpec {
         mapper.readValue(jsonPayloadInvalid, MedicalProviderType)
 
         then:
-        InvalidFormatException ex = thrown(InvalidFormatException)
-        ex.message.contains('Cannot deserialize value of type')
+        JsonMappingException ex = thrown(JsonMappingException)
+        ex.message.contains('Unknown MedicalProviderType')
         0 * _
     }
 

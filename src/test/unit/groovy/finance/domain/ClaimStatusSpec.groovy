@@ -48,7 +48,7 @@ class ClaimStatusSpec extends Specification {
 
         then: "should throw IllegalArgumentException"
         IllegalArgumentException ex = thrown()
-        ex.message == "Unknown claim status: invalid_status"
+        ex.message == "Unknown ClaimStatus: invalid_status"
     }
 
     def "should throw exception for null string value"() {
@@ -82,7 +82,6 @@ class ClaimStatusSpec extends Specification {
     def "should return correct label for enum: #status"() {
         expect: "label to match expected value"
         status.label == expectedLabel
-        status.toValue() == expectedLabel
         status.toString() == expectedLabel
 
         where:
@@ -109,14 +108,9 @@ class ClaimStatusSpec extends Specification {
         allValues.contains(ClaimStatus.Closed)
     }
 
-    def "should support JSON serialization via @JsonValue"() {
-        given: "a claim status"
-        ClaimStatus status = ClaimStatus.Approved
-
-        when: "getting JSON value"
-        String jsonValue = status.toValue()
-
-        then: "should return label for JSON serialization"
-        jsonValue == "approved"
+    def "label should equal toString for JSON serialization consistency"() {
+        expect: "label and toString are the same for serialization"
+        ClaimStatus.Approved.label == "approved"
+        ClaimStatus.Approved.toString() == "approved"
     }
 }

@@ -3,6 +3,7 @@ package finance.domain
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import finance.helpers.FamilyMemberBuilder
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -79,7 +80,7 @@ class FamilyMemberSpec extends BaseDomainSpec {
         '[]'                              | MismatchedInputException | 'Cannot deserialize value of type'
         '{owner: "test"}'                 | JsonParseException       | 'was expecting double-quote to start field name'
         '{"activeStatus": "abc"}'         | InvalidFormatException   | 'Cannot deserialize value of type'
-        jsonPayloadInvalidRelationship    | InvalidFormatException   | 'Cannot deserialize value of type'
+        jsonPayloadInvalidRelationship    | ValueInstantiationException | 'Unknown FamilyRelationship'
     }
 
     @Unroll

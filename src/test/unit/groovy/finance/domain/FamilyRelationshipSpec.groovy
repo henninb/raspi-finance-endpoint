@@ -1,7 +1,7 @@
 package finance.domain
 
 import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.JsonMappingException
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -99,8 +99,8 @@ class FamilyRelationshipSpec extends BaseDomainSpec {
         mapper.readValue(jsonPayloadInvalid, FamilyRelationship)
 
         then:
-        InvalidFormatException ex = thrown(InvalidFormatException)
-        ex.message.contains('Cannot deserialize value of type')
+        JsonMappingException ex = thrown(JsonMappingException)
+        ex.message.contains('Unknown FamilyRelationship')
         0 * _
     }
 

@@ -1,38 +1,24 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonCreator
 
-@JsonFormat
 enum class ReoccurringType(
     override val label: String,
 ) : LabeledEnum {
-    @JsonProperty("monthly")
     Monthly("monthly"),
-
-    @JsonProperty("annually")
     Annually("annually"),
-
-    @JsonProperty("biannually")
     BiAnnually("biannually"),
-
-    @JsonProperty("fortnightly")
     FortNightly("fortnightly"),
-
-    @JsonProperty("quarterly")
     Quarterly("quarterly"),
-
-    @JsonProperty("onetime")
     Onetime("onetime"),
-
-    @JsonProperty("undefined")
     Undefined("undefined"),
     ;
 
-    fun value(): String = label
-
-    override fun toString(): String = name.lowercase()
+    override fun toString(): String = label
 
     companion object {
+        @JvmStatic
+        @JsonCreator
+        fun fromString(value: String?): ReoccurringType = fromLabelOrThrow(value)
     }
 }

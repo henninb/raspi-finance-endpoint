@@ -1,21 +1,20 @@
 package finance.domain
 
-import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonCreator
 
-@JsonFormat
 enum class ImageFormatType(
     override val label: String,
 ) : LabeledEnum {
-    @JsonProperty("jpeg")
     Jpeg("jpeg"),
-
-    @JsonProperty("png")
     Png("png"),
-
-    @JsonProperty("undefined")
     Undefined("undefined"),
     ;
 
-    override fun toString(): String = name.lowercase()
+    override fun toString(): String = label
+
+    companion object {
+        @JvmStatic
+        @JsonCreator
+        fun fromString(value: String?): ImageFormatType = fromLabelOrThrow(value)
+    }
 }

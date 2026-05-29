@@ -44,12 +44,22 @@ class AccountTypeSpec extends Specification {
         AccountType.Trust              | "trust"                 | "asset"
     }
 
-    def "toString should return lowercase name"() {
+    def "toString should return label"() {
         expect:
         AccountType.Checking.toString() == "checking"
-        AccountType.CreditCard.toString() == "creditcard"
-        AccountType.Retirement401k.toString() == "retirement401k"
+        AccountType.CreditCard.toString() == "credit_card"
+        AccountType.Retirement401k.toString() == "retirement_401k"
         AccountType.HSA.toString() == "hsa"
+    }
+
+    def "isAsset and isLiability should reflect category"() {
+        expect:
+        AccountType.Checking.isAsset()
+        !AccountType.Checking.isLiability()
+        AccountType.Credit.isLiability()
+        !AccountType.Credit.isAsset()
+        !AccountType.Undefined.isAsset()
+        !AccountType.Undefined.isLiability()
     }
 
     def "getAssetTypes should return all asset account types"() {

@@ -1,7 +1,6 @@
 package finance.domain
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonValue
 
 enum class ClaimStatus(
     override val label: String,
@@ -14,23 +13,14 @@ enum class ClaimStatus(
     Closed("closed"),
     ;
 
-    @JsonValue
-    fun toValue(): String = label
+    override fun toString(): String = label
 
     companion object {
         @JvmStatic
         @JsonCreator
-        fun fromString(value: String?): ClaimStatus {
-            if (value.isNullOrBlank()) {
-                throw IllegalArgumentException("Unknown claim status: $value")
-            }
-            return values().find { it.label.equals(value, ignoreCase = true) }
-                ?: throw IllegalArgumentException("Unknown claim status: $value")
-        }
+        fun fromString(value: String?): ClaimStatus = fromLabelOrThrow(value)
 
         @JvmStatic
         fun getValidStatuses(): List<String> = values().map { it.label }
     }
-
-    override fun toString(): String = label
 }

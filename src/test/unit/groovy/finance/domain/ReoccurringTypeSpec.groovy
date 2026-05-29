@@ -22,22 +22,6 @@ class ReoccurringTypeSpec extends Specification {
     }
 
     @Unroll
-    def "value() should return label for #reoccurringType"() {
-        expect: "value returns the label"
-        reoccurringType.value() == expectedValue
-
-        where:
-        reoccurringType                | expectedValue
-        ReoccurringType.Monthly        | "monthly"
-        ReoccurringType.Annually       | "annually"
-        ReoccurringType.BiAnnually     | "biannually"
-        ReoccurringType.FortNightly    | "fortnightly"
-        ReoccurringType.Quarterly      | "quarterly"
-        ReoccurringType.Onetime        | "onetime"
-        ReoccurringType.Undefined      | "undefined"
-    }
-
-    @Unroll
     def "toString should return lowercase name for #reoccurringType"() {
         expect: "toString returns lowercase enum name"
         reoccurringType.toString() == expectedString
@@ -99,14 +83,6 @@ class ReoccurringTypeSpec extends Specification {
 
         then: "switch works correctly"
         result == "monthly payment"
-    }
-
-    def "value() and label should be identical"() {
-        when: "getting all reoccurring types"
-        def allTypes = ReoccurringType.values() as List
-
-        then: "value() returns the same as label"
-        allTypes.every { it.value() == it.label }
     }
 
     def "toString should match label for common types"() {

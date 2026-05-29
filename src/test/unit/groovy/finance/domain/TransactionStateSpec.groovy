@@ -19,19 +19,6 @@ class TransactionStateSpec extends Specification {
     }
 
     @Unroll
-    def "value() should return label for #transactionState"() {
-        expect: "value returns the label"
-        transactionState.value() == expectedValue
-
-        where:
-        transactionState               | expectedValue
-        TransactionState.Cleared       | "cleared"
-        TransactionState.Outstanding   | "outstanding"
-        TransactionState.Future        | "future"
-        TransactionState.Undefined     | "undefined"
-    }
-
-    @Unroll
     def "toString should return lowercase name for #transactionState"() {
         expect: "toString returns lowercase enum name"
         transactionState.toString() == expectedString
@@ -74,17 +61,9 @@ class TransactionStateSpec extends Specification {
         TransactionState.Cleared != TransactionState.Outstanding
     }
 
-    def "getByValue should return correct state when label matches"() {
-        when: "getting state by value"
-        def result = TransactionState.getByValue("cleared")
-
-        then: "correct state is returned"
-        result == TransactionState.Cleared
-    }
-
-    def "getByValue should return correct state for all valid labels"() {
+    def "fromString should return correct state for all valid labels"() {
         expect: "each label returns correct state"
-        TransactionState.getByValue(label) == expectedState
+        TransactionState.fromString(label) == expectedState
 
         where:
         label         | expectedState
@@ -94,28 +73,18 @@ class TransactionStateSpec extends Specification {
         "undefined"   | TransactionState.Undefined
     }
 
-    def "getByValue should return null when label does not match"() {
-        when: "getting state by invalid value"
-        def result = TransactionState.getByValue("nonexistent")
-
-        then: "null is returned"
-        result == null
+    def "fromString should be case insensitive"() {
+        expect:
+        TransactionState.fromString("CLEARED") == TransactionState.Cleared
+        TransactionState.fromString("Outstanding") == TransactionState.Outstanding
     }
 
-    def "getByValue should be case sensitive"() {
-        when: "getting state with wrong case"
-        def result = TransactionState.getByValue("CLEARED")
+    def "fromString should throw for invalid label"() {
+        when:
+        TransactionState.fromString("nonexistent")
 
-        then: "null is returned"
-        result == null
-    }
-
-    def "value() and label should be identical"() {
-        when: "getting all transaction states"
-        def allStates = TransactionState.values() as List
-
-        then: "value() returns the same as label"
-        allStates.every { it.value() == it.label }
+        then:
+        thrown(IllegalArgumentException)
     }
 
     def "toString should match label for all states"() {
@@ -144,15 +113,4 @@ class TransactionStateSpec extends Specification {
         result == "cleared transaction"
     }
 
-    def "companion object should provide getByValue functionality"() {
-        when: "getting values by label"
-        def cleared = TransactionState.getByValue("cleared")
-        def outstanding = TransactionState.getByValue("outstanding")
-        def invalid = TransactionState.getByValue("invalid")
-
-        then: "correct values are returned"
-        cleared == TransactionState.Cleared
-        outstanding == TransactionState.Outstanding
-        invalid == null
-    }
 }
