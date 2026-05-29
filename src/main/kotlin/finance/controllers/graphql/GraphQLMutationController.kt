@@ -20,6 +20,7 @@ import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.Transfer
 import finance.domain.ValidationAmount
+import finance.domain.getOrThrow
 import finance.services.AccountService
 import finance.services.CategoryService
 import finance.services.DescriptionService
@@ -76,29 +77,10 @@ class GraphQLMutationController(
                 this.activeStatus = payment.activeStatus ?: true
             }
 
-        return when (val result = paymentService.save(domain)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.payment.create.success").increment()
-                logger.info("GraphQL - Created payment id={}", result.data.paymentId)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                throw IllegalArgumentException(result.message)
-            }
-
-            is ServiceResult.SystemError -> {
-                throw result.exception
-            }
-
-            else -> {
-                throw RuntimeException("Unexpected error creating payment: $result")
-            }
-        }
+        val data = paymentService.save(domain).getOrThrow()
+        meterRegistry.counter("graphql.payment.create.success").increment()
+        logger.info("GraphQL - Created payment id={}", data.paymentId)
+        return data
     }
 
     @MutationMapping
@@ -216,27 +198,10 @@ class GraphQLMutationController(
                 this.parameterValue = parameter.parameterValue
                 this.activeStatus = parameter.activeStatus ?: true
             }
-        return when (val result = parameterService.save(domain)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.parameter.create.success").increment()
-                logger.info("GraphQL - Created parameter id={}", result.data.parameterId)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating parameter: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating parameter: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create parameter")
-            }
-        }
+        val data = parameterService.save(domain).getOrThrow()
+        meterRegistry.counter("graphql.parameter.create.success").increment()
+        logger.info("GraphQL - Created parameter id={}", data.parameterId)
+        return data
     }
 
     @MutationMapping
@@ -251,32 +216,10 @@ class GraphQLMutationController(
                 this.parameterValue = parameter.parameterValue
                 this.activeStatus = parameter.activeStatus ?: true
             }
-        return when (val result = parameterService.update(domain)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.parameter.update.success").increment()
-                logger.info("GraphQL - Updated parameter id={}", result.data.parameterId)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Parameter not found: {}", domain.parameterId)
-                throw IllegalArgumentException("Parameter not found: ${domain.parameterId}")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating parameter: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating parameter: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update parameter")
-            }
-        }
+        val data = parameterService.update(domain).getOrThrow()
+        meterRegistry.counter("graphql.parameter.update.success").increment()
+        logger.info("GraphQL - Updated parameter id={}", data.parameterId)
+        return data
     }
 
     @MutationMapping
@@ -284,17 +227,12 @@ class GraphQLMutationController(
         @Argument parameterId: Long,
     ): Boolean {
         logger.info("GraphQL - Deleting parameter id={}", parameterId)
-        return when (val result = parameterService.deleteById(parameterId)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.parameter.delete.success").increment()
-                logger.info("GraphQL - Deleted parameter id={}", parameterId)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
+        return handleDelete(
+            parameterService.deleteById(parameterId),
+            "graphql.parameter.delete.success",
+            "GraphQL - Deleted parameter id={}",
+            parameterId,
+        )
     }
 
     @MutationMapping
@@ -310,27 +248,10 @@ class GraphQLMutationController(
                 this.activeStatus = categoryInput.activeStatus ?: true
             }
 
-        return when (val result = categoryService.save(category)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.category.create.success").increment()
-                logger.info("GraphQL - Created category: {}", result.data.categoryName)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating category: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating category: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create category")
-            }
-        }
+        val data = categoryService.save(category).getOrThrow()
+        meterRegistry.counter("graphql.category.create.success").increment()
+        logger.info("GraphQL - Created category: {}", data.categoryName)
+        return data
     }
 
     @MutationMapping
@@ -375,7 +296,6 @@ class GraphQLMutationController(
                 }
 
                 else -> {
-                    // Try to look up by the new name (for updates that don't involve renaming)
                     logger.debug("Looking up category by categoryName: {}", categoryInput.categoryName)
                     when (val findResult = categoryService.findByCategoryNameStandardized(categoryInput.categoryName)) {
                         is ServiceResult.Success -> {
@@ -405,32 +325,10 @@ class GraphQLMutationController(
                 this.activeStatus = categoryInput.activeStatus ?: true
             }
 
-        return when (val result = categoryService.update(category)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.category.update.success").increment()
-                logger.info("GraphQL - Updated category: {}", result.data.categoryName)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Category not found with ID: {}", existingCategoryId)
-                throw IllegalArgumentException("Category not found with ID: $existingCategoryId")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating category: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating category: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update category")
-            }
-        }
+        val data = categoryService.update(category).getOrThrow()
+        meterRegistry.counter("graphql.category.update.success").increment()
+        logger.info("GraphQL - Updated category: {}", data.categoryName)
+        return data
     }
 
     @MutationMapping
@@ -438,17 +336,12 @@ class GraphQLMutationController(
         @Argument categoryName: String,
     ): Boolean {
         logger.info("GraphQL - Deleting category: {}", categoryName)
-        return when (val result = categoryService.deleteByCategoryNameStandardized(categoryName)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.category.delete.success").increment()
-                logger.info("GraphQL - Deleted category: {}", categoryName)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
+        return handleDelete(
+            categoryService.deleteByCategoryNameStandardized(categoryName),
+            "graphql.category.delete.success",
+            "GraphQL - Deleted category: {}",
+            categoryName,
+        )
     }
 
     @MutationMapping
@@ -464,27 +357,10 @@ class GraphQLMutationController(
                 this.activeStatus = descriptionInput.activeStatus ?: true
             }
 
-        return when (val result = descriptionService.save(description)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.description.create.success").increment()
-                logger.info("GraphQL - Created description: {}", result.data.descriptionName)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating description: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating description: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create description")
-            }
-        }
+        val data = descriptionService.save(description).getOrThrow()
+        meterRegistry.counter("graphql.description.create.success").increment()
+        logger.info("GraphQL - Created description: {}", data.descriptionName)
+        return data
     }
 
     @MutationMapping
@@ -523,14 +399,12 @@ class GraphQLMutationController(
                         }
 
                         else -> {
-                            logger.error("GraphQL - Error finding description: {}", oldDescriptionName)
                             throw RuntimeException("Failed to find description: $oldDescriptionName")
                         }
                     }
                 }
 
                 else -> {
-                    // Try to look up by the new name (for updates that don't involve renaming)
                     logger.debug("Looking up description by descriptionName: {}", descriptionInput.descriptionName)
                     when (val findResult = descriptionService.findByDescriptionNameStandardized(descriptionInput.descriptionName)) {
                         is ServiceResult.Success -> {
@@ -560,32 +434,10 @@ class GraphQLMutationController(
                 this.activeStatus = descriptionInput.activeStatus ?: true
             }
 
-        return when (val result = descriptionService.update(description)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.description.update.success").increment()
-                logger.info("GraphQL - Updated description: {}", result.data.descriptionName)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Description not found with ID: {}", existingDescriptionId)
-                throw IllegalArgumentException("Description not found with ID: $existingDescriptionId")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating description: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating description: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update description")
-            }
-        }
+        val data = descriptionService.update(description).getOrThrow()
+        meterRegistry.counter("graphql.description.update.success").increment()
+        logger.info("GraphQL - Updated description: {}", data.descriptionName)
+        return data
     }
 
     @MutationMapping
@@ -593,17 +445,12 @@ class GraphQLMutationController(
         @Argument descriptionName: String,
     ): Boolean {
         logger.info("GraphQL - Deleting description: {}", descriptionName)
-        return when (val result = descriptionService.deleteByDescriptionNameStandardized(descriptionName)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.description.delete.success").increment()
-                logger.info("GraphQL - Deleted description: {}", descriptionName)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
+        return handleDelete(
+            descriptionService.deleteByDescriptionNameStandardized(descriptionName),
+            "graphql.description.delete.success",
+            "GraphQL - Deleted description: {}",
+            descriptionName,
+        )
     }
 
     @MutationMapping
@@ -611,44 +458,7 @@ class GraphQLMutationController(
         @Argument("medicalExpense") @Valid medicalExpenseInput: MedicalExpenseInputDto,
     ): MedicalExpense {
         logger.info("GraphQL - Creating medical expense via @MutationMapping")
-
-        // Validate required fields before force-unwrapping
-        if (medicalExpenseInput.serviceDate == null) {
-            logger.error("GraphQL - Missing required field: serviceDate")
-            throw IllegalArgumentException("serviceDate is required")
-        }
-        if (medicalExpenseInput.billedAmount == null) {
-            logger.error("GraphQL - Missing required field: billedAmount")
-            throw IllegalArgumentException("billedAmount is required")
-        }
-        if (medicalExpenseInput.insuranceDiscount == null) {
-            logger.error("GraphQL - Missing required field: insuranceDiscount")
-            throw IllegalArgumentException("insuranceDiscount is required")
-        }
-        if (medicalExpenseInput.insurancePaid == null) {
-            logger.error("GraphQL - Missing required field: insurancePaid")
-            throw IllegalArgumentException("insurancePaid is required")
-        }
-        if (medicalExpenseInput.patientResponsibility == null) {
-            logger.error("GraphQL - Missing required field: patientResponsibility")
-            throw IllegalArgumentException("patientResponsibility is required")
-        }
-        if (medicalExpenseInput.isOutOfNetwork == null) {
-            logger.error("GraphQL - Missing required field: isOutOfNetwork")
-            throw IllegalArgumentException("isOutOfNetwork is required")
-        }
-        if (medicalExpenseInput.claimNumber == null) {
-            logger.error("GraphQL - Missing required field: claimNumber")
-            throw IllegalArgumentException("claimNumber is required")
-        }
-        if (medicalExpenseInput.claimStatus == null) {
-            logger.error("GraphQL - Missing required field: claimStatus")
-            throw IllegalArgumentException("claimStatus is required")
-        }
-        if (medicalExpenseInput.paidAmount == null) {
-            logger.error("GraphQL - Missing required field: paidAmount")
-            throw IllegalArgumentException("paidAmount is required")
-        }
+        requireMedicalExpenseFields(medicalExpenseInput)
 
         val medicalExpense =
             MedicalExpense().apply {
@@ -656,43 +466,26 @@ class GraphQLMutationController(
                 this.transactionId = medicalExpenseInput.transactionId
                 this.providerId = medicalExpenseInput.providerId
                 this.familyMemberId = medicalExpenseInput.familyMemberId
-                this.serviceDate = medicalExpenseInput.serviceDate
+                this.serviceDate = medicalExpenseInput.serviceDate!!
                 this.serviceDescription = medicalExpenseInput.serviceDescription
                 this.procedureCode = medicalExpenseInput.procedureCode
                 this.diagnosisCode = medicalExpenseInput.diagnosisCode
-                this.billedAmount = medicalExpenseInput.billedAmount
-                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount
-                this.insurancePaid = medicalExpenseInput.insurancePaid
-                this.patientResponsibility = medicalExpenseInput.patientResponsibility
+                this.billedAmount = medicalExpenseInput.billedAmount!!
+                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount!!
+                this.insurancePaid = medicalExpenseInput.insurancePaid!!
+                this.patientResponsibility = medicalExpenseInput.patientResponsibility!!
                 this.paidDate = medicalExpenseInput.paidDate
-                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork
-                this.claimNumber = medicalExpenseInput.claimNumber
-                this.claimStatus = medicalExpenseInput.claimStatus
+                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork!!
+                this.claimNumber = medicalExpenseInput.claimNumber!!
+                this.claimStatus = medicalExpenseInput.claimStatus!!
                 this.activeStatus = medicalExpenseInput.activeStatus ?: true
-                this.paidAmount = medicalExpenseInput.paidAmount
+                this.paidAmount = medicalExpenseInput.paidAmount!!
             }
 
-        return when (val result = medicalExpenseService.save(medicalExpense)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.medicalExpense.create.success").increment()
-                logger.info("GraphQL - Created medical expense: {}", result.data.medicalExpenseId)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating medical expense: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating medical expense: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create medical expense")
-            }
-        }
+        val data = medicalExpenseService.save(medicalExpense).getOrThrow()
+        meterRegistry.counter("graphql.medicalExpense.create.success").increment()
+        logger.info("GraphQL - Created medical expense: {}", data.medicalExpenseId)
+        return data
     }
 
     @MutationMapping
@@ -700,48 +493,8 @@ class GraphQLMutationController(
         @Argument("medicalExpense") @Valid medicalExpenseInput: MedicalExpenseInputDto,
     ): MedicalExpense {
         logger.info("GraphQL - Updating medical expense id={}", medicalExpenseInput.medicalExpenseId)
-
-        // Validate required fields including medicalExpenseId for update
-        if (medicalExpenseInput.medicalExpenseId == null) {
-            logger.error("GraphQL - Missing required field for update: medicalExpenseId")
-            throw IllegalArgumentException("medicalExpenseId is required for update")
-        }
-        if (medicalExpenseInput.serviceDate == null) {
-            logger.error("GraphQL - Missing required field: serviceDate")
-            throw IllegalArgumentException("serviceDate is required")
-        }
-        if (medicalExpenseInput.billedAmount == null) {
-            logger.error("GraphQL - Missing required field: billedAmount")
-            throw IllegalArgumentException("billedAmount is required")
-        }
-        if (medicalExpenseInput.insuranceDiscount == null) {
-            logger.error("GraphQL - Missing required field: insuranceDiscount")
-            throw IllegalArgumentException("insuranceDiscount is required")
-        }
-        if (medicalExpenseInput.insurancePaid == null) {
-            logger.error("GraphQL - Missing required field: insurancePaid")
-            throw IllegalArgumentException("insurancePaid is required")
-        }
-        if (medicalExpenseInput.patientResponsibility == null) {
-            logger.error("GraphQL - Missing required field: patientResponsibility")
-            throw IllegalArgumentException("patientResponsibility is required")
-        }
-        if (medicalExpenseInput.isOutOfNetwork == null) {
-            logger.error("GraphQL - Missing required field: isOutOfNetwork")
-            throw IllegalArgumentException("isOutOfNetwork is required")
-        }
-        if (medicalExpenseInput.claimNumber == null) {
-            logger.error("GraphQL - Missing required field: claimNumber")
-            throw IllegalArgumentException("claimNumber is required")
-        }
-        if (medicalExpenseInput.claimStatus == null) {
-            logger.error("GraphQL - Missing required field: claimStatus")
-            throw IllegalArgumentException("claimStatus is required")
-        }
-        if (medicalExpenseInput.paidAmount == null) {
-            logger.error("GraphQL - Missing required field: paidAmount")
-            throw IllegalArgumentException("paidAmount is required")
-        }
+        require(medicalExpenseInput.medicalExpenseId != null) { "medicalExpenseId is required for update" }
+        requireMedicalExpenseFields(medicalExpenseInput)
 
         val medicalExpense =
             MedicalExpense().apply {
@@ -749,48 +502,26 @@ class GraphQLMutationController(
                 this.transactionId = medicalExpenseInput.transactionId
                 this.providerId = medicalExpenseInput.providerId
                 this.familyMemberId = medicalExpenseInput.familyMemberId
-                this.serviceDate = medicalExpenseInput.serviceDate
+                this.serviceDate = medicalExpenseInput.serviceDate!!
                 this.serviceDescription = medicalExpenseInput.serviceDescription
                 this.procedureCode = medicalExpenseInput.procedureCode
                 this.diagnosisCode = medicalExpenseInput.diagnosisCode
-                this.billedAmount = medicalExpenseInput.billedAmount
-                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount
-                this.insurancePaid = medicalExpenseInput.insurancePaid
-                this.patientResponsibility = medicalExpenseInput.patientResponsibility
+                this.billedAmount = medicalExpenseInput.billedAmount!!
+                this.insuranceDiscount = medicalExpenseInput.insuranceDiscount!!
+                this.insurancePaid = medicalExpenseInput.insurancePaid!!
+                this.patientResponsibility = medicalExpenseInput.patientResponsibility!!
                 this.paidDate = medicalExpenseInput.paidDate
-                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork
-                this.claimNumber = medicalExpenseInput.claimNumber
-                this.claimStatus = medicalExpenseInput.claimStatus
+                this.isOutOfNetwork = medicalExpenseInput.isOutOfNetwork!!
+                this.claimNumber = medicalExpenseInput.claimNumber!!
+                this.claimStatus = medicalExpenseInput.claimStatus!!
                 this.activeStatus = medicalExpenseInput.activeStatus ?: true
-                this.paidAmount = medicalExpenseInput.paidAmount
+                this.paidAmount = medicalExpenseInput.paidAmount!!
             }
 
-        return when (val result = medicalExpenseService.update(medicalExpense)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.medicalExpense.update.success").increment()
-                logger.info("GraphQL - Updated medical expense: {}", result.data.medicalExpenseId)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Medical expense not found: {}", medicalExpenseInput.medicalExpenseId)
-                throw IllegalArgumentException("Medical expense not found: ${medicalExpenseInput.medicalExpenseId}")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating medical expense: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating medical expense: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update medical expense")
-            }
-        }
+        val data = medicalExpenseService.update(medicalExpense).getOrThrow()
+        meterRegistry.counter("graphql.medicalExpense.update.success").increment()
+        logger.info("GraphQL - Updated medical expense: {}", data.medicalExpenseId)
+        return data
     }
 
     @MutationMapping
@@ -798,17 +529,12 @@ class GraphQLMutationController(
         @Argument medicalExpenseId: Long,
     ): Boolean {
         logger.info("GraphQL - Deleting medical expense id={}", medicalExpenseId)
-        return when (val result = medicalExpenseService.deleteById(medicalExpenseId)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.medicalExpense.delete.success").increment()
-                logger.info("GraphQL - Deleted medical expense id={}", medicalExpenseId)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
+        return handleDelete(
+            medicalExpenseService.deleteById(medicalExpenseId),
+            "graphql.medicalExpense.delete.success",
+            "GraphQL - Deleted medical expense id={}",
+            medicalExpenseId,
+        )
     }
 
     @MutationMapping
@@ -827,27 +553,10 @@ class GraphQLMutationController(
                 this.amount = validationAmountInput.amount
             }
 
-        return when (val result = validationAmountService.save(validationAmount)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.validationAmount.create.success").increment()
-                logger.info("GraphQL - Created validation amount: {}", result.data.validationId)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating validation amount: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating validation amount: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create validation amount")
-            }
-        }
+        val data = validationAmountService.save(validationAmount).getOrThrow()
+        meterRegistry.counter("graphql.validationAmount.create.success").increment()
+        logger.info("GraphQL - Created validation amount: {}", data.validationId)
+        return data
     }
 
     @MutationMapping
@@ -866,32 +575,10 @@ class GraphQLMutationController(
                 this.amount = validationAmountInput.amount
             }
 
-        return when (val result = validationAmountService.update(validationAmount)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.validationAmount.update.success").increment()
-                logger.info("GraphQL - Updated validation amount: {}", result.data.validationId)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Validation amount not found: {}", validationAmountInput.validationId)
-                throw IllegalArgumentException("Validation amount not found: ${validationAmountInput.validationId}")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating validation amount: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating validation amount: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update validation amount")
-            }
-        }
+        val data = validationAmountService.update(validationAmount).getOrThrow()
+        meterRegistry.counter("graphql.validationAmount.update.success").increment()
+        logger.info("GraphQL - Updated validation amount: {}", data.validationId)
+        return data
     }
 
     @MutationMapping
@@ -899,17 +586,12 @@ class GraphQLMutationController(
         @Argument validationId: Long,
     ): Boolean {
         logger.info("GraphQL - Deleting validation amount id={}", validationId)
-        return when (val result = validationAmountService.deleteById(validationId)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.validationAmount.delete.success").increment()
-                logger.info("GraphQL - Deleted validation amount id={}", validationId)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
+        return handleDelete(
+            validationAmountService.deleteById(validationId),
+            "graphql.validationAmount.delete.success",
+            "GraphQL - Deleted validation amount id={}",
+            validationId,
+        )
     }
 
     @MutationMapping
@@ -932,27 +614,10 @@ class GraphQLMutationController(
                 this.validationDate = accountInput.validationDate ?: Timestamp(System.currentTimeMillis())
             }
 
-        return when (val result = accountService.save(account)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.account.create.success").increment()
-                logger.info("GraphQL - Created account: {}", result.data.accountNameOwner)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating account: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating account: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create account")
-            }
-        }
+        val data = accountService.save(account).getOrThrow()
+        meterRegistry.counter("graphql.account.create.success").increment()
+        logger.info("GraphQL - Created account: {}", data.accountNameOwner)
+        return data
     }
 
     @MutationMapping
@@ -997,7 +662,6 @@ class GraphQLMutationController(
                 }
 
                 else -> {
-                    // Try to look up by the new name (for updates that don't involve renaming)
                     logger.debug("Looking up account by accountNameOwner: {}", accountInput.accountNameOwner)
                     when (val findResult = accountService.findById(accountInput.accountNameOwner)) {
                         is ServiceResult.Success -> {
@@ -1034,32 +698,10 @@ class GraphQLMutationController(
                 this.validationDate = accountInput.validationDate ?: Timestamp(System.currentTimeMillis())
             }
 
-        return when (val result = accountService.update(account)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.account.update.success").increment()
-                logger.info("GraphQL - Updated account: {}", result.data.accountNameOwner)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Account not found with ID: {}", existingAccountId)
-                throw IllegalArgumentException("Account not found with ID: $existingAccountId")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating account: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating account: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update account")
-            }
-        }
+        val data = accountService.update(account).getOrThrow()
+        meterRegistry.counter("graphql.account.update.success").increment()
+        logger.info("GraphQL - Updated account: {}", data.accountNameOwner)
+        return data
     }
 
     @MutationMapping
@@ -1067,17 +709,12 @@ class GraphQLMutationController(
         @Argument accountNameOwner: String,
     ): Boolean {
         logger.info("GraphQL - Deleting account: {}", accountNameOwner)
-        return when (val result = accountService.deleteById(accountNameOwner)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.account.delete.success").increment()
-                logger.info("GraphQL - Deleted account: {}", accountNameOwner)
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
+        return handleDelete(
+            accountService.deleteById(accountNameOwner),
+            "graphql.account.delete.success",
+            "GraphQL - Deleted account: {}",
+            accountNameOwner,
+        )
     }
 
     @MutationMapping
@@ -1108,27 +745,10 @@ class GraphQLMutationController(
                 this.dateUpdated = Timestamp(System.currentTimeMillis())
             }
 
-        return when (val result = transactionService.save(transaction)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.transaction.create.success").increment()
-                logger.info("GraphQL - Created transaction: {}", result.data.guid)
-                result.data
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error creating transaction: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error creating transaction: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to create transaction")
-            }
-        }
+        val data = transactionService.save(transaction).getOrThrow()
+        meterRegistry.counter("graphql.transaction.create.success").increment()
+        logger.info("GraphQL - Created transaction: {}", data.guid)
+        return data
     }
 
     @MutationMapping
@@ -1157,32 +777,10 @@ class GraphQLMutationController(
                 this.receiptImageId = transactionInput.receiptImageId
             }
 
-        return when (val result = transactionService.update(transaction)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.transaction.update.success").increment()
-                logger.info("GraphQL - Updated transaction: {}", result.data.guid)
-                result.data
-            }
-
-            is ServiceResult.NotFound -> {
-                logger.warn("GraphQL - Transaction not found: {}", transaction.guid)
-                throw IllegalArgumentException("Transaction not found: ${transaction.guid}")
-            }
-
-            is ServiceResult.ValidationError -> {
-                logger.warn("GraphQL - Validation error updating transaction: {}", result.errors)
-                throw IllegalArgumentException("Validation failed: ${result.errors}")
-            }
-
-            is ServiceResult.BusinessError -> {
-                logger.warn("GraphQL - Business error updating transaction: {}", result.message)
-                throw IllegalStateException(result.message)
-            }
-
-            else -> {
-                throw RuntimeException("Failed to update transaction")
-            }
-        }
+        val data = transactionService.update(transaction).getOrThrow()
+        meterRegistry.counter("graphql.transaction.update.success").increment()
+        logger.info("GraphQL - Updated transaction: {}", data.guid)
+        return data
     }
 
     @MutationMapping
@@ -1190,16 +788,43 @@ class GraphQLMutationController(
         @Argument guid: String,
     ): Boolean {
         logger.info("GraphQL - Deleting transaction guid={}", guid)
-        return when (val result = transactionService.deleteById(guid)) {
-            is ServiceResult.Success -> {
-                meterRegistry.counter("graphql.transaction.delete.success").increment()
-                logger.info("GraphQL - Deleted transaction: {}", guid)
-                true
-            }
+        return handleDelete(
+            transactionService.deleteById(guid),
+            "graphql.transaction.delete.success",
+            "GraphQL - Deleted transaction: {}",
+            guid,
+        )
+    }
 
-            else -> {
-                false
-            }
+    private fun requireMedicalExpenseFields(input: MedicalExpenseInputDto) {
+        val checks =
+            listOf(
+                input.serviceDate to "serviceDate",
+                input.billedAmount to "billedAmount",
+                input.insuranceDiscount to "insuranceDiscount",
+                input.insurancePaid to "insurancePaid",
+                input.patientResponsibility to "patientResponsibility",
+                input.isOutOfNetwork to "isOutOfNetwork",
+                input.claimNumber to "claimNumber",
+                input.claimStatus to "claimStatus",
+                input.paidAmount to "paidAmount",
+            )
+        checks.forEach { (value, name) ->
+            if (value == null) throw IllegalArgumentException("$name is required")
         }
+    }
+
+    private fun handleDelete(
+        result: ServiceResult<*>,
+        metricName: String,
+        logMessage: String,
+        vararg logArgs: Any,
+    ): Boolean {
+        val deleted = result is ServiceResult.Success
+        if (deleted) {
+            meterRegistry.counter(metricName).increment()
+            logger.info(logMessage, *logArgs)
+        }
+        return deleted
     }
 }

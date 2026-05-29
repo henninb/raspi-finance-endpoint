@@ -492,7 +492,7 @@ class GraphQLMutationControllerSpec extends Specification {
 
         then:
         1 * mockPaymentService.save(_) >> ServiceResult.BusinessError.of("error", "ERR")
-        thrown(IllegalArgumentException)
+        thrown(IllegalStateException)
     }
 
     def "createPayment should throw when system error"() {
