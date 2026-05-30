@@ -494,10 +494,11 @@ class TransactionService
             startDate: LocalDate,
             targetAmount: BigDecimal,
             bonusAmount: BigDecimal,
+            windowDays: Long = 90,
         ): ServiceResult<BonusProgress> =
             handleServiceOperation("calculateBonusProgress", accountNameOwner) {
                 val owner = TenantContext.getCurrentOwner()
-                val windowEndDate = startDate.plusDays(89)
+                val windowEndDate = startDate.plusDays(windowDays - 1)
                 val today = LocalDate.now()
                 val spent = transactionRepository.sumSpendingInWindow(owner, accountNameOwner, startDate, windowEndDate)
                 val remaining = (targetAmount - spent).max(BigDecimal.ZERO)

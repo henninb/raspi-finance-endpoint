@@ -285,7 +285,8 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
             "AND t.accountNameOwner = :accountNameOwner " +
             "AND t.transactionDate >= :startDate " +
             "AND t.transactionDate <= :endDate " +
-            "AND t.activeStatus = true",
+            "AND t.activeStatus = true " +
+            "AND LOWER(t.category) != 'payment'",
     )
     fun sumSpendingInWindow(
         @Param("owner") owner: String,

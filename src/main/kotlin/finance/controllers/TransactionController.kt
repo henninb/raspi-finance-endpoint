@@ -274,5 +274,6 @@ class TransactionController(
         @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
         @RequestParam("targetAmount") targetAmount: BigDecimal,
         @RequestParam("bonusAmount") bonusAmount: BigDecimal,
-    ): ResponseEntity<BonusProgress> = transactionService.calculateBonusProgressStandardized(accountNameOwner, startDate, targetAmount, bonusAmount).toOkResponse()
+        @RequestParam("windowDays", defaultValue = "90") windowDays: Long,
+    ): ResponseEntity<BonusProgress> = transactionService.calculateBonusProgressStandardized(accountNameOwner, startDate, targetAmount, bonusAmount, windowDays).toOkResponse()
 }
