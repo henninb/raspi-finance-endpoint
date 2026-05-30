@@ -8,6 +8,7 @@ import java.time.LocalDate
 data class BonusProgress(
     val accountNameOwner: String,
     val spent: BigDecimal,
+    val spentPending: BigDecimal,
     val target: BigDecimal,
     val remaining: BigDecimal,
     val percentComplete: Double,

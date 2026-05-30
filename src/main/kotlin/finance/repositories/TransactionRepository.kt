@@ -286,6 +286,7 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
             "AND t.transactionDate >= :startDate " +
             "AND t.transactionDate <= :endDate " +
             "AND t.activeStatus = true " +
+            "AND t.transactionState = :transactionState " +
             "AND LOWER(t.category) != 'payment'",
     )
     fun sumSpendingInWindow(
@@ -293,5 +294,24 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         @Param("accountNameOwner") accountNameOwner: String,
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate,
+        @Param("transactionState") transactionState: TransactionState,
+    ): java.math.BigDecimal
+
+    @Query(
+        "SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "WHERE t.owner = :owner " +
+            "AND t.accountNameOwner = :accountNameOwner " +
+            "AND t.transactionDate >= :startDate " +
+            "AND t.transactionDate <= :endDate " +
+            "AND t.activeStatus = true " +
+            "AND t.transactionState IN :transactionStates " +
+            "AND LOWER(t.category) != 'payment'",
+    )
+    fun sumPendingSpendingInWindow(
+        @Param("owner") owner: String,
+        @Param("accountNameOwner") accountNameOwner: String,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate,
+        @Param("transactionStates") transactionStates: List<TransactionState>,
     ): java.math.BigDecimal
 }

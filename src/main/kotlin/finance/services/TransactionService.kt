@@ -500,7 +500,22 @@ class TransactionService
                 val owner = TenantContext.getCurrentOwner()
                 val windowEndDate = startDate.plusDays(windowDays - 1)
                 val today = LocalDate.now()
-                val spent = transactionRepository.sumSpendingInWindow(owner, accountNameOwner, startDate, windowEndDate)
+                val spent =
+                    transactionRepository.sumSpendingInWindow(
+                        owner,
+                        accountNameOwner,
+                        startDate,
+                        windowEndDate,
+                        TransactionState.Cleared,
+                    )
+                val spentPending =
+                    transactionRepository.sumPendingSpendingInWindow(
+                        owner,
+                        accountNameOwner,
+                        startDate,
+                        windowEndDate,
+                        listOf(TransactionState.Outstanding, TransactionState.Future),
+                    )
                 val remaining = (targetAmount - spent).max(BigDecimal.ZERO)
                 val percentComplete =
                     if (targetAmount > BigDecimal.ZERO) {
@@ -513,6 +528,7 @@ class TransactionService
                 BonusProgress(
                     accountNameOwner = accountNameOwner,
                     spent = spent,
+                    spentPending = spentPending,
                     target = targetAmount,
                     remaining = remaining,
                     percentComplete = Math.round(percentComplete * 10.0) / 10.0,
