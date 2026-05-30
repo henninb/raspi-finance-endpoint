@@ -278,4 +278,19 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
         @Param("oldDescription") oldDescription: String,
         @Param("newDescription") newDescription: String,
     ): Int
+
+    @Query(
+        "SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+            "WHERE t.owner = :owner " +
+            "AND t.accountNameOwner = :accountNameOwner " +
+            "AND t.transactionDate >= :startDate " +
+            "AND t.transactionDate <= :endDate " +
+            "AND t.activeStatus = true",
+    )
+    fun sumSpendingInWindow(
+        @Param("owner") owner: String,
+        @Param("accountNameOwner") accountNameOwner: String,
+        @Param("startDate") startDate: LocalDate,
+        @Param("endDate") endDate: LocalDate,
+    ): java.math.BigDecimal
 }

@@ -4,6 +4,7 @@ import finance.configurations.ResilienceComponents
 import finance.domain.Account
 import finance.domain.AccountType
 import finance.domain.AccountValidationException
+import finance.domain.BonusProgress
 import finance.domain.Category
 import finance.domain.Description
 import finance.domain.ImageFormatType
@@ -27,8 +28,10 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.Base64
 import java.util.UUID
 
@@ -485,6 +488,40 @@ class TransactionService
         // ===== Legacy Method Compatibility =====
 
         fun calculateActiveTotalsByAccountNameOwner(accountNameOwner: String): Totals = calculationService.calculateActiveTotalsByAccountNameOwner(accountNameOwner)
+
+        fun calculateBonusProgressStandardized(
+            accountNameOwner: String,
+            startDate: LocalDate,
+            targetAmount: BigDecimal,
+            bonusAmount: BigDecimal,
+        ): ServiceResult<BonusProgress> =
+            handleServiceOperation("calculateBonusProgress", accountNameOwner) {
+                val owner = TenantContext.getCurrentOwner()
+                val windowEndDate = startDate.plusDays(89)
+                val today = LocalDate.now()
+                val spent = transactionRepository.sumSpendingInWindow(owner, accountNameOwner, startDate, windowEndDate)
+                val remaining = (targetAmount - spent).max(BigDecimal.ZERO)
+                val percentComplete =
+                    if (targetAmount > BigDecimal.ZERO) {
+                        (spent.toDouble() / targetAmount.toDouble() * 100.0).coerceAtMost(100.0)
+                    } else {
+                        0.0
+                    }
+                val daysRemaining =
+                    if (today.isAfter(windowEndDate)) 0L else ChronoUnit.DAYS.between(today, windowEndDate)
+                BonusProgress(
+                    accountNameOwner = accountNameOwner,
+                    spent = spent,
+                    target = targetAmount,
+                    remaining = remaining,
+                    percentComplete = Math.round(percentComplete * 10.0) / 10.0,
+                    bonusAmount = bonusAmount,
+                    bonusEarned = spent >= targetAmount,
+                    windowStartDate = startDate,
+                    windowEndDate = windowEndDate,
+                    daysRemaining = daysRemaining,
+                )
+            }
 
         private fun masterTransactionUpdater(
             transactionFromDatabase: Transaction,

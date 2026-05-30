@@ -1,6 +1,7 @@
 package finance.controllers
 
 import finance.controllers.dto.TransactionAccountChangeInputDto
+import finance.domain.BonusProgress
 import finance.domain.ReceiptImage
 import finance.domain.ServiceResult
 import finance.domain.Totals
@@ -35,6 +36,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.util.Locale
 
 @Tag(name = "Transaction Management", description = "Operations for managing transactions")
@@ -256,4 +259,20 @@ class TransactionController(
     fun selectTransactionsByDescription(
         @PathVariable("description_name") descriptionName: String,
     ): ResponseEntity<List<Transaction>> = transactionService.findTransactionsByDescriptionStandardized(descriptionName).toListOkResponse()
+
+    @Operation(summary = "Get spending bonus progress for an account")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Bonus progress returned"),
+            ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            ApiResponse(responseCode = "500", description = "Internal server error"),
+        ],
+    )
+    @GetMapping("/account/bonus-progress/{accountNameOwner}", produces = ["application/json"])
+    fun getBonusProgress(
+        @PathVariable("accountNameOwner") accountNameOwner: String,
+        @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+        @RequestParam("targetAmount") targetAmount: BigDecimal,
+        @RequestParam("bonusAmount") bonusAmount: BigDecimal,
+    ): ResponseEntity<BonusProgress> = transactionService.calculateBonusProgressStandardized(accountNameOwner, startDate, targetAmount, bonusAmount).toOkResponse()
 }

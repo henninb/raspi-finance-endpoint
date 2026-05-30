@@ -104,7 +104,7 @@ class SecurityAuditFilter(
         val authentication = SecurityContextHolder.getContext().authentication
         val isAuthenticated = authentication?.isAuthenticated ?: false
         return AuditContext(
-            username = if (isAuthenticated) authentication?.name ?: "unknown" else "anonymous",
+            username = if (isAuthenticated) authentication.name ?: "unknown" else "anonymous",
             clientIp = IpAddressValidator.getClientIpAddress(request),
             userAgent = sanitizeUserAgent(request.getHeader("User-Agent")),
             isAuthenticated = isAuthenticated,
