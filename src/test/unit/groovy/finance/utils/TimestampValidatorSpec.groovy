@@ -2,8 +2,6 @@ package finance.utils
 
 import spock.lang.Specification
 import jakarta.validation.ConstraintValidatorContext
-import jakarta.validation.constraints.PastOrPresent
-import java.lang.annotation.Annotation
 import java.sql.Timestamp
 
 class TimestampValidatorSpec extends Specification {

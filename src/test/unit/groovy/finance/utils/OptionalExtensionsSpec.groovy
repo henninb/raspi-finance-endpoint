@@ -2,7 +2,6 @@ package finance.utils
 
 import jakarta.persistence.EntityNotFoundException
 import spock.lang.Specification
-import java.util.Optional
 
 class OptionalExtensionsSpec extends Specification {
 

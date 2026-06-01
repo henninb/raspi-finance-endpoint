@@ -6,7 +6,6 @@ import io.jsonwebtoken.security.Keys
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class JwtTokenServiceSpec extends Specification {
 
