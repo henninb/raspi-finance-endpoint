@@ -79,12 +79,47 @@ class DateValidatorSpec extends Specification {
         result == true
     }
 
-    def "isValid - returns true for future dates"() {
+    def "isValid - returns true for future dates within 50-year window"() {
         given:
         def futureDate = LocalDate.parse("2030-12-31")
 
         when:
         def result = dateValidator.isValid(futureDate, contextMock)
+
+        then:
+        result == true
+    }
+
+    // #9: upper-bound tests — dates beyond 50 years from now must be rejected
+    def "isValid - returns false for date more than 50 years in the future"() {
+        given:
+        def farFuture = LocalDate.now().plusYears(51)
+
+        when:
+        def result = dateValidator.isValid(farFuture, contextMock)
+
+        then:
+        result == false
+    }
+
+    def "isValid - returns false for date exactly 50 years from now"() {
+        given:
+        // plusYears(50) is NOT before itself, so isBefore(maxDate) == false
+        def boundaryDate = LocalDate.now().plusYears(50)
+
+        when:
+        def result = dateValidator.isValid(boundaryDate, contextMock)
+
+        then:
+        result == false
+    }
+
+    def "isValid - returns true for date one day before the 50-year boundary"() {
+        given:
+        def nearBoundary = LocalDate.now().plusYears(50).minusDays(1)
+
+        when:
+        def result = dateValidator.isValid(nearBoundary, contextMock)
 
         then:
         result == true

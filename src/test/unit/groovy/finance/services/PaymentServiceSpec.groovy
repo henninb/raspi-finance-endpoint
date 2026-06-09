@@ -736,7 +736,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "save should return ValidationError when source transaction validation fails"() {
+    def "save should return ValidationError when source transaction validation fails and compensates destination"() {
         given:
         def payment = PaymentBuilder.builder()
             .withGuidSource(null)
@@ -757,14 +757,15 @@ class PaymentServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(payment) >> noViolations
         1 * accountServiceMock.account("creditcard_dest") >> Optional.of(destAccount)
         1 * accountServiceMock.account("checking_src") >> Optional.of(srcAccount)
-        // First save (destination) succeeds, second (source) fails with ValidationError
+        // Destination succeeds, source fails with ValidationError
         1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
         1 * transactionServiceMock.save(_) >> new ServiceResult.ValidationError(["field": "bad"])
+        // #1: compensation — destination transaction must be deleted to prevent orphan
+        1 * transactionServiceMock.deleteByIdInternal("dest-guid") >> new ServiceResult.Success(true)
         result instanceof ServiceResult.ValidationError
-        0 * _
     }
 
-    def "save should return BusinessError when source transaction has business error"() {
+    def "save should return BusinessError when source transaction has business error and compensates destination"() {
         given:
         def payment = PaymentBuilder.builder()
             .withGuidSource(null)
@@ -788,11 +789,12 @@ class PaymentServiceSpec extends BaseServiceSpec {
         // Destination succeeds, source fails with BusinessError
         1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
         1 * transactionServiceMock.save(_) >> new ServiceResult.BusinessError("conflict", "DATA_INTEGRITY_VIOLATION")
+        // #1: compensation
+        1 * transactionServiceMock.deleteByIdInternal("dest-guid") >> new ServiceResult.Success(true)
         result instanceof ServiceResult.BusinessError
-        0 * _
     }
 
-    def "save should return SystemError when source transaction has system error"() {
+    def "save should return SystemError when source transaction has system error and compensates destination"() {
         given:
         def payment = PaymentBuilder.builder()
             .withGuidSource(null)
@@ -816,8 +818,9 @@ class PaymentServiceSpec extends BaseServiceSpec {
         // Destination succeeds, source fails with SystemError
         1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
         1 * transactionServiceMock.save(_) >> new ServiceResult.SystemError(new RuntimeException("db down"))
+        // #1: compensation
+        1 * transactionServiceMock.deleteByIdInternal("dest-guid") >> new ServiceResult.Success(true)
         result instanceof ServiceResult.SystemError
-        0 * _
     }
 
     def "updatePayment should throw RuntimeException when update returns ValidationError"() {
@@ -872,6 +875,125 @@ class PaymentServiceSpec extends BaseServiceSpec {
         }
         def ex = thrown(RuntimeException)
         ex.message == "connection lost"
+    }
+
+    // ===== #7: GUID partial state =====
+
+    def "save should return BusinessError when only guidSource is set (partial GUID state)"() {
+        given: "a payment with guidSource set but guidDestination absent"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource("only-source-guid")
+            .withGuidDestination(null)
+            .build()
+        def noViolations = [] as Set
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("partial GUID")
+        0 * _
+    }
+
+    def "save should return BusinessError when only guidDestination is set (partial GUID state)"() {
+        given: "a payment with guidDestination set but guidSource absent"
+        def payment = PaymentBuilder.builder()
+            .withGuidSource(null)
+            .withGuidDestination("only-dest-guid")
+            .build()
+        def noViolations = [] as Set
+
+        when:
+        def result = standardizedPaymentService.save(payment)
+
+        then:
+        1 * validatorMock.validate(payment) >> noViolations
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("partial GUID")
+        0 * _
+    }
+
+    // ===== #3: Account-type validation on update =====
+
+    def "update should return BusinessError when new account type combination is UNDEFINED"() {
+        given: "existing payment; update changes destination to a Utility (expense) account"
+        def existingPayment = PaymentBuilder.builder()
+            .withPaymentId(50L)
+            .withSourceAccount("checking_brian")
+            .withDestinationAccount("visa_brian")
+            .build()
+        def updatedPayment = PaymentBuilder.builder()
+            .withPaymentId(50L)
+            .withSourceAccount("checking_brian")
+            .withDestinationAccount("utility_account")  // expense type → UNDEFINED behavior
+            .build()
+        def srcAccount = new Account(accountType: AccountType.Checking)
+        def utilityAccount = new Account(accountType: AccountType.Utility)
+
+        when:
+        def result = standardizedPaymentService.update(updatedPayment)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 50L) >> Optional.of(existingPayment)
+        1 * accountServiceMock.account("checking_brian") >> Optional.of(srcAccount)
+        1 * accountServiceMock.account("utility_account") >> Optional.of(utilityAccount)
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("unsupported account type")
+        0 * _
+    }
+
+    def "update should return BusinessError when updated source account does not exist"() {
+        given: "existing payment; update changes source to an account that doesn't exist"
+        def existingPayment = PaymentBuilder.builder()
+            .withPaymentId(51L)
+            .withSourceAccount("checking_brian")
+            .withDestinationAccount("visa_brian")
+            .build()
+        def updatedPayment = PaymentBuilder.builder()
+            .withPaymentId(51L)
+            .withSourceAccount("new_account")
+            .withDestinationAccount("visa_brian")
+            .build()
+
+        when:
+        def result = standardizedPaymentService.update(updatedPayment)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 51L) >> Optional.of(existingPayment)
+        1 * accountServiceMock.account("new_account") >> Optional.empty()
+        1 * accountServiceMock.account("visa_brian") >> Optional.of(new Account(accountType: AccountType.CreditCard))
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("accounts not found")
+        0 * _
+    }
+
+    def "update should skip account-type check when accounts are unchanged"() {
+        given: "existing payment; update only changes amount (accounts unchanged)"
+        def existingPayment = PaymentBuilder.builder()
+            .withPaymentId(52L)
+            .withSourceAccount("source_brian")
+            .withDestinationAccount("dest_brian")
+            .withAmount(new BigDecimal("100.00"))
+            .build()
+        def updatedPayment = PaymentBuilder.builder()
+            .withPaymentId(52L)
+            .withSourceAccount("source_brian")
+            .withDestinationAccount("dest_brian")
+            .withAmount(new BigDecimal("150.00"))
+            .build()
+
+        when:
+        def result = standardizedPaymentService.update(updatedPayment)
+
+        then:
+        1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 52L) >> Optional.of(existingPayment)
+        // No accountServiceMock calls — accounts unchanged so check is skipped
+        0 * accountServiceMock.account(_)
+        1 * validatorMock.validate(_ as Payment) >> ([] as Set)
+        1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment p -> p }
+        result instanceof ServiceResult.Success
     }
 
     def "deleteById should log warning when destination transaction is not found"() {
@@ -1019,7 +1141,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
-    def "save should return SystemError when source transaction returns NotFound"() {
+    def "save should return SystemError when source transaction returns NotFound and compensates destination"() {
         given: "BILL_PAYMENT: source=Checking(asset) -> dest=CreditCard(liability)"
         def payment = PaymentBuilder.builder()
             .withGuidSource(null)
@@ -1042,7 +1164,8 @@ class PaymentServiceSpec extends BaseServiceSpec {
         1 * accountServiceMock.account("checking_src2") >> Optional.of(srcAccount)
         1 * transactionServiceMock.save(_) >> ServiceResult.Success.of(destTx)
         1 * transactionServiceMock.save(_) >> new ServiceResult.NotFound("not found")
+        // #1: compensation
+        1 * transactionServiceMock.deleteByIdInternal("dest-guid") >> new ServiceResult.Success(true)
         result instanceof ServiceResult.SystemError
-        0 * _
     }
 }

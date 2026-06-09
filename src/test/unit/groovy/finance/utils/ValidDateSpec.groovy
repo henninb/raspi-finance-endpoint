@@ -16,7 +16,7 @@ class ValidDateSpec extends Specification {
 
         then:
         annotation != null
-        annotation.message() == "date must be greater than 1/1/2000."
+        annotation.message() == "date must be after 1/1/2000 and no more than 50 years in the future."
         annotation.groups().length == 0
         annotation.payload().length == 0
     }

@@ -59,6 +59,8 @@ class PaymentService
         override fun save(entity: Payment): ServiceResult<Payment> =
             handleServiceOperation("save", entity.paymentId) {
                 val owner = TenantContext.getCurrentOwner()
+                // #10: owner must be populated before we write any data
+                check(owner.isNotBlank()) { "Tenant owner context is empty — cannot save payment" }
                 entity.owner = owner
 
                 if (entity.sourceAccount == entity.destinationAccount) {
@@ -70,9 +72,17 @@ class PaymentService
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
                 }
 
+                // #7: GUIDs must be all-present or all-absent; a partial state means the
+                // linked transactions are out of sync with this payment record.
+                val hasGuidSource = !entity.guidSource.isNullOrBlank()
+                val hasGuidDest = !entity.guidDestination.isNullOrBlank()
+                check(hasGuidSource == hasGuidDest) {
+                    "guidSource and guidDestination must both be set or both be absent — partial GUID state detected"
+                }
+
                 // If GUIDs are not set, we need to create transactions first
                 // This prevents foreign key constraint violations
-                if (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank()) {
+                if (!hasGuidSource && !hasGuidDest) {
                     logger.info("Creating transactions for payment: ${entity.sourceAccount} -> ${entity.destinationAccount}")
 
                     // Fail fast if either account does not exist — auto-creating with a wrong type
@@ -121,7 +131,8 @@ class PaymentService
                         }
                     }
 
-                    // Create source transaction
+                    // #1: Create source transaction; compensate by deleting the destination
+                    // transaction if source creation fails so we don't leave an orphan.
                     val transactionSource = buildSourceTransaction(entity, entity.sourceAccount, sourceAccount.accountType, behavior)
                     val sourceResult = transactionService.save(transactionSource)
                     when (sourceResult) {
@@ -131,18 +142,22 @@ class PaymentService
                         }
 
                         is ServiceResult.ValidationError -> {
+                            compensateDestinationTransaction(entity)
                             throw jakarta.validation.ConstraintViolationException("Source transaction validation failed: ${sourceResult.errors}", emptySet())
                         }
 
                         is ServiceResult.BusinessError -> {
+                            compensateDestinationTransaction(entity)
                             throw org.springframework.dao.DataIntegrityViolationException("Source transaction business error: ${sourceResult.message}")
                         }
 
                         is ServiceResult.NotFound -> {
+                            compensateDestinationTransaction(entity)
                             throw RuntimeException("Unexpected not-found saving source transaction: ${sourceResult.message}")
                         }
 
                         is ServiceResult.SystemError -> {
+                            compensateDestinationTransaction(entity)
                             throw sourceResult.exception
                         }
                     }
@@ -159,12 +174,38 @@ class PaymentService
         override fun update(entity: Payment): ServiceResult<Payment> =
             handleServiceOperation("update", entity.paymentId) {
                 val owner = TenantContext.getCurrentOwner()
+                // #10: owner must be present before we touch any data
+                check(owner.isNotBlank()) { "Tenant owner context is empty — cannot update payment" }
+
                 val existingPayment = paymentRepository.findByOwnerAndPaymentId(owner, entity.paymentId)
                 if (existingPayment.isEmpty) {
                     throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
                 }
 
                 val paymentToUpdate = existingPayment.get()
+
+                // #3: If either account is being changed, verify the new combination still
+                // maps to a supported PaymentBehavior before we commit the update.
+                if (entity.sourceAccount != paymentToUpdate.sourceAccount ||
+                    entity.destinationAccount != paymentToUpdate.destinationAccount
+                ) {
+                    val srcOpt = accountService.account(entity.sourceAccount)
+                    val dstOpt = accountService.account(entity.destinationAccount)
+                    if (srcOpt.isEmpty || dstOpt.isEmpty) {
+                        throw IllegalStateException(
+                            "Cannot update payment: one or both accounts not found " +
+                                "(source=${entity.sourceAccount}, destination=${entity.destinationAccount})",
+                        )
+                    }
+                    val behavior = PaymentBehavior.inferBehavior(srcOpt.get().accountType, dstOpt.get().accountType)
+                    if (behavior == PaymentBehavior.UNDEFINED) {
+                        throw IllegalStateException(
+                            "Cannot update payment: unsupported account type combination " +
+                                "${srcOpt.get().accountType} -> ${dstOpt.get().accountType}",
+                        )
+                    }
+                }
+
                 paymentToUpdate.sourceAccount = entity.sourceAccount
                 paymentToUpdate.destinationAccount = entity.destinationAccount
                 paymentToUpdate.amount = entity.amount
@@ -186,6 +227,8 @@ class PaymentService
         override fun deleteById(id: Long): ServiceResult<Payment> =
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
+                // #10: owner must be present before we touch any data
+                check(owner.isNotBlank()) { "Tenant owner context is empty — cannot delete payment" }
                 val optionalPayment = paymentRepository.findByOwnerAndPaymentId(owner, id)
                 if (optionalPayment.isEmpty) {
                     throw jakarta.persistence.EntityNotFoundException("Payment not found: $id")
@@ -223,6 +266,23 @@ class PaymentService
                 val owner = TenantContext.getCurrentOwner()
                 paymentRepository.findByOwnerAndActiveStatusOrderByTransactionDateDesc(owner, true, pageable)
             }
+
+        /**
+         * #1: Compensation helper — deletes an already-persisted destination transaction
+         * when source transaction creation fails, preventing orphaned records.
+         */
+        private fun compensateDestinationTransaction(payment: Payment) {
+            val guid = payment.guidDestination
+            if (!guid.isNullOrBlank()) {
+                logger.warn("Compensating: deleting orphaned destination transaction $guid due to source creation failure")
+                try {
+                    transactionService.deleteByIdInternal(guid)
+                } catch (e: Exception) {
+                    logger.error("Compensation failed: could not delete orphaned destination transaction $guid", e)
+                }
+                payment.guidDestination = null
+            }
+        }
 
         /**
          * Delete transactions associated with a payment (cascade delete helper)

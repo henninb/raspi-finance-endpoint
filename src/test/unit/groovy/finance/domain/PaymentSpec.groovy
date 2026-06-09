@@ -7,6 +7,7 @@ import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
 import java.time.LocalDate
 
+import static finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import static finance.utils.Constants.FIELD_MUST_BE_UUID_MESSAGE
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
 
@@ -85,10 +86,17 @@ class PaymentSpec extends BaseDomainSpec {
         violations.iterator().next().invalidValue == payment.properties[invalidField]
 
         where:
-        invalidField      | sourceAccount | destinationAccount | transactionDate             | amount | guidDestination              | guidSource                   | expectedError                                 | errorCount
-        'sourceAccount'   | 'a_'          | 'dest_test'        | LocalDate.parse('2020-10-15') | 0.0    | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
-        'guidDestination' | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-16') | 0.0    | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
-        'guidSource'      | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-17') | 0.0    | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        invalidField      | sourceAccount | destinationAccount | transactionDate               | amount      | guidDestination              | guidSource                   | expectedError                                 | errorCount
+        // Use amount=5.00 for non-amount tests so @DecimalMin doesn't add a second violation
+        'sourceAccount'   | 'a_'          | 'dest_test'        | LocalDate.parse('2020-10-15') | 5.00        | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE | 1
+        'guidDestination' | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-16') | 5.00        | 'invalid'                    | UUID.randomUUID().toString() | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        'guidSource'      | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-17') | 5.00        | UUID.randomUUID().toString() | 'invalid'                    | FIELD_MUST_BE_UUID_MESSAGE                    | 1
+        // #4: amount exactly 0.00 — violates @DecimalMin("0.01")
+        'amount'          | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-18') | 0.00        | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 'amount must be at least 0.01'                | 1
+        // #5: negative amount — violates @DecimalMin("0.01")
+        'amount'          | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-19') | -1.00       | UUID.randomUUID().toString() | UUID.randomUUID().toString() | 'amount must be at least 0.01'                | 1
+        // #6: 7 integer digits — violates @Digits(integer=6) which mirrors DB NUMERIC(8,2)
+        'amount'          | 'src_test'    | 'dest_test'        | LocalDate.parse('2020-10-20') | 1000000.00  | UUID.randomUUID().toString() | UUID.randomUUID().toString() | FIELD_MUST_BE_A_CURRENCY_MESSAGE              | 1
     }
 
     def "test equals and hashCode"() {
