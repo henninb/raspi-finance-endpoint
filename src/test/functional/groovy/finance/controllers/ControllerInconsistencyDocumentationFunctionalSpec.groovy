@@ -22,8 +22,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         def throwsNotFound = [
             'AccountController': '/select/active throws 404 when no accounts',
             'CategoryController': '/select/active throws 404 when no categories',
-            'ParameterController': '/select/active throws 404 when no parameters',
-            'PendingTransactionController': '/all throws 404 when no pending transactions'
+            'ParameterController': '/select/active throws 404 when no parameters'
         ]
 
         def returnsEmptyList = [
@@ -53,7 +52,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         'ParameterController'           | 'parameters() - simple plural'
         'PaymentController'             | 'selectAllPayments() - verbose descriptive'
         'DescriptionController'         | 'selectAllDescriptions() - verbose descriptive'
-        'PendingTransactionController'  | 'getAllPendingTransactions() - verbose with "get"'
         'TransactionController'         | 'selectByAccountNameOwner() - complex descriptive'
     }
 
@@ -71,7 +69,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         'DescriptionController'         | '@PathVariable("description_name") snake_case annotation'
         'ParameterController'           | '@PathVariable("parameter_name") snake_case annotation'
         'PaymentController'             | 'paymentId (camelCase, no annotation)'
-        'PendingTransactionController'  | 'id (camelCase, no annotation)'
         'TransactionController'         | 'guid, accountNameOwner (camelCase, no annotation)'
     }
 
@@ -89,7 +86,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         'DescriptionController'         | 'Description entity for updates'
         'ParameterController'           | 'Parameter entity for updates'
         'PaymentController'             | 'Payment entity for updates'
-        'PendingTransactionController'  | 'PendingTransaction entity for operations'
         'TransactionController'         | 'Transaction entity for updates'
     }
 
@@ -106,12 +102,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
             'PaymentController': '201 CREATED'
         ]
 
-        def okStatus = [
-            'PendingTransactionController': '200 OK (unique)'
-        ]
-
         createdStatus.size() > 0
-        okStatus.size() > 0
     }
 
     void 'should document HTTP status code inconsistencies for delete operations'() {
@@ -125,12 +116,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
             'PaymentController': '200 OK with deleted entity'
         ]
 
-        def noContent = [
-            'PendingTransactionController': '204 NO_CONTENT with empty body (unique)'
-        ]
-
         okWithEntity.size() > 0
-        noContent.size() > 0
     }
 
     void 'should document error status code inconsistencies for not found scenarios'() {
@@ -145,12 +131,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
             'TransactionController': '404 NOT_FOUND for entity not found'
         ]
 
-        def badRequest = [
-            'PendingTransactionController': '400 BAD_REQUEST for delete failures (unique)'
-        ]
-
         notFound.size() > 0
-        badRequest.size() > 0
     }
 
     // Exception Handling Complexity Inconsistencies
@@ -168,7 +149,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         'ParameterController'           | 'MEDIUM - specific exceptions but limited'
         'PaymentController'             | 'MEDIUM - specific exceptions with unique RSE handling'
         'TransactionController'         | 'LOW - mostly generic exception handling'
-        'PendingTransactionController'  | 'LOWEST - only generic exception handling'
     }
 
     // Endpoint Pattern Inconsistencies
@@ -185,7 +165,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         'DescriptionController'         | '/select/active, /select/{id}, /merge with JSON body'
         'ParameterController'           | '/select/active, /select/{id} (most standard CRUD)'
         'PaymentController'             | '/select (no active), /update/{id}, /delete/{id}'
-        'PendingTransactionController'  | '/all (unique), /insert, /delete/{id}, /delete/all'
         'TransactionController'         | '/account/select/{account}, /account/totals/{account}, /select/{guid}, /state/update/{guid}/{state}'
     }
 
@@ -195,8 +174,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         expect: 'Controllers integrate business logic to different degrees'
 
         def minimalBusinessLogic = [
-            'ParameterController': 'Simple CRUD operations only',
-            'PendingTransactionController': 'Basic insert/delete operations'
+            'ParameterController': 'Simple CRUD operations only'
         ]
 
         def moderateBusinessLogic = [
@@ -225,8 +203,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
             'CategoryController': 'CategoryService only',
             'DescriptionController': 'DescriptionService only',
             'ParameterController': 'ParameterService only',
-            'PaymentController': 'PaymentService only',
-            'PendingTransactionController': 'PendingTransactionService only'
+            'PaymentController': 'PaymentService only'
         ]
 
         def multiServiceIntegration = [
@@ -251,7 +228,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         'DescriptionController'         | 'String descriptionName (business key)'
         'ParameterController'           | 'String parameterName (business key)'
         'PaymentController'             | 'Long paymentId (database key)'
-        'PendingTransactionController'  | 'Long id (database key)'
         'TransactionController'         | 'String guid UUID (generated key)'
     }
 
@@ -272,8 +248,7 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         ]
 
         def complexRESTful = [
-            'TransactionController': 'Hierarchical URLs with business logic integration',
-            'PendingTransactionController': 'Simple endpoints but non-standard patterns'
+            'TransactionController': 'Hierarchical URLs with business logic integration'
         ]
 
         standardRESTful.size() > 0
@@ -298,7 +273,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         def noMergeOperation = [
             'PaymentController': 'No merge operations',
             'ParameterController': 'No merge operations',
-            'PendingTransactionController': 'No merge operations',
             'TransactionController': 'No merge operations'
         ]
 
@@ -321,13 +295,8 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
             'TransactionController': 'Totals object for /account/totals endpoint'
         ]
 
-        def noContentResponses = [
-            'PendingTransactionController': '204 NO_CONTENT for delete operations (unique)'
-        ]
-
         entityResponses.size() > 0
         specializedResponses.size() > 0
-        noContentResponses.size() > 0
     }
 
     // Documentation and Logging Inconsistencies
@@ -347,13 +316,8 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
             'ParameterController': 'Standard CRUD logging'
         ]
 
-        def minimalLogging = [
-            'PendingTransactionController': 'Minimal logging in exception handling'
-        ]
-
         comprehensiveLogging.size() > 0
         basicLogging.size() > 0
-        minimalLogging.size() > 0
     }
 
     // Validation Pattern Inconsistencies
@@ -373,7 +337,6 @@ class ControllerInconsistencyDocumentationFunctionalSpec extends Specification {
         ]
 
         def minimalValidation = [
-            'PendingTransactionController': 'Minimal validation with generic error handling',
             'TransactionController': 'Basic validation with generic exceptions'
         ]
 

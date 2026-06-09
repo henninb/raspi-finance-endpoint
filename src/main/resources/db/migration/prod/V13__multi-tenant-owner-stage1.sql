@@ -16,7 +16,6 @@ UPDATE public.t_payment SET owner = 'henninb' WHERE owner IS NULL;
 UPDATE public.t_transfer SET owner = 'henninb' WHERE owner IS NULL;
 UPDATE public.t_validation_amount SET owner = 'henninb' WHERE owner IS NULL;
 UPDATE public.t_receipt_image SET owner = 'henninb' WHERE owner IS NULL;
-UPDATE public.t_pending_transaction SET owner = 'henninb' WHERE owner IS NULL;
 UPDATE public.t_parameter SET owner = 'henninb' WHERE owner IS NULL;
 UPDATE public.t_transaction_categories SET owner = 'henninb' WHERE owner IS NULL;
 
@@ -37,7 +36,6 @@ CREATE INDEX IF NOT EXISTS idx_payment_owner ON public.t_payment(owner);
 CREATE INDEX IF NOT EXISTS idx_transfer_owner ON public.t_transfer(owner);
 CREATE INDEX IF NOT EXISTS idx_validation_amount_owner ON public.t_validation_amount(owner);
 CREATE INDEX IF NOT EXISTS idx_receipt_image_owner ON public.t_receipt_image(owner);
-CREATE INDEX IF NOT EXISTS idx_pending_transaction_owner ON public.t_pending_transaction(owner);
 CREATE INDEX IF NOT EXISTS idx_parameter_owner ON public.t_parameter(owner);
 CREATE INDEX IF NOT EXISTS idx_transaction_categories_owner ON public.t_transaction_categories(owner);
 CREATE INDEX IF NOT EXISTS idx_medical_expense_owner ON public.t_medical_expense(owner);
@@ -73,9 +71,5 @@ ALTER TABLE public.t_transfer
 -- t_parameter: existing parameter_name UNIQUE
 ALTER TABLE public.t_parameter
     ADD CONSTRAINT unique_owner_parameter_name UNIQUE (owner, parameter_name);
-
--- t_pending_transaction: existing unique_pending_transaction_fields(account_name_owner, transaction_date, description, amount)
-ALTER TABLE public.t_pending_transaction
-    ADD CONSTRAINT unique_owner_pending_transaction UNIQUE (owner, account_name_owner, transaction_date, description, amount);
 
 COMMIT;

@@ -96,10 +96,6 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_amount
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_due_date 
     ON public.t_transaction(due_date) WHERE due_date IS NOT NULL AND active_status = true;
 
--- Pending transaction processing
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pending_transaction_status_date 
-    ON public.t_pending_transaction(review_status, transaction_date);
-
 -- Account type filtering
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transaction_account_type 
     ON public.t_transaction(account_type);

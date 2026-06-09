@@ -466,8 +466,7 @@ class CategoryControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         // 1. DescriptionController (similar complexity)
         // 2. PaymentController (moderate complexity)
         // 3. AccountController (high complexity - business logic separation)
-        // 4. PendingTransactionController (unique patterns)
-        // 5. TransactionController (most complex - hierarchical endpoints)
+        // 4. TransactionController (most complex - hierarchical endpoints)
 
         standardizationAspects.size() == 10
 

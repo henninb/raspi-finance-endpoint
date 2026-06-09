@@ -231,26 +231,6 @@ CREATE INDEX IF NOT EXISTS idx_transaction_active_status ON public.t_transaction
 CREATE INDEX IF NOT EXISTS idx_transaction_date ON public.t_transaction(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_transaction_transaction_state ON public.t_transaction(transaction_state);
 
---------------------------
--- Pending Transaction  --
---------------------------
-CREATE TABLE IF NOT EXISTS public.t_pending_transaction
-(
-    pending_transaction_id BIGSERIAL PRIMARY KEY,
-    account_name_owner     TEXT                              NOT NULL,
-    transaction_date       DATE                              NOT NULL,
-    description            TEXT                              NOT NULL,
-    amount                 NUMERIC(12, 2) DEFAULT 0.00       NOT NULL,
-    review_status          TEXT          DEFAULT 'pending'   NOT NULL,
-    owner                  TEXT                              NOT NULL,
-    date_added             TIMESTAMP     DEFAULT now()       NOT NULL,
-    CONSTRAINT unique_owner_pending_transaction UNIQUE (owner, account_name_owner, transaction_date, description, amount),
-    CONSTRAINT fk_pending_account FOREIGN KEY (owner, account_name_owner) REFERENCES public.t_account (owner, account_name_owner) ON UPDATE CASCADE,
-    CONSTRAINT ck_review_status CHECK (review_status IN ('pending', 'approved', 'rejected'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_pending_transaction_owner ON public.t_pending_transaction(owner);
-
 -------------
 -- Payment --
 -------------

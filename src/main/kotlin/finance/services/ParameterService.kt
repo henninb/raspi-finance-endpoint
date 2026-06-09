@@ -43,6 +43,7 @@ class ParameterService
         override fun update(entity: Parameter): ServiceResult<Parameter> =
             handleServiceOperation("update", entity.parameterId) {
                 val owner = TenantContext.getCurrentOwner()
+                validateOrThrow(entity)
                 val parameterToUpdate =
                     parameterRepository
                         .findByOwnerAndParameterId(owner, entity.parameterId)

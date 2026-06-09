@@ -49,7 +49,7 @@ abstract class CrudBaseService<T, ID>
                 logger.info("Successfully completed $operation for ${getEntityName()}: $entityId")
                 ServiceResult.Success.of(result)
             } catch (ex: EntityNotFoundException) {
-                val message = "${getEntityName()} not found: $entityId"
+                val message = ex.message ?: "${getEntityName()} not found: $entityId"
                 logger.warn(message, ex)
                 ServiceResult.NotFound.of(message)
             } catch (ex: ConstraintViolationException) {

@@ -25,7 +25,6 @@ class ControllerPatternFunctionalSpec extends Specification {
             'DescriptionController',
             'PaymentController',
             'ParameterController',
-            'PendingTransactionController',
             'TransactionController'
         ]
 
@@ -93,7 +92,6 @@ class ControllerPatternFunctionalSpec extends Specification {
         // AccountController.findAllActive() -> returns [] instead of throwing 404
         // CategoryController.findAllActive() -> returns [] instead of throwing 404
         // ParameterController.findAllActive() -> returns [] instead of throwing 404
-        // PendingTransactionController.findAllActive() -> returns [] instead of throwing 404
         standardizedEmptyBehavior.size() == 3
     }
 
@@ -274,7 +272,6 @@ class ControllerPatternFunctionalSpec extends Specification {
             'DescriptionController': 'MODERATE - needs method naming and parameter naming standardization',
             'PaymentController': 'MODERATE - needs method naming and parameter standardization',
             'AccountController': 'COMPLEX - needs request body standardization and business logic separation',
-            'PendingTransactionController': 'COMPLEX - needs comprehensive standardization',
             'TransactionController': 'MOST COMPLEX - needs hierarchical endpoint reorganization'
         ]
 

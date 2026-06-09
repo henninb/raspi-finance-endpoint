@@ -187,7 +187,7 @@ class ParameterControllerSpec extends Specification {
         response.body == null
     }
 
-    def "update returns 200 when parameter exists"() {
+    def "update returns 200 when parameter exists and preserves owner"() {
         given:
         Parameter existing = param(7L, "epsilon", "old")
         Parameter patch = param(7L, "epsilon", "new")
@@ -204,6 +204,24 @@ class ParameterControllerSpec extends Specification {
         then:
         response.statusCode == HttpStatus.OK
         (response.body as Parameter).parameterValue == "new"
+        (response.body as Parameter).owner == TEST_OWNER
+    }
+
+    def "update ignores body parameterName and uses path variable"() {
+        given: "body has a different parameterName than the path variable"
+        Parameter existing = param(7L, "epsilon", "old")
+        Parameter patch = param(7L, "different-name", "new")
+        and:
+        parameterRepository.findByOwnerAndParameterName(TEST_OWNER, "epsilon") >> Optional.of(existing)
+        parameterRepository.findByOwnerAndParameterId(TEST_OWNER, 7L) >> Optional.of(existing)
+        parameterRepository.saveAndFlush(_ as Parameter) >> { Parameter p -> p }
+
+        when:
+        ResponseEntity<?> response = controller.update("epsilon", patch)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        (response.body as Parameter).parameterName == "epsilon"
     }
 
     def "update returns 404 when parameter missing"() {

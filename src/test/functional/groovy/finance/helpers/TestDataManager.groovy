@@ -392,10 +392,6 @@ class TestDataManager {
         safeUpdate("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
         safeUpdate("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${clean}")
 
-        // Delete pending transactions (FK constraint requires this before deleting accounts)
-        safeUpdate("DELETE FROM func.t_pending_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_pending_transaction WHERE account_name_owner LIKE ?", "%${clean}")
-
         // Delete test-specific validation amounts (FK constraint requires this before deleting accounts)
         safeUpdate("DELETE FROM func.t_validation_amount WHERE account_id IN (SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
         safeUpdate("DELETE FROM func.t_validation_amount WHERE account_id IN (SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${clean}")

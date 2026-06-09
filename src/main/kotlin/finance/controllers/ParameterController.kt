@@ -87,6 +87,7 @@ class ParameterController(
         val updatedParameter =
             Parameter(
                 parameterId = existsResult.data.parameterId,
+                owner = existsResult.data.owner,
                 parameterName = id,
                 parameterValue = entity.parameterValue,
                 activeStatus = entity.activeStatus,

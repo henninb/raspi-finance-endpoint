@@ -437,8 +437,7 @@ class ParameterControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         // 2. DescriptionController (similar complexity)
         // 3. PaymentController (moderate complexity)
         // 4. AccountController (high complexity - business logic separation)
-        // 5. PendingTransactionController (unique patterns)
-        // 6. TransactionController (most complex - hierarchical endpoints)
+        // 5. TransactionController (most complex - hierarchical endpoints)
 
         standardizationAspects.size() == 10
 

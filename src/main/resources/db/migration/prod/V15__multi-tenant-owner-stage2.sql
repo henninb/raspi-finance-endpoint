@@ -18,7 +18,6 @@ UPDATE public.t_payment SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR o
 UPDATE public.t_transfer SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
 UPDATE public.t_validation_amount SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
 UPDATE public.t_receipt_image SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
-UPDATE public.t_pending_transaction SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
 UPDATE public.t_parameter SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
 UPDATE public.t_transaction_categories SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
 UPDATE public.t_medical_expense SET owner = 'henninb@gmail.com' WHERE owner IS NULL OR owner = '';
@@ -34,7 +33,6 @@ ALTER TABLE public.t_payment ALTER COLUMN owner SET NOT NULL;
 ALTER TABLE public.t_transfer ALTER COLUMN owner SET NOT NULL;
 ALTER TABLE public.t_validation_amount ALTER COLUMN owner SET NOT NULL;
 ALTER TABLE public.t_receipt_image ALTER COLUMN owner SET NOT NULL;
-ALTER TABLE public.t_pending_transaction ALTER COLUMN owner SET NOT NULL;
 ALTER TABLE public.t_parameter ALTER COLUMN owner SET NOT NULL;
 ALTER TABLE public.t_transaction_categories ALTER COLUMN owner SET NOT NULL;
 ALTER TABLE public.t_medical_expense ALTER COLUMN owner SET NOT NULL;
@@ -42,7 +40,7 @@ ALTER TABLE public.t_medical_expense ALTER COLUMN owner SET NOT NULL;
 -----------------------------------------------
 -- 2. Add compound unique constraints for FKs
 -----------------------------------------------
--- t_account needs (owner, account_name_owner) for FKs from payment, transfer, pending_transaction
+-- t_account needs (owner, account_name_owner) for FKs from payment, transfer
 ALTER TABLE public.t_account
     ADD CONSTRAINT unique_owner_account_name_owner UNIQUE (owner, account_name_owner);
 
@@ -102,12 +100,6 @@ ALTER TABLE public.t_transaction
     ADD CONSTRAINT fk_account_id_account_name_owner FOREIGN KEY (owner, account_id, account_name_owner, account_type)
         REFERENCES public.t_account (owner, account_id, account_name_owner, account_type) ON UPDATE CASCADE;
 
--- t_pending_transaction -> t_account: (owner, account_name_owner) -> (owner, account_name_owner)
-ALTER TABLE public.t_pending_transaction DROP CONSTRAINT fk_pending_account;
-ALTER TABLE public.t_pending_transaction
-    ADD CONSTRAINT fk_pending_account FOREIGN KEY (owner, account_name_owner)
-        REFERENCES public.t_account (owner, account_name_owner) ON UPDATE CASCADE;
-
 -- t_payment -> t_account: source and destination compound FKs
 ALTER TABLE public.t_payment DROP CONSTRAINT fk_payment_source_account;
 ALTER TABLE public.t_payment
@@ -154,9 +146,6 @@ ALTER TABLE public.t_transfer DROP CONSTRAINT transfer_constraint;
 
 -- t_parameter: drop global unique on parameter_name
 ALTER TABLE public.t_parameter DROP CONSTRAINT t_parameter_parameter_name_key;
-
--- t_pending_transaction: drop global unique constraint
-ALTER TABLE public.t_pending_transaction DROP CONSTRAINT unique_pending_transaction_fields;
 
 -----------------------------------------------
 -- 5. Update stored functions with owner param

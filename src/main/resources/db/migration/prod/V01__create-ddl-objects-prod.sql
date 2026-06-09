@@ -202,22 +202,6 @@ ALTER TABLE public.t_receipt_image
 ALTER TABLE public.t_receipt_image
     ADD CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES public.t_transaction (transaction_id) ON UPDATE CASCADE;
 
-CREATE TABLE IF NOT EXISTS public.t_pending_transaction
-(
-    pending_transaction_id BIGSERIAL PRIMARY KEY,
-    account_name_owner     TEXT                              NOT NULL,
-    transaction_date       DATE                              NOT NULL,
-    description            TEXT                              NOT NULL,
-    amount                 NUMERIC(12, 2) DEFAULT 0.00       NOT NULL,
-    review_status          TEXT          DEFAULT 'pending'   NOT NULL,
-    owner                  TEXT                              NULL,
-    date_added             TIMESTAMP     DEFAULT now()       NOT NULL,
-    CONSTRAINT fk_pending_account FOREIGN KEY (account_name_owner)
-        REFERENCES public.t_account (account_name_owner) ON UPDATE CASCADE,
-    CONSTRAINT ck_review_status CHECK (review_status IN ('pending', 'approved', 'rejected')),
-    CONSTRAINT unique_pending_transaction_fields UNIQUE (account_name_owner, transaction_date, description, amount)
-);
-
 -------------
 -- Payment --
 -------------

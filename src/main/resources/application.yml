@@ -24,4 +24,7 @@ spring:
       file-extensions: .graphqls,.gqls
 
   profiles:
+    # Default profile — overridden by SPRING_PROFILES_ACTIVE env var in all deployment env files.
+    # Running without an env file (e.g. bare `./gradlew bootRun`) activates prod, which requires
+    # SSL_KEY_STORE_PASSWORD, JWT_KEY, DATASOURCE_PASSWORD, and sslmode in the DATASOURCE URL.
     active: prod

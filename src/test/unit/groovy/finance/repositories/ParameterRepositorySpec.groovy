@@ -18,23 +18,13 @@ class ParameterRepositorySpec extends Specification {
 
         then:
         names.containsAll([
-            'findByParameterName',
-            'findByParameterId',
-            'findByActiveStatusIsTrue',
             'findByOwnerAndParameterName',
             'findByOwnerAndParameterId',
             'findByOwnerAndActiveStatusIsTrue',
         ])
-    }
-
-    def "legacy methods have correct return types"() {
-        when:
-        def methods = ParameterRepository.declaredMethods
-
-        then:
-        methods.find { it.name == 'findByParameterName' }?.returnType == Optional.class
-        methods.find { it.name == 'findByParameterId' }?.returnType == Optional.class
-        methods.find { it.name == 'findByActiveStatusIsTrue' }?.returnType == List.class
+        !names.contains('findByParameterName')
+        !names.contains('findByParameterId')
+        !names.contains('findByActiveStatusIsTrue')
     }
 
     def "owner-scoped methods have correct return types"() {

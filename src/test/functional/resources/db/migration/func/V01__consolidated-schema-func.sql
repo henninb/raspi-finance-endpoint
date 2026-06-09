@@ -240,26 +240,6 @@ CREATE INDEX IF NOT EXISTS idx_transaction_account_name_owner ON func.t_transact
 CREATE INDEX IF NOT EXISTS idx_transaction_date ON func.t_transaction(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_transaction_transaction_state ON func.t_transaction(transaction_state);
 
---------------------------
--- Pending Transaction  --
---------------------------
-CREATE TABLE IF NOT EXISTS func.t_pending_transaction
-(
-    pending_transaction_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    account_name_owner     TEXT                              NOT NULL,
-    transaction_date       DATE                              NOT NULL,
-    description            TEXT                              NOT NULL,
-    amount                 NUMERIC(12, 2) DEFAULT 0.00       NOT NULL,
-    review_status          TEXT          DEFAULT 'pending'   NOT NULL,
-    owner                  TEXT                              NOT NULL,
-    date_added             TIMESTAMP     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT unique_owner_pending_transaction UNIQUE (owner, account_name_owner, transaction_date, description, amount),
-    CONSTRAINT fk_pending_account FOREIGN KEY (owner, account_name_owner) REFERENCES func.t_account (owner, account_name_owner) ON UPDATE CASCADE,
-    CONSTRAINT ck_review_status CHECK (review_status IN ('pending', 'approved', 'rejected'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_pending_transaction_owner ON func.t_pending_transaction(owner);
-
 -------------
 -- Payment --
 -------------

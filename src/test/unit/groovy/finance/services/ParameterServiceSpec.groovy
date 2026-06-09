@@ -49,6 +49,16 @@ class ParameterServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
+    def "findAllActive should return SystemError on RuntimeException"() {
+        when: "repository throws a runtime exception"
+        def result = standardizedParameterService.findAllActive()
+
+        then: "should return SystemError result"
+        1 * parameterRepositoryMock.findByOwnerAndActiveStatusIsTrue(TEST_OWNER) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
     // ===== TDD Tests for findById() =====
 
     def "findById should return Success with parameter when found"() {
@@ -73,6 +83,16 @@ class ParameterServiceSpec extends BaseServiceSpec {
         1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found: 999")
+        0 * _
+    }
+
+    def "findById should return SystemError on RuntimeException"() {
+        when: "repository throws a runtime exception"
+        def result = standardizedParameterService.findById(1L)
+
+        then: "should return SystemError result"
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
         0 * _
     }
 
@@ -134,6 +154,21 @@ class ParameterServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
+    def "save should return SystemError on RuntimeException"() {
+        given: "parameter that causes a system failure"
+        def parameter = ParameterBuilder.builder().build()
+        Set<ConstraintViolation<Parameter>> noViolations = [] as Set
+
+        when: "saving parameter throws runtime exception"
+        def result = standardizedParameterService.save(parameter)
+
+        then: "should return SystemError result"
+        1 * validatorMock.validate(parameter) >> noViolations
+        1 * parameterRepositoryMock.saveAndFlush(parameter) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
     // ===== TDD Tests for update() =====
 
     def "update should return Success with updated parameter when exists"() {
@@ -145,6 +180,7 @@ class ParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.update(updatedParameter)
 
         then: "should return Success with updated parameter"
+        1 * validatorMock.validate(updatedParameter) >> ([] as Set)
         1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(existingParameter)
         1 * parameterRepositoryMock.saveAndFlush(_ as Parameter) >> { Parameter param ->
             assert param.parameterName == "new"
@@ -163,9 +199,63 @@ class ParameterServiceSpec extends BaseServiceSpec {
         def result = standardizedParameterService.update(parameter)
 
         then: "should return NotFound result"
+        1 * validatorMock.validate(parameter) >> ([] as Set)
         1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 999L) >> Optional.empty()
         result instanceof ServiceResult.NotFound
         result.message.contains("Parameter not found: 999")
+        0 * _
+    }
+
+    def "update should return ValidationError when entity is invalid"() {
+        given: "parameter with invalid data"
+        def parameter = ParameterBuilder.builder().withParameterId(1L).withParameterName("").build()
+        ConstraintViolation<Parameter> violation = Mock(ConstraintViolation)
+        def mockPath = Mock(jakarta.validation.Path)
+        mockPath.toString() >> "parameterName"
+        violation.propertyPath >> mockPath
+        violation.message >> "size must be between 1 and 50"
+        Set<ConstraintViolation<Parameter>> violations = [violation] as Set
+
+        when: "updating with invalid parameter"
+        def result = standardizedParameterService.update(parameter)
+
+        then: "should return ValidationError result"
+        1 * validatorMock.validate(parameter) >> { throw new ConstraintViolationException("Validation failed", violations) }
+        result instanceof ServiceResult.ValidationError
+        result.errors.values().contains("size must be between 1 and 50")
+        0 * _
+    }
+
+    def "update should return BusinessError on DataIntegrityViolationException"() {
+        given: "update that causes a unique constraint violation"
+        def existingParameter = ParameterBuilder.builder().withParameterId(1L).withParameterName("old").build()
+        def updatedParameter = ParameterBuilder.builder().withParameterId(1L).withParameterName("new").build()
+
+        when: "updating causes a conflict"
+        def result = standardizedParameterService.update(updatedParameter)
+
+        then: "should return BusinessError result"
+        1 * validatorMock.validate(updatedParameter) >> ([] as Set)
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(existingParameter)
+        1 * parameterRepositoryMock.saveAndFlush(_ as Parameter) >> { throw new DataIntegrityViolationException("conflict") }
+        result instanceof ServiceResult.BusinessError
+        result.errorCode == "DATA_INTEGRITY_VIOLATION"
+        0 * _
+    }
+
+    def "update should return SystemError on RuntimeException"() {
+        given: "update that causes a system failure"
+        def existingParameter = ParameterBuilder.builder().withParameterId(1L).build()
+        def updatedParameter = ParameterBuilder.builder().withParameterId(1L).build()
+
+        when: "updating throws runtime exception"
+        def result = standardizedParameterService.update(updatedParameter)
+
+        then: "should return SystemError result"
+        1 * validatorMock.validate(updatedParameter) >> ([] as Set)
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(existingParameter)
+        1 * parameterRepositoryMock.saveAndFlush(_ as Parameter) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
         0 * _
     }
 
@@ -197,6 +287,20 @@ class ParameterServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
+    def "deleteById should return SystemError when delete throws RuntimeException"() {
+        given: "existing parameter whose delete fails"
+        def parameter = ParameterBuilder.builder().withParameterId(1L).build()
+
+        when: "deleting causes a system failure"
+        def result = standardizedParameterService.deleteById(1L)
+
+        then: "should return SystemError result"
+        1 * parameterRepositoryMock.findByOwnerAndParameterId(TEST_OWNER, 1L) >> Optional.of(parameter)
+        1 * parameterRepositoryMock.delete(parameter) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
     // ===== TDD Tests for findByParameterNameStandardized() =====
 
     def "findByParameterNameStandardized should return Success with parameter when found"() {
@@ -220,7 +324,17 @@ class ParameterServiceSpec extends BaseServiceSpec {
         then: "should return NotFound result"
         1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "missing") >> Optional.empty()
         result instanceof ServiceResult.NotFound
-        result.message.contains("Parameter not found")
+        result.message.contains("Parameter not found: missing")
+        0 * _
+    }
+
+    def "findByParameterNameStandardized should return SystemError on RuntimeException"() {
+        when: "repository throws a runtime exception"
+        def result = standardizedParameterService.findByParameterNameStandardized("err")
+
+        then: "should return SystemError result"
+        1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "err") >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
         0 * _
     }
 
@@ -248,7 +362,21 @@ class ParameterServiceSpec extends BaseServiceSpec {
         then: "should return NotFound result"
         1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "missing") >> Optional.empty()
         result instanceof ServiceResult.NotFound
-        result.message.contains("Parameter not found")
+        result.message.contains("Parameter not found: missing")
+        0 * _
+    }
+
+    def "deleteByParameterNameStandardized should return SystemError when delete throws RuntimeException"() {
+        given: "existing parameter whose delete fails"
+        def parameter = ParameterBuilder.builder().withParameterName("test").build()
+
+        when: "deleting causes a system failure"
+        def result = standardizedParameterService.deleteByParameterNameStandardized("test")
+
+        then: "should return SystemError result"
+        1 * parameterRepositoryMock.findByOwnerAndParameterName(TEST_OWNER, "test") >> Optional.of(parameter)
+        1 * parameterRepositoryMock.delete(parameter) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
         0 * _
     }
 }

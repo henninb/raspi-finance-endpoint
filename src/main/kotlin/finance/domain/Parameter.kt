@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
+import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
+import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
 import finance.utils.LowerCaseConverter
 import jakarta.persistence.Column
@@ -17,6 +19,7 @@ import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.sql.Timestamp
 import java.util.Calendar
@@ -44,12 +47,13 @@ data class Parameter(
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
+    @field:Pattern(regexp = ALPHA_NUMERIC_NO_SPACE_PATTERN, message = FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", nullable = false)
     var parameterName: String = "",
     @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
-    @Column(name = "parameter_value", unique = true, nullable = false)
+    @Column(name = "parameter_value", nullable = false)
     var parameterValue: String = "",
     @Column(name = "active_status", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     var activeStatus: Boolean = true,

@@ -470,8 +470,7 @@ class DescriptionControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         // This template should be applied next to:
         // 1. PaymentController (moderate complexity)
         // 2. AccountController (high complexity - business logic separation)
-        // 3. PendingTransactionController (unique patterns)
-        // 4. TransactionController (most complex - hierarchical endpoints)
+        // 3. TransactionController (most complex - hierarchical endpoints)
 
         standardizationAspects.size() == 10
 

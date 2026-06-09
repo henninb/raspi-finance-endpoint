@@ -40,7 +40,7 @@ spring:
     property-naming-strategy: LOWER_CAMEL_CASE
     default-property-inclusion: non_null
     mapper.accept-case-insensitive-enums: true
-    time-zone: America/Chicago
+    time-zone: UTC
 
   # ===============================
   # = DATA SOURCE

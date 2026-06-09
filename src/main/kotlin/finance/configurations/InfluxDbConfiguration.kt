@@ -21,9 +21,9 @@ open class InfluxDbConfiguration {
         private val environment: Environment,
     ) : InfluxConfig {
         override fun get(key: String): String? {
-            // Return property values for Micrometer's internal use
+            // Micrometer passes keys with "influx." prefix (e.g. "influx.apiVersion")
             return when (key) {
-                "apiVersion" -> environment.getProperty("management.metrics.export.influx.api-version", "v1")
+                "influx.apiVersion", "apiVersion" -> environment.getProperty("management.metrics.export.influx.api-version", "v2")
                 else -> null
             }
         }
