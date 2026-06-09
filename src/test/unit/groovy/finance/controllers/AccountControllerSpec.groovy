@@ -42,7 +42,7 @@ class AccountControllerSpec extends Specification {
 
     private static Account acct(Map args = [:]) {
         // Helper to build a valid Account with defaults
-        new Account(
+        def account = new Account(
             accountId: (args.accountId ?: 0L) as Long,
             owner: (args.owner ?: TEST_OWNER) as String,
             accountNameOwner: (args.accountNameOwner ?: "acct_test") as String,
@@ -52,9 +52,10 @@ class AccountControllerSpec extends Specification {
             outstanding: (args.outstanding ?: new BigDecimal("0.00")) as BigDecimal,
             future: (args.future ?: new BigDecimal("0.00")) as BigDecimal,
             cleared: (args.cleared ?: new BigDecimal("0.00")) as BigDecimal,
-            dateClosed: (args.dateClosed ?: new Timestamp(0)) as Timestamp,
-            validationDate: (args.validationDate ?: new Timestamp(System.currentTimeMillis())) as Timestamp
         )
+        account.dateClosed = args.containsKey('dateClosed') ? args.dateClosed as Timestamp : null
+        account.validationDate = (args.validationDate ?: new Timestamp(System.currentTimeMillis())) as Timestamp
+        account
     }
 
     // ===== STANDARDIZED ENDPOINTS =====
@@ -378,6 +379,7 @@ class AccountControllerSpec extends Specification {
         Account existing = acct(accountId: 60L, accountNameOwner: "old")
         and:
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "old") >> Optional.of(existing)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "new") >> Optional.empty()
         accountRepository.saveAndFlush(_ as Account) >> { Account a -> a }
 
         when:
@@ -391,9 +393,10 @@ class AccountControllerSpec extends Specification {
     def "renameAccountNameOwner throws DataIntegrityViolationException on conflict"() {
         given:
         Account existing = acct(accountId: 61L, accountNameOwner: "old")
+        Account conflicting = acct(accountId: 62L, accountNameOwner: "new")
         and:
         accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "old") >> Optional.of(existing)
-        accountRepository.saveAndFlush(_ as Account) >> { throw new org.springframework.dao.DataIntegrityViolationException("dup") }
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "new") >> Optional.of(conflicting)
 
         when:
         controller.renameAccountNameOwner("old", "new")

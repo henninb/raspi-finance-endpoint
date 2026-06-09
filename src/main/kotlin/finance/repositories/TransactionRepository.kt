@@ -246,6 +246,22 @@ interface TransactionRepository : JpaRepository<Transaction, Long> {
     @Modifying
     @Transactional
     @Query(
+        value = "UPDATE {h-schema}t_transaction SET active_status = true, date_updated = now() WHERE account_name_owner = :accountNameOwner AND owner = :owner",
+        nativeQuery = true,
+    )
+    fun reactivateAllTransactionsByOwnerAndAccountNameOwner(
+        @Param("owner") owner: String,
+        @Param("accountNameOwner") accountNameOwner: String,
+    ): Int
+
+    fun countByOwnerAndAccountNameOwner(
+        owner: String,
+        accountNameOwner: String,
+    ): Long
+
+    @Modifying
+    @Transactional
+    @Query(
         value = "UPDATE {h-schema}t_transaction SET account_name_owner = :newAccountNameOwner, date_updated = now() WHERE account_name_owner = :oldAccountNameOwner AND owner = :owner",
         nativeQuery = true,
     )

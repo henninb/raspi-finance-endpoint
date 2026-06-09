@@ -123,8 +123,8 @@ class PaymentTransactionVerificationIntSpec extends BaseIntegrationSpec {
 
     def "createPayment should create transactions with correct amount signs for BALANCE_TRANSFER"() {
         given:
-        String creditCard1 = testDataManager.createAccountFor(testOwner, "credit_bal1", "credit_card", true)
-        String creditCard2 = testDataManager.createAccountFor(testOwner, "credit_bal2", "credit_card", true)
+        String creditCard1 = testDataManager.createAccountFor(testOwner, "visabal", "credit_card", true)
+        String creditCard2 = testDataManager.createAccountFor(testOwner, "amexbal", "credit_card", true)
 
         and: "a payment from credit card to credit card (BALANCE_TRANSFER)"
         def dto = new PaymentInputDto(

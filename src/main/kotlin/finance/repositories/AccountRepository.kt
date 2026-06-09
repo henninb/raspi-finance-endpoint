@@ -14,22 +14,31 @@ import java.util.Optional
 // import javax.transaction.Transactional
 
 interface AccountRepository : JpaRepository<Account, Long> {
+    // Legacy non-owner-scoped methods — prefer owner-scoped variants below for all new code.
+    // These can match multiple rows when the same accountNameOwner exists under different owners
+    // or account types; callers that rely on single-result semantics must use findByOwnerAndAccountNameOwner.
+    @Deprecated("Use findByOwnerAndAccountNameOwner instead", ReplaceWith("findByOwnerAndAccountNameOwner(owner, accountNameOwner)"))
     fun findByAccountNameOwner(accountNameOwner: String): Optional<Account>
 
+    @Deprecated("Use findByOwnerAndAccountId instead", ReplaceWith("findByOwnerAndAccountId(owner, accountId)"))
     fun findByAccountId(accountId: Long): Optional<Account>
 
+    @Deprecated("Use findByOwnerAndActiveStatusOrderByAccountNameOwner instead")
     fun findByActiveStatusOrderByAccountNameOwner(activeStatus: Boolean = true): List<Account>
 
+    @Deprecated("Use findByOwnerAndActiveStatus instead")
     fun findByActiveStatus(activeStatus: Boolean): List<Account>
 
+    @Deprecated("Use findByOwnerAndAccountType instead")
     fun findByAccountType(accountType: AccountType): List<Account>
 
+    @Deprecated("Use findByOwnerAndActiveStatusAndAccountType instead")
     fun findByActiveStatusAndAccountType(
         activeStatus: Boolean,
         accountType: AccountType,
     ): List<Account>
 
-    // Paginated query for active accounts
+    @Deprecated("Use findAllByOwnerAndActiveStatusOrderByAccountNameOwner instead")
     fun findAllByActiveStatusOrderByAccountNameOwner(
         activeStatus: Boolean = true,
         pageable: Pageable,

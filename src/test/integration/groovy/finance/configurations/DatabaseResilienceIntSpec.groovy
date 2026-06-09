@@ -27,6 +27,8 @@ import javax.sql.DataSource
 @Transactional
 class DatabaseResilienceIntSpec extends Specification {
 
+    private static final String TEST_OWNER = "database-resilience-test"
+
     @Autowired
     DatabaseResilienceConfiguration databaseResilienceConfiguration
 
@@ -158,7 +160,7 @@ class DatabaseResilienceIntSpec extends Specification {
         given:
         Account testAccount = new Account(
             0L,  // accountId
-            "",  // owner
+            TEST_OWNER,  // owner
             "resilience_test",  // accountNameOwner
             AccountType.Debit,  // accountType
             true,  // activeStatus
@@ -199,7 +201,7 @@ class DatabaseResilienceIntSpec extends Specification {
             circuitBreaker.executeSupplier {
                 Account account = new Account(
                     0L,  // accountId
-                    "",  // owner
+                    TEST_OWNER,  // owner
                     accountNames[i],  // accountNameOwner
                     AccountType.Credit,  // accountType
                     true,  // activeStatus
@@ -246,7 +248,7 @@ class DatabaseResilienceIntSpec extends Specification {
                 { ->
                     Account account = new Account(
                         0L,  // accountId
-                        "",  // owner
+                        TEST_OWNER,  // owner
                         concurrentNames[index],  // accountNameOwner
                         AccountType.Credit,  // accountType
                         true,  // activeStatus
@@ -278,7 +280,7 @@ class DatabaseResilienceIntSpec extends Specification {
         for (int i = 0; i < 5; i++) {
             Account account = new Account(
                 0L,  // accountId
-                "",  // owner
+                TEST_OWNER,  // owner
                 batchNames[i],  // accountNameOwner
                 AccountType.Debit,  // accountType
                 true,  // activeStatus

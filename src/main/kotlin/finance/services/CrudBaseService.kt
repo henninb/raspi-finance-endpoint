@@ -5,6 +5,7 @@ import finance.domain.DomainException
 import finance.domain.ServiceResult
 import jakarta.persistence.EntityNotFoundException
 import jakarta.validation.ConstraintViolationException
+import jakarta.validation.ValidationException
 import jakarta.validation.Validator
 import org.springframework.dao.DataIntegrityViolationException
 
@@ -56,6 +57,10 @@ abstract class CrudBaseService<T, ID>
                 logger.error(message, ex)
                 val validationErrors = extractValidationErrors(ex)
                 ServiceResult.ValidationError.of(validationErrors)
+            } catch (ex: ValidationException) {
+                val message = ex.message ?: "Validation error"
+                logger.error("Validation error in $operation for ${getEntityName()}: $message", ex)
+                ServiceResult.ValidationError.of(mapOf("validation" to message))
             } catch (ex: DataIntegrityViolationException) {
                 val message = "Data integrity violation in $operation for ${getEntityName()}: ${ex.message}"
                 logger.error(message, ex)

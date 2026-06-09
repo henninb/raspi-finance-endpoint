@@ -16,7 +16,7 @@ class AccountBuilder {
     BigDecimal future = new BigDecimal(0)
     BigDecimal outstanding = new BigDecimal(0)
     BigDecimal cleared = new BigDecimal(0)
-    Timestamp dateClosed = new Timestamp(0)
+    Timestamp dateClosed = null
     Timestamp dateAdded = new Timestamp(System.currentTimeMillis())
     Timestamp dateUpdated = new Timestamp(System.currentTimeMillis())
 

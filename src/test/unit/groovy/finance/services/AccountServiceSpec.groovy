@@ -151,12 +151,14 @@ class AccountServiceSpec extends BaseServiceSpec {
         given: "existing account to update"
         def existingAccount = AccountBuilder.builder().withAccountId(1L).withAccountNameOwner("test_account").build()
         def updatedAccount = AccountBuilder.builder().withAccountId(1L).withAccountNameOwner("test_account").withActiveStatus(false).build()
+        Set<jakarta.validation.ConstraintViolation<Account>> noViolations = [] as Set
 
         when: "updating existing account"
         def result = standardizedAccountService.update(updatedAccount)
 
         then: "should return Success with updated account"
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(existingAccount)
+        1 * validatorMock.validate(_ as Account) >> noViolations
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account account ->
             assert account.activeStatus == false
             return account
@@ -182,8 +184,8 @@ class AccountServiceSpec extends BaseServiceSpec {
 
     // ===== TDD Tests for deleteById() =====
 
-    def "deleteById should return Success when account exists"() {
-        given: "existing account"
+    def "deleteById should return Success when account exists and has no transactions"() {
+        given: "existing account with no transactions"
         def account = AccountBuilder.builder().withAccountId(100L).withAccountNameOwner("test_account").build()
 
         when: "deleting existing account"
@@ -191,10 +193,27 @@ class AccountServiceSpec extends BaseServiceSpec {
 
         then: "should return Success"
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
+        1 * transactionRepositoryMock.countByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> 0L
         1 * validationAmountRepositoryMock.deleteByOwnerAndAccountId(TEST_OWNER, 100L) >> 0
         1 * accountRepositoryMock.delete(account)
         result instanceof ServiceResult.Success
         result.data != null
+        0 * _
+    }
+
+    def "deleteById should return BusinessError when account has existing transactions"() {
+        given: "existing account with transactions"
+        def account = AccountBuilder.builder().withAccountId(200L).withAccountNameOwner("busy_account").build()
+
+        when: "deleting account that has transactions"
+        def result = standardizedAccountService.deleteById("busy_account")
+
+        then: "should return BusinessError with descriptive message"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "busy_account") >> Optional.of(account)
+        1 * transactionRepositoryMock.countByOwnerAndAccountNameOwner(TEST_OWNER, "busy_account") >> 5L
+        result instanceof ServiceResult.BusinessError
+        result.message.contains("5 transaction(s) exist")
+        result.message.contains("Deactivate the account instead")
         0 * _
     }
 
@@ -337,10 +356,12 @@ class AccountServiceSpec extends BaseServiceSpec {
         when: "activating account"
         def result = standardizedAccountService.activateAccount("test_account")
 
-        then: "should return activated account"
+        then: "should return activated account and reactivate all its transactions"
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
+        1 * transactionRepositoryMock.reactivateAllTransactionsByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> 3
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.activeStatus == true
+            assert acc.dateClosed == null
             return activatedAccount
         }
         result.activeStatus == true
@@ -365,14 +386,31 @@ class AccountServiceSpec extends BaseServiceSpec {
         when: "renaming account"
         def result = standardizedAccountService.renameAccountNameOwner("old_name", "new_name")
 
-        then: "should return renamed account"
+        then: "should check new name first, then update transactions, then rename account"
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "old_name") >> Optional.of(account)
-        1 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactionsByOwner(TEST_OWNER, "old_name", "new_name") >> 5 // Returns number of updated transactions
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "new_name") >> Optional.empty()
+        1 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactionsByOwner(TEST_OWNER, "old_name", "new_name") >> 5
         1 * accountRepositoryMock.saveAndFlush(_ as Account) >> { Account acc ->
             assert acc.accountNameOwner == "new_name"
             return renamedAccount
         }
         result.accountNameOwner == "new_name"
+        0 * _
+    }
+
+    def "renameAccountNameOwner should throw DataIntegrityViolationException when new name already exists"() {
+        given: "existing account and a conflict on the target name"
+        def account = AccountBuilder.builder().withAccountNameOwner("old_name").build()
+        def conflicting = AccountBuilder.builder().withAccountNameOwner("new_name").build()
+
+        when: "renaming to a name that is already taken"
+        standardizedAccountService.renameAccountNameOwner("old_name", "new_name")
+
+        then: "should check new name before touching transactions and throw"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "old_name") >> Optional.of(account)
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "new_name") >> Optional.of(conflicting)
+        0 * transactionRepositoryMock.updateAccountNameOwnerForAllTransactionsByOwner(_, _, _)
+        thrown(DataIntegrityViolationException)
         0 * _
     }
 
@@ -383,6 +421,50 @@ class AccountServiceSpec extends BaseServiceSpec {
         then: "should throw EntityNotFoundException"
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "non_existent") >> Optional.empty()
         thrown(EntityNotFoundException)
+        0 * _
+    }
+
+    def "save should return ValidationError when accountType is Undefined"() {
+        given: "account with Undefined type"
+        def account = AccountBuilder.builder().withAccountNameOwner("test_account").withAccountType(AccountType.Undefined).build()
+
+        when: "saving account with Undefined type"
+        def result = standardizedAccountService.save(account)
+
+        then: "should return ValidationError"
+        result instanceof ServiceResult.ValidationError
+        result.errors.values().any { it.contains("undefined") }
+        0 * _
+    }
+
+    def "save should return ValidationError when billingCycleWeekendShift is set without billingStatementCloseDay"() {
+        given: "credit account with weekend shift but no close day"
+        def account = AccountBuilder.builder().withAccountNameOwner("credit_chase").build()
+        account.billingCycleWeekendShift = 'back'
+        // billingStatementCloseDay intentionally left null
+
+        when: "saving account"
+        def result = standardizedAccountService.save(account)
+
+        then: "should return ValidationError before even checking for duplicates"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "credit_chase") >> Optional.empty()
+        result instanceof ServiceResult.ValidationError
+        result.errors.values().any { it.contains("billingCycleWeekendShift") || it.contains("billingStatementCloseDay") }
+        0 * _
+    }
+
+    def "save should return ValidationError when multiple billing due methods are set"() {
+        given: "credit account with two conflicting due methods"
+        def account = AccountBuilder.builder().withAccountNameOwner("credit_chase").build()
+        account.billingGracePeriodDays = (short) 5
+        account.billingDueDaySameMonth = (short) 15
+
+        when: "saving account"
+        def result = standardizedAccountService.save(account)
+
+        then: "should return ValidationError"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "credit_chase") >> Optional.empty()
+        result instanceof ServiceResult.ValidationError
         0 * _
     }
 
@@ -481,6 +563,7 @@ class AccountServiceSpec extends BaseServiceSpec {
 
         then:
         1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> Optional.of(account)
+        1 * transactionRepositoryMock.countByOwnerAndAccountNameOwner(TEST_OWNER, "test_account") >> 0L
         1 * validationAmountRepositoryMock.deleteByOwnerAndAccountId(TEST_OWNER, 100L) >> 3
         1 * accountRepositoryMock.delete(account)
         result instanceof ServiceResult.Success

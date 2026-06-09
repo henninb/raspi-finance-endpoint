@@ -50,14 +50,22 @@ class AccountService
         override fun save(entity: Account): ServiceResult<Account> =
             handleServiceOperation("save", entity.accountNameOwner) {
                 val owner = TenantContext.getCurrentOwner()
+                if (owner.isBlank()) {
+                    throw ValidationException("Owner cannot be blank")
+                }
                 entity.owner = owner
+
+                if (entity.accountType == AccountType.Undefined) {
+                    throw ValidationException("AccountType 'undefined' is not valid for new accounts")
+                }
 
                 // Check if account already exists
                 val existingAccount = accountRepository.findByOwnerAndAccountNameOwner(owner, entity.accountNameOwner)
                 if (existingAccount.isPresent) {
-                    throw org.springframework.dao.DataIntegrityViolationException("Account already exists: ${entity.accountNameOwner}")
+                    throw DataIntegrityViolationException("Account already exists: ${entity.accountNameOwner}")
                 }
 
+                validateBillingFields(entity)
                 validateOrThrow(entity)
 
                 val timestamp = nowTimestamp()
@@ -82,7 +90,15 @@ class AccountService
                 accountToUpdate.outstanding = entity.outstanding
                 accountToUpdate.cleared = entity.cleared
                 accountToUpdate.dateClosed = entity.dateClosed
+                accountToUpdate.billingStatementCloseDay = entity.billingStatementCloseDay
+                accountToUpdate.billingGracePeriodDays = entity.billingGracePeriodDays
+                accountToUpdate.billingDueDaySameMonth = entity.billingDueDaySameMonth
+                accountToUpdate.billingDueDayNextMonth = entity.billingDueDayNextMonth
+                accountToUpdate.billingCycleWeekendShift = entity.billingCycleWeekendShift
                 accountToUpdate.dateUpdated = nowTimestamp()
+
+                validateBillingFields(accountToUpdate)
+                validateOrThrow(accountToUpdate)
 
                 accountRepository.saveAndFlush(accountToUpdate)
             }
@@ -91,6 +107,14 @@ class AccountService
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
                 val account = accountRepository.findByOwnerAndAccountNameOwner(owner, id).orThrowNotFound("Account", id)
+
+                val transactionCount = transactionRepository.countByOwnerAndAccountNameOwner(owner, id)
+                if (transactionCount > 0) {
+                    throw DataIntegrityViolationException(
+                        "Cannot delete account '$id': $transactionCount transaction(s) exist. Deactivate the account instead.",
+                    )
+                }
+
                 val deleted = validationAmountRepository.deleteByOwnerAndAccountId(owner, account.accountId)
                 if (deleted > 0) {
                     logger.info("Deleted $deleted ValidationAmount records for account: ${account.accountNameOwner}")
@@ -122,8 +146,14 @@ class AccountService
         fun accounts(): List<Account> {
             val result = findAllActive()
             return when (result) {
-                is ServiceResult.Success -> result.data
-                else -> emptyList()
+                is ServiceResult.Success -> {
+                    result.data
+                }
+
+                else -> {
+                    logger.warn("accounts() failed to retrieve active accounts: $result")
+                    emptyList()
+                }
             }
         }
 
@@ -182,6 +212,25 @@ class AccountService
                 accountRepository.updateValidationDateForAllAccountsByOwner(owner)
             }
 
+        private fun validateBillingFields(account: Account) {
+            if (account.billingCycleWeekendShift != null && account.billingStatementCloseDay == null) {
+                throw ValidationException("billingCycleWeekendShift requires billingStatementCloseDay to be set")
+            }
+            val dueMethods =
+                listOf(
+                    account.billingGracePeriodDays,
+                    account.billingDueDaySameMonth,
+                    account.billingDueDayNextMonth,
+                ).count { it != null }
+            if (dueMethods > 1) {
+                throw ValidationException("Only one of billingGracePeriodDays, billingDueDaySameMonth, billingDueDayNextMonth may be set at a time")
+            }
+            val isCreditType = account.accountType in setOf(AccountType.Credit, AccountType.CreditCard, AccountType.BusinessCredit)
+            if (isCreditType && account.billingStatementCloseDay == null && dueMethods == 0) {
+                logger.warn("Credit account '${account.accountNameOwner}' has no billing cycle fields set")
+            }
+        }
+
         private fun runAccountUpdate(repositoryOp: (String) -> Unit): Boolean {
             val owner = TenantContext.getCurrentOwner()
             try {
@@ -209,8 +258,13 @@ class AccountService
                         EntityNotFoundException("Account not found: $oldAccountNameOwner")
                     }
 
+            // Verify new name is not already taken BEFORE touching any transactions
+            if (accountRepository.findByOwnerAndAccountNameOwner(owner, newAccountNameOwner).isPresent) {
+                logger.error("Cannot rename: account '$newAccountNameOwner' already exists")
+                throw DataIntegrityViolationException("Account already exists: $newAccountNameOwner")
+            }
+
             try {
-                // First, update all transactions to use the new account name
                 val transactionsUpdated =
                     transactionRepository.updateAccountNameOwnerForAllTransactionsByOwner(
                         owner,
@@ -219,13 +273,12 @@ class AccountService
                     )
                 logger.info("Updated $transactionsUpdated transactions from $oldAccountNameOwner to $newAccountNameOwner")
 
-                // Then, rename the account itself
                 oldAccount.accountNameOwner = newAccountNameOwner
                 oldAccount.dateUpdated = nowTimestamp()
                 val renamedAccount = accountRepository.saveAndFlush(oldAccount)
                 logger.info("Successfully renamed account to: $newAccountNameOwner (accountId: ${renamedAccount.accountId})")
                 return renamedAccount
-            } catch (ex: org.springframework.dao.DataIntegrityViolationException) {
+            } catch (ex: DataIntegrityViolationException) {
                 logger.error("Cannot rename account: $newAccountNameOwner already exists or violates constraints", ex)
                 throw ex
             } catch (ex: Exception) {
@@ -257,6 +310,7 @@ class AccountService
             return updatedAccount
         }
 
+        @org.springframework.transaction.annotation.Transactional
         fun activateAccount(accountNameOwner: String): Account {
             val owner = TenantContext.getCurrentOwner()
             val account =
@@ -265,10 +319,21 @@ class AccountService
                     .orElseThrow { EntityNotFoundException("Account not found: $accountNameOwner") }
 
             logger.info("Activating account: $accountNameOwner")
+
+            val transactionsReactivated = transactionRepository.reactivateAllTransactionsByOwnerAndAccountNameOwner(owner, accountNameOwner)
+            logger.info("Reactivated $transactionsReactivated transactions for account: $accountNameOwner")
+
             account.activeStatus = true
+            account.dateClosed = null
             account.dateUpdated = nowTimestamp()
             val updatedAccount = accountRepository.saveAndFlush(account)
             logger.info("Successfully activated account: $accountNameOwner")
             return updatedAccount
+        }
+
+        fun syncTotals(): Boolean {
+            updateTotalsForAllAccounts()
+            updateValidationDatesForAllAccounts()
+            return true
         }
     }

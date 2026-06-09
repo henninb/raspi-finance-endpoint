@@ -884,7 +884,7 @@ class GraphQLControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'createTransfer with null activeStatus uses default true'() {
         given:
         String srcAccount = testDataManager.createAccountFor(testOwner, 'gqltnasrc', 'debit', true)
-        String dstAccount = testDataManager.createAccountFor(testOwner, 'gqltnaDst', 'credit', true)
+        String dstAccount = testDataManager.createAccountFor(testOwner, 'gqltnaDst', 'debit', true)
         def dto = new TransferInputDto(
             null, srcAccount, dstAccount,
             LocalDate.of(2024, 3, 1),
@@ -1121,7 +1121,7 @@ class GraphQLControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'updateTransfer with null activeStatus uses default'() {
         given:
         String srcAccount = testDataManager.createAccountFor(testOwner, 'gqlutnasc', 'debit', true)
-        String dstAccount = testDataManager.createAccountFor(testOwner, 'gqlutnaDst', 'credit', true)
+        String dstAccount = testDataManager.createAccountFor(testOwner, 'gqlutnaDst', 'debit', true)
         def createDto = new TransferInputDto(
             null, srcAccount, dstAccount,
             LocalDate.of(2024, 3, 5),
@@ -1309,7 +1309,7 @@ class GraphQLControllerFunctionalSpec extends BaseControllerFunctionalSpec {
     void 'updateTransfer succeeds with valid id'() {
         given:
         String srcAccount = testDataManager.createAccountFor(testOwner, 'gqlutxfsrc', 'debit', true)
-        String dstAccount = testDataManager.createAccountFor(testOwner, 'gqlutxfDst', 'credit', true)
+        String dstAccount = testDataManager.createAccountFor(testOwner, 'gqlutxfDst', 'debit', true)
         def createDto = new TransferInputDto(
             null, srcAccount, dstAccount,
             LocalDate.of(2024, 1, 15),

@@ -181,4 +181,12 @@ class AccountController(
     fun activateAccount(
         @PathVariable accountNameOwner: String,
     ): ResponseEntity<Account> = ResponseEntity.ok(accountService.activateAccount(accountNameOwner))
+
+    @Operation(summary = "Sync totals and validation dates for all accounts")
+    @ApiResponses(value = [ApiResponse(responseCode = "204", description = "Sync completed"), ApiResponse(responseCode = "500", description = "Internal server error")])
+    @PutMapping("/totals/sync")
+    fun syncTotals(): ResponseEntity<Void> {
+        accountService.syncTotals()
+        return ResponseEntity.noContent().build()
+    }
 }

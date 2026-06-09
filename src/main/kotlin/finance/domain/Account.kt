@@ -23,6 +23,7 @@ import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
@@ -50,6 +51,7 @@ class Account(
     @Column(name = "account_id", nullable = false)
     var accountId: Long,
     @Column(name = "owner", nullable = false)
+    @field:NotBlank(message = "Owner must not be blank")
     @field:Size(max = 100, message = "Owner must be 100 characters or less")
     @field:Convert(converter = LowerCaseConverter::class)
     var owner: String = "",
@@ -78,8 +80,8 @@ class Account(
     var cleared: BigDecimal,
 ) {
     @JsonIgnore
-    @Column(name = "date_closed", nullable = false)
-    var dateClosed: Timestamp = Timestamp(0)
+    @Column(name = "date_closed", nullable = true)
+    var dateClosed: Timestamp? = null
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "validation_date", nullable = false)

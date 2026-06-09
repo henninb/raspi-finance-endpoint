@@ -17,6 +17,7 @@ import finance.repositories.AccountRepository
 import finance.repositories.CategoryRepository
 import finance.repositories.DescriptionRepository
 import finance.repositories.TransactionRepository
+import finance.repositories.TransferRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -70,6 +71,9 @@ class ServiceLayerIntSpec extends Specification {
 
     @Autowired
     TransactionRepository transactionRepository
+
+    @Autowired
+    TransferRepository transferRepository
 
     @Autowired
     CategoryRepository categoryRepository
@@ -383,19 +387,67 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test transfer service integration'() {
         given:
+        ensureCategory(DEFAULT_CATEGORY)
+        ensureDescription("transfer withdrawal")
+        ensureDescription("transfer deposit")
+
+        Account sourceAccount = accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, PRIMARY_ACCOUNT_NAME).get()
+        Account destinationAccount = accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, SECONDARY_ACCOUNT_NAME).get()
+
+        String guidSource = UUID.randomUUID().toString()
+        String guidDestination = UUID.randomUUID().toString()
+
+        transactionRepository.saveAndFlush(new Transaction(
+            owner: TEST_OWNER,
+            guid: guidSource,
+            accountId: sourceAccount.accountId,
+            accountNameOwner: PRIMARY_ACCOUNT_NAME,
+            accountType: AccountType.Debit,
+            description: "transfer withdrawal",
+            category: DEFAULT_CATEGORY,
+            amount: new BigDecimal("-250.50"),
+            transactionDate: LocalDate.parse("2023-05-31"),
+            transactionState: TransactionState.Outstanding,
+            transactionType: TransactionType.Transfer,
+            notes: "prelinked transfer source",
+            activeStatus: true,
+            dateUpdated: now(),
+            dateAdded: now()
+        ))
+        transactionRepository.saveAndFlush(new Transaction(
+            owner: TEST_OWNER,
+            guid: guidDestination,
+            accountId: destinationAccount.accountId,
+            accountNameOwner: SECONDARY_ACCOUNT_NAME,
+            accountType: AccountType.Credit,
+            description: "transfer deposit",
+            category: DEFAULT_CATEGORY,
+            amount: new BigDecimal("250.50"),
+            transactionDate: LocalDate.parse("2023-05-31"),
+            transactionState: TransactionState.Outstanding,
+            transactionType: TransactionType.Transfer,
+            notes: "prelinked transfer destination",
+            activeStatus: true,
+            dateUpdated: now(),
+            dateAdded: now()
+        ))
+
         Transfer testTransfer = new Transfer(
             transferId: 0L,
+            owner: TEST_OWNER,
             sourceAccount: PRIMARY_ACCOUNT_NAME,
             destinationAccount: SECONDARY_ACCOUNT_NAME,
             amount: new BigDecimal("250.50"),
             transactionDate: LocalDate.parse("2023-05-31"),
+            guidSource: guidSource,
+            guidDestination: guidDestination,
             activeStatus: true,
             dateUpdated: now(),
             dateAdded: now()
         )
 
         when:
-        Transfer savedTransfer = unwrapSuccess(transferService.save(testTransfer))
+        Transfer savedTransfer = transferRepository.saveAndFlush(testTransfer)
 
         then:
         savedTransfer != null

@@ -34,11 +34,11 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
         )
 
         when: "creating the payment"
-        def result = mutationController.createPayment(dto)
+        mutationController.createPayment(dto)
 
-        then: "payment is created with UNDEFINED behavior (safest - both negative)"
-        result != null
-        result.paymentId > 0
+        then: "unsupported account type combinations are rejected"
+        def ex = thrown(IllegalStateException)
+        ex.message.contains("unsupported account type combination undefined -> checking")
     }
 
     def "createPayment should handle utility account type (expense category)"() {
@@ -59,11 +59,11 @@ class PaymentEdgeCasesIntSpec extends BaseIntegrationSpec {
         )
 
         when: "creating the payment"
-        def result = mutationController.createPayment(dto)
+        mutationController.createPayment(dto)
 
-        then: "payment is created (utility has 'expense' category, treated as UNDEFINED)"
-        result != null
-        result.paymentId > 0
+        then: "expense-only account types are rejected for payments"
+        def ex = thrown(IllegalStateException)
+        ex.message.contains("unsupported account type combination checking -> utility")
     }
 
     def "createPayment should handle payment with future date"() {

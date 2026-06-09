@@ -21,6 +21,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import jakarta.persistence.Version
 import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
@@ -84,6 +85,11 @@ data class Transfer(
     @JsonProperty
     @Column(name = "date_updated", nullable = false)
     var dateUpdated: Timestamp = Timestamp(Calendar.getInstance().time.time)
+
+    @Version
+    @JsonProperty
+    @Column(name = "version", nullable = false)
+    var version: Long = 0L
 
     override fun toString(): String = mapper.writeValueAsString(this)
 

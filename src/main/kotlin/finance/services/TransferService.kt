@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.interceptor.TransactionAspectSupport
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.Optional
@@ -57,32 +58,47 @@ class TransferService
             }
 
         @org.springframework.transaction.annotation.Transactional
-        override fun save(entity: Transfer): ServiceResult<Transfer> =
-            handleServiceOperation("save", entity.transferId) {
-                val owner = TenantContext.getCurrentOwner()
-                entity.owner = owner
+        override fun save(entity: Transfer): ServiceResult<Transfer> {
+            val owner = TenantContext.getCurrentOwner()
+            entity.owner = owner
 
-                if (entity.transferId == 0L) {
-                    // Always route new transfers through insertTransfer; never trust client-supplied GUIDs
-                    entity.guidSource = null
-                    entity.guidDestination = null
-                    logger.info("Detected new transfer creation - delegating to insertTransfer workflow")
-                    return@handleServiceOperation insertTransfer(entity)
+            if (entity.transferId == 0L) {
+                // Route new transfers through insertTransfer.
+                // Explicit try/catch with setRollbackOnly ensures the outer @Transactional
+                // is rolled back even though handleServiceOperation would otherwise swallow
+                // the exception (internal calls bypass the AOP proxy).
+                entity.guidSource = null
+                entity.guidDestination = null
+                logger.info("Detected new transfer creation - delegating to insertTransfer workflow")
+                return try {
+                    ServiceResult.Success.of(insertTransfer(entity))
+                } catch (ex: jakarta.validation.ConstraintViolationException) {
+                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                    val errors =
+                        ex.constraintViolations.associate {
+                            (it.propertyPath?.toString() ?: "unknown") to (it.message ?: "Validation failed")
+                        }
+                    ServiceResult.ValidationError.of(errors.ifEmpty { mapOf("validation" to "Validation failed") })
+                } catch (ex: DataIntegrityViolationException) {
+                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                    ServiceResult.BusinessError.of(ex.message ?: "Data integrity error", "DATA_INTEGRITY_VIOLATION")
+                } catch (ex: RuntimeException) {
+                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                    ServiceResult.SystemError.of(ex)
                 }
+            }
 
-                // For updates, just save directly
+            return handleServiceOperation("save", entity.transferId) {
                 val violations = validator.validate(entity)
                 if (violations.isNotEmpty()) {
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
                 }
-
-                // Set timestamps
                 val timestamp = Timestamp(System.currentTimeMillis())
                 entity.dateAdded = timestamp
                 entity.dateUpdated = timestamp
-
                 transferRepository.save(entity)
             }
+        }
 
         @org.springframework.transaction.annotation.Transactional
         override fun update(entity: Transfer): ServiceResult<Transfer> =
@@ -220,18 +236,28 @@ class TransferService
                 throw IllegalArgumentException("Source and destination accounts must be different: ${transfer.sourceAccount}")
             }
 
-            // Validate source account
+            // Validate source account exists and is a debit account
             val optionalSourceAccount = accountService.account(transfer.sourceAccount)
             if (!optionalSourceAccount.isPresent) {
                 logger.error("Source account not found: ${transfer.sourceAccount}")
                 throw RuntimeException("Source account not found: ${transfer.sourceAccount}")
             }
+            val sourceAccount = optionalSourceAccount.get()
+            if (!sourceAccount.accountType.isAsset) {
+                logger.error("Source account is not an asset account: ${transfer.sourceAccount} (type: ${sourceAccount.accountType})")
+                throw IllegalArgumentException("Source account must be an asset account: ${transfer.sourceAccount} (type: ${sourceAccount.accountType})")
+            }
 
-            // Validate destination account
+            // Validate destination account exists and is an asset account
             val optionalDestinationAccount = accountService.account(transfer.destinationAccount)
             if (!optionalDestinationAccount.isPresent) {
                 logger.error("Destination account not found: ${transfer.destinationAccount}")
                 throw RuntimeException("Destination account not found: ${transfer.destinationAccount}")
+            }
+            val destinationAccount = optionalDestinationAccount.get()
+            if (!destinationAccount.accountType.isAsset) {
+                logger.error("Destination account is not an asset account: ${transfer.destinationAccount} (type: ${destinationAccount.accountType})")
+                throw IllegalArgumentException("Destination account must be an asset account: ${transfer.destinationAccount} (type: ${destinationAccount.accountType})")
             }
 
             logger.info("Creating source and destination transactions for transfer")
@@ -343,27 +369,31 @@ class TransferService
             }
 
             val sourceResult = transactionService.findById(guidSource)
-            if (sourceResult is ServiceResult.Success) {
-                val tx = sourceResult.data
-                tx.amount = transfer.amount.negate()
-                tx.transactionDate = transfer.transactionDate
-                tx.accountNameOwner = transfer.sourceAccount
-                tx.notes = "Transfer to ${transfer.destinationAccount}"
-                transactionService.update(tx)
-            } else {
-                logger.warn("Source transaction not found for sync: $guidSource")
+            if (sourceResult !is ServiceResult.Success) {
+                throw IllegalStateException("Source transaction not found for transfer ${transfer.transferId}: $guidSource")
+            }
+            val sourceTx = sourceResult.data
+            sourceTx.amount = transfer.amount.negate()
+            sourceTx.transactionDate = transfer.transactionDate
+            sourceTx.accountNameOwner = transfer.sourceAccount
+            sourceTx.notes = "Transfer to ${transfer.destinationAccount}"
+            val sourceUpdateResult = transactionService.update(sourceTx)
+            if (sourceUpdateResult !is ServiceResult.Success) {
+                throw IllegalStateException("Failed to sync source transaction $guidSource: $sourceUpdateResult")
             }
 
             val destResult = transactionService.findById(guidDestination)
-            if (destResult is ServiceResult.Success) {
-                val tx = destResult.data
-                tx.amount = transfer.amount
-                tx.transactionDate = transfer.transactionDate
-                tx.accountNameOwner = transfer.destinationAccount
-                tx.notes = "Transfer from ${transfer.sourceAccount}"
-                transactionService.update(tx)
-            } else {
-                logger.warn("Destination transaction not found for sync: $guidDestination")
+            if (destResult !is ServiceResult.Success) {
+                throw IllegalStateException("Destination transaction not found for transfer ${transfer.transferId}: $guidDestination")
+            }
+            val destTx = destResult.data
+            destTx.amount = transfer.amount
+            destTx.transactionDate = transfer.transactionDate
+            destTx.accountNameOwner = transfer.destinationAccount
+            destTx.notes = "Transfer from ${transfer.sourceAccount}"
+            val destUpdateResult = transactionService.update(destTx)
+            if (destUpdateResult !is ServiceResult.Success) {
+                throw IllegalStateException("Failed to sync destination transaction $guidDestination: $destUpdateResult")
             }
         }
 

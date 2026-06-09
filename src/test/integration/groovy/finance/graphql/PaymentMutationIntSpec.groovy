@@ -156,8 +156,8 @@ class PaymentMutationIntSpec extends BaseIntegrationSpec {
     def "createPayment mutation succeeds with liability to liability (BALANCE_TRANSFER behavior)"() {
         given:
         // Create two credit card (liability) accounts
-        String creditCard1 = testDataManager.createAccountFor(testOwner, "credit_card_1", "credit_card", true)
-        String creditCard2 = testDataManager.createAccountFor(testOwner, "credit_card_2", "credit_card", true)
+        String creditCard1 = testDataManager.createAccountFor(testOwner, "visa", "credit_card", true)
+        String creditCard2 = testDataManager.createAccountFor(testOwner, "amex", "credit_card", true)
         def dto = new PaymentInputDto(
                 null,
                 creditCard1,                    // liability source

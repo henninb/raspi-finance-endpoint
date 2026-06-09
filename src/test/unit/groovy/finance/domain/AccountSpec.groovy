@@ -202,7 +202,7 @@ class AccountSpec extends BaseDomainSpec {
         account.billingCycleWeekendShift == null
         account.dateAdded != null
         account.dateUpdated != null
-        account.dateClosed != null
+        account.dateClosed == null
         account.validationDate != null
         0 * _
     }
