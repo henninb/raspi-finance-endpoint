@@ -9,6 +9,7 @@ import finance.domain.ReoccurringType
 import finance.domain.ServiceResult
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.domain.TransactionType
 import finance.repositories.PaymentRepository
 import finance.utils.TenantContext
 import jakarta.validation.ValidationException
@@ -60,6 +61,10 @@ class PaymentService
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
 
+                if (entity.sourceAccount == entity.destinationAccount) {
+                    throw IllegalStateException("Source and destination accounts must differ: ${entity.sourceAccount}")
+                }
+
                 val violations = validator.validate(entity)
                 if (violations.isNotEmpty()) {
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -70,16 +75,24 @@ class PaymentService
                 if (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank()) {
                     logger.info("Creating transactions for payment: ${entity.sourceAccount} -> ${entity.destinationAccount}")
 
-                    // Process accounts (create if missing) and retrieve for behavior inference
-                    val destinationAccount = processPaymentAccount(entity.destinationAccount)
-                    val sourceAccount = processPaymentAccount(entity.sourceAccount)
+                    // Fail fast if either account does not exist — auto-creating with a wrong type
+                    // would silently corrupt behavior inference downstream
+                    val destinationAccount = requirePaymentAccount(entity.destinationAccount)
+                    val sourceAccount = requirePaymentAccount(entity.sourceAccount)
 
-                    // Infer payment behavior from account types
+                    // Infer payment behavior from account types; UNDEFINED means an unsupported
+                    // account-type combination — fail early rather than produce wrong amounts
                     val behavior =
                         PaymentBehavior.inferBehavior(
                             sourceAccount.accountType,
                             destinationAccount.accountType,
                         )
+                    if (behavior == PaymentBehavior.UNDEFINED) {
+                        throw IllegalStateException(
+                            "Cannot create payment: unsupported account type combination " +
+                                "${sourceAccount.accountType} -> ${destinationAccount.accountType}",
+                        )
+                    }
                     logger.info("Payment behavior inferred: $behavior (${sourceAccount.accountType} -> ${destinationAccount.accountType})")
 
                     // Create destination transaction
@@ -151,16 +164,20 @@ class PaymentService
                     throw jakarta.persistence.EntityNotFoundException("Payment not found: ${entity.paymentId}")
                 }
 
-                // Update fields from the provided entity
                 val paymentToUpdate = existingPayment.get()
                 paymentToUpdate.sourceAccount = entity.sourceAccount
                 paymentToUpdate.destinationAccount = entity.destinationAccount
                 paymentToUpdate.amount = entity.amount
                 paymentToUpdate.transactionDate = entity.transactionDate
-                paymentToUpdate.guidSource = entity.guidSource
-                paymentToUpdate.guidDestination = entity.guidDestination
                 paymentToUpdate.activeStatus = entity.activeStatus
+                // GUIDs are system-managed — never overwrite them from the incoming payload
+                // to avoid orphaning the associated transactions
                 paymentToUpdate.dateUpdated = Timestamp(System.currentTimeMillis())
+
+                val violations = validator.validate(paymentToUpdate)
+                if (violations.isNotEmpty()) {
+                    throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+                }
 
                 paymentRepository.saveAndFlush(paymentToUpdate)
             }
@@ -279,27 +296,16 @@ class PaymentService
 
         // ===== Helper Methods for Payment Processing =====
 
-        /**
-         * Process payment account - create if missing (similar to TransactionService.processAccount)
-         */
-        private fun processPaymentAccount(accountNameOwner: String): Account {
-            logger.debug("Processing payment account: $accountNameOwner")
+        /** Resolves the account by name; throws if it does not exist so callers get a clear error. */
+        private fun requirePaymentAccount(accountNameOwner: String): Account {
+            logger.debug("Resolving payment account: $accountNameOwner")
             val accountOptional = accountService.account(accountNameOwner)
             if (accountOptional.isPresent) {
                 logger.info("Using existing account for payment: $accountNameOwner (accountId: ${accountOptional.get().accountId})")
                 return accountOptional.get()
             }
-            logger.info("Account not found for payment, creating new account: $accountNameOwner")
-            try {
-                val account = createDefaultAccount(accountNameOwner, AccountType.Credit)
-                val savedAccount = accountService.insertAccount(account)
-                logger.info("Created new account for payment: $accountNameOwner with ID: ${savedAccount.accountId}")
-                return savedAccount
-            } catch (ex: Exception) {
-                logger.error("Failed to create account for payment: $accountNameOwner", ex)
-                meterService.incrementExceptionCaughtCounter("PaymentAccountCreationFailed")
-                throw org.springframework.dao.DataIntegrityViolationException("Failed to create account: $accountNameOwner: ${ex.message}", ex)
-            }
+            logger.error("Account not found for payment: $accountNameOwner")
+            throw IllegalStateException("Account not found: $accountNameOwner")
         }
 
         // ===== Payment Behavior and Amount Calculation Methods =====
@@ -316,7 +322,7 @@ class PaymentService
                 PaymentBehavior.TRANSFER -> -amount.abs()
                 PaymentBehavior.CASH_ADVANCE -> amount.abs()
                 PaymentBehavior.BALANCE_TRANSFER -> amount.abs()
-                else -> -amount.abs()
+                PaymentBehavior.UNDEFINED -> throw IllegalStateException("calculateSourceAmount called with UNDEFINED behavior")
             }
 
         /**
@@ -331,7 +337,7 @@ class PaymentService
                 PaymentBehavior.TRANSFER -> amount.abs()
                 PaymentBehavior.CASH_ADVANCE -> amount.abs()
                 PaymentBehavior.BALANCE_TRANSFER -> -amount.abs()
-                else -> -amount.abs()
+                PaymentBehavior.UNDEFINED -> throw IllegalStateException("calculateDestinationAmount called with UNDEFINED behavior")
             }
 
         // ===== Transaction Factory Methods =====
@@ -347,11 +353,12 @@ class PaymentService
                 guid = UUID.randomUUID().toString()
                 transactionDate = payment.transactionDate
                 description = "payment"
-                category = "bill_pay"
+                category = behavior.category
                 notes = "to ${payment.destinationAccount}"
                 amount = calculateSourceAmount(payment.amount, behavior)
                 transactionState = TransactionState.Outstanding
                 reoccurringType = ReoccurringType.Onetime
+                transactionType = TransactionType.Transfer
                 accountType = sourceAccountType
                 accountNameOwner = sourceAccountNameOwner
                 dateUpdated = timestamp
@@ -370,11 +377,12 @@ class PaymentService
                 guid = UUID.randomUUID().toString()
                 transactionDate = payment.transactionDate
                 description = "payment"
-                category = "bill_pay"
+                category = behavior.category
                 notes = "from $sourceAccountNameOwner"
                 amount = calculateDestinationAmount(payment.amount, behavior)
                 transactionState = TransactionState.Outstanding
                 reoccurringType = ReoccurringType.Onetime
+                transactionType = TransactionType.Transfer
                 accountType = destinationAccountType
                 accountNameOwner = payment.destinationAccount
                 dateUpdated = timestamp

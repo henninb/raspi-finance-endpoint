@@ -227,6 +227,8 @@ class TransferServiceSpec extends BaseServiceSpec {
     def "deleteById should delete transfer when present"() {
         given:
         def transfer = TransferBuilder.builder().withTransferId(50L).build()
+        def sourceTx = new Transaction()
+        def destTx = new Transaction()
 
         when:
         def result = transferService.deleteById(50L)
@@ -234,6 +236,9 @@ class TransferServiceSpec extends BaseServiceSpec {
         then:
         1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 50L) >> Optional.of(transfer)
         1 * transferRepositoryMock.delete(transfer)
+        1 * transferRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal(transfer.guidSource) >> ServiceResult.Success.of(sourceTx)
+        1 * transactionServiceMock.deleteByIdInternal(transfer.guidDestination) >> ServiceResult.Success.of(destTx)
         result instanceof ServiceResult.Success
         result.data.transferId == 50L
         0 * _
@@ -252,6 +257,8 @@ class TransferServiceSpec extends BaseServiceSpec {
     def "deleteByTransferId should return boolean based on owner scoped lookup"() {
         given:
         def existing = TransferBuilder.builder().withTransferId(77L).build()
+        def sourceTx = new Transaction()
+        def destTx = new Transaction()
 
         when:
         def deletedExisting = transferService.deleteByTransferId(77L)
@@ -260,6 +267,9 @@ class TransferServiceSpec extends BaseServiceSpec {
         then:
         1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 77L) >> Optional.of(existing)
         1 * transferRepositoryMock.delete(existing)
+        1 * transferRepositoryMock.flush()
+        1 * transactionServiceMock.deleteByIdInternal(existing.guidSource) >> ServiceResult.Success.of(sourceTx)
+        1 * transactionServiceMock.deleteByIdInternal(existing.guidDestination) >> ServiceResult.Success.of(destTx)
         1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 88L) >> Optional.empty()
         deletedExisting
         !deletedMissing
@@ -284,6 +294,8 @@ class TransferServiceSpec extends BaseServiceSpec {
         given:
         def transfer = TransferBuilder.builder().withTransferId(20L).build()
         def existing = Optional.of(transfer)
+        def sourceTx = TransactionBuilder.builder().withGuid(transfer.guidSource).build()
+        def destTx = TransactionBuilder.builder().withGuid(transfer.guidDestination).build()
         Set noViolations = [] as Set
 
         when:
@@ -292,6 +304,10 @@ class TransferServiceSpec extends BaseServiceSpec {
         then:
         1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 20L) >> existing
         1 * validatorMock.validate(_ as finance.domain.Transfer) >> noViolations
+        1 * transactionServiceMock.findById(transfer.guidSource) >> ServiceResult.Success.of(sourceTx)
+        1 * transactionServiceMock.update(sourceTx) >> ServiceResult.Success.of(sourceTx)
+        1 * transactionServiceMock.findById(transfer.guidDestination) >> ServiceResult.Success.of(destTx)
+        1 * transactionServiceMock.update(destTx) >> ServiceResult.Success.of(destTx)
         1 * transferRepositoryMock.save(_ as finance.domain.Transfer) >> transfer
         result instanceof finance.domain.ServiceResult.Success
         result.data.transferId == 20L
@@ -301,6 +317,8 @@ class TransferServiceSpec extends BaseServiceSpec {
     def "updateTransfer should return transfer on success"() {
         given:
         def transfer = TransferBuilder.builder().withTransferId(30L).build()
+        def sourceTx = TransactionBuilder.builder().withGuid(transfer.guidSource).build()
+        def destTx = TransactionBuilder.builder().withGuid(transfer.guidDestination).build()
         Set noViolations = [] as Set
 
         when:
@@ -309,6 +327,10 @@ class TransferServiceSpec extends BaseServiceSpec {
         then:
         1 * transferRepositoryMock.findByOwnerAndTransferId(TEST_OWNER, 30L) >> Optional.of(transfer)
         1 * validatorMock.validate(_ as finance.domain.Transfer) >> noViolations
+        1 * transactionServiceMock.findById(transfer.guidSource) >> ServiceResult.Success.of(sourceTx)
+        1 * transactionServiceMock.update(sourceTx) >> ServiceResult.Success.of(sourceTx)
+        1 * transactionServiceMock.findById(transfer.guidDestination) >> ServiceResult.Success.of(destTx)
+        1 * transactionServiceMock.update(destTx) >> ServiceResult.Success.of(destTx)
         1 * transferRepositoryMock.save(_ as finance.domain.Transfer) >> transfer
         result.transferId == 30L
         0 * _

@@ -35,7 +35,7 @@ import java.util.Calendar
 @Entity
 @Table(
     name = "t_payment",
-    uniqueConstraints = [UniqueConstraint(columnNames = ["owner", "destination_account", "transaction_date", "amount"])],
+    uniqueConstraints = [UniqueConstraint(columnNames = ["owner", "source_account", "destination_account", "transaction_date", "amount"])],
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)

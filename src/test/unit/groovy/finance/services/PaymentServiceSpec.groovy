@@ -155,6 +155,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then: "should return Success with updated payment"
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 1L) >> Optional.of(existingPayment)
+        1 * validatorMock.validate(_ as Payment) >> ([] as Set)
         1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment payment ->
             assert payment.amount == new BigDecimal("200.00")
             return payment
@@ -402,6 +403,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then: "should return updated payment"
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 1L) >> Optional.of(existingPayment)
+        1 * validatorMock.validate(_ as Payment) >> ([] as Set)
         1 * paymentRepositoryMock.saveAndFlush(_ as Payment) >> { Payment payment -> return payment }
         result.amount == new BigDecimal("200.00")
         0 * _
@@ -458,8 +460,8 @@ class PaymentServiceSpec extends BaseServiceSpec {
         payment.guidDestination == "new-dest-guid"
     }
 
-    def "save should create missing accounts during transaction creation"() {
-        given: "a payment with a non-existent source account"
+    def "save should return BusinessError when source account does not exist"() {
+        given: "a payment referencing a source account that has not been created"
         def payment = PaymentBuilder.builder()
                 .withGuidSource(null)
                 .withGuidDestination(null)
@@ -470,24 +472,14 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def noViolations = [] as Set
 
         when: "saving the payment"
-        standardizedPaymentService.save(payment)
+        def result = standardizedPaymentService.save(payment)
 
-        then: "should create the missing account"
+        then: "should return BusinessError — accounts must exist before creating a payment"
         1 * validatorMock.validate(payment) >> noViolations
-
-        // Destination account exists
         1 * accountServiceMock.account("existing_account") >> Optional.of(new Account(accountType: AccountType.CreditCard))
-
-        // Source account missing
         1 * accountServiceMock.account("new_account") >> Optional.empty()
-        1 * accountServiceMock.insertAccount(_ as Account) >> { Account a ->
-            assert a.accountNameOwner == "new_account"
-            return a
-        }
-
-        // Continue with transaction creation
-        2 * transactionServiceMock.save(_) >> ServiceResult.Success.of(new finance.domain.Transaction(guid: "guid"))
-        1 * paymentRepositoryMock.saveAndFlush(_) >> payment
+        result instanceof ServiceResult.BusinessError
+        0 * _
     }
 
     def "updatePayment should throw RuntimeException when payment not found"() {
@@ -628,7 +620,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         result instanceof ServiceResult.SystemError
     }
 
-    def "save should return BusinessError when processPaymentAccount fails to create account"() {
+    def "save should return BusinessError when source account is not found"() {
         given:
         def payment = PaymentBuilder.builder()
             .withGuidSource(null)
@@ -646,8 +638,8 @@ class PaymentServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(payment) >> noViolations
         1 * accountServiceMock.account("existing_dest") >> Optional.of(destAccount)
         1 * accountServiceMock.account("new_source") >> Optional.empty()
-        1 * accountServiceMock.insertAccount(_) >> { throw new RuntimeException("cannot create account") }
         result instanceof ServiceResult.BusinessError
+        0 * _
     }
 
     def "save should return Success when both GUIDs are already set"() {
@@ -838,6 +830,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then:
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 20L) >> Optional.of(existingPayment)
+        1 * validatorMock.validate(_ as Payment) >> ([] as Set)
         1 * paymentRepositoryMock.saveAndFlush(_) >> {
             throw new ConstraintViolationException("validation failed", [] as Set)
         }
@@ -855,6 +848,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then:
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 21L) >> Optional.of(existingPayment)
+        1 * validatorMock.validate(_ as Payment) >> ([] as Set)
         1 * paymentRepositoryMock.saveAndFlush(_) >> {
             throw new DataIntegrityViolationException("constraint violation")
         }
@@ -872,6 +866,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
 
         then:
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 22L) >> Optional.of(existingPayment)
+        1 * validatorMock.validate(_ as Payment) >> ([] as Set)
         1 * paymentRepositoryMock.saveAndFlush(_) >> {
             throw new RuntimeException("connection lost")
         }

@@ -15,6 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.util.Optional
@@ -55,24 +56,21 @@ class TransferService
                 }
             }
 
+        @org.springframework.transaction.annotation.Transactional
         override fun save(entity: Transfer): ServiceResult<Transfer> =
             handleServiceOperation("save", entity.transferId) {
                 val owner = TenantContext.getCurrentOwner()
                 entity.owner = owner
 
-                // Detect new transfers: if transferId is 0 AND guidSource/guidDestination are missing
-                // then use the full insertTransfer workflow to create transactions
-                val isNewTransfer = (entity.transferId == 0L)
-                val needsTransactionCreation = (entity.guidSource.isNullOrBlank() || entity.guidDestination.isNullOrBlank())
-
-                if (isNewTransfer && needsTransactionCreation) {
+                if (entity.transferId == 0L) {
+                    // Always route new transfers through insertTransfer; never trust client-supplied GUIDs
+                    entity.guidSource = null
+                    entity.guidDestination = null
                     logger.info("Detected new transfer creation - delegating to insertTransfer workflow")
-                    // Use insertTransfer for the full workflow (creates transactions, sets GUIDs)
-                    // This will recursively call save() again, but with GUIDs populated
                     return@handleServiceOperation insertTransfer(entity)
                 }
 
-                // For updates or transfers that already have GUIDs, just save directly
+                // For updates, just save directly
                 val violations = validator.validate(entity)
                 if (violations.isNotEmpty()) {
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
@@ -86,6 +84,7 @@ class TransferService
                 transferRepository.save(entity)
             }
 
+        @org.springframework.transaction.annotation.Transactional
         override fun update(entity: Transfer): ServiceResult<Transfer> =
             handleServiceOperation("update", entity.transferId) {
                 val owner = TenantContext.getCurrentOwner()
@@ -95,17 +94,27 @@ class TransferService
                     throw jakarta.persistence.EntityNotFoundException("Transfer not found: ${entity.transferId}")
                 }
 
+                if (entity.sourceAccount == entity.destinationAccount) {
+                    throw IllegalArgumentException("Source and destination accounts must be different: ${entity.sourceAccount}")
+                }
+
                 val violations = validator.validate(entity)
                 if (violations.isNotEmpty()) {
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
                 }
 
-                // Update timestamp
+                val existing = existingTransfer.get()
+                entity.guidSource = existing.guidSource
+                entity.guidDestination = existing.guidDestination
+
+                syncTransferTransactions(entity)
+
                 entity.dateUpdated = Timestamp(System.currentTimeMillis())
 
                 transferRepository.save(entity)
             }
 
+        @Transactional
         override fun deleteById(id: Long): ServiceResult<Transfer> =
             handleServiceOperation("deleteById", id) {
                 val owner = TenantContext.getCurrentOwner()
@@ -114,8 +123,69 @@ class TransferService
                     throw jakarta.persistence.EntityNotFoundException("Transfer not found: $id")
                 }
                 val transfer = optionalTransfer.get()
+
+                // Save GUIDs before removing the transfer
+                val savedGuidSource = transfer.guidSource
+                val savedGuidDestination = transfer.guidDestination
+
+                // Step 1: Delete the transfer first to break FK references to t_transaction
                 transferRepository.delete(transfer)
+                transferRepository.flush()
+                logger.info("Transfer deleted (flushed) to allow cascade transaction deletes: $id")
+
+                // Step 2: Delete associated transactions (cascade delete)
+                val transactionsDeleted = deleteAssociatedTransactions(savedGuidSource, savedGuidDestination)
+                logger.info(
+                    "Deleted $transactionsDeleted transaction(s) for transfer $id: " +
+                        "source=$savedGuidSource, destination=$savedGuidDestination",
+                )
+
                 transfer
+            }
+
+        private fun deleteAssociatedTransactions(
+            guidSource: String?,
+            guidDestination: String?,
+        ): Int {
+            var deletedCount = 0
+            if (!guidSource.isNullOrBlank()) deletedCount += deleteTransactionByGuid(guidSource, "source")
+            if (!guidDestination.isNullOrBlank()) deletedCount += deleteTransactionByGuid(guidDestination, "destination")
+            return deletedCount
+        }
+
+        private fun deleteTransactionByGuid(
+            guid: String,
+            label: String,
+        ): Int =
+            when (val result = transactionService.deleteByIdInternal(guid)) {
+                is ServiceResult.Success -> {
+                    logger.info("Deleted $label transaction: $guid")
+                    1
+                }
+
+                is ServiceResult.NotFound -> {
+                    logger.warn("$label transaction not found (stale reference): $guid")
+                    0
+                }
+
+                is ServiceResult.BusinessError -> {
+                    throw DataIntegrityViolationException(
+                        "Cannot delete transfer because $label transaction $guid could not be deleted: ${result.message}",
+                    )
+                }
+
+                is ServiceResult.ValidationError -> {
+                    throw DataIntegrityViolationException(
+                        "Validation error deleting $label transaction $guid",
+                    )
+                }
+
+                is ServiceResult.SystemError -> {
+                    throw RuntimeException(
+                        "System error deleting $label transaction: $guid",
+                        result.exception,
+                    )
+                }
             }
 
         // ===== Paginated ServiceResult Methods =====
@@ -145,6 +215,10 @@ class TransferService
             val owner = TenantContext.getCurrentOwner()
             transfer.owner = owner
             logger.info("Inserting new transfer from ${transfer.sourceAccount} to ${transfer.destinationAccount}")
+
+            if (transfer.sourceAccount == transfer.destinationAccount) {
+                throw IllegalArgumentException("Source and destination accounts must be different: ${transfer.sourceAccount}")
+            }
 
             // Validate source account
             val optionalSourceAccount = accountService.account(transfer.sourceAccount)
@@ -222,26 +296,16 @@ class TransferService
                 }
             }
 
-            // Use the standardized save method and handle ServiceResult
-            val result = save(transfer)
-            return when (result) {
-                is ServiceResult.Success -> {
-                    result.data
-                }
-
-                is ServiceResult.ValidationError -> {
-                    throw jakarta.validation.ConstraintViolationException("Validation failed: ${result.errors}", emptySet())
-                }
-
-                is ServiceResult.BusinessError -> {
-                    // Handle data integrity violations (e.g., duplicate transfers)
-                    throw org.springframework.dao.DataIntegrityViolationException(result.message)
-                }
-
-                else -> {
-                    throw RuntimeException("Failed to insert transfer: $result")
-                }
+            // Persist the transfer record directly — do NOT call save() to avoid re-entering
+            // the new-transfer detection logic (save routes transferId=0 back here).
+            val violations = validator.validate(transfer)
+            if (violations.isNotEmpty()) {
+                throw jakarta.validation.ConstraintViolationException("Transfer validation failed", violations)
             }
+            val timestamp = Timestamp(System.currentTimeMillis())
+            transfer.dateAdded = timestamp
+            transfer.dateUpdated = timestamp
+            return transferRepository.save(transfer)
         }
 
         fun updateTransfer(transfer: Transfer): Transfer {
@@ -259,16 +323,49 @@ class TransferService
         }
 
         fun deleteByTransferId(transferId: Long): Boolean {
-            val owner = TenantContext.getCurrentOwner()
-            val optionalTransfer = transferRepository.findByOwnerAndTransferId(owner, transferId)
-            if (optionalTransfer.isPresent) {
-                transferRepository.delete(optionalTransfer.get())
-                return true
+            val result = deleteById(transferId)
+            return when (result) {
+                is ServiceResult.Success -> true
+                is ServiceResult.NotFound -> false
+                is ServiceResult.SystemError -> throw result.exception
+                else -> throw RuntimeException("Failed to delete transfer $transferId: $result")
             }
-            return false
         }
 
         // ===== Helper Methods for Transfer Processing =====
+
+        private fun syncTransferTransactions(transfer: Transfer) {
+            val guidSource = transfer.guidSource
+            val guidDestination = transfer.guidDestination
+            if (guidSource.isNullOrBlank() || guidDestination.isNullOrBlank()) {
+                logger.warn("Cannot sync transfer transactions: missing GUIDs on transfer ${transfer.transferId}")
+                return
+            }
+
+            val sourceResult = transactionService.findById(guidSource)
+            if (sourceResult is ServiceResult.Success) {
+                val tx = sourceResult.data
+                tx.amount = transfer.amount.negate()
+                tx.transactionDate = transfer.transactionDate
+                tx.accountNameOwner = transfer.sourceAccount
+                tx.notes = "Transfer to ${transfer.destinationAccount}"
+                transactionService.update(tx)
+            } else {
+                logger.warn("Source transaction not found for sync: $guidSource")
+            }
+
+            val destResult = transactionService.findById(guidDestination)
+            if (destResult is ServiceResult.Success) {
+                val tx = destResult.data
+                tx.amount = transfer.amount
+                tx.transactionDate = transfer.transactionDate
+                tx.accountNameOwner = transfer.destinationAccount
+                tx.notes = "Transfer from ${transfer.sourceAccount}"
+                transactionService.update(tx)
+            } else {
+                logger.warn("Destination transaction not found for sync: $guidDestination")
+            }
+        }
 
         private fun buildTransferTransaction(
             transfer: Transfer,

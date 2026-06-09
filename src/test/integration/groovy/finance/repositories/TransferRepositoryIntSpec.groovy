@@ -482,7 +482,7 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
         refetchedTransfer.dateUpdated != null
     }
 
-    void 'test transfer with zero amount'() {
+    void 'test transfer with zero amount is rejected by constraint validation'() {
         given:
         Transfer zeroTransfer = SmartTransferBuilder.builderForOwner(testOwner)
                 .withUniqueAccounts("zero_src", "zero_dest")
@@ -492,11 +492,10 @@ class TransferRepositoryIntSpec extends BaseIntegrationSpec {
                 .buildAndValidate()
 
         when:
-        Transfer savedTransfer = transferRepository.save(zeroTransfer)
+        transferRepository.save(zeroTransfer)
 
         then:
-        savedTransfer.amount == new BigDecimal("0.00")
-        savedTransfer.transferId != null
+        thrown(jakarta.validation.ConstraintViolationException)
     }
 
     void 'test transfer builder handles edge cases appropriately'() {

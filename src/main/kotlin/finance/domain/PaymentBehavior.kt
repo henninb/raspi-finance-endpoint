@@ -5,34 +5,40 @@ import com.fasterxml.jackson.annotation.JsonCreator
 enum class PaymentBehavior(
     override val label: String,
     val description: String,
+    val category: String,
 ) : LabeledEnum {
     // asset → liability: source decreases, liability decreases (debt paid down)
     BILL_PAYMENT(
         "bill_payment",
         "Payment from asset account to liability account (paying down debt)",
+        "bill_pay",
     ),
 
     // asset → asset: source decreases, destination increases
     TRANSFER(
         "transfer",
         "Transfer between two asset accounts",
+        "transfer",
     ),
 
     // liability → asset: liability increases (more debt), asset increases (cash received)
     CASH_ADVANCE(
         "cash_advance",
         "Cash advance from liability account to asset account (borrowing)",
+        "cash_advance",
     ),
 
     // liability → liability: source liability increases (charging), destination liability decreases (paid off)
     BALANCE_TRANSFER(
         "balance_transfer",
         "Balance transfer between two liability accounts (using one credit card to pay another)",
+        "balance_transfer",
     ),
 
     UNDEFINED(
         "undefined",
         "Unknown or unsupported account type combination",
+        "undefined",
     ),
     ;
 

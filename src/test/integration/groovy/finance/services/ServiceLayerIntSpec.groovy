@@ -383,33 +383,11 @@ class ServiceLayerIntSpec extends Specification {
 
     void 'test transfer service integration'() {
         given:
-        Transaction sourceTransaction = createLinkedTransaction(
-            PRIMARY_ACCOUNT_NAME,
-            AccountType.Debit,
-            "transfer withdrawal",
-            "transfer",
-            new BigDecimal("-250.50"),
-            LocalDate.parse("2023-05-31"),
-            TransactionType.Transfer,
-            "Transfer to ${SECONDARY_ACCOUNT_NAME}"
-        )
-        Transaction destinationTransaction = createLinkedTransaction(
-            SECONDARY_ACCOUNT_NAME,
-            AccountType.Credit,
-            "transfer deposit",
-            "transfer",
-            new BigDecimal("250.50"),
-            LocalDate.parse("2023-05-31"),
-            TransactionType.Transfer,
-            "Transfer from ${PRIMARY_ACCOUNT_NAME}"
-        )
         Transfer testTransfer = new Transfer(
             transferId: 0L,
             sourceAccount: PRIMARY_ACCOUNT_NAME,
             destinationAccount: SECONDARY_ACCOUNT_NAME,
-            guidSource: sourceTransaction.guid,
-            guidDestination: destinationTransaction.guid,
-            amount: 250.50,
+            amount: new BigDecimal("250.50"),
             transactionDate: LocalDate.parse("2023-05-31"),
             activeStatus: true,
             dateUpdated: now(),
@@ -422,7 +400,9 @@ class ServiceLayerIntSpec extends Specification {
         then:
         savedTransfer != null
         savedTransfer.transferId != null
-        savedTransfer.amount == 250.50
+        savedTransfer.amount == new BigDecimal("250.50")
+        savedTransfer.guidSource != null
+        savedTransfer.guidDestination != null
 
         when:
         List<Transfer> allTransfers = transferService.findAllTransfers()
@@ -431,7 +411,7 @@ class ServiceLayerIntSpec extends Specification {
         then:
         allTransfers.size() >= 1
         foundTransfer.isPresent()
-        foundTransfer.get().guidDestination == testTransfer.guidDestination
+        foundTransfer.get().guidDestination == savedTransfer.guidDestination
     }
 
     void 'test validation amount service integration'() {
