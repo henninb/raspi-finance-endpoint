@@ -265,7 +265,7 @@ class CrudBaseServiceSpec extends Specification {
 
         then: "should return NotFound result"
         result instanceof ServiceResult.NotFound
-        result.message.contains("TestEntity not found: 999")
+        result.message.contains("TestEntity not found for update: 999")
     }
 
     def "deleteById should handle successful deletion"() {

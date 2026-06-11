@@ -764,10 +764,10 @@ class TransactionControllerSpec extends Specification {
         def pageable = org.springframework.data.domain.PageRequest.of(0, 10)
         def page = new org.springframework.data.domain.PageImpl<>(transactions, pageable, 1)
         and:
-        standardizedTransactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner, pageable) >> ServiceResult.Success.of(page)
+        standardizedTransactionService.findByAccountNameOwnerWithFiltersStandardized(accountNameOwner, _, _, _, _, _, _, _, _, _) >> ServiceResult.Success.of(page)
 
         when:
-        ResponseEntity<?> response = controller.selectByAccountNameOwnerPaged(accountNameOwner, pageable)
+        ResponseEntity<?> response = controller.selectByAccountNameOwnerPaged(accountNameOwner, null, null, null, null, null, null, null, null, pageable)
 
         then:
         response.statusCode == HttpStatus.OK

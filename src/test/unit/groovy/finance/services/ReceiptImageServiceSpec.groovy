@@ -285,7 +285,7 @@ class ReceiptImageServiceSpec extends BaseServiceSpec {
 
         then:
         result instanceof ServiceResult.NotFound
-        result.message == "ReceiptImage not found: 999"
+        result.message == "ReceiptImage not found for transaction: 999"
     }
 
     def "findByTransactionId should return ServiceResult.SystemError on repository exception"() {

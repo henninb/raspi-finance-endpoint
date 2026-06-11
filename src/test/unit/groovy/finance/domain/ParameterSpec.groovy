@@ -71,10 +71,10 @@ class ParameterSpec extends BaseDomainSpec {
 
         where:
         invalidField     | parameterName                                            | parameterValue                                           | activeStatus | expectedError                               | errorCount
-        'parameterValue' | 'someName'                                               | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'parameterName'  | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | 'someValue'                                              | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'parameterName'  | ''                                                       | 'someValue'                                              | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'parameterValue' | 'someName'                                               | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterValue' | 'some_name'                                              | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterName'  | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | 'some_value'                                             | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterName'  | ''                                                       | 'some_value'                                             | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        'parameterValue' | 'some_name'                                              | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
     }
 
     def "test equals and hashCode"() {

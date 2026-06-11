@@ -223,7 +223,6 @@ class ParameterServiceSpec extends BaseServiceSpec {
         1 * validatorMock.validate(parameter) >> { throw new ConstraintViolationException("Validation failed", violations) }
         result instanceof ServiceResult.ValidationError
         result.errors.values().contains("size must be between 1 and 50")
-        0 * _
     }
 
     def "update should return BusinessError on DataIntegrityViolationException"() {

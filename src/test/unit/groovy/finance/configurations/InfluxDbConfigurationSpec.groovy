@@ -30,7 +30,7 @@ class InfluxDbConfigurationSpec extends Specification {
 
     def "CustomInfluxConfig should return environment property for apiVersion"() {
         given:
-        mockEnvironment.getProperty("management.metrics.export.influx.api-version", "v1") >> "v2"
+        mockEnvironment.getProperty("management.metrics.export.influx.api-version", "v2") >> "v2"
         def config = new InfluxDbConfiguration.CustomInfluxConfig(mockEnvironment)
 
         when:

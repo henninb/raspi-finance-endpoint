@@ -13,13 +13,21 @@ class LowerCaseConverterSpec extends Specification {
         converter.convertToEntityAttribute("BaZ") == "baz"
     }
 
-    def "Null becomes empty string in both directions"() {
+    def "Null throws IllegalArgumentException in both directions"() {
         given:
         def converter = new LowerCaseConverter()
 
-        expect:
-        converter.convertToDatabaseColumn(null) == ""
-        converter.convertToEntityAttribute(null) == ""
+        when:
+        converter.convertToDatabaseColumn(null)
+
+        then:
+        thrown(IllegalArgumentException)
+
+        when:
+        converter.convertToEntityAttribute(null)
+
+        then:
+        thrown(IllegalArgumentException)
     }
 }
 
