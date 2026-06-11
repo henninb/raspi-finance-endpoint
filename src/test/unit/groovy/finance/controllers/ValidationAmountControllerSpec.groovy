@@ -465,4 +465,94 @@ class ValidationAmountControllerSpec extends Specification {
         then:
         thrown(org.springframework.web.server.ResponseStatusException)
     }
+
+    def "selectValidationAmountByAccountId normalizes lowercase transactionState input"() {
+        given:
+        def account = new finance.domain.Account(accountId: 5L, accountNameOwner: "checking_primary", owner: TEST_OWNER)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(account)
+        validationRepo.findByOwnerAndTransactionStateAndAccountId(TEST_OWNER, TransactionState.Cleared, 5L) >> [va(validationId: 1L)]
+
+        when:
+        ResponseEntity<ValidationAmount> response = controller.selectValidationAmountByAccountId("checking_primary", "cleared")
+
+        then:
+        response.statusCode == HttpStatus.OK
+    }
+
+    def "selectValidationAmountByAccountId throws ResponseStatusException 400 for unrecognized transactionState"() {
+        given:
+        def account = new finance.domain.Account(accountId: 5L, accountNameOwner: "checking_primary", owner: TEST_OWNER)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(account)
+
+        when:
+        controller.selectValidationAmountByAccountId("checking_primary", "bogus")
+
+        then:
+        def ex = thrown(org.springframework.web.server.ResponseStatusException)
+        ex.statusCode.value() == 400
+    }
+
+    def "selectValidationAmountByAccountId throws ResponseStatusException when no validation amounts found for account"() {
+        given:
+        def account = new finance.domain.Account(accountId: 5L, accountNameOwner: "checking_primary", owner: TEST_OWNER)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(account)
+        validationRepo.findByOwnerAndTransactionStateAndAccountId(TEST_OWNER, TransactionState.Cleared, 5L) >> []
+
+        when:
+        controller.selectValidationAmountByAccountId("checking_primary", "Cleared")
+
+        then:
+        thrown(org.springframework.web.server.ResponseStatusException)
+    }
+
+    def "findAllActiveWithFilters with both accountNameOwner and transactionState returns intersection"() {
+        given:
+        def list = [
+            va(validationId: 1L, accountId: 5L, transactionState: TransactionState.Cleared),
+            va(validationId: 2L, accountId: 5L, transactionState: TransactionState.Outstanding)
+        ]
+        validationRepo.findByOwnerAndActiveStatusTrueOrderByValidationDateDesc(TEST_OWNER) >> list
+        def account = new finance.domain.Account(accountId: 5L, accountNameOwner: "checking_primary", owner: TEST_OWNER)
+        accountRepository.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.of(account)
+
+        when:
+        ResponseEntity<List<ValidationAmount>> response = controller.findAllActiveWithFilters("checking_primary", "Cleared")
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body.size() == 1
+        response.body[0].transactionState == TransactionState.Cleared
+    }
+
+    def "update path variable id overrides body validationId before calling service"() {
+        given:
+        long pathId = 50L
+        ValidationAmount existing = va(validationId: pathId, amount: new BigDecimal("1.00"))
+        ValidationAmount patch = va(validationId: 999L, amount: new BigDecimal("3.00"))
+        and:
+        validationRepo.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, pathId) >> Optional.of(existing)
+        validationRepo.saveAndFlush(_ as ValidationAmount) >> { ValidationAmount v -> v }
+        accountRepository.updateValidationDateForAccountByOwner(_, TEST_OWNER) >> 1
+
+        when:
+        ResponseEntity<ValidationAmount> response = controller.update(pathId, patch)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        patch.validationId == pathId
+    }
+
+    def "insertValidationAmount returns 400 on IllegalArgumentException from repository"() {
+        given:
+        // IllegalArgumentException is caught by handleServiceOperation as ValidationError,
+        // then rethrown as ValidationException, which the controller maps to 400
+        ValidationAmount input = va(validationId: 0L, accountId: 7L)
+        validationRepo.saveAndFlush(_ as ValidationAmount) >> { throw new IllegalArgumentException("invalid input") }
+
+        when:
+        ResponseEntity resp = controller.insertValidationAmount(input, "checking_primary")
+
+        then:
+        resp.statusCode == HttpStatus.BAD_REQUEST
+    }
 }

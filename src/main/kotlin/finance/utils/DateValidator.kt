@@ -17,7 +17,7 @@ class DateValidator : ConstraintValidator<ValidDate, LocalDate?> {
         if (value == null) return true
         val minDate = LocalDate.of(2000, 1, 1)
         val maxDate = LocalDate.now().plusYears(50)
-        return value.isAfter(minDate) && value.isBefore(maxDate)
+        return !value.isBefore(minDate) && !value.isAfter(maxDate)
     }
 
     companion object {

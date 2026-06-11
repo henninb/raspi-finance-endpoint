@@ -1,7 +1,10 @@
 package finance.configurations
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver
+import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
@@ -18,4 +21,10 @@ open class AliasWebConfig : WebMvcConfigurer {
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(requestLoggingInterceptor)
     }
+
+    @Bean
+    fun pageableResolverCustomizer(): PageableHandlerMethodArgumentResolverCustomizer =
+        PageableHandlerMethodArgumentResolverCustomizer { resolver: PageableHandlerMethodArgumentResolver ->
+            resolver.setMaxPageSize(1000)
+        }
 }

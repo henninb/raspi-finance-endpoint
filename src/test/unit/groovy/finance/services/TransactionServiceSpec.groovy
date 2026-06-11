@@ -61,6 +61,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             accountNameOwner: "test_account",
             accountId: 1L,
             accountType: AccountType.Credit,
+            transactionType: TransactionType.Expense,
             transactionDate: LocalDate.of(2023, 1, 1),
             description: "Test transaction",
             category: "test_category",
@@ -82,6 +83,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
             accountNameOwner: "test_account",
             accountId: 1L,
             accountType: AccountType.Credit,
+            transactionType: TransactionType.Expense,
             transactionDate: LocalDate.of(2023, 1, 1),
             description: "Test transaction",
             category: "test_category",
@@ -967,12 +969,12 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result.data.transactionDate == expectedDate
     }
 
-    def "createFutureTransactionStandardized should calculate yearly date for Credit account"() {
+    def "createFutureTransactionStandardized should calculate monthly date for Credit account with Monthly type"() {
         given:
         def transaction = createTestTransaction()
         transaction.reoccurringType = ReoccurringType.Monthly
         transaction.accountType = AccountType.Credit
-        def expectedDate = transaction.transactionDate.plusYears(1)
+        def expectedDate = transaction.transactionDate.plusMonths(1)
 
         when:
         def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
@@ -982,11 +984,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result.data.transactionDate == expectedDate
     }
 
-    def "createFutureTransactionStandardized should return BusinessError for Debit with unsupported reoccurring type"() {
+    def "createFutureTransactionStandardized should return BusinessError for unsupported reoccurring type"() {
         given:
         def transaction = createTestTransaction()
-        transaction.reoccurringType = ReoccurringType.Annually
-        transaction.accountType = AccountType.Debit
+        transaction.reoccurringType = ReoccurringType.Onetime
 
         when:
         def result = standardizedTransactionService.createFutureTransactionStandardized(transaction)
@@ -1008,7 +1009,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then:
         result instanceof ServiceResult.Success
-        result.data.dueDate == transaction.dueDate.plusYears(1)
+        result.data.dueDate == transaction.dueDate.plusMonths(1)
     }
 
     def "createAndSaveFutureTransaction should return Success when future transaction created and saved"() {
@@ -1154,7 +1155,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         result instanceof ServiceResult.BusinessError
     }
 
-    def "updateTransactionReceiptImageByGuidStandardized should return SystemError when payload exceeds max size"() {
+    def "updateTransactionReceiptImageByGuidStandardized should return ValidationError when payload exceeds max size"() {
         given:
         def guid = "test-guid-123"
         def oversizedPayload = "a" * 7_000_000
@@ -1163,10 +1164,10 @@ class TransactionServiceSpec extends BaseServiceSpec {
         def result = standardizedTransactionService.updateTransactionReceiptImageByGuidStandardized(guid, oversizedPayload)
 
         then:
-        result instanceof ServiceResult.SystemError
+        result instanceof ServiceResult.ValidationError
     }
 
-    def "updateTransactionReceiptImageByGuidStandardized should return BusinessError when transaction not found"() {
+    def "updateTransactionReceiptImageByGuidStandardized should return NotFound when transaction not found"() {
         given:
         def guid = "missing-guid"
         def validBase64 = "aGVsbG8="
@@ -1179,7 +1180,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
         1 * imageProcessingServiceMock.getImageFormatType(_) >> ImageFormatType.Jpeg
         1 * imageProcessingServiceMock.createThumbnail(_, ImageFormatType.Jpeg) >> "thumb".bytes
         1 * transactionRepositoryMock.findByOwnerAndGuid(TEST_OWNER, guid) >> Optional.empty()
-        result instanceof ServiceResult.BusinessError
+        result instanceof ServiceResult.NotFound
     }
 
     def "updateTransactionReceiptImageByGuidStandardized should insert new receipt image when none exists"() {

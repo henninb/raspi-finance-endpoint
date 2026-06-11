@@ -374,4 +374,157 @@ class ValidationAmountServiceSpec extends BaseServiceSpec {
         result.data.size() == 1
         result.data[0].transactionState == TransactionState.Cleared
     }
+
+    // ===== Edge cases: save SystemError =====
+
+    def "save should return SystemError when repository throws RuntimeException"() {
+        given:
+        def validationAmount = ValidationAmountBuilder.builder().build()
+        Set<ConstraintViolation<ValidationAmount>> noViolations = [] as Set
+
+        when:
+        def result = standardizedValidationAmountService.save(validationAmount)
+
+        then:
+        1 * validatorMock.validate(validationAmount) >> noViolations
+        1 * validationAmountRepositoryMock.saveAndFlush(validationAmount) >> { throw new RuntimeException("db failure") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    // ===== Edge cases: update error paths =====
+
+    def "update should return ValidationError when saveAndFlush throws ConstraintViolationException"() {
+        given:
+        def existing = ValidationAmountBuilder.builder().withValidationId(1L).build()
+        def patch = ValidationAmountBuilder.builder().withValidationId(1L).withAmount(new BigDecimal("-5.00")).build()
+        ConstraintViolation<ValidationAmount> violation = Mock(ConstraintViolation)
+        def mockPath = Mock(jakarta.validation.Path)
+        mockPath.toString() >> "amount"
+        violation.propertyPath >> mockPath
+        violation.message >> "must be dollar precision"
+        Set<ConstraintViolation<ValidationAmount>> violations = [violation] as Set
+
+        when:
+        def result = standardizedValidationAmountService.update(patch)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 1L) >> Optional.of(existing)
+        1 * validationAmountRepositoryMock.saveAndFlush(_ as ValidationAmount) >> { throw new ConstraintViolationException("bad amount", violations) }
+        result instanceof ServiceResult.ValidationError
+        // extractValidationErrors calls violation.propertyPath internally — no strict 0 * _ constraint here
+    }
+
+    def "update should return BusinessError when saveAndFlush throws DataIntegrityViolationException"() {
+        given:
+        def existing = ValidationAmountBuilder.builder().withValidationId(5L).build()
+        def patch = ValidationAmountBuilder.builder().withValidationId(5L).build()
+
+        when:
+        def result = standardizedValidationAmountService.update(patch)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 5L) >> Optional.of(existing)
+        1 * validationAmountRepositoryMock.saveAndFlush(_ as ValidationAmount) >> { throw new DataIntegrityViolationException("duplicate key") }
+        result instanceof ServiceResult.BusinessError
+        result.errorCode == "DATA_INTEGRITY_VIOLATION"
+        0 * _
+    }
+
+    def "update should return SystemError when saveAndFlush throws RuntimeException"() {
+        given:
+        def existing = ValidationAmountBuilder.builder().withValidationId(6L).build()
+        def patch = ValidationAmountBuilder.builder().withValidationId(6L).build()
+
+        when:
+        def result = standardizedValidationAmountService.update(patch)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 6L) >> Optional.of(existing)
+        1 * validationAmountRepositoryMock.saveAndFlush(_ as ValidationAmount) >> { throw new RuntimeException("db error") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    // ===== Edge cases: deleteById SystemError =====
+
+    def "deleteById should return SystemError when repository delete throws RuntimeException"() {
+        given:
+        def existing = ValidationAmountBuilder.builder().withValidationId(7L).build()
+
+        when:
+        def result = standardizedValidationAmountService.deleteById(7L)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 7L) >> Optional.of(existing)
+        1 * validationAmountRepositoryMock.delete(existing) >> { throw new RuntimeException("delete failure") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    // ===== Edge cases: findById SystemError =====
+
+    def "findById should return SystemError when repository throws RuntimeException"() {
+        when:
+        def result = standardizedValidationAmountService.findById(8L)
+
+        then:
+        1 * validationAmountRepositoryMock.findByOwnerAndValidationIdAndActiveStatusTrue(TEST_OWNER, 8L) >> { throw new RuntimeException("db error") }
+        result instanceof ServiceResult.SystemError
+        0 * _
+    }
+
+    // ===== Edge cases: findValidationAmountByAccountNameOwner — account found, no records =====
+
+    def "findValidationAmountByAccountNameOwner should throw EntityNotFoundException when account exists but no matching validation amounts"() {
+        given:
+        def account = new Account()
+        account.accountId = 1L
+        account.accountNameOwner = "emptyAccount"
+
+        when:
+        standardizedValidationAmountService.findValidationAmountByAccountNameOwner("emptyAccount", TransactionState.Cleared)
+
+        then:
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "emptyAccount") >> Optional.of(account)
+        1 * validationAmountRepositoryMock.findByOwnerAndTransactionStateAndAccountId(TEST_OWNER, TransactionState.Cleared, 1L) >> []
+        thrown(jakarta.persistence.EntityNotFoundException)
+        0 * _
+    }
+
+    // ===== Edge cases: insertValidationAmount — payload accountId skips lookup =====
+
+    def "insertValidationAmount should use payload accountId when greater than zero without calling account lookup"() {
+        given:
+        def va = new ValidationAmount(accountId: 9L, amount: new BigDecimal("100.00"))
+
+        when:
+        def result = standardizedValidationAmountService.insertValidationAmount("anyAccountName", va)
+
+        then:
+        0 * accountRepositoryMock.findByOwnerAndAccountNameOwner(_, _)
+        1 * validatorMock.validate(va) >> ([] as Set)
+        1 * validationAmountRepositoryMock.saveAndFlush(va) >> va
+        // after save, service tries to refresh account validation_date — allow it
+        _ * accountRepositoryMock.updateValidationDateForAccountByOwner(9L, TEST_OWNER) >> 1
+        result.accountId == 9L
+    }
+
+    def "insertValidationAmount should throw ValidationException when save returns ValidationError"() {
+        given:
+        def va = new ValidationAmount(accountId: 5L, amount: new BigDecimal("-1.00"))
+        ConstraintViolation<ValidationAmount> violation = Mock(ConstraintViolation)
+        def mockPath = Mock(jakarta.validation.Path)
+        mockPath.toString() >> "amount"
+        violation.propertyPath >> mockPath
+        violation.message >> "must be dollar precision"
+        Set<ConstraintViolation<ValidationAmount>> violations = [violation] as Set
+
+        when:
+        standardizedValidationAmountService.insertValidationAmount("acc1", va)
+
+        then:
+        1 * validatorMock.validate(va) >> { throw new ConstraintViolationException("Validation failed", violations) }
+        thrown(jakarta.validation.ValidationException)
+    }
 }

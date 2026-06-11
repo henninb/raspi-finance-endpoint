@@ -133,4 +133,56 @@ class ValidationAmountSpec extends BaseDomainSpec {
         va.dateUpdated != null
         0 * _
     }
+
+    void 'test ValidationAmount rejects amount with too many fraction digits'() {
+        given:
+        ValidationAmount validationAmount = new ValidationAmountBuilder()
+                .withAmount(new BigDecimal("3.45155"))
+                .withAccountId(1L)
+                .withTransactionState(TransactionState.Cleared)
+                .build()
+
+        when:
+        Set<ConstraintViolation<ValidationAmount>> violations = validator.validate(validationAmount)
+
+        then:
+        !violations.empty
+        violations.any { it.message == FIELD_MUST_BE_A_CURRENCY_MESSAGE }
+        0 * _
+    }
+
+    void 'test ValidationAmount rejects owner exceeding 100 characters'() {
+        given:
+        ValidationAmount validationAmount = new ValidationAmountBuilder()
+                .withOwner('a' * 101)
+                .withAmount(new BigDecimal("1.00"))
+                .withAccountId(1L)
+                .build()
+
+        when:
+        Set<ConstraintViolation<ValidationAmount>> violations = validator.validate(validationAmount)
+
+        then:
+        !violations.empty
+        violations.any { it.propertyPath.toString() == 'owner' }
+        0 * _
+    }
+
+    void 'test ValidationAmount rejects negative validationId'() {
+        given:
+        ValidationAmount validationAmount = new ValidationAmount()
+        validationAmount.validationId = -1L
+        validationAmount.accountId = 1L
+        validationAmount.amount = new BigDecimal("1.00")
+        validationAmount.transactionState = TransactionState.Cleared
+        validationAmount.validationDate = new Timestamp(System.currentTimeMillis())
+
+        when:
+        Set<ConstraintViolation<ValidationAmount>> violations = validator.validate(validationAmount)
+
+        then:
+        !violations.empty
+        violations.any { it.propertyPath.toString() == 'validationId' }
+        0 * _
+    }
 }

@@ -236,6 +236,10 @@ class TransferService
                 throw IllegalArgumentException("Source and destination accounts must be different: ${transfer.sourceAccount}")
             }
 
+            if (transfer.amount <= BigDecimal.ZERO) {
+                throw IllegalArgumentException("Transfer amount must be positive: ${transfer.amount}")
+            }
+
             // Validate source account exists and is a debit account
             val optionalSourceAccount = accountService.account(transfer.sourceAccount)
             if (!optionalSourceAccount.isPresent) {

@@ -356,4 +356,23 @@ class ValidationAmountInputDtoSpec extends BaseDomainSpec {
         copy.transactionState == TransactionState.Outstanding
         original.accountId == 1L
     }
+
+    def "ValidationAmountInputDto validation should fail for amount with too many fraction digits"() {
+        given:
+        def dto = new ValidationAmountInputDto(
+            null,
+            1L,
+            new Timestamp(System.currentTimeMillis()),
+            true,
+            TransactionState.Cleared,
+            new BigDecimal("100.001")
+        )
+
+        when:
+        Set<ConstraintViolation<ValidationAmountInputDto>> violations = validator.validate(dto)
+
+        then:
+        !violations.isEmpty()
+        violations.any { it.propertyPath.toString() == 'amount' }
+    }
 }

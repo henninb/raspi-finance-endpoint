@@ -7,6 +7,7 @@ import finance.domain.AccountValidationException
 import finance.domain.BonusProgress
 import finance.domain.Category
 import finance.domain.Description
+import finance.domain.DomainException
 import finance.domain.ImageFormatType
 import finance.domain.InvalidReoccurringTypeException
 import finance.domain.InvalidTransactionStateException
@@ -18,9 +19,11 @@ import finance.domain.Totals
 import finance.domain.Transaction
 import finance.domain.TransactionNotFoundException
 import finance.domain.TransactionState
+import finance.domain.TransactionType
 import finance.domain.TransactionValidationException
 import finance.repositories.PaymentRepository
 import finance.repositories.TransactionRepository
+import finance.repositories.TransactionSpecifications
 import finance.utils.TenantContext
 import jakarta.validation.Validator
 import org.springframework.data.domain.Page
@@ -28,6 +31,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
+import org.springframework.transaction.interceptor.TransactionAspectSupport
 import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -71,6 +75,7 @@ class TransactionService
                 }
             }
 
+        @org.springframework.transaction.annotation.Transactional
         override fun save(entity: Transaction): ServiceResult<Transaction> =
             handleServiceOperation("save", entity.guid) {
                 val owner = TenantContext.getCurrentOwner()
@@ -79,6 +84,13 @@ class TransactionService
                 val violations = validator.validate(entity)
                 if (violations.isNotEmpty()) {
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+                }
+
+                if (entity.transactionState == TransactionState.Undefined) {
+                    throw TransactionValidationException("transactionState cannot be Undefined")
+                }
+                if (entity.transactionType == TransactionType.Undefined) {
+                    throw TransactionValidationException("transactionType cannot be Undefined")
                 }
 
                 // Check for existing transaction
@@ -114,6 +126,13 @@ class TransactionService
                 val violations = validator.validate(entity)
                 if (violations.isNotEmpty()) {
                     throw jakarta.validation.ConstraintViolationException("Validation failed", violations)
+                }
+
+                if (entity.transactionState == TransactionState.Undefined) {
+                    throw TransactionValidationException("transactionState cannot be Undefined")
+                }
+                if (entity.transactionType == TransactionType.Undefined) {
+                    entity.transactionType = existingTransaction.get().transactionType
                 }
 
                 // Use existing masterTransactionUpdater logic
@@ -269,6 +288,70 @@ class TransactionService
             }
 
         /**
+         * Find transactions for an account with server-side search and filter params.
+         * Falls back to the optimised non-spec query when no filters are active.
+         */
+        fun findByAccountNameOwnerWithFiltersStandardized(
+            accountNameOwner: String,
+            pageable: Pageable,
+            search: String? = null,
+            states: List<TransactionState>? = null,
+            transactionTypes: List<TransactionType>? = null,
+            reoccurringTypes: List<ReoccurringType>? = null,
+            startDate: LocalDate? = null,
+            endDate: LocalDate? = null,
+            minAmount: BigDecimal? = null,
+            maxAmount: BigDecimal? = null,
+        ): ServiceResult<Page<Transaction>> =
+            handleServiceOperation("findByAccountNameOwnerWithFilters", accountNameOwner) {
+                val owner = TenantContext.getCurrentOwner()
+                val sortedPageable = applyTransactionSort(pageable)
+                val isFiltered =
+                    !search.isNullOrBlank() ||
+                        !states.isNullOrEmpty() ||
+                        !transactionTypes.isNullOrEmpty() ||
+                        !reoccurringTypes.isNullOrEmpty() ||
+                        startDate != null ||
+                        endDate != null ||
+                        minAmount != null ||
+                        maxAmount != null
+
+                if (!isFiltered) {
+                    executeWithResilienceSync(
+                        operation = {
+                            transactionRepository.findByOwnerAndAccountNameOwnerAndActiveStatus(
+                                owner,
+                                accountNameOwner,
+                                true,
+                                sortedPageable,
+                            )
+                        },
+                        operationName = "findByAccountNameOwner-paginated-$accountNameOwner",
+                        timeoutSeconds = 60,
+                    )
+                } else {
+                    val spec =
+                        TransactionSpecifications.searchSpec(
+                            owner = owner,
+                            accountNameOwner = accountNameOwner,
+                            search = search,
+                            states = states,
+                            transactionTypes = transactionTypes,
+                            reoccurringTypes = reoccurringTypes,
+                            startDate = startDate,
+                            endDate = endDate,
+                            minAmount = minAmount,
+                            maxAmount = maxAmount,
+                        )
+                    executeWithResilienceSync(
+                        operation = { transactionRepository.findAll(spec, sortedPageable) },
+                        operationName = "findByAccountNameOwnerFiltered-$accountNameOwner",
+                        timeoutSeconds = 60,
+                    )
+                }
+            }
+
+        /**
          * Find transactions by category with pagination.
          * Applies two-tier sorting: transactionState DESC, transactionDate DESC.
          */
@@ -360,49 +443,55 @@ class TransactionService
                 transactionRepository.saveAndFlush(transaction)
             }
 
+        @org.springframework.transaction.annotation.Transactional
         fun updateTransactionReceiptImageByGuidStandardized(
             guid: String,
             imageBase64Payload: String,
         ): ServiceResult<ReceiptImage> {
-            return handleServiceOperation("updateTransactionReceiptImage", guid) {
-                val owner = TenantContext.getCurrentOwner()
-                // 5 MB decoded → ~6.67 MB base64; reject oversized payloads before allocating heap
-                val maxBase64Length = 5 * 1024 * 1024 * 4 / 3 + 1024
-                if (imageBase64Payload.length > maxBase64Length) {
-                    throw IllegalArgumentException("Image payload exceeds the maximum allowed size of 5 MB")
-                }
+            val owner = TenantContext.getCurrentOwner()
+            // 5 MB decoded → ~6.67 MB base64; reject oversized payloads before allocating heap
+            val maxBase64Length = 5 * 1024 * 1024 * 4 / 3 + 1024
+            if (imageBase64Payload.length > maxBase64Length) {
+                return ServiceResult.ValidationError.of(mapOf("image" to "Image payload exceeds the maximum allowed size of 5 MB"))
+            }
+            return try {
                 val imageBase64String = imageBase64Payload.replace("^data:image/[a-z]+;base64,[ ]?".toRegex(), "")
                 val rawImage = Base64.getDecoder().decode(imageBase64String)
                 if (!imageProcessingService.validateImageSize(rawImage)) {
-                    throw IllegalArgumentException("Decoded image exceeds the maximum allowed size of 5 MB")
+                    return ServiceResult.ValidationError.of(mapOf("image" to "Decoded image exceeds the maximum allowed size of 5 MB"))
                 }
                 val imageFormatType = imageProcessingService.getImageFormatType(rawImage)
                 val thumbnail = imageProcessingService.createThumbnail(rawImage, imageFormatType)
 
                 val optionalTransaction = transactionRepository.findByOwnerAndGuid(owner, guid)
                 if (optionalTransaction.isEmpty) {
-                    throw TransactionNotFoundException("Cannot save a image for a transaction that does not exist with guid = '$guid'.")
+                    return ServiceResult.NotFound.of("Transaction not found: $guid")
                 }
-
                 val transaction = optionalTransaction.get()
 
                 if (transaction.receiptImageId != null) {
                     val receiptImageResult = receiptImageService.findById(transaction.receiptImageId!!)
-                    when (receiptImageResult) {
+                    return when (receiptImageResult) {
                         is ServiceResult.Success -> {
                             val existingReceiptImage = receiptImageResult.data
                             existingReceiptImage.thumbnail = thumbnail
                             existingReceiptImage.image = rawImage
                             existingReceiptImage.imageFormatType = imageFormatType
-                            val updateResult = receiptImageService.save(existingReceiptImage)
-                            return@handleServiceOperation when (updateResult) {
-                                is ServiceResult.Success -> updateResult.data
-                                else -> throw ReceiptImageException("Failed to update receipt image for transaction ${transaction.guid}: $updateResult")
+                            when (val updateResult = receiptImageService.save(existingReceiptImage)) {
+                                is ServiceResult.Success -> {
+                                    ServiceResult.Success.of(updateResult.data)
+                                }
+
+                                else -> {
+                                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                                    ServiceResult.SystemError.of(RuntimeException("Failed to update receipt image for transaction ${transaction.guid}: $updateResult"))
+                                }
                             }
                         }
 
                         else -> {
-                            throw ReceiptImageException("Failed to find receipt image for transaction ${transaction.guid}: $receiptImageResult")
+                            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                            ServiceResult.SystemError.of(RuntimeException("Receipt image not found for transaction ${transaction.guid}: $receiptImageResult"))
                         }
                     }
                 }
@@ -415,14 +504,30 @@ class TransactionService
                 val insertResult = receiptImageService.save(receiptImage)
                 val response =
                     when (insertResult) {
-                        is ServiceResult.Success -> insertResult.data
-                        else -> throw ReceiptImageException("Failed to insert receipt image for transaction ${transaction.guid}: $insertResult")
+                        is ServiceResult.Success -> {
+                            insertResult.data
+                        }
+
+                        else -> {
+                            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                            return ServiceResult.SystemError.of(RuntimeException("Failed to insert receipt image for transaction ${transaction.guid}: $insertResult"))
+                        }
                     }
                 transaction.receiptImageId = response.receiptImageId
                 transaction.dateUpdated = Timestamp(System.currentTimeMillis())
                 transactionRepository.saveAndFlush(transaction)
                 meterService.incrementTransactionReceiptImageInserted(transaction.accountNameOwner)
-                response
+                ServiceResult.Success.of(response)
+            } catch (ex: DomainException) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                ServiceResult.BusinessError.of(ex.message ?: "Domain error", "DOMAIN_RULE_VIOLATION")
+            } catch (ex: IllegalArgumentException) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                ServiceResult.ValidationError.of(mapOf("image" to (ex.message ?: "Validation error")))
+            } catch (ex: RuntimeException) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()
+                logger.error("Failed to update receipt image for transaction $guid", ex)
+                ServiceResult.SystemError.of(ex)
             }
         }
 
@@ -467,6 +572,7 @@ class TransactionService
                         accountId = transaction.accountId
                         accountNameOwner = transaction.accountNameOwner
                         accountType = transaction.accountType
+                        transactionType = transaction.transactionType
                         activeStatus = transaction.activeStatus
                         amount = transaction.amount
                         category = transaction.category
@@ -554,6 +660,7 @@ class TransactionService
                     throw AccountValidationException("Account not found: ${transaction.accountNameOwner}")
                 }
                 val account = accountOptional.get()
+                transaction.transactionId = transactionFromDatabase.transactionId
                 transaction.accountId = account.accountId
                 transaction.dateAdded = transactionFromDatabase.dateAdded
                 transaction.dateUpdated = Timestamp(System.currentTimeMillis())
@@ -659,22 +766,30 @@ class TransactionService
             transaction: Transaction,
             date: LocalDate,
         ): LocalDate =
-            when {
-                transaction.reoccurringType == ReoccurringType.FortNightly -> {
+            when (transaction.reoccurringType) {
+                ReoccurringType.FortNightly -> {
                     date.plusDays(14)
                 }
 
-                transaction.accountType != AccountType.Debit -> {
-                    date.plusYears(1)
-                }
-
-                transaction.reoccurringType == ReoccurringType.Monthly -> {
+                ReoccurringType.Monthly -> {
                     date.plusMonths(1)
                 }
 
+                ReoccurringType.Quarterly -> {
+                    date.plusMonths(3)
+                }
+
+                ReoccurringType.BiAnnually -> {
+                    date.plusMonths(6)
+                }
+
+                ReoccurringType.Annually -> {
+                    date.plusYears(1)
+                }
+
                 else -> {
-                    logger.warn("debit transaction ReoccurringType needs to be configured.")
-                    throw InvalidReoccurringTypeException("debit transaction ReoccurringType needs to be configured.")
+                    logger.warn("Invalid reoccurring type for future transaction: ${transaction.reoccurringType}")
+                    throw InvalidReoccurringTypeException("ReoccurringType '${transaction.reoccurringType}' is not valid for future transactions.")
                 }
             }
     }

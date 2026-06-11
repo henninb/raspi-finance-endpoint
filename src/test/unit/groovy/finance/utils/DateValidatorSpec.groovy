@@ -35,15 +35,15 @@ class DateValidatorSpec extends Specification {
         result == true
     }
 
-    def "isValid - returns false for date on 2000-01-01"() {
+    def "isValid - returns true for date on 2000-01-01"() {
         given:
-        def invalidDate = LocalDate.parse("2000-01-01")
+        def validDate = LocalDate.parse("2000-01-01")
 
         when:
-        def result = dateValidator.isValid(invalidDate, contextMock)
+        def result = dateValidator.isValid(validDate, contextMock)
 
         then:
-        result == false
+        result == true
     }
 
     def "isValid - returns false for date before 2000-01-01"() {
@@ -102,16 +102,15 @@ class DateValidatorSpec extends Specification {
         result == false
     }
 
-    def "isValid - returns false for date exactly 50 years from now"() {
+    def "isValid - returns true for date exactly 50 years from now"() {
         given:
-        // plusYears(50) is NOT before itself, so isBefore(maxDate) == false
         def boundaryDate = LocalDate.now().plusYears(50)
 
         when:
         def result = dateValidator.isValid(boundaryDate, contextMock)
 
         then:
-        result == false
+        result == true
     }
 
     def "isValid - returns true for date one day before the 50-year boundary"() {

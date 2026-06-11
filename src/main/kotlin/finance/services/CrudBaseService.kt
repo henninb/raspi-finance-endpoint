@@ -65,6 +65,10 @@ abstract class CrudBaseService<T, ID>
                 val message = "Data integrity violation in $operation for ${getEntityName()}: ${ex.message}"
                 logger.error(message, ex)
                 ServiceResult.BusinessError.of(message, "DATA_INTEGRITY_VIOLATION")
+            } catch (ex: IllegalArgumentException) {
+                val message = "Invalid argument in $operation for ${getEntityName()}: ${ex.message}"
+                logger.error(message, ex)
+                ServiceResult.ValidationError.of(mapOf("argument" to (ex.message ?: "Invalid argument")))
             } catch (ex: IllegalStateException) {
                 // Handle business logic state exceptions
                 val message = "Business logic error in $operation for ${getEntityName()}: ${ex.message}"

@@ -502,7 +502,7 @@ class TransactionControllerSpec extends Specification {
         response.body.guid == "future-insert"
     }
 
-    def "insertFutureTransaction throws 409 on data integrity violation"() {
+    def "insertFutureTransaction throws 400 on business error"() {
         given:
         Transaction input = createValidTransaction("future-dup", "future_dup_account")
         and:
@@ -513,8 +513,8 @@ class TransactionControllerSpec extends Specification {
 
         then:
         def ex = thrown(org.springframework.web.server.ResponseStatusException)
-        ex.statusCode == HttpStatus.CONFLICT
-        ex.reason.contains("Duplicate future transaction found")
+        ex.statusCode == HttpStatus.BAD_REQUEST
+        ex.reason.contains("Duplicate future transaction")
     }
 
     def "insertFutureTransaction throws 400 on validation error"() {

@@ -143,7 +143,8 @@ class TransactionController(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): ResponseEntity<Page<Transaction>> {
-        val pageable = PageRequest.of(page, size, Sort.by("transactionDate").descending())
+        val cappedSize = size.coerceIn(1, 1000)
+        val pageable = PageRequest.of(page, cappedSize, Sort.by("transactionDate").descending())
         return transactionService.findTransactionsByDateRangeStandardized(start, end, pageable).toPagedOkResponse(pageable)
     }
 
@@ -154,7 +155,7 @@ class TransactionController(
         @PathVariable("accountNameOwner") accountNameOwner: String,
     ): ResponseEntity<List<Transaction>> = transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner).toListOkResponse()
 
-    @Operation(summary = "List transactions for an account (paginated)")
+    @Operation(summary = "List transactions for an account (paginated, with optional server-side search and filters)")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Page of transactions returned"),
@@ -164,8 +165,48 @@ class TransactionController(
     @GetMapping("/account/select/{accountNameOwner}/paged", produces = ["application/json"])
     fun selectByAccountNameOwnerPaged(
         @PathVariable("accountNameOwner") accountNameOwner: String,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) states: String?,
+        @RequestParam(required = false) transactionTypes: String?,
+        @RequestParam(required = false) reoccurringTypes: String?,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate?,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate?,
+        @RequestParam(required = false) minAmount: BigDecimal?,
+        @RequestParam(required = false) maxAmount: BigDecimal?,
         pageable: Pageable,
-    ): ResponseEntity<Page<Transaction>> = transactionService.findByAccountNameOwnerOrderByTransactionDateStandardized(accountNameOwner, pageable).toPagedOkResponse(pageable)
+    ): ResponseEntity<Page<Transaction>> {
+        val stateList =
+            states
+                ?.split(",")
+                ?.mapNotNull { runCatching { TransactionState.fromString(it.trim()) }.getOrNull() }
+                ?.takeIf { it.isNotEmpty() }
+
+        val typeList =
+            transactionTypes
+                ?.split(",")
+                ?.mapNotNull { v -> runCatching { finance.domain.TransactionType.fromString(v.trim()) }.getOrNull() }
+                ?.takeIf { it.isNotEmpty() }
+
+        val reoccurList =
+            reoccurringTypes
+                ?.split(",")
+                ?.mapNotNull { v -> runCatching { finance.domain.ReoccurringType.fromString(v.trim()) }.getOrNull() }
+                ?.takeIf { it.isNotEmpty() }
+
+        return transactionService
+            .findByAccountNameOwnerWithFiltersStandardized(
+                accountNameOwner = accountNameOwner,
+                pageable = pageable,
+                search = search?.trim()?.takeIf { it.isNotBlank() },
+                states = stateList,
+                transactionTypes = typeList,
+                reoccurringTypes = reoccurList,
+                startDate = startDate,
+                endDate = endDate,
+                minAmount = minAmount,
+                maxAmount = maxAmount,
+            ).toPagedOkResponse(pageable)
+    }
 
     @Operation(summary = "Get totals for an account")
     @ApiResponses(value = [ApiResponse(responseCode = "200", description = "Totals returned"), ApiResponse(responseCode = "500", description = "Internal server error")])
@@ -210,7 +251,7 @@ class TransactionController(
             is ServiceResult.Success -> ResponseEntity(result.data, HttpStatus.CREATED)
             is ServiceResult.NotFound -> throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error creating future transaction")
             is ServiceResult.ValidationError -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation error: ${result.errors}")
-            is ServiceResult.BusinessError -> throw ResponseStatusException(HttpStatus.CONFLICT, "Duplicate future transaction found.")
+            is ServiceResult.BusinessError -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, result.message)
             is ServiceResult.SystemError -> throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error creating future transaction")
         }
 
@@ -275,5 +316,16 @@ class TransactionController(
         @RequestParam("targetAmount") targetAmount: BigDecimal,
         @RequestParam("bonusAmount") bonusAmount: BigDecimal,
         @RequestParam("windowDays", defaultValue = "90") windowDays: Long,
-    ): ResponseEntity<BonusProgress> = transactionService.calculateBonusProgressStandardized(accountNameOwner, startDate, targetAmount, bonusAmount, windowDays).toOkResponse()
+    ): ResponseEntity<BonusProgress> {
+        if (targetAmount < BigDecimal.ZERO) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "targetAmount must be non-negative")
+        }
+        if (bonusAmount < BigDecimal.ZERO) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "bonusAmount must be non-negative")
+        }
+        if (windowDays < 1) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "windowDays must be at least 1")
+        }
+        return transactionService.calculateBonusProgressStandardized(accountNameOwner, startDate, targetAmount, bonusAmount, windowDays).toOkResponse()
+    }
 }
