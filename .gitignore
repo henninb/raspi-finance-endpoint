@@ -80,3 +80,4 @@ env.secrets.old
 .codex
 test_output.txt
 memory/
+context.txt
