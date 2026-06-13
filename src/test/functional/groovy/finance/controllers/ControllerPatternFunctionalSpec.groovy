@@ -271,6 +271,7 @@ class ControllerPatternFunctionalSpec extends Specification {
             'CategoryController': 'MODERATE - needs method naming and empty result standardization',
             'DescriptionController': 'MODERATE - needs method naming and parameter naming standardization',
             'PaymentController': 'MODERATE - needs method naming and parameter standardization',
+            'ValidationAmountController': 'MODERATE - needs method naming and endpoint standardization',
             'AccountController': 'COMPLEX - needs request body standardization and business logic separation',
             'TransactionController': 'MOST COMPLEX - needs hierarchical endpoint reorganization'
         ]

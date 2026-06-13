@@ -76,17 +76,18 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
     void 'test payment unique constraint on destination, date, and amount'() {
         given:
         String cleanOwner = testOwner.replaceAll(/[^a-z]/, '').toLowerCase()
+        String uniqueSource = "source_${cleanOwner}"
         String uniqueDestination = "unique_${cleanOwner}"
         LocalDate transactionDate = LocalDate.parse("2024-02-20")
         BigDecimal amount = new BigDecimal("100.50")
 
         Payment payment1 = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withUniqueAccounts("source1", "uniquedest")
+                .withUniqueAccounts("source", "uniquedest")
                 .withAmount(amount)
                 .withTransactionDate(transactionDate)
                 .buildAndValidate()
 
-        // Manually set destination to ensure exact match for constraint test
+        payment1.sourceAccount = uniqueSource
         payment1.destinationAccount = uniqueDestination
 
         when:
@@ -95,17 +96,17 @@ class PaymentRepositoryIntSpec extends BaseIntegrationSpec {
         then:
         savedPayment1.paymentId != null
 
-        when: "trying to save payment with same destination, date, and amount"
+        when: "trying to save payment with same source, destination, date, and amount"
         Payment payment2 = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withUniqueAccounts("source2", "uniquedest")
+                .withUniqueAccounts("source", "uniquedest")
                 .withAmount(amount)
                 .withTransactionDate(transactionDate)
                 .buildAndValidate()
 
-        // Set same destination to trigger constraint
+        payment2.sourceAccount = uniqueSource
         payment2.destinationAccount = uniqueDestination
 
-        paymentRepository.save(payment2)
+        paymentRepository.saveAndFlush(payment2)
 
         then:
         thrown(DataIntegrityViolationException)

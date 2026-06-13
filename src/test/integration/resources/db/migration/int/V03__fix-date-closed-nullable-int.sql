@@ -1,2 +1,2 @@
-ALTER TABLE int.t_account ALTER COLUMN date_closed SET NULL;
-UPDATE int.t_account SET date_closed = NULL WHERE date_closed = PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S');
+ALTER TABLE t_account ALTER COLUMN date_closed SET NULL;
+UPDATE t_account SET date_closed = NULL WHERE date_closed = PARSEDATETIME('1970-01-01 00:00:00.0', 'yyyy-MM-dd HH:mm:ss.S');

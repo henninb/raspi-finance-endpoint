@@ -131,8 +131,7 @@ class PaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
         and: 'a test payment using proper SmartBuilder pattern'
         Payment originalPayment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withSourceAccount("updsrc_test")
-                .withDestinationAccount("upddest_test")
+                .withTestDataAccounts()
                 .withAmount(new BigDecimal("300.00"))
                 .buildAndValidate()
 
@@ -143,8 +142,7 @@ class PaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
         and: 'updated payment data'
         Payment updatedPayment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withSourceAccount("updsrc_new")
-                .withDestinationAccount("upddest_new")
+                .withTestDataAccounts()
                 .withAmount(new BigDecimal("400.00"))
                 .buildAndValidate()
         // Keep the same ID for update operation
@@ -313,8 +311,7 @@ class PaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
         and: 'a test payment using proper SmartBuilder pattern'
         Payment originalPayment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withSourceAccount("oksrc_test")
-                .withDestinationAccount("okdest_test")
+                .withTestDataAccounts()
                 .withAmount(new BigDecimal("700.00"))
                 .buildAndValidate()
 
@@ -325,8 +322,7 @@ class PaymentControllerFunctionalSpec extends BaseControllerFunctionalSpec {
 
         and: 'updated payment data'
         Payment updatedPayment = SmartPaymentBuilder.builderForOwner(testOwner)
-                .withSourceAccount("oksrc_upd")
-                .withDestinationAccount("okdest_upd")
+                .withTestDataAccounts()
                 .withAmount(new BigDecimal("800.00"))
                 .buildAndValidate()
         updatedPayment.paymentId = paymentId

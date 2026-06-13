@@ -16,8 +16,12 @@ class SmartParameterBuilder {
 
     private SmartParameterBuilder(String testOwner) {
         this.testOwner = testOwner
-        // Generate unique, constraint-compliant parameter name and value
         generateUniqueParameterFields()
+    }
+
+    private String safeOwnerForName() {
+        String safe = testOwner.replaceAll(/[^a-z0-9_-]/, '').toLowerCase()
+        return safe.isEmpty() ? 'owner' : safe
     }
 
     static SmartParameterBuilder builderForOwner(String testOwner) {
@@ -26,23 +30,22 @@ class SmartParameterBuilder {
 
     private void generateUniqueParameterFields() {
         int counter = COUNTER.incrementAndGet()
+        String safeOwner = safeOwnerForName()
 
-        // Generate parameterName (1-50 chars, lowercase)
-        String baseName = "param_${counter}_${testOwner}"
+        String baseName = "param_${counter}_${safeOwner}"
         this.parameterName = ensureValidLength(baseName.toLowerCase())
 
-        // Generate parameterValue (1-50 chars, lowercase)
-        String baseValue = "value_${counter}_${testOwner}"
+        String baseValue = "value_${counter}_${safeOwner}"
         this.parameterValue = ensureValidLength(baseValue.toLowerCase())
 
         log.debug("Generated parameter: name=${parameterName}, value=${parameterValue} for test owner: ${testOwner}")
     }
 
     private String ensureValidLength(String input) {
-        // Ensure constraints: min 1, max 50 chars
         if (input.length() > 50) {
-            String shortOwner = testOwner.length() > 8 ? testOwner[0..7] : testOwner
-            String shortened = input.replace(testOwner, shortOwner)
+            String safeOwner = safeOwnerForName()
+            String shortOwner = safeOwner.length() > 8 ? safeOwner[0..7] : safeOwner
+            String shortened = input.replace(testOwner, shortOwner).replace(safeOwnerForName(), shortOwner)
             if (shortened.length() > 50) {
                 shortened = shortened[0..49]
             }
@@ -99,13 +102,13 @@ class SmartParameterBuilder {
     }
 
     SmartParameterBuilder withUniqueParameterName(String prefix = "test") {
-        String baseName = "${prefix}_${COUNTER.incrementAndGet()}_${testOwner}"
+        String baseName = "${prefix}_${COUNTER.incrementAndGet()}_${safeOwnerForName()}"
         this.parameterName = ensureValidLength(baseName.toLowerCase())
         return this
     }
 
     SmartParameterBuilder withUniqueParameterValue(String prefix = "value") {
-        String baseValue = "${prefix}_${COUNTER.incrementAndGet()}_${testOwner}"
+        String baseValue = "${prefix}_${COUNTER.incrementAndGet()}_${safeOwnerForName()}"
         this.parameterValue = ensureValidLength(baseValue.toLowerCase())
         return this
     }
@@ -128,10 +131,10 @@ class SmartParameterBuilder {
 
     // Common parameter patterns for testing
     SmartParameterBuilder asPaymentAccountParameter() {
-        this.parameterName = "payment_account_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-        this.parameterValue = "bank_${testOwner}".toLowerCase()
+        String safeOwner = safeOwnerForName()
+        this.parameterName = "payment_account_${COUNTER.incrementAndGet()}_${safeOwner}".toLowerCase()
+        this.parameterValue = "bank_${safeOwner}".toLowerCase()
 
-        // Ensure length constraints
         this.parameterName = ensureValidLength(this.parameterName)
         this.parameterValue = ensureValidLength(this.parameterValue)
 
@@ -139,10 +142,10 @@ class SmartParameterBuilder {
     }
 
     SmartParameterBuilder asConfigParameter(String configType) {
-        this.parameterName = "${configType}_config_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-        this.parameterValue = "${configType}_value_${testOwner}".toLowerCase()
+        String safeOwner = safeOwnerForName()
+        this.parameterName = "${configType}_config_${COUNTER.incrementAndGet()}_${safeOwner}".toLowerCase()
+        this.parameterValue = "${configType}_value_${safeOwner}".toLowerCase()
 
-        // Ensure length constraints
         this.parameterName = ensureValidLength(this.parameterName)
         this.parameterValue = ensureValidLength(this.parameterValue)
 
@@ -150,10 +153,10 @@ class SmartParameterBuilder {
     }
 
     SmartParameterBuilder withKeyValuePair(String key, String value) {
-        this.parameterName = "${key}_${COUNTER.incrementAndGet()}_${testOwner}".toLowerCase()
-        this.parameterValue = "${value}_${testOwner}".toLowerCase()
+        String safeOwner = safeOwnerForName()
+        this.parameterName = "${key}_${COUNTER.incrementAndGet()}_${safeOwner}".toLowerCase()
+        this.parameterValue = "${value}_${safeOwner}".toLowerCase()
 
-        // Ensure length constraints
         this.parameterName = ensureValidLength(this.parameterName)
         this.parameterValue = ensureValidLength(this.parameterValue)
 

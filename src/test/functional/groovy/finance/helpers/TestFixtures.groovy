@@ -405,7 +405,7 @@ class PaymentTestContext {
     private void createAccountDirectly(String accountName, String accountType) {
         // Create account directly with the full account name
         testDataManager.jdbcTemplate.update("""
-            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
+            INSERT INTO t_account(account_name_owner, account_type, active_status, moniker,
                                   date_closed, date_updated, date_added)
             VALUES (?, ?, true, '0000', '1969-12-31 18:00:00.000000',
                     '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
@@ -657,7 +657,7 @@ class ValidationAmountTestContext {
     // Get the accountId for the test owner's primary account
     private Long getPrimaryAccountId() {
         return testDataManager.jdbcTemplate.queryForObject(
-            "SELECT account_id FROM func.t_account WHERE account_name_owner = ?",
+            "SELECT account_id FROM t_account WHERE account_name_owner = ?",
             Long.class, "primary_${testOwner}".toLowerCase()
         )
     }
@@ -806,7 +806,7 @@ class TransferTestContext {
     private void createAccountDirectly(String accountName, String accountType) {
         // Create account directly with the full account name
         testDataManager.jdbcTemplate.update("""
-            INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker,
+            INSERT INTO t_account(account_name_owner, account_type, active_status, moniker,
                                   date_closed, date_updated, date_added)
             VALUES (?, ?, true, '0000', '1969-12-31 18:00:00.000000',
                     '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')

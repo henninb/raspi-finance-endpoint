@@ -64,7 +64,7 @@ class TestDataManager {
         String categoryName = "test_category_${ownerClean}".toLowerCase()
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_category (category_name, active_status, owner, date_updated, date_added)
+                INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added)
                 VALUES (?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
             """, categoryName, testOwner)
         } catch (Exception e) {
@@ -80,7 +80,7 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_account(account_name_owner, account_type, active_status, moniker, owner,
+                INSERT INTO t_account(account_name_owner, account_type, active_status, moniker, owner,
                                       date_closed, validation_date, date_updated, date_added)
                 VALUES (?, ?, ?, '0000', ?, '1969-12-31 18:00:00.000000', '1970-01-01 00:00:00.000000',
                         '2020-12-23 20:04:37.903600', '2020-09-05 20:33:34.077330')
@@ -102,7 +102,7 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_category (category_name, active_status, owner, date_updated, date_added)
+                INSERT INTO t_category (category_name, active_status, owner, date_updated, date_added)
                 VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
             """, categoryName, activeStatus, testOwner)
         } catch (Exception e) {
@@ -137,7 +137,7 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
+            INSERT INTO t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
             VALUES (?, ?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
         """, parameterName, parameterValue, activeStatus, testOwner)
 
@@ -165,7 +165,7 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
+            INSERT INTO t_parameter (parameter_name, parameter_value, active_status, owner, date_updated, date_added)
             VALUES (?, ?, true, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
         """, parameterName, parameterValue, testOwner)
 
@@ -183,7 +183,7 @@ class TestDataManager {
         }
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_description (description_name, active_status, owner, date_updated, date_added)
+            INSERT INTO t_description (description_name, active_status, owner, date_updated, date_added)
             VALUES (?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
         """, descriptionName, activeStatus, testOwner)
 
@@ -214,11 +214,11 @@ class TestDataManager {
         ensureCategoryExists(testOwner, "test_category")
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
+            INSERT INTO t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
                                       active_status, notes, receipt_image_id, owner, date_updated, date_added)
-            VALUES ((select account_id from func.t_account where account_name_owner=?),
-                    (select account_type from func.t_account where account_name_owner=?),
+            VALUES ((select account_id from t_account where account_name_owner=?),
+                    (select account_type from t_account where account_name_owner=?),
                     'expense', ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
         """, accountName, accountName, accountName, guid, description,
@@ -242,11 +242,11 @@ class TestDataManager {
         ensureCategoryExists(testOwner, category ?: "test_category")
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
+            INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
                                       active_status, notes, receipt_image_id, owner, date_updated, date_added, transaction_type)
-            VALUES ((select account_id from func.t_account where account_name_owner=?),
-                    (select account_type from func.t_account where account_name_owner=?),
+            VALUES ((select account_id from t_account where account_name_owner=?),
+                    (select account_type from t_account where account_name_owner=?),
                     ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139', 'expense')
         """, accountName, accountName, accountName, guid, description,
@@ -261,7 +261,7 @@ class TestDataManager {
         Integer count = 0
         try {
             count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM func.t_account WHERE account_name_owner = ? AND owner = ?",
+                "SELECT COUNT(*) FROM t_account WHERE account_name_owner = ? AND owner = ?",
                 Integer.class, accountName, testOwner
             )
         } catch (Exception e) {
@@ -281,7 +281,7 @@ class TestDataManager {
         Integer count = 0
         try {
             count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM func.t_category WHERE category_name = ? AND owner = ?",
+                "SELECT COUNT(*) FROM t_category WHERE category_name = ? AND owner = ?",
                 Integer.class, categoryName, testOwner
             )
         } catch (Exception e) {
@@ -315,10 +315,10 @@ class TestDataManager {
         ensureCategoryExists(testOwner, category)
 
         jdbcTemplate.update("""
-            INSERT INTO func.t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
+            INSERT INTO t_transaction(account_id, account_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
                                       active_status, notes, receipt_image_id, owner, date_updated, date_added, transaction_type)
-            VALUES ((select account_id from func.t_account where account_name_owner=?),
+            VALUES ((select account_id from t_account where account_name_owner=?),
                     ?, ?, ?, '2020-09-04', ?, ?, ?, ?, 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139', ?)
         """, accountName, accountType, accountName, guid, description,
@@ -337,27 +337,27 @@ class TestDataManager {
 
         // Source transaction (credit account - negative amount)
         jdbcTemplate.update("""
-            INSERT INTO func.t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
+            INSERT INTO t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
                                       active_status, notes, receipt_image_id, owner, date_updated, date_added)
-            VALUES ((select account_id from func.t_account where account_name_owner=?), 'credit', 'payment', ?, ?, '2020-12-31',
+            VALUES ((select account_id from t_account where account_name_owner=?), 'credit', 'payment', ?, ?, '2020-12-31',
                     'payment_source', ?, ?, 'cleared', 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
         """, sourceAccount, sourceAccount, sourceGuid, "test_category_${testOwner}", amount.negate(), testOwner)
 
         // Destination transaction (debit account - positive amount)
         jdbcTemplate.update("""
-            INSERT INTO func.t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
+            INSERT INTO t_transaction(account_id, account_type, transaction_type, account_name_owner, guid, transaction_date,
                                       description, category, amount, transaction_state, reoccurring_type,
                                       active_status, notes, receipt_image_id, owner, date_updated, date_added)
-            VALUES ((select account_id from func.t_account where account_name_owner=?), 'debit', 'payment', ?, ?, '2020-12-31',
+            VALUES ((select account_id from t_account where account_name_owner=?), 'debit', 'payment', ?, ?, '2020-12-31',
                     'payment_dest', ?, ?, 'cleared', 'undefined', true, '', null, ?,
                     '2020-10-27 18:51:06.903105', '2020-09-05 20:34:39.360139')
         """, destAccount, destAccount, destGuid, "test_category_${testOwner}", amount, testOwner)
 
         // Create the payment record
         jdbcTemplate.update("""
-            INSERT INTO func.t_payment (source_account, destination_account, transaction_date, amount,
+            INSERT INTO t_payment (source_account, destination_account, transaction_date, amount,
                                    guid_source, guid_destination, active_status, owner, date_updated, date_added)
             VALUES (?, ?, '2020-12-31', ?, ?, ?, true, ?, '2021-01-09 14:26:26.739000', '2021-01-09 14:26:26.739000')
         """, sourceAccount, destAccount, amount, sourceGuid, destGuid, testOwner)
@@ -377,52 +377,52 @@ class TestDataManager {
 
         // Delete payments first
         String clean = cleanOwner(testOwner)
-        safeUpdate("DELETE FROM func.t_payment WHERE source_account LIKE ? OR destination_account LIKE ?",
+        safeUpdate("DELETE FROM t_payment WHERE source_account LIKE ? OR destination_account LIKE ?",
                    "%${testOwner}", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_payment WHERE source_account LIKE ? OR destination_account LIKE ?",
+        safeUpdate("DELETE FROM t_payment WHERE source_account LIKE ? OR destination_account LIKE ?",
                    "%${clean}", "%${clean}")
 
         // Delete transaction categories
-        safeUpdate("DELETE FROM func.t_transaction_categories WHERE transaction_id IN (SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE ?)",
+        safeUpdate("DELETE FROM t_transaction_categories WHERE transaction_id IN (SELECT transaction_id FROM t_transaction WHERE account_name_owner LIKE ?)",
                    "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_transaction_categories WHERE transaction_id IN (SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE ?)",
+        safeUpdate("DELETE FROM t_transaction_categories WHERE transaction_id IN (SELECT transaction_id FROM t_transaction WHERE account_name_owner LIKE ?)",
                    "%${clean}")
 
         // Delete transactions
-        safeUpdate("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_transaction WHERE account_name_owner LIKE ?", "%${clean}")
+        safeUpdate("DELETE FROM t_transaction WHERE account_name_owner LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM t_transaction WHERE account_name_owner LIKE ?", "%${clean}")
 
         // Delete test-specific validation amounts (FK constraint requires this before deleting accounts)
-        safeUpdate("DELETE FROM func.t_validation_amount WHERE account_id IN (SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_validation_amount WHERE account_id IN (SELECT account_id FROM func.t_account WHERE account_name_owner LIKE ?)", "%${clean}")
+        safeUpdate("DELETE FROM t_validation_amount WHERE account_id IN (SELECT account_id FROM t_account WHERE account_name_owner LIKE ?)", "%${testOwner}")
+        safeUpdate("DELETE FROM t_validation_amount WHERE account_id IN (SELECT account_id FROM t_account WHERE account_name_owner LIKE ?)", "%${clean}")
 
         // Delete accounts (with error handling for FK constraints)
         try {
-            jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${testOwner}")
+            jdbcTemplate.update("DELETE FROM t_account WHERE account_name_owner LIKE ?", "%${testOwner}")
         } catch (Exception e) {
             log.warn("Failed to delete accounts for ${testOwner}, possibly due to remaining FK references: ${e.message}")
         }
         try {
-            jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE ?", "%${clean}")
+            jdbcTemplate.update("DELETE FROM t_account WHERE account_name_owner LIKE ?", "%${clean}")
         } catch (Exception e) {
             log.warn("Failed to delete accounts for ${clean}, possibly due to remaining FK references: ${e.message}")
         }
 
         // Delete test-specific categories
-        safeUpdate("DELETE FROM func.t_category WHERE category_name LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_category WHERE category_name LIKE ?", "%${clean}")
+        safeUpdate("DELETE FROM t_category WHERE category_name LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM t_category WHERE category_name LIKE ?", "%${clean}")
 
         // Delete test-specific parameters
-        safeUpdate("DELETE FROM func.t_parameter WHERE parameter_name LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_parameter WHERE parameter_name LIKE ?", "%${clean}")
+        safeUpdate("DELETE FROM t_parameter WHERE parameter_name LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM t_parameter WHERE parameter_name LIKE ?", "%${clean}")
 
         // Delete test-specific descriptions
-        safeUpdate("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_description WHERE description_name LIKE ?", "%${clean}")
+        safeUpdate("DELETE FROM t_description WHERE description_name LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM t_description WHERE description_name LIKE ?", "%${clean}")
 
         // Delete test-specific users
-        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${clean}")
+        safeUpdate("DELETE FROM t_user WHERE username LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM t_user WHERE username LIKE ?", "%${clean}")
 
         log.info("Successfully cleaned up test data for owner: ${testOwner}")
     }
@@ -431,13 +431,13 @@ class TestDataManager {
         // Find the primary account for this test owner
         String accountName = accountNameFor(testOwner, 'primary')
         Long accountId = jdbcTemplate.queryForObject(
-            "SELECT account_id FROM func.t_account WHERE account_name_owner = ?",
+            "SELECT account_id FROM t_account WHERE account_name_owner = ?",
             Long.class, accountName
         )
 
         // Insert validation amount
         jdbcTemplate.update("""
-            INSERT INTO func.t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, owner, date_updated, date_added)
+            INSERT INTO t_validation_amount (account_id, validation_date, active_status, transaction_state, amount, owner, date_updated, date_added)
             VALUES (?, NOW(), true, ?, ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
         """, accountId, transactionState, amount, testOwner)
 
@@ -476,7 +476,7 @@ class TestDataManager {
 
         try {
             jdbcTemplate.update("""
-                INSERT INTO func.t_user (user_id, username, first_name, last_name, password, active_status, date_updated, date_added)
+                INSERT INTO t_user (user_id, username, first_name, last_name, password, active_status, date_updated, date_added)
                 VALUES (0, ?, 'functional', 'test', ?, ?, '1970-01-01 00:00:00.000000', '1970-01-01 00:00:00.000000')
             """, username, password, activeStatus)
         } catch (Exception e) {
@@ -498,8 +498,8 @@ class TestDataManager {
         log.info("Cleaning up users for owner: ${testOwner}")
 
         String clean = cleanOwner(testOwner)
-        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${testOwner}")
-        safeUpdate("DELETE FROM func.t_user WHERE username LIKE ?", "%${clean}")
+        safeUpdate("DELETE FROM t_user WHERE username LIKE ?", "%${testOwner}")
+        safeUpdate("DELETE FROM t_user WHERE username LIKE ?", "%${clean}")
 
         log.info("Successfully cleaned up users for owner: ${testOwner}")
     }
@@ -508,34 +508,34 @@ class TestDataManager {
         log.info("Performing full test data cleanup")
 
         // Clean up any test data that might have been left behind
-        safeUpdate("DELETE FROM func.t_payment WHERE source_account LIKE 'test_%' OR destination_account LIKE 'test_%'")
-        safeUpdate("DELETE FROM func.t_payment WHERE source_account LIKE 'primary_%' OR destination_account LIKE 'primary_%'")
-        safeUpdate("DELETE FROM func.t_payment WHERE source_account LIKE 'secondary_%' OR destination_account LIKE 'secondary_%'")
+        safeUpdate("DELETE FROM t_payment WHERE source_account LIKE 'test_%' OR destination_account LIKE 'test_%'")
+        safeUpdate("DELETE FROM t_payment WHERE source_account LIKE 'primary_%' OR destination_account LIKE 'primary_%'")
+        safeUpdate("DELETE FROM t_payment WHERE source_account LIKE 'secondary_%' OR destination_account LIKE 'secondary_%'")
 
-        jdbcTemplate.update("DELETE FROM func.t_transaction_categories WHERE transaction_id IN " +
-                           "(SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE 'test_%')")
-        jdbcTemplate.update("DELETE FROM func.t_transaction_categories WHERE transaction_id IN " +
-                           "(SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE 'primary_%')")
-        jdbcTemplate.update("DELETE FROM func.t_transaction_categories WHERE transaction_id IN " +
-                           "(SELECT transaction_id FROM func.t_transaction WHERE account_name_owner LIKE 'secondary_%')")
+        jdbcTemplate.update("DELETE FROM t_transaction_categories WHERE transaction_id IN " +
+                           "(SELECT transaction_id FROM t_transaction WHERE account_name_owner LIKE 'test_%')")
+        jdbcTemplate.update("DELETE FROM t_transaction_categories WHERE transaction_id IN " +
+                           "(SELECT transaction_id FROM t_transaction WHERE account_name_owner LIKE 'primary_%')")
+        jdbcTemplate.update("DELETE FROM t_transaction_categories WHERE transaction_id IN " +
+                           "(SELECT transaction_id FROM t_transaction WHERE account_name_owner LIKE 'secondary_%')")
 
-        jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE 'test_%'")
-        jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE 'primary_%'")
-        jdbcTemplate.update("DELETE FROM func.t_transaction WHERE account_name_owner LIKE 'secondary_%'")
+        jdbcTemplate.update("DELETE FROM t_transaction WHERE account_name_owner LIKE 'test_%'")
+        jdbcTemplate.update("DELETE FROM t_transaction WHERE account_name_owner LIKE 'primary_%'")
+        jdbcTemplate.update("DELETE FROM t_transaction WHERE account_name_owner LIKE 'secondary_%'")
 
-        jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE 'test_%'")
-        jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE 'primary_%'")
-        jdbcTemplate.update("DELETE FROM func.t_account WHERE account_name_owner LIKE 'secondary_%'")
+        jdbcTemplate.update("DELETE FROM t_account WHERE account_name_owner LIKE 'test_%'")
+        jdbcTemplate.update("DELETE FROM t_account WHERE account_name_owner LIKE 'primary_%'")
+        jdbcTemplate.update("DELETE FROM t_account WHERE account_name_owner LIKE 'secondary_%'")
 
-        jdbcTemplate.update("DELETE FROM func.t_category WHERE category_name LIKE 'test_%'")
-        jdbcTemplate.update("DELETE FROM func.t_parameter WHERE parameter_name LIKE 'test_%'")
+        jdbcTemplate.update("DELETE FROM t_category WHERE category_name LIKE 'test_%'")
+        jdbcTemplate.update("DELETE FROM t_parameter WHERE parameter_name LIKE 'test_%'")
 
         // Clean up validation amounts
-        jdbcTemplate.update("DELETE FROM func.t_validation_amount WHERE account_id IN " +
-                           "(SELECT account_id FROM func.t_account WHERE account_name_owner LIKE 'test_%')")
+        jdbcTemplate.update("DELETE FROM t_validation_amount WHERE account_id IN " +
+                           "(SELECT account_id FROM t_account WHERE account_name_owner LIKE 'test_%')")
 
         // Clean up users
-        jdbcTemplate.update("DELETE FROM func.t_user WHERE username LIKE 'test_%'")
+        jdbcTemplate.update("DELETE FROM t_user WHERE username LIKE 'test_%'")
 
         log.info("Completed full test data cleanup")
     }
