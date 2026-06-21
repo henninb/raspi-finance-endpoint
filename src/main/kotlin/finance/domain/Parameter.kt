@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import finance.utils.Constants.ALPHA_NUMERIC_NO_SPACE_PATTERN
 import finance.utils.Constants.FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
+import finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_TWO_HUNDRED_MESSAGE
 import finance.utils.LowerCaseConverter
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
@@ -51,7 +52,7 @@ data class Parameter(
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_name", nullable = false)
     var parameterName: String = "",
-    @field:Size(min = 1, max = 50, message = FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE)
+    @field:Size(min = 1, max = 200, message = FILED_MUST_BE_BETWEEN_ONE_AND_TWO_HUNDRED_MESSAGE)
     @field:Convert(converter = LowerCaseConverter::class)
     @Column(name = "parameter_value", nullable = false)
     var parameterValue: String = "",

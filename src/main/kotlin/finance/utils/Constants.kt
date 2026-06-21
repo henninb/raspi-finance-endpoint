@@ -30,6 +30,7 @@ object Constants {
     const val FIELD_MUST_BE_NUMERIC_NO_SPACE_MESSAGE = "must be alphanumeric no space"
     const val FIELD_MUST_BE_FOUR_DIGITS_MESSAGE = "Must be 4 digits."
     const val FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE = "size must be between 1 and 50"
+    const val FILED_MUST_BE_BETWEEN_ONE_AND_TWO_HUNDRED_MESSAGE = "size must be between 1 and 200"
     const val FILED_MUST_BE_BETWEEN_ONE_AND_SEVENTY_FIVE_MESSAGE = "size must be between 1 and 75"
     const val FILED_MUST_BE_GREATER_THAN_ZERO_MESSAGE = "must be greater than or equal to 0"
     const val FILED_MUST_BE_ALPHA_NUMERIC_NO_SPACE_MESSAGE = "must be alphanumeric no space"
