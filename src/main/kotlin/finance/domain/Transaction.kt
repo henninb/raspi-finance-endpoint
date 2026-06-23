@@ -40,6 +40,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Pattern
@@ -130,6 +131,10 @@ class Transaction(
         ReoccurringType.Undefined,
         "",
     )
+
+    @Transient
+    @JsonProperty
+    var cashback: BigDecimal? = null
 
     @Column(name = "due_date", columnDefinition = "DATE", nullable = true)
     @JsonProperty

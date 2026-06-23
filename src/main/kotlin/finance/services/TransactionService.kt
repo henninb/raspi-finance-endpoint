@@ -50,6 +50,8 @@ class TransactionService
         private val imageProcessingService: ImageProcessingService,
         private val calculationService: CalculationService,
         private val paymentRepository: PaymentRepository,
+        private val rewardService: RewardService,
+        private val rewardsCalculationService: RewardsCalculationService,
         meterService: MeterService,
         validator: Validator,
         resilienceComponents: ResilienceComponents,
@@ -239,7 +241,13 @@ class TransactionService
                 if (startDate.isAfter(endDate)) {
                     throw IllegalStateException("startDate must be before or equal to endDate")
                 }
-                transactionRepository.findByOwnerAndTransactionDateBetween(owner, startDate, endDate, pageable)
+                val page = transactionRepository.findByOwnerAndTransactionDateBetween(owner, startDate, endDate, pageable)
+                val tiersByAccount = rewardService.loadAllTiersGrouped()
+                page.content.forEach { transaction ->
+                    val tiers = tiersByAccount[transaction.accountId] ?: emptyList()
+                    transaction.cashback = rewardsCalculationService.calculateCashback(transaction, tiers)
+                }
+                page
             }
 
         // ===== Paginated ServiceResult Methods =====
@@ -284,6 +292,12 @@ class TransactionService
                     logger.warn("No active transactions found for account owner: $accountNameOwner")
                     meterService.incrementAccountListIsEmpty("non-existent-accounts")
                 }
+
+                val account = accountService.account(accountNameOwner)
+                if (account.isPresent) {
+                    val tiers = rewardService.findByAccountId(account.get().accountId).getDataOrNull() ?: emptyList()
+                    page.content.forEach { it.cashback = rewardsCalculationService.calculateCashback(it, tiers) }
+                }
                 page
             }
 
@@ -316,39 +330,47 @@ class TransactionService
                         minAmount != null ||
                         maxAmount != null
 
-                if (!isFiltered) {
-                    executeWithResilienceSync(
-                        operation = {
-                            transactionRepository.findByOwnerAndAccountNameOwnerAndActiveStatus(
-                                owner,
-                                accountNameOwner,
-                                true,
-                                sortedPageable,
-                            )
-                        },
-                        operationName = "findByAccountNameOwner-paginated-$accountNameOwner",
-                        timeoutSeconds = 60,
-                    )
-                } else {
-                    val spec =
-                        TransactionSpecifications.searchSpec(
-                            owner = owner,
-                            accountNameOwner = accountNameOwner,
-                            search = search,
-                            states = states,
-                            transactionTypes = transactionTypes,
-                            reoccurringTypes = reoccurringTypes,
-                            startDate = startDate,
-                            endDate = endDate,
-                            minAmount = minAmount,
-                            maxAmount = maxAmount,
+                val page =
+                    if (!isFiltered) {
+                        executeWithResilienceSync(
+                            operation = {
+                                transactionRepository.findByOwnerAndAccountNameOwnerAndActiveStatus(
+                                    owner,
+                                    accountNameOwner,
+                                    true,
+                                    sortedPageable,
+                                )
+                            },
+                            operationName = "findByAccountNameOwner-paginated-$accountNameOwner",
+                            timeoutSeconds = 60,
                         )
-                    executeWithResilienceSync(
-                        operation = { transactionRepository.findAll(spec, sortedPageable) },
-                        operationName = "findByAccountNameOwnerFiltered-$accountNameOwner",
-                        timeoutSeconds = 60,
-                    )
+                    } else {
+                        val spec =
+                            TransactionSpecifications.searchSpec(
+                                owner = owner,
+                                accountNameOwner = accountNameOwner,
+                                search = search,
+                                states = states,
+                                transactionTypes = transactionTypes,
+                                reoccurringTypes = reoccurringTypes,
+                                startDate = startDate,
+                                endDate = endDate,
+                                minAmount = minAmount,
+                                maxAmount = maxAmount,
+                            )
+                        executeWithResilienceSync(
+                            operation = { transactionRepository.findAll(spec, sortedPageable) },
+                            operationName = "findByAccountNameOwnerFiltered-$accountNameOwner",
+                            timeoutSeconds = 60,
+                        )
+                    }
+
+                val account = accountService.account(accountNameOwner)
+                if (account.isPresent) {
+                    val tiers = rewardService.findByAccountId(account.get().accountId).getDataOrNull() ?: emptyList()
+                    page.content.forEach { it.cashback = rewardsCalculationService.calculateCashback(it, tiers) }
                 }
+                page
             }
 
         /**

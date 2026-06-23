@@ -164,6 +164,7 @@ type Transaction {
     receiptImage: ReceiptImage
     dateAdded: Timestamp
     dateUpdated: Timestamp
+    cashback: Float
 }
 
 # complete 7/17/2021
