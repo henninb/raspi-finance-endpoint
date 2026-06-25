@@ -63,4 +63,11 @@ enum class AccountType(
         @JvmStatic
         fun getBusinessTypes(): List<AccountType> = listOf(BusinessChecking, BusinessSavings, BusinessCredit)
     }
+
+    fun taxBucket(): String =
+        when (this) {
+            Retirement401k, RetirementIRA, Pension, HSA, FSA, MedicalSavings -> "pretax"
+            RetirementRoth -> "roth"
+            else -> "taxable"
+        }
 }

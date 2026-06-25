@@ -95,6 +95,7 @@ class AccountService
                 accountToUpdate.billingDueDaySameMonth = entity.billingDueDaySameMonth
                 accountToUpdate.billingDueDayNextMonth = entity.billingDueDayNextMonth
                 accountToUpdate.billingCycleWeekendShift = entity.billingCycleWeekendShift
+                accountToUpdate.taxBucket = entity.taxBucket
                 accountToUpdate.dateUpdated = nowTimestamp()
 
                 validateBillingFields(accountToUpdate)

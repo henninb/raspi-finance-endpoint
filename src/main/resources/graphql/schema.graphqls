@@ -118,6 +118,7 @@ type Account {
     validationDate: Timestamp
     dateAdded: Timestamp
     dateUpdated: Timestamp
+    taxBucket: String
 }
 
 # complete 7/17/2021
@@ -232,6 +233,7 @@ input AccountInput {
     future: BigDecimal
     dateClosed: Timestamp
     validationDate: Timestamp
+    taxBucket: String
 }
 
 input TransactionInput {

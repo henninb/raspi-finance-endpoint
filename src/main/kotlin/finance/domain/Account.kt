@@ -123,6 +123,9 @@ class Account(
     @Column(name = "billing_cycle_weekend_shift", nullable = true)
     var billingCycleWeekendShift: String? = null
 
+    @Column(name = "tax_bucket", nullable = true)
+    var taxBucket: String? = null
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Account) return false

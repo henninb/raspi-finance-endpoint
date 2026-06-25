@@ -14,23 +14,26 @@ import jakarta.validation.constraints.Size
 import java.math.BigDecimal
 import java.sql.Timestamp
 
-data class AccountInputDto(
-    val accountId: Long? = null,
-    @field:NotBlank
-    @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
-    @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
-    val accountNameOwner: String,
-    @field:NotNull
-    val accountType: AccountType,
-    val activeStatus: Boolean? = null,
-    @field:Pattern(regexp = "^[0-9]{4}$", message = FIELD_MUST_BE_FOUR_DIGITS_MESSAGE)
-    val moniker: String? = null,
-    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    val outstanding: BigDecimal? = null,
-    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    val cleared: BigDecimal? = null,
-    @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
-    val future: BigDecimal? = null,
-    val dateClosed: Timestamp? = null,
-    val validationDate: Timestamp? = null,
-)
+data class AccountInputDto
+    @JvmOverloads
+    constructor(
+        val accountId: Long? = null,
+        @field:NotBlank
+        @field:Size(min = 3, max = 40, message = FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE)
+        @field:Pattern(regexp = ALPHA_UNDERSCORE_PATTERN, message = FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSAGE)
+        val accountNameOwner: String,
+        @field:NotNull
+        val accountType: AccountType,
+        val activeStatus: Boolean? = null,
+        @field:Pattern(regexp = "^[0-9]{4}$", message = FIELD_MUST_BE_FOUR_DIGITS_MESSAGE)
+        val moniker: String? = null,
+        @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+        val outstanding: BigDecimal? = null,
+        @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+        val cleared: BigDecimal? = null,
+        @field:Digits(integer = 8, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+        val future: BigDecimal? = null,
+        val dateClosed: Timestamp? = null,
+        val validationDate: Timestamp? = null,
+        val taxBucket: String? = null,
+    )
