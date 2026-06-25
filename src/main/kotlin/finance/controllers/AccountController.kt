@@ -97,7 +97,7 @@ class AccountController(
     @PutMapping("/{accountNameOwner}", consumes = ["application/json"], produces = ["application/json"])
     override fun update(
         @PathVariable("accountNameOwner") id: String,
-        @Valid @RequestBody entity: Account,
+        @RequestBody entity: Account,
     ): ResponseEntity<Account> {
         entity.accountNameOwner = id
         return accountService.update(entity).toOkResponse()
