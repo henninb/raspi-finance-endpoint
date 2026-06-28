@@ -91,8 +91,8 @@ class AccountRepositorySpec extends Specification {
         method.isAnnotationPresent(Query.class)
 
         def queryAnnotation = method.getAnnotation(Query.class)
-        queryAnnotation.nativeQuery() == false  // JPQL query, not native
-        queryAnnotation.value().contains("FROM Transaction t")
+        queryAnnotation.nativeQuery() == true
+        queryAnnotation.value().contains("FROM t_transaction")
 
         // Check if method has @Param annotation on parameters
         method.parameters.any { param ->

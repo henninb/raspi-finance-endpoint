@@ -301,7 +301,7 @@ class AccountServiceSpec extends BaseServiceSpec {
         1 * accountRepositoryMock.updateTotalsForAllAccountsByOwner(TEST_OWNER)
         // New behavior: refresh validation dates prior to computing payment required list
         1 * accountRepositoryMock.updateValidationDateForAllAccountsByOwner(TEST_OWNER)
-        1 * accountRepositoryMock.findAccountsThatRequirePaymentByOwner(TEST_OWNER, _, _) >> accounts
+        1 * accountRepositoryMock.findAccountsThatRequirePaymentByOwnerAndTypes(TEST_OWNER, _, _) >> accounts
         result.size() == 1
         0 * _
     }

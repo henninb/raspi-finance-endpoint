@@ -55,7 +55,27 @@ interface AccountRepository : JpaRepository<Account, Long> {
     fun updateTotalsForAllAccounts()
 
     @Query(
-        value = "SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND transaction_state = :transactionState AND active_status = true) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and transaction_state = :transactionState AND active_status = true) B",
+        value = """
+            SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0)
+            FROM (
+                SELECT SUM(amount) AS debits FROM t_transaction
+                WHERE account_type IN (
+                    'debit','checking','savings','certificate','money_market',
+                    'brokerage','retirement_401k','retirement_ira','retirement_roth','pension',
+                    'hsa','fsa','medical_savings','prepaid','gift_card',
+                    'business_checking','business_savings','cash','escrow','trust'
+                )
+                AND transaction_state = :transactionState AND active_status = true
+            ) A,
+            (
+                SELECT SUM(amount) AS credits FROM t_transaction
+                WHERE account_type IN (
+                    'credit','credit_card','mortgage','auto_loan','student_loan',
+                    'personal_loan','line_of_credit','business_credit'
+                )
+                AND transaction_state = :transactionState AND active_status = true
+            ) B
+        """,
         nativeQuery = true,
     )
     fun sumOfAllTransactionsByTransactionState(
@@ -63,11 +83,28 @@ interface AccountRepository : JpaRepository<Account, Long> {
     ): BigDecimal
 
     @Query(
-        """SELECT COALESCE(SUM(CASE WHEN t.accountType = 'debit' THEN t.amount ELSE 0 END), 0) -
-              COALESCE(SUM(CASE WHEN t.accountType = 'credit' THEN t.amount ELSE 0 END), 0)
-       FROM Transaction t
-       WHERE t.transactionState = :transactionState
-       AND t.activeStatus = true""",
+        value = """
+            SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0)
+            FROM (
+                SELECT SUM(amount) AS debits FROM t_transaction
+                WHERE account_type IN (
+                    'debit','checking','savings','certificate','money_market',
+                    'brokerage','retirement_401k','retirement_ira','retirement_roth','pension',
+                    'hsa','fsa','medical_savings','prepaid','gift_card',
+                    'business_checking','business_savings','cash','escrow','trust'
+                )
+                AND transaction_state = :transactionState AND active_status = true
+            ) A,
+            (
+                SELECT SUM(amount) AS credits FROM t_transaction
+                WHERE account_type IN (
+                    'credit','credit_card','mortgage','auto_loan','student_loan',
+                    'personal_loan','line_of_credit','business_credit'
+                )
+                AND transaction_state = :transactionState AND active_status = true
+            ) B
+        """,
+        nativeQuery = true,
     )
     fun sumOfAllTransactionsByTransactionStateJpql(
         @Param("transactionState") transactionState: String,
@@ -180,7 +217,27 @@ interface AccountRepository : JpaRepository<Account, Long> {
     )
 
     @Query(
-        value = "SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0) FROM ( SELECT SUM(amount) AS debits FROM t_transaction WHERE account_type = 'debit' AND transaction_state = :transactionState AND active_status = true AND owner = :owner) A,( SELECT SUM(amount) AS credits FROM t_transaction WHERE account_type = 'credit' and transaction_state = :transactionState AND active_status = true AND owner = :owner) B",
+        value = """
+            SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0)
+            FROM (
+                SELECT SUM(amount) AS debits FROM t_transaction
+                WHERE account_type IN (
+                    'debit','checking','savings','certificate','money_market',
+                    'brokerage','retirement_401k','retirement_ira','retirement_roth','pension',
+                    'hsa','fsa','medical_savings','prepaid','gift_card',
+                    'business_checking','business_savings','cash','escrow','trust'
+                )
+                AND transaction_state = :transactionState AND active_status = true AND owner = :owner
+            ) A,
+            (
+                SELECT SUM(amount) AS credits FROM t_transaction
+                WHERE account_type IN (
+                    'credit','credit_card','mortgage','auto_loan','student_loan',
+                    'personal_loan','line_of_credit','business_credit'
+                )
+                AND transaction_state = :transactionState AND active_status = true AND owner = :owner
+            ) B
+        """,
         nativeQuery = true,
     )
     fun sumOfAllTransactionsByTransactionStateAndOwner(
@@ -189,12 +246,28 @@ interface AccountRepository : JpaRepository<Account, Long> {
     ): BigDecimal
 
     @Query(
-        """SELECT COALESCE(SUM(CASE WHEN t.accountType = 'debit' THEN t.amount ELSE 0 END), 0) -
-              COALESCE(SUM(CASE WHEN t.accountType = 'credit' THEN t.amount ELSE 0 END), 0)
-       FROM Transaction t
-       WHERE t.transactionState = :transactionState
-       AND t.activeStatus = true
-       AND t.owner = :owner""",
+        value = """
+            SELECT COALESCE(A.debits, 0.0) - COALESCE(B.credits, 0.0)
+            FROM (
+                SELECT SUM(amount) AS debits FROM t_transaction
+                WHERE account_type IN (
+                    'debit','checking','savings','certificate','money_market',
+                    'brokerage','retirement_401k','retirement_ira','retirement_roth','pension',
+                    'hsa','fsa','medical_savings','prepaid','gift_card',
+                    'business_checking','business_savings','cash','escrow','trust'
+                )
+                AND transaction_state = :transactionState AND active_status = true AND owner = :owner
+            ) A,
+            (
+                SELECT SUM(amount) AS credits FROM t_transaction
+                WHERE account_type IN (
+                    'credit','credit_card','mortgage','auto_loan','student_loan',
+                    'personal_loan','line_of_credit','business_credit'
+                )
+                AND transaction_state = :transactionState AND active_status = true AND owner = :owner
+            ) B
+        """,
+        nativeQuery = true,
     )
     fun sumOfAllTransactionsByTransactionStateAndOwnerJpql(
         @Param("transactionState") transactionState: String,
@@ -213,6 +286,20 @@ interface AccountRepository : JpaRepository<Account, Long> {
         @Param("owner") owner: String,
         @Param("activeStatus") activeStatus: Boolean = true,
         @Param("accountType") accountType: AccountType = AccountType.Credit,
+    ): List<Account>
+
+    @Query(
+        """SELECT a FROM Account a
+       WHERE a.owner = :owner
+       AND a.activeStatus = :activeStatus
+       AND a.accountType IN :accountTypes
+       AND (a.outstanding > 0 OR a.future > 0 OR a.cleared > 0)
+       ORDER BY a.accountNameOwner""",
+    )
+    fun findAccountsThatRequirePaymentByOwnerAndTypes(
+        @Param("owner") owner: String,
+        @Param("activeStatus") activeStatus: Boolean = true,
+        @Param("accountTypes") accountTypes: Collection<AccountType>,
     ): List<Account>
 
     @Modifying

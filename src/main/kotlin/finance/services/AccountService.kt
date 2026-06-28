@@ -167,7 +167,7 @@ class AccountService
             val owner = TenantContext.getCurrentOwner()
             updateTotalsForAllAccounts()
             updateValidationDatesForAllAccounts()
-            return accountRepository.findAccountsThatRequirePaymentByOwner(owner, true, AccountType.Credit)
+            return accountRepository.findAccountsThatRequirePaymentByOwnerAndTypes(owner, true, AccountType.getLiabilityTypes())
         }
 
         fun sumOfAllTransactionsByTransactionState(transactionState: TransactionState): BigDecimal {
