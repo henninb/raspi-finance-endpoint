@@ -41,6 +41,10 @@ enum class AccountType(
     val isAsset: Boolean get() = category == "asset"
     val isLiability: Boolean get() = category == "liability"
 
+    // Liabilities plus accounts (like utility billers) that don't carry a debt
+    // balance but are still valid targets for a payment.
+    val isPayable: Boolean get() = isLiability || category == "expense"
+
     override fun toString(): String = label
 
     companion object {

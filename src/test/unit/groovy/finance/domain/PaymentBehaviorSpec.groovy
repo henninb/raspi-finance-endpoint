@@ -304,15 +304,21 @@ class PaymentBehaviorSpec extends Specification {
         "Undefined to Undefined"            | AccountType.Undefined   | AccountType.Undefined
     }
 
-    def "inferBehavior with expense category account should return UNDEFINED"() {
-        when: "using Utility account type (expense category)"
+    def "inferBehavior with expense category account as destination should return BILL_PAYMENT"() {
+        when: "paying an expense-category account (e.g. a utility biller) from an asset account"
         def assetToExpense = PaymentBehavior.inferBehavior(AccountType.Checking, AccountType.Utility)
+
+        then: "BILL_PAYMENT is inferred, same as asset to liability"
+        assetToExpense == PaymentBehavior.BILL_PAYMENT
+    }
+
+    def "inferBehavior with expense category account as source should return UNDEFINED"() {
+        when: "using Utility account type (expense category) as the source"
         def expenseToAsset = PaymentBehavior.inferBehavior(AccountType.Utility, AccountType.Savings)
         def expenseToLiability = PaymentBehavior.inferBehavior(AccountType.Utility, AccountType.CreditCard)
         def expenseToExpense = PaymentBehavior.inferBehavior(AccountType.Utility, AccountType.Utility)
 
-        then: "all should return UNDEFINED (expense is not asset or liability)"
-        assetToExpense == PaymentBehavior.UNDEFINED
+        then: "all should return UNDEFINED (expense accounts cannot be a payment source)"
         expenseToAsset == PaymentBehavior.UNDEFINED
         expenseToLiability == PaymentBehavior.UNDEFINED
         expenseToExpense == PaymentBehavior.UNDEFINED

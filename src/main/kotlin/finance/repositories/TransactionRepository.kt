@@ -2,6 +2,7 @@ package finance.repositories
 
 import finance.domain.Transaction
 import finance.domain.TransactionState
+import finance.domain.TransactionType
 import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -306,7 +307,8 @@ interface TransactionRepository :
             "AND t.transactionDate <= :endDate " +
             "AND t.activeStatus = true " +
             "AND t.transactionState = :transactionState " +
-            "AND LOWER(t.category) != 'payment'",
+            "AND t.transactionType <> :excludedTransactionType " +
+            "AND LOWER(t.category) <> :excludedCategory",
     )
     fun sumSpendingInWindow(
         @Param("owner") owner: String,
@@ -314,6 +316,8 @@ interface TransactionRepository :
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate,
         @Param("transactionState") transactionState: TransactionState,
+        @Param("excludedTransactionType") excludedTransactionType: TransactionType,
+        @Param("excludedCategory") excludedCategory: String,
     ): java.math.BigDecimal
 
     @Query(
@@ -324,7 +328,8 @@ interface TransactionRepository :
             "AND t.transactionDate <= :endDate " +
             "AND t.activeStatus = true " +
             "AND t.transactionState IN :transactionStates " +
-            "AND LOWER(t.category) != 'payment'",
+            "AND t.transactionType <> :excludedTransactionType " +
+            "AND LOWER(t.category) <> :excludedCategory",
     )
     fun sumPendingSpendingInWindow(
         @Param("owner") owner: String,
@@ -332,5 +337,7 @@ interface TransactionRepository :
         @Param("startDate") startDate: LocalDate,
         @Param("endDate") endDate: LocalDate,
         @Param("transactionStates") transactionStates: List<TransactionState>,
+        @Param("excludedTransactionType") excludedTransactionType: TransactionType,
+        @Param("excludedCategory") excludedCategory: String,
     ): java.math.BigDecimal
 }

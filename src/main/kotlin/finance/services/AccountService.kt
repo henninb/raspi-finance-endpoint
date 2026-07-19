@@ -266,6 +266,11 @@ class AccountService
             }
 
             try {
+                oldAccount.accountNameOwner = newAccountNameOwner
+                oldAccount.dateUpdated = nowTimestamp()
+                val renamedAccount = accountRepository.saveAndFlush(oldAccount)
+                logger.info("Successfully renamed account to: $newAccountNameOwner (accountId: ${renamedAccount.accountId})")
+
                 val transactionsUpdated =
                     transactionRepository.updateAccountNameOwnerForAllTransactionsByOwner(
                         owner,
@@ -273,11 +278,6 @@ class AccountService
                         newAccountNameOwner,
                     )
                 logger.info("Updated $transactionsUpdated transactions from $oldAccountNameOwner to $newAccountNameOwner")
-
-                oldAccount.accountNameOwner = newAccountNameOwner
-                oldAccount.dateUpdated = nowTimestamp()
-                val renamedAccount = accountRepository.saveAndFlush(oldAccount)
-                logger.info("Successfully renamed account to: $newAccountNameOwner (accountId: ${renamedAccount.accountId})")
                 return renamedAccount
             } catch (ex: DataIntegrityViolationException) {
                 logger.error("Cannot rename account: $newAccountNameOwner already exists or violates constraints", ex)

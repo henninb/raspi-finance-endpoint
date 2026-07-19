@@ -55,7 +55,7 @@ enum class PaymentBehavior(
             destinationAccountType: AccountType,
         ): PaymentBehavior =
             when {
-                sourceAccountType.isAsset && destinationAccountType.isLiability -> BILL_PAYMENT
+                sourceAccountType.isAsset && destinationAccountType.isPayable -> BILL_PAYMENT
                 sourceAccountType.isAsset && destinationAccountType.isAsset -> TRANSFER
                 sourceAccountType.isLiability && destinationAccountType.isAsset -> CASH_ADVANCE
                 sourceAccountType.isLiability && destinationAccountType.isLiability -> BALANCE_TRANSFER

@@ -635,6 +635,8 @@ class TransactionService
                         startDate,
                         windowEndDate,
                         TransactionState.Cleared,
+                        TransactionType.Transfer,
+                        "payment",
                     )
                 val spentPending =
                     transactionRepository.sumPendingSpendingInWindow(
@@ -643,6 +645,8 @@ class TransactionService
                         startDate,
                         windowEndDate,
                         listOf(TransactionState.Outstanding, TransactionState.Future),
+                        TransactionType.Transfer,
+                        "payment",
                     )
                 val remaining = (targetAmount - spent).max(BigDecimal.ZERO)
                 val percentComplete =
