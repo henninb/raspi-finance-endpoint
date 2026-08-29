@@ -189,7 +189,7 @@ class AccountInputDtoSpec extends BaseDomainSpec {
         def original = new AccountInputDto(null, "checking_primary", AccountType.Checking, null, null, null, null, null, null, null)
 
         when:
-        def copy = original.copy(null, "savings_primary", AccountType.Checking, null, null, null, null, null, null, null)
+        def copy = original.copy(null, "savings_primary", AccountType.Checking, null, null, null, null, null, null, null, null)
 
         then:
         copy.accountNameOwner == "savings_primary"

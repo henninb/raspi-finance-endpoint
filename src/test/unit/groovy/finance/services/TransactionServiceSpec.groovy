@@ -26,9 +26,11 @@ class TransactionServiceSpec extends BaseServiceSpec {
     def standardizedReceiptImageServiceMock = Mock(ReceiptImageService)
     def imageProcessingServiceMock = Mock(ImageProcessingService)
     def calculationServiceMock = Mock(CalculationService)
+    def rewardServiceMock = Mock(RewardService)
 
     CategoryService localCategoryService
     DescriptionService localDescriptionService
+    RewardsCalculationService rewardsCalculationService
 
     @Subject
     TransactionService standardizedTransactionService
@@ -36,6 +38,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
     def setup() {
         localCategoryService = new CategoryService(categoryRepositoryMock, categoryTxRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
         localDescriptionService = new DescriptionService(descriptionRepositoryMock, transactionRepositoryMock, meterService, validatorMock, ResilienceComponents.noOp())
+        rewardsCalculationService = new RewardsCalculationService()
         standardizedTransactionService = new TransactionService(
             transactionRepositoryMock,
             accountService,
@@ -45,6 +48,8 @@ class TransactionServiceSpec extends BaseServiceSpec {
             imageProcessingServiceMock,
             calculationServiceMock,
             paymentRepositoryMock,
+            rewardServiceMock,
+            rewardsCalculationService,
             meterService,
             validatorMock,
             ResilienceComponents.noOp()
@@ -779,6 +784,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then: "repository method is called with date range and pageable"
         1 * transactionRepositoryMock.findByOwnerAndTransactionDateBetween(TEST_OWNER, startDate, endDate, pageable) >> page
+        1 * rewardServiceMock.loadAllTiersGrouped() >> [:]
 
         and: "result is Success with page"
         result instanceof ServiceResult.Success
@@ -827,6 +833,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then:
         1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatus(TEST_OWNER, accountNameOwner, true, _) >> page
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.empty()
         result instanceof ServiceResult.Success
         result.data.content == transactions
     }
@@ -842,6 +849,7 @@ class TransactionServiceSpec extends BaseServiceSpec {
 
         then:
         1 * transactionRepositoryMock.findByOwnerAndAccountNameOwnerAndActiveStatus(TEST_OWNER, accountNameOwner, true, _) >> emptyPage
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, accountNameOwner) >> Optional.empty()
         result instanceof ServiceResult.Success
         result.data.isEmpty()
     }

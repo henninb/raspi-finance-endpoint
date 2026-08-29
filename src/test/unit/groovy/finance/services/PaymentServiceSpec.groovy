@@ -918,7 +918,10 @@ class PaymentServiceSpec extends BaseServiceSpec {
     // ===== #3: Account-type validation on update =====
 
     def "update should return BusinessError when new account type combination is UNDEFINED"() {
-        given: "existing payment; update changes destination to a Utility (expense) account"
+        given: "existing payment; update changes destination to an Undefined-type account"
+        // Checking (asset) -> Utility (expense) is now a valid BILL_PAYMENT combination
+        // (see PaymentBehavior.inferBehavior), so use Undefined, which matches no
+        // asset/liability/payable rule and always infers to UNDEFINED.
         def existingPayment = PaymentBuilder.builder()
             .withPaymentId(50L)
             .withSourceAccount("checking_brian")
@@ -927,10 +930,10 @@ class PaymentServiceSpec extends BaseServiceSpec {
         def updatedPayment = PaymentBuilder.builder()
             .withPaymentId(50L)
             .withSourceAccount("checking_brian")
-            .withDestinationAccount("utility_account")  // expense type → UNDEFINED behavior
+            .withDestinationAccount("undefined_account")
             .build()
         def srcAccount = new Account(accountType: AccountType.Checking)
-        def utilityAccount = new Account(accountType: AccountType.Utility)
+        def undefinedAccount = new Account(accountType: AccountType.Undefined)
 
         when:
         def result = standardizedPaymentService.update(updatedPayment)
@@ -938,7 +941,7 @@ class PaymentServiceSpec extends BaseServiceSpec {
         then:
         1 * paymentRepositoryMock.findByOwnerAndPaymentId(TEST_OWNER, 50L) >> Optional.of(existingPayment)
         1 * accountServiceMock.account("checking_brian") >> Optional.of(srcAccount)
-        1 * accountServiceMock.account("utility_account") >> Optional.of(utilityAccount)
+        1 * accountServiceMock.account("undefined_account") >> Optional.of(undefinedAccount)
         result instanceof ServiceResult.BusinessError
         result.message.contains("unsupported account type")
         0 * _

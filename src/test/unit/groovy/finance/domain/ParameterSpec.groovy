@@ -7,6 +7,7 @@ import spock.lang.Unroll
 import jakarta.validation.ConstraintViolation
 
 import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE
+import static finance.utils.Constants.FILED_MUST_BE_BETWEEN_ONE_AND_TWO_HUNDRED_MESSAGE
 
 class ParameterSpec extends BaseDomainSpec {
 
@@ -70,11 +71,11 @@ class ParameterSpec extends BaseDomainSpec {
         violations.iterator().next().invalidValue == parameter.properties[invalidField]
 
         where:
-        invalidField     | parameterName                                            | parameterValue                                           | activeStatus | expectedError                               | errorCount
-        'parameterValue' | 'some_name'                                              | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'parameterName'  | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | 'some_value'                                             | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'parameterName'  | ''                                                       | 'some_value'                                             | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
-        'parameterValue' | 'some_name'                                              | ''                                                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE | 1
+        invalidField     | parameterName                                            | parameterValue           | activeStatus | expectedError                                   | errorCount
+        'parameterValue' | 'some_name'                                              | ('y' * 201)              | true         | FILED_MUST_BE_BETWEEN_ONE_AND_TWO_HUNDRED_MESSAGE | 1
+        'parameterName'  | 'ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot-ynot' | 'some_value'             | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE       | 1
+        'parameterName'  | ''                                                       | 'some_value'             | true         | FILED_MUST_BE_BETWEEN_ONE_AND_FIFTY_MESSAGE       | 1
+        'parameterValue' | 'some_name'                                              | ''                       | true         | FILED_MUST_BE_BETWEEN_ONE_AND_TWO_HUNDRED_MESSAGE | 1
     }
 
     def "test equals and hashCode"() {
