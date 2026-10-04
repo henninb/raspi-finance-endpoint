@@ -468,6 +468,22 @@ class AccountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
+    def "save should return ValidationError when both close day and close business day are set"() {
+        given: "credit account with conflicting close methods"
+        def account = AccountBuilder.builder().withAccountNameOwner("credit_chase").build()
+        account.billingStatementCloseDay = (short) 11
+        account.billingStatementCloseBusinessDay = (short) 8
+
+        when: "saving account"
+        def result = standardizedAccountService.save(account)
+
+        then: "should return ValidationError"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "credit_chase") >> Optional.empty()
+        result instanceof ServiceResult.ValidationError
+        result.errors.values().any { it.contains("billingStatementCloseBusinessDay") }
+        0 * _
+    }
+
     // ===== TDD Tests for Error Handling in Legacy Methods =====
 
     def "insertAccount should throw DataIntegrityViolationException for duplicate account"() {

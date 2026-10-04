@@ -91,6 +91,7 @@ class AccountService
                 accountToUpdate.cleared = entity.cleared
                 accountToUpdate.dateClosed = entity.dateClosed
                 accountToUpdate.billingStatementCloseDay = entity.billingStatementCloseDay
+                accountToUpdate.billingStatementCloseBusinessDay = entity.billingStatementCloseBusinessDay
                 accountToUpdate.billingGracePeriodDays = entity.billingGracePeriodDays
                 accountToUpdate.billingDueDaySameMonth = entity.billingDueDaySameMonth
                 accountToUpdate.billingDueDayNextMonth = entity.billingDueDayNextMonth
@@ -214,6 +215,9 @@ class AccountService
             }
 
         private fun validateBillingFields(account: Account) {
+            if (account.billingStatementCloseDay != null && account.billingStatementCloseBusinessDay != null) {
+                throw ValidationException("Only one of billingStatementCloseDay, billingStatementCloseBusinessDay may be set at a time")
+            }
             if (account.billingCycleWeekendShift != null && account.billingStatementCloseDay == null) {
                 throw ValidationException("billingCycleWeekendShift requires billingStatementCloseDay to be set")
             }
@@ -227,7 +231,7 @@ class AccountService
                 throw ValidationException("Only one of billingGracePeriodDays, billingDueDaySameMonth, billingDueDayNextMonth may be set at a time")
             }
             val isCreditType = account.accountType in setOf(AccountType.Credit, AccountType.CreditCard, AccountType.BusinessCredit)
-            if (isCreditType && account.billingStatementCloseDay == null && dueMethods == 0) {
+            if (isCreditType && account.billingStatementCloseDay == null && account.billingStatementCloseBusinessDay == null && dueMethods == 0) {
                 logger.warn("Credit account '${account.accountNameOwner}' has no billing cycle fields set")
             }
         }

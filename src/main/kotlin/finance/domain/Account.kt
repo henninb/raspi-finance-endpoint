@@ -111,6 +111,9 @@ class Account(
     @Column(name = "billing_statement_close_day", nullable = true)
     var billingStatementCloseDay: Short? = null
 
+    @Column(name = "billing_statement_close_business_day", nullable = true)
+    var billingStatementCloseBusinessDay: Short? = null
+
     @Column(name = "billing_grace_period_days", nullable = true)
     var billingGracePeriodDays: Short? = null
 
