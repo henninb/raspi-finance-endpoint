@@ -277,6 +277,32 @@ class LoginControllerSpec extends Specification {
         1 * response.addHeader("Set-Cookie", _)
     }
 
+    @Unroll
+    def "refresh should preserve keepLoggedIn=#keepLoggedIn from the current token"() {
+        given:
+        def currentToken = jwtTokenService.buildToken("testuser", keepLoggedIn)
+        def refreshRequest = Mock(jakarta.servlet.http.HttpServletRequest)
+        refreshRequest.getCookies() >> ([new jakarta.servlet.http.Cookie("token", currentToken)] as jakarta.servlet.http.Cookie[])
+        String setCookie = null
+
+        when:
+        ResponseEntity<Map<String, String>> result = loginController.refresh("testuser", refreshRequest, response)
+
+        then:
+        1 * response.addHeader("Set-Cookie", _) >> { args -> setCookie = args[1] }
+        result.statusCode == HttpStatus.OK
+        setCookie.contains("Max-Age=${expectedMaxAge}")
+
+        and: "the reissued token carries the same keepLoggedIn claim"
+        def newToken = setCookie.split(';')[0].substring("token=".length())
+        jwtTokenService.parseClaims(newToken)[JwtTokenService.CLAIM_KEEP_LOGGED_IN] == keepLoggedIn
+
+        where:
+        keepLoggedIn | expectedMaxAge
+        true         | JwtTokenService.JWT_LONG_EXPIRY_SECONDS
+        false        | JwtTokenService.JWT_EXPIRY_SECONDS
+    }
+
     def "login should return TOO_MANY_REQUESTS when account is locked"() {
         given:
         def loginRequest = new LoginRequest("lockeduser", "password123", false)

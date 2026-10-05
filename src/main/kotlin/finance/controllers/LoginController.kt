@@ -193,7 +193,7 @@ class LoginController(
         val keepLoggedIn =
             jwtTokenService.extractToken(request)?.let { currentToken ->
                 try {
-                    jwtTokenService.parseClaims(currentToken).get(JwtTokenService.CLAIM_KEEP_LOGGED_IN, Boolean::class.java) ?: false
+                    jwtTokenService.parseClaims(currentToken)[JwtTokenService.CLAIM_KEEP_LOGGED_IN] as? Boolean ?: false
                 } catch (e: Exception) {
                     logger.warn("REFRESH could not read keepLoggedIn claim: {}", e.message)
                     false
