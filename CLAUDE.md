@@ -38,13 +38,13 @@ A Spring Boot financial management application built with Kotlin/Groovy providin
 ## Architecture
 
 ### Technology Stack
-- **Core**: Kotlin 2.2.20, Spring Boot 4.0.0-RC2, Java 21
-- **Testing**: Groovy 4.0.28, Spock 2.4-M6, CodeNarc 3.4.0
-- **Security**: Spring Security 7.0.0-RC3 with JWT
-- **Database**: PostgreSQL/Oracle (prod), H2 (test), Flyway 11.17.0
-- **Build**: Gradle 9.2.1
+- **Core**: Kotlin 2.4.21, Spring Boot 4.1.2, Java 21
+- **Testing**: Groovy 6.0.0, Spock 2.5-groovy-6.0, CodeNarc 4.0.0
+- **Security**: Spring Security 7.1.2 with JWT
+- **Database**: PostgreSQL/Oracle (prod), H2 (test), Flyway 13.12.1
+- **Build**: Gradle 9.9.0
 - **GraphQL**: Spring GraphQL with Extended Scalars 24.0
-- **Resilience**: Resilience4j 2.3.0
+- **Resilience**: Resilience4j 2.4.0
 
 ### Package Structure
 - `finance.domain/` - JPA entities
@@ -137,7 +137,7 @@ PaymentInputDto, TransferInputDto, AccountInputDto, DescriptionInputDto, Categor
 - Java 21 compliance
 - Explicit exception handling
 - Resilience patterns (circuit breakers, timeouts)
-- CodeNarc 3.4.0 with ratcheting rules
+- CodeNarc 4.0.0 with ratcheting rules
 
 ### Performance
 - Log queries >100ms
