@@ -453,15 +453,40 @@ else
   log "⚠ influxdb-server is not running: $influx_status"
 fi
 
-log "Testing application health..."
-if ssh "${REMOTE_HOST}" 'curl -k -f -s https://localhost:8443/actuator/health >/dev/null 2>&1'; then
-  log "✓ Application health check passed"
+# The container publishes 8443 on ${HOST_IP} only, so probe that address
+# (localhost on the server is not bound). Spring Boot takes ~15-20s to start,
+# so poll until healthy instead of checking once.
+HEALTH_URL="https://${HOST_IP}:8443/actuator/health"
+HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"
+HEALTH_INTERVAL=3
+
+log "Testing application health (waiting up to ${HEALTH_TIMEOUT}s)..."
+health_ok=false
+elapsed=0
+while [ "$elapsed" -lt "$HEALTH_TIMEOUT" ]; do
+  if ssh "${REMOTE_HOST}" "curl -k -f -s --connect-timeout 5 --max-time 10 '${HEALTH_URL}' >/dev/null 2>&1"; then
+    health_ok=true
+    break
+  fi
+  # Stop waiting if the container died during startup
+  if ! ssh "${REMOTE_HOST}" "podman ps --filter name=raspi-finance-endpoint --format '{{.Status}}'" 2>/dev/null | grep -q "Up"; then
+    log_error "✗ raspi-finance-endpoint exited during startup"
+    ssh "${REMOTE_HOST}" "podman logs --tail 40 raspi-finance-endpoint" 2>&1 || true
+    exit 1
+  fi
+  sleep "$HEALTH_INTERVAL"
+  elapsed=$((elapsed + HEALTH_INTERVAL))
+done
+
+if [ "$health_ok" = true ]; then
+  log "✓ Application health check passed after ~${elapsed}s"
 else
-  log "⚠ Health check failed - application may still be starting"
+  log "⚠ Health check did not pass within ${HEALTH_TIMEOUT}s"
+  log "Check logs: ssh ${REMOTE_HOST} 'podman logs raspi-finance-endpoint'"
 fi
 
 log "Testing LAN access..."
-if curl -k -f -s --connect-timeout 10 "https://${HOST_IP}:8443/actuator/health" >/dev/null 2>&1; then
+if curl -k -f -s --connect-timeout 10 --max-time 15 "${HEALTH_URL}" >/dev/null 2>&1; then
   log "✓ LAN HTTPS access working: https://${HOST_IP}:8443/"
 else
   log "⚠ LAN HTTPS access test failed (may be normal if DNS/routing not configured)"
@@ -493,6 +518,6 @@ log "  Enable linger: ssh ${REMOTE_HOST} 'sudo loginctl enable-linger ${USERNAME
 log ""
 log "Troubleshooting:"
 log "  Re-run deployment: ./deploy-podman.sh"
-log "  App diagnostics: ssh ${REMOTE_HOST} 'curl -k -s https://localhost:8443/actuator/info'"
+log "  App diagnostics: ssh ${REMOTE_HOST} 'curl -k -s https://${HOST_IP}:8443/actuator/health'"
 
 exit 0

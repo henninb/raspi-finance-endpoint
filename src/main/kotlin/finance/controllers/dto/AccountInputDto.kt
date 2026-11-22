@@ -6,6 +6,7 @@ import finance.utils.Constants.FIELD_MUST_BE_ALPHA_SEPARATED_BY_UNDERSCORE_MESSA
 import finance.utils.Constants.FIELD_MUST_BE_A_CURRENCY_MESSAGE
 import finance.utils.Constants.FIELD_MUST_BE_FOUR_DIGITS_MESSAGE
 import finance.utils.Constants.FILED_MUST_BE_BETWEEN_THREE_AND_FORTY_MESSAGE
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -36,4 +37,7 @@ data class AccountInputDto
         val dateClosed: Timestamp? = null,
         val validationDate: Timestamp? = null,
         val taxBucket: String? = null,
+        @field:DecimalMin(value = "0.00", message = "Credit limit must not be negative")
+        @field:Digits(integer = 10, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+        val creditLimit: BigDecimal? = null,
     )

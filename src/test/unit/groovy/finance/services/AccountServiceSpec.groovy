@@ -484,6 +484,63 @@ class AccountServiceSpec extends BaseServiceSpec {
         0 * _
     }
 
+    def "save should persist creditLimit on a credit card account"() {
+        given: "credit card account with a credit limit"
+        def account = AccountBuilder.builder()
+            .withAccountNameOwner("credit_chase")
+            .withAccountType(AccountType.CreditCard)
+            .build()
+        account.creditLimit = new BigDecimal("15000.00")
+
+        when: "saving account"
+        def result = standardizedAccountService.save(account)
+
+        then: "should save with the credit limit"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "credit_chase") >> Optional.empty()
+        1 * validatorMock.validate(account) >> ([] as Set)
+        1 * accountRepositoryMock.saveAndFlush(account) >> account
+        result instanceof ServiceResult.Success
+        result.data.creditLimit == new BigDecimal("15000.00")
+    }
+
+    def "save should return ValidationError when creditLimit is set on a non-credit account"() {
+        given: "checking account with a credit limit"
+        def account = AccountBuilder.builder()
+            .withAccountNameOwner("checking_primary")
+            .withAccountType(AccountType.Checking)
+            .build()
+        account.creditLimit = new BigDecimal("1000.00")
+
+        when: "saving account"
+        def result = standardizedAccountService.save(account)
+
+        then: "should return ValidationError"
+        1 * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "checking_primary") >> Optional.empty()
+        result instanceof ServiceResult.ValidationError
+        result.errors.values().any { it.contains("creditLimit") }
+        0 * _
+    }
+
+    def "update should copy creditLimit onto the existing account"() {
+        given: "existing credit account and an update carrying a new limit"
+        def existing = AccountBuilder.builder().withAccountNameOwner("credit_chase").build()
+        existing.accountId = 1L
+        def patch = AccountBuilder.builder().withAccountNameOwner("credit_chase").build()
+        patch.accountId = 1L
+        patch.creditLimit = new BigDecimal("7500.00")
+
+        when: "updating account"
+        def result = standardizedAccountService.update(patch)
+
+        then: "existing account receives the credit limit"
+        _ * accountRepositoryMock.findByOwnerAndAccountId(TEST_OWNER, 1L) >> Optional.of(existing)
+        _ * accountRepositoryMock.findByOwnerAndAccountNameOwner(TEST_OWNER, "credit_chase") >> Optional.of(existing)
+        _ * validatorMock.validate(_) >> ([] as Set)
+        1 * accountRepositoryMock.saveAndFlush(existing) >> existing
+        result instanceof ServiceResult.Success
+        existing.creditLimit == new BigDecimal("7500.00")
+    }
+
     // ===== TDD Tests for Error Handling in Legacy Methods =====
 
     def "insertAccount should throw DataIntegrityViolationException for duplicate account"() {

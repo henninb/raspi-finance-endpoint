@@ -1,7 +1,8 @@
 -- V01: Consolidated schema for functional tests (H2 MODE=PostgreSQL)
 -- Based on prod V19 consolidated schema, adapted for H2 syntax.
 -- Incorporates: V02 (token_blacklist), V03 (transfer version), V04 (date_closed nullable),
---               V05 (payment unique constraint), V06 (t_reward), V07 (tax_bucket)
+--               V05 (payment unique constraint), V06 (t_reward), V07 (tax_bucket),
+--               V08 (credit_limit)
 
 -------------
 -- Account --
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS t_account
     billing_due_day_next_month  SMALLINT      NULL,
     billing_cycle_weekend_shift TEXT          NULL,
     tax_bucket                  TEXT          NULL,
+    credit_limit                NUMERIC(12, 2) NULL,
     CONSTRAINT ck_billing_statement_close_day CHECK (billing_statement_close_day BETWEEN 1 AND 31),
     CONSTRAINT ck_billing_statement_close_business_day CHECK (billing_statement_close_business_day BETWEEN 1 AND 23),
     CONSTRAINT ck_billing_close_method_exclusive CHECK (billing_statement_close_day IS NULL OR billing_statement_close_business_day IS NULL),
@@ -44,6 +46,7 @@ CREATE TABLE IF NOT EXISTS t_account
          CASE WHEN billing_due_day_next_month IS NOT NULL THEN 1 ELSE 0 END) <= 1
     ),
     CONSTRAINT ck_tax_bucket CHECK (tax_bucket IN ('pretax', 'taxable', 'roth')),
+    CONSTRAINT ck_credit_limit CHECK (credit_limit IS NULL OR credit_limit >= 0),
     CONSTRAINT unique_owner_account_name_owner_account_type UNIQUE (owner, account_name_owner, account_type),
     CONSTRAINT unique_owner_account_name_owner UNIQUE (owner, account_name_owner),
     CONSTRAINT unique_owner_account_id_name_type UNIQUE (owner, account_id, account_name_owner, account_type),

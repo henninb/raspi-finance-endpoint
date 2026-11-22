@@ -750,6 +750,61 @@ class GraphQLControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         result.accountNameOwner == accountName
     }
 
+    void 'createAccount stores creditLimit and updateAccount changes it'() {
+        given:
+        String owner = shortOwner()
+        String accountName = "gqlclim_${owner}"
+        def createDto = new AccountInputDto(
+            null, accountName, AccountType.CreditCard,
+            true, '4321',
+            BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+            null, null, null, new BigDecimal('15000.00')
+        )
+        withUserRole(testOwner)
+
+        when:
+        def created = mutationController.createAccount(createDto)
+
+        then:
+        created.creditLimit == new BigDecimal('15000.00')
+
+        when:
+        def updateDto = new AccountInputDto(
+            null, accountName, AccountType.CreditCard,
+            true, '4321',
+            BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+            null, null, null, new BigDecimal('20000.00')
+        )
+        def updated = mutationController.updateAccount(updateDto, null)
+
+        then:
+        updated.creditLimit == new BigDecimal('20000.00')
+        queryController.account(accountName).creditLimit == new BigDecimal('20000.00')
+    }
+
+    void 'createAccount rejects creditLimit on a non-credit account'() {
+        given:
+        String owner = shortOwner()
+        String accountName = "gqlcdeb_${owner}"
+        def dto = new AccountInputDto(
+            null, accountName, AccountType.Debit,
+            true, '4322',
+            BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+            null, null, null, new BigDecimal('500.00')
+        )
+        withUserRole(testOwner)
+
+        when:
+        mutationController.createAccount(dto)
+
+        then:
+        def ex = thrown(IllegalArgumentException)
+        ex.message.contains('creditLimit')
+
+        and: 'nothing was saved'
+        queryController.account(accountName) == null
+    }
+
     // ===================================
     // MUTATION CONTROLLER - validationAmounts
     // ===================================

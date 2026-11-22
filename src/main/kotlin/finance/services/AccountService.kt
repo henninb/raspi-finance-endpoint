@@ -97,6 +97,7 @@ class AccountService
                 accountToUpdate.billingDueDayNextMonth = entity.billingDueDayNextMonth
                 accountToUpdate.billingCycleWeekendShift = entity.billingCycleWeekendShift
                 accountToUpdate.taxBucket = entity.taxBucket
+                accountToUpdate.creditLimit = entity.creditLimit
                 accountToUpdate.dateUpdated = nowTimestamp()
 
                 validateBillingFields(accountToUpdate)
@@ -231,6 +232,9 @@ class AccountService
                 throw ValidationException("Only one of billingGracePeriodDays, billingDueDaySameMonth, billingDueDayNextMonth may be set at a time")
             }
             val isCreditType = account.accountType in setOf(AccountType.Credit, AccountType.CreditCard, AccountType.BusinessCredit)
+            if (account.creditLimit != null && account.accountType !in CREDIT_LIMIT_TYPES) {
+                throw ValidationException("creditLimit is only allowed on revolving credit accounts (${CREDIT_LIMIT_TYPES.joinToString { it.label }})")
+            }
             if (isCreditType && account.billingStatementCloseDay == null && account.billingStatementCloseBusinessDay == null && dueMethods == 0) {
                 logger.warn("Credit account '${account.accountNameOwner}' has no billing cycle fields set")
             }
@@ -340,5 +344,10 @@ class AccountService
             updateTotalsForAllAccounts()
             updateValidationDatesForAllAccounts()
             return true
+        }
+
+        companion object {
+            private val CREDIT_LIMIT_TYPES =
+                setOf(AccountType.Credit, AccountType.CreditCard, AccountType.BusinessCredit, AccountType.LineOfCredit)
         }
     }

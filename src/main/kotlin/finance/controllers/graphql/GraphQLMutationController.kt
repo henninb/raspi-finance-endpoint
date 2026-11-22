@@ -613,6 +613,7 @@ class GraphQLMutationController(
                 this.dateClosed = accountInput.dateClosed ?: Timestamp(0)
                 this.validationDate = accountInput.validationDate ?: Timestamp(System.currentTimeMillis())
                 this.taxBucket = accountInput.taxBucket
+                this.creditLimit = accountInput.creditLimit
             }
 
         val data = accountService.save(account).getOrThrow()
@@ -698,6 +699,7 @@ class GraphQLMutationController(
                 this.dateClosed = accountInput.dateClosed ?: Timestamp(0)
                 this.validationDate = accountInput.validationDate ?: Timestamp(System.currentTimeMillis())
                 this.taxBucket = accountInput.taxBucket
+                this.creditLimit = accountInput.creditLimit
             }
 
         val data = accountService.update(account).getOrThrow()

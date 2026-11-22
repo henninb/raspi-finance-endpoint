@@ -1,6 +1,6 @@
 scalar Long
 scalar Date
-scalar BigDecimal  
+scalar BigDecimal
 scalar Timestamp
 
 enum AccountType {
@@ -119,6 +119,7 @@ type Account {
     dateAdded: Timestamp
     dateUpdated: Timestamp
     taxBucket: String
+    creditLimit: BigDecimal
 }
 
 # complete 7/17/2021
@@ -234,6 +235,7 @@ input AccountInput {
     dateClosed: Timestamp
     validationDate: Timestamp
     taxBucket: String
+    creditLimit: BigDecimal
 }
 
 input TransactionInput {

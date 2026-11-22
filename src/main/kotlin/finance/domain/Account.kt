@@ -21,6 +21,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
@@ -128,6 +129,11 @@ class Account(
 
     @Column(name = "tax_bucket", nullable = true)
     var taxBucket: String? = null
+
+    @field:DecimalMin(value = "0.00", message = "Credit limit must not be negative")
+    @field:Digits(integer = 10, fraction = 2, message = FIELD_MUST_BE_A_CURRENCY_MESSAGE)
+    @Column(name = "credit_limit", nullable = true, precision = 12, scale = 2)
+    var creditLimit: BigDecimal? = null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

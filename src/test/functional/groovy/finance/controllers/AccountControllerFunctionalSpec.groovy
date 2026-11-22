@@ -102,6 +102,67 @@ class AccountControllerFunctionalSpec extends BaseControllerFunctionalSpec {
         response.body.contains("credit")
     }
 
+    void 'should store, update and clear creditLimit on a credit card account via REST'() {
+        given:
+        def account = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("creditlimit")
+                .withAccountType(finance.domain.AccountType.CreditCard)
+                .buildAndValidate()
+        def payload = new groovy.json.JsonSlurper().parseText(account.toString())
+        payload.creditLimit = 15000.00
+
+        when: 'creating the account with a limit'
+        def createResponse = postEndpoint("/account", new groovy.json.JsonBuilder(payload).toString())
+
+        then:
+        createResponse.statusCode == HttpStatus.CREATED
+
+        when: 'reading it back'
+        def getResponse = getEndpoint("/account/${account.accountNameOwner}")
+        def fetched = new groovy.json.JsonSlurper().parseText(getResponse.body)
+
+        then:
+        getResponse.statusCode == HttpStatus.OK
+        new BigDecimal(fetched.creditLimit.toString()) == new BigDecimal("15000.00")
+
+        when: 'updating the limit, sending the row back the way the frontend does'
+        fetched.creditLimit = 20000.00
+        def updateResponse = putEndpoint("/account/${account.accountNameOwner}", new groovy.json.JsonBuilder(fetched).toString())
+        def afterUpdate = new groovy.json.JsonSlurper().parseText(getEndpoint("/account/${account.accountNameOwner}").body)
+
+        then:
+        updateResponse.statusCode == HttpStatus.OK
+        new BigDecimal(afterUpdate.creditLimit.toString()) == new BigDecimal("20000.00")
+
+        when: 'clearing the limit'
+        afterUpdate.remove('creditLimit')
+        def clearResponse = putEndpoint("/account/${account.accountNameOwner}", new groovy.json.JsonBuilder(afterUpdate).toString())
+        def afterClear = new groovy.json.JsonSlurper().parseText(getEndpoint("/account/${account.accountNameOwner}").body)
+
+        then:
+        clearResponse.statusCode == HttpStatus.OK
+        !afterClear.containsKey('creditLimit')
+    }
+
+    void 'should reject creditLimit on a non-credit account via REST'() {
+        given:
+        def account = SmartAccountBuilder.builderForOwner(testOwner)
+                .withUniqueAccountName("debitlimit")
+                .asDebit()
+                .buildAndValidate()
+        def payload = new groovy.json.JsonSlurper().parseText(account.toString())
+        payload.creditLimit = 500.00
+
+        when:
+        def response = postEndpoint("/account", new groovy.json.JsonBuilder(payload).toString())
+
+        then:
+        response.statusCode == HttpStatus.BAD_REQUEST
+
+        and: 'nothing was saved'
+        getEndpoint("/account/${account.accountNameOwner}").statusCode == HttpStatus.NOT_FOUND
+    }
+
     void 'should implement standardized method name: deleteById instead of deleteAccount'() {
         given:
         String uniqueAccountName = SmartAccountBuilder.builderForOwner(testOwner)
