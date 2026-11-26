@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 
 @ConfigurationProperties(prefix = "custom.project", ignoreUnknownFields = true)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 open class CustomProperties(
     var excludedAccounts: MutableList<String> = mutableListOf(),
     private var _adminUsers: MutableList<String> = mutableListOf(),

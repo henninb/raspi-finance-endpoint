@@ -161,7 +161,10 @@ dependencies {
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    // Spring Boot 4.2 no longer manages Jackson 2; pin via its BOM until the code migrates to Jackson 3 (tools.jackson)
+    implementation(platform("com.fasterxml.jackson:jackson-bom:${jackson2Version}"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     //Groovy
     implementation("org.apache.groovy:groovy:${groovyVersion}")

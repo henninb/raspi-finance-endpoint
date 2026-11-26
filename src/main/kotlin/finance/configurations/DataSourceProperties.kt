@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 
 @ConfigurationProperties(prefix = "spring.datasource", ignoreUnknownFields = true)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 open class DataSourceProperties(
     var url: String = "",
     var username: String = "",
